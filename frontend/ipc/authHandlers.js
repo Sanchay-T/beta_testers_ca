@@ -5,11 +5,13 @@ const licenseManager = require('../LicenseManager');
 const { users } = require('../db/schema/User');
 const bcrypt = require('bcrypt');
 const databaseManager = require('../db/db');
-const db = databaseManager.getDatabase();
 
 const { eq, exists, sql } = require("drizzle-orm");
 
 function registerAuthHandlers() {
+    const db = databaseManager.getInstance().getDatabase();
+    log.info("Database instance : ", db);
+
     log.info('Registering auth IPC handlers');
     // Handle login
     ipcMain.handle('auth:login', async (event, credentials) => {

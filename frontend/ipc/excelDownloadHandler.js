@@ -3,7 +3,6 @@ const fs = require('fs');
 const path = require('path');
 const log = require('electron-log');
 const databaseManager = require('../db/db');
-const db = databaseManager.getDatabase();
 const { transactions } = require('../db/schema/Transactions');
 const { statements } = require('../db/schema/Statement');
 const { cases } = require('../db/schema/Cases');
@@ -14,6 +13,9 @@ const axios = require("axios");
 
 
 function registerExcelDownloadHandlers(downloadPath) {
+
+    const db = databaseManager.getInstance().getDatabase();
+    log.info("Database instance : ", db);
 
     const formatDate = (dateString) => {
         const date = new Date(dateString); // Parse the date string

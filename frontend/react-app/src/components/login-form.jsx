@@ -20,7 +20,7 @@ export function LoginForm({ className, ...props }) {
   const location = useLocation();
   // const [needsLicense, setNeedsLicense] = useState(true);
   const [credentials, setCredentials] = useState({
-    email: "3-e413eeb0",
+    email: "2-32e6d741",
     password: "123",
     licenseKey: "SOMEX4Y4ZLicenseKEYForAiyaz",
   });

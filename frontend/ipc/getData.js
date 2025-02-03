@@ -1,12 +1,15 @@
 const { ipcMain } = require("electron");
 const log = require("electron-log");
 const databaseManager = require('../db/db');
-const db = databaseManager.getDatabase();
 const { cases } = require("../db/schema/Cases");
 const { eq, and, inArray } = require("drizzle-orm"); // Add this import
 const { statements } = require("../db/schema/Statement");
 
 function getdata() {
+
+  const db = databaseManager.getInstance().getDatabase();
+  log.info("Database instance : ", db);
+
   ipcMain.handle("get-Report-Name", async (event, caseId) => {
     try {
       const reportName = await db

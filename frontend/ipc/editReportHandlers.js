@@ -3,7 +3,6 @@ const sessionManager = require('../SessionManager');
 const log = require('electron-log');
 const licenseManager = require('../LicenseManager');
 const databaseManager = require('../db/db');
-const db = databaseManager.getDatabase();
 const { transactions } = require('../db/schema/Transactions');
 const { statements } = require('../db/schema/Statement');
 const { cases } = require('../db/schema/Cases');
@@ -14,6 +13,9 @@ const { eq, and, SQL, sql, inArray } = require("drizzle-orm");
 const axios = require("axios");
 
 function registerEditReportHandlers() {
+
+    const db = databaseManager.getInstance().getDatabase();
+    log.info("Database instance : ", db);
 
     async function processOpportunityToEarnData(opportunityToEarnData, caseId) {
         try {

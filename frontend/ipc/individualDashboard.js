@@ -1,7 +1,6 @@
 const { ipcMain } = require("electron");
 const log = require("electron-log");
 const databaseManager = require('../db/db');
-const db = databaseManager.getDatabase();
 const { statements } = require("../db/schema/Statement");
 const { transactions } = require("../db/schema/Transactions");
 const { eod } = require("../db/schema/Eod");
@@ -9,6 +8,8 @@ const { summary } = require("../db/schema/Summary");
 const { eq, gt, and, inArray } = require("drizzle-orm"); // Add this import
 
 function registerIndividualDashboardIpc() {
+  const db = databaseManager.getInstance().getDatabase();
+  log.info("Database instance : ", db);
   // Handler for getting EOD balance
   ipcMain.handle("get-eod-balance", async (event, caseId) => {
     if (!caseId) {
@@ -55,8 +56,8 @@ function registerIndividualDashboardIpc() {
           })
           .from(transactions)
           .where(and(eq(transactions.statementId, individualId.toString())));
-        
-        log.info({allTransactions:allTransactions.length})
+
+        log.info({ allTransactions: allTransactions.length })
         return allTransactions;
       } else {
         const allStatements = await db

@@ -34,6 +34,7 @@ class DatabaseManager {
 
   static getInstance() {
     if (!DatabaseManager.instance) {
+      log.info("Creating new DatabaseManager instance");
       DatabaseManager.instance = new DatabaseManager();
     }
     return DatabaseManager.instance;
@@ -48,7 +49,7 @@ class DatabaseManager {
     try {
       const dbUrl = `file:${isDev
         ? path.resolve(__dirname, "../db.sqlite3")
-        : path.join(BASE_DIR, "db.sqlite3")}`;
+        : path.join(userDataPath, "db.sqlite3")}`;
 
       log.info("Resolved dbUrl:", dbUrl);
 
@@ -88,4 +89,4 @@ class DatabaseManager {
 }
 
 // Export the class instead of an instance
-module.exports = DatabaseManager.getInstance();
+module.exports = DatabaseManager;

@@ -1,12 +1,14 @@
 const { ipcMain } = require("electron");
 const log = require("electron-log");
 const databaseManager = require('../db/db');
-const db = databaseManager.getDatabase();
 const { statements } = require("../db/schema/Statement");
 const { eq, and } = require("drizzle-orm"); // Add this import
 const { transactions } = require("../db/schema/Transactions");
 
 function registerCaseDashboardIpc() {
+  const db = databaseManager.getInstance().getDatabase();
+  log.info("Database instance : ", db);
+
   ipcMain.handle("get-statements", async (event, caseId) => {
     const result = await db
       .select()

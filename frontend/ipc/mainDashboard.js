@@ -1,7 +1,6 @@
 const { ipcMain } = require("electron");
 const log = require("electron-log");
 const databaseManager = require('../db/db');
-const db = databaseManager.getDatabase();
 const { statements } = require("../db/schema/Statement");
 const { cases } = require("../db/schema/Cases");
 const { count } = require("drizzle-orm");
@@ -10,6 +9,10 @@ const path = require("path");
 const axios = require("axios");
 
 function registerMainDashboardIpc(tmpdir_path) {
+
+  const db = databaseManager.getInstance().getDatabase();
+  log.info("Database instance : ", db);
+
   ipcMain.handle("get-reports-processed", async (event) => {
     try {
       const totalCount = await db

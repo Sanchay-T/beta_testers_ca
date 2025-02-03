@@ -1,13 +1,16 @@
 const { ipcMain } = require("electron");
 const log = require("electron-log");
 const databaseManager = require('../db/db');
-const db = databaseManager.getDatabase();
 const { opportunityToEarn } = require("../db/schema/OpportunityToEarn");
 const { eq } = require("drizzle-orm");
 const { statements } = require("../db/schema/Statement");
 const { cases } = require("../db/schema/Cases");
 
 function registerOpportunityToEarnIpc() {
+
+  const db = databaseManager.getInstance().getDatabase();
+  log.info("Database instance : ", db);
+
   ipcMain.handle("getOpportunityToEarn", async () => {
     try {
       const data = await db

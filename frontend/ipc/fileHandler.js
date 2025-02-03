@@ -2,11 +2,13 @@ const path = require('path');
 const { ipcMain, shell } = require('electron');
 const log = require('electron-log');
 const databaseManager = require('../db/db');
-const db = databaseManager.getDatabase();
 const { users } = require('../db/schema/User');
 // console.log("Users : ", users)
 
 async function registerOpenFileIpc(BASE_DIR) {
+
+    const db = databaseManager.getInstance().getDatabase();
+    log.info("Database instance : ", db);
 
     // console.log("Registering open-file IPC handler");
     // console.log("Trying Db connection");

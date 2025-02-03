@@ -91,7 +91,7 @@ autoUpdater.on('checking-for-update', () => {
 autoUpdater.on('update-available', (info) => {
   log.info('Update available. Current version:', app.getVersion());
   log.info('New version:', info.version);
-  
+
   dialog.showMessageBox({
     type: 'info',
     title: 'Update Available',
@@ -103,7 +103,7 @@ autoUpdater.on('update-available', (info) => {
     if (response === 0) {
       log.info('User accepted download');
       autoUpdater.downloadUpdate();
-      
+
       // Show progress dialog
       dialog.showMessageBox({
         type: 'info',
@@ -129,7 +129,7 @@ autoUpdater.on('download-progress', (progress) => {
 autoUpdater.on('update-downloaded', (info) => {
   log.info('Update downloaded. Version:', info.version);
   win?.setProgressBar(-1); // Remove progress bar
-  
+
   dialog.showMessageBox({
     type: 'info',
     title: 'Update Ready',
@@ -197,26 +197,26 @@ function getProductionExecutablePath() {
   };
 
   const executablePath = platformExecutables[process.platform];
-  
+
   // Add detailed logging
   log.info("Current platform:", process.platform);
   log.info("Resources path:", process.resourcesPath);
   log.info("Looking for executable at:", executablePath);
-  
+
   if (!executablePath || !fs.existsSync(executablePath)) {
     const errorMessage = `Executable not found for platform: ${process.platform}. Path: ${executablePath}`;
     log.error(errorMessage);
-    
+
     // Log the contents of the resources directory
     try {
       const resourcesContents = fs.readdirSync(process.resourcesPath);
       log.info("Contents of resources directory:", resourcesContents);
-      
+
       const backendPath = path.join(process.resourcesPath, "backend");
       if (fs.existsSync(backendPath)) {
         const backendContents = fs.readdirSync(backendPath);
         log.info("Contents of backend directory:", backendContents);
-        
+
         const mainPath = path.join(backendPath, "main");
         if (fs.existsSync(mainPath)) {
           const mainContents = fs.readdirSync(mainPath);
@@ -226,7 +226,7 @@ function getProductionExecutablePath() {
     } catch (err) {
       log.error("Error listing directory contents:", err);
     }
-    
+
     dialog.showErrorBox("Executable Missing", errorMessage);
     return null;
   }
@@ -284,7 +284,7 @@ async function startPythonExecutable() {
       log.info("Working directory:", process.cwd());
       log.info("Executable path:", executablePath);
       log.info("Executable exists:", fs.existsSync(executablePath));
-      
+
       // Check if the executable is actually executable
       try {
         fs.accessSync(executablePath, fs.constants.X_OK);
@@ -295,7 +295,7 @@ async function startPythonExecutable() {
 
       command = executablePath;
       args = [];
-      
+
       // Set working directory to the executable's directory
       options.cwd = path.dirname(executablePath);
       log.info("Setting working directory to:", options.cwd);
@@ -307,14 +307,14 @@ async function startPythonExecutable() {
         args,
         options
       });
-      
+
       pythonProcess = spawn(command, args, options);
 
       pythonProcess.stdout.on("data", (data) => {
         const output = data.toString().trim();
         log.info(`Process stdout: ${output}`);
       });
-      
+
       pythonProcess.stderr.on("data", (data) => {
         const error = data.toString().trim();
         log.error(`Process stderr: ${error}`);
@@ -346,7 +346,7 @@ async function startPythonExecutable() {
           resolve();
         }
       }, 2000);
-      
+
     } catch (error) {
       const errorMessage = `Unexpected error starting process: ${error.message}`;
       log.error(errorMessage);
@@ -604,7 +604,7 @@ async function createWindow() {
   win.webContents.on('did-finish-load', () => {
     if (!isDev) {
       setTimeout(checkForUpdates, 3000);
-      
+
       // Check for updates every hour
       setInterval(checkForUpdates, 60 * 60 * 1000);
     }
@@ -617,8 +617,9 @@ app.whenReady().then(async () => {
   log.info("App is ready", app.getPath("userData"));
   try {
     try {
-      await databaseManager.initialize(app.getPath("userData"));
-      log.info("Database initialized successfully", databaseManager.getDatabase());
+      const dbManager = databaseManager.getInstance();
+      await dbManager.initialize(app.getPath("userData"));
+      log.info("Database initialized successfully", dbManager.getDatabase());
     } catch (error) {
       log.error("Database initialization failed:", error);
       throw error;
@@ -701,7 +702,7 @@ function checkForUpdates() {
     log.info('Skipping update check in development mode');
     return;
   }
-  
+
   log.info('Checking for updates...');
   autoUpdater.checkForUpdates().catch(err => {
     log.error('Error checking for updates:', err);

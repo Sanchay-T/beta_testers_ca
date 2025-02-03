@@ -4,13 +4,14 @@ const path = require("path");
 const log = require("electron-log");
 const axios = require("axios");
 const databaseManager = require('../db/db');
-const db = databaseManager.getDatabase();
 const { transactions } = require("../db/schema/Transactions");
 const { statements } = require("../db/schema/Statement");
 const { cases } = require("../db/schema/Cases");
 const { failedStatements } = require("../db/schema/FailedStatements");
 const { eq, and } = require("drizzle-orm");
 const { updateCaseStatus } = require("./generateReport")
+
+let db = null;
 
 // Helper function to sanitize JSON string
 const sanitizeJSONString = (jsonString) => {
@@ -249,6 +250,10 @@ async function getModifiedTransactions() {
 }
 
 function registerReportHandlers(tmpdir_path) {
+
+  db = databaseManager.getInstance().getDatabase();
+  log.info("Database instance : ", db);
+
   ipcMain.handle("get-recent-reports", async (event) => {
     try {
       log.info("Fetching recent reports from the database...");
