@@ -1,6 +1,7 @@
 const { ipcMain } = require("electron");
 const log = require("electron-log");
-const db = require("../db/db");
+const databaseManager = require('../db/db');
+const db = databaseManager.getDatabase();
 const { statements } = require("../db/schema/Statement");
 const { transactions } = require("../db/schema/Transactions");
 const { eod } = require("../db/schema/Eod");
@@ -68,8 +69,10 @@ function registerIndividualDashboardIpc() {
         // log.info("Found statements:", allStatements);
         // Get all transactions for these statements
         const allTransactions = await db
-          .select({ id: transactions.id,
-            ...transactions})
+          .select({
+            id: transactions.id,
+            ...transactions
+          })
           .from(transactions)
           .where(
             inArray(

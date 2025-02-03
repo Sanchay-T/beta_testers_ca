@@ -1,7 +1,8 @@
 const path = require('path');
 const { ipcMain, shell } = require('electron');
 const log = require('electron-log');
-const db = require('../db/db');
+const databaseManager = require('../db/db');
+const db = databaseManager.getDatabase();
 const { users } = require('../db/schema/User');
 // console.log("Users : ", users)
 
@@ -37,7 +38,7 @@ async function registerOpenFileIpc(BASE_DIR) {
         }
     });
 
-    
+
 }
 
 module.exports = { registerOpenFileIpc };

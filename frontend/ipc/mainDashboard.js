@@ -1,6 +1,7 @@
 const { ipcMain } = require("electron");
 const log = require("electron-log");
-const db = require("../db/db");
+const databaseManager = require('../db/db');
+const db = databaseManager.getDatabase();
 const { statements } = require("../db/schema/Statement");
 const { cases } = require("../db/schema/Cases");
 const { count } = require("drizzle-orm");

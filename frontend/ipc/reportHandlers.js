@@ -3,13 +3,14 @@ const fs = require("fs");
 const path = require("path");
 const log = require("electron-log");
 const axios = require("axios");
-const db = require("../db/db");
+const databaseManager = require('../db/db');
+const db = databaseManager.getDatabase();
 const { transactions } = require("../db/schema/Transactions");
 const { statements } = require("../db/schema/Statement");
 const { cases } = require("../db/schema/Cases");
 const { failedStatements } = require("../db/schema/FailedStatements");
 const { eq, and } = require("drizzle-orm");
-const {updateCaseStatus} = require("./generateReport")
+const { updateCaseStatus } = require("./generateReport")
 
 // Helper function to sanitize JSON string
 const sanitizeJSONString = (jsonString) => {
@@ -248,15 +249,15 @@ async function getModifiedTransactions() {
 }
 
 function registerReportHandlers(tmpdir_path) {
-    ipcMain.handle("get-recent-reports", async (event) => {
-        try {
-            log.info("Fetching recent reports from the database...");
-            const result = await db
-                .select()
-                .from(cases)
-                .orderBy(cases.createdAt, "DESC")
-                .leftJoin(statements, eq(cases.id, statements.caseId))
-                // .limit(10);
+  ipcMain.handle("get-recent-reports", async (event) => {
+    try {
+      log.info("Fetching recent reports from the database...");
+      const result = await db
+        .select()
+        .from(cases)
+        .orderBy(cases.createdAt, "DESC")
+        .leftJoin(statements, eq(cases.id, statements.caseId))
+      // .limit(10);
 
       log.info("Reports fetched successfully, processing data...");
 
@@ -317,8 +318,8 @@ function registerReportHandlers(tmpdir_path) {
       .select()
       .from(cases)
       .where(eq(cases.id, caseId));
-    const caseName= caseData.name;
-    log.info("Case Name : ", caseName); 
+    const caseName = caseData.name;
+    log.info("Case Name : ", caseName);
     try {
       if (!result?.files?.length) {
         throw new Error("Invalid or empty files array received");
@@ -393,86 +394,86 @@ function registerReportHandlers(tmpdir_path) {
         throw new Error("Empty response received from analysis server");
       }
 
-  // Handle failed extractions from API response
-        if (response.data?.["pdf_paths_not_extracted"]) {
-          const failedPdfPaths =
-            response.data["pdf_paths_not_extracted"].paths || [];
-  
-          // Store failed statements in database
-          await db.insert(failedStatements).values({
-            caseId: caseId,
-            data: JSON.stringify(response.data["pdf_paths_not_extracted"]),
-          });
-  
-          // Mark files as failed based on API response
-          for (const failedPath of failedPdfPaths) {
-            // Find the corresponding full path in our processed files
-            const fullPath = fileDetails.find((detail) =>
-              detail.pdf_paths.includes(path.basename(failedPath))
-            )?.pdf_paths;
-  
-            if (fullPath) {
-              failedFiles.add(fullPath);
-              successfulFiles.delete(fullPath);
-            }
+      // Handle failed extractions from API response
+      if (response.data?.["pdf_paths_not_extracted"]) {
+        const failedPdfPaths =
+          response.data["pdf_paths_not_extracted"].paths || [];
+
+        // Store failed statements in database
+        await db.insert(failedStatements).values({
+          caseId: caseId,
+          data: JSON.stringify(response.data["pdf_paths_not_extracted"]),
+        });
+
+        // Mark files as failed based on API response
+        for (const failedPath of failedPdfPaths) {
+          // Find the corresponding full path in our processed files
+          const fullPath = fileDetails.find((detail) =>
+            detail.pdf_paths.includes(path.basename(failedPath))
+          )?.pdf_paths;
+
+          if (fullPath) {
+            failedFiles.add(fullPath);
+            successfulFiles.delete(fullPath);
           }
-  
-          log.warn("Some PDF paths were not extracted", Array.from(failedFiles));
         }
+
+        log.warn("Some PDF paths were not extracted", Array.from(failedFiles));
+      }
 
 
       const sanitizedJsonString = sanitizeJSONString(response.data.data);
       const parsedData = JSON.parse(sanitizedJsonString);
-       if (parsedData == null) {
-              await updateCaseStatus(caseId, "Failed");
-              const failedPDFsDir = path.join(tempDir, "failed_pdfs", caseName);
-              fs.mkdirSync(failedPDFsDir, { recursive: true });
-              return {
-                success: true,
-                data: {
-                  caseId: caseId,
-                  processed: null,
-                  totalTransactions: 0,
-                  eodProcessed: false,
-                  summaryProcessed: false,
-                  failedStatements: response.data["pdf_paths_not_extracted"] || null,
-                  failedFiles: Array.from(failedFiles),
-                  successfulFiles: Array.from(successfulFiles),
-                  nerResults: response.data?.ner_results || {
-                    Name: [],
-                    "Acc Number": [],
-                  },
-                },
-              };
-            }
+      if (parsedData == null) {
+        await updateCaseStatus(caseId, "Failed");
+        const failedPDFsDir = path.join(tempDir, "failed_pdfs", caseName);
+        fs.mkdirSync(failedPDFsDir, { recursive: true });
+        return {
+          success: true,
+          data: {
+            caseId: caseId,
+            processed: null,
+            totalTransactions: 0,
+            eodProcessed: false,
+            summaryProcessed: false,
+            failedStatements: response.data["pdf_paths_not_extracted"] || null,
+            failedFiles: Array.from(failedFiles),
+            successfulFiles: Array.from(successfulFiles),
+            nerResults: response.data?.ner_results || {
+              Name: [],
+              "Acc Number": [],
+            },
+          },
+        };
+      }
 
-            const transactions = (parsedData.Transactions || []).filter(
-              (transaction) => {
-                if (
-                  typeof transaction.Credit === "number" &&
-                  isNaN(transaction.Credit)
-                ) {
-                  transaction.Credit = null;
-                }
-                if (
-                  typeof transaction.Debit === "number" &&
-                  isNaN(transaction.Debit)
-                ) {
-                  transaction.Debit = null;
-                }
-                if (
-                  typeof transaction.Balance === "number" &&
-                  isNaN(transaction.Balance)
-                ) {
-                  transaction.Balance = 0;
-                }
-      
-                return (
-                  (transaction.Credit !== null && !isNaN(transaction.Credit)) ||
-                  (transaction.Debit !== null && !isNaN(transaction.Debit))
-                );
-              }
-            );
+      const transactions = (parsedData.Transactions || []).filter(
+        (transaction) => {
+          if (
+            typeof transaction.Credit === "number" &&
+            isNaN(transaction.Credit)
+          ) {
+            transaction.Credit = null;
+          }
+          if (
+            typeof transaction.Debit === "number" &&
+            isNaN(transaction.Debit)
+          ) {
+            transaction.Debit = null;
+          }
+          if (
+            typeof transaction.Balance === "number" &&
+            isNaN(transaction.Balance)
+          ) {
+            transaction.Balance = 0;
+          }
+
+          return (
+            (transaction.Credit !== null && !isNaN(transaction.Credit)) ||
+            (transaction.Debit !== null && !isNaN(transaction.Debit))
+          );
+        }
+      );
 
       log.info(
         `Extracted ${transactions.length} valid transactions from response`
@@ -508,30 +509,30 @@ function registerReportHandlers(tmpdir_path) {
         await updateCaseStatus(caseId, "Failed");
       }
 
-       // Create directory for failed PDFs
-        const failedPDFsDir = path.join(tempDir, "failed_pdfs", caseName);
-        fs.mkdirSync(failedPDFsDir, { recursive: true });
+      // Create directory for failed PDFs
+      const failedPDFsDir = path.join(tempDir, "failed_pdfs", caseName);
+      fs.mkdirSync(failedPDFsDir, { recursive: true });
 
-       // Handle failed and successful files
-            for (const filePath of allProcessedFiles) {
-              try {
-                if (fs.existsSync(filePath)) {
-                  if (failedFiles.has(filePath)) {
-                    // Move failed file to its specific directory
-                    const newPath = path.join(failedPDFsDir, path.basename(filePath));
-                    fs.copyFileSync(filePath, newPath); // Copy first to prevent any move errors
-                    fs.unlinkSync(filePath); // Then remove the original
-                    log.info(`Moved failed PDF to: ${newPath}`);
-                  } else if (successfulFiles.has(filePath)) {
-                    // Remove successful files
-                    fs.unlinkSync(filePath);
-                    log.info(`Successfully deleted processed file: ${filePath}`);
-                  }
-                }
-              } catch (error) {
-                log.error(`Error handling file ${filePath}:`, error);
-              }
+      // Handle failed and successful files
+      for (const filePath of allProcessedFiles) {
+        try {
+          if (fs.existsSync(filePath)) {
+            if (failedFiles.has(filePath)) {
+              // Move failed file to its specific directory
+              const newPath = path.join(failedPDFsDir, path.basename(filePath));
+              fs.copyFileSync(filePath, newPath); // Copy first to prevent any move errors
+              fs.unlinkSync(filePath); // Then remove the original
+              log.info(`Moved failed PDF to: ${newPath}`);
+            } else if (successfulFiles.has(filePath)) {
+              // Remove successful files
+              fs.unlinkSync(filePath);
+              log.info(`Successfully deleted processed file: ${filePath}`);
             }
+          }
+        } catch (error) {
+          log.error(`Error handling file ${filePath}:`, error);
+        }
+      }
 
       // try {
       //     fs.rmdirSync(tempDir);

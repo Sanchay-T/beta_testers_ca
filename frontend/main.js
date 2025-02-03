@@ -23,7 +23,7 @@ const licenseManager = require("./LicenseManager");
 const { generateReportIpc } = require("./ipc/generateReport");
 const { registerOpportunityToEarnIpc } = require("./ipc/opportunityToEarn");
 const { registerExcelDownloadHandlers } = require("./ipc/excelDownloadHandler")
-const db = require("./db/db");
+const databaseManager = require("./db/db");
 const { spawn, execFile } = require("child_process");
 const log = require("electron-log");
 const portscanner = require("portscanner"); // Import portscanner
@@ -519,19 +519,13 @@ app.setName("CypherSol Dev");
 app.whenReady().then(async () => {
   log.info("App is ready", app.getPath("userData"));
   try {
-    // try {
-    //   sessionManager.init();
-    // } catch (error) {
-    //   log.error("SessionManager initialization failed:", error);
-    //   throw error;
-    // }
-
-    // try {
-    //   licenseManager.init();
-    // } catch (error) {
-    //   log.error("LicenseManager initialization failed:", error);
-    //   throw error;
-    // }
+    try {
+      await databaseManager.initialize(app.getPath("userData"));
+      log.info("Database initialized successfully", databaseManager.getDatabase());
+    } catch (error) {
+      log.error("Database initialization failed:", error);
+      throw error;
+    }
 
     try {
       sessionManager.init();
