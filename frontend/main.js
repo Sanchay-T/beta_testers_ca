@@ -548,12 +548,12 @@ app.whenReady().then(async () => {
       throw error;
     }
 
-    // try {
-    //   startPythonExecutable();
-    // } catch (error) {
-    //   log.error("Python initialization failed:", error);
-    //   throw error;
-    // }
+    try {
+      startPythonExecutable();
+    } catch (error) {
+      log.error("Python initialization failed:", error);
+      throw error;
+    }
 
     // Proceed with the window creation and other tasks after initialization
     log.info("After all initializations");
