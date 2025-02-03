@@ -81,7 +81,7 @@ def save_to_excel(df, name_n_num_df, account_number):
     particulars_df.to_excel(
         writer,
         sheet_name=sheet_name,
-        startrow=name_n_num_df.shape[0] + 2,
+        startrow=name_n_num_df.shape[0] + 4,
         index=False,
     )
     income_receipts_df.to_excel(
@@ -628,6 +628,7 @@ def start_extraction_edit_pdf(bank_names, pdf_paths, passwords, start_dates, end
 
         # arrange dfs
         initial_df = pd.concat(sort_dataframes_by_date(list_of_dataframes)).fillna("").reset_index(drop=True)
+        initial_df = initial_df.drop_duplicates(keep="first")
 
         df = category_add_ca(initial_df)
         new_tran_df = another_method(df)
