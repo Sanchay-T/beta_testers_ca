@@ -91,8 +91,28 @@ autoUpdater.on('checking-for-update', () => {
 autoUpdater.on('update-available', (info) => {
   log.info('Update available. Current version:', app.getVersion());
   log.info('New version:', info.version);
-  log.info('Release date:', info.releaseDate);
-  win?.webContents.send('update-status', 'available', info);
+  
+  dialog.showMessageBox({
+    type: 'info',
+    title: 'Update Available',
+    message: `A new version (${info.version}) is available. Your current version is ${app.getVersion()}.\n\nWould you like to download it now?`,
+    detail: info.releaseNotes ? `Release Notes:\n${info.releaseNotes}` : undefined,
+    buttons: ['Download Now', 'Later'],
+    defaultId: 0
+  }).then(({ response }) => {
+    if (response === 0) {
+      log.info('User accepted download');
+      autoUpdater.downloadUpdate();
+      
+      // Show progress dialog
+      dialog.showMessageBox({
+        type: 'info',
+        title: 'Downloading Update',
+        message: 'The update is being downloaded',
+        buttons: ['OK']
+      });
+    }
+  });
 });
 
 autoUpdater.on('update-not-available', (info) => {
@@ -102,21 +122,27 @@ autoUpdater.on('update-not-available', (info) => {
 });
 
 autoUpdater.on('download-progress', (progress) => {
-  const logMessage = `
-    Download progress:
-    • Speed: ${progress.bytesPerSecond} bytes/s
-    • Downloaded: ${progress.transferred} bytes
-    • Total: ${progress.total} bytes
-    • Percent: ${progress.percent}%
-  `;
-  log.info(logMessage);
-  win?.webContents.send('update-progress', progress);
+  log.info(`Download progress: ${progress.percent}%`);
+  win?.setProgressBar(progress.percent / 100);
 });
 
 autoUpdater.on('update-downloaded', (info) => {
   log.info('Update downloaded. Version:', info.version);
-  log.info('Release notes:', info.releaseNotes);
-  win?.webContents.send('update-downloaded', info);
+  win?.setProgressBar(-1); // Remove progress bar
+  
+  dialog.showMessageBox({
+    type: 'info',
+    title: 'Update Ready',
+    message: 'The update has been downloaded successfully.',
+    detail: 'The application will restart to install the update.',
+    buttons: ['Restart Now', 'Later'],
+    defaultId: 0
+  }).then(({ response }) => {
+    if (response === 0) {
+      log.info('User accepted install');
+      autoUpdater.quitAndInstall(false, true);
+    }
+  });
 });
 
 autoUpdater.on('error', (err) => {
@@ -127,7 +153,7 @@ autoUpdater.on('error', (err) => {
 
 log.info("Working Directory:", process.cwd());
 
-const BASE_DIR = isDev ? __dirname : app.getPath("module");
+const BASE_DIR = isDev ? __dirname : process.resourcesPath;
 log.info("current directory", app.getAppPath());
 log.info("BASE_DIR", BASE_DIR);
 log.info("__dirname", __dirname);
@@ -171,14 +197,41 @@ function getProductionExecutablePath() {
   };
 
   const executablePath = platformExecutables[process.platform];
-
+  
+  // Add detailed logging
+  log.info("Current platform:", process.platform);
+  log.info("Resources path:", process.resourcesPath);
+  log.info("Looking for executable at:", executablePath);
+  
   if (!executablePath || !fs.existsSync(executablePath)) {
-    const errorMessage = `Executable not found for platform: ${process.platform}`;
+    const errorMessage = `Executable not found for platform: ${process.platform}. Path: ${executablePath}`;
     log.error(errorMessage);
+    
+    // Log the contents of the resources directory
+    try {
+      const resourcesContents = fs.readdirSync(process.resourcesPath);
+      log.info("Contents of resources directory:", resourcesContents);
+      
+      const backendPath = path.join(process.resourcesPath, "backend");
+      if (fs.existsSync(backendPath)) {
+        const backendContents = fs.readdirSync(backendPath);
+        log.info("Contents of backend directory:", backendContents);
+        
+        const mainPath = path.join(backendPath, "main");
+        if (fs.existsSync(mainPath)) {
+          const mainContents = fs.readdirSync(mainPath);
+          log.info("Contents of main directory:", mainContents);
+        }
+      }
+    } catch (err) {
+      log.error("Error listing directory contents:", err);
+    }
+    
     dialog.showErrorBox("Executable Missing", errorMessage);
     return null;
   }
 
+  log.info("Found executable at:", executablePath);
   return executablePath;
 }
 
@@ -189,18 +242,19 @@ async function startPythonExecutable() {
       detached: false,
       stdio: "pipe",
     };
+
     if (isDev) {
+      // Development mode code remains the same
       const venvPythonPath =
         process.platform === "win32"
-          ? path.join(__dirname, "../.venv/Scripts/python.exe") // Path to .venv Python on Windows
-          : path.join(__dirname, "../.venv/bin/python"); // Path to .venv Python on macOS/Linux
+          ? path.join(__dirname, "../.venv/Scripts/python.exe")
+          : path.join(__dirname, "../.venv/bin/python");
 
       const pythonScriptPath = path.join(__dirname, "../backend/main.py");
       const workingDir = path.join(__dirname, "../");
 
       if (!fs.existsSync(pythonScriptPath)) {
-        const errorMessage =
-          "Python script main.py not found in development mode.";
+        const errorMessage = "Python script main.py not found in development mode.";
         log.error(errorMessage);
         dialog.showErrorBox("Development Error", errorMessage);
         reject(new Error(errorMessage));
@@ -208,8 +262,7 @@ async function startPythonExecutable() {
       }
 
       if (!fs.existsSync(venvPythonPath)) {
-        const errorMessage =
-          "Virtual environment not found. Ensure .venv is set up.";
+        const errorMessage = "Virtual environment not found. Ensure .venv is set up.";
         log.error(errorMessage);
         dialog.showErrorBox("Development Error", errorMessage);
         reject(new Error(errorMessage));
@@ -220,50 +273,84 @@ async function startPythonExecutable() {
       args = ["-m", "backend.main"];
       options.cwd = workingDir;
     } else {
+      // Production mode
       const executablePath = getProductionExecutablePath();
       if (!executablePath) {
         reject(new Error("Executable not found"));
         return;
       }
 
+      // Log the working directory and executable details
+      log.info("Working directory:", process.cwd());
+      log.info("Executable path:", executablePath);
+      log.info("Executable exists:", fs.existsSync(executablePath));
+      
+      // Check if the executable is actually executable
+      try {
+        fs.accessSync(executablePath, fs.constants.X_OK);
+        log.info("Executable has execution permissions");
+      } catch (err) {
+        log.error("Executable lacks execution permissions:", err);
+      }
+
       command = executablePath;
       args = [];
+      
+      // Set working directory to the executable's directory
+      options.cwd = path.dirname(executablePath);
+      log.info("Setting working directory to:", options.cwd);
     }
 
     try {
-      log.info("Options : ", options);
+      log.info("Spawning process with options:", {
+        command,
+        args,
+        options
+      });
+      
       pythonProcess = spawn(command, args, options);
 
-      pythonProcess.stdout.on("data", (data) =>
-        log.info(`Process stdout: ${data}`)
-      );
-      pythonProcess.stderr.on("data", (data) =>
-        log.error(`Process stderr: ${data}`)
-      );
+      pythonProcess.stdout.on("data", (data) => {
+        const output = data.toString().trim();
+        log.info(`Process stdout: ${output}`);
+      });
+      
+      pythonProcess.stderr.on("data", (data) => {
+        const error = data.toString().trim();
+        log.error(`Process stderr: ${error}`);
+      });
 
       pythonProcess.on("error", (error) => {
         const errorMessage = `Failed to start process: ${error.message}`;
         log.error(errorMessage);
+        log.error("Error details:", error);
         dialog.showErrorBox("Process Error", errorMessage);
         reject(error);
       });
 
       pythonProcess.on("close", (code) => {
         if (code !== 0) {
-          const errorMessage = `Process exited with non-zero code: ${code}`;
+          const errorMessage = `Process exited with code: ${code}`;
           log.error(errorMessage);
-          // dialog.showErrorBox("Process Exited", errorMessage);
           reject(new Error(errorMessage));
         } else {
-          log.info("Process started successfully.");
+          log.info("Process started successfully");
           resolve();
         }
       });
 
-      setTimeout(resolve, 2000);
+      // Wait a bit to ensure process starts
+      setTimeout(() => {
+        if (pythonProcess.exitCode === null) {
+          log.info("Process still running after timeout - considering it successful");
+          resolve();
+        }
+      }, 2000);
+      
     } catch (error) {
       const errorMessage = `Unexpected error starting process: ${error.message}`;
       log.error(errorMessage);
+      log.error("Error details:", error);
       dialog.showErrorBox("Unexpected Error", errorMessage);
       reject(error);
     }
@@ -512,6 +599,16 @@ async function createWindow() {
       throw error;
     }
   });
+
+  // Check for updates after window is ready
+  win.webContents.on('did-finish-load', () => {
+    if (!isDev) {
+      setTimeout(checkForUpdates, 3000);
+      
+      // Check for updates every hour
+      setInterval(checkForUpdates, 60 * 60 * 1000);
+    }
+  });
 }
 
 app.setName("CypherSol Dev");
@@ -548,12 +645,12 @@ app.whenReady().then(async () => {
       throw error;
     }
 
-    // try {
-    //   startPythonExecutable();
-    // } catch (error) {
-    //   log.error("Python initialization failed:", error);
-    //   throw error;
-    // }
+    try {
+      startPythonExecutable();
+    } catch (error) {
+      log.error("Python initialization failed:", error);
+      throw error;
+    }
 
     // Proceed with the window creation and other tasks after initialization
     log.info("After all initializations");
@@ -594,3 +691,31 @@ app.on("activate", () => {
     createWindow();
   }
 });
+
+// Add these IPC handlers
+ipcMain.handle('start-download', () => {
+  autoUpdater.downloadUpdate();
+});
+
+ipcMain.handle('quit-and-install', () => {
+  autoUpdater.quitAndInstall();
+});
+
+// Modify the update check function
+function checkForUpdates() {
+  if (isDev) {
+    log.info('Skipping update check in development mode');
+    return;
+  }
+  
+  log.info('Checking for updates...');
+  autoUpdater.checkForUpdates().catch(err => {
+    log.error('Error checking for updates:', err);
+    dialog.showMessageBox({
+      type: 'error',
+      title: 'Update Error',
+      message: `Error checking for updates: ${err.message}`,
+      buttons: ['OK']
+    });
+  });
+}

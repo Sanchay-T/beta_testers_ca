@@ -39,7 +39,7 @@ const validateAndTransformTransaction = (transaction, statementId) => {
       throw new Error("Invalid date");
     }
   } catch (error) {
-    throw new Error(`Invalid date format: ${transaction["Value Date"]}`);
+    throw new Error(Invalid date format: ${transaction["Value Date"]});
   }
 
   let amount = 0;
@@ -108,7 +108,7 @@ const storeTransactionsBatch = async (transformedTransactions) => {
         });
       } else {
         log.info(
-          `Skipping duplicate transaction: ${t.description} on ${t.date}`
+          Skipping duplicate transaction: ${t.description} on ${t.date}
         );
       }
     }
@@ -125,7 +125,7 @@ const storeTransactionsBatch = async (transformedTransactions) => {
 
     if (existingStatements.length === 0) {
       throw new Error(
-        `Statement ${uniqueTransactions[0].statementId} not found`
+        Statement ${uniqueTransactions[0].statementId} not found
       );
     }
 
@@ -135,7 +135,7 @@ const storeTransactionsBatch = async (transformedTransactions) => {
       const chunk = uniqueTransactions.slice(i, i + chunkSize);
       await db.insert(transactions).values(chunk);
       log.info(
-        `Stored transactions batch ${i / chunkSize + 1}, size: ${chunk.length}`
+        Stored transactions batch ${i / chunkSize + 1}, size: ${chunk.length}
       );
     }
 
@@ -163,7 +163,7 @@ const getOrCreateCase = async (caseName, userId = 1) => {
 
     if (existingCase.length > 0) {
       log.info(
-        `Found existing case with ID: ${(existingCase[0].id, caseName)}`
+        Found existing case with ID: ${(existingCase[0].id, caseName)}
       );
       return existingCase[0].id;
     }
@@ -181,8 +181,8 @@ const getOrCreateCase = async (caseName, userId = 1) => {
       .returning();
 
     if (newCase.length > 0) {
-      log.info(`Created new case with ID: ${(newCase[0].id, caseName)}`);
-      log.info(`Case id: ${newCase[0].id}`);
+      log.info(Created new case with ID: ${(newCase[0].id, caseName)});
+      log.info(Case id: ${newCase[0].id});
       return newCase[0].id;
     }
 
@@ -206,7 +206,7 @@ const getOrCreateCase = async (caseName, userId = 1) => {
 //       .limit(1);
 
 //     if (existingCase.length > 0) {
-//       log.info(`Found existing case with ID: ${existingCase[0].id}`);
+//       log.info(Found existing case with ID: ${existingCase[0].id});
 //       return existingCase[0].id;
 //     }
 
@@ -228,7 +228,7 @@ const getOrCreateCase = async (caseName, userId = 1) => {
 //       .returning();
 
 //     if (newCase.length > 0) {
-//       log.info(`Created new case with ID: ${newCase[0].id}`);
+//       log.info(Created new case with ID: ${newCase[0].id});
 //       return newCase[0].id;
 //     }
 
@@ -264,7 +264,7 @@ const processStatementAndEOD = async (
           return validateAndTransformTransaction(transaction, null); // Pass null for statementId initially
         } catch (error) {
           log.warn(
-            `Invalid transaction found during validation: ${error.message}`,
+            Invalid transaction found during validation: ${error.message},
             transaction
           );
           return null;
@@ -443,7 +443,7 @@ const processSummaryData = async (parsedData, caseName) => {
           updatedAt: new Date(),
         })
         .where(eq(summary.caseId, validCaseId));
-      // log.info(`Updated Data:`,summaryData);
+      // log.info(Updated Data:,summaryData);
     } else {
       // Insert new summary record
       await db.insert(summary).values({
@@ -453,7 +453,7 @@ const processSummaryData = async (parsedData, caseName) => {
       });
     }
 
-    log.info(`Summary data processed for case ${validCaseId}`);
+    log.info(Summary data processed for case ${validCaseId});
     return true;
   } catch (error) {
     log.error("Error processing summary data:", error);
@@ -470,9 +470,9 @@ const updateCaseStatus = async (caseId, status) => {
       })
       .where(eq(cases.id, caseId));
 
-    log.info(`Updated case ${caseId} status to ${status}`);
+    log.info(Updated case ${caseId} status to ${status});
   } catch (error) {
-    log.error(`Failed to update case ${caseId} status to ${status}:`, error);
+    log.error(Failed to update case ${caseId} status to ${status}:, error);
     throw error;
   }
 };
@@ -538,7 +538,7 @@ const processOpportunityToEarnData = async (
       generalInsurance,
     });
 
-    log.info(`New opportunity to earn data appended for case ${validCaseId}`);
+    log.info(New opportunity to earn data appended for case ${validCaseId});
     return true;
   } catch (error) {
     log.error("Error processing opportunity to earn data:", error);
@@ -555,9 +555,9 @@ function preprocessPayload(payload) {
         return statement.map((col) => {
           return {
             ...col,
-            // rename `type` -> `column_type`; default to null if it's missing
+            // rename type -> column_type; default to null if it's missing
             column_type: col.type ?? null,
-            // remove the old `type` field if needed
+            // remove the old type field if needed
             type: undefined,
           };
         });
@@ -572,7 +572,7 @@ function preprocessPayload(payload) {
       (tx) => {
         return {
           ...tx,
-          // rename `type` -> `transaction_type`
+          // rename type -> transaction_type
           transaction_type: tx.type ?? "",
           // remove or set to undefined so it doesn't get sent
           type: undefined,
@@ -595,7 +595,7 @@ function preprocessPayload(payload) {
     : [];
   payload.end_dates = Array.isArray(payload.end_dates) ? payload.end_dates : [];
 
-  // 4) Ensure `ca_id` is a string if that’s what FastAPI expects
+  // 4) Ensure ca_id is a string if that’s what FastAPI expects
   if (payload.ca_id != null) {
     payload.ca_id = String(payload.ca_id);
   }
@@ -604,9 +604,9 @@ function preprocessPayload(payload) {
 }
 
 function generateReportIpc(tmpdir_path) {
-  const baseUrl = `http://localhost:7500`;
-  const generateReportEndpoint = `${baseUrl}/analyze-statements/`;
-  const editPdfEndpoint = `${baseUrl}/column-rectify-add-pdf/`;
+  const baseUrl = http://localhost:7500;
+  const generateReportEndpoint = ${baseUrl}/analyze-statements/;
+  const editPdfEndpoint = ${baseUrl}/column-rectify-add-pdf/;
   // const client = axios.create({ socketPath: udsPath, baseURL: 'http://unix' });
   // const payload = {
   //   bank_names: ["ICICI", "HDFC"],
@@ -616,7 +616,7 @@ function generateReportIpc(tmpdir_path) {
   //   end_date: ["2023-12-31", "2023-12-31"],
   //   ca_id: "DEFAULT_CASE",
   // };
-  // const client = new axios.Axios({ socketPath: `unix://${udsPath}`, baseURL: 'http://localhost' });
+  // const client = new axios.Axios({ socketPath: unix://${udsPath}, baseURL: 'http://localhost' });
   // console.log("Client : ", client);
   // client.post("/", 'test', {
   //   headers: { "Content-Type": "application/json" },
@@ -679,11 +679,11 @@ function generateReportIpc(tmpdir_path) {
       // Step 1: Save all uploaded files in the case folder
       const fileDetails = receivedResult.files.map((fileDetail, index) => {
         if (!fileDetail.pdf_paths || !fileDetail.bankName) {
-          throw new Error(`Missing required fields for file at index ${index}`);
+          throw new Error(Missing required fields for file at index ${index});
         }
 
         const originalFilename = fileDetail.pdf_paths;
-        const tempFilename = `${Date.now()}-${path.basename(originalFilename)}`;
+        const tempFilename = ${Date.now()}-${path.basename(originalFilename)};
         const filePath = path.join(caseFolder, tempFilename);
 
         allProcessedFiles.add(filePath);
@@ -692,13 +692,13 @@ function generateReportIpc(tmpdir_path) {
           bankName: fileDetail.bankName,
         });
 
-        console.log(`Saving file to ${filePath}`);
+        console.log(Saving file to ${filePath});
 
         if (fileDetail.fileContent) {
           fs.writeFileSync(filePath, fileDetail.fileContent, "binary");
           successfulFiles.add(filePath); // Initially assume success
         } else {
-          log.warn(`No file content for ${fileDetail.bankName}`);
+          log.warn(No file content for ${fileDetail.bankName});
           failedFiles.add(filePath);
         }
 
@@ -827,7 +827,7 @@ function generateReportIpc(tmpdir_path) {
           failedFiles.add(fileDetail.pdf_paths);
           successfulFiles.delete(fileDetail.pdf_paths);
           log.error(
-            `Error processing file detail for ${fileDetail.bankName}:`,
+            Error processing file detail for ${fileDetail.bankName}:,
             error
           );
         }
@@ -870,14 +870,14 @@ function generateReportIpc(tmpdir_path) {
         try {
           if (fs.existsSync(filePath)) {
             if (failedFiles.has(filePath)) {
-              log.info(`Failed PDF retained: ${filePath}`);
+              log.info(Failed PDF retained: ${filePath});
             } else if (successfulFiles.has(filePath)) {
               fs.unlinkSync(filePath);
-              log.info(`Successfully deleted processed file: ${filePath}`);
+              log.info(Successfully deleted processed file: ${filePath});
             }
           }
         } catch (error) {
-          log.error(`Error handling file ${filePath}:`, error);
+          log.error(Error handling file ${filePath}:, error);
         }
       }
 
@@ -1086,7 +1086,7 @@ function generateReportIpc(tmpdir_path) {
           // Track failed files
           failedFiles.push(fileDetail.pdf_paths);
           log.error(
-            `Error processing file detail for ${fileDetail.bankName}:`,
+            Error processing file detail for ${fileDetail.bankName}:,
             error
           );
           throw error;
@@ -1129,7 +1129,7 @@ function generateReportIpc(tmpdir_path) {
             fs.unlinkSync(detail.pdf_paths);
           }
         } catch (error) {
-          log.warn(`Failed to cleanup temp file: ${detail.pdf_paths}`, error);
+          log.warn(Failed to cleanup temp file: ${detail.pdf_paths}, error);
         }
       });
       await updateCaseStatus(caseId, "Success");

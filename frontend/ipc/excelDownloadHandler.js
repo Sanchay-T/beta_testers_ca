@@ -60,6 +60,7 @@ function registerExcelDownloadHandlers(downloadPath) {
                     .select({
                         "accountNumber": statements.accountNumber,
                         "customerName": statements.customerName,
+                        "bankName": statements.bankName
                     })
                     .from(statements)
                     .where(eq(statements.caseId, caseId));
@@ -114,8 +115,10 @@ function registerExcelDownloadHandlers(downloadPath) {
             const nameAndNumberData = statementsForCase.map(statement => ({
                 "Account Number": statement.accountNumber,
                 "Account Name": statement.customerName,
-                "Bank": statement.bank
+                "Bank": statement.bankName
             }));
+
+            log.info("Name and Number Data : ", nameAndNumberData.slice(0, 2));
 
 
             try {

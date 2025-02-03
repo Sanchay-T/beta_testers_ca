@@ -13,7 +13,10 @@ const EodBalance = ({ caseId }) => {
       try {
         console.log("Fetching EOD data for caseId:", caseId);
         const fetchData = await window.electron.getEodBalance(caseId);
-        
+        console.log("data", fetchData);
+        if(fetchData.length < 0){
+          throw error;
+        }
         // Parse the data if it's a string, otherwise use as is
         const parsedData = typeof fetchData[0].data === 'string' 
           ? JSON.parse(fetchData[0].data) 
@@ -40,7 +43,9 @@ const EodBalance = ({ caseId }) => {
           setSelectedColumns(numeric);
         }
       } catch (err) {
-        setError("Failed to fetch EOD data");
+        console.log("hj",err)
+        setEodData([])
+        // setError("Failed to fetch EOD data");
         console.error("Error fetching EOD data:", err);
         setEodData([]);
       }

@@ -1,0 +1,269 @@
+ca-offline-suite
+├── backend
+│   ├── local_model
+│   │   ├── config.json
+│   │   └── model.safetensors
+│   ├── tax_professional
+│   │   ├── banks
+│   │   │   ├── __init__.py
+│   │   │   └── CA_Statement_Analyzer.py
+│   │   └── __init__.py
+│   ├── main.py
+│   ├── requirements.txt
+│   ├── __init__.py
+│   ├── code_for_extraction.py
+│   ├── common_functions.py
+│   ├── Final_Category.xlsx
+│   ├── gather_info.py
+│   ├── old_bank_extractions.py
+│   ├── readme.md
+│   ├── test_endpoint.py
+│   ├── tree.py
+│   └── utils.py
+├── docs
+│   └── api-design.md
+├── frontend
+│   ├── assets
+│   │   ├── cyphersol-icon.png
+│   │   ├── cyphersol-logo-dark.png
+│   │   └── cyphersol-logo.png
+│   ├── config
+│   │   └── dbConfig.js
+│   ├── db
+│   │   ├── schema
+│   │   │   ├── Cases.js
+│   │   │   ├── Category.js
+│   │   │   ├── EOD.js
+│   │   │   ├── FailedStatements.js
+│   │   │   ├── Finance_Vouchers.js
+│   │   │   ├── OpportunityToEarn.js
+│   │   │   ├── Statement.js
+│   │   │   ├── Summary.js
+│   │   │   ├── Trade_Vouchers.js
+│   │   │   ├── Transactions.js
+│   │   │   └── User.js
+│   │   └── db.js
+│   ├── drizzle
+│   │   ├── meta
+│   │   │   ├── 0000_snapshot.json
+│   │   │   ├── 0001_snapshot.json
+│   │   │   ├── 0002_snapshot.json
+│   │   │   ├── 0003_snapshot.json
+│   │   │   ├── 0004_snapshot.json
+│   │   │   ├── 0005_snapshot.json
+│   │   │   ├── 0006_snapshot.json
+│   │   │   ├── 0007_snapshot.json
+│   │   │   ├── 0008_snapshot.json
+│   │   │   ├── 0009_snapshot.json
+│   │   │   ├── 0010_snapshot.json
+│   │   │   ├── 0011_snapshot.json
+│   │   │   ├── 0012_snapshot.json
+│   │   │   └── _journal.json
+│   │   ├── 0000_bitter_liz_osborn.sql
+│   │   ├── 0001_ambitious_reavers.sql
+│   │   ├── 0002_red_valkyrie.sql
+│   │   ├── 0003_slim_proteus.sql
+│   │   ├── 0004_overjoyed_groot.sql
+│   │   ├── 0005_naive_zaran.sql
+│   │   ├── 0006_tan_senator_kelly.sql
+│   │   ├── 0007_curved_boom_boom.sql
+│   │   ├── 0008_glamorous_justin_hammer.sql
+│   │   ├── 0009_awesome_umar.sql
+│   │   ├── 0010_first_azazel.sql
+│   │   ├── 0011_swift_bruce_banner.sql
+│   │   └── 0012_sad_quentin_quire.sql
+│   ├── ipc
+│   │   ├── authHandlers.js
+│   │   ├── caseDashboard.js
+│   │   ├── editCategory.js
+│   │   ├── fileHandler.js
+│   │   ├── generateReport.js
+│   │   ├── getData.js
+│   │   ├── individualDashboard.js
+│   │   ├── mainDashboard.js
+│   │   ├── opportunityToEarn.js
+│   │   └── reportHandlers.js
+│   ├── media
+│   │   └── vouchers
+│   │       ├── tallyerp
+│   │       │   ├── Ledgers Voucher Final.xlsm
+│   │       │   ├── Payment Voucher ERP.xlsm
+│   │       │   ├── Purchase Voucher.xlsm
+│   │       │   ├── Receipt Voucher ERP.xlsm
+│   │       │   └── Sale Voucher final.xlsm
+│   │       └── tallyprime
+│   │           ├── Ledgers Voucher Final.xlsm
+│   │           ├── Payment Voucher Final.xlsm
+│   │           ├── Purchase Voucher Final.xlsm
+│   │           ├── Receipt Voucher Final.xlsm
+│   │           └── Sale Voucher final.xlsm
+│   ├── react-app
+│   │   ├── hooks
+│   │   │   └── use-toast.js
+│   │   ├── lib
+│   │   │   └── utils.js
+│   │   ├── public
+│   │   │   ├── index.html
+│   │   │   ├── favicon.ico
+│   │   │   ├── logo192.png
+│   │   │   ├── logo512.png
+│   │   │   ├── manifest.json
+│   │   │   └── robots.txt
+│   │   ├── src
+│   │   │   ├── app
+│   │   │   │   ├── dashboard
+│   │   │   │   │   └── page.jsx
+│   │   │   │   └── login
+│   │   │   │       └── page.jsx
+│   │   │   ├── components
+│   │   │   │   ├── Authentication
+│   │   │   │   │   └── Login.js
+│   │   │   │   ├── CaseDashboardComponents
+│   │   │   │   │   ├── AccountNumNameManager.js
+│   │   │   │   │   ├── CombinedTable.js
+│   │   │   │   │   └── IndividualTable.js
+│   │   │   │   ├── charts
+│   │   │   │   │   ├── BarChart.js
+│   │   │   │   │   ├── BarLineChart.js
+│   │   │   │   │   ├── HorizontalBarChart.js
+│   │   │   │   │   ├── LineChart.js
+│   │   │   │   │   ├── PieCharts.js
+│   │   │   │   │   └── SuspensePieChart.js
+│   │   │   │   ├── Elements
+│   │   │   │   │   ├── chartComponent.jsx
+│   │   │   │   │   ├── Loader.jsx
+│   │   │   │   │   ├── RecentReportsTable.jsx
+│   │   │   │   │   ├── ReportForm.jsx
+│   │   │   │   │   ├── StatsCard.jsx
+│   │   │   │   │   └── timecard.jsx
+│   │   │   │   ├── ImortTally
+│   │   │   │   │   ├── TallyERP.js
+│   │   │   │   │   └── TallyPrime.js
+│   │   │   │   ├── IndividualDashboardComponents
+│   │   │   │   │   ├── Cash.js
+│   │   │   │   │   ├── Creditors.js
+│   │   │   │   │   ├── Debtors.js
+│   │   │   │   │   ├── EMI.js
+│   │   │   │   │   ├── EodBalance.js
+│   │   │   │   │   ├── ForeignTransactions.js
+│   │   │   │   │   ├── Investment.js
+│   │   │   │   │   ├── Reversal.js
+│   │   │   │   │   ├── Summary.js
+│   │   │   │   │   ├── Suspense.js
+│   │   │   │   │   ├── TableData.js
+│   │   │   │   │   ├── ToggleStrip.js
+│   │   │   │   │   └── Transactions.js
+│   │   │   │   ├── MainDashboardComponents
+│   │   │   │   │   ├── Analytics.js
+│   │   │   │   │   ├── Billing.js
+│   │   │   │   │   ├── CategoryEditModal.js
+│   │   │   │   │   ├── CategoryEditTable.js
+│   │   │   │   │   ├── Eligibility.js
+│   │   │   │   │   ├── GenerateReport.js
+│   │   │   │   │   ├── MainDashboard.js
+│   │   │   │   │   ├── PdfMarker.js
+│   │   │   │   │   ├── PdfMarkerModal.js
+│   │   │   │   │   ├── RecentReports.js
+│   │   │   │   │   ├── ReportForm.jsx
+│   │   │   │   │   ├── Table copy.js
+│   │   │   │   │   ├── Table.js
+│   │   │   │   │   └── TallyVoucher.js
+│   │   │   │   ├── ui
+│   │   │   │   │   ├── accordion.jsx
+│   │   │   │   │   ├── alert-dialog.jsx
+│   │   │   │   │   ├── alert.jsx
+│   │   │   │   │   ├── avatar.jsx
+│   │   │   │   │   ├── badge.jsx
+│   │   │   │   │   ├── breadcrumb.jsx
+│   │   │   │   │   ├── button.jsx
+│   │   │   │   │   ├── card.jsx
+│   │   │   │   │   ├── chart.jsx
+│   │   │   │   │   ├── checkbox.jsx
+│   │   │   │   │   ├── circularprogress.jsx
+│   │   │   │   │   ├── collapsible.jsx
+│   │   │   │   │   ├── dialog.jsx
+│   │   │   │   │   ├── dropdown-menu.jsx
+│   │   │   │   │   ├── input.jsx
+│   │   │   │   │   └── ...
+│   │   │   │   ├── app-sidebar.jsx
+│   │   │   │   ├── BreadCrumb.js
+│   │   │   │   ├── ElectronIntro.jsx
+│   │   │   │   ├── Header.js
+│   │   │   │   ├── login-form.jsx
+│   │   │   │   ├── nav-main.jsx
+│   │   │   │   ├── nav-projects.jsx
+│   │   │   │   ├── nav-user.jsx
+│   │   │   │   ├── PrivateRoute.js
+│   │   │   │   ├── Sidebar.js
+│   │   │   │   ├── team-switcher.jsx
+│   │   │   │   ├── theme-provider.jsx
+│   │   │   │   └── UpdateNotification.js
+│   │   │   ├── contexts
+│   │   │   │   ├── AuthContext.js
+│   │   │   │   └── BreadcrumbContext.js
+│   │   │   ├── data
+│   │   │   │   ├── assets
+│   │   │   │   │   ├── cyphersol-logo-dark.png
+│   │   │   │   │   ├── icon.png
+│   │   │   │   │   └── logo.png
+│   │   │   │   ├── ats_file.json
+│   │   │   │   ├── cases.json
+│   │   │   │   ├── cash_deposit.json
+│   │   │   │   ├── cash_withdrawal.json
+│   │   │   │   ├── Creditors.json
+│   │   │   │   ├── Debtors.json
+│   │   │   │   ├── emi.json
+│   │   │   │   ├── eod.json
+│   │   │   │   ├── investment.json
+│   │   │   │   ├── refund.json
+│   │   │   │   ├── sampleStats.jsx
+│   │   │   │   ├── summary.json
+│   │   │   │   ├── suspense_credit.json
+│   │   │   │   ├── suspense_debit.json
+│   │   │   │   └── Transaction.json
+│   │   │   ├── hooks
+│   │   │   │   ├── use-mobile.jsx
+│   │   │   │   ├── use-toast.js
+│   │   │   │   ├── useRedirectAuth.js
+│   │   │   │   └── useRequireAuth.js
+│   │   │   ├── lib
+│   │   │   │   └── utils.js
+│   │   │   ├── Pages
+│   │   │   │   ├── CaseDashboard.js
+│   │   │   │   ├── Home.js
+│   │   │   │   └── IndividualDashboard.js
+│   │   │   ├── index.js
+│   │   │   ├── App.css
+│   │   │   ├── App.js
+│   │   │   ├── index.css
+│   │   │   ├── logo.svg
+│   │   │   ├── reportWebVitals.js
+│   │   │   └── setupTests.js
+│   │   ├── next.config.js
+│   │   ├── package.json
+│   │   ├── README.md
+│   │   ├── components.json
+│   │   ├── jsconfig.json
+│   │   ├── package-lock.json
+│   │   └── tailwind.config.js
+│   ├── tmp
+│   ├── main.js
+│   ├── package.json
+│   ├── README.md
+│   ├── db.sqlite3
+│   ├── drizzle.config.js
+│   ├── LicenseManager.js
+│   ├── package-lock.json
+│   ├── preload.js
+│   ├── renderer.js
+│   └── SessionManager.js
+├── local_model
+│   ├── config.json
+│   └── model.safetensors
+├── README.md
+├── main.spec
+├── narpat.pdf
+├── new_output.json
+├── postbuild.py
+├── test.js
+└── tree.py

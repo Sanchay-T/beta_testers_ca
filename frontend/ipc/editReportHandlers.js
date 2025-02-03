@@ -388,6 +388,7 @@ function registerEditReportHandlers() {
 
             const sanitizedJsonString = sanitizeJSONString(response.data);
             parsedData = JSON.parse(sanitizedJsonString);
+            // log.info("API response:", parsedData['Important Expenses']);
 
             try {
                 await processSummaryData(

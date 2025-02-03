@@ -9,6 +9,7 @@ The Root folder contains 2 main folders which are of interest.
 1. Backend - contains FashApi code
 2. Frontend - contains React app and a Electron folder which contains Electron app
 
+npx drizzle-kit migrate
 
 ```bash
 # Backend setup

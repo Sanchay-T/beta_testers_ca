@@ -119,10 +119,10 @@ const MainDashboard = () => {
         <div className="flex justify-between items-center">
           <div>
             <h2 className="text-3xl font-bold tracking-tight dark:text-slate-300">
-              Sanchay
+              Cyphersol
             </h2>
             <p className="text-muted-foreground">
-              Overview of Sanchay the great
+            Analytics Dashboard : 1.0.1-alpha , the update has been successfull
             </p>
           </div>
           <div className="flex items-center space-x-4">

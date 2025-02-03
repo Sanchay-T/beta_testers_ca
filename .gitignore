@@ -165,3 +165,7 @@ local_settings.py
 build/
 /backend/local_model/
 new_ouptut.json
+
+local_model
+frontend/dist/
+backend/models/local_model

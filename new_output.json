@@ -246,6 +246,7 @@
             "Sep-2024": 0.0,
             "Oct-2024": 0.0,
             "Total": 0.0
+>>>>>>> 55d558f4f04a9e315474b0d1a9d46ccf593114be
         }
     ],
     "Important Expenses": [
@@ -626,7 +627,8 @@
             "Total": 0.0
         }
     ],
-    "Opportunity to Earn": [
+    "Opportunity to Earn": [],
+    "Transactions": [
         {
             "Product": "Home Loan / Balance Transfer",
             "Amount": 27807000.0,
@@ -646,19 +648,25 @@
             "Commission (in Rs)": 63300.0
         },
         {
-            "Product": "Term Plan",
-            "Amount": NaN,
-            "Commission %": "1%-30%",
-            "Commission (in Rs)": NaN
+            "Value Date": "04-01-2025",
+            "Description": "bytransfer-neft*utib0001506*axnpn00407467903*phonepeprivate-",
+            "Debit": NaN,
+            "Credit": 3461.74,
+            "Balance": 3761.67,
+            "Category": "Debtor",
+            "Entity": "Cash Deposits",
+            "Bank": "state bank of india"
         },
         {
-            "Product": "General Insurance",
-            "Amount": NaN,
-            "Commission %": "upto 10%",
-            "Commission (in Rs)": NaN
-        }
-    ],
-    "Transactions": [
+            "Value Date": "07-01-2025",
+            "Description": "totransfer-inbneftutrno:sbin125007490812-itgurussoftware",
+            "Debit": 767.0,
+            "Credit": NaN,
+            "Balance": 2994.67,
+            "Category": "Creditor",
+            "Entity": "utrno",
+            "Bank": "state bank of india"
+        },
         {
             "Value Date": "01-04-2024",
             "Description": "openingbalance",
@@ -3836,7 +3844,7 @@
             "Date": "05-06-2024",
             "Effective Date": "",
             "Bill Ref": "-",
-            "Dr Ledger": "Creditor",
+            "Dr Ledger": "Bounce",
             "Cr Ledger": "",
             "Amount": 20000.0,
             "Voucher Type": "Payment",
@@ -5503,7 +5511,7 @@
         {
             "Date": "06-04-2024",
             "Effective Date": "",
-            "Cr Ledger": "Suspense",
+            "Cr Ledger": "Debtor",
             "Dr Ledger": "",
             "Amount": 139000.0,
             "Narration": "ftfromindusindaccount/g4plj8ln8o4i/253888272819"
@@ -5511,7 +5519,7 @@
         {
             "Date": "07-04-2024",
             "Effective Date": "",
-            "Cr Ledger": "Suspense",
+            "Cr Ledger": "Debtor",
             "Dr Ledger": "",
             "Amount": 35000.0,
             "Narration": "ftfromindusindaccount/p4eqmzivzyvf/253888272819"
@@ -5535,7 +5543,7 @@
         {
             "Date": "30-06-2024",
             "Effective Date": "",
-            "Cr Ledger": "Bank Interest Received",
+            "Cr Ledger": "Debtor",
             "Dr Ledger": "",
             "Amount": 6704.0,
             "Narration": "153888272819:int.pd:01-04-2024to30-06-2024"
@@ -5599,7 +5607,7 @@
         {
             "Date": "30-09-2024",
             "Effective Date": "",
-            "Cr Ledger": "Bank Interest Received",
+            "Cr Ledger": "Cash Deposits",
             "Dr Ledger": "",
             "Amount": 2960.0,
             "Narration": "153888272819:int.pd:01-07-2024to30-09-2024"
