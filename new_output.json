@@ -349,8 +349,8 @@
             "Dec-2022": 0.0,
             "Jan-2023": 0.0,
             "Feb-2023": 0.0,
-            "Mar-2023": 0.0,
-            "Total": 0.0
+            "Mar-2023": 481.0,
+            "Total": 481.0
         }
     ],
     "Important Expenses": [
@@ -1056,11 +1056,11 @@
         },
         {
             "Value Date": "31-03-2023",
-            "Description": "916010029755238:int.pd:01-01-2023to31-03-2023transactiontotalclosingbalance",
+            "Description": "916010029755238:int.pd:01-01-2023to31-03-2023transactiontotalclosingbalanceifiesthebankimmediatelyofanydiscrepancyfounduntcorrect.own/displayedincludesnotonlythecreditbalanceakedaslien,ifany.hencetheclosingbalancedisplayactthebranch.that,asapolicy,axisbankdoesnotaskyoutoparhemailsorphonecallfurther,wewouldliketoreitngofyourloginid,passwordanddebitcardnumberfreceivedbyyou,tocustomer.service@axisbank.coust2016,thereplacementchargesfordebitcardandlicablecharges,pleasevisitwww.axisbank.comeditguaranteecorporation(dicgc)insurancecovmaximumamountofrs5lakhincludingprincipalatoryguidelines,thenon-ctschequebooksattachedhequeswillnotbevalidforcash,clearingandtraxisbankltd,trishul,opp.samartheswareneratedoutputandrequiresnosignature.xisbankltd,churchgate,mumbai[maroad,oppk.ccollegechurchgate,9hinternetbankingtransferthroughinternetbankingolinkedfixeddepositlinkedfixeddepositmlinkedfixeddeposit/accounterthroughatmthroughatmsageofdebitcardatpumps/railwayticketpurchaseratesonusageofcardinternationallyansactionroughedcmachinecfundtransferthroughaxisbankomerfromthecustomer++++endofstatemrequestfrom:192.16",
             "Debit": NaN,
             "Credit": 481.0,
             "Balance": 65550.87,
-            "Category": "Closing Balance",
+            "Category": "UPI-Cr",
             "Entity": "",
             "Bank": "axis bank"
         },
@@ -1629,10 +1629,10 @@
             "Effective Date": "",
             "Bill Ref": "-",
             "Dr Ledger": "",
-            "Cr Ledger": "Closing Balance",
+            "Cr Ledger": "UPI-Cr",
             "Amount": 481.0,
             "Voucher Type": "Receipt",
-            "Narration": "916010029755238:int.pd:01-01-2023to31-03-2023transactiontotalclosingbalance"
+            "Narration": "916010029755238:int.pd:01-01-2023to31-03-2023transactiontotalclosingbalanceifiesthebankimmediatelyofanydiscrepancyfounduntcorrect.own/displayedincludesnotonlythecreditbalanceakedaslien,ifany.hencetheclosingbalancedisplayactthebranch.that,asapolicy,axisbankdoesnotaskyoutoparhemailsorphonecallfurther,wewouldliketoreitngofyourloginid,passwordanddebitcardnumberfreceivedbyyou,tocustomer.service@axisbank.coust2016,thereplacementchargesfordebitcardandlicablecharges,pleasevisitwww.axisbank.comeditguaranteecorporation(dicgc)insurancecovmaximumamountofrs5lakhincludingprincipalatoryguidelines,thenon-ctschequebooksattachedhequeswillnotbevalidforcash,clearingandtraxisbankltd,trishul,opp.samartheswareneratedoutputandrequiresnosignature.xisbankltd,churchgate,mumbai[maroad,oppk.ccollegechurchgate,9hinternetbankingtransferthroughinternetbankingolinkedfixeddepositlinkedfixeddepositmlinkedfixeddeposit/accounterthroughatmthroughatmsageofdebitcardatpumps/railwayticketpurchaseratesonusageofcardinternationallyansactionroughedcmachinecfundtransferthroughaxisbankomerfromthecustomer++++endofstatemrequestfrom:192.16"
         },
         {
             "Date": "31-03-2023",
@@ -1771,10 +1771,10 @@
         {
             "Date": "31-03-2023",
             "Effective Date": "",
-            "Cr Ledger": "Closing Balance",
+            "Cr Ledger": "UPI-Cr",
             "Dr Ledger": "",
             "Amount": 481.0,
-            "Narration": "916010029755238:int.pd:01-01-2023to31-03-2023transactiontotalclosingbalance"
+            "Narration": "916010029755238:int.pd:01-01-2023to31-03-2023transactiontotalclosingbalanceifiesthebankimmediatelyofanydiscrepancyfounduntcorrect.own/displayedincludesnotonlythecreditbalanceakedaslien,ifany.hencetheclosingbalancedisplayactthebranch.that,asapolicy,axisbankdoesnotaskyoutoparhemailsorphonecallfurther,wewouldliketoreitngofyourloginid,passwordanddebitcardnumberfreceivedbyyou,tocustomer.service@axisbank.coust2016,thereplacementchargesfordebitcardandlicablecharges,pleasevisitwww.axisbank.comeditguaranteecorporation(dicgc)insurancecovmaximumamountofrs5lakhincludingprincipalatoryguidelines,thenon-ctschequebooksattachedhequeswillnotbevalidforcash,clearingandtraxisbankltd,trishul,opp.samartheswareneratedoutputandrequiresnosignature.xisbankltd,churchgate,mumbai[maroad,oppk.ccollegechurchgate,9hinternetbankingtransferthroughinternetbankingolinkedfixeddepositlinkedfixeddepositmlinkedfixeddeposit/accounterthroughatmthroughatmsageofdebitcardatpumps/railwayticketpurchaseratesonusageofcardinternationallyansactionroughedcmachinecfundtransferthroughaxisbankomerfromthecustomer++++endofstatemrequestfrom:192.16"
         },
         {
             "Date": "31-03-2023",

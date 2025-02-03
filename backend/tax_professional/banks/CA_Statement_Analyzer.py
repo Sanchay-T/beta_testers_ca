@@ -14,9 +14,10 @@ pd.set_option("display.max_rows", None)
 pd.set_option("display.width", None)
 BASE_DIR = os.path.dirname(os.path.abspath(os.path.join(__file__, "../../../")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
-from ...utils import get_saved_pdf_dir
+from ...utils import get_saved_pdf_dir, get_saved_excel_dir
 # from findaddy.exceptions import ExtractionError
 TEMP_SAVED_PDF_DIR = get_saved_pdf_dir()
+TEMP_SAVED_EXCEL_DIR = get_saved_excel_dir()
 
 from ...common_functions import (process_excel_to_json,process_name_n_num_df,category_add_ca,
                               another_method,Upi,eod,opening_and_closing_bal,summary_sheet,
@@ -66,11 +67,8 @@ def save_to_excel(df, name_n_num_df, account_number):
     bank_avg_balance_df = calculate_fixed_day_average(eod_sheet_df)
     loan_value_df = process_avg_last_6_months(bank_avg_balance_df, eod_sheet_df)
     
-    os.makedirs(os.path.join(TEMP_SAVED_PDF_DIR, "saved_excel"), exist_ok=True)    
-    filename = os.path.join(TEMP_SAVED_PDF_DIR,
-        "saved_excel",
-        f"Bank_{account_number}_Extracted_statements_file.xlsx",
-    )
+    os.makedirs(TEMP_SAVED_EXCEL_DIR, exist_ok=True)    
+    filename = os.path.join(TEMP_SAVED_EXCEL_DIR, f"Bank_{account_number}_Extracted_statements_file.xlsx")
 
     writer = pd.ExcelWriter(filename, engine="xlsxwriter")
 

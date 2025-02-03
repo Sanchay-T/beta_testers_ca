@@ -9,6 +9,14 @@ def get_saved_pdf_dir():
     return TEMP_SAVED_PDF_DIR
 
 
+
+def get_saved_excel_dir():
+
+    TEMP_SAVED_EXCEL_DIR = os.path.join(tempfile.gettempdir(), "saved_excel")
+
+    return TEMP_SAVED_EXCEL_DIR
+    
+
 def get_base_dir():
     """
     Determine the base directory of the application.
