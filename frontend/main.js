@@ -127,7 +127,7 @@ autoUpdater.on('error', (err) => {
 
 log.info("Working Directory:", process.cwd());
 
-const BASE_DIR = isDev ? __dirname : app.getPath("module");
+const BASE_DIR = isDev ? __dirname : process.resourcesPath;
 log.info("current directory", app.getAppPath());
 log.info("BASE_DIR", BASE_DIR);
 log.info("__dirname", __dirname);
