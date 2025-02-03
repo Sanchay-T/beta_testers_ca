@@ -125,7 +125,7 @@ export default function GenerateReport() {
           duration: 3000,
         });
         if (result.data.failedFiles.length > 0) {
-          setShowRectifyButton(true);
+          // setShowRectifyButton(true);
           const failedFiles = result.data.failedFiles.map((file_path) => {
             return file_path.split("\\").pop();
           });
@@ -263,7 +263,8 @@ export default function GenerateReport() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Report Generated Successfully!</DialogTitle>
+          {failedStatements.length === 0 ? <DialogTitle>Alert</DialogTitle>:
+            <DialogTitle>Report Generated Successfully!</DialogTitle>}
             <DialogDescription className="flex items-end gap-x-4 pt-4 ">
               {console.log(
                 "failedStatements from alert box ",

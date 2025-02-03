@@ -29,7 +29,9 @@ import {
   Edit2,
   X,
   CheckCircle,
-  Loader2, AlertTriangle, XCircle
+  Loader2,
+  AlertTriangle,
+  XCircle,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -63,7 +65,7 @@ import {
 
 import PDFMarkerModal from "./PdfMarkerModal";
 
-const RecentReportsComp = ({key,onReportGenerated}) => {
+const RecentReports = ({ key }) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -88,7 +90,6 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
   const [showRectifyButton, setShowRectifyButton] = useState(false); // State to show Rectify button
   const [failedStatements, setFailedStatements] = useState([]); // State to store failed statements
   const [dialogOpen, setDialogOpen] = useState(false); // State to control Dialog visibility
-  
 
   const handleSubmitEditPdf = async () => {
     setPdfEditLoading(true);
@@ -105,20 +106,19 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
       console.log("result", result);
 
       if (result.success) {
-      toast({
-        title: "Success",
-        description: "All statements have been rectified.",
-        variant: "success",
-        className: "bg-white text-black opacity-100 shadow-lg",
-      });
-      setPdfEditLoading(false);
-    } else {
+        toast({
+          title: "Success",
+          description: "All statements have been rectified.",
+          variant: "success",
+          className: "bg-white text-black opacity-100 shadow-lg",
+        });
+      } else {
         // If the rectification failed, show error message and reasons
         const unrectifiedStatements = failedDatasOfCurrentReport.filter(
           (statement) => statement.respectiveReasonsForError
         );
 
-      toast({
+        toast({
           title: "Rectification Failed",
           description: (
             <div>
@@ -135,7 +135,7 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
               </ul>
             </div>
           ),
-        variant: "destructive",
+          variant: "destructive",
           duration: 6000,
         });
       }
@@ -148,7 +148,7 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
         duration: 5000,
       });
     }
-      setPdfEditLoading(false);
+    setPdfEditLoading(false);
   };
 
   const handleRectify = () => {
@@ -200,6 +200,7 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
       }
     };
 
+    console.log({ setShowRectifyButton, setFailedStatements, setDialogOpen });
 
     fetchReports();
   }, []);
@@ -432,167 +433,164 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
   //   }
   // };
 
-
-  const handleAddPdfSubmit =  async (
-      setProgress,
-      setLoading,
-      setToastId,
-      selectedFiles,
-      fileDetails,
-      setSelectedFiles,
-      setFileDetails,
-      toast,
-      progressIntervalRef,
-      simulateProgress,
-      convertDateFormat,
-      caseName
-    ) => {
-      if (caseName === "") {
-        toast({
-          title: "Error",
-          description: "Please enter a Case Name",
-          variant: "destructive",
-          duration: 3000,
-        });
-        return;
-      }
-      setCurrentCaseName(caseName);
-  
-      if (selectedFiles.length === 0) {
-        toast({
-          title: "Error",
-          description: "Please select at least one file",
-          variant: "destructive",
-          duration: 3000,
-        });
-        return;
-      }
-  
-      setLoading(true);
-      const newToastId = toast({
-        title: "Initializing Report Generation",
-        description: (
-          <div className="mt-2 w-full flex items-center gap-2">
-            <div className="flex items-center gap-4">
-              <CircularProgress className="w-full" />
-            </div>
-            <p className="text-sm text-gray-500">Preparing to process files...</p>
-          </div>
-        ),
-        duration: Infinity,
+  const handleAddPdfSubmit = async (
+    setProgress,
+    setLoading,
+    setToastId,
+    selectedFiles,
+    fileDetails,
+    setSelectedFiles,
+    setFileDetails,
+    toast,
+    progressIntervalRef,
+    simulateProgress,
+    convertDateFormat,
+    caseName
+  ) => {
+    if (caseName === "") {
+      toast({
+        title: "Error",
+        description: "Please enter a Case Name",
+        variant: "destructive",
+        duration: 3000,
       });
-      setToastId(newToastId);
-  
-      progressIntervalRef.current = simulateProgress();
-  
-      try {
-        const filesWithContent = await Promise.all(
-          selectedFiles.map(async (file, index) => {
-            const fileContent = await new Promise((resolve, reject) => {
-              const reader = new FileReader();
-              reader.onload = () => resolve(reader.result);
-              reader.onerror = reject;
-              reader.readAsBinaryString(file);
-            });
-  
-            const detail = fileDetails[index];
-  
-            return {
-              fileContent,
-              pdf_paths: file.name,
-              bankName: detail.bankName,
-              passwords: detail.password || "",
-              start_date: convertDateFormat(detail.start_date), // Convert date format
-              end_date: convertDateFormat(detail.end_date), // Convert date format
-              ca_id: currentCaseId,
-            };
-          })
-        );
-  
-        console.log({ caseName, filesWithContent });
-  
-        console.log({ caseName, filesWithContent });
-  
-        const result = await window.electron.generateReportIpc(
-          {
-            files: filesWithContent,
-          },
-          caseName,
-          "add-pdf"
-        );
-  
-        console.log("Report generation result:", result.data);
-        setCurrentCaseId(result.data.caseId); // Store caseId
-  
-        if (result.success) {
-          clearInterval(progressIntervalRef.current);
-          setProgress(100);
-          toast.dismiss(newToastId);
-          toast({
-            title: "Success",
-            description: "Report generated successfully!",
-            duration: 3000,
+      return;
+    }
+    setCurrentCaseName(caseName);
+
+    if (selectedFiles.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please select at least one file",
+        variant: "destructive",
+        duration: 3000,
+      });
+      return;
+    }
+
+    setLoading(true);
+    const newToastId = toast({
+      title: "Initializing Report Generation",
+      description: (
+        <div className="mt-2 w-full flex items-center gap-2">
+          <div className="flex items-center gap-4">
+            <CircularProgress className="w-full" />
+          </div>
+          <p className="text-sm text-gray-500">Preparing to process files...</p>
+        </div>
+      ),
+      duration: Infinity,
+    });
+    setToastId(newToastId);
+
+    progressIntervalRef.current = simulateProgress();
+
+    try {
+      const filesWithContent = await Promise.all(
+        selectedFiles.map(async (file, index) => {
+          const fileContent = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsBinaryString(file);
           });
-          if (result.data.failedFiles.length > 0) {
-            setShowRectifyButton(true);
-            const failedFiles = result.data.failedFiles.map((file_path) => {
-              return file_path.split("\\").pop();
-            });
-            setFailedStatements(failedFiles || []); // Store failed
-          }
-  
-          if (result.data.totalTransactions) setShowAnalysisButton(true);
-  
-          // setFailedStatements(result.pdf_paths_not_extracted || []); // Store failed
-  
-          setDialogOpen(true); // Open the Dialog
-  
-          setSelectedFiles([]);
-          setFileDetails([]);
-  
-          // Trigger a page refresh
-        } else {
-          const errorMessage = result.error
-            ? typeof result.error === "object"
-              ? JSON.stringify(result.error, null, 2)
-              : result.error
-            : "Unknown error occurred";
-  
-          throw new Error(errorMessage);
-        }
-      } catch (error) {
-        console.log("Report generation failed:", { error: error.stack });
-  
-        if (typeof error === "object" && error !== null) {
-          console.error("Detailed error:", JSON.stringify(error, null, 2));
-        }
-  
-        if (error && error.message) {
-          console.error("Error message:", error.message);
-        }
-  
-        if (error && error.stack) {
-          console.error("Error stack trace:", error.stack);
-        }
-  
+
+          const detail = fileDetails[index];
+
+          return {
+            fileContent,
+            pdf_paths: file.name,
+            bankName: detail.bankName,
+            passwords: detail.password || "",
+            start_date: convertDateFormat(detail.start_date), // Convert date format
+            end_date: convertDateFormat(detail.end_date), // Convert date format
+            ca_id: currentCaseId,
+          };
+        })
+      );
+
+      console.log({ caseName, filesWithContent });
+
+      console.log({ caseName, filesWithContent });
+
+      const result = await window.electron.generateReportIpc(
+        {
+          files: filesWithContent,
+        },
+        caseName
+      );
+
+      console.log("Report generation result:", result.data);
+      setCurrentCaseId(result.data.caseId); // Store caseId
+
+      if (result.success) {
         clearInterval(progressIntervalRef.current);
+        setProgress(100);
         toast.dismiss(newToastId);
-        setProgress(0);
-        if(showAnalsisButton || showRectifyButton) {
-          setDialogOpen(true);
-        }
         toast({
-          title: "Error",
-          description: showRectifyButton?"Some Statement/s failed, please check rectify them.":"Failed to add report",
-          variant: "destructive",
-          duration: 5000,
+          title: "Success",
+          description: "Report generated successfully!",
+          duration: 3000,
         });
-      } finally {
-        setLoading(false);
-        progressIntervalRef.current = null;
-        setIsAddPdfModalOpen(false);
+        if (result.data.failedFiles.length > 0) {
+          setShowRectifyButton(true);
+          const failedFiles = result.data.failedFiles.map((file_path) => {
+            return file_path.split("\\").pop();
+          });
+          setFailedStatements(failedFiles || []); // Store failed
+        }
+
+        if (result.data.totalTransactions) setShowAnalysisButton(true);
+
+        // setFailedStatements(result.pdf_paths_not_extracted || []); // Store failed
+
+        setDialogOpen(true); // Open the Dialog
+
+        setSelectedFiles([]);
+        setFileDetails([]);
+
+        // Trigger a page refresh
+      } else {
+        const errorMessage = result.error
+          ? typeof result.error === "object"
+            ? JSON.stringify(result.error, null, 2)
+            : result.error
+          : "Unknown error occurred";
+
+        throw new Error(errorMessage);
       }
-    };
+    } catch (error) {
+      console.log("Report generation failed:", { error: error.stack });
+
+      if (typeof error === "object" && error !== null) {
+        console.error("Detailed error:", JSON.stringify(error, null, 2));
+      }
+
+      if (error && error.message) {
+        console.error("Error message:", error.message);
+      }
+
+      if (error && error.stack) {
+        console.error("Error stack trace:", error.stack);
+      }
+
+      clearInterval(progressIntervalRef.current);
+      toast.dismiss(newToastId);
+      setProgress(0);
+      if (showAnalsisButton || showRectifyButton) {
+        setDialogOpen(true);
+      }
+      toast({
+        title: "Error",
+        description: "Failed to generate report",
+        variant: "destructive",
+        duration: 5000,
+      });
+    } finally {
+      setLoading(false);
+      progressIntervalRef.current = null;
+    }
+  };
   const toggleEdit = (id) => {
     setIsCategoryEditOpen(!isCategoryEditOpen);
     setCurrentCaseId(id);
@@ -643,7 +641,7 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
           try {
             const parsedData = JSON.parse(item.data);
             // console.log("Parsed failed statement data:", parsedData);
-            if(parsedData.paths.length===0) return null;
+            if (parsedData.paths.length === 0) return null;
 
             return {
               ...item,
@@ -686,7 +684,7 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
 
       // Extract first valid failed statement (assuming one caseId per report)
       const firstFailedEntry = processedFailedData[0];
-      console.log({processedFailedData,firstFailedEntry})
+      console.log({ processedFailedData, firstFailedEntry });
       if (!firstFailedEntry?.parsedContent?.paths?.length) {
         console.warn("No valid failed PDF paths found.");
         setFailedDatasOfCurrentReport([]);
@@ -908,19 +906,19 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
                                         {/* Only show button if there's no error and the statement isn't done */}
                                         {!hasError && (
                                           <>
-                                        {isDone ? (
-                                          <Button
-                                            size="sm"
-                                            disabled
-                                            className="flex-1 bg-green-600 hover:bg-green-700 text-white transition-colors"
-                                          >
-                                            <CheckCircle className="w-4 h-4 mr-2" />
-                                            Done
-                                          </Button>
-                                        ) : (
-                                          <Button
-                                            variant="secondary"
-                                            size="sm"
+                                            {isDone ? (
+                                              <Button
+                                                size="sm"
+                                                disabled
+                                                className="flex-1 bg-green-600 hover:bg-green-700 text-white transition-colors"
+                                              >
+                                                <CheckCircle className="w-4 h-4 mr-2" />
+                                                Done
+                                              </Button>
+                                            ) : (
+                                              <Button
+                                                variant="secondary"
+                                                size="sm"
                                                 disabled={
                                                   report.status === "Success"
                                                 }
@@ -929,20 +927,20 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
                                                     ? "bg-green-600 hover:bg-green-700 text-white"
                                                     : "flex-1 hover:bg-primary hover:text-primary-foreground transition-colors"
                                                 }`}
-                                            onClick={() => {
-                                              setIsMarkerModalOpen(true);
+                                                onClick={() => {
+                                                  setIsMarkerModalOpen(true);
                                                   setSelectedFailedFile(
                                                     statement
                                                   );
-                                            }}
-                                          >
+                                                }}
+                                              >
                                                 {report.status === "Success" ? (
                                                   <CheckCircle className="w-4 h-4 mr-2" />
                                                 ) : (
                                                   ""
                                                 )}
-                                            Rectify
-                                          </Button>
+                                                Rectify
+                                              </Button>
                                             )}
                                           </>
                                         )}
@@ -979,21 +977,21 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
                                 {report.status === "Success" ? (
                                   ""
                                 ) : (
-                                <Button
-                                  type="submit"
-                                  disabled={pdfEditLoading}
-                                  onClick={handleSubmitEditPdf}
-                                  className="relative inline-flex items-center px-4 py-2"
-                                >
-                                  {pdfEditLoading ? (
-                                    <>
-                                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                      <span>Processing...</span>
-                                    </>
-                                  ) : (
-                                    "Submit"
-                                  )}
-                                </Button>
+                                  <Button
+                                    type="submit"
+                                    disabled={pdfEditLoading}
+                                    onClick={handleSubmitEditPdf}
+                                    className="relative inline-flex items-center px-4 py-2"
+                                  >
+                                    {pdfEditLoading ? (
+                                      <>
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        <span>Processing...</span>
+                                      </>
+                                    ) : (
+                                      "Submit"
+                                    )}
+                                  </Button>
                                 )}
                               </div>
                             )}
@@ -1084,7 +1082,7 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
         </div>
       )}
 
-<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Report Generated Successfully!</DialogTitle>
@@ -1136,4 +1134,4 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
   );
 };
 
-export default RecentReportsComp;
+export default RecentReports;

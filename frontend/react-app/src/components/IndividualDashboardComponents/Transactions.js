@@ -116,18 +116,17 @@ const Transactions = () => {
   }, []);
 
   useEffect(() => {
-    console.log({ fromTransactionsTab: individualId });
   }, [individualId]);
 
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
-        console.log("Fetching transactions for statementId:", caseId);
 
         // Add this line to debug the electron call
-        console.log("Before electron call");
-        const data = await window.electron.getTransactions(caseId);
-        console.log("After electron call, received data:", data);
+        const data = await  window.electron.getTransactions(
+          caseId,
+          parseInt(individualId)
+        );
 
         // Transform the data to only include required fields
         const formattedData = data.map((transaction) => ({
@@ -177,7 +176,9 @@ const Transactions = () => {
         bank: transaction.bank,
         // entity: transaction.entity,
         type: transaction.type,
+        id:transaction.id
       };
+
 
       acc[monthKey].push(standardizedTransaction);
       return acc;
@@ -205,6 +206,7 @@ const Transactions = () => {
       balance: transaction.balance,
       category: transaction.category,
       bank: transaction.bank,
+      id:transaction.id
       // entity: transaction.entity,
     }));
   };
@@ -253,7 +255,8 @@ const Transactions = () => {
     if (selectedMonths.length === 0) {
       setSelectedMonths(availableMonthstemp);
     }
-  }, [monthsData]);
+
+  }, [monthsData,]);
 
   const filteredData = selectedMonths
     .flatMap((month) => {
@@ -261,6 +264,7 @@ const Transactions = () => {
       return Object.values(dailyData);
     })
     .sort((a, b) => new Date(a.date) - new Date(b.date));
+
 
   const creditVsdebit = selectedMonths
     .flatMap((month) => {
@@ -307,7 +311,7 @@ const Transactions = () => {
             </div>
           ) : (
             <>
-              <div className="flex flex-wrap -mx-2">
+              {/* <div className="flex flex-wrap -mx-2">
                 <MaximizableChart
                   title="Daily Balance Trend"
                   isMaximized={isDailyBalanceMaximized}
@@ -363,13 +367,13 @@ const Transactions = () => {
                     />
                   </div>
                 </MaximizableChart>
-              </div>
+              </div> */}
 
               <CategoryEditTable
                 data={filteredData}
                 categoryOptions={categoryOptions}
                 setCategoryOptions={setCategoryOptions}
-                caseId={caseId}
+                caseId={parseInt(caseId)}
               />
             </>
           )}

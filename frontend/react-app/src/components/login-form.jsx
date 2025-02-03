@@ -20,9 +20,9 @@ export function LoginForm({ className, ...props }) {
   const location = useLocation();
   // const [needsLicense, setNeedsLicense] = useState(true);
   const [credentials, setCredentials] = useState({
-    email: "2-32e6d741",
-    password: "rajaa",
-    licenseKey: "SOMEX4Y4ZLicenseKEYForCAOffline",
+    email: "3-e413eeb0",
+    password: "123",
+    licenseKey: "SOMEX4Y4ZLicenseKEYForAiyaz",
   });
 
   // useEffect(() => {

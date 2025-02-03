@@ -54,6 +54,8 @@ function registerIndividualDashboardIpc() {
           })
           .from(transactions)
           .where(and(eq(transactions.statementId, individualId.toString())));
+        
+        log.info({allTransactions:allTransactions.length})
         return allTransactions;
       } else {
         const allStatements = await db

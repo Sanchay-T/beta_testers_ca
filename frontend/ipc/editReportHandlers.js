@@ -337,7 +337,6 @@ function registerEditReportHandlers() {
         });
 
         log.info("Updated transactions:", updatedTransactions.slice(0, 5));
-        log.info("aiyaz:", aiyaz);
         log.info("Updated transactions:", updatedTransactions[aiyaz]);
 
 

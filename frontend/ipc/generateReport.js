@@ -725,7 +725,7 @@ function generateReportIpc(tmpdir_path) {
 
       const response = await axios.post(generateReportEndpoint, payload, {
         headers: { "Content-Type": "application/json" },
-        timeout: 300000,
+        // timeout: 300000,
         validateStatus: (status) => status === 200,
       });
 
@@ -977,9 +977,11 @@ function generateReportIpc(tmpdir_path) {
       log.info("editPdfEndpoint: ", editPdfEndpoint);
       const response = await axios.post(editPdfEndpoint, finalPayload, {
         headers: { "Content-Type": "application/json" },
-        timeout: 300000,
+        // timeout: 300000,
         validateStatus: (status) => status === 200,
       });
+
+      log.info("Response from fastapi: ", response.data);
 
       let failedPdfPaths = [];
 
