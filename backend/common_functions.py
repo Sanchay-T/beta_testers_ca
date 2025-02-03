@@ -4061,6 +4061,25 @@ def color_summary_sheet( filename):
     # Load the workbook
     wb = openpyxl.load_workbook(filename)
     ws = wb["Summary"]  # Access the "Summary" sheet
+
+    # Initialize row variables
+    row_6 = row_12 = row_30 = row_49 = row_66 = None
+
+    # Search for the target words in the sheet
+    for row in ws.iter_rows(min_row=1, max_row=ws.max_row):
+        for cell in row:
+            if cell.value and isinstance(cell.value, str):
+                if "Particulars" in cell.value:
+                    row_6 = cell.row
+                elif "Income / Receipts" in cell.value:
+                    row_12 = cell.row
+                elif "Important Expenses / Payments" in cell.value:
+                    row_30 = cell.row
+                elif "Other Expenses / Payments" in cell.value:
+                    row_49 = cell.row
+                elif "Utility Bills" in cell.value:
+                    row_66 = cell.row
+
     for cell in ws[1]:
         cell.value = None
         cell.border = Border()
@@ -4090,13 +4109,13 @@ def color_summary_sheet( filename):
         for cell in ws[row]:
             cell.fill = fill_color
             cell.font = bold_font
-    for row in [6, 12, 30, 49]:
+    for row in [row_6, row_12, row_30, row_49]:
         for cell in ws[row]:
             cell.fill = royal_blue_fill
             cell.font = white_bold_font
-    for start_row in [6, 12, 30, 49]:
+    for start_row in [row_6, row_12, row_30, row_49]:
         row = start_row + 1
-        while row not in [6, 12, 30, 49, 66]:
+        while row not in [row_6, row_12, row_30, row_49, row_66]:
             for cell in ws[row]:
                 cell.fill = (
                     white_fill if (row - start_row) % 2 == 1 else light_blue_fill
@@ -4107,7 +4126,7 @@ def color_summary_sheet( filename):
     #         cell.fill = white_fill
     for row in ws["A"]:
         row.border = border_right
-    for cell in ws[66]:
+    for cell in ws[row_66]:
         cell.border = border_thick_bottom
 
     def apply_alternating_fill(sheet):
