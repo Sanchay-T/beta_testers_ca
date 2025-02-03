@@ -2,9 +2,10 @@ const { ipcMain } = require('electron');
 const sessionManager = require('../SessionManager');
 const log = require('electron-log');
 const licenseManager = require('../LicenseManager');
-const db = require('../db/db');
 const { users } = require('../db/schema/User');
 const bcrypt = require('bcrypt');
+const databaseManager = require('../db/db');
+const db = databaseManager.getDatabase();
 
 const { eq, exists, sql } = require("drizzle-orm");
 
