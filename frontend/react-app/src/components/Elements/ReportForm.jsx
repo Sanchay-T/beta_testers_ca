@@ -688,9 +688,9 @@ const GenerateReportForm = ({
             </div>
 
             <div>
-              <h1 className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {/* <h1 className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Add Bank Statements
-              </h1>
+              </h1> */}
 
               <div className="flex items-center justify-center space-x-4 w-full mb-6">
                 <label className="text-md font-medium text-gray-700 dark:text-gray-300">
