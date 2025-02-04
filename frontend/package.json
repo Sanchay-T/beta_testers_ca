@@ -110,7 +110,8 @@
       "deleteAppDataOnUninstall": true,
       "artifactName": "${productName}-Setup-${version}.${ext}",
       "uninstallDisplayName": "${productName}",
-      "differentialPackage": true
+      "differentialPackage": true,
+      "warningsAsErrors": false
     },
     "linux": {
       "target": "AppImage"

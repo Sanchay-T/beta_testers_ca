@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs"
 
 // pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString()
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 const COLUMN_TYPES = [
   { id: "date", label: "📅 Date" },
   { id: "description", label: "📝 Description" },
@@ -48,9 +48,9 @@ const initialConfigTest = {
     // { x: 19.830726623535156 },
     // { x: 582.7577514648438 },
   ],
-  
+
 }
-const PDFColumnMarker = ({ addColsToStatementData, pdfPath,initialConfig = initialConfigTest }) => {
+const PDFColumnMarker = ({ addColsToStatementData, pdfPath, initialConfig = initialConfigTest }) => {
   const [columnLines, setColumnLines] = useState([])
   const [columnLabels, setColumnLabels] = useState([])
   const [pdfFile, setPdfFile] = useState(null)
@@ -76,11 +76,11 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath,initialConfig = initi
     if (initialConfig && pdfBlob) {
       if (initialConfig.lines) {
         // sort the lines
-        const sortedInitialLines =initialConfig.lines.map((line) => ({
+        const sortedInitialLines = initialConfig.lines.map((line) => ({
           id: Date.now() + Math.random(),
           x: line.x,
         })).sort((a, b) => a.x - b.x)
-        console.log({sortedInitialLines})
+        console.log({ sortedInitialLines })
         setColumnLines(sortedInitialLines)
       }
 
@@ -100,10 +100,11 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath,initialConfig = initi
   }, [initialConfig, pdfBlob])
 
   useEffect(() => {
-    console.log({OpeningPDf:pdfPath})
+    console.log({ OpeningPDf: pdfPath })
     window.electron.fetchPdfContent(pdfPath)
       .then(base64 => {
         const blob = base64StringToBlob(base64, 'application/pdf');
+        console.log("Blob : ", { blob })
         setPdfBlob(URL.createObjectURL(blob));
       })
       .catch(err => console.error('Failed to fetch PDF:', err));
@@ -114,9 +115,9 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath,initialConfig = initi
     const len = binaryString.length;
     const bytes = new Uint8Array(len);
     for (let i = 0; i < len; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
+      bytes[i] = binaryString.charCodeAt(i);
     }
-    return new Blob([bytes], {type: type});
+    return new Blob([bytes], { type: type });
   };
 
 
@@ -161,9 +162,9 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath,initialConfig = initi
     } else if (currentStep === "labels") {
       // find col start and col end of this col
       const colEnd = columnLines.findIndex((line) => {
-          return line.x > x;
+        return line.x > x;
       });
-      const colStart = colEnd-1;
+      const colStart = colEnd - 1;
       if (colStart === -1 || colEnd === -1) return
 
 
@@ -250,16 +251,16 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath,initialConfig = initi
       const newLabels = prev.map((label, i) =>
         i === labelIndex
           ? {
-              ...label,
-              type: typeId,
-              label: COLUMN_TYPES.find((t) => t.id === typeId)?.label || "",
-            }
+            ...label,
+            type: typeId,
+            label: COLUMN_TYPES.find((t) => t.id === typeId)?.label || "",
+          }
           : label,
       )
       updateHistory(columnLines, newLabels)
       return newLabels
     })
-    if(typeId !== "Skip")
+    if (typeId !== "Skip")
       setUsedColumnTypes((prev) => [...prev, typeId])
     setEditingLabelIndex(null)
   }
@@ -340,8 +341,8 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath,initialConfig = initi
       columns,
     }
 
-    console.log({pdfPath,config})
-    addColsToStatementData(pdfPath,config.columns)
+    console.log({ pdfPath, config })
+    addColsToStatementData(pdfPath, config.columns)
   }
 
   const updateHistory = (lines, labels) => {
@@ -374,9 +375,9 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath,initialConfig = initi
       if (!label.type || label.type === "Skip") return null
       const x = label.x
       const endIndex = columnLines.findIndex((line) => {
-          return line.x > x;
+        return line.x > x;
       });
-      const startIndex = endIndex-1;
+      const startIndex = endIndex - 1;
       const startX = columnLines[startIndex]?.x || 0
       const endX = columnLines[endIndex]?.x || 0
 
@@ -399,7 +400,7 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath,initialConfig = initi
     })
   }
 
-  
+
 
   return (
     <Card className="w-full max-w-4xl mx-auto ">
@@ -433,77 +434,77 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath,initialConfig = initi
           </div>
         ) : ( */}
 
-          <>
+        <>
           <div className="flex justify-between">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  // setTableBounds({ start: null, end: null })
-                  setColumnLines([])
-                  setColumnLabels([])
-                  setUsedColumnTypes([])
-                }}
-              >
-                Start Over
-              </Button>
-              <Button className="ml-auto" onClick={handleSubmit}>
-                Save Column Mapping
-              </Button>
-            </div>
-            <div className="flex items-center justify-between bg-gray-50 p-2 rounded-lg  ">
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" onClick={undo} disabled={historyIndex <= 0}>
-                  <Undo2 className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" onClick={redo} disabled={historyIndex >= history.length - 1}>
-                  <Redo2 className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="flex items-center gap-2 text-nowrap">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                  disabled={currentPage <= 1}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <span>
-                  Page {currentPage} of {numPages || "?"}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, numPages || prev))}
-                  disabled={currentPage >= (numPages || 1)}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-
-              <div className="flex items-center gap-2 text-nowrap">
-                <Button variant="ghost" size="icon" onClick={() => setScale((prev) => Math.max(0.1, prev - 0.1))}>
-                  <ZoomOut className="h-4 w-4" />
-                </Button>
-                <span>{Math.round(scale * 100)}%</span>
-                <Button variant="ghost" size="icon" onClick={() => setScale((prev) => prev + 0.1)}>
-                  <ZoomIn className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-
-            <div
-              ref={pdfContainerRef}
-              className="relative bg-gray-50 rounded-lg overflow-hidden "
-              style={{ cursor: "crosshair" }}
-              onClick={handleClick}
-              onMouseMove={handleDrag}
-              onMouseUp={handleDragEnd}
-              onMouseLeave={handleDragEnd}
+            <Button
+              variant="outline"
+              onClick={() => {
+                // setTableBounds({ start: null, end: null })
+                setColumnLines([])
+                setColumnLabels([])
+                setUsedColumnTypes([])
+              }}
             >
-              <Document className={"overflow-auto"} style={{overflow:"auto"}} file={pdfBlob} onLoadSuccess={onDocumentLoadSuccess}>
-                <Page pageNumber={currentPage} scale={scale} renderTextLayer={false} renderAnnotationLayer={false} />
-                {/* 
+              Start Over
+            </Button>
+            <Button className="ml-auto" onClick={handleSubmit}>
+              Save Column Mapping
+            </Button>
+          </div>
+          <div className="flex items-center justify-between bg-gray-50 p-2 rounded-lg  ">
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" onClick={undo} disabled={historyIndex <= 0}>
+                <Undo2 className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={redo} disabled={historyIndex >= history.length - 1}>
+                <Redo2 className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="flex items-center gap-2 text-nowrap">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage <= 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span>
+                Page {currentPage} of {numPages || "?"}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, numPages || prev))}
+                disabled={currentPage >= (numPages || 1)}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="flex items-center gap-2 text-nowrap">
+              <Button variant="ghost" size="icon" onClick={() => setScale((prev) => Math.max(0.1, prev - 0.1))}>
+                <ZoomOut className="h-4 w-4" />
+              </Button>
+              <span>{Math.round(scale * 100)}%</span>
+              <Button variant="ghost" size="icon" onClick={() => setScale((prev) => prev + 0.1)}>
+                <ZoomIn className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          <div
+            ref={pdfContainerRef}
+            className="relative bg-gray-50 rounded-lg overflow-hidden "
+            style={{ cursor: "crosshair" }}
+            onClick={handleClick}
+            onMouseMove={handleDrag}
+            onMouseUp={handleDragEnd}
+            onMouseLeave={handleDragEnd}
+          >
+            <Document className={"overflow-auto"} style={{ overflow: "auto" }} file={pdfBlob} onLoadSuccess={onDocumentLoadSuccess}>
+              <Page pageNumber={currentPage} scale={scale} renderTextLayer={false} renderAnnotationLayer={false} />
+              {/* 
                 {tableBounds.start !== null && (
                   <div
                     className="absolute top-0 h-full border-l-2 border-red-500"
@@ -525,49 +526,49 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath,initialConfig = initi
                   </div>
                 )} */}
 
-                {columnLines.map((line, index) => (
-                  <div key={line.id} className="absolute top-0 h-full" style={{ left: `${line.x * scale}px` ,zIndex: 99}}>
-                    <div className="h-full bg-gray-400 border-l-2 border-gray-500" />
+              {columnLines.map((line, index) => (
+                <div key={line.id} className="absolute top-0 h-full" style={{ left: `${line.x * scale}px`, zIndex: 99 }}>
+                  <div className="h-full bg-gray-400 border-l-2 border-gray-500" />
 
-                    <div className="absolute top-2  items-center">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 cursor-move"
-                        onMouseDown={(e) => handleDragStart(e, index, "line")}
-                      >
-                        <GripVertical className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          removeColumnLine(index)
-                        }}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
+                  <div className="absolute top-2  items-center">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 cursor-move"
+                      onMouseDown={(e) => handleDragStart(e, index, "line")}
+                    >
+                      <GripVertical className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        removeColumnLine(index)
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
                   </div>
-                ))}
+                </div>
+              ))}
 
-                {columnLabels.map((label, index) => (
-                  <div
-                    key={label.id}
-                    className={`absolute `}
-                    style={{
-                      left: `${label.x * scale}px`,
-                      // top:label.y?`${label.y * scale}px`:`top-[${15+(5*(index+1))}%]`,
-                      top: label.y ? label.y : `${15 + 5 * (index + 1)}%`,
-                      transform: "translateX(-50%)",
-                      zIndex: 99,
-                    }}
-                  >
-                    <div className="flex flex-col items-center">
-                      <div className="flex items-center gap-1 mb-2">
-                        {/* <Button
+              {columnLabels.map((label, index) => (
+                <div
+                  key={label.id}
+                  className={`absolute `}
+                  style={{
+                    left: `${label.x * scale}px`,
+                    // top:label.y?`${label.y * scale}px`:`top-[${15+(5*(index+1))}%]`,
+                    top: label.y ? label.y : `${15 + 5 * (index + 1)}%`,
+                    transform: "translateX(-50%)",
+                    zIndex: 99,
+                  }}
+                >
+                  <div className="flex flex-col items-center">
+                    <div className="flex items-center gap-1 mb-2">
+                      {/* <Button
                           variant="ghost"
                           size="icon"
                           className="h-6 w-6 cursor-move"
@@ -575,69 +576,69 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath,initialConfig = initi
                         >
                           <GripVertical className="h-4 w-4" />
                         </Button> */}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            removeColumnLabel(index)
-                          }}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          removeColumnLabel(index)
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    {editingLabelIndex === index ? (
+                      <Select style={{ zIndex: 999 }} open={labelSelectorOpen} value={label.type} onValueChange={(value) => handleColumnTypeSelect(index, value)}>
+
+                        <SelectTrigger className="w-48">
+                          <SelectValue placeholder="Select column type" />
+                        </SelectTrigger>
+                        <SelectContent style={{ zIndex: 999 }}
+
                         >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-
-                      {editingLabelIndex === index ? (
-                        <Select style={{ zIndex: 999 }} open={labelSelectorOpen}  value={label.type} onValueChange={(value) => handleColumnTypeSelect(index, value)}>
-                          
-                          <SelectTrigger className="w-48">
-                            <SelectValue placeholder="Select column type" />
-                          </SelectTrigger>
-                          <SelectContent style={{ zIndex: 999 }}  
-
-                          >
-                            {COLUMN_TYPES.filter((type) => !usedColumnTypes.includes(type.id)).map((type) => (
-                              <SelectItem key={type.id} value={type.id}>
-                                {type.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <div
-                          className={`px-2 py-1 rounded cursor-pointer
+                          {COLUMN_TYPES.filter((type) => !usedColumnTypes.includes(type.id)).map((type) => (
+                            <SelectItem key={type.id} value={type.id}>
+                              {type.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <div
+                        className={`px-2 py-1 rounded cursor-pointer
                             ${COLUMN_COLORS[label.colorIndex].bg} ${COLUMN_COLORS[label.colorIndex].text}
                             text-sm font-medium whitespace-nowrap`}
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setEditingLabelIndex(index)
-                            }}
-                        >
-                          {label.label || "Click to label"}
-                        </div>
-                      )}
-                    </div>
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setEditingLabelIndex(index)
+                        }}
+                      >
+                        {label.label || "Click to label"}
+                      </div>
+                    )}
                   </div>
-                ))}
-                {renderColoredColumns()}
-              </Document>
-            </div>
+                </div>
+              ))}
+              {renderColoredColumns()}
+            </Document>
+          </div>
 
-         
 
-            {/* right - side tabs */}
-            <div
-              className={`fixed right-0 top-1/2 transform -translate-y-1/2 z-[99] transition-all duration-300 ${"w-auto"}`}
+
+          {/* right - side tabs */}
+          <div
+            className={`fixed right-0 top-1/2 transform -translate-y-1/2 z-[99] transition-all duration-300 ${"w-auto"}`}
+          >
+            <Tabs
+              value={currentStep}
+              onValueChange={(value) => setCurrentStep(value)}
+              orientation="vertical"
+              className="h-full "
             >
-              <Tabs
-                value={currentStep}
-                onValueChange={(value) => setCurrentStep(value)}
-                orientation="vertical"
-                className="h-full "
-              >
-                <TabsList className="flex flex-col  h-full bg-white shadow-lg border">
-                  {/* <div 
+              <TabsList className="flex flex-col  h-full bg-white shadow-lg border">
+                {/* <div 
             className="cursor-pointer p-2 hover:bg-gray-100"
             onClick={() => setIsOpen(!isOpen)}
           >
@@ -646,21 +647,21 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath,initialConfig = initi
             />
           </div> */}
 
-                  <TabsTrigger value="lines" className="w-full flex items-center justify-center p-2 hover:bg-gray-100">
-                    {/* <BookmarkIcon size={20} /> */}
-                    Line
-                    {/* {isOpen && <span className="ml-2">Place Line</span>} */}
-                  </TabsTrigger>
+                <TabsTrigger value="lines" className="w-full flex items-center justify-center p-2 hover:bg-gray-100">
+                  {/* <BookmarkIcon size={20} /> */}
+                  Line
+                  {/* {isOpen && <span className="ml-2">Place Line</span>} */}
+                </TabsTrigger>
 
-                  <TabsTrigger value="labels" className="w-full flex items-center justify-center p-2 hover:bg-gray-100">
-                    Labels
-                    {/* <BookmarkIcon size={20} /> */}
-                    {/* {isOpen && <span className="ml-2">Place Labels</span>} */}
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
-          </>
+                <TabsTrigger value="labels" className="w-full flex items-center justify-center p-2 hover:bg-gray-100">
+                  Labels
+                  {/* <BookmarkIcon size={20} /> */}
+                  {/* {isOpen && <span className="ml-2">Place Labels</span>} */}
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+        </>
         {/* )} */}
       </CardContent>
     </Card>

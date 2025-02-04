@@ -123,15 +123,15 @@ const CategoryEditTable = ({
 
     const transCats = transactions.map((tx) => tx.category);
     const mergedCategories = Array.from(new Set([...localCats, ...transCats]));
-  // Step 3: If there are any new categories, update localStorage.
-  if (mergedCategories.length !== localCats.length) {
-    localStorage.setItem("categoryOptions", JSON.stringify(mergedCategories));
-  }
+    // Step 3: If there are any new categories, update localStorage.
+    if (mergedCategories.length !== localCats.length) {
+      localStorage.setItem("categoryOptions", JSON.stringify(mergedCategories));
+    }
     setCategoryOptions(mergedCategories);
 
     setTransactions(formattedData);
     setFilteredData(formattedData);
-  }, [data]);
+  }, []);
 
   let columns = data.length > 0 ? Object.keys(data[0]) : [];
   columns = columns.filter((column) => !columnsToIgnore.includes(column));
@@ -218,7 +218,7 @@ const CategoryEditTable = ({
   const confirmCategoryChange = () => {
     if (!pendingCategoryChange) return;
     const transactionId = pendingCategoryChange.transactionId;
-    console.log("transactionId", transactionId, "pendingCategoryChange ",pendingCategoryChange);
+    console.log("transactionId", transactionId, "pendingCategoryChange ", pendingCategoryChange);
     const updatedFilteredData = filteredData.map((tx) => {
       console.log("tx.id", tx.id, "transactionId", transactionId);
       if (parseInt(tx.id) === parseInt(transactionId)) {
@@ -459,7 +459,7 @@ const CategoryEditTable = ({
   const handleAddCategory = (newCategory, row) => {
     // Check if the new category is non-empty and not already in the options
     if (newCategory && !categoryOptions.includes(newCategory)) {
-      
+
       // Set the category that needs classification
       setNewCategoryToClassify(newCategory);
       // Add the new category to your category options and sort them
@@ -467,7 +467,7 @@ const CategoryEditTable = ({
       setCategoryOptions(updatedOptions);
       localStorage.setItem("categoryOptions", JSON.stringify(updatedOptions));
 
-  
+
       if (row) {
         // Single-row update flow: store the pending change using the transaction id.
         setPendingCategoryChange({
@@ -485,7 +485,7 @@ const CategoryEditTable = ({
     }
     return false;
   };
-  
+
 
   return (
     <div className="relative min-h-screen flex flex-col">
@@ -748,7 +748,7 @@ const CategoryEditTable = ({
                       className={cn(
                         "cursor-pointer",
                         currentPage === totalPages &&
-                          "pointer-events-none opacity-50"
+                        "pointer-events-none opacity-50"
                       )}
                     />
                   </PaginationItem>
