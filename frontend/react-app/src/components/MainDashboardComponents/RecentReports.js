@@ -60,6 +60,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "../ui/dialog"; // Import shadcn/ui Dialog components
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 
 import PDFMarkerModal from "./PdfMarkerModal";
 
@@ -783,6 +784,8 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
             <TableBody>
               {currentReports.map((report, index) => (
                 <TableRow key={report.id}>
+                  <TooltipProvider delayDuration={800}> {/* Reduces delay to 100ms */}
+
                   <TableCell>{report.createdAt}</TableCell>
                   <TableCell>{report.name}</TableCell>
                   <TableCell>
@@ -790,15 +793,23 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
                   </TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
+                    <Tooltip>
+                    <TooltipTrigger asChild>
                       <Button
                         variant="outline"
                         size="icon"
                         onClick={() => handleView(report.id)}
                         className="h-8 w-8"
+
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>View Report</TooltipContent>
+                    </Tooltip>
 
+                    <Tooltip>
+                    <TooltipTrigger asChild>
                       <Button
                         variant="outline"
                         size="icon"
@@ -807,6 +818,12 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
                       >
                         <Plus className="h-4 w-4" />
                       </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Add Statements</TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                    <TooltipTrigger asChild>
                       <Button
                         variant="outline"
                         size="icon"
@@ -815,7 +832,13 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
                       >
                         <Edit2 className="h-4 w-4" />
                       </Button>
+                      </TooltipTrigger>
+                    <TooltipContent>Edit Categories</TooltipContent>
+                  </Tooltip>
+
                       <AlertDialog>
+                      <Tooltip key={report.id}>
+                      <TooltipTrigger asChild>
                         <AlertDialogTrigger asChild>
                           <Button
                             variant="outline"
@@ -825,7 +848,11 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
+                         
                         </AlertDialogTrigger>
+                        </TooltipTrigger>
+                        <TooltipContent>Delete Report</TooltipContent>
+                      </Tooltip>
                         <AlertDialogContent className="bg-white dark:bg-slate-950">
                           <AlertDialogHeader>
                             <AlertDialogTitle>Delete Report</AlertDialogTitle>
@@ -852,6 +879,8 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
                   </TableCell>
                   <TableCell>
                     <AlertDialog>
+                      <Tooltip>
+                      <TooltipTrigger asChild>
                       <AlertDialogTrigger asChild>
                         <Button
                           variant="ghost"
@@ -862,6 +891,9 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
                           <Info className="h-4 w-4" />
                         </Button>
                       </AlertDialogTrigger>
+                        </TooltipTrigger>
+                      <TooltipContent>View Failed Statements</TooltipContent>
+                    </Tooltip>
                       <AlertDialogContent className="max-w-2xl bg-white shadow-lg border-0 dark:bg-slate-950">
                         <AlertDialogHeader>
                           <AlertDialogTitle className="text-xl font-medium text-black bg-black/[0.03] -mx-6 -mt-6 p-4 border-b border-black/10 dark:bg-slate-900 dark:text-slate-300">
@@ -1004,6 +1036,8 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
                       </AlertDialogContent>
                     </AlertDialog>
                   </TableCell>
+                  </TooltipProvider>
+
                 </TableRow>
               ))}
             </TableBody>

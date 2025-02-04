@@ -195,8 +195,8 @@ const MainDashboard = () => {
             mainValueLabel="Statements Processed"
             percentageChange={10}
             bottomStats={[
-              { label: "Success", value: 100 },
-              { label: "Failed", value: 12 },
+              { label: "Success", value: "-" },
+              { label: "Failed", value: "-" },
             ]}
             // chartData={[
             //   { month: "Jan", value: 120 },
@@ -210,17 +210,17 @@ const MainDashboard = () => {
           <StatsMetricCard
             type="timeSaved"
             title="Time Saved"
-            mainValue="1200"
+            mainValue="-"
             mainValueLabel="Minutes Saved"
             percentageChange={25}
             breakdownData={[
-              { label: "Manual Processing", value: "800 mins" },
-              { label: "Automation", value: "400 mins" },
-              { label: "Optimization", value: "200 mins" },
+              { label: "Manual Processing", value: "- mins" },
+              { label: "Automation", value: "- mins" },
+              { label: "Optimization", value: "- mins" },
             ]}
             bottomStats={[
-              { label: "Average Time Saved/Day", value: "40 mins" },
-              { label: "Peak Savings", value: "100 mins" },
+              { label: "Average Time Saved/Day", value: "- mins" },
+              { label: "Peak Savings", value: "- mins" },
             ]}
           />
         </div>

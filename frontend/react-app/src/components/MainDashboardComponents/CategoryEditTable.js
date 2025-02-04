@@ -131,7 +131,7 @@ const CategoryEditTable = ({
 
     setTransactions(formattedData);
     setFilteredData(formattedData);
-  }, []);
+  }, [data]);
 
   let columns = data.length > 0 ? Object.keys(data[0]) : [];
   columns = columns.filter((column) => !columnsToIgnore.includes(column));
@@ -157,6 +157,7 @@ const CategoryEditTable = ({
   // When classification is complete, update either the bulk field or a single row change.
   const handleClassificationSubmit = () => {
     handleCategoryClassification(newCategoryToClassify, selectedType);
+    console.log({selectedType})
     setShowClassificationModal(false);
     if (bulkCategoryModalOpen) {
       setSelectedBulkCategory(newCategoryToClassify);
@@ -175,7 +176,6 @@ const CategoryEditTable = ({
       setCurrentTransaction(transaction);
       setReasoningModalOpen(true);
     }
-    setSelectedType("");
     setNewCategoryToClassify("");
   };
 
@@ -198,7 +198,6 @@ const CategoryEditTable = ({
         return String(value).toLowerCase().includes(searchValue.toLowerCase());
       })
     );
-    console.log({updatedData: filtered});
     setFilteredData(filtered);
     setCurrentPage(1);
   };
@@ -243,7 +242,6 @@ const CategoryEditTable = ({
         classification: selectedType,
         is_new: true,
       };
-      setSelectedType("");
     } else {
       modifiedObject = { ...modifiedObject, is_new: false };
     }
@@ -409,6 +407,7 @@ const CategoryEditTable = ({
         title: "Changes saved successfully",
         description: "All category updates have been saved",
       });
+
     } catch (error) {
       toast({
         title: "Error saving changes",
@@ -417,6 +416,8 @@ const CategoryEditTable = ({
       });
     } finally {
       setIsLoading(false);
+    setSelectedType("");
+
     }
   };
 
@@ -467,8 +468,8 @@ const CategoryEditTable = ({
       const updatedOptions = [...categoryOptions, newCategory].sort();
       setCategoryOptions(updatedOptions);
       localStorage.setItem("categoryOptions", JSON.stringify(updatedOptions));
-
-  
+      
+      
       if (row) {
         // Single-row update flow: store the pending change using the transaction id.
         setPendingCategoryChange({
@@ -476,6 +477,7 @@ const CategoryEditTable = ({
           newCategory,
           oldCategory: row.category,
           transaction: row,
+          isDebit:row.credit===0
         });
         setShowClassificationModal(true);
       } else {
@@ -1042,18 +1044,19 @@ const CategoryEditTable = ({
               onValueChange={setSelectedType}
               className="space-y-3"
             >
-              <div className="flex items-center space-x-2">
+              
+              {(!pendingCategoryChange?.isDebit || bulkCategoryModalOpen) && <div className="flex items-center space-x-2">
                 <RadioGroupItem value="income" id="income" />
-                <Label htmlFor="income">Income</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Important Expenses" id="important_expenses" />
+                <Label htmlFor="Income">Income</Label>
+              </div>}
+              {(pendingCategoryChange?.isDebit || bulkCategoryModalOpen)&&<div className="flex items-center space-x-2">
+                <RadioGroupItem value="Important Expenses / Payments" id="important_expenses" />
                 <Label htmlFor="important_expenses">Important Expenses</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Other Expenses" id="other_expenses" />
+              </div>}
+              {(pendingCategoryChange?.isDebit || bulkCategoryModalOpen)&&<div className="flex items-center space-x-2">
+                <RadioGroupItem value="Other Expenses / Payments" id="other_expenses" />
                 <Label htmlFor="other_expenses">Other Expenses</Label>
-              </div>
+              </div>}
             </RadioGroup>
 
             <DialogFooter>

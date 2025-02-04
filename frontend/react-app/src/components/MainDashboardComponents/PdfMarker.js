@@ -56,7 +56,7 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath,initialConfig = initi
   const [pdfFile, setPdfFile] = useState(null)
   const [numPages, setNumPages] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
-  const [scale, setScale] = useState(1.4)
+  const [scale, setScale] = useState(1.2)
   const [editingLabelIndex, setEditingLabelIndex] = useState(null)
   const [draggingLineIndex, setDraggingLineIndex] = useState(null)
   const [draggingLabelIndex, setDraggingLabelIndex] = useState(null)
