@@ -955,10 +955,9 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
                                               statement.respectiveReasonsForError
                                             }
                                           </p>
-                                          <p className="text-red-500 text-xs mt-1">
-                                            Please contact sales for assistance
-                                            with this issue.
-                                          </p>
+                                          {<p className="text-red-500 text-xs mt-1">
+                                          {statement.respectiveReasonsForError.toLowerCase().includes("start and end date")? "Please Re-run this statement with correct dates.": "Please contact sales for assistance with this issue."}
+                                          </p>}
                                         </div>
                                       )}
                                     </div>

@@ -68,6 +68,7 @@ const Reversal = () => {
               data={data}
               xAxisKey="date"
               selectedColumns={["credit"]}
+              showLegends={true}
             />
           </div>
           <div>

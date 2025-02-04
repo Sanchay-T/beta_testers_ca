@@ -570,12 +570,12 @@ const DataTable = ({ data = [], source, title, subtitle }) => {
                   }
                 }}
               >
-                <option value="5">5 rows</option>
+                {/* <option value="5">5 rows</option> */}
                 <option value="10">10 rows</option>
                 <option value="20">20 rows</option>
                 <option value="50">50 rows</option>
-                <option value="100">100 rows</option>
-                <option value="all">Show all</option>
+                {/* <option value="100">100 rows</option> */}
+                {/* <option value="all">Show all</option> */}
               </select>
               <Button
                 className="dark:bg-slate-300 dark:hover:bg-slate-200"

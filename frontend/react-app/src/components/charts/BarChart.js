@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Bar,
   BarChart,
@@ -27,7 +27,10 @@ const SingleBarChart = ({
   showLegends = false,
 }) => {
   // Get all columns from the first data item
-  const columns = data.length > 0 ? Object.keys(data[0]) : [];
+  const [columnsToIgnore, setColumnsToIgnore] = useState(["balance"]);
+
+  let columns = data.length > 0 ? Object.keys(data[0]) : [];
+  columns = columns.filter((column) => !columnsToIgnore.includes(column));
 
   // Determine numeric columns (similar to table component)
   const numericColumns = columns.filter((column) =>
