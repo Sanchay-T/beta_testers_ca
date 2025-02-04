@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Bar,
   Line,
@@ -24,7 +24,10 @@ const BarLineChart = ({
   xAxisKey = null,
   columnTypes = {},
 }) => {
-  const columns = data.length > 0 ? Object.keys(data[0]) : [];
+  const [columnsToIgnore, setColumnsToIgnore] = useState(["transactionId","Balance","balance"]);
+
+  let columns = data.length > 0 ? Object.keys(data[0]) : [];
+  columns = columns.filter((column) => !columnsToIgnore.includes(column));
 
   const numericColumns = columns.filter((column) =>
     data.some((row) => {

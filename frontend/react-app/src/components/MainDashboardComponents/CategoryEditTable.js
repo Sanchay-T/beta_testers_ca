@@ -51,7 +51,7 @@ const CategoryEditTable = ({
   data = [],
   categoryOptions,
   setCategoryOptions,
-  caseId
+  caseId,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [transactions, setTransactions] = useState([]);
@@ -76,80 +76,75 @@ const CategoryEditTable = ({
   const [columnsToIgnore, setColumnsToIgnore] = useState(["id"]);
   const [showKeywordInput, setShowKeywordInput] = useState(false);
 
-  // New states for multiple selection
-  const [selectedRows, setSelectedRows] = useState([]);
+  // NEW: Using transaction id instead of row index
+  const [globalSelectedRows, setGlobalSelectedRows] = useState(new Set());
   const [bulkCategoryModalOpen, setBulkCategoryModalOpen] = useState(false);
   const [selectedBulkCategory, setSelectedBulkCategory] = useState("");
   const [confirmationModalOpen, setConfirmationModalOpen] = useState(false);
-  const [globalSelectedRows, setGlobalSelectedRows] = useState(new Set());
 
-  // New states for classification modal
+  // Classification modal state
   const [selectedType, setSelectedType] = useState("");
   const [showClassificationModal, setShowClassificationModal] = useState(false);
   const [newCategoryToClassify, setNewCategoryToClassify] = useState("");
   const [isSearchInputFocused, setIsSearchInputFocused] = useState(false);
 
-  // Add new state for reasoning dialog
+  // Reasoning modal state
   const [reasoningModalOpen, setReasoningModalOpen] = useState(false);
   const [currentTransaction, setCurrentTransaction] = useState(null);
   const [reasoning, setReasoning] = useState("");
+  // We now store pending change by transaction id
   const [pendingCategoryChange, setPendingCategoryChange] = useState(null);
   const [bulkReasoning, setBulkReasoning] = useState("");
 
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [showAllRows, setShowAllRows] = useState(false);
 
-  // Add this helper function to format dates
+  // Helper: Format dates
   const formatValue = (value) => {
-    if (value instanceof Date) {
-      return value.toLocaleDateString();
-    }
+    if (value instanceof Date) return value.toLocaleDateString();
     return value;
   };
 
   useEffect(() => {
-    // console.log({dataFromEditCategoryTable:data})
-    // Format any Date objects in the data when it's first received
-    const formattedData = data.map((row, index) => {
-      const newRow = {
-        ...row 
-      };
-      
-      // Format each value
+    const formattedData = data.map((row) => {
+      const newRow = { ...row };
       Object.keys(row).forEach((key) => {
         newRow[key] = formatValue(row[key]);
       });
-
       return newRow;
     });
-    // also add a id field to each transaction which resembles real row id of that transaction
 
+    const storedCategories = localStorage.getItem("categoryOptions");
+    let localCats = storedCategories ? JSON.parse(storedCategories) : null;
+    if (!localCats) {
+      localCats = categoryOptions;
+      localStorage.setItem("categoryOptions", JSON.stringify(localCats));
+    }
+
+    const transCats = transactions.map((tx) => tx.category);
+    const mergedCategories = Array.from(new Set([...localCats, ...transCats]));
+  // Step 3: If there are any new categories, update localStorage.
+  if (mergedCategories.length !== localCats.length) {
+    localStorage.setItem("categoryOptions", JSON.stringify(mergedCategories));
+  }
+    setCategoryOptions(mergedCategories);
 
     setTransactions(formattedData);
     setFilteredData(formattedData);
   }, [data]);
 
-  // useEffect(() => {
-  //   setTransactions(data);
-  //   setFilteredData(data);
-  // }, [data]);
-
-  // Get dynamic columns from first data item
   let columns = data.length > 0 ? Object.keys(data[0]) : [];
   columns = columns.filter((column) => !columnsToIgnore.includes(column));
 
-  // Determine which columns are numeric
   const numericColumns = columns.filter((column) =>
     data.some((row) => {
       const value = String(row[column]);
       return !isNaN(parseFloat(value)) && !value.includes("-");
     })
   );
-  const handleCategoryClassification = (category, classificationType) => {
-    // Here you can store the classification mapping
-    // You might want to save this to your backend or state management system
-    console.log(`Category: ${category}, Type: ${classificationType}`);
 
+  const handleCategoryClassification = (category, classificationType) => {
+    console.log(`Category: ${category}, Type: ${classificationType}`);
     toast({
       title: "Category Classified",
       description: `${category} has been classified as ${classificationType.replace(
@@ -159,32 +154,29 @@ const CategoryEditTable = ({
     });
   };
 
+  // When classification is complete, update either the bulk field or a single row change.
   const handleClassificationSubmit = () => {
     handleCategoryClassification(newCategoryToClassify, selectedType);
     setShowClassificationModal(false);
-
-    // Set the pending category change
-    const oldCategory =
-      currentData[pendingCategoryChange?.rowIndex]?.category || "";
-    setPendingCategoryChange({
-      ...pendingCategoryChange,
-      newCategory: newCategoryToClassify,
-      oldCategory: oldCategory,
-    });
-
-    // Set the current transaction for the reasoning modal
-    setCurrentTransaction(currentData[pendingCategoryChange?.rowIndex]);
-
-    setSelectedBulkCategory(newCategoryToClassify);
-
-    // Show the reasoning modal
-    if(bulkCategoryModalOpen){
-      // handleBulkCategoryChange();
-    }else{
-
+    if (bulkCategoryModalOpen) {
+      setSelectedBulkCategory(newCategoryToClassify);
+      setCategorySearchTerm("");
+      setPendingCategoryChange(null);
+    } else if (pendingCategoryChange) {
+      const transaction = filteredData.find(
+        (tx) => tx.id === pendingCategoryChange.transactionId
+      );
+      const oldCategory = transaction ? transaction.category : "";
+      setPendingCategoryChange({
+        ...pendingCategoryChange,
+        newCategory: newCategoryToClassify,
+        oldCategory: oldCategory,
+      });
+      setCurrentTransaction(transaction);
       setReasoningModalOpen(true);
     }
-    // setSelectedType(""); // Reset for next use
+    setSelectedType("");
+    setNewCategoryToClassify("");
   };
 
   const handleSearch = (searchValue) => {
@@ -194,9 +186,8 @@ const CategoryEditTable = ({
       setCurrentPage(1);
       return;
     }
-
     const columnsToReplace = ["amount", "balance", "debit", "credit"];
-    const filtered = filteredData.filter((row) =>
+    const filtered = transactions.filter((row) =>
       Object.entries(row).some(([key, value]) => {
         if (columnsToReplace.includes(key)) {
           return String(value)
@@ -207,83 +198,81 @@ const CategoryEditTable = ({
         return String(value).toLowerCase().includes(searchValue.toLowerCase());
       })
     );
-
     setFilteredData(filtered);
     setCurrentPage(1);
   };
 
-  const handleCategoryChange = (rowIndex, newCategory) => {
-    const dataOnUi = [...currentData];
-    const oldCategory = dataOnUi[rowIndex].category;
-
-    // Store pending change and show reasoning dialog
+  // --- Single Row Update: Use the entire row (which includes its id) ---
+  const handleCategoryChange = (transaction, newCategory) => {
+    const oldCategory = transaction.category;
     setPendingCategoryChange({
-      rowIndex,
+      transactionId: transaction.id,
       newCategory,
       oldCategory,
-      transaction: dataOnUi[rowIndex],
+      transaction,
     });
-    setCurrentTransaction(dataOnUi[rowIndex]);
+    setCurrentTransaction(transaction);
     setReasoningModalOpen(true);
   };
 
   const confirmCategoryChange = () => {
     if (!pendingCategoryChange) return;
-
-    const { rowIndex, newCategory, oldCategory } = pendingCategoryChange;
-    const dataOnUi = [...currentData];
-    dataOnUi[rowIndex].category = newCategory;
-    setCurrentdata(dataOnUi);
-    console.log({selectedType})
-    if(selectedType){
-      const modifiedObject = {
-        ...dataOnUi[rowIndex],
-        oldCategory,
-        classification:selectedType,
-        is_new:true,
-        keyword: showKeywordInput ? reasoning : "", // Only include reasoning if checkbox was checked
-      };
-      setModifiedData([...modifiedData, modifiedObject]);
-      setSelectedType(""); // Reset for next use
-    }
-    else{
-    const modifiedObject = {
-      ...dataOnUi[rowIndex],
-      oldCategory,
-      is_new:false,
-      keyword: showKeywordInput ? reasoning : "", // Only include reasoning if checkbox was checked
+    const transactionId = pendingCategoryChange.transactionId;
+    console.log("transactionId", transactionId, "pendingCategoryChange ",pendingCategoryChange);
+    const updatedFilteredData = filteredData.map((tx) => {
+      console.log("tx.id", tx.id, "transactionId", transactionId);
+      if (parseInt(tx.id) === parseInt(transactionId)) {
+        console.log("Transaction found")
+        return { ...tx, category: pendingCategoryChange.newCategory };
+      }
+      return tx;
+    });
+    setFilteredData(updatedFilteredData);
+    const transaction = updatedFilteredData.find((tx) => tx.id === transactionId);
+    console.log("transaction aiyaz", transaction);
+    let modifiedObject = {
+      ...transaction,
+      oldCategory: pendingCategoryChange.oldCategory,
+      keyword: showKeywordInput ? reasoning : "",
     };
+    console.log("modifiedObject", modifiedObject);
+    if (selectedType) {
+      modifiedObject = {
+        ...modifiedObject,
+        classification: selectedType,
+        is_new: true,
+      };
+      setSelectedType("");
+    } else {
+      modifiedObject = { ...modifiedObject, is_new: false };
+    }
+    console.log("modifiedObject final", modifiedObject);
     setModifiedData([...modifiedData, modifiedObject]);
-  }
     setHasChanges(true);
-
-    // Reset states
     setReasoningModalOpen(false);
     setPendingCategoryChange(null);
     setReasoning("");
-    setShowKeywordInput(false); // Reset checkbox state
+    setShowKeywordInput(false);
   };
 
-  // New function to handle bulk category change
-  // Modify bulk category update to work with global selection
+  // --- Bulk Update: Find each row by its id ---
   const handleBulkCategoryChange = () => {
-    const dataOnUi = [...filteredData];
+    // Create a shallow copy so we don’t mutate state directly.
+    const dataOnUi = filteredData.map((row) => ({ ...row }));
     const newModifiedData = [...modifiedData];
-
-    globalSelectedRows.forEach((globalIndex) => {
-      const oldCategory = dataOnUi[globalIndex].category;
-      dataOnUi[globalIndex].category = selectedBulkCategory===""?  categorySearchTerm :selectedBulkCategory 
-
-      const modifiedObject = {
-        ...dataOnUi[globalIndex],
-        oldCategory,
-        reasoning: bulkReasoning,
-      };
-
-      console.log({aiyaz:modifiedObject})
-      newModifiedData.push(modifiedObject);
+    globalSelectedRows.forEach((id) => {
+      const index = dataOnUi.findIndex((row) => row.id === id);
+      if (index !== -1) {
+        const oldCategory = dataOnUi[index].category;
+        dataOnUi[index].category =
+          selectedBulkCategory === "" ? categorySearchTerm : selectedBulkCategory;
+        newModifiedData.push({
+          ...dataOnUi[index],
+          oldCategory,
+          reasoning: bulkReasoning,
+        });
+      }
     });
-
     setFilteredData(dataOnUi);
     setModifiedData(newModifiedData);
     setHasChanges(true);
@@ -292,46 +281,35 @@ const CategoryEditTable = ({
     setConfirmationModalOpen(false);
     setSelectedBulkCategory("");
     setBulkReasoning("");
-
-    // toast({
-    //   title: "Categories updated",
-    //   description: `Updated ${globalSelectedRows.size} transactions`,
-    // });
   };
 
-  // Function to handle row selection
-  const toggleRowSelection = (index) => {
-    const globalIndex = startIndex + index;
+  // --- Now store selected rows as transaction IDs ---
+  const toggleRowSelection = (id) => {
     setGlobalSelectedRows((prev) => {
       const newSet = new Set(prev);
-      if (newSet.has(globalIndex)) {
-        newSet.delete(globalIndex);
+      if (newSet.has(id)) {
+        newSet.delete(id);
       } else {
-        newSet.add(globalIndex);
+        newSet.add(id);
       }
       return newSet;
     });
   };
 
-  // Modify toggleSelectAll for current page
   const toggleSelectAll = () => {
     const newGlobalSelected = new Set(globalSelectedRows);
-    const allCurrentPageSelected = filteredData.every((_, index) =>
-      newGlobalSelected.has(startIndex + index)
+    const allCurrentPageSelected = filteredData.every((row) =>
+      newGlobalSelected.has(row.id)
     );
-
     if (allCurrentPageSelected) {
-      // Unselect all items on current page
-      filteredData.forEach((_, index) => {
-        newGlobalSelected.delete(startIndex + index);
+      filteredData.forEach((row) => {
+        newGlobalSelected.delete(row.id);
       });
     } else {
-      // Select all items on current page
-      filteredData.forEach((_, index) => {
-        newGlobalSelected.add(startIndex + index);
+      filteredData.forEach((row) => {
+        newGlobalSelected.add(row.id);
       });
     }
-
     setGlobalSelectedRows(newGlobalSelected);
   };
 
@@ -342,7 +320,7 @@ const CategoryEditTable = ({
         : [...prev, category]
     );
   };
-  // Filter categories based on search term
+
   const filteredCategories = categoryOptions.filter((category) =>
     category.toLowerCase().includes(categorySearchTerm.toLowerCase())
   );
@@ -359,7 +337,7 @@ const CategoryEditTable = ({
     if (selectedCategories.length === 0) {
       setFilteredData(transactions);
     } else {
-      const filtered = data.filter((row) =>
+      const filtered = transactions.filter((row) =>
         selectedCategories.includes(String(row[currentFilterColumn]))
       );
       setFilteredData(filtered);
@@ -369,7 +347,7 @@ const CategoryEditTable = ({
   };
 
   const handleNumericFilter = (columnName, min, max) => {
-    const filtered = data.filter((row) => {
+    const filtered = transactions.filter((row) => {
       const value = parseFloat(row[columnName]);
       if (isNaN(value)) return false;
       const meetsMin = min === "" || value >= parseFloat(min);
@@ -388,11 +366,10 @@ const CategoryEditTable = ({
     setMaxValue("");
     setSelectedCategories([]);
     setCategorySearchTerm("");
-    setSelectedRows([]);
   };
 
   const getUniqueValues = (columnName) => {
-    return [...new Set(data.map((row) => String(row[columnName])))];
+    return [...new Set(transactions.map((row) => String(row[columnName])))];
   };
 
   const getFilteredUniqueValues = (columnName) => {
@@ -405,29 +382,41 @@ const CategoryEditTable = ({
 
   const handleCategorySearch = (e) => {
     e.preventDefault();
-    e.stopPropagation(); // Prevent event bubbling
+    e.stopPropagation();
     setCategorySearchTerm(e.target.value);
   };
 
-  console.log("category search term", categorySearchTerm);
-  console.log("selected Categories", selectedCategories);
+  const convertArrayToObject = (array) => {
+    return array.reduce((acc, transaction) => {
+      const id = transaction.id;
+      if (id) {
+        acc[Number(id)] = transaction;
+      }
+      return acc;
+    }, {});
+  };
 
-  // Function to add new category
-  const handleAddCategory = (newCategory, rowIndex) => {
-    if (newCategory && !categoryOptions.includes(newCategory)) {
-      setNewCategoryToClassify(newCategory);
-      // Store the row index with the pending change
-      setPendingCategoryChange({
-        rowIndex,
-        newCategory: newCategory,
-        oldCategory: currentData[rowIndex]?.category || "",
+  const handleSaveChanges = async () => {
+    try {
+      setIsLoading(true);
+      console.log("Modified Data", modifiedData);
+      const payload = convertArrayToObject(modifiedData);
+      console.log("Payload", payload);
+      const response = await window.electron.editCategory(payload, caseId);
+      setHasChanges(false);
+      toast({
+        title: "Changes saved successfully",
+        description: "All category updates have been saved",
       });
-      setShowClassificationModal(true);
-      const updatedOptions = [...categoryOptions, newCategory].sort();
-      setCategoryOptions(updatedOptions);
-      return true;
+    } catch (error) {
+      toast({
+        title: "Error saving changes",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
-    return false;
   };
 
   useEffect(() => {
@@ -447,7 +436,6 @@ const CategoryEditTable = ({
   const getPageNumbers = () => {
     const pageNumbers = [];
     const maxVisiblePages = 5;
-
     if (totalPages <= maxVisiblePages) {
       for (let i = 1; i <= totalPages; i++) {
         pageNumbers.push(i);
@@ -468,47 +456,36 @@ const CategoryEditTable = ({
     return pageNumbers;
   };
 
-  const convertArrayToObject = (array) => {
-    console.log({insideCategoryEditTable:array})
-    return array.reduce((acc, transaction) => {
-      // Use realid if present, otherwise use transactionId
-      const id = transaction.id;
+  const handleAddCategory = (newCategory, row) => {
+    // Check if the new category is non-empty and not already in the options
+    if (newCategory && !categoryOptions.includes(newCategory)) {
       
-      // Only add to accumulator if we have a valid id
-      if (id) {
-          acc[Number(id)] = transaction;
+      // Set the category that needs classification
+      setNewCategoryToClassify(newCategory);
+      // Add the new category to your category options and sort them
+      const updatedOptions = [...categoryOptions, newCategory].sort();
+      setCategoryOptions(updatedOptions);
+      localStorage.setItem("categoryOptions", JSON.stringify(updatedOptions));
+
+  
+      if (row) {
+        // Single-row update flow: store the pending change using the transaction id.
+        setPendingCategoryChange({
+          transactionId: row.id,
+          newCategory,
+          oldCategory: row.category,
+          transaction: row,
+        });
+        setShowClassificationModal(true);
+      } else {
+        // Bulk update flow: simply show the classification modal.
+        setShowClassificationModal(true);
       }
-      return acc;
-    }, {});
-  };
-
-  const handleSaveChanges = async () => {
-    try {
-      setIsLoading(true);
-
-      console.log({ "Form Submitted": modifiedData });
-      const payload = convertArrayToObject(modifiedData)
-      console.log("sending request ",payload)
-      const reposonse = await window.electron.editCategory(payload,caseId);
-      console.log({reposonse})
-
-      setHasChanges(false);
-      toast({
-        title: "Changes saved successfully",
-        description: "All category updates have been saved",
-      });
-      //  refresh this component only
-      
-    } catch (error) {
-      toast({
-        title: "Error saving changes",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+      return true;
     }
+    return false;
   };
+  
 
   return (
     <div className="relative min-h-screen flex flex-col">
@@ -542,41 +519,39 @@ const CategoryEditTable = ({
                   }
                 }}
               >
-                <option value="5">5 rows</option>
+                {/* <option value="5">5 rows</option> */}
                 <option value="10">10 rows</option>
                 <option value="20">20 rows</option>
                 <option value="50">50 rows</option>
-                <option value="100">100 rows</option>
-                <option value="all">Show all</option>
+                {/* <option value="100">100 rows</option> */}
+                {/* <option value="all">Show all</option> */}
               </select>
-              <Button variant="default" onClick={() => clearFilters()}>
+              <Button variant="default" onClick={clearFilters}>
                 Clear Filters
               </Button>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="overflow-x-auto min-w-[900px]">
           <div className="relative">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-center flex gap-2 items-center">
                     <div className="flex items-center gap-2">
-                      <p className={"whitespace-nowrap"}>Select All</p>
+                      <p className="whitespace-nowrap">Select All</p>
                     </div>
                     <Checkbox
                       checked={
                         currentData.length > 0 &&
-                        currentData.every((_, index) =>
-                          globalSelectedRows.has(startIndex + index)
-                        )
+                        currentData.every((row) => globalSelectedRows.has(row.id))
                       }
                       onCheckedChange={toggleSelectAll}
                     />
                   </TableHead>
                   {columns.map((column) => (
                     <TableHead key={column}>
-                      <div className="flex items-center gap-2 whitespace-nowrap ">
+                      <div className="flex items-center gap-2 whitespace-nowrap">
                         {column.charAt(0).toUpperCase() +
                           column.slice(1).toLowerCase()}
                         {column.toLowerCase() !== "description" && (
@@ -615,17 +590,12 @@ const CategoryEditTable = ({
                     </TableCell>
                   </TableRow>
                 ) : (
-                  currentData.map((row, index) => (
-                    <TableRow
-                      key={index}
-                      className={cn(
-                        selectedRows.includes(index) && "bg-muted/50"
-                      )}
-                    >
+                  currentData.map((row) => (
+                    <TableRow key={row.id}>
                       <TableCell className="text-center">
                         <Checkbox
-                          checked={globalSelectedRows.has(startIndex + index)}
-                          onCheckedChange={() => toggleRowSelection(index)}
+                          checked={globalSelectedRows.has(row.id)}
+                          onCheckedChange={() => toggleRowSelection(row.id)}
                         />
                       </TableCell>
                       {columns.map((column) => (
@@ -637,19 +607,16 @@ const CategoryEditTable = ({
                             <Select
                               value={row[column]}
                               onValueChange={(value) =>
-                                handleCategoryChange(index, value)
+                                handleCategoryChange(row, value)
                               }
                               className="w-full"
-                              disabled={globalSelectedRows.has(
-                                startIndex + index
-                              )}
+                              disabled={globalSelectedRows.has(row.id)}
                             >
                               <SelectTrigger className="w-full">
                                 <SelectValue>{row[column]}</SelectValue>
                               </SelectTrigger>
                               <SelectContent
                                 onCloseAutoFocus={(e) => {
-                                  // Prevent the default focus behavior
                                   e.preventDefault();
                                 }}
                               >
@@ -658,19 +625,16 @@ const CategoryEditTable = ({
                                     <Input
                                       placeholder="Search categories..."
                                       value={categorySearchTerm}
-                                      onChange={(e) => handleCategorySearch(e)}
-                                      // Add these handlers
+                                      onChange={(e) =>
+                                        handleCategorySearch(e)
+                                      }
                                       onFocus={() =>
                                         setIsSearchInputFocused(true)
                                       }
                                       onBlur={() =>
                                         setIsSearchInputFocused(false)
                                       }
-                                      // Prevent the select's keyboard navigation from interfering
-                                      onKeyDown={(e) => {
-                                        e.stopPropagation();
-                                      }}
-                                      // Prevent any click events from bubbling up to the Select
+                                      onKeyDown={(e) => e.stopPropagation()}
                                       onClick={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
@@ -685,9 +649,10 @@ const CategoryEditTable = ({
                                       e.preventDefault();
                                       e.stopPropagation();
                                       if (categorySearchTerm.trim()) {
+                                        // Pass the whole row for a single update
                                         const added = handleAddCategory(
                                           categorySearchTerm.trim(),
-                                          index // Pass the row index
+                                          row
                                         );
                                         if (added) {
                                           setCategorySearchTerm("");
@@ -743,8 +708,6 @@ const CategoryEditTable = ({
               </TableBody>
             </Table>
           </div>
-
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="mt-6">
               <Pagination>
@@ -778,7 +741,9 @@ const CategoryEditTable = ({
                   <PaginationItem>
                     <PaginationNext
                       onClick={() =>
-                        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                        setCurrentPage((prev) =>
+                          Math.min(prev + 1, totalPages)
+                        )
                       }
                       className={cn(
                         "cursor-pointer",
@@ -793,7 +758,7 @@ const CategoryEditTable = ({
           )}
         </CardContent>
 
-        {/* category Filter Modal */}
+        {/* Filter Modal */}
         {filterModalOpen && (
           <Dialog open={filterModalOpen} onOpenChange={setFilterModalOpen}>
             <DialogContent className="sm:max-w-[400px]">
@@ -897,7 +862,7 @@ const CategoryEditTable = ({
           </Dialog>
         )}
 
-        {/* Bulk category Update Modal */}
+        {/* Bulk Category Update Modal */}
         <Dialog
           open={bulkCategoryModalOpen}
           onOpenChange={setBulkCategoryModalOpen}
@@ -920,80 +885,67 @@ const CategoryEditTable = ({
                   <SelectValue placeholder="Select new category" />
                 </SelectTrigger>
                 <SelectContent>
-                <div className="p-2 border-b flex gap-2">
-                      <div className="relative flex-1">
-                        <Input
-                          placeholder="Search categories..."
-                          value={categorySearchTerm}
-                          onChange={(e) => handleCategorySearch(e)}
-                          // Add these handlers
-                          onFocus={() =>
-                            setIsSearchInputFocused(true)
-                          }
-                          onBlur={() =>
-                            setIsSearchInputFocused(false)
-                          }
-                          // Prevent the select's keyboard navigation from interfering
-                          onKeyDown={(e) => {
-                            e.stopPropagation();
-                          }}
-                          // Prevent any click events from bubbling up to the Select
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                          }}
-                        />
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="px-2 h-10"
+                  <div className="p-2 border-b flex gap-2">
+                    <div className="relative flex-1">
+                      <Input
+                        placeholder="Search categories..."
+                        value={categorySearchTerm}
+                        onChange={(e) => handleCategorySearch(e)}
+                        onFocus={() =>
+                          setIsSearchInputFocused(true)
+                        }
+                        onBlur={() =>
+                          setIsSearchInputFocused(false)
+                        }
+                        onKeyDown={(e) => e.stopPropagation()}
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          if (categorySearchTerm.trim()) {
-                            const added = handleAddCategory(
-                              categorySearchTerm.trim(),
-                            );
-                            if (added) {
-                              setCategorySearchTerm("");
-                            }
-                          }
                         }}
-                      >
-                        <Plus className="h-4 w-4" />
-                        Add
-                      </Button>
+                      />
                     </div>
-                <div className="overflow-y-auto">
-                  
-                {filteredCategories.length > 0 ? (
-                    filteredCategories.map((category) => (
-                      <SelectItem
-                        key={category}
-                        value={category}
-                      >
-                        {category}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <div className="p-4 max-w-[300px] text-center text-muted-foreground">
-                      <p className="text-md">
-                        No matching categories found
-                      </p>
-                      <p className="text-sm mt-1">
-                        Click the{" "}
-                        <Plus className="h-3 w-3 inline-block mx-1" />{" "}
-                        icon above to add "{categorySearchTerm}"
-                        as a new category
-                      </p>
-                    </div>
-                  )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="px-2 h-10"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (categorySearchTerm.trim()) {
+                          // In bulk mode we do not pass a row
+                          const added = handleAddCategory(
+                            categorySearchTerm.trim()
+                          );
+                          if (added) {
+                            setCategorySearchTerm("");
+                          }
+                        }
+                      }}
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add
+                    </Button>
+                  </div>
+                  <div className="overflow-y-auto">
+                    {filteredCategories.length > 0 ? (
+                      filteredCategories.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <div className="p-4 max-w-[300px] text-center text-muted-foreground">
+                        <p className="text-md">No matching categories found</p>
+                        <p className="text-sm mt-1">
+                          Click the{" "}
+                          <Plus className="h-3 w-3 inline-block mx-1" /> icon
+                          above to add "{categorySearchTerm}" as a new category
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </SelectContent>
               </Select>
-
-              
 
               <div className="space-y-4">
                 <div className="flex items-center space-x-2 mt-4">
@@ -1054,8 +1006,7 @@ const CategoryEditTable = ({
               <DialogTitle>Confirm Category Update</DialogTitle>
               <DialogDescription>
                 Are you sure you want to update the category to "
-                {selectedBulkCategory}" for {globalSelectedRows.size}{" "}
-                transactions?
+                {selectedBulkCategory}" for {globalSelectedRows.size} transactions?
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
@@ -1072,7 +1023,7 @@ const CategoryEditTable = ({
           </DialogContent>
         </Dialog>
 
-        {/* Classification modal */}
+        {/* Classification Modal */}
         <Dialog
           open={showClassificationModal}
           onOpenChange={() => setShowClassificationModal(false)}
@@ -1081,8 +1032,7 @@ const CategoryEditTable = ({
             <DialogHeader>
               <DialogTitle>Classify New Category</DialogTitle>
               <DialogDescription>
-                Please classify "{newCategoryToClassify}" into one of the
-                following types
+                Please classify "{newCategoryToClassify}" into one of the following types
               </DialogDescription>
             </DialogHeader>
 
@@ -1096,10 +1046,7 @@ const CategoryEditTable = ({
                 <Label htmlFor="income">Income</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem
-                  value="Important Expenses"
-                  id="important_expenses"
-                />
+                <RadioGroupItem value="Important Expenses" id="important_expenses" />
                 <Label htmlFor="important_expenses">Important Expenses</Label>
               </div>
               <div className="flex items-center space-x-2">
@@ -1160,9 +1107,7 @@ const CategoryEditTable = ({
               {showKeywordInput && (
                 <div className="space-y-2">
                   <Label>
-                    What keywords from the description made you change the
-                    category from "{pendingCategoryChange?.oldCategory}" to "
-                    {pendingCategoryChange?.newCategory}"?
+                    What keywords from the description made you change the category from "{pendingCategoryChange?.oldCategory}" to "{pendingCategoryChange?.newCategory}"?
                   </Label>
                   <Input
                     value={reasoning}
@@ -1180,7 +1125,7 @@ const CategoryEditTable = ({
                   setReasoningModalOpen(false);
                   setPendingCategoryChange(null);
                   setReasoning("");
-                  setShowKeywordInput(false); // Reset checkbox state
+                  setShowKeywordInput(false);
                 }}
               >
                 Cancel
@@ -1188,7 +1133,7 @@ const CategoryEditTable = ({
               <Button
                 variant="default"
                 onClick={confirmCategoryChange}
-                disabled={showKeywordInput && !reasoning} // Only disable if checkbox is checked and no reasoning provided
+                disabled={showKeywordInput && !reasoning}
               >
                 Confirm Change
               </Button>
@@ -1204,7 +1149,7 @@ const CategoryEditTable = ({
         )}
       </Card>
 
-      {/* Fixed bottom actions bar */}
+      {/* Fixed Bottom Actions Bar */}
       {(hasChanges || globalSelectedRows.size > 0) && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-lg flex justify-end gap-2 z-50">
           {globalSelectedRows.size > 0 && (

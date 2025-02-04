@@ -80,6 +80,7 @@ function registerMainDashboardIpc(tmpdir_path) {
   });
 
   ipcMain.handle("fetch-pdf-content", async (event, path) => {
+    log.info("opening file ", path)
     // This hander takes in a file path and returns the base64 encoded data of the file
     // const filePath = 'E:/Workplace/Bizpedia/ca-offline-suite/frontend/tmp/52 Kotak bank account statement - Apr 23 to Mar 24.pdf'; // The path to the PDF file
     // const filePath = path.join(tmpdir_path, "failed_pdfs", "check", fileName);

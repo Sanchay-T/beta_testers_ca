@@ -558,11 +558,15 @@ const GenerateReportForm = ({
   };
 
   const handleFileChange = (e) => {
+    console.log("Inside handleFileChange..");
+    console.log({e:e.target})
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
 
       // Combine new files with existing files
       const combinedFiles = [...selectedFiles, ...newFiles];
+      
+      console.log({newFiles,combinedFiles})
 
       // Remove duplicates based on file name and size
       const uniqueFiles = combinedFiles.filter(
@@ -570,6 +574,8 @@ const GenerateReportForm = ({
           index ===
           self.findIndex((f) => f.name === file.name && f.size === file.size)
       );
+
+      console.log({uniqueFiles})
 
       setSelectedFiles(uniqueFiles);
 
@@ -599,12 +605,19 @@ const GenerateReportForm = ({
   };
 
   const removeFile = (indexToRemove) => {
-    setSelectedFiles((prevFiles) =>
-      prevFiles.filter((_, index) => index !== indexToRemove)
-    );
-    setFileDetails((prevDetails) =>
-      prevDetails.filter((_, index) => index !== indexToRemove)
-    );
+    console.log({removeFile: indexToRemove})
+    let tempSelectedFiles = [...selectedFiles];
+    let tempFileDetails = [...fileDetails];
+
+    console.log({tempSelectedFiles, tempFileDetails})
+
+    tempSelectedFiles= tempSelectedFiles.filter((_, index) => index !== indexToRemove)
+    tempFileDetails= tempFileDetails.filter((_, index) => index !== indexToRemove)
+
+    console.log({tempSelectedFiles, tempFileDetails})
+
+    setSelectedFiles(tempSelectedFiles);
+    setFileDetails(tempFileDetails);
   };
 
   return (
