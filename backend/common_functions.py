@@ -2757,18 +2757,29 @@ def make_summary_great_again(df1, opening_closing_balance, df2):
 
     return particulars_table, income_summary, important_summary, other_summary
 
+
 def summary_sheet(idf, open_bal, close_bal, new_tran_df, new_categories = None):
 
     opening_closing_balance = {month: [open_bal[month], close_bal[month]] for month in open_bal}
 
     excel_file_path = os.path.join(BASE_DIR, "Final_Category.xlsx")
-    new_excel_file_path = append_to_excel(excel_file_path, new_categories)
 
-    df2 = pd.read_excel(new_excel_file_path)
+    df2 = pd.read_excel(excel_file_path)
+    
+    df_new = pd.DataFrame()
+    
+    if new_categories:
+        df_new = pd.DataFrame(new_categories)
+        new_excel_file_path = append_to_excel(excel_file_path, new_categories)
+
+    # Append new data
+    df2 = pd.concat([df2, df_new], ignore_index=True)
+
     sheet_1, sheet_2, sheet_3, sheet_4 = make_summary_great_again(new_tran_df, opening_closing_balance, df2)
     df_list = [sheet_1, sheet_2, sheet_3, sheet_4]
 
     return df_list
+
 
 def transaction_sheet( df):
     if len(df["Bank"].unique()) > 1:
