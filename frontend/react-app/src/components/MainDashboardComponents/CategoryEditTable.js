@@ -131,7 +131,7 @@ const CategoryEditTable = ({
 
     setTransactions(formattedData);
     setFilteredData(formattedData);
-  }, [data]);
+  }, []);
 
   let columns = data.length > 0 ? Object.keys(data[0]) : [];
   columns = columns.filter((column) => !columnsToIgnore.includes(column));
@@ -198,6 +198,7 @@ const CategoryEditTable = ({
         return String(value).toLowerCase().includes(searchValue.toLowerCase());
       })
     );
+    console.log({updatedData: filtered});
     setFilteredData(filtered);
     setCurrentPage(1);
   };
