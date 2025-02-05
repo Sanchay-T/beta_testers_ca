@@ -33,6 +33,7 @@
   "build": {
     "appId": "com.electron.electronapp",
     "productName": "Cyphersol",
+    "icon":"assets/cyphersol-icon.ico",
     "directories": {
       "output": "dist"
     },
@@ -91,6 +92,7 @@
       "darkModeSupport": true
     },
     "win": {
+      "icon":"assets/cyphersol-icon.ico",
       "target": [
         {
           "target": "nsis",
@@ -113,7 +115,8 @@
       "differentialPackage": true
     },
     "linux": {
-      "target": "AppImage"
+      "target": "AppImage",
+      "icon":"assets/cyphersol-icon.png"
     }
   },
   "dependencies": {
