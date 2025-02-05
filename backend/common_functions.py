@@ -1062,6 +1062,7 @@ def pmt_bl():
     # print("pmt_bl", payment)
     return payment
 
+
 def category_add_ca(df):
     x = df["Balance"]
     df["Debit"] = pd.to_numeric(df["Debit"], errors="coerce")
@@ -1070,172 +1071,93 @@ def category_add_ca(df):
         if df[col].dtype == "object":
             df[col] = df[col].str.lower()
     df["Description"] = df["Description"].str.replace(" ", "")
-    # excel_file_path = os.path.join(BASE_DIR, "CA_Category_sheet.xlsx")
     excel_file_path = os.path.join(BASE_DIR, "Final_Category.xlsx")
-    print("Category sheet path : ", excel_file_path)
     df2 = pd.read_excel(excel_file_path)
 
     # Initialize the 'Category' column with "Suspense" for all rows
     df["Category"] = "Suspense"
 
     pos_pattern = r"^pos.*"
-    df.loc[
-        (df["Description"].str.contains(pos_pattern, regex=True))
-        & (df["Debit"] > 0),
-        "Category",
-    ] = "POS-Dr"
-    df.loc[
-        (df["Description"].str.contains(pos_pattern, regex=True))
-        & (df["Credit"] > 0),
-        "Category",
-    ] = "POS-Cr"
+    df.loc[(df["Description"].str.contains(pos_pattern, regex=True)) & (df["Debit"] > 0), "Category",] = "POS-Dr"
+    df.loc[(df["Description"].str.contains(pos_pattern, regex=True)) & (df["Credit"] > 0), "Category",] = "POS-Cr"
 
     pos_pattern_2 = r"^(vps|ips|ecom|pur|pcd|edc|ecompur)"
-    df.loc[
-        (df["Description"].str.contains(pos_pattern_2, regex=True))
-        & (df["Debit"] > 0),
-        "Category",
-    ] = "POS-Dr"
-    df.loc[
-        (df["Description"].str.contains(pos_pattern_2, regex=True))
-        & (df["Credit"] > 0),
-        "Category",
-    ] = "POS-Cr"
+    df.loc[(df["Description"].str.contains(pos_pattern_2, regex=True)) & (df["Debit"] > 0), "Category",] = "POS-Dr"
+    df.loc[(df["Description"].str.contains(pos_pattern_2, regex=True)) & (df["Credit"] > 0), "Category",] = "POS-Cr"
 
     def categorize_bank_charges(df):
         Bank_charges = r"^(bctt|nchg|tChg|tip/scg|rate\.diff|owchquereturncharges|inwardchqreturncharge|chrg|incidentalcharges|iwchq|smschrg|chrg:sms|\*chrg:sms|nachreturncharges|fundtransfercharges|cashwithdrawalchgs|impschg|monthlysmscha|amcatmcharges|monthlyservicechrgs|smsalert|penalcharges|sgst|cgst|bulkcharges)"
-
-        df = df[
-            ~df["Description"].str.contains("POS-Cr|POS-Dr", regex=True, na=False)
-        ]
-        df.loc[
-            (df["Description"].str.contains(Bank_charges, regex=True))
-            & (df["Debit"] > 0),
-            "Category",
-        ] = "Bank Charges"
+        df = df[~df["Description"].str.contains("POS-Cr|POS-Dr", regex=True, na=False)]
+        df.loc[(df["Description"].str.contains(Bank_charges, regex=True)) & (
+                    df["Debit"] > 0), "Category",] = "Bank Charges"
         return df
 
     df = categorize_bank_charges(df)
 
     Bank_charges = r"(wchrgs)"
-    df.loc[
-        (df["Description"].str.contains(Bank_charges, case=False, regex=True))
-        & (df["Debit"] > 0),
-        "Category",
-    ] = "Bank Charges"
+    df.loc[(df["Description"].str.contains(Bank_charges, case=False, regex=True)) & (
+                df["Debit"] > 0), "Category"] = "Bank Charges"
 
     Bank_Interest_Recieved = r"^(int)"
-    df.loc[
-        (df["Description"].str.contains(Bank_Interest_Recieved, regex=True))
-        & (df["Credit"] > 0),
-        "Category",
-    ] = "Bank Interest Received"
+    df.loc[(df["Description"].str.contains(Bank_Interest_Recieved, regex=True)) & (
+                df["Credit"] > 0), "Category",] = "Bank Interest Received"
 
     Bounce = r"^(r-ret-utr)"
-    df.loc[
-        (df["Description"].str.contains(Bounce, regex=True)) & (df["Debit"] > 0),
-        "Category",
-    ] = "Bounce"
+    df.loc[(df["Description"].str.contains(Bounce, regex=True)) & (df["Debit"] > 0), "Category",] = "Bounce"
 
     Cash_Withdrawal = r"^(ccwd|vat|mat|nfs|atm|atm-cash-axis|atm-cash|atw|csw|atd|ati|vmt|inf|cwdr|self|cash-atm|atl/|cashpm|withdrawal|chequewdl)"
-    df.loc[
-        (df["Description"].str.contains(Cash_Withdrawal, case=False, regex=True))
-        & (df["Debit"] > 0),
-        "Category",
-    ] = "Cash Withdrawal"
+    df.loc[(df["Description"].str.contains(Cash_Withdrawal, case=False, regex=True)) & (
+                df["Debit"] > 0), "Category",] = "Cash Withdrawal"
 
     General_insurance = r"^(pac)"
-    df.loc[
-        (df["Description"].str.contains(General_insurance, case=False, regex=True))
-        & (df["Debit"] > 0),
-        "Category",
-    ] = "General insurance"
+    df.loc[(df["Description"].str.contains(General_insurance, case=False, regex=True)) & (
+                df["Debit"] > 0), "Category",] = "General insurance"
 
     Indirect_tax = r"^(idtx)"
-    df.loc[
-        (df["Description"].str.contains(Indirect_tax, case=False, regex=True))
-        & (df["Debit"] > 0),
-        "Category",
-    ] = "Indirect tax"
+    df.loc[(df["Description"].str.contains(Indirect_tax, case=False, regex=True)) & (
+                df["Debit"] > 0), "Category",] = "Indirect tax"
 
     interest_paid = r"^(int.coll)"
-    df.loc[
-        (df["Description"].str.contains(interest_paid, case=False, regex=True))
-        & (df["Debit"] > 0),
-        "Category",
-    ] = "interest paid"
+    df.loc[(df["Description"].str.contains(interest_paid, case=False, regex=True)) & (
+                df["Debit"] > 0), "Category",] = "interest paid"
 
     investment = r"^(eba|autosweep|growwpay|axismutualfund)"
-    df.loc[
-        (df["Description"].str.contains(investment, case=False, regex=True))
-        & (df["Debit"] > 0),
-        "Category",
-    ] = "Investment"
+    df.loc[(df["Description"].str.contains(investment, case=False, regex=True)) & (
+                df["Debit"] > 0), "Category",] = "Investment"
     investment = r"(growwpay)"
-    df.loc[
-        (df["Description"].str.contains(investment, case=False, regex=True))
-        & (df["Debit"] > 0),
-        "Category",
-    ] = "Investment"
+    df.loc[(df["Description"].str.contains(investment, case=False, regex=True)) & (
+                df["Debit"] > 0), "Category",] = "Investment"
 
     Local_cheque_collection = r"^(lccbrncms)"
-    df.loc[
-        (
-            df["Description"].str.contains(
-                Local_cheque_collection, case=False, regex=True
-            )
-        )
-        & (df["Debit"] > 0),
-        "Category",
-    ] = "Local cheque collection"
+    df.loc[(df["Description"].str.contains(Local_cheque_collection, case=False, regex=True)) & (
+                df["Debit"] > 0), "Category",] = "Local cheque collection"
 
     emi = r"^(emi|lnpy)"
     df.loc[
-        (df["Description"].str.contains(emi, case=False, regex=True))
-        & (df["Debit"] > 0),
-        "Category",
-    ] = "Probable EMI"
+        (df["Description"].str.contains(emi, case=False, regex=True)) & (df["Debit"] > 0), "Category",] = "Probable EMI"
 
     Tax_Payment = r"^(gib)"
-    df.loc[
-        (df["Description"].str.contains(Tax_Payment, case=False, regex=True))
-        & (df["Debit"] > 0),
-        "Category",
-    ] = "Tax Payment"
+    df.loc[(df["Description"].str.contains(Tax_Payment, case=False, regex=True)) & (
+                df["Debit"] > 0), "Category",] = "Tax Payment"
     Tax_Payment = r"(gsttaxpayment|gst@)"
-    df.loc[
-        (df["Description"].str.contains(Tax_Payment, case=False, regex=True))
-        & (df["Debit"] > 0),
-        "Category",
-    ] = "GST Paid"
+    df.loc[(df["Description"].str.contains(Tax_Payment, case=False, regex=True)) & (
+                df["Debit"] > 0), "Category",] = "GST Paid"
 
     Refund_Reversal = r"^(ft-rev|revchrg|rev:imps|imps:rec|imps_ret)"
-    df.loc[
-        (df["Description"].str.contains(Refund_Reversal, case=False, regex=True))
-        & (df["Credit"] > 0),
-        "Category",
-    ] = "Refund/Reversal"
+    df.loc[(df["Description"].str.contains(Refund_Reversal, case=False, regex=True)) & (
+                df["Credit"] > 0), "Category",] = "Refund/Reversal"
 
     Refund = r"^(imps:rec|ref-tr)"
-    df.loc[
-        (df["Description"].str.contains(Refund, case=False, regex=True))
-        & (df["Credit"] > 0),
-        "Category",
-    ] = "Refund/Reversal"
+    df.loc[(df["Description"].str.contains(Refund, case=False, regex=True)) & (
+                df["Credit"] > 0), "Category",] = "Refund/Reversal"
 
     Redemption = r"^(revsweep|sewwptrf)"
-    df.loc[
-        (df["Description"].str.contains(Redemption, case=False, regex=True))
-        & (df["Credit"] > 0),
-        "Category",
-    ] = "Redemption,Dividend & Interest"
+    df.loc[(df["Description"].str.contains(Redemption, case=False, regex=True)) & (
+                df["Credit"] > 0), "Category",] = "Redemption,Dividend & Interest"
 
     Recharge = r"^(rchg)"
-    df.loc[
-        (df["Description"].str.contains(Recharge, case=False, regex=True))
-        & (df["Credit"] > 0),
-        "Category",
-    ] = "Recharge"
+    df.loc[(df["Description"].str.contains(Recharge, case=False, regex=True)) & (
+                df["Credit"] > 0), "Category",] = "Recharge"
 
     # Function to extract and clean name from 'ipay/inst/neft/' transactions
     def extract_ipay_neft_name(description):
@@ -1259,11 +1181,8 @@ def category_add_ca(df):
     # SBI
     NEFT_SBI = df[df["Description"].str.contains("bytransfer-neft*", na=False)]
     if not NEFT_SBI.empty:
-        NEFT_1 = NEFT_SBI[
-            ~NEFT_SBI["Category"].str.contains("Redemption, Dividend & Interest")
-        ]
+        NEFT_1 = NEFT_SBI[~NEFT_SBI["Category"].str.contains("Redemption, Dividend & Interest")]
 
-        # neft_names = NEFT_1['Description'].apply(lambda x: x.split('*')[3])
         def extract_category(description):
             try:
                 return description.split("*")[3]
@@ -1280,35 +1199,26 @@ def category_add_ca(df):
         )  # Regex to find digits followed by non-digits
         return (
             matches[-1] if matches else None
-        )  # Returning the text after the last numeric character
+        )
 
-    # Select all NEFT entries
+    def extract_neft_name(description):
+        parts = description.split("/")
+        if len(parts) > 2 and parts[2].strip():
+            return parts[2].strip()
+        else:
+            return "Suspense"
+
     NEFT = df[df["Description"].str.contains("neft", na=False)]
-    # Process for NEFT_1
     NEFT_1 = NEFT[NEFT["Description"].str.contains("neft/", na=False)]
     if not NEFT_1.empty:
-        NEFT_1 = NEFT_1[NEFT_1["Category"].str.contains("Suspense")]
-        NEFT_1 = NEFT_1[
-            ~NEFT_1["Category"].str.contains(
-                "Redemption, Dividend & Interest,Salary Paid,Salary Received"
-            )
-        ]
-        # neft_names = NEFT_1['Description'].apply(lambda x: x.split('/')[2])
-        try:
-            neft_names = NEFT_1["Description"].apply(lambda x: x.split("/")[2])
-            NEFT_1["Category"] = neft_names
-        except Exception as e:
-            print("Error in splitting NEFT names: ", e)
-        # NEFT_1['Category'] = neft_names
+        NEFT_1 = NEFT_1[NEFT_1["Category"].str.contains("Suspense", na=False)]
+        exclude_pattern = "Redemption|Dividend & Interest|Salary Paid|Salary Received"
+        NEFT_1 = NEFT_1[~NEFT_1["Category"].str.contains(exclude_pattern, na=False)]
+        NEFT_1["Category"] = NEFT_1["Description"].apply(extract_neft_name)
         df.update(NEFT_1)
 
-    # Process for NEFT_KOTAK
-    NEFT_KOTAK = NEFT[
-        ~NEFT["Category"].str.contains(
-            "Debtor|Creditor|Suspense|Redemption,Dividend & Interest,Salary Paid,Salary Received",
-            na=False,
-        )
-    ]
+    NEFT_KOTAK = NEFT[~NEFT["Category"].str.contains(
+        "Debtor|Creditor|Suspense|Redemption,Dividend & Interest,Salary Paid,Salary Received", na=False, )]
     if not NEFT_KOTAK.empty:
         extracted_text = NEFT_KOTAK["Description"].apply(extract_text_after_numeric)
         NEFT_KOTAK["Category"] = extracted_text
@@ -1324,15 +1234,9 @@ def category_add_ca(df):
 
     NEFT_colon = df[df["Description"].str.contains("neft:", na=False)]
     if not NEFT_colon.empty:
-        NEFT_colon = NEFT_colon[
-            ~NEFT_colon["Category"].str.contains(
-                "Debtor|Creditor|Redemption, Dividend & Interest,Salary Paid,Salary Received",
-                na=False,
-            )
-        ]
-        NEFT_colon["Category"] = NEFT_colon["Description"].apply(
-            extract_neft_colon_category
-        )
+        NEFT_colon = NEFT_colon[~NEFT_colon["Category"].str.contains(
+            "Debtor|Creditor|Redemption, Dividend & Interest|Salary Paid|Salary Received", na=False, )]
+        NEFT_colon["Category"] = NEFT_colon["Description"].apply(extract_neft_colon_category)
         df.update(NEFT_colon)
 
     def extract_nefto_union_category(description):
@@ -1345,12 +1249,8 @@ def category_add_ca(df):
 
     NEFTO = df[df["Description"].str.contains("nefto-", na=False)]
     if not NEFTO.empty:
-        NEFTO = NEFTO[
-            ~NEFTO["Category"].str.contains(
-                "Debtor|Creditor|Redemption, Dividend & Interest,Salary Paid,Salary Received",
-                na=False,
-            )
-        ]
+        NEFTO = NEFTO[~NEFTO["Category"].str.contains(
+            "Debtor|Creditor|Redemption, Dividend & Interest|Salary Paid|Salary Received", na=False, )]
         NEFTO["Category"] = NEFTO["Description"].apply(extract_nefto_union_category)
         df.update(NEFTO)
 
@@ -1364,12 +1264,8 @@ def category_add_ca(df):
 
     RTGSO = df[df["Description"].str.contains("rtgso-", na=False)]
     if not RTGSO.empty:
-        RTGSO = RTGSO[
-            ~RTGSO["Category"].str.contains(
-                "Debtor|Creditor|Redemption, Dividend & Interest,Salary Paid,Salary Received",
-                na=False,
-            )
-        ]
+        RTGSO = RTGSO[~RTGSO["Category"].str.contains(
+            "Debtor|Creditor|Redemption, Dividend & Interest|Salary Paid|Salary Received", na=False, )]
         RTGSO["Category"] = RTGSO["Description"].apply(extract_rtgso_union_category)
         df.update(RTGSO)
 
@@ -1382,12 +1278,8 @@ def category_add_ca(df):
 
     RTGSFR = df[df["Description"].str.contains("rtgsfr:", na=False)]
     if not RTGSFR.empty:
-        RTGSFR = RTGSFR[
-            ~RTGSFR["Category"].str.contains(
-                "Debtor|Creditor|Redemption, Dividend & Interest,Salary Paid,Salary Received",
-                na=False,
-            )
-        ]
+        RTGSFR = RTGSFR[~RTGSFR["Category"].str.contains(
+            "Debtor|Creditor|Redemption, Dividend & Interest|Salary Paid|Salary Received", na=False, )]
         RTGSFR["Category"] = RTGSFR["Description"].apply(extract_rtgsfr_category)
         df.update(RTGSFR)
 
@@ -1401,22 +1293,15 @@ def category_add_ca(df):
 
     RTGSO = df[df["Description"].str.contains("rtgs:", na=False)]
     if not RTGSO.empty:
-        RTGSO = RTGSO[
-            ~RTGSO["Category"].str.contains(
-                "Debtor|Creditor|Redemption, Dividend & Interest,Salary Paid,Salary Received",
-                na=False,
-            )
-        ]
+        RTGSO = RTGSO[~RTGSO["Category"].str.contains(
+            "Debtor|Creditor|Redemption, Dividend & Interest|Salary Paid|Salary Received", na=False, )]
         RTGSO["Category"] = RTGSO["Description"].apply(extract_rtgso_union_category)
         df.update(RTGSO)
 
     rtgs_ib = df[df["Description"].str.contains("ib/rtgs/", na=False)]
     rtgs_ib = rtgs_ib[
-        ~rtgs_ib["Category"].str.contains(
-            "Debtor|Creditor|Redemption, Dividend & Interest,Salary Paid,Salary Received",
-            na=False,
-        )
-    ]
+        ~rtgs_ib["Category"].str.contains("Debtor|Creditor|Redemption, Dividend & Interest|Salary Paid|Salary Received",
+                                          na=False, )]
     if not rtgs_ib.empty:
         def extract_category(description):
             parts = description.split("/")
@@ -1431,10 +1316,7 @@ def category_add_ca(df):
     NEFT_ib = df[df["Description"].str.contains("ib/neft/", na=False)]
     if not NEFT_ib.empty:
         NEFT_ib = NEFT_ib[
-            ~NEFT_ib["Category"].str.contains(
-                "Redemption, Dividend & Interest,Salary Paid,Salary Received"
-            )
-        ]
+            ~NEFT_ib["Category"].str.contains("Redemption, Dividend & Interest|Salary Paid|Salary Received")]
 
         def extract_category(description):
             parts = description.split("/")
@@ -1448,11 +1330,7 @@ def category_add_ca(df):
 
     NEFT = df[df["Description"].str.contains("neft/mb/ax", na=False)]
     if not NEFT.empty:
-        NEFT = NEFT[
-            ~NEFT["Category"].str.contains(
-                "Redemption, Dividend & Interest,Salary Paid,Salary Received"
-            )
-        ]
+        NEFT = NEFT[~NEFT["Category"].str.contains("Redemption, Dividend & Interest|Salary Paid|Salary Received")]
 
         def extract_category(description):
             parts = description.split("/")
@@ -1473,10 +1351,7 @@ def category_add_ca(df):
 
     NEFT_entries = df[df["Description"].str.contains("neft-", na=False)]
     NEFT_entries = NEFT_entries[
-        ~NEFT_entries["Category"].str.contains(
-            "Redemption, Dividend & Interest,Salary Paid,Salary Received"
-        )
-    ]
+        ~NEFT_entries["Category"].str.contains("Redemption, Dividend & Interest|Salary Paid|Salary Received")]
     if not NEFT_entries.empty:
         for idx, row in NEFT_entries.iterrows():
             keyword = extract_keyword_from_description(row["Description"])
@@ -1494,16 +1369,10 @@ def category_add_ca(df):
         except IndexError:
             return "Suspense"
 
-    NEFT_IO = df[
-        df["Description"].str.contains("neft-", na=False)
-        & df["Category"].str.contains("Suspense", na=False)
-        ]
+    NEFT_IO = df[df["Description"].str.contains("neft-", na=False) & df["Category"].str.contains("Suspense", na=False)]
     if not NEFT_IO.empty:
-        NEFT_IO = NEFT_IO[
-            ~NEFT_IO["Category"].str.contains(
-                "Redemption, Dividend & Interest|Bank Interest Received,Salary Paid,Salary Received"
-            )
-        ]
+        NEFT_IO = NEFT_IO[~NEFT_IO["Category"].str.contains(
+            "Redemption, Dividend & Interest|Bank Interest Received|Salary Paid|Salary Received")]
         NEFT_IO = NEFT_IO[~NEFT_IO["Category"].str.contains("Debtor")]
         NEFT_IO = NEFT_IO[~NEFT_IO["Category"].str.contains("Creditor")]
         NEFT_IO["Category"] = NEFT_IO["Description"].apply(extract_neft_io_category)
@@ -1517,24 +1386,16 @@ def category_add_ca(df):
 
     NEFT_HDFC_CR = df[df["Description"].str.contains("neftcr", na=False)]
     if not NEFT_HDFC_CR.empty:
-        NEFT_HDFC_CR = NEFT_HDFC_CR[
-            ~NEFT_HDFC_CR["Category"].str.contains(
-                "Redemption, Dividend & Interest|Bank Interest Received,Salary Paid,Salary Received"
-            )
-        ]
-        neft_names = NEFT_HDFC_CR["Description"].apply(
-            extract_neft_hdfc_cr_category
-        )
+        NEFT_HDFC_CR = NEFT_HDFC_CR[~NEFT_HDFC_CR["Category"].str.contains(
+            "Redemption, Dividend & Interest|Bank Interest Received|Salary Paid|Salary Received")]
+        neft_names = NEFT_HDFC_CR["Description"].apply(extract_neft_hdfc_cr_category)
         NEFT_HDFC_CR["Category"] = neft_names
         df.update(NEFT_HDFC_CR)
 
     NEFT_HDFC_DR = df[df["Description"].str.contains("neftdr", na=False)]
     if not NEFT_HDFC_DR.empty:
         NEFT_HDFC_DR = NEFT_HDFC_DR[
-            ~NEFT_HDFC_DR["Category"].str.contains(
-                "Redemption, Dividend & Interest,Salary Paid,Salary Received"
-            )
-        ]
+            ~NEFT_HDFC_DR["Category"].str.contains("Redemption, Dividend & Interest|Salary Paid|Salary Received")]
 
         def extract_category(description):
             try:
@@ -1551,10 +1412,7 @@ def category_add_ca(df):
     NEFT_thane = df[df["Description"].str.contains("toneft", na=False)]
     if not NEFT_thane.empty:
         NEFT_thane = NEFT_thane[
-            ~NEFT_thane["Category"].str.contains(
-                "Redemption, Dividend & Interest,Salary Paid,Salary Received"
-            )
-        ]
+            ~NEFT_thane["Category"].str.contains("Redemption, Dividend & Interest|Salary Paid|Salary Received")]
 
         def extract_category(description):
             try:
@@ -1566,16 +1424,10 @@ def category_add_ca(df):
         NEFT_thane["Category"] = neft_thane_names
         df.update(NEFT_thane)
 
-    NEFT_UCO = df[
-        (df["Description"].str.contains("neft/", na=False))
-        & (df["Category"] == "Suspense")
-        ]
+    NEFT_UCO = df[(df["Description"].str.contains("neft/", na=False)) & (df["Category"] == "Suspense")]
     if not NEFT_UCO.empty:
         NEFT_1 = NEFT_UCO[
-            ~NEFT_UCO["Category"].str.contains(
-                "Redemption, Dividend & Interest,Salary Paid,Salary Received"
-            )
-        ]
+            ~NEFT_UCO["Category"].str.contains("Redemption, Dividend & Interest|Salary Paid|Salary Received")]
         NEFT_1 = NEFT_1[~NEFT_1["Category"].str.contains("Debtor")]
         NEFT_1 = NEFT_1[~NEFT_1["Category"].str.contains("Creditor")]
 
@@ -1600,14 +1452,9 @@ def category_add_ca(df):
 
     net_neft = df[df["Description"].str.contains("net/neft/", na=False)]
     net_neft = net_neft[
-        ~net_neft["Category"].str.contains(
-            "Redemption, Dividend & Interest,Salary Paid,Salary Received"
-        )
-    ]
+        ~net_neft["Category"].str.contains("Redemption, Dividend & Interest|Salary Paid|Salary Received")]
     if not net_neft.empty:
-        net_neft["Category"] = net_neft["Description"].apply(
-            extract_net_neft_category
-        )
+        net_neft["Category"] = net_neft["Description"].apply(extract_net_neft_category)
         df.update(net_neft)
 
     def extract_nft_category(description):
@@ -1619,10 +1466,7 @@ def category_add_ca(df):
 
     nft_neft = df[df["Description"].str.contains("nft/", na=False)]
     nft_neft = nft_neft[
-        ~nft_neft["Category"].str.contains(
-            "Redemption, Dividend & Interest,Salary Paid,Salary Received"
-        )
-    ]
+        ~nft_neft["Category"].str.contains("Redemption, Dividend & Interest|Salary Paid|Salary Received")]
     if not nft_neft.empty:
         nft_neft["Category"] = nft_neft["Description"].apply(extract_nft_category)
         df.update(nft_neft)
@@ -1638,16 +1482,11 @@ def category_add_ca(df):
 
     NEFT_BOB = df[df["Description"].str.contains("neft-", na=False)]
     if not NEFT_BOB.empty:
-        NEFT_BOB = NEFT_BOB[
-            ~NEFT_BOB["Category"].str.contains(
-                "Redemption, Dividend & Interest|Bank Interest Received,Salary Paid,Salary Received"
-            )
-        ]
+        NEFT_BOB = NEFT_BOB[~NEFT_BOB["Category"].str.contains(
+            "Redemption, Dividend & Interest|Bank Interest Received|Salary Paid|Salary Received")]
         NEFT_BOB = NEFT_BOB[~NEFT_BOB["Category"].str.contains("Debtor")]
         NEFT_BOB = NEFT_BOB[~NEFT_BOB["Category"].str.contains("Creditor")]
-        NEFT_BOB["Category"] = NEFT_BOB["Description"].apply(
-            extract_bob_neft_category
-        )
+        NEFT_BOB["Category"] = NEFT_BOB["Description"].apply(extract_bob_neft_category)
         df.update(NEFT_BOB)
 
     def extract_neft_category(description):
@@ -1659,16 +1498,10 @@ def category_add_ca(df):
         except IndexError:
             return "Suspense"
 
-    NEFT_IO = df[
-        df["Description"].str.contains("neft-", na=False)
-        & df["Category"].str.contains("Suspense", na=False)
-        ]
+    NEFT_IO = df[df["Description"].str.contains("neft-", na=False) & df["Category"].str.contains("Suspense", na=False)]
     if not NEFT_IO.empty:
-        NEFT_IO = NEFT_IO[
-            ~NEFT_IO["Category"].str.contains(
-                "Redemption, Dividend & Interest|Bank Interest Received,Salary Paid,Salary Received"
-            )
-        ]
+        NEFT_IO = NEFT_IO[~NEFT_IO["Category"].str.contains(
+            "Redemption, Dividend & Interest|Bank Interest Received|Salary Paid|Salary Received")]
         NEFT_IO = NEFT_IO[~NEFT_IO["Category"].str.contains("Debtor")]
         NEFT_IO = NEFT_IO[~NEFT_IO["Category"].str.contains("Creditor")]
         NEFT_IO["Category"] = NEFT_IO["Description"].apply(extract_neft_category)
@@ -1682,11 +1515,8 @@ def category_add_ca(df):
             return "Suspense"
 
     NEFT = df[df["Description"].str.contains("net-neft-", na=False)]
-    NEFT = NEFT[
-        ~NEFT["Category"].str.contains(
-            "Redemption, Dividend & Interest|Bank Interest Received,Salary Paid,Salary Received"
-        )
-    ]
+    NEFT = NEFT[~NEFT["Category"].str.contains(
+        "Redemption, Dividend & Interest|Bank Interest Received|Salary Paid|Salary Received")]
     if not NEFT.empty:
         NEFT["Category"] = NEFT["Description"].apply(extract_net_neft_category)
         df.update(NEFT)
@@ -1698,15 +1528,9 @@ def category_add_ca(df):
         except IndexError:
             return "Suspense"
 
-    NEFT_Kar = df[
-        df["Description"].str.contains("neft-", na=False)
-        & df["Category"].str.contains("Suspense", na=False)
-        ]
-    NEFT_Kar = NEFT_Kar[
-        ~NEFT_Kar["Category"].str.contains(
-            "Redemption, Dividend & Interest|Bank Interest Received,Salary Paid,Salary Received"
-        )
-    ]
+    NEFT_Kar = df[df["Description"].str.contains("neft-", na=False) & df["Category"].str.contains("Suspense", na=False)]
+    NEFT_Kar = NEFT_Kar[~NEFT_Kar["Category"].str.contains(
+        "Redemption, Dividend & Interest|Bank Interest Received|Salary Paid|Salary Received")]
     if not NEFT_Kar.empty:
         NEFT_Kar["Category"] = NEFT_Kar["Description"].apply(extract_neft_name)
         df.update(NEFT_Kar)
@@ -1728,87 +1552,25 @@ def category_add_ca(df):
                 return "Suspense"
 
     neft_SBI = df[df["Description"].str.contains("totransfer-neft", na=False)]
-    neft_SBI = neft_SBI[
-        ~neft_SBI["Category"].str.contains(
-            "Redemption, Dividend & Interest|Bank Interest Received,Salary Paid,Salary Received"
-        )
-    ]
+    neft_SBI = neft_SBI[~neft_SBI["Category"].str.contains(
+        "Redemption, Dividend & Interest|Bank Interest Received|Salary Paid|Salary Received")]
     if not neft_SBI.empty:
-        neft_SBI["Category"] = neft_SBI["Description"].apply(
-            extract_category_neft_sbi
-        )
+        neft_SBI["Category"] = neft_SBI["Description"].apply(extract_category_neft_sbi)
         df.update(neft_SBI)
 
-    def Bounce(df):
-        keywords = ["return", "Bounce", "i/wchqreturn", "out-chqreturn"]
-        pattern = r"\b(" + "|".join(keywords) + r")\b"
-        df.loc[
-            df["Description"].str.contains(pattern, regex=True) & (df["Debit"] > 0),
-            "Category",
-        ] = "Bounce"
-        # print(df)
-        return df
-
-    Bounce(df)
-
-    # Iterate through the rows of df2
-    for _, keyword_row in df2.iterrows():
-        mask = df["Description"].str.contains(
-            keyword_row["Description"], case=False, na=False
-        )
-
-        if keyword_row["Debit / Credit"] == "Debit":
-            mask = mask & (df["Debit"] > 0)  # check if Debit is greater than 0
-        elif keyword_row["Debit / Credit"] == "Credit":
-            mask = mask & (df["Credit"] > 0)  # check if Credit is greater than 0
-
-        # Update the category for matching transactions
-        df.loc[mask, "Category"] = keyword_row["Category"]
-
-    # df = df[['Value Date', 'Description', 'Debit', 'Credit', 'Balance', 'Category', 'Bank']]
-    #####
     def filter_emi_transactions(df):
         df["Debit"] = pd.to_numeric(df["Debit"], errors="coerce")
-        keywords = [
-            "emi",
-            "achidfcfblimited",
-            "cholamandalaminvest",
-            "lnpy",
-            "ach/",
-            "ach-",
-            "achdr",
-            "ecs",
-            "achd",
-            "bajajfinance",
-            "cms",
-            "lamum",
-            "lcfm",
-            "loanreco",
-            "lptne",
-            "nach",
-            "magmafincorpltd",
-            "toachdraditybirl",
-            "toachdrambitfinv",
-            "toachdrclixcapita",
-            "toachdrdeutscheb",
-            "toachdrdhaniloan",
-            "toachdrfedbankfi",
-            "toachdrfullerton",
-            "toachdrindiabulls",
-            "toachdrindinfhouf",
-            "toachdrindusind",
-            "toachdrlendingkar",
-            "toachdrmagmafinco",
-            "toachdrmahnimahin",
-            "toachdrmoneywisef",
-            "toachdrneogrowth",
-            "toachdrtatacapita",
-            "toachdrtpachmag",
-            "toachdrtpachneo",
-            "toachdrtpcapfrst",
-            "toachdryesbankr",
-            "achracpc",
-        ]
+        keywords = ["emi", "achidfcfblimited", "cholamandalaminvest", "lnpy", "ach/", "ach-", "achdr", "ecs", "achd",
+                    "bajajfinance", "cms", "lamum",
+                    "lcfm", "loanreco", "lptne", "nach", "magmafincorpltd", "toachdraditybirl", "toachdrambitfinv",
+                    "toachdrclixcapita",
+                    "toachdrdeutscheb", "toachdrdhaniloan", "toachdrfedbankfi", "toachdrfullerton", "toachdrindiabulls",
+                    "toachdrindinfhouf",
+                    "toachdrindusind", "toachdrlendingkar", "toachdrmagmafinco", "toachdrmahnimahin",
+                    "toachdrmoneywisef", "toachdrneogrowth",
+                    "toachdrtatacapita", "toachdrtpachmag", "toachdrtpachneo", "toachdrtpcapfrst", "toachdryesbankr",
+                    "achracpc",
+                    ]
         pattern = r"(" + "|".join(keywords) + r")"
         emi_transactions = df[
             df["Description"].str.contains(pattern, case=False, regex=True) & (~df["Debit"].isnull()) & (
@@ -1822,10 +1584,26 @@ def category_add_ca(df):
         return df
 
     filter_emi_transactions(df)
-    MPS = df[
-        df["Description"].str.contains("mps/", na=False)
-        & ~df["Description"].str.contains("imps/")
-        ]
+
+    def Bounce(df):
+        keywords = ["return", "Bounce", "i/wchqreturn", "out-chqreturn"]
+        pattern = r"\b(" + "|".join(keywords) + r")\b"
+        df.loc[df["Description"].str.contains(pattern, regex=True) & (df["Debit"] > 0), "Category",] = "Bounce"
+
+        return df
+
+    Bounce(df)
+
+    # Iterate through the rows of df2
+    for _, keyword_row in df2.iterrows():
+        mask = df["Description"].str.contains(keyword_row["Description"], case=False, na=False)
+        if keyword_row["Debit / Credit"] == "Debit":
+            mask = mask & (df["Debit"] > 0)  # check if Debit is greater than 0
+        elif keyword_row["Debit / Credit"] == "Credit":
+            mask = mask & (df["Credit"] > 0)  # check if Credit is greater than 0
+        df.loc[mask, "Category"] = keyword_row["Category"]
+    #####
+    MPS = df[df["Description"].str.contains("mps/", na=False) & ~df["Description"].str.contains("imps/")]
     if not MPS.empty:
         for idx, row in MPS.iterrows():
             if row["Credit"] > 0:
@@ -1833,95 +1611,46 @@ def category_add_ca(df):
             elif row["Debit"] > 0:
                 df.at[idx, "Category"] = "UPI-Dr"
 
+    Salary_credit = ((df["Description"].str.contains("imps|neft|rtgs", case=False, na=False)) & (
+        df["Description"].str.contains("salary", case=False, na=False)) & (df["Credit"] > 0))
+    Salary_debit = ((df["Description"].str.contains("imps|neft|rtgs", case=False, na=False)) & (
+        df["Description"].str.contains("salary", case=False, na=False)) & (df["Debit"] > 0))
+    df.loc[Salary_credit, "Category"] = "Salary Received"
+    df.loc[Salary_debit, "Category"] = "Salary Paid"
 
-    mask_withdrawal = (
-                          df["Description"].str.contains(
-                              "eaw-|nwd-|atw-|tocash", case=False, na=False
-                          )
-                      ) & (df["Debit"] > 0)
+    mask_withdrawal = (df["Description"].str.contains("eaw-|nwd-|atw-|tocash", case=False, na=False)) & (
+                df["Debit"] > 0)
     df.loc[mask_withdrawal, "Category"] = "Cash Withdrawal"
 
-    General_insurance = [
-        "acko",
-        "adityabirlahealth",
-        "bajajallianz",
-        "bhartiaxa",
-        "carehealth",
-        "cholamandalam",
-        "ecgc",
-        "edelweiss",
-        "future generali",
-        "godigit",
-        "hdfcergo",
-        "icicilombard",
-        "iffcotokio",
-        "kotakgeneral",
-        "liberty",
-        "manipalcigna",
-        "maxbupahealth",
-        "nationalinsurance",
-        "pmsby",
-        "rahejaqbe",
-        "royalsundaram",
-        "sbigeneral",
-        "shriram",
-        "starhealth",
-        "tataaig",
-        "thenewindiaassurance",
-        "theoriental",
-        "unitedindia",
-        "universalsompo",
-    ]
-    df.loc[
-        df["Description"].apply(
-            lambda x: any(keyword in x for keyword in General_insurance)
-        )
-        & (df["Debit"] > 0),
-        "Category",
-    ] = "General insurance"
+    General_insurance = ["acko", "adityabirlahealth", "bajajallianz", "bhartiaxa", "carehealth", "cholamandalam",
+                         "ecgc", "edelweiss",
+                         "future generali", "godigit", "hdfcergo", "icicilombard", "iffcotokio", "kotakgeneral",
+                         "liberty", "manipalcigna",
+                         "maxbupahealth", "nationalinsurance", "pmsby", "rahejaqbe", "royalsundaram", "sbigeneral",
+                         "shriram", "starhealth",
+                         "tataaig", "thenewindiaassurance", "theoriental", "unitedindia", "universalsompo",
+                         ]
+    df.loc[df["Description"].apply(lambda x: any(keyword in x for keyword in General_insurance)) & (
+                df["Debit"] > 0), "Category",] = "General insurance"
 
-    online_shopping_keywords = [
-        "amazon",
-        "bigbasket",
-        "ecom",
-        "flipkart",
-        "mamaearth",
-        "myntra",
-        "nykaa",
-        "meesho",
-    ]
-    df.loc[
-        df["Description"].apply(
-            lambda x: any(
-                keyword in x.lower() for keyword in online_shopping_keywords
-            )
-                      and "amazonpay" not in x.lower()
-        )
-        & (df["Debit"] > 0),
-        "Category",
-    ] = "Online Shopping"
+    online_shopping_keywords = ["amazon", "bigbasket", "ecom", "flipkart", "mamaearth", "myntra", "nykaa", "meesho", ]
+    df.loc[df["Description"].apply(lambda x: any(
+        keyword in x.lower() for keyword in online_shopping_keywords) and "amazonpay" not in x.lower()) & (
+                       df["Debit"] > 0), "Category",] = "Online Shopping"
 
     INB = df[df["Description"].str.contains("inb/|inb-td/", na=False)]
     INB = INB[~INB["Description"].str.contains("gsttaxpayments", na=False)]
     INB = INB[~INB["Category"].str.contains("Salary Paid|Salary Received|GST Paid", na=False)]
-
     if not INB.empty:
-        INB["Category"] = INB["Description"].apply(
-            lambda x: (
-                x.split("/")[2]
-                if "inb/" in x and len(x.split("/")) > 2
-                else x.split("/")[1] if len(x.split("/")) > 1 else x
-            )
-        )
+        INB["Category"] = INB["Description"].apply(lambda x: (x.split("/")[2]
+                                                              if "inb/" in x and len(x.split("/")) > 2
+                                                              else x.split("/")[1] if len(x.split("/")) > 1 else x))
 
         df.update(INB)
 
     BIL_IMB_entries = df[df["Description"].str.contains("bil/imb/", na=False)]
-    BIL_IMB_entries = BIL_IMB_entries[
-        ~BIL_IMB_entries["Category"].str.contains("Salary Paid,Salary Received")
-    ]
+    BIL_IMB_entries = BIL_IMB_entries[~BIL_IMB_entries["Category"].str.contains("Salary Paid,Salary Received")]
     if not BIL_IMB_entries.empty:
-
         def extract_name_from_bilimb(description):
             parts = description.split("/")
             if len(parts) >= 4:
@@ -1930,60 +1659,70 @@ def category_add_ca(df):
 
         for idx, row in BIL_IMB_entries.iterrows():
             name = extract_name_from_bilimb(row["Description"])
-
             if name and not name.isdigit():
                 df.at[idx, "Category"] = name
             else:
                 df.at[idx, "Category"] = "Suspense"
 
+    def extract_ecs_name(description):
+        parts = description.split("/")
+        if len(parts) > 1 and parts[1].strip():
+            return parts[1].strip()
+        else:
+            return "Suspense"
+
     ECS = df[df["Description"].str.contains("ecs/", na=False)]
-    ECS = ECS[~ECS["Category"].str.contains("Salary Paid,Salary Received")]
+    ECS = ECS[~ECS["Category"].str.contains("Salary Paid|Salary Received", na=False)]
     if not ECS.empty:
-        ECS = ECS[~ECS["Category"].str.contains("Redemption, Dividend & Interest")]
-        ECS = ECS[~ECS["Category"].str.contains("Probable EMI|Bank Charges")]
-        ECS_names = ECS["Description"].apply(lambda x: x.split("/")[1])
-        ECS["Category"] = ECS_names
+        ECS = ECS[~ECS["Category"].str.contains("Redemption|Dividend & Interest", na=False)]
+        ECS = ECS[~ECS["Category"].str.contains("Probable EMI|Bank Charges", na=False)]
+        ECS["Category"] = ECS["Description"].apply(extract_ecs_name)
         df.update(ECS)
 
     MPS = df[df["Description"].str.contains("MPS/", na=False)]
     if not ECS.empty:
         ECS = ECS[~ECS["Description"].str.contains("imps/")]
 
-    IMPS_HDFC = df[df["Description"].str.contains("imps", na=False)]
-    IMPS_HDFC = IMPS_HDFC[
-        ~IMPS_HDFC["Category"].str.contains("Salary Paid,Salary Received")
-    ]
-    if not IMPS_HDFC.empty:
+    def extract_imps_name(description):
         pattern = r"imps-\d+-(.*?)-"
-        Ext = IMPS_HDFC["Description"].str.extract(pattern)
-        IMPS_HDFC["Category"] = Ext
+        match = re.search(pattern, description)
+        if match:
+            extracted = match.group(1).strip()
+            if extracted:
+                return extracted
+        return "Suspense"
+
+    IMPS_HDFC = df[df["Description"].str.contains("imps", na=False)]
+    IMPS_HDFC = IMPS_HDFC[~IMPS_HDFC["Category"].str.contains("Salary Paid|Salary Received", na=False)]
+    if not IMPS_HDFC.empty:
+        IMPS_HDFC["Category"] = IMPS_HDFC["Description"].apply(extract_imps_name)
         df.update(IMPS_HDFC)
 
-    imps_rib = df[
-        df["Description"].str.contains("imps-rib|imps-inet|imps-cib", na=False)
-    ]
-    imps_rib = imps_rib[
-        ~imps_rib["Category"].str.contains("Salary Paid,Salary Received")
-    ]
+    def extract_imps_rib_name(description):
+        parts = description.split("/")
+        if len(parts) > 3 and parts[3].strip():
+            return parts[3].strip()
+        else:
+            return "Suspense"
+
+    imps_rib = df[df["Description"].str.contains("imps-rib|imps-inet|imps-cib", na=False)]
+    imps_rib = imps_rib[~imps_rib["Category"].str.contains("Salary Paid|Salary Received", na=False)]
     if not imps_rib.empty:
-        imps_rib_name = imps_rib["Description"].apply(lambda x: x.split("/")[3])
-        imps_rib["Category"] = imps_rib_name
+        imps_rib["Category"] = imps_rib["Description"].apply(extract_imps_rib_name)
         df.update(imps_rib)
 
-    imps_mob = df[df["Description"].str.contains("imps-mob/", na=False)]
-    imps_mob = imps_mob[
-        ~imps_mob["Category"].str.contains("Salary Paid,Salary Received")
-    ]
-    if not imps_mob.empty:
-        imps_mob_name = imps_mob["Description"].apply(lambda x: x.split("/")[3])
-        imps_mob["Category"] = imps_mob_name
-        df.update(imps_mob)
+    def extract_imps_mob_name(description):
+        parts = description.split("/")
+        if len(parts) > 3 and parts[3].strip():
+            return parts[3].strip()
+        else:
+            return "Suspense"
 
-    # imps_idfc = df[df["Description"].str.contains("imps/", na=False)]
-    # if not imps_idfc.empty:
-    #     imps_idfc_name = imps_idfc['Description'].apply(lambda x: x.split('/')[2])
-    #     imps_idfc['Category'] = imps_idfc_name
-    #     df.update(imps_idfc)
+    imps_mob = df[df["Description"].str.contains("imps-mob/", na=False)]
+    imps_mob = imps_mob[~imps_mob["Category"].str.contains("Salary Paid|Salary Received", na=False)]
+    if not imps_mob.empty:
+        imps_mob["Category"] = imps_mob["Description"].apply(extract_imps_mob_name)
+        df.update(imps_mob)
 
     def extract_imps_hdfc_category(description):
         try:
@@ -1995,13 +1734,9 @@ def category_add_ca(df):
             return "Suspense"
 
     imps_idfc = df[df["Description"].str.contains("imps/", na=False)]
-    imps_idfc = imps_idfc[
-        ~imps_idfc["Category"].str.contains("Salary Paid,Salary Received")
-    ]
+    imps_idfc = imps_idfc[~imps_idfc["Category"].str.contains("Salary Paid|Salary Received")]
     if not imps_idfc.empty:
-        imps_idfc["Category"] = imps_idfc["Description"].apply(
-            extract_imps_hdfc_category
-        )
+        imps_idfc["Category"] = imps_idfc["Description"].apply(extract_imps_hdfc_category)
         df.update(imps_idfc)
 
     def extract_bulkposting_category(description):
@@ -2018,9 +1753,7 @@ def category_add_ca(df):
 
     bulkposting_idfc = df[df["Description"].str.contains("bulkposting", na=False)]
     if not bulkposting_idfc.empty:
-        bulkposting_idfc["Category"] = bulkposting_idfc["Description"].apply(
-            extract_bulkposting_category
-        )
+        bulkposting_idfc["Category"] = bulkposting_idfc["Description"].apply(extract_bulkposting_category)
         df.update(bulkposting_idfc)
 
     def extract_category_axis(x):
@@ -2033,13 +1766,9 @@ def category_add_ca(df):
             return "Suspense"
 
     imps_axis = df[df["Description"].str.contains("imps/p2a", na=False)]
-    imps_axis = imps_axis[
-        ~imps_axis["Category"].str.contains("Salary Paid,Salary Received")
-    ]
+    imps_axis = imps_axis[~imps_axis["Category"].str.contains("Salary Paid|Salary Received")]
     if not imps_axis.empty:
-        imps_axis["Category"] = imps_axis["Description"].apply(
-            extract_category_axis
-        )
+        imps_axis["Category"] = imps_axis["Description"].apply(extract_category_axis)
         df.update(imps_axis)
 
     def extract_category_axis(x):
@@ -2055,22 +1784,22 @@ def category_add_ca(df):
             return "Suspense"
 
     imps_axis = df[df["Description"].str.contains("mmt/imps", na=False)]
-    imps_axis = imps_axis[
-        ~imps_axis["Category"].str.contains("Salary Paid,Salary Received")
-    ]
+    imps_axis = imps_axis[~imps_axis["Category"].str.contains("Salary Paid|Salary Received")]
     if not imps_axis.empty:
-        imps_axis["Category"] = imps_axis["Description"].apply(
-            extract_category_axis
-        )
+        imps_axis["Category"] = imps_axis["Description"].apply(extract_category_axis)
         df.update(imps_axis)
 
+    def extract_imps_fed_name(description):
+        parts = description.split("/")
+        if len(parts) > 3 and parts[3].strip():
+            return parts[3].strip()
+        else:
+            return "Suspense"
+
     imps_fed = df[df["Description"].str.contains("ftimps", na=False)]
-    imps_fed = imps_fed[
-        ~imps_fed["Category"].str.contains("Salary Paid,Salary Received")
-    ]
+    imps_fed = imps_fed[~imps_fed["Category"].str.contains("Salary Paid|Salary Received", na=False)]
     if not imps_fed.empty:
-        imps_rib_name = imps_fed["Description"].apply(lambda x: x.split("/")[3])
-        imps_fed["Category"] = imps_rib_name
+        imps_fed["Category"] = imps_fed["Description"].apply(extract_imps_fed_name)
         df.update(imps_fed)
 
     # imps_svc = df[df["Description"].str.contains("byimps", na=False)]
@@ -2086,13 +1815,9 @@ def category_add_ca(df):
             return "Suspense"
 
     imps_svc = df[df["Description"].str.contains("byimps", na=False)]
-    imps_svc = imps_svc[
-        ~imps_svc["Category"].str.contains("Salary Paid,Salary Received")
-    ]
+    imps_svc = imps_svc[~imps_svc["Category"].str.contains("Salary Paid|Salary Received")]
     if not imps_svc.empty:
-        # Apply the safe extraction function to the 'Description' column
         imps_svc["Category"] = imps_svc["Description"].apply(safe_extract_category)
-        # Update the original DataFrame
         df.update(imps_svc)
 
     # SBI
@@ -2107,56 +1832,66 @@ def category_add_ca(df):
         except IndexError:
             return "Suspense"
 
-    imps_SBI = df[
-        df["Description"].str.contains("totransfer-inbimps/p2a/", na=False)
-    ]
-    imps_SBI = imps_SBI[
-        ~imps_SBI["Category"].str.contains("Salary Paid,Salary Received")
-    ]
+    imps_SBI = df[df["Description"].str.contains("totransfer-inbimps/p2a/", na=False)]
+    imps_SBI = imps_SBI[~imps_SBI["Category"].str.contains("Salary Paid|Salary Received")]
     if not imps_SBI.empty:
-        # Apply the custom function to extract categories
-        imps_SBI["Category"] = imps_SBI["Description"].apply(
-            extract_category_imps_sbi
-        )
+        imps_SBI["Category"] = imps_SBI["Description"].apply(extract_category_imps_sbi)
         df.update(imps_SBI)
 
+    def extract_mob_name(description):
+        parts = description.split("/")
+        if len(parts) > 2:
+            if not parts[2].isdigit():
+                candidate = parts[-2].strip() if len(parts) >= 2 else ""
+                return candidate if candidate else "Suspense"
+        return "Suspense"
+
     MOB = df[df["Description"].str.contains("mob/tpft/", na=False)]
-    MOB = MOB[~MOB["Category"].str.contains("Salary Paid,Salary Received")]
+    MOB = MOB[~MOB["Category"].str.contains("Salary Paid|Salary Received", na=False)]
     if not MOB.empty:
-        MOB_names = MOB["Description"].apply(
-            lambda x: (
-                x.split("/")[-2] if not x.split("/")[2].isdigit() else "Suspense"
-            )
-        )
-        MOB["Category"] = MOB_names
+        MOB["Category"] = MOB["Description"].apply(extract_mob_name)
         df.update(MOB)
+
+    def extract_mob_1_name(description):
+        parts = description.split("/")
+        if len(parts) > 2:
+            if not parts[2].isdigit():
+                candidate = parts[-2].strip() if len(parts) >= 2 else ""
+                return candidate if candidate else "Suspense"
+        return "Suspense"
 
     MOB_1 = df[df["Description"].str.contains("mob/selfft/", na=False)]
     MOB_1 = MOB_1[~MOB_1["Category"].str.contains("Salary Paid|Salary Received", na=False)]
     if not MOB_1.empty:
-        MOB_names1 = MOB_1["Description"].apply(
-            lambda x: (
-                x.split("/")[-2] if not x.split("/")[2].isdigit() else "Suspense"
-            )
-        )
-        MOB_1["Category"] = MOB_names1
+        MOB_1["Category"] = MOB_1["Description"].apply(extract_mob_1_name)
         df.update(MOB_1)
 
-    BRN_clg = df[df["Description"].str.contains("brn-clg-chqpaidto", na=False)]
-    if not BRN_clg.empty:
-        BRN_clg_names = BRN_clg['Description'].apply(lambda x: x.split('to ')[-1].split('/')[0].strip())
-        BRN_clg['Category'] = BRN_clg_names
-        df.update(BRN_clg)
+    def extract_brn_clg_name(description):
+        try:
+            part = description.split("to ")[-1]
+            name = part.split("/")[0].strip()
+            return name if name else "Suspense"
+        except Exception:
+            return "Suspense"
 
     BRN_clg = df[df["Description"].str.contains("brn-clg-chqpaidto", na=False)]
-    BRN_clg = BRN_clg[
-        ~BRN_clg["Category"].str.contains("Salary Paid,Salary Received")
-    ]
     if not BRN_clg.empty:
-        # This lambda function extracts the category name based on your statement structure
-        BRN_clg["Category"] = BRN_clg["Description"].apply(
-            lambda x: x.split("brn-clg-chqpaidto")[-1].split("/")[0].strip()
-        )
+        BRN_clg["Category"] = BRN_clg["Description"].apply(extract_brn_clg_name)
+        df.update(BRN_clg)
+
+    def extract_brn_clg_name(description):
+        try:
+            # Split based on "brn-clg-chqpaidto" and then split on "/" to extract the category name.
+            part = description.split("brn-clg-chqpaidto")[-1]
+            name = part.split("/")[0].strip()
+            return name if name else "Suspense"
+        except Exception:
+            return "Suspense"
+
+    BRN_clg = df[df["Description"].str.contains("brn-clg-chqpaidto", na=False)]
+    BRN_clg = BRN_clg[~BRN_clg["Category"].str.contains("Salary Paid|Salary Received", na=False)]
+    if not BRN_clg.empty:
+        BRN_clg["Category"] = BRN_clg["Description"].apply(extract_brn_clg_name)
         df.update(BRN_clg)
 
     def extract_category_ben(x):
@@ -2169,9 +1904,7 @@ def category_add_ca(df):
             return "Suspense"
 
     imps_ben = df[df["Description"].str.contains("imps/ben/", na=False)]
-    imps_ben = imps_ben[
-        ~imps_ben["Category"].str.contains("Salary Paid,Salary Received")
-    ]
+    imps_ben = imps_ben[~imps_ben["Category"].str.contains("Salary Paid,Salary Received")]
     if not imps_ben.empty:
         imps_ben["Category"] = imps_ben["Description"].apply(extract_category_ben)
         df.update(imps_ben)
@@ -2199,50 +1932,34 @@ def category_add_ca(df):
             return "Suspense"
 
     imps_new = df[df["Description"].str.contains("sentimps", na=False)]
-    imps_new = imps_new[
-        ~imps_new["Category"].str.contains("Salary Paid,Salary Received")
-    ]
+    imps_new = imps_new[~imps_new["Category"].str.contains("Salary Paid,Salary Received")]
     if not imps_new.empty:
-        imps_new["Category"] = imps_new["Description"].apply(
-            extract_sentimps_text_after_numeric
-        )
+        imps_new["Category"] = imps_new["Description"].apply(extract_sentimps_text_after_numeric)
         df.update(imps_new)
 
-    # Filter rows containing "idfcfirstb" in the Description
     Loan = df[df["Description"].str.contains("idfcfirstb|krazybees", na=False)]
     if not Loan.empty:
-        # Update the Category for the filtered rows
-        df.loc[
-            (df["Description"].str.contains("idfcfirstb|krazybees", regex=True))
-            & (df["Credit"] > 0),
-            "Category",
-        ] = "Loan"
+        df.loc[(df["Description"].str.contains("idfcfirstb|krazybees", regex=True)) & (
+                    df["Credit"] > 0), "Category",] = "Loan"
 
     BRN = df[
-        (
-                df["Description"].str.contains("brn-flexi")
-                | df["Description"].str.contains("/SBI Funds/STATE BAN//ATTN//")
-        )
-        & df["Credit"].notnull()
-        ]
+        (df["Description"].str.contains("brn-flexi") | df["Description"].str.contains("/SBI Funds/STATE BAN//ATTN//")) &
+        df["Credit"].notnull()]
     if not BRN.empty:
         df.loc[BRN.index, "Category"] = "Redemption of Investment"
 
-    RTGS = df[df["Description"].str.contains("rtgs/", na=False)]
-    RTGS = RTGS[~RTGS["Category"].str.contains("Salary Paid,Salary Received")]
-    if not RTGS.empty:
-        RTGS_names = RTGS["Description"].apply(lambda x: x.split("/")[2])
-        RTGS["Category"] = RTGS_names
-        df.update(RTGS)
+    def extract_name(description):
+        parts = description.split("/")
+        if len(parts) > 2 and parts[2].strip():
+            return parts[2].strip()
+        else:
+            return "Suspense"
 
-    RTGS_HDFC_CR = df[df["Description"].str.contains("rtgscr", na=False)]
-    RTGS_HDFC_CR = RTGS_HDFC_CR[
-        ~RTGS_HDFC_CR["Category"].str.contains("Salary Paid,Salary Received")
-    ]
-    if not RTGS_HDFC_CR.empty:
-        RTGS_names = RTGS_HDFC_CR["Description"].apply(lambda x: x.split("-")[2])
-        RTGS_HDFC_CR["Category"] = RTGS_names
-        df.update(RTGS_HDFC_CR)
+    RTGS = df[df["Description"].str.contains("rtgs/", na=False)]
+    RTGS = RTGS[~RTGS["Category"].str.contains("Salary Paid|Salary Received")]
+    if not RTGS.empty:
+        RTGS["Category"] = RTGS["Description"].apply(extract_name)
+        df.update(RTGS)
 
     def extract_rtgs_category(description):
         try:
@@ -2251,34 +1968,28 @@ def category_add_ca(df):
             return "Suspense"
 
     RTGS_HDFC_DR = df[
-        df["Description"].str.contains("rtgsdr", na=False)
-        | df["Description"].str.contains("rtgs-", na=False)
-        ]
-    RTGS_HDFC_DR = RTGS_HDFC_DR[
-        ~RTGS_HDFC_DR["Category"].str.contains("Salary Paid,Salary Received")
-    ]
+        df["Description"].str.contains("rtgsdr", na=False) | df["Description"].str.contains("rtgs-", na=False)]
+    RTGS_HDFC_DR = RTGS_HDFC_DR[~RTGS_HDFC_DR["Category"].str.contains("Salary Paid,Salary Received")]
     if not RTGS_HDFC_DR.empty:
-        # Apply the custom function to extract RTGS names
-        RTGS_HDFC_DR["Category"] = RTGS_HDFC_DR["Description"].apply(
-            extract_rtgs_category
-        )
+        RTGS_HDFC_DR["Category"] = RTGS_HDFC_DR["Description"].apply(extract_rtgs_category)
         df.update(RTGS_HDFC_DR)
 
+    def extract_name_inrtgs(description):
+        parts = description.split("/")
+        if len(parts) > 1 and parts[1].strip():
+            return parts[1].strip()
+        else:
+            return "Suspense"
+
     RTGS_DCB = df[df["Description"].str.contains("inrtgs", na=False)]
-    RTGS_DCB = RTGS_DCB[
-        ~RTGS_DCB["Category"].str.contains("Salary Paid,Salary Received")
-    ]
+    RTGS_DCB = RTGS_DCB[~RTGS_DCB["Category"].str.contains("Salary Paid|Salary Received", na=False)]
     if not RTGS_DCB.empty:
-        RTGS_name = RTGS_DCB["Description"].apply(lambda x: x.split("/")[1])
-        RTGS_DCB["Category"] = RTGS_name
+        RTGS_DCB["Category"] = RTGS_DCB["Description"].apply(extract_name_inrtgs)
         df.update(RTGS_DCB)
 
     RTGS_DCB = df[df["Description"].str.contains("tortgs", na=False)]
-    RTGS_DCB = RTGS_DCB[
-        ~RTGS_DCB["Category"].str.contains("Salary Paid,Salary Received")
-    ]
+    RTGS_DCB = RTGS_DCB[~RTGS_DCB["Category"].str.contains("Salary Paid,Salary Received")]
     if not RTGS_DCB.empty:
-
         def extract_category(description):
             try:
                 return description.split("/")[1]
@@ -2290,11 +2001,8 @@ def category_add_ca(df):
         df.update(RTGS_DCB)
 
     toib_svc = df[df["Description"].str.contains("toib", na=False)]
-    toib_svc = toib_svc[
-        ~toib_svc["Category"].str.contains("Salary Paid,Salary Received")
-    ]
+    toib_svc = toib_svc[~toib_svc["Category"].str.contains("Salary Paid,Salary Received")]
     if not toib_svc.empty:
-
         def extract_category_svc(description):
             try:
                 return description.split("-")[2]
@@ -2306,11 +2014,8 @@ def category_add_ca(df):
         df.update(toib_svc)
 
     BYNEFTID_DCB = df[df["Description"].str.contains("byneftid", na=False)]
-    BYNEFTID_DCB = BYNEFTID_DCB[
-        ~BYNEFTID_DCB["Category"].str.contains("Salary Paid,Salary Received")
-    ]
+    BYNEFTID_DCB = BYNEFTID_DCB[~BYNEFTID_DCB["Category"].str.contains("Salary Paid,Salary Received")]
     if not BYNEFTID_DCB.empty:
-
         def extract_category(description):
             try:
                 return description.split("from")[1].split("]")[0]
@@ -2322,11 +2027,8 @@ def category_add_ca(df):
         df.update(BYNEFTID_DCB)
 
     BYRTGSID_DCB = df[df["Description"].str.contains("byrtgsid", na=False)]
-    BYRTGSID_DCB = BYRTGSID_DCB[
-        ~BYRTGSID_DCB["Category"].str.contains("Salary Paid,Salary Received")
-    ]
+    BYRTGSID_DCB = BYRTGSID_DCB[~BYRTGSID_DCB["Category"].str.contains("Salary Paid,Salary Received")]
     if not BYRTGSID_DCB.empty:
-
         def extract_name_from_description(description):
             try:
                 return "".join(
@@ -2335,18 +2037,13 @@ def category_add_ca(df):
             except IndexError:
                 return "Suspense"  # We return "Unknown" if the format is incorrect
 
-        BYRTGSID_name = BYRTGSID_DCB["Description"].apply(
-            extract_name_from_description
-        )
+        BYRTGSID_name = BYRTGSID_DCB["Description"].apply(extract_name_from_description)
         BYRTGSID_DCB["Category"] = BYRTGSID_name
         df.update(BYRTGSID_DCB)
 
     BYCLG_DCB = df[df["Description"].str.contains("byclg:", na=False)]
-    BYCLG_DCB = BYCLG_DCB[
-        ~BYCLG_DCB["Category"].str.contains("Salary Paid,Salary Received")
-    ]
+    BYCLG_DCB = BYCLG_DCB[~BYCLG_DCB["Category"].str.contains("Salary Paid,Salary Received")]
     if not BYCLG_DCB.empty:
-
         def extract_name_from_description(description):
             try:
                 name_part = description.split("byclg:")[1]
@@ -2359,22 +2056,14 @@ def category_add_ca(df):
         BYCLG_DCB["Category"] = BYCLG_name
         df.update(BYCLG_DCB)
 
-    CASHDEP = df[
-        df["Description"].str.contains(
-            "cashdep|bytransfer|byclearing/|atr/|chequedeposit", na=False
-        )
-    ]
+    CASHDEP = df[df["Description"].str.contains("cashdep|bytransfer|byclearing/|atr/|chequedeposit", na=False)]
     if not CASHDEP.empty:
         extracted_names = [
             re.search(r"CASHDEP(.*?)-", s).group(1)
             for s in CASHDEP["Description"]
             if re.search(r"CASHDEP(.*?)-", s)
         ]
-
-        # Update the Category column of CASHDEP_ZAHIRDAHISAR with the extracted names
         CASHDEP["Category"] = "Cash Deposits"
-
-        # Update the original dataframe df with the modified rows from CASHDEP_ZAHIRDAHISAR
         df.update(CASHDEP)
 
     def extract_rtgs_name_jankalyan(description):
@@ -2390,18 +2079,10 @@ def category_add_ca(df):
                 return "Suspense"
         # Removed the else condition
 
-    # Applying the function to the DataFrame
-    RTGS_jankalyan = df[
-        (df["Description"].str.contains("rtgs", case=False, na=False))
-        & (df["Category"] == "Suspense")
-        ]
-    RTGS_jankalyan = RTGS_jankalyan[
-        ~RTGS_jankalyan["Category"].str.contains("Salary Paid,Salary Received")
-    ]
+    RTGS_jankalyan = df[(df["Description"].str.contains("rtgs", case=False, na=False)) & (df["Category"] == "Suspense")]
+    RTGS_jankalyan = RTGS_jankalyan[~RTGS_jankalyan["Category"].str.contains("Salary Paid,Salary Received")]
     if not RTGS_jankalyan.empty:
-        RTGS_jankalyan["Category"] = RTGS_jankalyan["Description"].apply(
-            extract_rtgs_name_jankalyan
-        )
+        RTGS_jankalyan["Category"] = RTGS_jankalyan["Description"].apply(extract_rtgs_name_jankalyan)
         df.update(RTGS_jankalyan)
 
     def extract_neft_jankalyan(description):
@@ -2416,10 +2097,7 @@ def category_add_ca(df):
             except IndexError:
                 return "Suspense"
 
-    NEFT = df[
-        (df["Description"].str.contains("neft", case=False, na=False))
-        & (df["Category"] == "Suspense")
-        ]
+    NEFT = df[(df["Description"].str.contains("neft", case=False, na=False)) & (df["Category"] == "Suspense")]
     NEFT = NEFT[~NEFT["Category"].str.contains("Salary Paid,Salary Received")]
     if not NEFT.empty:
         NEFT["Category"] = NEFT["Description"].apply(extract_neft_jankalyan)
@@ -2441,10 +2119,7 @@ def category_add_ca(df):
             except IndexError:
                 return "Suspense"
 
-    IMPS = df[
-        (df["Description"].str.contains("imps\[", case=False, na=False))
-        & (df["Category"] == "Suspense")
-        ]
+    IMPS = df[(df["Description"].str.contains("imps\[", case=False, na=False)) & (df["Category"] == "Suspense")]
     IMPS = IMPS[~IMPS["Category"].str.contains("Salary Paid,Salary Received")]
     if not IMPS.empty:
         IMPS["Category"] = IMPS["Description"].apply(extract_imps_category)
@@ -2504,9 +2179,7 @@ def category_add_ca(df):
             return "Suspense"
 
     neft_in_df = df[df["Description"].str.contains(r"neft_in:ioban\d+/\d+/", case=False, na=False)].copy()
-    neft_in_df = neft_in_df[
-        ~neft_in_df["Category"].str.contains("Salary Paid|Salary Received", case=False, na=False)]
-
+    neft_in_df = neft_in_df[~neft_in_df["Category"].str.contains("Salary Paid|Salary Received", case=False, na=False)]
     if not neft_in_df.empty:
         neft_in_df["Category"] = neft_in_df["Description"].apply(extract_neft_in_category)
         df.update(neft_in_df)  # Update original DataFrame
@@ -2525,52 +2198,36 @@ def category_add_ca(df):
             return "Suspense"
 
     imps_io_df = df[df["Description"].str.contains(r"imps/(in|out)/\d+/", case=False, na=False)].copy()
-    imps_io_df = imps_io_df[
-        ~imps_io_df["Category"].str.contains("Salary Paid|Salary Received", case=False, na=False)]
+    imps_io_df = imps_io_df[~imps_io_df["Category"].str.contains("Salary Paid|Salary Received", case=False, na=False)]
     if not imps_io_df.empty:
         imps_io_df["Category"] = imps_io_df["Description"].apply(extract_imps_io_category)
         df.update(imps_io_df)  # Update original DataFrame
 
-    # df = categorize_name_transactions(df)
     PF = df[df["Description"].str.contains("providentfund", na=False)]
-
     if not PF.empty:
-        # Update the Category for the filtered rows
-        df.loc[
-            (df["Description"].str.contains("providentfund", regex=True))
-            & (df["Credit"] > 0),
-            "Category",
-        ] = "Provident Fund"
+        df.loc[(df["Description"].str.contains("providentfund", regex=True)) & (
+                    df["Credit"] > 0), "Category",] = "Provident Fund"
 
     Salary_credit = (
-            (df["Description"].str.contains("imps", case=False, na=False))
-            & (df["Description"].str.contains("salary", case=False, na=False))
-            & (df["Credit"] > 0)
+            (df["Description"].str.contains("imps", case=False, na=False)) & (
+        df["Description"].str.contains("salary", case=False, na=False)) & (df["Credit"] > 0)
     )
     Salary_debit = (
-            (df["Description"].str.contains("imps", case=False, na=False))
-            & (df["Description"].str.contains("salary", case=False, na=False))
-            & (df["Debit"] > 0)
+            (df["Description"].str.contains("imps", case=False, na=False)) & (
+        df["Description"].str.contains("salary", case=False, na=False)) & (df["Debit"] > 0)
     )
     df.loc[Salary_credit, "Category"] = "Salary Received"
     df.loc[Salary_debit, "Category"] = "Salary Paid"
 
     last_move = r"(imps|neft|rtgs|chqpaid|chqdep)"
-    df.loc[
-        (df["Description"].str.contains(last_move, regex=True))
-        & (df["Debit"] > 0)
-        & (df["Category"] == "Suspense"),
-        "Category",
-    ] = ""
-    df.loc[
-        (df["Description"].str.contains(last_move, regex=True))
-        & (df["Credit"] > 0)
-        & (df["Category"] == "Suspense"),
-        "Category",
-    ] = ""
+    df.loc[(df["Description"].str.contains(last_move, regex=True)) & (df["Debit"] > 0) & (
+                df["Category"] == "Suspense"), "Category",] = ""
+    df.loc[(df["Description"].str.contains(last_move, regex=True)) & (df["Credit"] > 0) & (
+                df["Category"] == "Suspense"), "Category",] = ""
 
     df["Balance"] = x  # Manish
     return df
+
 
 ##SHEETS
 def process_name_n_num_df(data):
