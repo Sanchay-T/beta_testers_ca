@@ -275,14 +275,12 @@ export default function GenerateReport() {
                     <CheckCircle className="text-green-500 w-6 h-6 mt-2" />
                     <p>Your report has been generated successfully.</p>
                   </div>
-                ) : failedStatements.length > 0 ? (
+                ) :  (
                   <div className="flex items-end gap-x-4">
                     <AlertTriangle className="text-yellow-500 w-6 h-6 mt-2" />
                     <p>Below Statements had some errors.</p>
                   </div>
-                ) : (
-                  <XCircle className="text-red-500 w-6 h-6 mt-2" />
-                )}
+                ) }
               </DialogDescription>
             </DialogHeader>
           {failedStatements.length > 0 && (
