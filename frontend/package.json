@@ -33,6 +33,7 @@
   "build": {
     "appId": "com.electron.electronapp",
     "productName": "Cyphersol",
+    "asar": false,
     "directories": {
       "output": "dist"
     },

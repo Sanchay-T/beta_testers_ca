@@ -313,10 +313,10 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath,initialConfig = initi
     const requiredTypes = ["balance", "date", "description"]
     const selectedTypes = columnLabels.map((label) => label.type)
 
-    // if (!requiredTypes.every((type) => selectedTypes.includes(type))) {
-    //   alert("Please select Balance, Date, and Description columns before submitting.")
-    //   return
-    // }
+    if (!requiredTypes.every((type) => selectedTypes.includes(type))) {
+      alert("Please select Balance, Date, and Description columns before submitting.")
+      return
+    }
 
     const sortedLines = [...columnLines].sort((a, b) => a.x - b.x)
 
