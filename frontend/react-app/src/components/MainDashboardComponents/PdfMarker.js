@@ -106,6 +106,7 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath, initialConfig = init
         const blob = base64StringToBlob(base64, 'application/pdf');
         console.log("Blob : ", { blob })
         setPdfBlob(URL.createObjectURL(blob));
+        console.log('Fetched PDF:', blob);
       })
       .catch(err => console.error('Failed to fetch PDF:', err));
   }, []);
@@ -505,6 +506,20 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath, initialConfig = init
             <Document className={"overflow-auto"} style={{ overflow: "auto" }} file={pdfBlob} onLoadSuccess={onDocumentLoadSuccess}>
               <Page pageNumber={currentPage} scale={scale} renderTextLayer={false} renderAnnotationLayer={false} />
               {/* 
+            <div
+              ref={pdfContainerRef}
+              className="relative bg-gray-50 rounded-lg overflow-hidden "
+              style={{ cursor: "crosshair" }}
+              onClick={handleClick}
+              onMouseMove={handleDrag}
+              onMouseUp={handleDragEnd}
+              onMouseLeave={handleDragEnd}
+            >
+
+              {console.log({pdfBlob})}
+              <Document className={"overflow-auto"} style={{overflow:"auto"}} file={pdfBlob} onLoadSuccess={onDocumentLoadSuccess}>
+                <Page pageNumber={currentPage} scale={scale} renderTextLayer={false} renderAnnotationLayer={false} />
+                {/* 
                 {tableBounds.start !== null && (
                   <div
                     className="absolute top-0 h-full border-l-2 border-red-500"

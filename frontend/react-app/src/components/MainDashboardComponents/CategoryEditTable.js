@@ -198,6 +198,7 @@ const CategoryEditTable = ({
         return String(value).toLowerCase().includes(searchValue.toLowerCase());
       })
     );
+    console.log({updatedData: filtered});
     setFilteredData(filtered);
     setCurrentPage(1);
   };
