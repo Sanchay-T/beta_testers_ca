@@ -123,15 +123,15 @@ const CategoryEditTable = ({
 
     const transCats = transactions.map((tx) => tx.category);
     const mergedCategories = Array.from(new Set([...localCats, ...transCats]));
-  // Step 3: If there are any new categories, update localStorage.
-  if (mergedCategories.length !== localCats.length) {
-    localStorage.setItem("categoryOptions", JSON.stringify(mergedCategories));
-  }
+    // Step 3: If there are any new categories, update localStorage.
+    if (mergedCategories.length !== localCats.length) {
+      localStorage.setItem("categoryOptions", JSON.stringify(mergedCategories));
+    }
     setCategoryOptions(mergedCategories);
 
     setTransactions(formattedData);
     setFilteredData(formattedData);
-  }, [data]);
+  }, []);
 
   let columns = data.length > 0 ? Object.keys(data[0]) : [];
   columns = columns.filter((column) => !columnsToIgnore.includes(column));
