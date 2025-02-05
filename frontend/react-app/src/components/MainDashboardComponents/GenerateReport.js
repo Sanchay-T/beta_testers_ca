@@ -263,28 +263,26 @@ export default function GenerateReport() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-          {failedStatements.length === 0 ? <DialogTitle>Alert</DialogTitle>:
-            <DialogTitle>Report Generated Successfully!</DialogTitle>}
-            <DialogDescription className="flex items-end gap-x-4 pt-4 ">
-              {console.log(
-                "failedStatements from alert box ",
-                failedStatements
-              )}
-              {failedStatements.length === 0 ? (
-                <div className="flex items-center gap-x-4">
-                  <CheckCircle className="text-green-500 w-6 h-6 mt-2" />
-                  <p>Your report has been generated successfully.</p>
-                </div>
-              ) : failedStatements.length > 0 ? (
-                <div className="flex items-end gap-x-4">
-                  <AlertTriangle className="text-yellow-500 w-6 h-6 mt-2" />
-                  <p>Below Statements had some errors.</p>
-                </div>
-              ) : (
-                <XCircle className="text-red-500 w-6 h-6 mt-2" />
-              )}
-            </DialogDescription>
-          </DialogHeader>
+          {failedStatements.length === 0 ?
+              <DialogTitle>Report Generated Successfully!</DialogTitle> :<DialogTitle>Alert</DialogTitle>}
+              <DialogDescription className="flex items-end gap-x-4 pt-4 ">
+                {console.log(
+                  "failedStatements from alert box ",
+                  failedStatements
+                )}
+                {failedStatements.length === 0 ? (
+                  <div className="flex items-center gap-x-4">
+                    <CheckCircle className="text-green-500 w-6 h-6 mt-2" />
+                    <p>Your report has been generated successfully.</p>
+                  </div>
+                ) :  (
+                  <div className="flex items-end gap-x-4">
+                    <AlertTriangle className="text-yellow-500 w-6 h-6 mt-2" />
+                    <p>Below Statements had some errors.</p>
+                  </div>
+                ) }
+              </DialogDescription>
+            </DialogHeader>
           {failedStatements.length > 0 && (
             <div className="mb-4">
               <ul className="list-disc pl-5">

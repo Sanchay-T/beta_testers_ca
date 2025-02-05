@@ -35,7 +35,9 @@ const validateAndTransformTransaction = (transaction, statementId) => {
 
   let date = null;
   try {
+    log.info({"before":"conversion",before:transaction["Value Date"]})
     const [day, month, year] = transaction["Value Date"].split("-");
+    log.info({"after":"conversion",day,month,year})
     date = new Date(year, month - 1, day);
     if (isNaN(date.getTime())) {
       throw new Error("Invalid date");

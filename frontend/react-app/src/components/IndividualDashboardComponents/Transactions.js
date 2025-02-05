@@ -128,8 +128,12 @@ const Transactions = () => {
           parseInt(individualId)
         );
 
+        console.log("Aiyaz", data)
+
+   
         // Transform the data to only include required fields
         const formattedData = data.map((transaction) => ({
+          
           date: new Date(transaction.date).toLocaleDateString("en-GB", {
             day: "2-digit",
             month: "2-digit",
@@ -143,7 +147,7 @@ const Transactions = () => {
           bank: transaction.bank,
           id:transaction.id
         }));
-
+        console.log("formattedData = ",formattedData);
         setTransactionData(formattedData);
       } catch (err) {
         setError("Failed to fetch transactions");
@@ -158,17 +162,25 @@ const Transactions = () => {
 
   const monthsData = React.useMemo(() => {
     return transactionData.reduce((acc, transaction) => {
-      const date = new Date(transaction.date);
+      const [day, month, year] = transaction.date.split("/").map(Number);
+      const date = new Date(year, month - 1, day); // month is zero-based in JS
+      if (isNaN(date.getTime())) {
+        console.warn("Invalid date detected:", transaction.date);
+        return acc; // Skip invalid dates
+    }
+
+      console.log({oldDate:transaction.date,date,transaction})
       const monthKey = `${date.toLocaleString("en-GB", {
         month: "short",
       })}-${date.getFullYear()}`;
+      console.log({monthKey})
 
       if (!acc[monthKey]) {
         acc[monthKey] = [];
       }
 
       const standardizedTransaction = {
-        date: date,
+        date: transaction.date,
         description: transaction.description,
         amount: transaction.amount,
         balance: transaction.balance,
@@ -193,11 +205,7 @@ const Transactions = () => {
 
   const processDailyData = (transactions) => {
     return transactions.map((transaction) => ({
-      date: transaction.date.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      }),
+      date: transaction.date,
       description: transaction.description,
       credit:
         transaction.type.toLowerCase() === "credit" ? transaction.amount : 0,
@@ -215,11 +223,7 @@ const Transactions = () => {
 
   const processCreditDebitData = (transactions) => {
     return transactions.map((transaction) => ({
-      date: transaction.date.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      }),
+      date: transaction.date,
       credit:
         transaction.type.toLowerCase() === "credit" ? transaction.amount : 0,
       debit:
