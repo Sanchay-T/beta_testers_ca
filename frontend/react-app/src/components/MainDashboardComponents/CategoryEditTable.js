@@ -1048,7 +1048,7 @@ const CategoryEditTable = ({
             >
 
               {(!pendingCategoryChange?.isDebit || bulkCategoryModalOpen) && <div className="flex items-center space-x-2">
-                <RadioGroupItem value="income" id="income" />
+                <RadioGroupItem value="Income" id="income" />
                 <Label htmlFor="Income">Income</Label>
               </div>}
               {(pendingCategoryChange?.isDebit || bulkCategoryModalOpen) && <div className="flex items-center space-x-2">
