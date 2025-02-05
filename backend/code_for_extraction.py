@@ -87,7 +87,7 @@ def load_new_first_page_function(pdf_document):
 
         if crop_y is not None:
             # Adjust crop_y to include some distance above the keywords
-            buffer_distance = 5  # Points to keep above the line
+            buffer_distance = 9  # Points to keep above the line
             crop_y = max(page.mediabox.y0, crop_y - buffer_distance)
 
             # Define the cropping rectangle
@@ -375,7 +375,10 @@ def get_table_column_coordinates(pdf_path):
         if not column_x_coords and len(table_finder.tables) == 1:
             return column_all_coords
 
-        return column_x_coords\
+        if len(column_x_coords) < 4:
+            return column_all_coords
+
+        return column_x_coords
 
 def get_table_column_coordinates_by_text(pdf_path):
     page_num = 0
@@ -420,11 +423,15 @@ def get_table_column_coordinates_by_text(pdf_path):
         if not column_x_coords and len(table_finder.tables) == 1:
             return column_all_coords
 
+        if len(column_x_coords) < 4:
+            return column_all_coords
+
         return column_x_coords
 
 ##____________AFTER EXTRACTION (cleaning)_________________
 def parse_date(date_string):
     formats_to_try = [
+        "%d/%m /%Y",
         "%d-%m-%Y",
         "%d %b %Y",
         "%Y-%m-%d",
@@ -492,7 +499,7 @@ def find_desc_column(df, date_cols):
         "description", "escription", "scription", "descr", "descrip",
         "narration", "arration", "rration", "narrati", "narrat",
         "particular", "articular", "rticular", "particul",
-        "detail", "remark"
+        "detail", "remark", "remar", "emark", "naration",
     ]
 
     # Iterate over each row
@@ -580,6 +587,7 @@ def cleaning(new_df):
 
     def try_parsing_date(text):
         formats_to_try = [
+            "%d/%m /%Y",
             "%d-%m-%Y",
             "%d %b %Y",
             "%Y-%m-%d",
@@ -738,7 +746,8 @@ def credit_debit(df, description_column, date_column, bal_column, same_column):
         print("5 or more occurrences of case 2 found")
 
         # Vectorized split of numeric part and "CR/DR" part using regex
-        df['A'] = df[same_column].str.extract(r'([\d,]+\.?\d*)')[0].str.replace(',', '').astype(float)
+        df['A'] = df[same_column].str.extract(r'([\d,]+\.?\d*)')[0].str.replace(',', '')
+        df['A'] = pd.to_numeric(df['A'], errors='coerce')  # Convert to float, ignoring errors
         df['B'] = df[same_column].str.extract(r'(CR|DR|Credit|Debit|C|D|\+|\-)', flags=re.IGNORECASE)[0].str.upper()
         # Now call the crdr_to_credit_debit_columns function with new columns 'A' and 'B'
         new_df = crdr_to_credit_debit_columns(df, description_column, date_column, bal_column, 'A', 'B')
