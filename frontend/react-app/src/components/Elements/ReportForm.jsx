@@ -275,7 +275,9 @@ const GenerateReportForm = ({
         description: (
           <div className="mt-2 w-full flex items-center gap-2">
             <div className="flex items-center gap-4">
-              <CircularProgress value={progress} className="w-full" />
+              {/* <CircularProgress value={progress} className="w-full" /> */}
+              <Loader2 className="w-6 h-6 animate-spin" />
+
               {/* <span className="text-sm font-medium">{progress}%</span> */}
             </div>
             <p className="text-sm text-gray-500">
