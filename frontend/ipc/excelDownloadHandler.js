@@ -7,7 +7,7 @@ const { transactions } = require('../db/schema/Transactions');
 const { statements } = require('../db/schema/Statement');
 const { cases } = require('../db/schema/Cases');
 const { summary } = require('../db/schema/Summary');
-const { eod } = require('../db/schema/Eod');
+const { eod } = require('../db/schema/EodSchema');
 const { eq, and, SQL, sql, inArray, Name } = require("drizzle-orm");
 const axios = require("axios");
 
