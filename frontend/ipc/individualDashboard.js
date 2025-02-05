@@ -3,7 +3,7 @@ const log = require("electron-log");
 const databaseManager = require('../db/db');
 const { statements } = require("../db/schema/Statement");
 const { transactions } = require("../db/schema/Transactions");
-const { eod } = require("../db/schema/Eod");
+const { eod } = require("../db/schema/EodSchema");
 const { summary } = require("../db/schema/Summary");
 const { eq, gt, and, inArray } = require("drizzle-orm"); // Add this import
 
