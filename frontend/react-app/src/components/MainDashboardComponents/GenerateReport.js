@@ -17,6 +17,7 @@ export default function GenerateReport() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false); // State to control Dialog visibility
   const [failedStatements, setFailedStatements] = useState([]); // State to store failed statements
+  const [successfulStatements, setSuccessfulStatements] = useState([]); // State to store successful statements
   const [currentCaseId, setCurrentCaseId] = useState(null); // State to store caseId
   const [showAnalsisButton, setShowAnalysisButton] = useState(false); // State to show Analysis button
   const [showRectifyButton, setShowRectifyButton] = useState(false); // State to show Rectify button
@@ -123,6 +124,7 @@ export default function GenerateReport() {
           title: "Success",
           description: "Report generated successfully!",
           duration: 3000,
+          variant: "success",
         });
         if (result.data.failedFiles.length > 0) {
           // setShowRectifyButton(true);
@@ -130,6 +132,15 @@ export default function GenerateReport() {
             return file_path.split("\\").pop();
           });
           setFailedStatements(failedFiles || []); // Store failed
+        }
+        if (result.data.successfulFiles.length > 0) {
+          // setShowRectifyButton(true);
+          const successfulFiles = result.data.successfulFiles.map(
+            (file_path) => {
+              return file_path.split("\\").pop();
+            }
+          );
+          setSuccessfulStatements(successfulFiles || []); // Store failed
         }
 
         if (result.data.totalTransactions) setShowAnalysisButton(true);
@@ -263,31 +274,35 @@ export default function GenerateReport() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-          {failedStatements.length === 0 ?
-              <DialogTitle>Report Generated Successfully!</DialogTitle> :<DialogTitle>Alert</DialogTitle>}
-              <DialogDescription className="flex items-end gap-x-4 pt-4 ">
-                {console.log(
-                  "failedStatements from alert box ",
-                  failedStatements
-                )}
-                {failedStatements.length === 0 ? (
-                  <div className="flex items-center gap-x-4">
-                    <CheckCircle className="text-green-500 w-6 h-6 mt-2" />
-                    <p>Your report has been generated successfully.</p>
-                  </div>
-                ) :  (
-                  <div className="flex items-end gap-x-4">
-                    <AlertTriangle className="text-yellow-500 w-6 h-6 mt-2" />
-                    <p>Below Statements had some errors.</p>
-                  </div>
-                ) }
-              </DialogDescription>
-            </DialogHeader>
-          {failedStatements.length > 0 && (
+            {failedStatements.length === 0 ? (
+              <DialogTitle>Report Generated Successfully!</DialogTitle>
+            ) : (
+              <DialogTitle className="flex items-end gap-x-2">
+                <AlertTriangle className="text-yellow-500 w-6 h-6 mt-2" />
+                Some statement had errors.
+              </DialogTitle>
+            )}
+            <DialogDescription className="flex items-end gap-x-4 pt-4 ">
+              {console.log(
+                "failedStatements from alert box ",
+                failedStatements
+              )}
+              {failedStatements.length === 0 && (
+                <div className="flex items-center gap-x-4">
+                  <CheckCircle className="text-green-500 w-6 h-6 mt-2" />
+                  <p>Your report has been generated successfully.</p>
+                </div>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          {(failedStatements.length > 0 && successfulStatements.length > 0) && (
             <div className="mb-4">
               <ul className="list-disc pl-5">
                 {failedStatements.map((statement, index) => (
-                  <li key={index}>{statement}</li>
+                  <li key={index} className="text-red-500">{statement}</li>
+                ))}
+                {successfulStatements.map((statement, index) => (
+                  <li key={index} className="text-green-500">{statement}</li>
                 ))}
               </ul>
             </div>

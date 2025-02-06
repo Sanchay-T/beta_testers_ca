@@ -803,7 +803,7 @@ const CategoryEditTable = ({
                   className="bg-black hover:bg-gray-800"
                   onClick={handleColumnFilter}
                 >
-                  Save changes
+                  Apply Filters
                 </Button>
               </div>
             </DialogContent>
@@ -860,7 +860,7 @@ const CategoryEditTable = ({
                     setNumericFilterModalOpen(false);
                   }}
                 >
-                  Save changes
+                  Apply Filters
                 </Button>
               </div>
             </DialogContent>

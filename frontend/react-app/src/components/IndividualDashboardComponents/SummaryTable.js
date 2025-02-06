@@ -469,7 +469,7 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
                 className="bg-black hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
                 onClick={handleColumnFilter}
               >
-                Save changes
+                Apply Filters
               </Button>
             </div>
           </DialogContent>
@@ -521,7 +521,7 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
                   setNumericFilterModalOpen(false);
                 }}
               >
-                Save changes
+                Apply Filters
               </Button>
             </div>
           </DialogContent>

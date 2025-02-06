@@ -4,6 +4,8 @@ import { Card, CardHeader, CardTitle } from "../ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Maximize2, Minimize2 } from "lucide-react";
 import SummaryTable from "./SummaryTable";
+import DataTable from "./TableData";
+import { useParams } from "react-router-dom";
 
 const formatDecimal = (value) => {
   return Number(parseFloat(value || 0).toFixed(2));
@@ -47,7 +49,7 @@ const MaximizableChart = ({ children, title, isMaximized, setIsMaximized }) => {
 };
 
 const Summary = ({ caseId }) => {
-  const [activeTable, setActiveTable] = useState("Income Receipts");
+  // const [activeTable, setActiveTable] = useState("Income Receipts");
   const [summaryData, setSummaryData] = useState({
     Particulars: [],
     "Income Receipts": [],
@@ -64,8 +66,13 @@ const Summary = ({ caseId }) => {
   } = summaryData;
 
   const [incomeMaximized, setIncomeMaximized] = useState(false);
-  const [importantExpensesMaximized, setImportantExpensesMaximized] = useState(false);
+  const [importantExpensesMaximized, setImportantExpensesMaximized] =
+    useState(false);
   const [otherExpensesMaximized, setOtherExpensesMaximized] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [filteredTransactions, setFilteredTransactions] = useState([]);
+  const [transactionData, setTransactionData] = useState([]);
+  const {individualId } = useParams();
 
   useEffect(() => {
     const fetchSummaryData = async () => {
@@ -76,11 +83,17 @@ const Summary = ({ caseId }) => {
         const result = await window.electron.getSummary(caseId);
         const parsedData = result.length > 0 ? JSON.parse(result[0].data) : {};
 
+        const transactions = await window.electron.getTransactions(
+          caseId,
+          parseInt(individualId)
+        );
+        // console.log("transactions", transactions.length);
+
         const formatData = (data) => {
-          return data.map(item => {
+          return data.map((item) => {
             const formattedItem = { ...item };
-            Object.keys(formattedItem).forEach(key => {
-              if (typeof formattedItem[key] === 'number') {
+            Object.keys(formattedItem).forEach((key) => {
+              if (typeof formattedItem[key] === "number") {
                 formattedItem[key] = formatDecimal(formattedItem[key]);
               }
             });
@@ -94,6 +107,7 @@ const Summary = ({ caseId }) => {
           "Important Expenses": formatData(parsedData.importantExpenses || []),
           "Other Expenses": formatData(parsedData.otherExpenses || []),
         });
+        setTransactionData(transactions);
       } catch (error) {
         console.error("Error fetching summary data:", error);
         setError(error);
@@ -103,6 +117,7 @@ const Summary = ({ caseId }) => {
           "Important Expenses": [],
           "Other Expenses": [],
         });
+        setTransactionData([]);
       } finally {
         setIsLoading(false);
       }
@@ -112,24 +127,46 @@ const Summary = ({ caseId }) => {
   }, [caseId]);
 
   const monthOrder = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
 
   const [selectedMonths, setSelectedMonths] = useState([]);
   const months = useMemo(() => {
     const allMonths = new Set();
-    [particulars, incomeReceipts, importantExpenses, otherExpenses].forEach((category) => {
-      category.forEach((item) => {
-        Object.keys(item).forEach((key) => {
-          if (!["Total", "Particulars", "Income / Receipts", "Important Expenses / Payments", "Other Expenses / Payments"].includes(key)) {
-            allMonths.add(key);
-          }
+    [particulars, incomeReceipts, importantExpenses, otherExpenses].forEach(
+      (category) => {
+        category.forEach((item) => {
+          Object.keys(item).forEach((key) => {
+            if (
+              ![
+                "Total",
+                "Particulars",
+                "Income / Receipts",
+                "Important Expenses / Payments",
+                "Other Expenses / Payments",
+              ].includes(key)
+            ) {
+              allMonths.add(key);
+            }
+          });
         });
-      });
-    });
+      }
+    );
 
-    return Array.from(allMonths).sort((a, b) => monthOrder.indexOf(a) - monthOrder.indexOf(b));
+    return Array.from(allMonths).sort(
+      (a, b) => monthOrder.indexOf(a) - monthOrder.indexOf(b)
+    );
   }, [incomeReceipts, importantExpenses, otherExpenses]);
 
   useEffect(() => {
@@ -148,18 +185,21 @@ const Summary = ({ caseId }) => {
         }))
         .filter((item) => item.value > 0);
     }
-  
+
     return data
       .filter((item) => item[nameKey] !== excludeName)
       .map((item) => ({
         name: item[nameKey],
         value: formatDecimal(
-          selectedMonths.reduce((sum, month) => sum + parseFloat(item[month] || 0), 0)
+          selectedMonths.reduce(
+            (sum, month) => sum + parseFloat(item[month] || 0),
+            0
+          )
         ),
       }))
       .filter((item) => item.value > 0);
   };
-  console.log("other expenses",otherExpenses);
+  // console.log("other expenses",otherExpenses);
   const particularsData = transformData(
     particulars,
     "Total",
@@ -186,6 +226,42 @@ const Summary = ({ caseId }) => {
     "Total Debit"
   );
 
+  const handlePieClick = (data) => {
+    const categoryName = data.name.trim().toLowerCase();
+    
+    const matchingTransactions = transactionData.filter(transaction => {
+      if (!transaction || !transaction.category) return false;
+      const transactionCategory = transaction.category.trim().toLowerCase();
+      const amount = parseFloat(transaction.amount || 0);
+
+      const isIncome = summaryData["Income Receipts"].some(item => item["Income / Receipts"]?.trim().toLowerCase() === categoryName);
+      const isImportantExpense = summaryData["Important Expenses"].some(item => item["Important Expenses / Payments"]?.trim().toLowerCase() === categoryName);
+      const isOtherExpense = summaryData["Other Expenses"].some(item => item["Other Expenses / Payments"]?.trim().toLowerCase() === categoryName);
+
+      if (isIncome) return transactionCategory === categoryName && amount > 0;
+      if (isImportantExpense || isOtherExpense) return transactionCategory === categoryName && amount > 0;
+      
+      return false;
+    });
+
+    const formattedTransactions = matchingTransactions.map(transaction => ({
+      date: transaction.date ? new Date(transaction.date).toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      }) : '',
+      description: transaction.description || '',
+      amount: Math.abs(parseFloat(transaction.amount || 0)),
+      category: transaction.category || '',
+      balance: parseFloat(transaction.balance || 0),
+      bank: transaction.bank || '',
+      entity: transaction.entity || 'unknown'
+    }));
+
+    setSelectedCategory(categoryName);
+    setFilteredTransactions(formattedTransactions);
+  };
+  
   const renderChart = (data, title, isMaximized, setIsMaximized) => {
     return (
       <MaximizableChart
@@ -197,12 +273,15 @@ const Summary = ({ caseId }) => {
         <div className="w-full p-4">
           {data.length > 0 ? (
             <PieCharts
+              onPieClick={handlePieClick}
+              source="summary"
               data={data}
               title=""
               valueKey="value"
               nameKey="name"
               showLegends={isMaximized}
             />
+          ) : (
             // {!isMaximized && (
             //   <Button
             //     onClick={() => setActiveTable(tableType)}
@@ -214,9 +293,10 @@ const Summary = ({ caseId }) => {
             //     View Table
             //   </Button>
             // )}
-          ) : (
             <div className="flex items-center justify-center h-48">
-              <p className="text-gray-500 dark:text-gray-400">No Data Available</p>
+              <p className="text-gray-500 dark:text-gray-400">
+                No Data Available
+              </p>
             </div>
           )}
         </div>
@@ -237,34 +317,82 @@ const Summary = ({ caseId }) => {
         </div>
       ) : (
         <> */}
-          <div className="flex flex-wrap -mx-2">
-          {renderChart(incomeData, "Income Receipts", incomeMaximized, setIncomeMaximized, "Income Receipts")}
-          {renderChart(importantExpensesData, "Important Expenses", importantExpensesMaximized, setImportantExpensesMaximized, "Important Expenses")}
-          {renderChart(otherExpensesData, "Other Expenses", otherExpensesMaximized, setOtherExpensesMaximized, "Other Expenses")}
-          </div>
-          <div className="space-y-6">
-              <SummaryTable
-                source="particulars"
-                data={particulars}
-                title="Particulars"
-                categoryKey="Particulars"
-              />
-              <SummaryTable
-                data={incomeReceipts}
-                title="Income Receipts"
-                categoryKey="Income / Receipts"
-              />
-              <SummaryTable
-                data={importantExpenses}
-                title="Important Expenses"
-                categoryKey="Important Expenses / Payments"
-              />
-              <SummaryTable
-                data={otherExpenses}
-                title="Other Expenses"
-                categoryKey="Other Expenses / Payments"
-              />
-          </div>
+      <div className="flex flex-wrap -mx-2">
+        {renderChart(
+          incomeData,
+          "Income Receipts",
+          incomeMaximized,
+          setIncomeMaximized,
+          "Income Receipts"
+        )}
+        {renderChart(
+          importantExpensesData,
+          "Important Expenses",
+          importantExpensesMaximized,
+          setImportantExpensesMaximized,
+          "Important Expenses"
+        )}
+        {renderChart(
+          otherExpensesData,
+          "Other Expenses",
+          otherExpensesMaximized,
+          setOtherExpensesMaximized,
+          "Other Expenses"
+        )}
+      </div>
+      <Dialog
+        open={!!selectedCategory}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            setSelectedCategory(null);
+            setFilteredTransactions([]);
+          }
+        }}
+      >
+        {selectedCategory && filteredTransactions.length > 0 ? (
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader></DialogHeader>
+            <DataTable
+              data={filteredTransactions}
+              title={`Transactions Details: ${selectedCategory}`}
+            />
+          </DialogContent>
+        ) : (
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>No Transactions</DialogTitle>
+            </DialogHeader>
+            <div className="bg-gray-100 p-4 rounded-md w-full h-[10vh]">
+              <p className="text-gray-800 text-center mt-3 font-medium text-base">
+                No data Available for this category
+              </p>
+            </div>
+          </DialogContent>
+        )}
+      </Dialog>
+      <div className="space-y-6">
+        <SummaryTable
+          source="particulars"
+          data={particulars}
+          title="Particulars"
+          categoryKey="Particulars"
+        />
+        <SummaryTable
+          data={incomeReceipts}
+          title="Income Receipts"
+          categoryKey="Income / Receipts"
+        />
+        <SummaryTable
+          data={importantExpenses}
+          title="Important Expenses"
+          categoryKey="Important Expenses / Payments"
+        />
+        <SummaryTable
+          data={otherExpenses}
+          title="Other Expenses"
+          categoryKey="Other Expenses / Payments"
+        />
+      </div>
     </div>
   );
 };
