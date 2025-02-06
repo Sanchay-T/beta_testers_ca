@@ -463,6 +463,47 @@ function registerIndividualDashboardIpc() {
     }
   );
 
+  ipcMain.handle(
+    "get-transactions-by-suspense-all",
+    async (event, caseId, individualId) => {
+      try {
+        if (individualId) {
+          const result = await db
+            .select()
+            .from(transactions)
+            .where(
+              and(
+                eq(transactions.statementId, individualId.toString()),
+                eq(transactions.category, "Suspense"),
+              )
+            );
+          return result;
+        } else {
+          const allStatements = await db
+            .select()
+            .from(statements)
+            .where(eq(statements.caseId, caseId));
+
+          const statementIds = allStatements.map((stmt) => stmt.id.toString());
+
+          const result = await db
+            .select()
+            .from(transactions)
+            .where(
+              and(
+                inArray(transactions.statementId, statementIds),
+                eq(transactions.category, "Suspense"),
+              )
+            );
+          return result;
+        }
+      } catch (error) {
+        log.error("Error fetching Suspense Credit transactions:", error);
+        throw error;
+      }
+    }
+  );
+
   // Handler for getting Suspense Debit transactions
   ipcMain.handle(
     "get-transactions-by-suspensedebit",

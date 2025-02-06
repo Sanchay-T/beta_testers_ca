@@ -53,6 +53,14 @@ contextBridge.exposeInMainWorld("electron", {
       caseId,
       individualId
     ),
+    
+  getTransactionsBySuspense: (caseId, individualId) =>
+    ipcRenderer.invoke(
+      "get-transactions-by-suspense-all",
+      caseId,
+      individualId
+    ),
+    
 
   getTransactionsByEmi: (caseId, individualId) =>
     ipcRenderer.invoke("get-transactions-by-emi", caseId, individualId),

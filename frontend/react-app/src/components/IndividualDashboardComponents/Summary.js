@@ -192,6 +192,7 @@ const Summary = ({ caseId }) => {
         title={title}
         isMaximized={isMaximized}
         setIsMaximized={setIsMaximized}
+        
       >
         <div className="w-full p-4">
           {data.length > 0 ? (

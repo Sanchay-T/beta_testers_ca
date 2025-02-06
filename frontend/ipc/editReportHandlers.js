@@ -312,14 +312,12 @@ function registerEditReportHandlers() {
         const updatedTransactions = transactionsForCase.map((transaction, index) => {
 
             const { id, Date, Amount, Type, ...requiredFields } = transaction;
-            log.info(transaction.id);
             const frontendEntry = frontendData[transaction.id.toString()]; // Check if the ID exists in frontend data
 
             if (frontendEntry) {
                 log.info("Found frontend entry for ID:", frontendEntry, id);
                 const formattedDate = formatDate(Date);
                 // If present in frontend data, update the transaction
-                log.info({ transaction, frontendEntry })
                 aiyaz = index;
                 return {
                     "Value Date": formattedDate,

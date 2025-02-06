@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
-import CategoryEditTable from "../MainDashboardComponents/CategoryEditTable";
+import UnifiedTable from "../IndividualDashboardComponents/UnifiedTable";
 
 const CategoryEditModal = ({ open, onOpenChange, caseId }) => {
   const [categoryOptions, setCategoryOptions] = useState(null);
@@ -8,61 +8,6 @@ const CategoryEditModal = ({ open, onOpenChange, caseId }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Sample entity options
-  const categoryOptionsfixed = [
-    "Bank Charges",
-    "Bank Interest Received",
-    "Bonus Paid",
-    "Bonus Received",
-    "Bounce",
-    "Cash Deposits",
-    "Cash Reversal",
-    "Cash Withdrawal",
-    "Closing Balance",
-    "Credit Card Payment",
-    "Debtor List",
-    "Departmental Stores",
-    "Donation",
-    "Food Expense/Hotel",
-    "General Insurance",
-    "Gold Loan",
-    "GST Paid",
-    "Income Tax Paid",
-    "Income Tax Refund",
-    "Indirect tax",
-    "Interest Debit",
-    "Interest Received",
-    "Investment",
-    "Life insurance",
-    "Loan",
-    "Loan given",
-    "Local Cheque Collection",
-    "Online Shopping",
-    "Opening Balance",
-    "Other Expenses",
-    "POS-Cr",
-    "POS-Dr",
-    "Probable Claim Settlement",
-    "Property Tax",
-    "Provident Fund",
-    "Redemption, Dividend & Interest",
-    "Refund/Reversal",
-    "Rent Paid",
-    "Rent Received",
-    "Salary Paid",
-    "Salary Received",
-    "Subscription / Entertainment",
-    "TDS Deducted",
-    "Total Income Tax Paid",
-    "Travelling Expense",
-    "UPI-Cr",
-    "UPI-Dr",
-    "Utility Bills",
-  ];
-
-  useEffect(() => {
-    setCategoryOptions(categoryOptionsfixed);
-  }, []);
 
   // const handleEntityChange = (transactionId, newEntity) => {
   //   setTransactions(prevTransactions =>
@@ -115,35 +60,16 @@ const CategoryEditModal = ({ open, onOpenChange, caseId }) => {
     }
   }, [caseId]); // Add caseId to dependency array
 
-
-  // process epoch date to human readable date in format dd-mm-yyyy
-  //   const processDate = (epochDate) => {
-  //     const date = new Date(epochDate);
-  //     const day = date.getDate();
-  //     const month = date.getMonth() + 1;
-  //     const year = date.getFullYear();
-  //     return `${day}-${month}-${year}`;
-  //   };
-
-  //   transactionData2.forEach((transaction) => {
-  //     transaction["Value Date"] = processDate(transaction["Value Date"]);
-  //     // remove entity month and date
-  //     delete transaction["Entity"];
-  //     delete transaction["Month"];
-  //     delete transaction["Date"];
-  //   });
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="min-w-[90vw] h-[95vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Transactions</DialogTitle>
+          {/* <DialogTitle>Transactions</DialogTitle> */}
         </DialogHeader>
         <div className="overflow-auto flex-1">
-          <CategoryEditTable
+          <UnifiedTable
             data={transactionData}
-            categoryOptions={categoryOptions}
-            setCategoryOptions={setCategoryOptions}
+            title="Transactions"
             caseId={caseId}
           />
         </div>

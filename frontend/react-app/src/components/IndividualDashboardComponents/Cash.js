@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../ui/tabs";
 import BarLineChart from "../charts/BarLineChart";
-import DataTable from "./TableData";
+import UnifiedTable from "./UnifiedTable";
 import { useParams } from "react-router-dom";
 
 const Cash = () => {
@@ -36,6 +36,7 @@ const Cash = () => {
           Description: item.description,
           Debit: Math.abs(item.amount) || 0, // Ensure positive value
           Balance: item.balance || 0,
+          category: item.category || "-",
         }));
 
         // Transform deposit data
@@ -48,6 +49,8 @@ const Cash = () => {
           Description: item.description,
           Credit: item.amount || 0,
           Balance: item.balance || 0,
+          category: item.category || "-",
+
         }));
 
         setWithdrawalData(transformedWithdrawalData);
@@ -130,9 +133,9 @@ const Cash = () => {
                 />
               </div>
               <div>
-                <DataTable
+                <UnifiedTable
                   data={withdrawalData}
-                  title="Cash Widthdrawal Table"
+                  title="Cash Widthdrawal Transactions"
                 />
               </div>
             </>
@@ -157,7 +160,7 @@ const Cash = () => {
                 />
               </div>
               <div>
-                <DataTable data={depositData} title="Cash Deposit Table" />
+                <UnifiedTable data={depositData} title="Cash Deposit Transactions" />
               </div>
             </>
           )}

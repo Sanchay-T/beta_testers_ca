@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import BarLineChart from "../charts/BarLineChart";
-import DataTable from "./TableData";
+import UnifiedTable from "./UnifiedTable";
 import { useParams } from "react-router-dom";
 // import investementData from "../../data/investment.json";
 
@@ -28,8 +28,8 @@ const Investment = () => {
           }),
           description: item.description,
           debit: item.amount,
-          category: item.category,
           balance: item.balance,
+          category: item.category,
         }));
         setData(transformedData);
       } catch (error) {
@@ -72,7 +72,7 @@ const Investment = () => {
           </div>
 
           <div>
-            <DataTable data={data} title="Investment Table" />
+            <UnifiedTable data={data} title="Investment Transactions" />
           </div>
         </>
       )}

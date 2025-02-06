@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Search, Loader2, Check, Pause } from "lucide-react";
+import { Search, Loader2, Check,Download,X,MessageCircle,Mail, Share2 } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -33,8 +33,10 @@ import {
 } from "../ui/pagination";
 import { Label } from "../ui/label";
 import { useToast } from "../../hooks/use-toast";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
+import { exportToExcel } from "../exportToExcel";
 
-const DataTable = ({ data = [], source, title, subtitle }) => {
+const DataTable = ({ data = [], source, title, subtitle}) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [filteredData, setFilteredData] = useState(data);
   const [searchTerm, setSearchTerm] = useState("");
@@ -56,9 +58,11 @@ const DataTable = ({ data = [], source, title, subtitle }) => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [batchModalOpen, setBatchModalOpen] = useState(false);
   const [batchEntityValue, setBatchEntityValue] = useState("");
-
   const { toast } = useToast();
 
+  // States for sharing 
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  
   // Get dynamic columns from first data item
   let columns = data.length > 0 ? Object.keys(data[0]) : [];
   columns = columns.filter((column) => !columnsToIgnore.includes(column));
@@ -238,7 +242,7 @@ const DataTable = ({ data = [], source, title, subtitle }) => {
       )
     ) {
 
-      const payload = [{ entity: newValue, transactionId: row.transactionId }]
+      const payload = [{ entity: newValue, transactionId: row.id }]
       entityUpdateIpc(payload);
 
       // Update the local state so the UI immediately reflects the new value.
@@ -315,7 +319,7 @@ const DataTable = ({ data = [], source, title, subtitle }) => {
         const row = filteredData[globalIndex];
         console.log(row)
         // Replace this console.log with your backend call.
-        return { entity: batchEntityValue, transactionId: row.transactionId }
+        return { entity: batchEntityValue, transactionId: row.id }
       });
       entityUpdateIpc(payload)
       // Clear selections and close the modal.
@@ -360,6 +364,44 @@ const DataTable = ({ data = [], source, title, subtitle }) => {
     return { ...acc, [column]: total.toFixed(2) };
   }, {});
 
+  const handleShare = async () => {
+    setShareModalOpen(true);
+  };
+
+  const handleDownload = ()=>{
+    exportToExcel(data,title);
+  }
+
+
+  const handleMailShare = async () => {
+      const fileName = await exportToExcel(data, `${title}.xlsx`, true);
+      if (!fileName) return alert("File saving was canceled.");
+    
+      // Generate mailto link (without attachment, since it's not possible)
+      const subject = encodeURIComponent(`${title} Report`);
+      const body = encodeURIComponent(`Please find the attached ${title} report.\n\n📌 Don't forget to manually attach the saved file before sending.`);
+      const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
+  
+    // Open mail client **only after the file is saved**
+    window.location.href = mailtoLink;
+  };
+  
+
+  const handleWhatsappShare = async () => {
+    const fileName = await exportToExcel(data, `${title}.xlsx`, true);
+    if (!fileName) return alert("File saving was canceled.");
+  
+    // Generate WhatsApp sharing link (without attachment, since it's not possible)
+    const message = encodeURIComponent(
+      `📁 Please find the attached Report: ${title}\n\n📌 Don't forget to manually attach the saved file before sending.`
+    );
+    const whatsappLink = `https://api.whatsapp.com/send?text=${message}`;
+  
+    // Open WhatsApp Web
+    window.open(whatsappLink, "_blank");
+  };
+  
+
   // If source is lifo or fifo, render a different table
   if (source === "LIFO" || source === "FIFO") {
     return (
@@ -389,6 +431,7 @@ const DataTable = ({ data = [], source, title, subtitle }) => {
               >
                 Clear Filters
               </Button>
+              
             </div>
           </div>
         </CardHeader>
@@ -474,12 +517,13 @@ const DataTable = ({ data = [], source, title, subtitle }) => {
 
                 <TableFooter>
                   <TableRow>
-                    <TableCell className="text-sm">Total</TableCell>
+                    <TableCell>Total</TableCell>
                     {columns.slice(1).map((column) => (
-                      <TableCell key={column} className="text-sm">
+                      <TableCell key={column}>
                         {numericColumns.includes(column) ? totals[column] : ""}
                       </TableCell>
                     ))}
+
                   </TableRow>
                 </TableFooter>
               </Table>
@@ -578,12 +622,48 @@ const DataTable = ({ data = [], source, title, subtitle }) => {
                 {/* <option value="all">Show all</option> */}
               </select>
               <Button
-                className="dark:bg-slate-300 dark:hover:bg-slate-200"
-                variant="default"
-                onClick={() => clearFilters()}
-              >
-                Clear Filters
-              </Button>
+  variant="outline"
+  className="px-3 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-600 
+             bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
+             transition-all rounded-md shadow-sm hover:shadow-md"
+  onClick={clearFilters}
+>
+  Clear Filters
+</Button>
+              <div className="flex gap-2">
+                {/* Download Button */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
+                                transition-all shadow-sm hover:shadow-md"
+                      onClick={handleDownload}
+                    >
+                      <Download className="w-4 h-4 text-blue-500" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Download</TooltipContent>
+                </Tooltip>
+
+                {/* Share Button */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
+                                transition-all shadow-sm hover:shadow-md"
+                      onClick={handleShare}
+                    >
+                      <Share2 className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Share</TooltipContent>
+                </Tooltip>
+              </div>
+
               {hasEntity && (
                 <Button
                   variant="default"
@@ -922,6 +1002,63 @@ const DataTable = ({ data = [], source, title, subtitle }) => {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Create a share modal dialog */}
+      <Dialog open={shareModalOpen} onOpenChange={setShareModalOpen}>
+      <DialogContent className="max-w-md p-6 rounded-lg shadow-lg border dark:border-gray-700 bg-white dark:bg-gray-900">
+        {/* Header with Close Button */}
+        <DialogHeader className="flex justify-between items-center">
+          <DialogTitle className="text-lg font-semibold text-gray-800 dark:text-white">Share This Report</DialogTitle>
+        </DialogHeader>
+
+        {/* Share Options */}
+        <div className="flex justify-center gap-6 py-4">
+          <TooltipProvider>
+            {/* Mail Button */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="p-4 transition-all rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
+                  onClick={handleMailShare}
+                >
+                  <Mail className="w-6 h-6 text-red-500" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Share via Email</TooltipContent>
+            </Tooltip>
+
+            {/* WhatsApp Button */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="p-4 transition-all rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
+                  onClick={handleWhatsappShare}
+                >
+                  <MessageCircle className="w-6 h-6 text-green-500" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Share via WhatsApp</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+
+        {/* Cancel Button */}
+        <div className="flex justify-end">
+          <Button
+            variant="outline"
+            className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+            onClick={() => setShareModalOpen(false)}
+          >
+            Cancel
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+
+
+      
       {/* Loading Overlay */}
       {isLoading && (
         <div className="fixed inset-0 bg-white bg-opacity-80 backdrop-blur-sm flex items-center justify-center">
