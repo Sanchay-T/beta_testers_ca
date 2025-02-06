@@ -390,7 +390,7 @@ function registerReportHandlers(tmpdir_path) {
         payload,
         {
           headers: { "Content-Type": "application/json" },
-          timeout: 300000,
+          // timeout: 300000,
           validateStatus: (status) => status === 200,
         }
       );

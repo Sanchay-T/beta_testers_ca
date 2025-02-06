@@ -5,7 +5,6 @@ const capitalizeFirstLetter = (str) => str.charAt(0).toUpperCase() + str.slice(1
 
 const exportToExcel = async (transactions, fileName = "transactions.xlsx", forShare = false) => {
   if (!transactions.length) return null;
-
   // Convert JSON data to worksheet
   const worksheet = XLSX.utils.json_to_sheet(transactions);
   const headers = Object.keys(transactions[0]);
