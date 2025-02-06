@@ -354,7 +354,7 @@ function registerEditReportHandlers() {
             return acc;
         }, []);
 
-        console.log({ newCategories: newCategories, newCategoriesLength: newCategories.length });
+        console.log("New categories: ", newCategories, "NewCategoriesLength: ", newCategories.length);
 
 
         try {
