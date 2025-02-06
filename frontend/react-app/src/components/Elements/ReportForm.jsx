@@ -382,7 +382,7 @@ const GenerateReportForm = ({
 
     if (!caseName && !currentCaseName) {
       toast({
-        title: "Error",
+        title: "Alert",
         description: "Please enter a report name",
         variant: "destructive",
         duration: 3000,
@@ -400,7 +400,7 @@ const GenerateReportForm = ({
         console.log({response})
         if (response.exists) {
           toast({
-            title: "Error",
+            title: "Alert",
             description:
               "Report name already exists. Please choose a different name.",
             variant: "destructive",
@@ -428,7 +428,7 @@ const GenerateReportForm = ({
     } catch (error) {
       console.error("Error checking report name:", error);
       toast({
-        title: "Error",
+        title: "Alert",
         description: "Failed to validate report name",
         variant: "destructive",
         duration: 3000,

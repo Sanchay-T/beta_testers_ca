@@ -74,6 +74,7 @@ const Creditors = () => {
             />
           </div>
           <div className="w-full">
+
             <UnifiedTable data={data} title="Ceditors Transactions" />
           </div>
         </>
