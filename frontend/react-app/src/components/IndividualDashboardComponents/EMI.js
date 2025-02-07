@@ -152,6 +152,9 @@ const EMI = () => {
                 title="Probable EMI"
               />
             </div>
+            <div>
+            <UnifiedTable data={emiSummary} title="Emi Summary" />
+          </div>
             <div className="w-full">
               <UnifiedTable data={filteredData} title="Emi Transactions" />
             </div>
