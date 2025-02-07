@@ -68,6 +68,8 @@ contextBridge.exposeInMainWorld("electron", {
     ipcRenderer.invoke("get-transactions-by-investment", caseId, individualId),
   getTransactionsByReversal: (caseId, individualId) =>
     ipcRenderer.invoke("get-transactions-by-reversal", caseId, individualId),
+  getTransactionsByInsurance: (caseId, individualId, categories ) =>
+    ipcRenderer.invoke("get-transactions-by-insurance", caseId, individualId),
 
   getStatements: (case_id) => ipcRenderer.invoke("get-statements", case_id),
 
