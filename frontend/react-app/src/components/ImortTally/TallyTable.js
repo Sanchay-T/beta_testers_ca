@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Search, Loader2, Check,Download,X,Save,Plus,MessageCircle,Mail, Share2 } from "lucide-react";
+import { Search, Loader2, Check,Download,X,Save,Plus,MessageCircle,Mail, Share2 , UploadCloud} from "lucide-react";
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-  CardDescription,
 } from "../ui/card";
 import {
   Table,
@@ -18,7 +16,6 @@ import {
 } from "../ui/table";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { Badge } from "../ui/badge";
 import { cn } from "../../lib/utils";
 import { Checkbox } from "../ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle,DialogFooter,DialogDescription } from "../ui/dialog";
@@ -745,6 +742,25 @@ useEffect(() => {
     // Open WhatsApp Web
     window.open(whatsappLink, "_blank");
   };
+
+  const handleInputChange = (transactionId, column, value) => {
+    setFilteredData((prevData) => {
+      return prevData.map((transaction) =>
+        transaction.id === transactionId ? { ...transaction, [column]: value } : transaction
+      );
+    });
+  
+    setTransactions((prevTransactions) => {
+      return prevTransactions.map((transaction) =>
+        transaction.id === transactionId ? { ...transaction, [column]: value } : transaction
+      );
+    });
+  };
+
+  const handleUploadToTally = async () => {
+  console.log("Upload to Tally transaction", transactions);
+
+  }
   
 
   return (
@@ -753,8 +769,15 @@ useEffect(() => {
       <CardHeader>
         <div className="flex justify-between items-center">
           <div className="space-y-2">
-            <CardTitle className="dark:text-slate-300">{title || "Data Table"}</CardTitle>
-            <CardDescription>{subtitle || "View and manage your data"}</CardDescription>
+          <Button
+      onClick={handleUploadToTally}
+      className="px-6 py-3 text-base font-medium text-white bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 hover:bg-gray-700 transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
+    >
+      <UploadCloud className="w-5 h-5 text-white" />
+      Upload to Tally
+    </Button>
+            {/* <CardTitle className="dark:text-slate-300">{title || "Data Table"}</CardTitle> */}
+            {/* <CardDescription>{subtitle || "View and manage your data"}</CardDescription> */}
           </div>
           <div className="flex items-center gap-2">
             <div className="relative flex items-center gap-2">
@@ -782,14 +805,14 @@ useEffect(() => {
                 {/* <option value="all">Show all</option> */}
               </select>
               <Button
-  variant="outline"
-  className="px-3 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-600 
-             bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
-             transition-all rounded-md shadow-sm hover:shadow-md"
-  onClick={clearFilters}
->
-  Clear Filters
-</Button>
+              variant="outline"
+              className="px-3 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-600 
+                        bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
+                        transition-all rounded-md shadow-sm hover:shadow-md"
+              onClick={clearFilters}
+            >
+              Clear Filters
+            </Button>
               <div className="flex gap-2">
                 {/* Download Button */}
                 <Tooltip>
@@ -838,13 +861,14 @@ useEffect(() => {
           </div>
         </div>
       </CardHeader>
+
       <CardContent>
-        <div className="relative">
-          <Table>
+        <div className="relative  overflow-x-auto">
+          <Table className="w-full">
             <TableHeader>
               <TableRow>
                
-                 {                 (columns.includes("category") || columns.includes("entity") )&&  <TableHead className="w-10">
+                 {(columns.includes("category") || columns.includes("entity") )&&  <TableHead className="w-10">
                     <Checkbox
                         checked={
                         currentData.length > 0 &&
@@ -855,13 +879,17 @@ useEffect(() => {
                   </TableHead>}
                 
                 {columns.map((column) => (
-                  <TableHead key={column} className="whitespace-nowrap"
+                  <TableHead key={column} className={`whitespace-nowrap ${column==="bill_ref"&&"min-w-[180px]"} ${column==="narration"&&"min-w-[300px]"}`}
                   // className={source === "summary" ? "bg-gray-900 dark:bg-slate-800 text-white" : ""}
                   >
+
                     <div className="flex items-center gap-2">
-                      {column.charAt(0).toUpperCase() +
-                        column.slice(1).toLowerCase()}
-                      {column.toLowerCase() !== "description" && (
+                      {column
+                        .split("_") // Split by underscore
+                        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Capitalize
+                        .join(" ")}
+                        
+                      {["narration","bill_ref","effective_date"].includes(column.toLowerCase())===false && (
                         <Button
                           variant="ghost"
                           size="sm"
@@ -886,6 +914,7 @@ useEffect(() => {
                 ))}
               </TableRow>
             </TableHeader>
+
             <TableBody>
               {currentData.length === 0 ? (
                 <TableRow>
@@ -899,7 +928,7 @@ useEffect(() => {
                     key={row.id}
                   // className={source === "summary" ? "even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200" : ""}
                   >
-                     {(columns.includes("category") || columns.includes("entity") )&& <TableCell className="w-10">
+                     {                 (columns.includes("category") || columns.includes("entity") )&&  <TableCell className="w-10">
                         <Checkbox
                           checked={globalSelectedRows.has(row.id)}
                           onCheckedChange={() => toggleRowSelection(row.id)}
@@ -910,7 +939,7 @@ useEffect(() => {
                         return (
                           <TableCell
                             key={column}
-                            className="max-w-[200px] relative"
+                            className="max-w-[00px] relative"
                           >
                             <div className="flex items-center">
                               <Input
@@ -1034,22 +1063,52 @@ useEffect(() => {
                               </div>
                             </SelectContent>
                           </Select>
-                                                  </TableCell>
+                          </TableCell>
                           
                         )
                       }
-                       else if (column.toLowerCase() === "description") {
+                       else if (column.toLowerCase() === "narration") {
                         return (
                           <TableCell
                             key={column}
-                            className="max-w-[200px] group relative"
-                          >
-                            <div className="truncate">{formatValue(row[column])}</div>
-                            <div className="absolute left-0 top-10 hidden group-hover:block bg-black text-white text-sm rounded p-2 z-50 whitespace-normal min-w-[200px] max-w-[400px]">
+                            className="max-w-[500px] group relative"
+                          ><Input
+                          type="text"
+                          value={row[column] || ""}
+                          onChange={(e) => handleInputChange(row.id, column, e.target.value)}
+                          placeholder="Enter Narration"
+                          className="w-full p-2 border border-gray-300  truncate rounded-md"
+                        />
+                            <div className="absolute right-24 top-12 hidden group-hover:block bg-black text-white text-sm rounded p-2 z-50 whitespace-normal min-w-[200px] ">
                               {row[column]}
                             </div>
                           </TableCell>
                         );
+
+                      }else if(column.toLowerCase()==="effective_date"){
+                        return <TableCell
+                        key={column}
+                        className="w-[250px] group relative"
+                      > <Input
+                        type="date"
+                        value={row[column] ? row[column].split("T")[0] : ""}
+                        onChange={(e) => handleInputChange(row.id, column, e.target.value) }
+                        className="w-full p-2 border border-gray-300 rounded-md"
+                      />
+                      </TableCell>
+                      }
+                      else if(column.toLowerCase()==="bill_ref"){
+                        return  <TableCell
+                            key={column}
+                            className="w-[250px] group relative"
+                          ><Input
+                        type="text"
+                        value={row[column] || ""}
+                        onChange={(e) => handleInputChange(row.id, column, e.target.value)}
+                        placeholder="Enter Bill Ref"
+                        className="w-full p-2 border border-gray-300 rounded-md"
+                      />
+                      </TableCell>
                       } else {
                         return (
                           <TableCell key={column} className="max-w-[200px]">
@@ -1067,7 +1126,7 @@ useEffect(() => {
                   <TableCell>Total</TableCell>
                   {columns.slice(0).map((column) => (
                     <TableCell key={column}>
-                      {['credit', 'debit', 'balance'].includes(column.toLowerCase()) ? totals[column] : ""}
+                      {['credit', 'debit', 'balance','amount'].includes(column.toLowerCase()) ? totals[column] : ""}
                     </TableCell>
                   ))}
                 </TableRow>

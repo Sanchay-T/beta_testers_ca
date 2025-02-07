@@ -1,14 +1,6 @@
 import React, { useState, useEffect } from "react";
-import SingleLineChart from "../charts/LineChart";
-import SingleBarChart from "../charts/BarChart";
-import PieCharts from "../charts/PieCharts";
-import DataTable from "./TableData";
-import { Maximize2, Minimize2 } from "lucide-react";
-import { Card, CardHeader, CardTitle } from "../ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import ToggleStrip from "./ToggleStrip";
 import { useParams } from "react-router-dom";
-// import CategoryEditTable from "../MainDashboardComponents/CategoryEditTable";
 import UnifiedTable from "../IndividualDashboardComponents/UnifiedTable";
 
 

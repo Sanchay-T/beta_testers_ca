@@ -22,6 +22,7 @@ const sessionManager = require("./SessionManager");
 const licenseManager = require("./LicenseManager");
 const { generateReportIpc } = require("./ipc/generateReport");
 const { registerOpportunityToEarnIpc } = require("./ipc/opportunityToEarn");
+const { registerTallyIpc } = require("./ipc/tallyHandlers.js");
 const { registerExcelDownloadHandlers } = require("./ipc/excelDownloadHandler")
 const databaseManager = require("./db/db");
 const { spawn, execFile } = require("child_process");
@@ -497,6 +498,7 @@ async function createWindow() {
   registerReportHandlers(TMP_DIR);
   registerAuthHandlers();
   registerOpportunityToEarnIpc();
+  registerTallyIpc();
   getdata();
   registerEditReportHandlers();
   registerExcelDownloadHandlers(app.getPath("downloads"));
