@@ -252,47 +252,50 @@ useEffect(() => {
       };
     
 
-
-  const handleSearch = (searchValue) => {
-    setSearchTerm(searchValue);
-    if (searchValue === "") {
-      setFilteredData(data);
-      setCurrentPage(1);
-      return;
-    }
-
-
-    // Calculate totals for numeric columns
-    const totals = numericColumns.reduce((acc, column) => {
-      const total = filteredData.reduce((sum, row) => {
-        const value = parseFloat(String(row[column]).replace(/,/g, ""));
-        return !isNaN(value) ? sum + value : sum;
-      }, 0);
-      return {
-        ...acc,
-        [column]: total.toLocaleString(undefined, {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        }),
-      };
-    }, {});
-
-    const columnsToReplace = ["amount", "balance", "debit", "credit"];
-    const filtered = filteredData.filter((row) =>
-      Object.entries(row).some(([key, value]) => {
-        if (columnsToReplace.includes(key)) {
-          return String(value)
-            .replace(/,/g, "")
-            .toLowerCase()
-            .includes(searchValue.toLowerCase());
+//Search Functionality
+      const handleSearch = (searchValue) => {
+        setSearchTerm(searchValue);
+      
+        // Reset to original data if search value is empty
+        if (searchValue === "") {
+          setFilteredData(data);
+          setCurrentPage(1);
+          return;
         }
-        return String(value).toLowerCase().includes(searchValue.toLowerCase());
-      })
-    );
-
-    setFilteredData(filtered);
-    setCurrentPage(1);
-  };
+      
+        // Always filter from the full data set for consistent search results
+        const columnsToReplace = ["amount", "balance", "debit", "credit"];
+        const filtered = data.filter((row) =>
+          Object.entries(row).some(([key, value]) => {
+            if (columnsToReplace.includes(key)) {
+              return String(value)
+                .replace(/,/g, "")
+                .toLowerCase()
+                .includes(searchValue.toLowerCase());
+            }
+            return String(value).toLowerCase().includes(searchValue.toLowerCase());
+          })
+        );
+      
+        setFilteredData(filtered);
+        setCurrentPage(1);
+      
+        // Calculate totals for numeric columns from the new filtered data
+        const totals = numericColumns.reduce((acc, column) => {
+          const total = filtered.reduce((sum, row) => {
+            const value = parseFloat(String(row[column]).replace(/,/g, ""));
+            return !isNaN(value) ? sum + value : sum;
+          }, 0);
+          return {
+            ...acc,
+            [column]: total.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }),
+          };
+        }, {});
+      };
+      
 
   // --- Single Row Update: Use the entire row (which includes its id) ---
   const handleCategoryChange = (transaction, newCategory) => {

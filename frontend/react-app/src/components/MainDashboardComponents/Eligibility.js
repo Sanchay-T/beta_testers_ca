@@ -241,26 +241,48 @@ export default function Eligibility() {
                       <Table>
                         <TableHeader>
                           <TableRow className="bg-gray-50 dark:bg-gray-800">
-                            <TableHead className="font-semibold">Product</TableHead>
-                            <TableHead className="text-center font-semibold">Amount</TableHead>
-                            <TableHead className="text-center font-semibold">Commission %</TableHead>
-                            <TableHead className="text-right font-semibold">Commission (₹)</TableHead>
+                            <TableHead className="font-semibold">
+                              Product
+                            </TableHead>
+                            <TableHead className="text-center font-semibold">
+                              Amount
+                            </TableHead>
+                            <TableHead className="text-center font-semibold">
+                              Commission %
+                            </TableHead>
+                            <TableHead className="text-right font-semibold">
+                              Commission (₹)
+                            </TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {Object.entries(data)
-                            .filter(([key]) => !["caseName", "statementCustomerName"].includes(key))
+                            .filter(
+                              ([key]) =>
+                                !["caseName", "statementCustomerName"].includes(
+                                  key
+                                )
+                            )
                             .map(([key, item]) => (
-                              <TableRow key={key} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                                <TableCell className="font-medium">{item.type}</TableCell>
+                              <TableRow
+                                key={key}
+                                className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                              >
+                                <TableCell className="font-medium">
+                                  {item.type}
+                                </TableCell>
                                 <TableCell className="text-center">
-                                  ₹{item.amount.toLocaleString(undefined, {
+                                  ₹
+                                  {item.amount.toLocaleString(undefined, {
                                     maximumFractionDigits: 2,
                                   })}
                                 </TableCell>
-                                <TableCell className="text-center">{item.rate}</TableCell>
+                                <TableCell className="text-center">
+                                  {item.rate}
+                                </TableCell>
                                 <TableCell className="text-right font-semibold">
-                                  ₹{item.value.toLocaleString(undefined, {
+                                  ₹
+                                  {item.value.toLocaleString(undefined, {
                                     maximumFractionDigits: 2,
                                   })}
                                 </TableCell>
@@ -275,49 +297,50 @@ export default function Eligibility() {
           </Accordion>
         </Card>)}
         <div className="grid gap-6 md:grid-cols-2">
-        <Card className="p-6">
-              <h4 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
-                <AlertCircle className="h-5 w-5 text-amber-500" />
-                Important Notes
-              </h4>
-              <ul className="space-y-3">
-                {note[1].content.map((item, idx) => (
-                  <li key={idx} className="flex gap-3 text-gray-600 dark:text-slate-300">
-                    <ChevronRight className="h-5 w-5 flex-shrink-0 text-gray-400" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </Card>
-            <Card className="p-6 space-y-4">
-              <h4 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                <Phone className="h-5 w-5 text-blue-500" />
-                Contact Information
-              </h4>
-              <div className="space-y-4 text-gray-600 dark:text-slate-300">
-                <p>
-In case your client is interested in any of the above products, you can contact our trusted vendor M/s BizPedia Tech Private Limited using below contact details.
-
+          <Card className="p-6">
+            <h4 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+              <AlertCircle className="h-5 w-5 text-amber-500" />
+              Important Notes
+            </h4>
+            <ul className="space-y-3">
+              {note[1].content.map((item, idx) => (
+                <li
+                  key={idx}
+                  className="flex gap-3 text-gray-600 dark:text-slate-300"
+                >
+                  <ChevronRight className="h-5 w-5 flex-shrink-0 text-gray-400" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </Card>
+          <Card className="p-6 space-y-4">
+            <h4 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <Phone className="h-5 w-5 text-blue-500" />
+              Contact Information
+            </h4>
+            <div className="space-y-4 text-gray-600 dark:text-slate-300">
+              <p>
+                In case your client is interested in any of the above products,
+                you can contact our trusted vendor M/s BizPedia Tech Private
+                Limited using below contact details.
+              </p>
+              <p className="flex items-center gap-2">
+                <Phone className="h-4 w-4" />
+                +91 8828824242
+              </p>
+              <p className="flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                support@leadsathi.in
+              </p>
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                <p className="text-sm font-medium text-blue-800 dark:text-blue-300">
+                  Use promo code: "CYPHERSOLEARN" for higher commission rates
                 </p>
-                <p className="flex items-center gap-2">
-                  <Phone className="h-4 w-4" />
-                  +91 8828824242
-                </p>
-                <p className="flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
-                  support@leadsathi.in
-                </p>
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                  <p className="text-sm font-medium text-blue-800 dark:text-blue-300">
-                    Use promo code: "CYPHERSOLEARN" for higher commission rates
-                  </p>
-                </div>
               </div>
-            </Card>
-
-          
-          </div>
-      
+            </div>
+          </Card>
+        </div>
       </div>
     </ScrollArea>
   );

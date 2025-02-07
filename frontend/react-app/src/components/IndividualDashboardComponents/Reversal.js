@@ -1,13 +1,29 @@
 import React, { useState, useEffect } from "react";
 import UnifiedTable from "./UnifiedTable";
-// import refundData from "../../data/refund.json";
+// // import refundData from "../../data/refund.json";
 import SingleBarChart from "../charts/BarChart";
 import { useParams } from "react-router-dom";
+import ToggleStrip from "./ToggleStrip";
 
 const Reversal = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const { caseId, individualId } = useParams();
+    const [availableMonths, setAvailableMonths] = useState([]);
+    const [selectedMonths, setSelectedMonths] = useState([]);
+  
+      // Helper function to get month key
+      const getMonthKey = (dateString) => {
+        const date = new Date(dateString);
+        return `${date.toLocaleString("en-GB", { month: "short" })}-${date.getFullYear()}`;
+      };
+    
+      // Helper function to parse month string to Date
+      const getMonthDate = (monthStr) => {
+        const [month, year] = monthStr.split("-");
+        const monthIndex = new Date(Date.parse(month + " 1, 2000")).getMonth();
+        return new Date(parseInt(year), monthIndex);
+      };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -30,8 +46,20 @@ const Reversal = () => {
           credit: item.amount,
           balance: item.balance,
           category: item.category,
+          monthKey: getMonthKey(item.date)
         }));
-        setData(transformedData);
+
+        const uniqueMonths = [...new Set(transformedData.map(item => item.monthKey))]
+          .sort((a, b) => {
+            const dateA = getMonthDate(a);
+            const dateB = getMonthDate(b);
+            return dateA - dateB;
+          });
+        setData(transformedData)
+        setAvailableMonths(uniqueMonths);
+        
+        // Initially select all months
+        setSelectedMonths(uniqueMonths);
       } catch (error) {
         console.error("Error fetching emi transactions:", error);
       } finally {
@@ -41,6 +69,9 @@ const Reversal = () => {
 
     fetchData();
   }, []);
+  const filteredData = data.filter(item => 
+    selectedMonths.includes(item.monthKey)
+  );
 
   if (loading) {
     return (
@@ -61,19 +92,34 @@ const Reversal = () => {
           </p>
         </div>
       ) : (
+
         <>
+        <ToggleStrip
+          columns={availableMonths}
+          selectedColumns={selectedMonths}
+          setSelectedColumns={setSelectedMonths}
+        />
+  
+        {selectedMonths.length === 0 ? (
+          <div className="text-center text-gray-600 dark:text-gray-400 my-6">
+            Select months to display the graphs
+          </div>
+        ) : (
+          <>
           <div className="w-full h-[60vh]">
             <SingleBarChart
               title="Refund/Reversal"
-              data={data}
+              data={filteredData}
               xAxisKey="date"
-              selectedColumns={["credit"]}
+              yAxisKey="credit"
               showLegends={true}
             />
           </div>
           <div>
-            <UnifiedTable data={data} title="Refund/Reversal Transactions" />
+            <UnifiedTable data={filteredData} title="Refund/Reversal Transactions" />
           </div>
+        </>
+        )}
         </>
       )}
     </div>
