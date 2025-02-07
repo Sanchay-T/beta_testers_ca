@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import BarLineChart from "../charts/BarLineChart";
 import UnifiedTable from "./UnifiedTable";
+import ToggleStrip from "./ToggleStrip";
 import { useParams } from "react-router-dom";
 // import EmiData from "../../data/emi.json";.
 
@@ -8,6 +9,21 @@ const EMI = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const { caseId, individualId } = useParams();
+  const [availableMonths, setAvailableMonths] = useState([]);
+  const [selectedMonths, setSelectedMonths] = useState([]);
+  
+    // Helper function to get month key
+    const getMonthKey = (dateString) => {
+      const date = new Date(dateString);
+      return `${date.toLocaleString("en-GB", { month: "short" })}-${date.getFullYear()}`;
+    };
+  
+    // Helper function to parse month string to Date
+    const getMonthDate = (monthStr) => {
+      const [month, year] = monthStr.split("-");
+      const monthIndex = new Date(Date.parse(month + " 1, 2000")).getMonth();
+      return new Date(parseInt(year), monthIndex);
+    };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -30,8 +46,20 @@ const EMI = () => {
           debit: item.amount,
           balance: item.balance,
           category: item.category,
+          monthKey: getMonthKey(item.date)
         }));
+        
+        const uniqueMonths = [...new Set(transformedData.map(item => item.monthKey))]
+          .sort((a, b) => {
+            const dateA = getMonthDate(a);
+            const dateB = getMonthDate(b);
+            return dateA - dateB;
+          });
         setData(transformedData);
+        setAvailableMonths(uniqueMonths);
+        
+        // Initially select all months
+        setSelectedMonths(uniqueMonths);
       } catch (error) {
         console.error("Error fetching emi transactions:", error);
       } finally {
@@ -41,7 +69,9 @@ const EMI = () => {
 
     fetchData();
   }, []);
-
+  const filteredData = data.filter(item => 
+    selectedMonths.includes(item.monthKey)
+  );
   if (loading) {
     return (
       <div className="bg-gray-100 p-4 rounded-md w-full h-[10vh]">
@@ -61,18 +91,32 @@ const EMI = () => {
           </p>
         </div>
       ) : (
-        <>
-          <div className="w-full h-[60vh]">
-            <BarLineChart
-              data={data}
-              xAxisKey="date"
-              yAxisKey="balance"
-              title="Probable EMI"
-            />
+<>
+        <ToggleStrip
+          columns={availableMonths}
+          selectedColumns={selectedMonths}
+          setSelectedColumns={setSelectedMonths}
+        />
+  
+        {selectedMonths.length === 0 ? (
+          <div className="text-center text-gray-600 dark:text-gray-400 my-6">
+            Select months to display the graphs
           </div>
-          <div>
-            <UnifiedTable data={data} title="Emi Transactions" />
-          </div>
+        ) : (
+          <>
+            <div className="w-full h-[60vh]">
+              <BarLineChart
+                xAxisKey="date"
+                yAxisKey="balance"
+                data={filteredData}
+                title="Probable EMI"
+              />
+            </div>
+            <div className="w-full">
+              <UnifiedTable data={filteredData} title="Emi Transactions" />
+            </div>
+          </>
+        )}
         </>
       )}
     </div>
