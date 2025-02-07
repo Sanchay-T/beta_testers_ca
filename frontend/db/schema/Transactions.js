@@ -15,6 +15,7 @@ const transactions = sqliteTable("transactions", {
   // add default value in the entity
   bank: text("bank").notNull().default("unknown"),
   entity: text("entity").notNull().default("unknown"),
+  voucher_type: text("voucher_type").default("unknown"),
 });
 
 module.exports = { transactions };

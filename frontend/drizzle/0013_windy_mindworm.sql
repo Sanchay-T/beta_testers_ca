@@ -1,0 +1,1 @@
+ALTER TABLE `transactions` ADD `voucher_type` text DEFAULT 'unknown';
