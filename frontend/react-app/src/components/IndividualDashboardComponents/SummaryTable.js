@@ -34,6 +34,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 // } from "../ui/pagination";
 import { Label } from "../ui/label";
 import DataTable from "./TableData";
+import { Spinner } from "../ui/spinner";
 
 const SummaryTable = ({ data = [], source, title, subtitle }) => {
   // const [viewMode, setViewMode] = useState("paginated"); // "all" or "paginated"
@@ -68,11 +69,9 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
     })
   );
 
-
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
-
         // console.log("Fetching transactions for statementId:", caseId);
         const data = await window.electron.getTransactions(
           caseId,
@@ -93,35 +92,52 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
 
   const filterTransactionsByCategory = (row) => {
     if (!row || !transactionData.length) {
-      console.log("No row or transaction data:", { row, transactionLength: transactionData.length });
+      console.log("No row or transaction data:", {
+        row,
+        transactionLength: transactionData.length,
+      });
       return [];
     }
-    
+
     // Get the category value from the summary row
-    const categoryColumn = Object.keys(row)[0];  // "Income / Receipts"
-    const categoryValue = row[categoryColumn];   // "Cash Deposits"
-    
-    return transactionData.filter(transaction => 
-      transaction.category === categoryValue
-    ).map(transaction => {
-      const { id, statementId, type, ...rest } = transaction;
-      return {
-      ...rest,
-      date: transaction.date instanceof Date 
-        ? transaction.date.toLocaleDateString('en-GB', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-        })
-        : transaction.date
-      };
+    const categoryColumn = Object.keys(row)[0]; // "Income / Receipts"
+    const categoryValue = row[categoryColumn]; // "Cash Deposits"
+
+    return transactionData
+      .filter((transaction) => transaction.category === categoryValue)
+      .map((transaction) => {
+        const { id, statementId, type, ...rest } = transaction;
+        return {
+          ...rest,
+          date:
+            transaction.date instanceof Date
+              ? transaction.date.toLocaleDateString("en-GB", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                })
+              : transaction.date,
+        };
+      });
+  };
+
+  // Add a new sorting function
+  const sortDataByTotal = (data) => {
+    return [...data].sort((a, b) => {
+      const totalColumn = Object.keys(a).find(
+        (key) =>
+          key.toLowerCase() === "total" || key.toLowerCase().includes("total")
+      );
+      if (!totalColumn) return 0;
+      const totalA = parseFloat(String(a[totalColumn]).replace(/,/g, "")) || 0;
+      const totalB = parseFloat(String(b[totalColumn]).replace(/,/g, "")) || 0;
+      return totalB - totalA;
     });
   };
 
-
-
   useEffect(() => {
-    setFilteredData(data);
+    const sortedData = sortDataByTotal(data);
+    setFilteredData(sortedData);
   }, [data]);
 
   const handleRowClick = (row) => {
@@ -276,27 +292,29 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
     return { ...acc, [column]: total.toFixed(2) };
   }, {});
 
-  
-
   return (
     // if source is equal to lifo or fifo then show the table
     <Card>
-     <CardHeader>
-  <div className="flex justify-between items-center">
-    <div className="space-y-2">
-      <CardTitle className="dark:text-slate-300">{title || "Data Table"}</CardTitle>
-      <CardDescription>{subtitle||"View and manage your data"}</CardDescription>
-    </div>
-    <div className="flex items-center gap-2">
-      <div className="relative flex items-center gap-2">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search..."
-          className="pl-10 w-[300px]"
-          value={searchTerm}
-          onChange={(e) => handleSearch(e.target.value)}
-        />              
-        {/* <Button
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <div className="space-y-2">
+            <CardTitle className="dark:text-slate-300">
+              {title || "Data Table"}
+            </CardTitle>
+            <CardDescription>
+              {subtitle || "View and manage your data"}
+            </CardDescription>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="relative flex items-center gap-2">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search..."
+                className="pl-10 w-[300px]"
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+              />
+              {/* <Button
           variant="outline"
           onClick={() => {
             setViewMode(viewMode === "paginated" ? "all" : "paginated");
@@ -306,90 +324,187 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
         >
           {viewMode === "paginated" ? "Show All" : "Show Paginated"}
         </Button> */}
-        <Button
-          className="dark:bg-slate-300 dark:hover:bg-slate-200"
-          variant="default"
-          onClick={() => clearFilters()}
-        >
-          Clear Filters
-        </Button>
-      </div>
-    </div>
-  </div>
-</CardHeader>
+              <Button
+                className="dark:bg-slate-300 dark:hover:bg-slate-200"
+                variant="default"
+                onClick={() => clearFilters()}
+              >
+                Clear Filters
+              </Button>
+            </div>
+          </div>
+        </div>
+      </CardHeader>
       <CardContent>
-        <div className="relative">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {columns.map((column) => (
-                  <TableHead key={column}
-                    className="bg-gray-300 dark:bg-slate-800 text-black opacity-80 whitespace-nowrap"
-                  >
-                    <div className="flex items-center gap-2">
-                      {column.charAt(0).toUpperCase() +
-                        column.slice(1).toLowerCase()}
-                      {column.toLowerCase() !== "description" && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0"
-                          onClick={() => {
-                            if (numericColumns.includes(column)) {
-                              setCurrentNumericColumn(column);
-                              setNumericFilterModalOpen(true);
-                            } else {
-                              setCurrentFilterColumn(column);
+        {columns.length > 0 ? (
+          <div className="relative overflow-x-auto">
+            <div className="flex">
+              {/* Fixed First Column */}
+              <div className="sticky left-0 z-20 min-w-[300px] bg-white dark:bg-slate-950">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="bg-gray-300 dark:bg-slate-800 text-black opacity-80 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          {columns[0].charAt(0).toUpperCase() +
+                            columns[0].slice(1).toLowerCase()}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={() => {
+                              setCurrentFilterColumn(columns[0]);
                               setSelectedCategories([]);
                               setCategorySearchTerm("");
                               setFilterModalOpen(true);
-                            }
-                          }}
-                        >
-                          ▼
-                        </Button>
-                      )}
-                    </div>
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {currentData.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className="text-center">
-                    No matching results found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                currentData.map((row, index) => (
-                  <TableRow 
-                    key={index}
-                    // className={source === "summary" ? "even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200" : ""}
-                    
-                    className="even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200 cursor-pointer"
-                    onClick={source === 'particulars' ? undefined : () => handleRowClick(row)}
-                  >
-                    {columns.map((column) => (
-                      <TableCell
-                        key={column}
-                        className="max-w-[200px] group relative"
+                            }}
+                          >
+                            ▼
+                          </Button>
+                        </div>
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {currentData.map((row, index) => (
+                      <TableRow
+                        key={index}
+                        className="even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200 cursor-pointer"
+                        onClick={
+                          source === "particulars"
+                            ? undefined
+                            : () => handleRowClick(row)
+                        }
                       >
-                        <div className="truncate">{row[column]}</div>
-                        {/* Tooltip */}
-                        {column.toLowerCase() === "description" && (
-                          <div className="absolute left-0 top-10 hidden group-hover:block bg-black text-white text-sm rounded p-2 z-50 whitespace-normal min-w-[200px] max-w-[400px]">
-                            {row[column]}
-                          </div>
-                        )}
-                      </TableCell>
+                        <TableCell className="max-w-[200px] whitespace-nowrap">
+                          {row[columns[0]]}
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Scrollable Middle Columns */}
+              <div className="overflow-x-auto flex-1">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      {columns.slice(1, -1).map((column) => (
+                        <TableHead
+                          key={column}
+                          className="bg-gray-300 dark:bg-slate-800 text-black opacity-80 whitespace-nowrap"
+                        >
+                          <div className="flex items-center gap-2">
+                            {column.charAt(0).toUpperCase() +
+                              column.slice(1).toLowerCase()}
+                            {column.toLowerCase() !== "description" && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={() => {
+                                  if (numericColumns.includes(column)) {
+                                    setCurrentNumericColumn(column);
+                                    setNumericFilterModalOpen(true);
+                                  } else {
+                                    setCurrentFilterColumn(column);
+                                    setSelectedCategories([]);
+                                    setCategorySearchTerm("");
+                                    setFilterModalOpen(true);
+                                  }
+                                }}
+                              >
+                                ▼
+                              </Button>
+                            )}
+                          </div>
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {currentData.map((row, index) => (
+                      <TableRow
+                        key={index}
+                        className="even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200 cursor-pointer"
+                        onClick={
+                          source === "particulars"
+                            ? undefined
+                            : () => handleRowClick(row)
+                        }
+                      >
+                        {columns.slice(1, -1).map((column) => (
+                          <TableCell
+                            key={column}
+                            className="max-w-[200px] group relative"
+                          >
+                            <div className="truncate">{row[column]}</div>
+                            {column.toLowerCase() === "description" && (
+                              <div className="absolute left-0 top-10 hidden group-hover:block bg-black text-white text-sm rounded p-2 z-50 whitespace-normal min-w-[200px] max-w-[400px]">
+                                {row[column]}
+                              </div>
+                            )}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Fixed Last Column */}
+              <div className="sticky right-0 z-20 bg-white dark:bg-slate-950">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="bg-gray-300 dark:bg-slate-800 text-black opacity-80 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          {columns[columns.length - 1].charAt(0).toUpperCase() +
+                            columns[columns.length - 1].slice(1).toLowerCase()}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={() => {
+                              setCurrentNumericColumn(
+                                columns[columns.length - 1]
+                              );
+                              setNumericFilterModalOpen(true);
+                            }}
+                          >
+                            ▼
+                          </Button>
+                        </div>
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {currentData.map((row, index) => (
+                      <TableRow
+                        key={index}
+                        className="even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200 cursor-pointer"
+                        onClick={
+                          source === "particulars"
+                            ? undefined
+                            : () => handleRowClick(row)
+                        }
+                      >
+                        <TableCell className="max-w-[200px] whitespace-nowrap">
+                          {row[columns[columns.length - 1]]}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center h-[200px]">
+            <Spinner />
+          </div>
+        )}
 
         {/* {showPagination  && totalPages > 1 && (
           <div className="mt-4 flex justify-center">
@@ -534,39 +649,36 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
         </div>
       )}
 
-      <Dialog 
-          open={!!selectedRow} 
-          onOpenChange={(isOpen) => {
-            if (!isOpen) {
-              setSelectedRow(null);
-              setFilteredTransactions([]);
-            }
-          }}
-        >
-          {selectedRow && filteredTransactions.length > 0 ? (
-            <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                </DialogTitle>
-              </DialogHeader>
-                <DataTable 
-                  data={filteredTransactions}
-                  title={`Transactions Details: ${Object.values(selectedRow)[0]}`}
-                />
-            </DialogContent>
-          ) : (
-            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <Dialog
+        open={!!selectedRow}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            setSelectedRow(null);
+            setFilteredTransactions([]);
+          }
+        }}
+      >
+        {selectedRow && filteredTransactions.length > 0 ? (
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
+              <DialogTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2"></DialogTitle>
             </DialogHeader>
-              <div className="bg-gray-100 p-4 rounded-md w-full h-[10vh]">
-                <p className="text-gray-800 text-center mt-3 font-medium text-base">
-                  No data Available for this category
-                </p>
-              </div>
+            <DataTable
+              data={filteredTransactions}
+              title={`Transactions Details: ${Object.values(selectedRow)[0]}`}
+            />
           </DialogContent>
-          )}
-
-        </Dialog>
+        ) : (
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader></DialogHeader>
+            <div className="bg-gray-100 p-4 rounded-md w-full h-[10vh]">
+              <p className="text-gray-800 text-center mt-3 font-medium text-base">
+                No data Available for this category
+              </p>
+            </div>
+          </DialogContent>
+        )}
+      </Dialog>
     </Card>
   );
 };

@@ -15,14 +15,17 @@ import {
 } from "../ui/table";
 import { ScrollArea } from "../ui/scroll-area";
 import { Card } from "../ui/card";
-import { Phone, Mail, AlertCircle, ChevronRight,Download } from "lucide-react";
+import { Phone, Mail, AlertCircle, ChevronRight, Download } from "lucide-react";
 import { Button } from "../ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { exportToExcel } from "../exportToExcel";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 import { ChevronDown } from "lucide-react";
-
-
 
 export default function Eligibility() {
   const [opportunityData, setOpportunityData] = useState(null);
@@ -118,45 +121,55 @@ export default function Eligibility() {
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error loading data: {error}</div>;
 
-  const handleDownload = (e,data,title,includeCommission)=>{
+  const handleDownload = (e, data, title, includeCommission) => {
     e.preventDefault();
     // Extract and format relevant data from the nested structure
     const formattedData = Object.values(data)
-      .filter(item => item.type) // Filter only loan products
-      .map(item => {
+      .filter((item) => item.type) // Filter only loan products
+      .map((item) => {
         const formattedItem = {
           Product: item.type,
           "Amount (₹)": item.amount.toLocaleString(undefined),
         };
         if (includeCommission) {
           formattedItem["Commission %"] = item.rate;
-          formattedItem["Commission (₹)"] = item.value.toLocaleString(undefined);
+          formattedItem["Commission (₹)"] =
+            item.value.toLocaleString(undefined);
         }
         return formattedItem;
       });
 
-    exportToExcel(formattedData,title);
-
-  }
+    exportToExcel(formattedData, title);
+  };
   const handleDownloadAll = (includeCommission) => {
     if (!opportunityData) return;
 
-    const allFormattedData = opportunityData.map(data => {
+    const allFormattedData = opportunityData.map((data) => {
       const formattedItem = {
         "Client Name": data.statementCustomerName,
         "Case Name": data.caseName,
-        "Home Loan Amount (₹)": data.homeLoanValue?.amount.toLocaleString(undefined) || "0",
-        "LAP Amount (₹)": data.loanAgainstProperty?.amount.toLocaleString(undefined) || "0",
-        "Business Loan Amount (₹)": data.businessLoan?.amount.toLocaleString(undefined) || "0",
-        "Term Plan Amount (₹)": data.termPlan?.amount.toLocaleString(undefined) || "0",
-        "General Insurance Amount (₹)": data.generalInsurance?.amount.toLocaleString(undefined) || "0",
+        "Home Loan Amount (₹)":
+          data.homeLoanValue?.amount.toLocaleString(undefined) || "0",
+        "LAP Amount (₹)":
+          data.loanAgainstProperty?.amount.toLocaleString(undefined) || "0",
+        "Business Loan Amount (₹)":
+          data.businessLoan?.amount.toLocaleString(undefined) || "0",
+        "Term Plan Amount (₹)":
+          data.termPlan?.amount.toLocaleString(undefined) || "0",
+        "General Insurance Amount (₹)":
+          data.generalInsurance?.amount.toLocaleString(undefined) || "0",
       };
       if (includeCommission) {
-        formattedItem["Home Loan Commission (₹)"] = data.homeLoanValue?.value.toLocaleString(undefined) || "0";
-        formattedItem["LAP Commission (₹)"] = data.loanAgainstProperty?.value.toLocaleString(undefined) || "0";
-        formattedItem["Business Loan Commission (₹)"] = data.businessLoan?.value.toLocaleString(undefined) || "0";
-        formattedItem["Term Plan Commission (₹)"] = data.termPlan?.value.toLocaleString(undefined) || "0";
-        formattedItem["General Insurance Commission (₹)"] = data.generalInsurance?.value.toLocaleString(undefined) || "0";
+        formattedItem["Home Loan Commission (₹)"] =
+          data.homeLoanValue?.value.toLocaleString(undefined) || "0";
+        formattedItem["LAP Commission (₹)"] =
+          data.loanAgainstProperty?.value.toLocaleString(undefined) || "0";
+        formattedItem["Business Loan Commission (₹)"] =
+          data.businessLoan?.value.toLocaleString(undefined) || "0";
+        formattedItem["Term Plan Commission (₹)"] =
+          data.termPlan?.value.toLocaleString(undefined) || "0";
+        formattedItem["General Insurance Commission (₹)"] =
+          data.generalInsurance?.value.toLocaleString(undefined) || "0";
       }
       return formattedItem;
     });
@@ -164,79 +177,114 @@ export default function Eligibility() {
     exportToExcel(allFormattedData, "All Clients Eligibility Report");
   };
 
-
   return (
     <ScrollArea className="h-full">
       <div className="p-8 pt-0 space-y-8">
-      <div className="flex justify-between items-center">
-        <div className="text-left">
-          <h2 className="text-3xl font-extrabold to-blue-400 dark:text-slate-300">
-            Opportunity to Earn
-          </h2>
-          <p className="text-gray-600 mt-2 dark:text-[#7F8EA3]">
-            Discover the products you're eligible for and the associated
-            benefits.
-          </p>
-        </div>
-       {opportunityData  && <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="default" className="flex items-center gap-2">
-                <Download className="w-5 h-5" /> Download All
-                <ChevronDown className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem className="cursor-pointer" onClick={() => handleDownloadAll(true)}>
-                Download All with Commission
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer" onClick={() => handleDownloadAll(false)}>
-                Download All without Commission
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>}
-        </div>
-        { !opportunityData || opportunityData.length === 0 ? (
-          <div className="bg-gray-100 p-4 rounded-md w-full h-[10vh]">
-            <p className="text-gray-800 text-center mt-3 font-medium text-lg">
-            Run more statements to earn more
+        <div className="flex justify-between items-center">
+          <div className="text-left">
+            <h2 className="text-3xl font-extrabold to-blue-400 dark:text-slate-300">
+              Opportunity to Earn
+            </h2>
+            <p className="text-gray-600 mt-2 dark:text-[#7F8EA3]">
+              Discover the products you're eligible for and the associated
+              benefits.
             </p>
           </div>
-        ) : (<Card className="px-6 rounded-lg">
-          <Accordion type="single" collapsible className="w-full">
-            {opportunityData.map((data, index) => (
-              <AccordionItem key={index} value={`item-${index + 1}`}>
-                <AccordionTrigger className="from-neutral-500 gap-x-4">
-                  <div className="flex items-center justify-between w-full"> 
-                  <div className="flex flex-col items-start gap-y-1">
-                    <span className="text-[18px] font-semibold">
-                      {data.statementCustomerName}
-                    </span>
-                    <span className="text-[15px] font-normal text-gray-600">
-                      Report Name: {data.caseName}
-                    </span>
-                    
-                  </div>
-                  <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="w-fit px-4 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 transition-all shadow-sm hover:shadow-md">
-                          <Download className="w-4 h-4 text-gray-800" /> 
-                          Download
-                          {/* <ChevronDown className="w-4 h-4 text-blue-500" /> */}
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem className="cursor-pointer" onClick={(e) => handleDownload(e, data, `${data.statementCustomerName} Eligibility Report`, true)}>
-                          Download with Commission
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="cursor-pointer" onClick={(e) => handleDownload(e, data, `${data.statementCustomerName} Eligibility Report`, false)}>
-                          Download without Commission
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-
-                </AccordionTrigger>
-                <AccordionContent className=" py-4">
+          {opportunityData && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="default" className="flex items-center gap-2">
+                  <Download className="w-5 h-5" /> Download All
+                  <ChevronDown className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => handleDownloadAll(true)}
+                >
+                  Download All with Commission
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => handleDownloadAll(false)}
+                >
+                  Download All without Commission
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
+        {!opportunityData || opportunityData.length === 0 ? (
+          <div className="bg-gray-100 p-4 rounded-md w-full h-[10vh]">
+            <p className="text-gray-800 text-center mt-3 font-medium text-lg">
+              Run more statements to earn more
+            </p>
+          </div>
+        ) : (
+          <Card className="px-6 rounded-lg">
+            <Accordion type="single" collapsible className="w-full">
+              {opportunityData.map((data, index) => (
+                <AccordionItem key={index} value={`item-${index + 1}`}>
+                  <AccordionTrigger className="from-neutral-500 gap-x-4">
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex place-items-start gap-3">
+                        <span className="text-lg font-bold text-gray-800 dark:text-gray-400">
+                          {index + 1}.
+                        </span>
+                        <div className="flex flex-col items-start gap-y-1">
+                          <span className="text-[18px] font-semibold">
+                            {data.statementCustomerName}
+                          </span>
+                          <span className="text-[15px] font-normal text-gray-600">
+                            Report Name: {data.caseName}
+                          </span>
+                        </div>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="w-fit px-4 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 transition-all shadow-sm hover:shadow-md"
+                          >
+                            <Download className="w-4 h-4 text-gray-800" />
+                            Download
+                            {/* <ChevronDown className="w-4 h-4 text-blue-500" /> */}
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            className="cursor-pointer"
+                            onClick={(e) =>
+                              handleDownload(
+                                e,
+                                data,
+                                `${data.statementCustomerName} Eligibility Report`,
+                                true
+                              )
+                            }
+                          >
+                            Download with Commission
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="cursor-pointer"
+                            onClick={(e) =>
+                              handleDownload(
+                                e,
+                                data,
+                                `${data.statementCustomerName} Eligibility Report`,
+                                false
+                              )
+                            }
+                          >
+                            Download without Commission
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className=" py-4">
                     <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
                       <Table>
                         <TableHeader>
@@ -292,10 +340,11 @@ export default function Eligibility() {
                       </Table>
                     </div>
                   </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </Card>)}
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </Card>
+        )}
         <div className="grid gap-6 md:grid-cols-2">
           <Card className="p-6">
             <h4 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">

@@ -66,6 +66,13 @@ const Suspense = () => {
 
         console.log("transformedSuspenseData", transformedSuspenseData);
 
+        setSuspenseAllData(transformedSuspenseData);
+      } catch {}
+    };
+    setIsLoading(true);
+    fetchData();
+    setIsLoading(false);
+  }, []);
         const uniqueMonths = [
           ...new Set(transformedSuspenseData.map((item) => item.monthKey)),
         ].sort((a, b) => {
@@ -111,6 +118,15 @@ const Suspense = () => {
           </p>
         </div>
       ) : (
+        <div className="">
+          <div>
+            <UnifiedTable
+              data={suspenseAllData}
+              title="Suspense Transactions"
+              caseId={caseId}
+            />
+          </div>
+        </div>
         <>
           <ToggleStrip
             columns={availableMonths}

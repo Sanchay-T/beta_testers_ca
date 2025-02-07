@@ -29,7 +29,10 @@ import {
   Edit2,
   X,
   CheckCircle,
-  Loader2, AlertTriangle, XCircle
+  Loader2,
+  AlertTriangle,
+  XCircle,
+  Download,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -60,11 +63,18 @@ import {
   DialogTitle,
   DialogDescription,
 } from "../ui/dialog"; // Import shadcn/ui Dialog components
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../ui/tooltip";
+import { Checkbox } from "../ui/checkbox";
 
 import PDFMarkerModal from "./PdfMarkerModal";
+import { useLoading } from "../../contexts/LoadingContext";
 
-const RecentReportsComp = ({key,onReportGenerated}) => {
+const RecentReportsComp = ({ key, onReportGenerated }) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -89,7 +99,8 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
   const [showRectifyButton, setShowRectifyButton] = useState(false); // State to show Rectify button
   const [failedStatements, setFailedStatements] = useState([]); // State to store failed statements
   const [dialogOpen, setDialogOpen] = useState(false); // State to control Dialog visibility
-  
+  const [isChecked, setIsChecked] = useState(false);
+  const { setIsExcelLoading } = useLoading();
 
   const handleSubmitEditPdf = async () => {
     setPdfEditLoading(true);
@@ -106,20 +117,20 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
       console.log("result", result);
 
       if (result.success && result.data.failedStatements.length === 0) {
-      toast({
-        title: "Success",
-        description: "All statements have been rectified.",
-        variant: "success",
-        className: "bg-white text-black opacity-100 shadow-lg",
-      });
-      setPdfEditLoading(false);
-    } else {
+        toast({
+          title: "Success",
+          description: "All statements have been rectified.",
+          variant: "success",
+          className: "bg-white text-black opacity-100 shadow-lg",
+        });
+        setPdfEditLoading(false);
+      } else {
         // If the rectification failed, show error message and reasons
         const unrectifiedStatements = failedDatasOfCurrentReport.filter(
           (statement) => statement.respectiveReasonsForError
         );
 
-      toast({
+        toast({
           title: "Rectification Failed",
           description: (
             <div>
@@ -136,7 +147,7 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
               </ul>
             </div>
           ),
-        variant: "destructive",
+          variant: "destructive",
           duration: 6000,
         });
       }
@@ -149,7 +160,7 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
         duration: 5000,
       });
     }
-      setPdfEditLoading(false);
+    setPdfEditLoading(false);
   };
 
   const handleRectify = () => {
@@ -201,6 +212,7 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
       }
     };
 
+    console.log({ setShowRectifyButton, setFailedStatements, setDialogOpen });
 
     fetchReports();
   }, []);
@@ -433,170 +445,171 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
   //   }
   // };
 
-
-  const handleAddPdfSubmit =  async (
-      setProgress,
-      setLoading,
-      setToastId,
-      selectedFiles,
-      fileDetails,
-      setSelectedFiles,
-      setFileDetails,
-      toast,
-      progressIntervalRef,
-      simulateProgress,
-      convertDateFormat,
-      caseName
-    ) => {
-      if (caseName === "") {
-        toast({
-          title: "Alert",
-          description: "Please enter a Case Name",
-          variant: "destructive",
-          duration: 3000,
-        });
-        return;
-      }
-      setCurrentCaseName(caseName);
-  
-      if (selectedFiles.length === 0) {
-        toast({
-          title: "Alert",
-          description: "Please select at least one file",
-          variant: "destructive",
-          duration: 3000,
-        });
-        return;
-      }
-  
-      setLoading(true);
-      const newToastId = toast({
-        title: "Initializing Report Generation",
-        description: (
-          <div className="mt-2 w-full flex items-center gap-2">
-            <div className="flex items-center gap-4">
-              <CircularProgress className="w-full" />
-            </div>
-            <p className="text-sm text-gray-500">Preparing to process files...</p>
-          </div>
-        ),
-        duration: Infinity,
+  const handleAddPdfSubmit = async (
+    setProgress,
+    setLoading,
+    setToastId,
+    selectedFiles,
+    fileDetails,
+    setSelectedFiles,
+    setFileDetails,
+    toast,
+    progressIntervalRef,
+    simulateProgress,
+    convertDateFormat,
+    caseName
+  ) => {
+    if (caseName === "") {
+      toast({
+        title: "Alert",
+        description: "Please enter a Case Name",
+        variant: "destructive",
+        duration: 3000,
       });
-      setToastId(newToastId);
-  
-      progressIntervalRef.current = simulateProgress();
-  
-      try {
-        const filesWithContent = await Promise.all(
-          selectedFiles.map(async (file, index) => {
-            const fileContent = await new Promise((resolve, reject) => {
-              const reader = new FileReader();
-              reader.onload = () => resolve(reader.result);
-              reader.onerror = reject;
-              reader.readAsBinaryString(file);
-            });
-  
-            const detail = fileDetails[index];
-  
-            return {
-              fileContent,
-              pdf_paths: file.name,
-              bankName: detail.bankName,
-              passwords: detail.password || "",
-              start_date: convertDateFormat(detail.start_date), // Convert date format
-              end_date: convertDateFormat(detail.end_date), // Convert date format
-              ca_id: currentCaseId,
-            };
-          })
-        );
-  
-        console.log({ caseName, filesWithContent });
-  
-        console.log({ caseName, filesWithContent });
-  
-        const result = await window.electron.generateReportIpc(
-          {
-            files: filesWithContent,
-          },
-          caseName,
-          "add-pdf"
-        );
-  
-        console.log("Report generation result:", result.data);
-        setCurrentCaseId(result.data.caseId); // Store caseId
-  
-        if (result.success) {
-          clearInterval(progressIntervalRef.current);
-          setProgress(100);
-          toast.dismiss(newToastId);
-          toast({
-            title: "Success",
-            description: "Report generated successfully!",
-            duration: 3000,
-            variant: "success",
+      return;
+    }
+    setCurrentCaseName(caseName);
+
+    if (selectedFiles.length === 0) {
+      toast({
+        title: "Alert",
+        description: "Please select at least one file",
+        variant: "destructive",
+        duration: 3000,
+      });
+      return;
+    }
+
+    setLoading(true);
+    const newToastId = toast({
+      title: "Initializing Report Generation",
+      description: (
+        <div className="mt-2 w-full flex items-center gap-2">
+          <div className="flex items-center gap-4">
+            <CircularProgress className="w-full" />
+          </div>
+          <p className="text-sm text-gray-500">Preparing to process files...</p>
+        </div>
+      ),
+      duration: Infinity,
+    });
+    setToastId(newToastId);
+
+    progressIntervalRef.current = simulateProgress();
+
+    try {
+      const filesWithContent = await Promise.all(
+        selectedFiles.map(async (file, index) => {
+          const fileContent = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsBinaryString(file);
           });
 
-          console.log("Report generation result:", result.data);
-          if (result.data.failedFiles.length > 0) {
-            setShowRectifyButton(true);
-            const failedFiles = result.data.failedFiles.map((file_path) => {
-              return file_path.split("\\").pop();
-            });
-            setFailedStatements(failedFiles || []); // Store failed
-          }
-  
-          if (result.data.totalTransactions) setShowAnalysisButton(true);
-  
-          // setFailedStatements(result.pdf_paths_not_extracted || []); // Store failed
-  
-          setDialogOpen(true); // Open the Dialog
-  
-          setSelectedFiles([]);
-          setFileDetails([]);
-  
-          // Trigger a page refresh
-        } else {
-          const errorMessage = result.error
-            ? typeof result.error === "object"
-              ? JSON.stringify(result.error, null, 2)
-              : result.error
-            : "Unknown error occurred";
-  
-          throw new Error(errorMessage);
-        }
-      } catch (error) {
-        console.log("Report generation failed:", { error: error.stack });
-  
-        if (typeof error === "object" && error !== null) {
-          console.error("Detailed error:", JSON.stringify(error, null, 2));
-        }
-  
-        if (error && error.message) {
-          console.error("Error message:", error.message);
-        }
-  
-        if (error && error.stack) {
-          console.error("Error stack trace:", error.stack);
-        }
-  
+          const detail = fileDetails[index];
+
+          return {
+            fileContent,
+            pdf_paths: file.name,
+            bankName: detail.bankName,
+            passwords: detail.password || "",
+            start_date: convertDateFormat(detail.start_date), // Convert date format
+            end_date: convertDateFormat(detail.end_date), // Convert date format
+            ca_id: currentCaseId,
+          };
+        })
+      );
+
+      console.log({ caseName, filesWithContent });
+
+      console.log({ caseName, filesWithContent });
+
+      const result = await window.electron.generateReportIpc(
+        {
+          files: filesWithContent,
+        },
+        caseName,
+        "add-pdf"
+      );
+
+      console.log("Report generation result:", result.data);
+      setCurrentCaseId(result.data.caseId); // Store caseId
+
+      if (result.success) {
         clearInterval(progressIntervalRef.current);
+        setProgress(100);
         toast.dismiss(newToastId);
-        setProgress(0);
-        if(showAnalsisButton || showRectifyButton) {
-          setDialogOpen(true);
-        }
         toast({
-          title: "Error",
-          description: showRectifyButton?"Some Statement/s failed, please check rectify them.":"Failed to add report",
-          variant: "destructive",
-          duration: 5000,
+          title: "Success",
+          description: "Report generated successfully!",
+          duration: 3000,
+          variant: "success",
         });
-      } finally {
-        setLoading(false);
-        progressIntervalRef.current = null;
-        setIsAddPdfModalOpen(false);
+
+        console.log("Report generation result:", result.data);
+        if (result.data.failedFiles.length > 0) {
+          setShowRectifyButton(true);
+          const failedFiles = result.data.failedFiles.map((file_path) => {
+            return file_path.split("\\").pop();
+          });
+          setFailedStatements(failedFiles || []); // Store failed
+        }
+
+        if (result.data.totalTransactions) setShowAnalysisButton(true);
+
+        // setFailedStatements(result.pdf_paths_not_extracted || []); // Store failed
+
+        setDialogOpen(true); // Open the Dialog
+
+        setSelectedFiles([]);
+        setFileDetails([]);
+
+        // Trigger a page refresh
+      } else {
+        const errorMessage = result.error
+          ? typeof result.error === "object"
+            ? JSON.stringify(result.error, null, 2)
+            : result.error
+          : "Unknown error occurred";
+
+        throw new Error(errorMessage);
       }
-    };
+    } catch (error) {
+      console.log("Report generation failed:", { error: error.stack });
+
+      if (typeof error === "object" && error !== null) {
+        console.error("Detailed error:", JSON.stringify(error, null, 2));
+      }
+
+      if (error && error.message) {
+        console.error("Error message:", error.message);
+      }
+
+      if (error && error.stack) {
+        console.error("Error stack trace:", error.stack);
+      }
+
+      clearInterval(progressIntervalRef.current);
+      toast.dismiss(newToastId);
+      setProgress(0);
+      if (showAnalsisButton || showRectifyButton) {
+        setDialogOpen(true);
+      }
+      toast({
+        title: "Error",
+        description: showRectifyButton
+          ? "Some Statement/s failed, please check rectify them."
+          : "Failed to add report",
+        variant: "destructive",
+        duration: 5000,
+      });
+    } finally {
+      setLoading(false);
+      progressIntervalRef.current = null;
+      setIsAddPdfModalOpen(false);
+    }
+  };
   const toggleEdit = (id) => {
     setIsCategoryEditOpen(!isCategoryEditOpen);
     setCurrentCaseId(id);
@@ -647,7 +660,7 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
           try {
             const parsedData = JSON.parse(item.data);
             // console.log("Parsed failed statement data:", parsedData);
-            if(parsedData.paths.length===0) return null;
+            if (parsedData.paths.length === 0) return null;
 
             return {
               ...item,
@@ -690,7 +703,7 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
 
       // Extract first valid failed statement (assuming one caseId per report)
       const firstFailedEntry = processedFailedData[0];
-      console.log({processedFailedData,firstFailedEntry})
+      console.log({ processedFailedData, firstFailedEntry });
       if (!firstFailedEntry?.parsedContent?.paths?.length) {
         console.warn("No valid failed PDF paths found.");
         setFailedDatasOfCurrentReport([]);
@@ -734,6 +747,91 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDownload = async (caseid, status) => {
+    if (status === "Pending") {
+      toast({
+        title: "Cannot Download",
+        description:
+          "Report is still being processed. Please wait until it's complete.",
+        variant: "warning",
+        duration: 3000,
+      });
+      return;
+    }
+
+    let file_cretaed = false;
+    try {
+      console.log("setting setisexcel true");
+      setIsExcelLoading(true); // Start loading
+
+      // Start the download process in the main process
+      window.electron.download.excelReportDownload(caseid);
+
+      let downloadedChunks = [];
+      // let totalFileSize = 0;
+      let downloadProgress = 0;
+
+      // Listen for file chunks from the main process
+      window.electron.download.onExcelDownloadChunk((chunk) => {
+        downloadedChunks.push(chunk);
+        downloadProgress += chunk.length;
+        console.log(`Downloaded ${downloadProgress} bytes`);
+
+        // Update progress if needed (could add a progress bar)
+        // const progressPercentage = (downloadProgress / totalFileSize) * 100;
+        // setProgress(progressPercentage);
+      });
+
+      // Listen for download completion
+      window.electron.download.onExcelDownloadComplete((res) => {
+        if (!file_cretaed) {
+          file_cretaed = true;
+          const { message, fileName } = res;
+          console.log("Download completed:", message);
+          setIsExcelLoading(false); // End loading state
+
+          const fileBlob = new Blob(downloadedChunks, {
+            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          });
+          const url = window.URL.createObjectURL(fileBlob);
+
+          // Trigger file download
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = fileName;
+          link.click();
+
+          // Clean up URL
+          window.URL.revokeObjectURL(url);
+
+          toast({
+            title: "Success",
+            description: res.message || "Excel file downloaded successfully",
+          });
+        }
+      });
+
+      // Handle download error
+      window.electron.download.onExcelDownloadError((error) => {
+        console.log("Error downloading file:", error);
+        setIsExcelLoading(false);
+
+        toast({
+          title: "Error",
+          description: `Failed to download Excel file: ${error}`,
+          variant: "destructive",
+        });
+      });
+    } catch (error) {
+      setIsExcelLoading(false);
+      toast({
+        title: "Error",
+        description: `Failed to initiate download: ${error.message}`,
+        variant: "destructive",
+      });
     }
   };
 
@@ -787,260 +885,305 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
             <TableBody>
               {currentReports.map((report, index) => (
                 <TableRow key={report.id}>
-                  <TooltipProvider delayDuration={800}> {/* Reduces delay to 100ms */}
-
-                  <TableCell>{report.createdAt}</TableCell>
-                  <TableCell>{report.name}</TableCell>
-                  <TableCell>
-                    <StatusBadge status={report.status} />
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                    <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => handleView(report.id)}
-                        className="h-8 w-8"
-
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>View Report</TooltipContent>
-                    </Tooltip>
-
-                    <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => handleAddReport(report.name, report.id)}
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Add Statements</TooltipContent>
-                    </Tooltip>
-
-                    <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => toggleEdit(report.id)}
-                        className="h-8 w-8"
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                      </TooltipTrigger>
-                    <TooltipContent>Edit Categories</TooltipContent>
-                  </Tooltip>
-
-                      <AlertDialog>
-                      <Tooltip key={report.id}>
-                      <TooltipTrigger asChild>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => setReportToDelete(report.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                         
-                        </AlertDialogTrigger>
-                        </TooltipTrigger>
-                        <TooltipContent>Delete Report</TooltipContent>
-                      </Tooltip>
-                        <AlertDialogContent className="bg-white dark:bg-slate-950">
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Report</AlertDialogTitle>
-                          </AlertDialogHeader>
-                          <div className="py-4">
-                            Are you sure you want to delete this report? This
-                            action cannot be undone.
-                          </div>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <TooltipProvider delayDuration={800}>
+                    {" "}
+                    {/* Reduces delay to 100ms */}
+                    <TableCell>{report.createdAt}</TableCell>
+                    <TableCell>{report.name}</TableCell>
+                    <TableCell>
+                      <StatusBadge status={report.status} />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex space-x-2">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
                             <Button
-                              variant="destructive"
-                              onClick={() => {
-                                handleDeleteReport(report.id);
-                                setReportToDelete(null);
-                              }}
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleView(report.id)}
+                              className="h-8 w-8"
                             >
-                              Delete
+                              <Eye className="h-4 w-4" />
                             </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>View Report</TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() =>
+                                handleAddReport(report.name, report.id)
+                              }
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Add Statements</TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => toggleEdit(report.id)}
+                              className="h-8 w-8"
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Edit Categories</TooltipContent>
+                        </Tooltip>
+
+                        <AlertDialog>
+                          <Tooltip key={report.id}>
+                            <TooltipTrigger asChild>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => setReportToDelete(report.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent>Delete Report</TooltipContent>
+                          </Tooltip>
+                          <AlertDialogContent className="bg-white dark:bg-slate-950">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Report</AlertDialogTitle>
+                            </AlertDialogHeader>
+                            <div className="py-4 flex gap-3 items-center">
+                              <Checkbox
+                                checked={isChecked}
+                                onCheckedChange={(checked) =>
+                                  setIsChecked(checked)
+                                }
+                                className="mb-5"
+                              ></Checkbox>
+                              Are you sure you want to delete this report? This
+                              action cannot be undone.
+                            </div>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <Button
+                                variant="destructive"
+                                onClick={() => {
+                                  handleDeleteReport(report.id);
+                                  setReportToDelete(null);
+                                }}
+                                disabled={!isChecked}
+                              >
+                                Delete
+                              </Button>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() =>
+                                handleDownload(report.id, report.status)
+                              }
+                              className={cn(
+                                "h-8 w-8",
+                                report.status === "In Progress" &&
+                                  "opacity-50 cursor-not-allowed"
+                              )}
+                              disabled={report.status === "In Progress"}
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {report.status === "Pending"
+                              ? "Download not available while processing"
+                              : "Download Excel"}
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <AlertDialog>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 hover:bg-black/5"
+                                onClick={() =>
+                                  handleDetails(report.id, report.name)
+                                }
+                              >
+                                <Info className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            View Failed Statements
+                          </TooltipContent>
+                        </Tooltip>
+                        <AlertDialogContent className="max-w-2xl bg-white shadow-lg border-0 dark:bg-slate-950">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="text-xl font-medium text-black bg-black/[0.03] -mx-6 -mt-6 p-4 border-b border-black/10 dark:bg-slate-900 dark:text-slate-300">
+                              Report Details
+                            </AlertDialogTitle>
+                          </AlertDialogHeader>
+                          <div className="p-6 overflow-auto max-h-[400px]">
+                            {failedDatasOfCurrentReport &&
+                            failedDatasOfCurrentReport.length > 0 ? (
+                              <div>
+                                {[...failedDatasOfCurrentReport]
+                                  .sort((a, b) => {
+                                    const aHasError = Boolean(
+                                      a.respectiveReasonsForError
+                                    );
+                                    const bHasError = Boolean(
+                                      b.respectiveReasonsForError
+                                    );
+                                    return aHasError === bHasError
+                                      ? 0
+                                      : aHasError
+                                      ? 1
+                                      : -1;
+                                  })
+                                  .map((statement, index) => {
+                                    const isDone = statement.resolved;
+                                    const hasError = Boolean(
+                                      statement.respectiveReasonsForError
+                                    );
+
+                                    return (
+                                      <div
+                                        key={index}
+                                        className="mb-4 border-b pb-4"
+                                      >
+                                        <h3 className="font-semibold mb-2">
+                                          Failed Statement {index + 1}
+                                        </h3>
+                                        <div className="flex gap-2 items-center">
+                                          <p className="flex-[4.5]">
+                                            <strong>File Name:</strong>{" "}
+                                            {statement.pdfName}
+                                          </p>
+                                          {/* Only show button if there's no error and the statement isn't done */}
+                                          {!hasError && (
+                                            <>
+                                              {isDone ? (
+                                                <Button
+                                                  size="sm"
+                                                  disabled
+                                                  className="flex-1 bg-green-600 hover:bg-green-700 text-white transition-colors"
+                                                >
+                                                  <CheckCircle className="w-4 h-4 mr-2" />
+                                                  Done
+                                                </Button>
+                                              ) : (
+                                                <Button
+                                                  variant="secondary"
+                                                  size="sm"
+                                                  disabled={
+                                                    report.status === "Success"
+                                                  }
+                                                  className={`${
+                                                    report.status === "Success"
+                                                      ? "bg-green-600 hover:bg-green-700 text-white"
+                                                      : "flex-1 hover:bg-primary hover:text-primary-foreground transition-colors"
+                                                  }`}
+                                                  onClick={() => {
+                                                    setIsMarkerModalOpen(true);
+                                                    setSelectedFailedFile(
+                                                      statement
+                                                    );
+                                                  }}
+                                                >
+                                                  {report.status ===
+                                                  "Success" ? (
+                                                    <CheckCircle className="w-4 h-4 mr-2" />
+                                                  ) : (
+                                                    ""
+                                                  )}
+                                                  Rectify
+                                                </Button>
+                                              )}
+                                            </>
+                                          )}
+                                        </div>
+                                        {hasError && (
+                                          <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
+                                            <p className="text-red-600 text-sm">
+                                              <strong>Error:</strong>{" "}
+                                              {
+                                                statement.respectiveReasonsForError
+                                              }
+                                            </p>
+                                            {
+                                              <p className="text-red-500 text-xs mt-1">
+                                                {statement.respectiveReasonsForError
+                                                  .toLowerCase()
+                                                  .includes(
+                                                    "start and end date"
+                                                  )
+                                                  ? "Please Re-run this statement with correct dates."
+                                                  : "Please contact sales for assistance with this issue."}
+                                              </p>
+                                            }
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                              </div>
+                            ) : (
+                              <div className="text-center text-green-600 font-semibold">
+                                Report Processed Successfully
+                              </div>
+                            )}
+                          </div>
+                          <AlertDialogFooter className="border-t border-black/10 pt-6">
+                            {/* create a submit button */}
+                            {failedDatasOfCurrentReport &&
+                              failedDatasOfCurrentReport.length > 0 && (
+                                <div className="flex justify-center ">
+                                  {report.status === "Success" ? (
+                                    ""
+                                  ) : (
+                                    <Button
+                                      type="submit"
+                                      disabled={pdfEditLoading}
+                                      onClick={handleSubmitEditPdf}
+                                      className="relative inline-flex items-center px-4 py-2"
+                                    >
+                                      {pdfEditLoading ? (
+                                        <>
+                                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                          <span>Processing...</span>
+                                        </>
+                                      ) : (
+                                        "Submit"
+                                      )}
+                                    </Button>
+                                  )}
+                                </div>
+                              )}
+
+                            <AlertDialogCancel className="px-8 bg-black text-white hover:bg-black/90 hover:text-white dark:bg-white dark:text-black">
+                              Close
+                            </AlertDialogCancel>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <AlertDialog>
-                      <Tooltip>
-                      <TooltipTrigger asChild>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 hover:bg-black/5"
-                          onClick={() => handleDetails(report.id, report.name)}
-                        >
-                          <Info className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                        </TooltipTrigger>
-                      <TooltipContent>View Failed Statements</TooltipContent>
-                    </Tooltip>
-                      <AlertDialogContent className="max-w-2xl bg-white shadow-lg border-0 dark:bg-slate-950">
-                        <AlertDialogHeader>
-                          <AlertDialogTitle className="text-xl font-medium text-black bg-black/[0.03] -mx-6 -mt-6 p-4 border-b border-black/10 dark:bg-slate-900 dark:text-slate-300">
-                            Report Details
-                          </AlertDialogTitle>
-                        </AlertDialogHeader>
-                        <div className="p-6 overflow-auto max-h-[400px]">
-                          {failedDatasOfCurrentReport &&
-                          failedDatasOfCurrentReport.length > 0 ? (
-                            <div>
-                              {[...failedDatasOfCurrentReport]
-                                .sort((a, b) => {
-                                  const aHasError = Boolean(
-                                    a.respectiveReasonsForError
-                                  );
-                                  const bHasError = Boolean(
-                                    b.respectiveReasonsForError
-                                  );
-                                  return aHasError === bHasError
-                                    ? 0
-                                    : aHasError
-                                    ? 1
-                                    : -1;
-                                })
-                                .map((statement, index) => {
-                                  const isDone = statement.resolved;
-                                  const hasError = Boolean(
-                                    statement.respectiveReasonsForError
-                                  );
-
-                                  return (
-                                    <div
-                                      key={index}
-                                      className="mb-4 border-b pb-4"
-                                    >
-                                      <h3 className="font-semibold mb-2">
-                                        Failed Statement {index + 1}
-                                      </h3>
-                                      <div className="flex gap-2 items-center">
-                                        <p className="flex-[4.5]">
-                                          <strong>File Name:</strong>{" "}
-                                          {statement.pdfName}
-                                        </p>
-                                        {/* Only show button if there's no error and the statement isn't done */}
-                                        {!hasError && (
-                                          <>
-                                        {isDone ? (
-                                          <Button
-                                            size="sm"
-                                            disabled
-                                            className="flex-1 bg-green-600 hover:bg-green-700 text-white transition-colors"
-                                          >
-                                            <CheckCircle className="w-4 h-4 mr-2" />
-                                            Done
-                                          </Button>
-                                        ) : (
-                                          <Button
-                                            variant="secondary"
-                                            size="sm"
-                                                disabled={
-                                                  report.status === "Success"
-                                                }
-                                                className={`${
-                                                  report.status === "Success"
-                                                    ? "bg-green-600 hover:bg-green-700 text-white"
-                                                    : "flex-1 hover:bg-primary hover:text-primary-foreground transition-colors"
-                                                }`}
-                                            onClick={() => {
-                                              setIsMarkerModalOpen(true);
-                                                  setSelectedFailedFile(
-                                                    statement
-                                                  );
-                                            }}
-                                          >
-                                                {report.status === "Success" ? (
-                                                  <CheckCircle className="w-4 h-4 mr-2" />
-                                                ) : (
-                                                  ""
-                                                )}
-                                            Rectify
-                                          </Button>
-                                            )}
-                                          </>
-                                        )}
-                                      </div>
-                                      {hasError && (
-                                        <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
-                                          <p className="text-red-600 text-sm">
-                                            <strong>Error:</strong>{" "}
-                                            {
-                                              statement.respectiveReasonsForError
-                                            }
-                                          </p>
-                                          {<p className="text-red-500 text-xs mt-1">
-                                          {statement.respectiveReasonsForError.toLowerCase().includes("start and end date")? "Please Re-run this statement with correct dates.": "Please contact sales for assistance with this issue."}
-                                          </p>}
-                                        </div>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                            </div>
-                          ) : (
-                            <div className="text-center text-green-600 font-semibold">
-                              Report Processed Successfully
-                            </div>
-                          )}
-                        </div>
-                        <AlertDialogFooter className="border-t border-black/10 pt-6">
-                          {/* create a submit button */}
-                          {failedDatasOfCurrentReport &&
-                            failedDatasOfCurrentReport.length > 0 && (
-                              <div className="flex justify-center ">
-                                {report.status === "Success" ? (
-                                  ""
-                                ) : (
-                                <Button
-                                  type="submit"
-                                  disabled={pdfEditLoading}
-                                  onClick={handleSubmitEditPdf}
-                                  className="relative inline-flex items-center px-4 py-2"
-                                >
-                                  {pdfEditLoading ? (
-                                    <>
-                                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                      <span>Processing...</span>
-                                    </>
-                                  ) : (
-                                    "Submit"
-                                  )}
-                                </Button>
-                                )}
-                              </div>
-                            )}
-
-                          <AlertDialogCancel className="px-8 bg-black text-white hover:bg-black/90 hover:text-white dark:bg-white dark:text-black">
-                            Close
-                          </AlertDialogCancel>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </TableCell>
+                    </TableCell>
                   </TooltipProvider>
-
                 </TableRow>
               ))}
             </TableBody>
@@ -1120,7 +1263,7 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
         </div>
       )}
 
-<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Report Generated Successfully!</DialogTitle>

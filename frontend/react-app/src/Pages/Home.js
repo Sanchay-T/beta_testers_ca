@@ -42,11 +42,11 @@ const Dashboard = () => {
       url: "#",
       icon: FilePlus2,
     },
-    {
-      title: "Analytics",
-      url: "#",
-      icon: ChartNoAxesCombined,
-    },
+    // {
+    //   title: "Analytics",
+    //   url: "#",
+    //   icon: ChartNoAxesCombined,
+    // },
     {
       title: "Import to Tally",
       url: "#",

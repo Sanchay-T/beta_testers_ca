@@ -24,7 +24,7 @@ import { Input } from "../ui/input";
 const GenerateReportForm = ({
   currentCaseName = null,
   handleReportSubmit,
-  onReportGenerated
+  onReportGenerated,
 }) => {
   const [unit, setUnit] = useState("Unit 1");
   const [units, setUnits] = useState(["Unit 1", "Unit 2"]);
@@ -104,7 +104,7 @@ const GenerateReportForm = ({
     "CBI",
     "SURAT",
     "JANKALYAN",
-    "Other"
+    "Other",
   ];
 
   // Add this useEffect after your other useEffect declarations
@@ -155,17 +155,20 @@ const GenerateReportForm = ({
   };
 
   // Modified financial year change handler
-  const handleFinancialYearChange = (selectedYear) => {
-    setFinancialYear(selectedYear);
-
+  const handleFinancialYearChange = (selectedYear, fileIndex) => {
+    // If no year is selected, clear the dates for the specific file
     if (!selectedYear) {
-      // If no year is selected, clear the dates
       setFileDetails((prevDetails) =>
-        prevDetails.map((detail) => ({
-          ...detail,
-          start_date: "",
-          end_date: "",
-        }))
+        prevDetails.map((detail, index) => {
+          if (index === fileIndex) {
+            return {
+              ...detail,
+              start_date: "",
+              end_date: "",
+            };
+          }
+          return detail;
+        })
       );
       return;
     }
@@ -173,13 +176,18 @@ const GenerateReportForm = ({
     // Get dates for the selected financial year
     const { startDate, endDate } = getFinancialYearDates(selectedYear);
 
-    // Update all file details with new dates
+    // Update only the specific file's details
     setFileDetails((prevDetails) =>
-      prevDetails.map((detail) => ({
-        ...detail,
-        start_date: startDate,
-        end_date: endDate,
-      }))
+      prevDetails.map((detail, index) => {
+        if (index === fileIndex) {
+          return {
+            ...detail,
+            start_date: startDate,
+            end_date: endDate,
+          };
+        }
+        return detail;
+      })
     );
   };
 
@@ -201,8 +209,12 @@ const GenerateReportForm = ({
   }, []);
 
   // Rest of your component code remains the same, but replace the financial year Select component with:
-  const renderFinancialYearSelect = () => (
-    <Select value={financialYear} onValueChange={handleFinancialYearChange}>
+  const renderFinancialYearSelect = (fileIndex) => (
+    <Select
+      // value={financialYear}
+      value={fileDetails[fileIndex]?.financialYear}
+      onValueChange={(value) => handleFinancialYearChange(value, fileIndex)}
+    >
       <SelectTrigger className="w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-500 transition-all">
         <SelectValue placeholder="Select Financial Year" />
       </SelectTrigger>
@@ -390,14 +402,14 @@ const GenerateReportForm = ({
       return;
     }
 
-
     try {
-       if(caseName){ // Check if report name exists
+      if (caseName) {
+        // Check if report name exists
         const response = await window.electron.getReportNameExists({
           reportName: caseName || currentCaseName,
         });
-        
-        console.log({response})
+
+        console.log({ response });
         if (response.exists) {
           toast({
             title: "Alert",
@@ -407,7 +419,8 @@ const GenerateReportForm = ({
             duration: 3000,
           });
           return;
-        }}
+        }
+      }
 
       // If report name is unique, proceed with report generation
       handleReportSubmit(
@@ -424,7 +437,6 @@ const GenerateReportForm = ({
         convertDateFormat,
         caseName || currentCaseName
       );
-
     } catch (error) {
       console.error("Error checking report name:", error);
       toast({
@@ -561,14 +573,14 @@ const GenerateReportForm = ({
 
   const handleFileChange = (e) => {
     console.log("Inside handleFileChange..");
-    console.log({e:e.target})
+    console.log({ e: e.target });
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
 
       // Combine new files with existing files
       const combinedFiles = [...selectedFiles, ...newFiles];
-      
-      console.log({newFiles,combinedFiles})
+
+      console.log({ newFiles, combinedFiles });
 
       // Remove duplicates based on file name and size
       const uniqueFiles = combinedFiles.filter(
@@ -577,7 +589,7 @@ const GenerateReportForm = ({
           self.findIndex((f) => f.name === file.name && f.size === file.size)
       );
 
-      console.log({uniqueFiles})
+      console.log({ uniqueFiles });
 
       setSelectedFiles(uniqueFiles);
 
@@ -603,20 +615,25 @@ const GenerateReportForm = ({
       });
 
       setFileDetails(newFileDetails);
+      e.target.value = "";
     }
   };
 
   const removeFile = (indexToRemove) => {
-    console.log({removeFile: indexToRemove})
+    console.log({ removeFile: indexToRemove });
     let tempSelectedFiles = [...selectedFiles];
     let tempFileDetails = [...fileDetails];
 
-    console.log({tempSelectedFiles, tempFileDetails})
+    console.log({ tempSelectedFiles, tempFileDetails });
 
-    tempSelectedFiles= tempSelectedFiles.filter((_, index) => index !== indexToRemove)
-    tempFileDetails= tempFileDetails.filter((_, index) => index !== indexToRemove)
+    tempSelectedFiles = tempSelectedFiles.filter(
+      (_, index) => index !== indexToRemove
+    );
+    tempFileDetails = tempFileDetails.filter(
+      (_, index) => index !== indexToRemove
+    );
 
-    console.log({tempSelectedFiles, tempFileDetails})
+    console.log({ tempSelectedFiles, tempFileDetails });
 
     setSelectedFiles(tempSelectedFiles);
     setFileDetails(tempFileDetails);
@@ -851,7 +868,7 @@ const GenerateReportForm = ({
                                 <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                                   Financial Year
                                 </label>
-                                {renderFinancialYearSelect()}
+                                {renderFinancialYearSelect(index)}
                               </div>
                               <div>
                                 <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">

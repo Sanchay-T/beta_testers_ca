@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const log = require("electron-log");
 const axios = require("axios");
-const databaseManager = require('../db/db');
+const databaseManager = require("../db/db");
 const { transactions } = require("../db/schema/Transactions");
 const { statements } = require("../db/schema/Statement");
 const { cases } = require("../db/schema/Cases");
@@ -186,7 +186,6 @@ const getOrCreateCase = async (caseName, userId = 1) => {
 
     if (newCase.length > 0) {
       log.info(`Created new case with ID: ${(newCase[0].id, caseName)}`);
-      log.info(`Case id: ${newCase[0].id}`);
       return newCase[0].id;
     }
 
@@ -608,7 +607,6 @@ function preprocessPayload(payload) {
 }
 
 function generateReportIpc(tmpdir_path) {
-
   db = databaseManager.getInstance().getDatabase();
   log.info("Database instance : ", db);
 
@@ -637,40 +635,14 @@ function generateReportIpc(tmpdir_path) {
   //   console.error(err.message);
   //   console.error(err.response.data.detail[0].loc);
   // });
-  ipcMain.handle("generate-report", async (event, receivedResult, caseName, source) => {
-
+  ipcMain.handle("generate-report", async (event, receivedResult, caseName) => {
     const caseId = await getOrCreateCase(caseName);
     // Track file status
     const successfulFiles = new Set();
     const failedFiles = new Set();
     const allProcessedFiles = new Set();
     const uploadedFiles = new Map();
-    let whole_transaction_sheet = null
-
     try {
-
-      if (source == "add-pdf") {
-        const allStatements = await db
-          .select()
-          .from(statements)
-          .where(eq(statements.caseId, caseId));
-        if (allStatements.length === 0) {
-          log.info("No statements found for case:", caseId);
-        }
-
-        const allTransactions = await db
-          .select()
-          .from(transactions)
-          .where(
-            inArray(
-              transactions.statementId,
-              allStatements.map((stmt) => stmt.id.toString()) // Convert integer ID to string
-            )
-          );
-
-        whole_transaction_sheet = allTransactions
-      }
-
       log.info("IPC handler invoked for generate-report", caseName);
 
       if (!receivedResult?.files?.length) {
@@ -681,8 +653,6 @@ function generateReportIpc(tmpdir_path) {
       const caseFolder = path.join(tmpdir_path, "failed_pdfs", caseName);
       fs.mkdirSync(caseFolder, { recursive: true });
       log.info("Case Folder for PDFs:", caseFolder);
-
-
 
       // Step 1: Save all uploaded files in the case folder
       const fileDetails = receivedResult.files.map((fileDetail, index) => {
@@ -726,7 +696,6 @@ function generateReportIpc(tmpdir_path) {
         start_date: fileDetails.map((d) => d.start_date || ""),
         end_date: fileDetails.map((d) => d.end_date || ""),
         ca_id: caseName || "DEFAULT_CASE",
-        whole_transaction_sheet: whole_transaction_sheet,
       };
 
       log.info("Sending API request with payload:", payload);
@@ -739,13 +708,10 @@ function generateReportIpc(tmpdir_path) {
 
       log.info("API response received:", response.data);
 
-
       // Step 3: Handle failed extractions
       if (response.data?.["pdf_paths_not_extracted"]) {
         const failedPdfPaths =
           response.data["pdf_paths_not_extracted"].paths || [];
-
-        log.info({ caseId, failedPdfPaths })
 
         // Store failed statements in database
         await db.insert(failedStatements).values({
@@ -909,7 +875,6 @@ function generateReportIpc(tmpdir_path) {
           },
         },
       };
-
     } catch (error) {
       log.error("Error in report generation:", {
         message: error.message,
@@ -1001,11 +966,11 @@ function generateReportIpc(tmpdir_path) {
         // Store failed statements in the database
         await db.insert(failedStatements).values({
           caseId: validCaseId,
-          data: JSON.stringify(response.data["pdf_paths_not_extracted"]),
+          data: JSON.stringify(modifiedData),
         });
 
         // Track failed PDF paths
-        failedPdfPaths = response.data["pdf_paths_not_extracted"].paths || [];
+        failedPdfPaths = modifiedData.paths || [];
         log.warn("Some PDF paths were not extracted", failedPdfPaths);
       }
 
@@ -1078,7 +1043,7 @@ function generateReportIpc(tmpdir_path) {
         }
       );
 
-      log.info("transactions_temp ", transactions_temp.length)
+      log.info("transactions_temp ", transactions_temp.length);
 
       const processedData = [];
 
@@ -1095,8 +1060,8 @@ function generateReportIpc(tmpdir_path) {
         };
       });
 
-      log.info({ exampleTrnsaction: transactions_temp[0] })
-      log.info({ exampleFileDetails: fileDetails })
+      log.info({ exampleTrnsaction: transactions_temp[0] });
+      log.info({ exampleFileDetails: fileDetails });
 
       for (const fileDetail of fileDetails) {
         try {
