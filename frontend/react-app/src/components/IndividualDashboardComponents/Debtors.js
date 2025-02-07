@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import BarLineChart from "../charts/BarLineChart";
-import DataTable from "./TableData";
+import UnifiedTable from "./UnifiedTable";
 import { useParams } from "react-router-dom";
 
 const Debtors = () => {
@@ -28,10 +28,10 @@ const Debtors = () => {
           }),
           description: item.description,
           credit: item.amount,
-          category: item.category,
           balance: item.balance,
+          category: item.category,
           entity:item.entity|| '-',
-          transactionId:item.id
+          id:item.id
 
         }));
         setData(transformedData);
@@ -74,7 +74,7 @@ const Debtors = () => {
             />
           </div>
           <div className="w-full">
-            <DataTable data={data} title="Debtors Table" />
+            <UnifiedTable data={data} title="Debtors Table" />
           </div>
         </>
       )}

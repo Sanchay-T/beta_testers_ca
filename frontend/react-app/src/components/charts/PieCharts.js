@@ -16,6 +16,8 @@ const PieCharts = ({
   valueKey = null,
   nameKey = null,
   showLegends = false,
+  source,
+  onPieClick,
 }) => {
   // Get all columns from the first data item
   // const columns = data.length > 0 ? Object.keys(data[0]) : [];
@@ -57,10 +59,17 @@ const PieCharts = ({
     return colors[index % colors.length];
   };
 
+  const handleClick = () => {
+    if (source === "summary") {
+      console.log("Clicked:");
+      // Add your click handling logic here
+    }
+  };
   // Transform data to include colors
   const transformedData = data.map((item, index) => ({
     ...item,
     fill: getColor(index),
+    cursor: source === "summary" ? "pointer" : "default",
   }));
 
   return (
@@ -85,6 +94,7 @@ const PieCharts = ({
               nameKey={finalNameKey}
               stroke="0"
               radius={120}
+              onClick={onPieClick}
             />
           </PieChart>
         </ChartContainer>

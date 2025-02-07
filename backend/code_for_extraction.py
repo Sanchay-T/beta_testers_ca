@@ -453,7 +453,6 @@ def parse_date(date_string):
         "%d-%m-%Y %H:%M:%S",
         "%d %b %Y %H:%M:%S",
         "%Y-%m-%d %H:%M:%S",
-        "%y-%m-%d %H:%M:%S",
         "%d %B %Y %H:%M:%S",
         "%d/%m/%Y %H:%M:%S",
         "%d-%b-%Y %H:%M:%S",
@@ -466,6 +465,8 @@ def parse_date(date_string):
         "%d-%m-%y %H:%M:%S",
         "%d-%b- %Y %H:%M:%S",
         "%d/%b/%Y %H:%M:%S",
+        "%y-%m-%d %H:%M:%S",
+        "%y-%m-%d",
     ]
 
     for date_format in formats_to_try:
@@ -609,7 +610,6 @@ def cleaning(new_df):
             "%d-%m-%Y %H:%M:%S",
             "%d %b %Y %H:%M:%S",
             "%Y-%m-%d %H:%M:%S",
-            "%y-%m-%d %H:%M:%S",
             "%d %B %Y %H:%M:%S",
             "%d/%m/%Y %H:%M:%S",
             "%d-%b-%Y %H:%M:%S",
@@ -622,6 +622,8 @@ def cleaning(new_df):
             "%d-%m-%y %H:%M:%S",
             "%d-%b- %Y %H:%M:%S",
             "%d/%b/%Y %H:%M:%S",
+            "%y-%m-%d %H:%M:%S",
+            "%y-%m-%d",
         ]
 
         for fmt in formats_to_try:
@@ -673,7 +675,7 @@ def cleaning(new_df):
 
     df = check_date(df)
     df = df[df['Balance'].notna() & (df['Balance'] != "")]
-    df.dropna(subset=["Debit", "Credit"], how="all", inplace=True)
+    df = df[~((df["Debit"].fillna(0) == 0) & (df["Credit"].fillna(0) == 0))]
     idf = df[["Value Date", "Description", "Debit", "Credit", "Balance"]]
 
     return idf
@@ -694,7 +696,7 @@ def credit_debit(df, description_column, date_column, bal_column, same_column):
         # Case 2: Count occurrences where the value contains both a number and "CR" or "DR"
 
         case2_count = values.str.contains(r'^[+-]?\d+.*(CR|DR|Credit|Debit|C|D)?', regex=True).sum()
-        print(case2_count)
+        # print(case2_count)
 
         # Return the case based on counts
         if case1_count >= 5:
@@ -965,7 +967,7 @@ def extract_dataframe_from_pdf(page_path, table_settings):
         # new_table = clean_table(pd.DataFrame(table))
         df_total = df_total._append(table, ignore_index=True)
         df_total.replace({r"\n": " "}, regex=True, inplace=True)
-        print(f"on page:{i}")
+        print(f"on page:{i}/{len(pdf.pages)}")
     w = df_total.drop_duplicates()
     # rage_path = pdf_path.split(".")[0]
     # w.to_excel(f"raw_dataframe_{rage_path}.xlsx")

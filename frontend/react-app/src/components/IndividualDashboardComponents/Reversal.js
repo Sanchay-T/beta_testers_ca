@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import DataTable from "./TableData";
-import refundData from "../../data/refund.json";
+import UnifiedTable from "./UnifiedTable";
+// import refundData from "../../data/refund.json";
 import SingleBarChart from "../charts/BarChart";
 import { useParams } from "react-router-dom";
 
@@ -28,8 +28,8 @@ const Reversal = () => {
           }),
           description: item.description,
           credit: item.amount,
-          category: item.category,
           balance: item.balance,
+          category: item.category,
         }));
         setData(transformedData);
       } catch (error) {
@@ -72,7 +72,7 @@ const Reversal = () => {
             />
           </div>
           <div>
-            <DataTable data={data} title="Refund/Reversal Table" />
+            <UnifiedTable data={data} title="Refund/Reversal Transactions" />
           </div>
         </>
       )}

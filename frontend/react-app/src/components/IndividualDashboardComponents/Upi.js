@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../ui/tabs";
 import BarLineChart from "../charts/BarLineChart";
-import DataTable from "./TableData";
+import UnifiedTable from "./UnifiedTable";
 import { useParams } from "react-router-dom";
 
 const Upi = () => {
@@ -33,8 +33,9 @@ const Upi = () => {
           Description: item.description,
           Credit: item.amount || 0,
           Balance: item.balance || 0,
+          category:item.category|| '-',
           entity:item.entity|| '-',
-          transactionId:item.id
+          id:item.id,
 
         }));
 
@@ -48,6 +49,7 @@ const Upi = () => {
           Description: item.description,
           Debit: Math.abs(item.amount) || 0, // Ensure positive value
           Balance: item.balance || 0,
+          category:item.category|| '-',
           entity:item.entity || '-',
           transactionId:item.id
 
@@ -130,7 +132,7 @@ const Upi = () => {
                 />
               </div>
               <div>
-                <DataTable data={upiCrData} title="UPI Credit Table" />
+                <UnifiedTable data={upiCrData} title="UPI Credit Transactions" />
               </div>
             </>
           )}
@@ -154,7 +156,7 @@ const Upi = () => {
                 />
               </div>
               <div>
-                <DataTable data={upiDrData} title="UPI Debit Table" />
+                <UnifiedTable data={upiDrData} title="UPI Debit Transactions" />
               </div>
             </>
           )}

@@ -22,6 +22,7 @@ import { BreadcrumbDynamic } from "../components/BreadCrumb";
 import { useBreadcrumb } from "../contexts/BreadcrumbContext";
 import { useParams } from "react-router-dom";
 import PdfColumnMarker from "../components/MainDashboardComponents/PdfMarker";
+import TallyPrimeDirect from "../components/ImortTally/TallyPrimeDirect";
 
 const Dashboard = () => {
   const { breadcrumbs, setMainDashboard } = useBreadcrumb();
@@ -149,7 +150,7 @@ const Dashboard = () => {
                 <PdfColumnMarker setPdfColMarkerData={setPdfColMarkerData} />
               )}
               {/* {activeTab === "Import to Tally" && <ImportToTally />} */}
-              {activeTab === "TallyPrime" && <ExcelViewer />}
+              {activeTab === "TallyPrime" && <TallyPrimeDirect />}
               {activeTab === "TallyERP" && <ExcelERP />}
             </main>
           </div>

@@ -89,22 +89,6 @@ const IndividualDashboard = () => {
       icon: ArrowRightLeft,
     },
     {
-      title: "EOD",
-      icon: History,
-    },
-    {
-      title: "Suspense",
-      icon: FileQuestion,
-    },
-    {
-      title: "Cash",
-      icon: IndianRupee,
-    },
-    {
-      title: "UPI",
-      icon: ScanLine,
-    },
-    {
       title: "Debtors",
       url: "#",
       icon: ArrowUpNarrowWide,
@@ -112,6 +96,14 @@ const IndividualDashboard = () => {
     {
       title: "Creditors",
       icon: ArrowDownWideNarrow,
+    },
+    {
+      title: "UPI",
+      icon: ScanLine,
+    },
+    {
+      title: "Cash",
+      icon: IndianRupee,
     },
     {
       title: "EMI",
@@ -126,6 +118,14 @@ const IndividualDashboard = () => {
       title: "Reversal",
       url: "#",
       icon: Undo2,
+    },
+    {
+      title: "Suspense",
+      icon: FileQuestion,
+    },
+    {
+      title: "EOD",
+      icon: History,
     },
   ];
 

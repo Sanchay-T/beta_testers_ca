@@ -139,7 +139,7 @@ function registerExcelDownloadHandlers(downloadPath) {
                 // use axios 
                 response = await axios.post(serverEndpoint, payload, {
                     headers: { "Content-Type": "application/json" },
-                    timeout: 300000,
+                    // timeout: 300000,
                     validateStatus: (status) => status === 200,
                 });
 

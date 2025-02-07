@@ -971,8 +971,8 @@ function generateReportIpc(tmpdir_path) {
         bank_names: result.map((d) => d.bankName),
         pdf_paths: result.map((d) => d.path),
         passwords: result.map((d) => d.passwords || ""),
-        start_dates: result.map((d) => d.startDate || ""),
-        end_dates: result.map((d) => d.endDate || ""),
+        start_date: result.map((d) => d.startDate || ""),
+        end_date: result.map((d) => d.endDate || ""),
         ca_id: caseId || "DEFAULT_CASE",
         aiyazs_array_of_array: result.map((d) => d.rectifiedColumns || ""),
         whole_transaction_sheet: whole_transaction_sheet,
@@ -982,8 +982,7 @@ function generateReportIpc(tmpdir_path) {
       const finalPayload = preprocessPayload(payload);
 
       log.info("finalPayload: ", finalPayload);
-      log.info("editPdfEndpoint: ", editPdfEndpoint);
-      const response = await axios.post(editPdfEndpoint, finalPayload, {
+      const response = await axios.post(generateReportEndpoint, finalPayload, {
         headers: { "Content-Type": "application/json" },
         // timeout: 300000,
         validateStatus: (status) => status === 200,
@@ -1011,7 +1010,7 @@ function generateReportIpc(tmpdir_path) {
       }
 
       // Continue processing if data exists
-      if (!response.data || !response.data.data) {
+      if (!response.data ) {
         throw new Error(
           "Empty or invalid response received from analysis server"
         );
@@ -1021,6 +1020,28 @@ function generateReportIpc(tmpdir_path) {
       try {
         const sanitizedJsonString = sanitizeJSONString(response.data.data);
         parsedData = JSON.parse(sanitizedJsonString);
+        if (parsedData == null) {
+          await updateCaseStatus(caseId, "Failed");
+          const failedPDFsDir = path.join(tmpdir_path, "failed_pdfs", caseName);
+          fs.mkdirSync(failedPDFsDir, { recursive: true });
+          return {
+            success: true,
+            data: {
+              caseId: caseId,
+              processed: null,
+              totalTransactions: 0,
+              eodProcessed: false,
+              summaryProcessed: false,
+              failedStatements: response.data["pdf_paths_not_extracted"] || null,
+              failedFiles: Array.from(failedFiles),
+              successfulFiles: Array.from(successfulFiles),
+              nerResults: response.data?.ner_results || {
+                Name: [],
+                "Acc Number": [],
+              },
+            },
+          };
+        }
       } catch (error) {
         log.error("JSON parsing error:", error);
         throw error;

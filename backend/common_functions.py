@@ -35,7 +35,7 @@ import logging
 import openpyxl
 from openpyxl.styles import Alignment
 from .utils import get_base_dir
-
+import fitz
 bold_font = Font(bold=True)
 pd.options.display.float_format = "{:,.2f}".format
 pd.set_option("display.max_columns", None)
@@ -686,6 +686,7 @@ def calculate_fixed_day_average( data):
     averages_with_monthly = calculate_monthly_averages(all_avg_balances)
     # You should decide whether you want to return all_avg_balances or averages_with_monthly
     # Here we assume you want to return the averages with monthly data included
+
     return averages_with_monthly
 
 def process_avg_last_6_months(data, eod):
@@ -2320,16 +2321,13 @@ def make_summary_great_again(df1, opening_closing_balance, df2):
         # Rearrange columns
         summary = summary[['Month-Year', 'opening_balance', 'closing_balance', 'total_credit', 'total_debit']]
 
-        print(summary)
-        print("**************************************^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
-
         pivot_df = summary.set_index("Month-Year").T
         pivot_df["Total"] = pivot_df.sum(axis=1)
         pivot_df.index = [
             "Opening Balance",
             "Closing Balance",
-            "Total Amount of Credit Transactions",
-            "Total Amount of Debit Transactions",
+            "Total Credit",
+            "Total Debit",
         ]
 
         # Reset index for display
@@ -2393,26 +2391,36 @@ def make_summary_great_again(df1, opening_closing_balance, df2):
     income_table = df1[df1['Category'].isin(df2[df2['Particulars'] == 'Income']['Category'])]
     important_table = df1[df1['Category'].isin(df2[df2['Particulars'] == 'Important Expenses / Payments']['Category'])]
     other_table = df1[df1['Category'].isin(df2[df2['Particulars'] == 'Other Expenses / Payments']['Category'])]
+    contra_credit_table = df1[df1['Category'].isin(df2[df2['Particulars'] == 'Contra Credit']['Category'])]
+    contra_debit_table = df1[df1['Category'].isin(df2[df2['Particulars'] == 'Contra Debit']['Category'])]
 
     # Adding the template rows to each table and sorting them
     income_table = pd.concat([template_rows, income_table]).reset_index(drop=True)
     important_table = pd.concat([template_rows, important_table]).reset_index(drop=True)
     other_table = pd.concat([template_rows, other_table]).reset_index(drop=True)
+    contra_credit_table = pd.concat([template_rows, contra_credit_table]).reset_index(drop=True)
+    contra_debit_table = pd.concat([template_rows, contra_debit_table]).reset_index(drop=True)
 
     # Converting the "Value Date" column to datetime format in income_table, important_table, and other_table
     income_table['Value Date'] = pd.to_datetime(income_table['Value Date'], format='%d-%m-%Y')
     important_table['Value Date'] = pd.to_datetime(important_table['Value Date'], format='%d-%m-%Y')
     other_table['Value Date'] = pd.to_datetime(other_table['Value Date'], format='%d-%m-%Y')
+    contra_credit_table['Value Date'] = pd.to_datetime(contra_credit_table['Value Date'], format='%d-%m-%Y')
+    contra_debit_table['Value Date'] = pd.to_datetime(contra_debit_table['Value Date'], format='%d-%m-%Y')
 
     income_table = income_table.sort_values(by=['Value Date']).reset_index(drop=True)
     important_table = important_table.sort_values(by=['Value Date']).reset_index(drop=True)
     other_table = other_table.sort_values(by=['Value Date']).reset_index(drop=True)
+    contra_credit_table = contra_credit_table.sort_values(by=['Value Date']).reset_index(drop=True)
+    contra_debit_table = contra_debit_table.sort_values(by=['Value Date']).reset_index(drop=True)
 
     income_summary = generate_summary(income_table, "Credit", "Income / Receipts")
     important_summary = generate_summary(important_table, "Debit", "Important Expenses / Payments")
     other_summary = generate_summary(other_table, "Debit", "Other Expenses / Payments")
+    contra_credit_summary = generate_summary(contra_credit_table, "Credit", "Contra Credit")
+    contra_debit_summary = generate_summary(contra_debit_table, "Debit", "Contra Debit")
 
-    return particulars_table, income_summary, important_summary, other_summary
+    return particulars_table, income_summary, important_summary, other_summary, contra_credit_summary, contra_debit_summary
 
 
 def summary_sheet(idf, open_bal, close_bal, new_tran_df, new_categories = None):
@@ -2432,8 +2440,8 @@ def summary_sheet(idf, open_bal, close_bal, new_tran_df, new_categories = None):
     # Append new data
     df2 = pd.concat([df2, df_new], ignore_index=True)
 
-    sheet_1, sheet_2, sheet_3, sheet_4 = make_summary_great_again(new_tran_df, opening_closing_balance, df2)
-    df_list = [sheet_1, sheet_2, sheet_3, sheet_4]
+    sheet_1, sheet_2, sheet_3, sheet_4, sheet_5, sheet_6 = make_summary_great_again(new_tran_df, opening_closing_balance, df2)
+    df_list = [sheet_1, sheet_2, sheet_3, sheet_4, sheet_5, sheet_6]
 
     return df_list
 
@@ -3377,7 +3385,7 @@ def Bl_eligibility_bankwise( trans, data, eod):
 
     # Calculate ABB using eod data
     processed_data = calculate_fixed_day_average(eod)
-    print(processed_data)
+    # print(processed_data)
 
     # Helper Functions for ABB Extraction
     def filter_12_months_average(data):
@@ -3731,7 +3739,7 @@ def color_summary_sheet( filename):
     ws = wb["Summary"]  # Access the "Summary" sheet
 
     # Initialize row variables
-    row_6 = row_12 = row_30 = row_49 = row_66 = None
+    row_6 = row_12 = row_30 = row_49 = row_66 = row_55 = row_56 = None
 
     # Search for the target words in the sheet
     for row in ws.iter_rows(min_row=1, max_row=ws.max_row):
@@ -3745,8 +3753,10 @@ def color_summary_sheet( filename):
                     row_30 = cell.row
                 elif "Other Expenses / Payments" in cell.value:
                     row_49 = cell.row
-                elif "Utility Bills" in cell.value:
-                    row_66 = cell.row
+                elif "Contra Credit" in cell.value:
+                    row_55 = cell.row
+                elif "Contra Debit" in cell.value:
+                    row_56 = cell.row
 
     for cell in ws[1]:
         cell.value = None
@@ -3777,25 +3787,28 @@ def color_summary_sheet( filename):
         for cell in ws[row]:
             cell.fill = fill_color
             cell.font = bold_font
-    for row in [row_6, row_12, row_30, row_49]:
+    for row in [row_6, row_12, row_30, row_49, row_55, row_56]:
         for cell in ws[row]:
             cell.fill = royal_blue_fill
             cell.font = white_bold_font
-    for start_row in [row_6, row_12, row_30, row_49]:
-        row = start_row + 1
-        while row not in [row_6, row_12, row_30, row_49, row_66]:
+    skip_rows = {row_6, row_12, row_30, row_49, row_55, row_56}
+
+    for start_row in [row_6, row_12, row_30, row_49, row_55, row_56]:
+        for row in range(start_row + 1, ws.max_row + 1):
+            if row in skip_rows:
+                continue  # Skip the rows that are in the skip list
+
             for cell in ws[row]:
-                cell.fill = (
-                    white_fill if (row - start_row) % 2 == 1 else light_blue_fill
-                )
-            row += 1
+                # Apply alternating color fill
+                cell.fill = white_fill if (row - start_row) % 2 == 1 else light_blue_fill
+
     # for row_num in [16, 27, 41, 54]:
     #     for cell in ws[row_num]:
     #         cell.fill = white_fill
     for row in ws["A"]:
         row.border = border_right
-    for cell in ws[row_66]:
-        cell.border = border_thick_bottom
+    # for cell in ws[row_66]:
+    #     cell.border = border_thick_bottom
 
     def apply_alternating_fill(sheet):
 
@@ -4673,3 +4686,23 @@ def process_transactions(df):
         out_df = out_df._append(new_row, ignore_index=True)
 
     return out_df
+
+
+def get_total_pdf_pages(pdf_paths):
+    """
+    Calculate the total number of pages from a list of PDF file paths.
+
+    :param pdf_paths: List of PDF file paths
+    :return: Total number of pages
+    """
+    total_pages = 0
+
+    for pdf_path in pdf_paths:
+        if pdf_path:  # Ensure the path is not empty
+            try:
+                with fitz.open(pdf_path) as doc:
+                    total_pages += len(doc)
+            except Exception as e:
+                print(f"Error processing {pdf_path}: {e}")
+
+    return total_pages

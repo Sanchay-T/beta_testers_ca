@@ -265,10 +265,16 @@ const CategoryEditTable = ({
         const oldCategory = dataOnUi[index].category;
         dataOnUi[index].category =
           selectedBulkCategory === "" ? categorySearchTerm : selectedBulkCategory;
+          
+          if(selectedType){
+            dataOnUi[index].classification = selectedType;
+            dataOnUi[index].is_new = true;
+          }
         newModifiedData.push({
           ...dataOnUi[index],
           oldCategory,
           reasoning: bulkReasoning,
+
         });
       }
     });
@@ -422,18 +428,12 @@ const CategoryEditTable = ({
   };
 
   useEffect(() => {
-    const totalPagesTemp = showAllRows
-      ? 1
-      : Math.ceil(filteredData.length / rowsPerPage);
+    const totalPagesTemp = Math.ceil(filteredData.length / rowsPerPage);
     setTotalPages(totalPagesTemp);
-    const startIndexTemp = showAllRows ? 0 : (currentPage - 1) * rowsPerPage;
-    setStartIndex(startIndexTemp);
-    const endIndexTemp = showAllRows
-      ? filteredData.length
-      : startIndexTemp + rowsPerPage;
-    setEndIndex(endIndexTemp);
+    const startIndexTemp = (currentPage - 1) * rowsPerPage;
+    const endIndexTemp =  startIndexTemp + rowsPerPage;
     setCurrentdata(filteredData.slice(startIndexTemp, endIndexTemp));
-  }, [filteredData, currentPage, rowsPerPage, showAllRows]);
+  }, [data,filteredData, currentPage, rowsPerPage]);
 
   const getPageNumbers = () => {
     const pageNumbers = [];
@@ -803,7 +803,7 @@ const CategoryEditTable = ({
                   className="bg-black hover:bg-gray-800"
                   onClick={handleColumnFilter}
                 >
-                  Save changes
+                  Apply Filters
                 </Button>
               </div>
             </DialogContent>
@@ -860,7 +860,7 @@ const CategoryEditTable = ({
                     setNumericFilterModalOpen(false);
                   }}
                 >
-                  Save changes
+                  Apply Filters
                 </Button>
               </div>
             </DialogContent>
@@ -1001,7 +1001,7 @@ const CategoryEditTable = ({
           </DialogContent>
         </Dialog>
 
-        {/* Confirmation Modal */}
+        {/* Confirmation Modal for bulk category update*/}
         <Dialog
           open={confirmationModalOpen}
           onOpenChange={setConfirmationModalOpen}
