@@ -287,22 +287,22 @@ export default function GenerateReport() {
                 "failedStatements from alert box ",
                 failedStatements
               )}
-              {failedStatements.length === 0 && (
+              {/* {failedStatements.length === 0 && (
                 <div className="flex items-center gap-x-4">
                   <CheckCircle className="text-green-500 w-6 h-6 mt-2" />
                   <p>Your report has been generated successfully.</p>
                 </div>
-              )}
+              )} */}
             </DialogDescription>
           </DialogHeader>
-          {(failedStatements.length > 0 && successfulStatements.length > 0) && (
+          {(failedStatements.length > 0 || successfulStatements.length > 0) && (
             <div className="mb-4">
               <ul className="list-disc pl-5">
                 {failedStatements.map((statement, index) => (
-                  <li key={index} className="text-red-500">{statement}</li>
+                  <li key={index} className="text-red-400">{statement}</li>
                 ))}
                 {successfulStatements.map((statement, index) => (
-                  <li key={index} className="text-green-500">{statement}</li>
+                  <li key={index} className="text-green-400">{statement}</li>
                 ))}
               </ul>
             </div>

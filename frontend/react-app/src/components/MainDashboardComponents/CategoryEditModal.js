@@ -3,21 +3,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import UnifiedTable from "../IndividualDashboardComponents/UnifiedTable";
 
 const CategoryEditModal = ({ open, onOpenChange, caseId }) => {
-  const [categoryOptions, setCategoryOptions] = useState(null);
   const [transactionData, setTransactionData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-
-  // const handleEntityChange = (transactionId, newEntity) => {
-  //   setTransactions(prevTransactions =>
-  //     prevTransactions.map(transaction =>
-  //       transaction.id === transactionId
-  //         ? { ...transaction, entity: newEntity }
-  //         : transaction
-  //     )
-  //   );
-  // };
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -54,11 +43,10 @@ const CategoryEditModal = ({ open, onOpenChange, caseId }) => {
       }
     };
 
-    if (caseId) {
-      // Add this check
+      setIsLoading(true);
       fetchTransactions();
-    }
-  }, [caseId]); // Add caseId to dependency array
+      setIsLoading(false);
+  }, [caseId]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -67,10 +55,11 @@ const CategoryEditModal = ({ open, onOpenChange, caseId }) => {
           {/* <DialogTitle>Transactions</DialogTitle> */}
         </DialogHeader>
         <div className="overflow-auto flex-1">
+          
           <UnifiedTable
             data={transactionData}
             title="Transactions"
-            caseId={caseId}
+            caseId={parseInt(caseId)}
           />
         </div>
       </DialogContent>

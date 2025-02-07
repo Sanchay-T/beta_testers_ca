@@ -14,7 +14,7 @@ from backend.utils import get_saved_pdf_dir
 TEMP_SAVED_PDF_DIR = get_saved_pdf_dir()
 from pydantic import Field
 # If you have other custom imports:
-from backend.tax_professional.banks.CA_Statement_Analyzer import start_extraction_add_pdf,start_extraction_edit_pdf, refresh_category_all_sheets, save_to_excel
+from backend.tax_professional.banks.CA_Statement_Analyzer import start_extraction_add_pdf, refresh_category_all_sheets, save_to_excel
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from backend.account_number_ifsc_extraction import extract_accno_ifsc
@@ -70,6 +70,7 @@ class BankStatementRequest(BaseModel):
     end_date: List[str]
     ca_id: str
     whole_transaction_sheet: Optional[List[Transaction]] = None
+    aiyazs_array_of_array: Optional[List[List[ColumnData]]]=None
     
 class EditCategoryRequest(BaseModel):
     transaction_data: List[dict]
@@ -185,6 +186,7 @@ async def analyze_bank_statements(request: BankStatementRequest):
             "data": result["sheets_in_json"],
             "pdf_paths_not_extracted": result["pdf_paths_not_extracted"],
             "ner_results": ner_results, 
+            "success_page_number": result["success_page_number"]
         }
 
     except Exception as e:
@@ -195,115 +197,115 @@ async def analyze_bank_statements(request: BankStatementRequest):
     
 
 
-@app.post("/column-rectify-add-pdf/")
-async def column_rectify_add_pdf(request:EditPdfRequest):
-    print("Received request data:", request)
-    try:
+# @app.post("/column-rectify-add-pdf/")
+# async def column_rectify_add_pdf(request:EditPdfRequest):
+#     print("Received request data:", request)
+#     try:
 
-        # # Create a progress tracking function
-        def progress_tracker(current: int, total: int, info: str) -> None:
-            logger.info(f"{info} ({current}/{total})")
+#         # # Create a progress tracking function
+#         def progress_tracker(current: int, total: int, info: str) -> None:
+#             logger.info(f"{info} ({current}/{total})")
 
-        progress_data = {
-        "progress_func": progress_tracker,
-        "current_progress": 10,
-        "total_progress": 100,
-        }
+#         progress_data = {
+#         "progress_func": progress_tracker,
+#         "current_progress": 10,
+#         "total_progress": 100,
+#         }
 
-        # Validate passwords length if provided
-        if request.passwords and len(request.passwords) != len(request.pdf_paths):
-            raise HTTPException(
-                status_code=400,
-                detail=(
-                    f"Number of passwords ({len(request.passwords)}) "
-                    f"must match number of PDFs ({len(request.pdf_paths)})"
-                ),
-            )
+#         # Validate passwords length if provided
+#         if request.passwords and len(request.passwords) != len(request.pdf_paths):
+#             raise HTTPException(
+#                 status_code=400,
+#                 detail=(
+#                     f"Number of passwords ({len(request.passwords)}) "
+#                     f"must match number of PDFs ({len(request.pdf_paths)})"
+#                 ),
+#             )
         
-        temp_aiyaz_array_of_array = []
-        for statement in request.aiyazs_array_of_array:
-            temp_aiyaz_array = []
-            for col in statement:
-                temp_aiyaz_array.append(col.model_dump())
-            temp_aiyaz_array_of_array.append(temp_aiyaz_array)
+#         temp_aiyaz_array_of_array = []
+#         for statement in request.aiyazs_array_of_array:
+#             temp_aiyaz_array = []
+#             for col in statement:
+#                 temp_aiyaz_array.append(col.model_dump())
+#             temp_aiyaz_array_of_array.append(temp_aiyaz_array)
 
 
         
-        bank_names = request.bank_names 
-        pdf_paths = request.pdf_paths
-        passwords =  request.passwords if request.passwords else []
-        start_date = request.start_dates if request.start_dates else []
-        end_date = request.end_dates if request.end_dates else []
-        CA_ID = request.ca_id
-        progress_data = progress_data
-        aiyazs_array_of_array = temp_aiyaz_array_of_array
-        whole_transaction_sheet = request.whole_transaction_sheet
+#         bank_names = request.bank_names 
+#         pdf_paths = request.pdf_paths
+#         passwords =  request.passwords if request.passwords else []
+#         start_date = request.start_dates if request.start_dates else []
+#         end_date = request.end_dates if request.end_dates else []
+#         CA_ID = request.ca_id
+#         progress_data = progress_data
+#         aiyazs_array_of_array = temp_aiyaz_array_of_array
+#         whole_transaction_sheet = request.whole_transaction_sheet
 
 
-        ner_results = {
-                "Name": [],
-                "Acc Number": []
-            }
+#         ner_results = {
+#                 "Name": [],
+#                 "Acc Number": []
+#             }
 
-        # Process PDFs with NER
-        start_ner = time.time()
-        person_count = 0
-        for pdf in pdf_paths:
-            person_count+=1
-            # result = pdf_to_name_and_accno(pdf)
-            fetched_name = None
-            fetched_acc_num = None
+#         # Process PDFs with NER
+#         start_ner = time.time()
+#         person_count = 0
+#         for pdf in pdf_paths:
+#             person_count+=1
+#             # result = pdf_to_name_and_accno(pdf)
+#             fetched_name = None
+#             fetched_acc_num = None
 
-            name_entities = extract_entities(pdf)
-            acc_number_ifsc = extract_accno_ifsc(pdf)
+#             name_entities = extract_entities(pdf)
+#             acc_number_ifsc = extract_accno_ifsc(pdf)
 
-            print("name_entities:- ",name_entities)
+#             print("name_entities:- ",name_entities)
 
-            fetched_acc_num=acc_number_ifsc["acc"]
+#             fetched_acc_num=acc_number_ifsc["acc"]
 
-            if name_entities:
-                for entity in name_entities:
-                    if fetched_name==None:
-                        fetched_name=entity
+#             if name_entities:
+#                 for entity in name_entities:
+#                     if fetched_name==None:
+#                         fetched_name=entity
 
-            if fetched_name:
-                ner_results["Name"].append(fetched_name)
-            else:
-                ner_results["Name"].append(f"Statement {person_count}")
+#             if fetched_name:
+#                 ner_results["Name"].append(fetched_name)
+#             else:
+#                 ner_results["Name"].append(f"Statement {person_count}")
                 
-            if fetched_acc_num:
-                ner_results["Acc Number"].append(fetched_acc_num)
-            else:
-                ner_results["Acc Number"].append("XXXXXXXXXXX")
-        print("Ner results", ner_results)
-        end_ner = time.time()
-        print("Time taken to process NER", end_ner-start_ner)
+#             if fetched_acc_num:
+#                 ner_results["Acc Number"].append(fetched_acc_num)
+#             else:
+#                 ner_results["Acc Number"].append("XXXXXXXXXXX")
+#         print("Ner results", ner_results)
+#         end_ner = time.time()
+#         print("Time taken to process NER", end_ner-start_ner)
 
 
 
 
-        logger.info("Starting extraction")
-        result = start_extraction_edit_pdf(bank_names=bank_names,pdf_paths= pdf_paths,passwords= passwords,start_dates= start_date,end_dates= end_date,CA_ID= CA_ID, progress_data=progress_data,aiyazs_array_of_array=aiyazs_array_of_array,whole_transaction_sheet=whole_transaction_sheet)
+#         logger.info("Starting extraction")
+#         result = start_extraction_edit_pdf(bank_names=bank_names,pdf_paths= pdf_paths,passwords= passwords,start_dates= start_date,end_dates= end_date,CA_ID= CA_ID, progress_data=progress_data,aiyazs_array_of_array=aiyazs_array_of_array,whole_transaction_sheet=whole_transaction_sheet)
 
-        print("RESULT GENERATED")
-        logger.info("Result = ", result["sheets_in_json"])
-        logger.info("Result pdf_paths_not_extracted= ", result["pdf_paths_not_extracted"])
-        logger.info("Extraction completed successfully")
-        return {
-            "status": "success",
-            "message": "Bank statements analyzed successfully",
-            "data": result["sheets_in_json"],
-            "pdf_paths_not_extracted": result["pdf_paths_not_extracted"],
-            "ner_results": ner_results, 
-        }
+#         print("RESULT GENERATED")
+#         logger.info("Result = ", result["sheets_in_json"])
+#         logger.info("Result pdf_paths_not_extracted= ", result["pdf_paths_not_extracted"])
+#         logger.info("Extraction completed successfully")
+#         return {
+#             "status": "success",
+#             "message": "Bank statements analyzed successfully",
+#             "data": result["sheets_in_json"],
+#             "pdf_paths_not_extracted": result["pdf_paths_not_extracted"],
+#             "ner_results": ner_results, 
+#         }
 
-    except Exception as e:
+#     except Exception as e:
 
-        print(e)
-        logger.error(f"Error processing bank statements: {str(e)}")
-        raise HTTPException(
-            status_code=500, detail=f"Error processing bank statements: {str(e)}"
-        )
+#         print(e)
+#         logger.error(f"Error processing bank statements: {str(e)}")
+#         raise HTTPException(
+#             status_code=500, detail=f"Error processing bank statements: {str(e)}"
+#         )
 
 
 @app.post("/refresh/")

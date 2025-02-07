@@ -105,7 +105,7 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
       );
       console.log("result", result);
 
-      if (result.success) {
+      if (result.success && result.data.failedStatements.length === 0) {
       toast({
         title: "Success",
         description: "All statements have been rectified.",
@@ -535,6 +535,8 @@ const RecentReportsComp = ({key,onReportGenerated}) => {
             duration: 3000,
             variant: "success",
           });
+
+          console.log("Report generation result:", result.data);
           if (result.data.failedFiles.length > 0) {
             setShowRectifyButton(true);
             const failedFiles = result.data.failedFiles.map((file_path) => {

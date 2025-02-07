@@ -312,6 +312,7 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath, initialConfig = init
 
   const handleSubmit = () => {
     const requiredTypes = ["balance", "date", "description"]
+    console.log({columnLabels})
     const selectedTypes = columnLabels.map((label) => label.type)
 
     if (!requiredTypes.every((type) => selectedTypes.includes(type))) {

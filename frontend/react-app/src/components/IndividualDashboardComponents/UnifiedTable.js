@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Search, Loader2, Check,Download,X,Save,Plus,MessageCircle,Mail, Share2 } from "lucide-react";
 import {
   Card,
@@ -93,46 +93,46 @@ const categoryOptionsfixed = [
     "UPI-Cr",
     "UPI-Dr",
     "Utility Bills",
+    "Loan taken",
+    "Loan Given",
+    "Self Transfer"
   ];
 
 
 const DataTable = ({ data = [], title, subtitle,caseId,source}) => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [transactions, setTransactions] = useState([]);
-  const [filteredData, setFilteredData] = useState(data);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterModalOpen, setFilterModalOpen] = useState(false);
-  const [currentFilterColumn, setCurrentFilterColumn] = useState(null);
-  const [numericFilterModalOpen, setNumericFilterModalOpen] = useState(false);
-  const [currentNumericColumn, setCurrentNumericColumn] = useState(null);
-  const [minValue, setMinValue] = useState("");
-  const [maxValue, setMaxValue] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [categorySearchTerm, setCategorySearchTerm] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [columnsToIgnore, setColumnsToIgnore] = useState(["id","transactionId"]);
-  const [categoryOptions, setCategoryOptions] = useState(categoryOptionsfixed);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [transactions, setTransactions] = useState([]);
+    const [filteredData, setFilteredData] = useState(data);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [filterModalOpen, setFilterModalOpen] = useState(false);
+    const [currentFilterColumn, setCurrentFilterColumn] = useState(null);
+    const [numericFilterModalOpen, setNumericFilterModalOpen] = useState(false);
+    const [currentNumericColumn, setCurrentNumericColumn] = useState(null);
+    const [minValue, setMinValue] = useState("");
+    const [maxValue, setMaxValue] = useState("");
+    const [selectedCategories, setSelectedCategories] = useState([]);
+    const [categorySearchTerm, setCategorySearchTerm] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [columnsToIgnore, setColumnsToIgnore] = useState(["id","transactionId"]);
+    const [categoryOptions, setCategoryOptions] = useState(categoryOptionsfixed);
 
-// Category states
-  const [hasChanges, setHasChanges] = useState(false);
-  const [modifiedData, setModifiedData] = useState([]);
-  const [showKeywordInput, setShowKeywordInput] = useState(false);
-  const [currentData, setCurrentdata] = useState([]);
-  const [totalPages, setTotalPages] = useState(0);
+  // Category states
+    const [hasChanges, setHasChanges] = useState(false);
+    const [modifiedData, setModifiedData] = useState([]);
+    const [showKeywordInput, setShowKeywordInput] = useState(false);
+    const [currentData, setCurrentdata] = useState([]);
+    const [totalPages, setTotalPages] = useState(0);
 
-  // States for entity updating
-  const [editedEntities, setEditedEntities] = useState({});
-  const [batchModalOpen, setBatchModalOpen] = useState(false);
-  const [batchEntityValue, setBatchEntityValue] = useState("");
-  const { toast } = useToast();
+    // States for entity updating
+    const [editedEntities, setEditedEntities] = useState({});
+    const [batchModalOpen, setBatchModalOpen] = useState(false);
+    const [batchEntityValue, setBatchEntityValue] = useState("");
+    const { toast } = useToast();
 
-  // States for sharing 
-  const [shareModalOpen, setShareModalOpen] = useState(false);
-  
-
-
-  
+    // States for sharing 
+    const [shareModalOpen, setShareModalOpen] = useState(false);
+    
     // NEW: Using transaction id instead of row index
     const [globalSelectedRows, setGlobalSelectedRows] = useState(new Set());
     const [bulkCategoryModalOpen, setBulkCategoryModalOpen] = useState(false);
@@ -154,6 +154,8 @@ const DataTable = ({ data = [], title, subtitle,caseId,source}) => {
     const [bulkReasoning, setBulkReasoning] = useState("");
     const [showAllRows, setShowAllRows] = useState(false);
 
+    const isFirstLoad = useRef(true);
+
   // Helper: Format dates
   const formatValue = (value) => {
     if (value instanceof Date) return value.toLocaleDateString();
@@ -162,6 +164,7 @@ const DataTable = ({ data = [], title, subtitle,caseId,source}) => {
 
   
 useEffect(() => {
+  console.log("Data from unified - ",data);
     const formattedData = data.map((row) => {
       const newRow = { ...row };
       Object.keys(row).forEach((key) => {
@@ -169,6 +172,14 @@ useEffect(() => {
       });
       return newRow;
     });
+
+    // If it's the first load, set the transactions
+    if (isFirstLoad) {
+      setTransactions(formattedData);
+      setFilteredData(formattedData);
+      isFirstLoad.current = false;
+      return;
+    }
 
     const storedCategories = localStorage.getItem("categoryOptions");
     let localCats = storedCategories ? JSON.parse(storedCategories) : null;
@@ -185,9 +196,7 @@ useEffect(() => {
     }
     setCategoryOptions(mergedCategories);
 
-    setTransactions(formattedData);
-    setFilteredData(formattedData);
-  }, []);
+  }, [data]);
 
 
   // Get dynamic columns from first data item
