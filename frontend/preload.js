@@ -53,14 +53,13 @@ contextBridge.exposeInMainWorld("electron", {
       caseId,
       individualId
     ),
-    
+
   getTransactionsBySuspense: (caseId, individualId) =>
     ipcRenderer.invoke(
       "get-transactions-by-suspense-all",
       caseId,
       individualId
     ),
-    
 
   getTransactionsByEmi: (caseId, individualId) =>
     ipcRenderer.invoke("get-transactions-by-emi", caseId, individualId),
@@ -68,8 +67,10 @@ contextBridge.exposeInMainWorld("electron", {
     ipcRenderer.invoke("get-transactions-by-investment", caseId, individualId),
   getTransactionsByReversal: (caseId, individualId) =>
     ipcRenderer.invoke("get-transactions-by-reversal", caseId, individualId),
-  getTransactionsByInsurance: (caseId, individualId, categories ) =>
+  getTransactionsByInsurance: (caseId, individualId, categories) =>
     ipcRenderer.invoke("get-transactions-by-insurance", caseId, individualId),
+  getTransactionsByContra: (caseId, individualId) =>
+    ipcRenderer.invoke("get-transactions-by-contra", caseId, individualId),
 
   getStatements: (case_id) => ipcRenderer.invoke("get-statements", case_id),
 
@@ -105,10 +106,10 @@ contextBridge.exposeInMainWorld("electron", {
   getTallyVoucher: (caseId, voucherType) =>
     ipcRenderer.invoke("get-tally-voucher", caseId, voucherType),
 
+
   updateTransactionStatus: (transactionIds) =>
     ipcRenderer.invoke("update-transaction-status", transactionIds),
   
-
   user: {
     getData: (userId) => ipcRenderer.invoke("user:get-data", userId),
     updateData: (userData) => ipcRenderer.send("user:update-data", userData),
@@ -138,14 +139,17 @@ contextBridge.exposeInMainWorld("electron", {
   onLicenseExpired: (callback) => ipcRenderer.on("navigateToLogin", callback),
   removeLicenseExpiredListener: () =>
     ipcRenderer.removeAllListeners("navigateToLogin"),
-  editCategory: (data, caseId) => ipcRenderer.invoke("edit-category", data, caseId),
-  excelFileDownload: (caseId) => ipcRenderer.invoke("excel-report-download", caseId),
-  editPdf: (result, reportName) => ipcRenderer.invoke("edit-pdf", result, reportName),
+  editCategory: (data, caseId) =>
+    ipcRenderer.invoke("edit-category", data, caseId),
+  excelFileDownload: (caseId) =>
+    ipcRenderer.invoke("excel-report-download", caseId),
+  editPdf: (result, reportName) =>
+    ipcRenderer.invoke("edit-pdf", result, reportName),
   editEntity: (payload) => ipcRenderer.invoke("edit-entity", payload),
 
   // Add auto-update related methods
   updates: {
-    checkForUpdates: () => ipcRenderer.invoke("check-for-updates", () => { }),
+    checkForUpdates: () => ipcRenderer.invoke("check-for-updates", () => {}),
     // downloadUpdate: () => ipcRenderer.invoke('download-update'),
     // installUpdate: () => ipcRenderer.invoke('install-update'),
     onUpdateStatus: (callback) =>
@@ -167,10 +171,16 @@ contextBridge.exposeInMainWorld("electron", {
   },
 
   download: {
-    excelReportDownload: (caseId) => ipcRenderer.invoke('excel-report-download', caseId),
-    onExcelDownloadChunk: (callback) => ipcRenderer.on('excel-report-chunk', (event, chunk) => callback(chunk)),
-    onExcelDownloadComplete: (callback) => ipcRenderer.on('excel-report-complete', (event, message) => callback(message)),
-    onExcelDownloadError: (callback) => ipcRenderer.on('excel-report-error', (event, error) => callback(error)),
+    excelReportDownload: (caseId) =>
+      ipcRenderer.invoke("excel-report-download", caseId),
+    onExcelDownloadChunk: (callback) =>
+      ipcRenderer.on("excel-report-chunk", (event, chunk) => callback(chunk)),
+    onExcelDownloadComplete: (callback) =>
+      ipcRenderer.on("excel-report-complete", (event, message) =>
+        callback(message)
+      ),
+    onExcelDownloadError: (callback) =>
+      ipcRenderer.on("excel-report-error", (event, error) => callback(error)),
   },
 
   shell: {

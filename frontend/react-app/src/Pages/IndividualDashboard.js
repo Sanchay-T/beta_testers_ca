@@ -18,6 +18,7 @@ import Reversal from "../components/IndividualDashboardComponents/Reversal";
 // import ForeignTransactions from "../components/IndividualDashboardComponents/ForeignTransactions";
 import Upi from "../components/IndividualDashboardComponents/Upi";
 import Insurance from "../components/IndividualDashboardComponents/Insurance";
+import Contra from "../components/IndividualDashboardComponents/Contra";
 import {
   ArrowDownWideNarrow,
   ArrowRightLeft,
@@ -90,6 +91,12 @@ const IndividualDashboard = () => {
     {
       title: "Insurance",
       icon: ShieldPlus,
+    },
+    {
+      title: "Contra",
+      icon: IndianRupee,
+    },
+  ];
     }
   ]);
 
@@ -212,6 +219,9 @@ const IndividualDashboard = () => {
               )}
               {activeTab === "Insurance" && (
                 <Insurance caseId={caseId} individualId={individualId} />
+              )}
+              {activeTab === "Contra" && (
+                <Contra caseId={caseId} individualId={individualId} />
               )}
             </main>
           </div>

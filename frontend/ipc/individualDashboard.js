@@ -5,7 +5,7 @@ const { statements } = require("../db/schema/Statement");
 const { transactions } = require("../db/schema/Transactions");
 const { eod } = require("../db/schema/EodSchema");
 const { summary } = require("../db/schema/Summary");
-const { eq, gt, and, inArray } = require("drizzle-orm"); // Add this import
+const { eq, gt, and, inArray, or } = require("drizzle-orm"); // Add this import
 
 function registerIndividualDashboardIpc() {
   const db = databaseManager.getInstance().getDatabase();
@@ -736,6 +736,57 @@ function registerIndividualDashboardIpc() {
           "Error fetching insurance transactions:",
           error
         );
+        throw error;
+      }
+    }
+  );
+
+  // Handler for getting Contra transactions
+  ipcMain.handle(
+    "get-transactions-by-contra",
+    async (event, caseId, individualId) => {
+      try {
+        if (individualId) {
+          const result = await db
+            .select()
+            .from(transactions)
+            .where(
+              and(
+                eq(transactions.statementId, individualId.toString()),
+                or(
+                  eq(transactions.category, "Self transfer"),
+                  eq(transactions.voucher_type, "contra")
+                )
+              )
+            );
+            log.info("Contra transactions fetched successfully:", result);
+          return result;
+        } else {
+          const allStatements = await db
+            .select()
+            .from(statements)
+            .where(eq(statements.caseId, caseId));
+  
+          const statementIds = allStatements.map((stmt) => stmt.id.toString());
+  
+          const result = await db
+            .select()
+            .from(transactions)
+            .where(
+              and(
+                inArray(transactions.statementId, statementIds),
+                or(
+                  eq(transactions.category, "Self transfer"),
+                  eq(transactions.voucher_type, "contra")
+                )
+              )
+            );
+            log.info("Contra transactions fetched successfully:", result);
+
+          return result;
+        }
+      } catch (error) {
+        log.error("Error fetching transactions:", error);
         throw error;
       }
     }
