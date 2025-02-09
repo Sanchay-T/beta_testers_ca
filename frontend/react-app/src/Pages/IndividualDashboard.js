@@ -17,6 +17,7 @@ import EodBalance from "../components/IndividualDashboardComponents/EodBalance";
 import Reversal from "../components/IndividualDashboardComponents/Reversal";
 // import ForeignTransactions from "../components/IndividualDashboardComponents/ForeignTransactions";
 import Upi from "../components/IndividualDashboardComponents/Upi";
+import Insurance from "../components/IndividualDashboardComponents/Insurance";
 import {
   ArrowDownWideNarrow,
   ArrowRightLeft,
@@ -29,6 +30,7 @@ import {
   MessageSquareText,
   ScanLine,
   Undo2,
+  ShieldPlus,
 } from "lucide-react";
 
 const IndividualDashboard = () => {
@@ -85,6 +87,10 @@ const IndividualDashboard = () => {
       title: "EOD",
       icon: History,
     },
+    {
+      title: "Insurance",
+      icon: ShieldPlus,
+    }
   ]);
 
   useEffect(() => {
@@ -204,7 +210,9 @@ const IndividualDashboard = () => {
               {activeTab === "Reversal" && (
                 <Reversal caseId={caseId} individualId={individualId} />
               )}
-              {/* {activeTab === "Reversal" && <ForeignTransactions />} */}
+              {activeTab === "Insurance" && (
+                <Insurance caseId={caseId} individualId={individualId} />
+              )}
             </main>
           </div>
         </ScrollArea>

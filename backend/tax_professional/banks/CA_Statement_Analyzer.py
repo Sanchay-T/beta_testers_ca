@@ -7,6 +7,7 @@ from openpyxl import Workbook, load_workbook
 import sys
 import json
 import pandas as pd
+
 bold_font = Font(bold=True)
 pd.options.display.float_format = "{:,.2f}".format
 pd.set_option("display.max_columns", None)
@@ -15,29 +16,33 @@ pd.set_option("display.width", None)
 BASE_DIR = os.path.dirname(os.path.abspath(os.path.join(__file__, "../../../")))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 from ...utils import get_saved_pdf_dir, get_saved_excel_dir
+
 # from findaddy.exceptions import ExtractionError
 TEMP_SAVED_PDF_DIR = get_saved_pdf_dir()
 TEMP_SAVED_EXCEL_DIR = get_saved_excel_dir()
 
-from ...common_functions import (process_excel_to_json,process_name_n_num_df,category_add_ca,
-                              another_method,Upi,eod,opening_and_closing_bal,summary_sheet,
-                              transaction_sheet,total_investment,redemption_investment,
-                              creditor_list,debtor_list, cash_withdraw, cash_depo, div_int, emi,
-                              refund_reversal, suspense_credit, suspense_debit, payment,receipt,
-                              calculate_fixed_day_average, process_avg_last_6_months, extraction_process,
-                              color_summary_sheet, format_numbers_with_commas, adjust_column_widths_for_varied_sheets,
-                              Summary_note, Investment_note, CreditorList_note, DebtorList_note, CashWithdrawalt_note,
-                              Cash_Deposit_note, Emi_note, Refund_note, Suspense_Credit_note, Suspense_Debit_note,
-                              add_filters_to_excel, create_excel_sheet, color_excel_tabs_inplace, sort_dataframes_by_date,
-                              extraction_process_explicit_lines, process_transactions, get_total_pdf_pages)
+from ...common_functions import (process_excel_to_json, process_name_n_num_df, category_add_ca,
+                                 another_method, Upi, eod, opening_and_closing_bal, summary_sheet,
+                                 transaction_sheet, total_investment, redemption_investment,
+                                 creditor_list, debtor_list, cash_withdraw, cash_depo, div_int, emi,
+                                 refund_reversal, suspense_credit, suspense_debit, payment, receipt,
+                                 calculate_fixed_day_average, process_avg_last_6_months, extraction_process,
+                                 color_summary_sheet, format_numbers_with_commas,
+                                 adjust_column_widths_for_varied_sheets,
+                                 Summary_note, Investment_note, CreditorList_note, DebtorList_note,
+                                 CashWithdrawalt_note,
+                                 Cash_Deposit_note, Emi_note, Refund_note, Suspense_Credit_note, Suspense_Debit_note,
+                                 add_filters_to_excel, create_excel_sheet, color_excel_tabs_inplace,
+                                 sort_dataframes_by_date,
+                                 extraction_process_explicit_lines, process_transactions, get_total_pdf_pages)
+
 
 def save_to_excel(df, name_n_num_df, account_number):
-
     # Generate all necessary DataFrames
     eod_sheet_df = eod(df)
     opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df, df)
 
-    summary_df_list = summary_sheet(df, opening_bal, closing_bal, df)
+    summary_df_list, missing_months_list = summary_sheet(df, opening_bal, closing_bal, df)
 
     particulars_df = summary_df_list[0]
     income_receipts_df = summary_df_list[1]
@@ -68,13 +73,13 @@ def save_to_excel(df, name_n_num_df, account_number):
 
     bank_avg_balance_df = calculate_fixed_day_average(eod_sheet_df)
     loan_value_df = process_avg_last_6_months(bank_avg_balance_df, eod_sheet_df)
-    
-    os.makedirs(TEMP_SAVED_EXCEL_DIR, exist_ok=True)    
+
+    os.makedirs(TEMP_SAVED_EXCEL_DIR, exist_ok=True)
     filename = os.path.join(TEMP_SAVED_EXCEL_DIR, f"Bank_{account_number}_Extracted_statements_file.xlsx")
 
     writer = pd.ExcelWriter(filename, engine="xlsxwriter")
 
-    #start converting to excel
+    # start converting to excel
     sheet_name = "Summary"
     name_n_num_df.to_excel(writer, sheet_name=sheet_name, index=False)
 
@@ -155,7 +160,7 @@ def save_to_excel(df, name_n_num_df, account_number):
     receipt_df.to_excel(writer, sheet_name='Receipt Voucher', index=False)
     writer.close()
 
-    #added color formatting nd filter functionalities
+    # added color formatting nd filter functionalities
     color_summary_sheet(filename)
     format_numbers_with_commas(filename)
     sheet_specs = {
@@ -425,7 +430,7 @@ def returns_json_output_of_all_sheets(df, name_n_num_df):
     eod_sheet_df = eod(df)
     opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df, df)
 
-    summary_df_list = summary_sheet(df, opening_bal, closing_bal, df)
+    summary_df_list, missing_months_list = summary_sheet(df, opening_bal, closing_bal, df)
 
     particulars_df = summary_df_list[0]
     income_receipts_df = summary_df_list[1]
@@ -433,7 +438,6 @@ def returns_json_output_of_all_sheets(df, name_n_num_df):
     other_expenses_df = summary_df_list[3]
     contra_credit_df = summary_df_list[4]
     contra_debit_df = summary_df_list[5]
-
 
     df['Value Date'] = pd.to_datetime(df['Value Date']).dt.strftime('%d-%m-%Y')
     transaction_sheet_df = transaction_sheet(df)
@@ -491,17 +495,17 @@ def returns_json_output_of_all_sheets(df, name_n_num_df):
     json_output = json.dumps(result_dict, indent=4)
     with open("new_output.json", "w") as file:
         file.write(json_output)
-    return json_output
+    return json_output, missing_months_list
 
 
-def refresh_category_all_sheets(df, eod_sheet_df, new_categories):
-
+def refresh_category_all_sheets(df, new_categories):
+    eod_sheet_df = eod(df)
     opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df, df)
 
     if not new_categories:
-        summary_df_list = summary_sheet(df, opening_bal, closing_bal, df)
+        summary_df_list, missing_months_list = summary_sheet(df, opening_bal, closing_bal, df)
     else:
-        summary_df_list = summary_sheet(df, opening_bal, closing_bal, df, new_categories)
+        summary_df_list, missing_months_list = summary_sheet(df, opening_bal, closing_bal, df, new_categories)
 
     particulars_df = summary_df_list[0]
     income_receipts_df = summary_df_list[1]
@@ -509,7 +513,6 @@ def refresh_category_all_sheets(df, eod_sheet_df, new_categories):
     other_expenses_df = summary_df_list[3]
     contra_credit_df = summary_df_list[4]
     contra_debit_df = summary_df_list[5]
-
 
     df['Value Date'] = pd.to_datetime(df['Value Date']).dt.strftime('%d-%m-%Y')
     # transaction_sheet_df = transaction_sheet(df)
@@ -567,125 +570,8 @@ def refresh_category_all_sheets(df, eod_sheet_df, new_categories):
     return json_output
 
 
-# def start_extraction_edit_pdf(bank_names, pdf_paths, passwords, start_dates, end_dates, CA_ID, progress_data, aiyazs_array_of_array, whole_transaction_sheet=None):
-#     account_number = ""
-#     dfs = {}
-#     name_dfs = {}
-#     errorz = {}
-#     pdf_paths_not_extracted = {
-#         "bank_names": [],
-#         "paths": [],
-#         "passwords": [],
-#         "start_dates": [],
-#         "end_dates": [],
-#         "respective_list_of_columns": [],
-#         "respective_reasons_for_error": []
-#     }
-#     i = 0
-#
-#     for bank in bank_names:
-#         bank = str(f"{bank}{i}")
-#         pdf_path = pdf_paths[i]
-#         pdf_password = passwords[i]
-#         start_date = start_dates[i]
-#         end_date = end_dates[i]
-#         aiyaz_array_of_array = aiyazs_array_of_array[i]
-#         print("aiyaz_array_of_array from ca statement analyzer - ", aiyaz_array_of_array)
-#
-#         # Iterate through the columns to extract start and end coordinates
-#         # Extracting unique "start" and "end" coordinates
-#         explicit_lines = list(
-#             {coord for item in aiyaz_array_of_array for coord in (item["bounds"]["start"], item["bounds"]["end"])}
-#         )
-#         labels = [[entry["index"], entry["column_type"]] for entry in aiyaz_array_of_array]
-#
-#
-#         dfs[bank], name_dfs[bank], errorz[bank] = extraction_process_explicit_lines(bank, pdf_path, pdf_password, start_date, end_date, explicit_lines, labels)
-#
-#         print(f"Extracted {bank} bank statement successfully")
-#         # account_number += f"{name_dfs[bank][1][:4]}x{name_dfs[bank][1][-4:]}_"
-#         # Check if the extracted dataframe is empty
-#         if dfs[bank].empty:
-#             pdf_paths_not_extracted["bank_names"].append(bank)
-#             pdf_paths_not_extracted["paths"].append(pdf_path)
-#             pdf_paths_not_extracted["passwords"].append(pdf_password)
-#             pdf_paths_not_extracted["start_dates"].append(start_date)
-#             pdf_paths_not_extracted["end_dates"].append(end_date)
-#             pdf_paths_not_extracted["respective_list_of_columns"].append(name_dfs[bank])
-#             pdf_paths_not_extracted["respective_reasons_for_error"].append(errorz[bank])
-#             del dfs[bank]
-#             del name_dfs[bank]
-#         i += 1
-#
-#     print("|------------------------------|")
-#     print(account_number)
-#     print("|------------------------------|")
-#
-#     if not dfs:
-#         folder_path = "saved_pdf"
-#         try:
-#             shutil.rmtree(folder_path)
-#             print(f"Removed all contents in '{folder_path}'")
-#         except Exception as e:
-#             print(f"Failed to remove '{folder_path}': {e}")
-#
-#         return {"sheets_in_json": None, 'pdf_paths_not_extracted': pdf_paths_not_extracted}
-#
-#     else:
-#         data = []
-#         # num_pairs = len(pd.Series(dfs).to_dict())
-#
-#         for key, value in name_dfs.items():
-#             bank_name = key
-#             acc_name = value[0]
-#             acc_num = value[1]
-#
-#             if str(acc_num) == "None":
-#                 masked_acc_num = "None"
-#             else:
-#                 masked_acc_num = "X" * (len(acc_num) - 4) + acc_num[-4:]
-#             data.append([masked_acc_num, acc_name, bank_name])
-#             for item in data:
-#                 item[2] = "".join(
-#                     character for character in item[2] if character.isalpha()
-#                 )
-#
-#         name_n_num_df = process_name_n_num_df(data)
-#         list_of_dataframes = list(dfs.values())
-#
-#         if whole_transaction_sheet is not None:
-#             list_of_dataframes.append(whole_transaction_sheet)
-#
-#         # print("list_of_dataframes - ", list_of_dataframes)
-#
-#         # arrange dfs
-#         initial_df = pd.concat(sort_dataframes_by_date(list_of_dataframes)).fillna("").reset_index(drop=True)
-#         initial_df = initial_df.drop_duplicates(keep="first")
-#
-#         df = category_add_ca(initial_df)
-#         new_tran_df = another_method(df)
-#         new_tran_df = Upi(new_tran_df)
-#         # print(new_tran_df)
-#
-#         #############################------------------------#######################################
-#
-#         json_lists_of_df = returns_json_output_of_all_sheets(new_tran_df, name_n_num_df)
-#         # excel_file_path = reconstruct_dict_from_json_save_to_excel(json_lists_of_df, account_number, CA_ID)
-#         # print(excel_file_path)
-#
-#         # output_json = process_excel_to_json(filename)
-#
-#         folder_path = "saved_pdf"
-#         try:
-#             shutil.rmtree(folder_path)
-#             print(f"Removed all contents in '{folder_path}'")
-#         except Exception as e:
-#             print(f"Failed to remove '{folder_path}': {e}")
-#
-#         return {"sheets_in_json": json_lists_of_df, 'pdf_paths_not_extracted': pdf_paths_not_extracted}
-
-
-def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_dates, CA_ID, progress_data, whole_transaction_sheet=None, aiyazs_array_of_array=None):
+def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_dates, CA_ID, progress_data,
+                             whole_transaction_sheet=None, aiyazs_array_of_array=None):
     account_number = ""
     dfs = {}
     name_dfs = {}
@@ -713,12 +599,16 @@ def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_
             aiyaz_array_of_array = aiyazs_array_of_array[i]
             print("aiyaz_array_of_array from ca statement analyzer - ", aiyaz_array_of_array)
             # Iterate through the columns to extract start and end coordinates
-            explicit_lines = list({coord for item in aiyaz_array_of_array for coord in (item["bounds"]["start"], item["bounds"]["end"])})
+            explicit_lines = list(
+                {coord for item in aiyaz_array_of_array for coord in (item["bounds"]["start"], item["bounds"]["end"])})
             labels = [[entry["index"], entry["column_type"]] for entry in aiyaz_array_of_array]
-            dfs[bank], name_dfs[bank], errorz[bank] = extraction_process_explicit_lines(bank, pdf_path, pdf_password, start_date, end_date, explicit_lines, labels)
+            dfs[bank], name_dfs[bank], errorz[bank] = extraction_process_explicit_lines(bank, pdf_path, pdf_password,
+                                                                                        start_date, end_date,
+                                                                                        explicit_lines, labels)
 
         else:
-            dfs[bank], name_dfs[bank], errorz[bank] = extraction_process(bank, pdf_path, pdf_password, start_date, end_date)
+            dfs[bank], name_dfs[bank], errorz[bank] = extraction_process(bank, pdf_path, pdf_password, start_date,
+                                                                         end_date)
 
         print(f"Extracted {bank} bank statement successfully")
         # account_number += f"{name_dfs[bank][1][:4]}x{name_dfs[bank][1][-4:]}_"
@@ -748,7 +638,8 @@ def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_
         except Exception as e:
             print(f"Failed to remove '{folder_path}': {e}")
 
-        return {"sheets_in_json": None, 'pdf_paths_not_extracted': pdf_paths_not_extracted}
+        return {"sheets_in_json": None, 'pdf_paths_not_extracted': pdf_paths_not_extracted, 'success_page_number': 0,
+                'missing_months_list': []}
 
     else:
         data = []
@@ -784,7 +675,7 @@ def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_
         # print(new_tran_df)
         #############################------------------------#######################################
 
-        json_lists_of_df = returns_json_output_of_all_sheets(new_tran_df, name_n_num_df)
+        json_lists_of_df, missing_months_list = returns_json_output_of_all_sheets(new_tran_df, name_n_num_df)
 
         # excel_file_path = save_to_excel(new_tran_df, name_n_num_df, account_number)
         # print(excel_file_path)
@@ -801,133 +692,8 @@ def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_
             print(f"Failed to remove '{folder_path}': {e}")
         # print(name_n_num_df)
 
-        return {"sheets_in_json": json_lists_of_df, 'pdf_paths_not_extracted': pdf_paths_not_extracted, 'success_page_number': time_saved_pages}
-
-
-
-
-
-
-##################################
-# aiyaz_array_of_array = [
-#         [
-#             {
-#                 "index": 0,
-#                 "bounds": {
-#                     "start": 55.64100999098557,
-#                     "end": 69.48716383713942
-#                 },
-#                 "type": null
-#             },
-#             {
-#                 "index": 1,
-#                 "bounds": {
-#                     "start": 69.48716383713942,
-#                     "end": 146.41024076021634
-#                 },
-#                 "type": "date"
-#             },
-#             {
-#                 "index": 2,
-#                 "bounds": {
-#                     "start": 146.41024076021634,
-#                     "end": 194.8717792217548
-#                 },
-#                 "type": null
-#             },
-#             {
-#                 "index": 3,
-#                 "bounds": {
-#                     "start": 194.8717792217548,
-#                     "end": 321.02562537560095
-#                 },
-#                 "type": "description"
-#             },
-#             {
-#                 "index": 4,
-#                 "bounds": {
-#                     "start": 321.02562537560095,
-#                     "end": 398.71793306790863
-#                 },
-#                 "type": null
-#             },
-#             {
-#                 "index": 5,
-#                 "bounds": {
-#                     "start": 398.71793306790863,
-#                     "end": 473.3333176832933
-#                 },
-#                 "type": "amount (dr/cr)"
-#             },
-#             {
-#                 "index": 6,
-#                 "bounds": {
-#                     "start": 473.3333176832933,
-#                     "end": 529.4871638371394
-#                 },
-#                 "type": "balance"
-#             }
-#         ],
-#         [
-#             {
-#                 "index": 0,
-#                 "bounds": {
-#                     "start": 20.25639460637019,
-#                     "end": 99.48716383713942
-#                 },
-#                 "type": "date"
-#             },
-#             {
-#                 "index": 1,
-#                 "bounds": {
-#                     "start": 99.48716383713942,
-#                     "end": 161.02562537560095
-#                 },
-#                 "type": null
-#             },
-#             {
-#                 "index": 2,
-#                 "bounds": {
-#                     "start": 161.02562537560095,
-#                     "end": 349.4871638371394
-#                 },
-#                 "type": "balance"
-#             },
-#             {
-#                 "index": 3,
-#                 "bounds": {
-#                     "start": 349.4871638371394,
-#                     "end": 394.10254845252405
-#                 },
-#                 "type": null
-#             },
-#             {
-#                 "index": 4,
-#                 "bounds": {
-#                     "start": 394.10254845252405,
-#                     "end": 446.4102407602163
-#                 },
-#                 "type": "debit"
-#             },
-#             {
-#                 "index": 5,
-#                 "bounds": {
-#                     "start": 446.4102407602163,
-#                     "end": 497.1794715294471
-#                 },
-#                 "type": "credit"
-#             },
-#             {
-#                 "index": 6,
-#                 "bounds": {
-#                     "start": 497.1794715294471,
-#                     "end": 571.7948561448317
-#                 },
-#                 "type": "balance"
-#             }
-#         ]
-# ]
-#
+        return {"sheets_in_json": json_lists_of_df, 'pdf_paths_not_extracted': pdf_paths_not_extracted,
+                'success_page_number': time_saved_pages, 'missing_months_list': missing_months_list}
 
 # #
 # bank_names = ["AXIS"]

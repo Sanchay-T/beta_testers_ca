@@ -2420,7 +2420,9 @@ def make_summary_great_again(df1, opening_closing_balance, df2):
     contra_credit_summary = generate_summary(contra_credit_table, "Credit", "Contra Credit")
     contra_debit_summary = generate_summary(contra_debit_table, "Debit", "Contra Debit")
 
-    return particulars_table, income_summary, important_summary, other_summary, contra_credit_summary, contra_debit_summary
+    missing_months_list = get_missing_months(opening_closing_balance, new_opening_closing_balance)
+
+    return particulars_table, income_summary, important_summary, other_summary, contra_credit_summary, contra_debit_summary, missing_months_list
 
 
 def summary_sheet(idf, open_bal, close_bal, new_tran_df, new_categories = None):
@@ -2440,10 +2442,10 @@ def summary_sheet(idf, open_bal, close_bal, new_tran_df, new_categories = None):
     # Append new data
     df2 = pd.concat([df2, df_new], ignore_index=True)
 
-    sheet_1, sheet_2, sheet_3, sheet_4, sheet_5, sheet_6 = make_summary_great_again(new_tran_df, opening_closing_balance, df2)
+    sheet_1, sheet_2, sheet_3, sheet_4, sheet_5, sheet_6, missing_months_list = make_summary_great_again(new_tran_df, opening_closing_balance, df2)
     df_list = [sheet_1, sheet_2, sheet_3, sheet_4, sheet_5, sheet_6]
 
-    return df_list
+    return df_list, missing_months_list
 
 
 def transaction_sheet( df):
@@ -4632,6 +4634,19 @@ def sort_dataframes_by_date(dataframes):
 
     return sorted_dataframes
 
+
+def get_missing_months(opening_closing_balance, balances):
+
+    # Extract months from both dictionaries
+    opening_closing_months = set(opening_closing_balance.keys())
+    balances_months = set(balances.keys())
+
+    # Find months in balances but not in opening_closing_balance
+    missing_months = list(balances_months - opening_closing_months)
+
+    missing_months.sort(key=lambda x: pd.to_datetime(x, format='%b-%Y'))
+
+    return missing_months
 
 
 def process_transactions(df):

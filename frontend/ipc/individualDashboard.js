@@ -683,6 +683,63 @@ function registerIndividualDashboardIpc() {
       }
     }
   );
+
+  // Handler for getting Insurance transactions
+  ipcMain.handle(
+    "get-transactions-by-insurance",
+    async (event, caseId, individualId, categories = ["General Insurance", "Life insurance"]) => {
+      try {
+        // Validate categories input
+        if (!Array.isArray(categories) || categories.length === 0) {
+          throw new Error("Categories must be a non-empty array");
+        }
+  
+        if (individualId) {
+          // Query for specific individual
+          const result = await db
+            .select()
+            .from(transactions)
+            .where(
+              and(
+                eq(transactions.statementId, individualId.toString()),
+                inArray(transactions.category, categories)
+              )
+            );
+          return result;
+        } else {
+          // Query for all statements in the case
+          const allStatements = await db
+            .select()
+            .from(statements)
+            .where(eq(statements.caseId, caseId));
+          
+          const statementIds = allStatements.map((stmt) => stmt.id.toString());
+          
+          // Return empty array if no statements found
+          if (statementIds.length === 0) {
+            return [];
+          }
+  
+          const result = await db
+            .select()
+            .from(transactions)
+            .where(
+              and(
+                inArray(transactions.statementId, statementIds),
+                inArray(transactions.category, categories)
+              )
+            );
+          return result;
+        }
+      } catch (error) {
+        log.error(
+          "Error fetching insurance transactions:",
+          error
+        );
+        throw error;
+      }
+    }
+  );
 }
 
 module.exports = { registerIndividualDashboardIpc };
