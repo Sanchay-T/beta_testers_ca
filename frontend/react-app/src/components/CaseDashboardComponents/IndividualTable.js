@@ -28,6 +28,9 @@ import {
 } from "../ui/pagination";
 import { cn } from "../../lib/utils";
 import { Button } from "../ui/button";
+import PDFMarkerModal from "../MainDashboardComponents/PdfMarkerModal";
+import { toast } from "../../hooks/use-toast";
+// import IndividualDashboard from "@/Pages/IndividualDashboard";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -36,19 +39,23 @@ const IndividualTable = ({ caseId }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [statements, setStatements] = useState([]);
+  const [isMarkerModalOpen, setIsMarkerModalOpen] = useState(false);
+  const [selectedFailedFile, setSelectedFailedFile] = useState(null);
+  const [pdfEditLoading, setPdfEditLoading] = useState(false);
+  const [failedDatasOfCurrentReport, setFailedDatasOfCurrentReport] = useState(
+    []
+  );
+  const [currentCaseName, setCurrentCaseName] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchStatements = async () => {
       setIsLoading(true);
       try {
-        // console.log("Fetching statements for caseId:", caseId);
-        // Call the IPC handler to get statements
         const result = await window.electron.getStatements(caseId);
-        // console.log("Statements fetched successfully:", result);
         setStatements(result);
       } catch (error) {
-        // console.error("Error fetching statements:", error);
+        console.error("Error fetching statements:", error);
       } finally {
         setIsLoading(false);
       }
@@ -58,7 +65,6 @@ const IndividualTable = ({ caseId }) => {
     }
   }, [caseId]);
 
-  // Filter data based on search term
   const filteredData = statements.filter((item) => {
     const name = item.customerName || "";
     const accountNumber = item.accountNumber || "";
@@ -72,6 +78,11 @@ const IndividualTable = ({ caseId }) => {
       individualId.toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
+  const handleSaveMarkerData = (data) => {
+    // Handle saving marker data here
+    console.log("recent reports failed pdf handleSave data:", data);
+    setIsMarkerModalOpen(false);
+  };
 
   const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -80,11 +91,7 @@ const IndividualTable = ({ caseId }) => {
     startIndex + ITEMS_PER_PAGE
   );
 
-  // console.log("currentData", currentData);
-
   const handleRowClick = async (name, accountNumber, individualId) => {
-    // console.log("name", name);
-    // console.log("indivivdual table", individualId);
     setIsLoading(true);
     try {
       navigate(`/individual-dashboard/${caseId}/${individualId}/defaultTab`);
@@ -93,7 +100,28 @@ const IndividualTable = ({ caseId }) => {
     }
   };
 
-  // console.log("caseId", caseId);
+  const handleRectify = (filePath) => {
+    try {
+      const selectedFile = statements.find(
+        (stmt) => stmt.filePath === filePath
+      );
+      if (!selectedFile) {
+        console.error("File not found in statements list:", filePath);
+        return;
+      }
+
+      console.log("Selected file from DB:", selectedFile);
+      setSelectedFailedFile(selectedFile);
+      setIsMarkerModalOpen(true);
+    } catch (error) {
+      console.error("Error handling rectify:", error);
+    }
+  };
+
+  // const handleModalClose = () => {
+  //   setIsMarkerModalOpen(false);
+  //   setSelectedFailedFile(null);
+  // };
 
   const getPageNumbers = () => {
     const pageNumbers = [];
@@ -134,15 +162,6 @@ const IndividualTable = ({ caseId }) => {
     }
   };
 
-  const handleCombinedDashboardClick = (caseId) => {
-    setIsLoading(true);
-    try {
-      navigate(`/individual-dashboard/${caseId}/defaultTab`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="p-8 space-y-8">
       <Card>
@@ -155,9 +174,6 @@ const IndividualTable = ({ caseId }) => {
               </CardDescription>
             </div>
             <div className="relative flex items-center space-x-4">
-              <Button onClick={() => handleCombinedDashboardClick(caseId)}>
-                Combined Dashboard
-              </Button>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -202,8 +218,23 @@ const IndividualTable = ({ caseId }) => {
                   >
                     <TableCell>{startIndex + index + 1}</TableCell>
                     <TableCell>
-                      <div className="truncate max-w-96" title={item.filePath}>
-                        {item.filePath.split("\\").pop()}
+                      <div className="flex flex-row justify-between">
+                        <div
+                          className="truncate max-w-96"
+                          title={item.filePath}
+                        >
+                          {item.filePath.split("\\").pop()}
+                        </div>
+                        <div className="-space-x-2">
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent row click
+                              handleRectify(item.filePath);
+                            }}
+                          >
+                            Rectify
+                          </Button>
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>{item.customerName}</TableCell>
@@ -255,6 +286,17 @@ const IndividualTable = ({ caseId }) => {
           </div>
         </CardContent>
       </Card>
+
+      <PDFMarkerModal
+        isOpen={isMarkerModalOpen}
+        // onClose={handleModalClose}
+        selectedFailedFile={selectedFailedFile}
+        source={"indiviualDasboard"}
+        setFailedDatasOfCurrentReport={setFailedDatasOfCurrentReport}
+        failedDatasOfCurrentReport={failedDatasOfCurrentReport}
+        currentCaseName={currentCaseName}
+      />
+
       {isLoading && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin" />

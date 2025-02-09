@@ -840,20 +840,20 @@ function generateReportIpc(tmpdir_path) {
       );
 
       // Step 8: Handle file cleanup
-      for (const filePath of allProcessedFiles) {
-        try {
-          if (fs.existsSync(filePath)) {
-            if (failedFiles.has(filePath)) {
-              log.info(`Failed PDF retained: ${filePath}`);
-            } else if (successfulFiles.has(filePath)) {
-              fs.unlinkSync(filePath);
-              log.info(`Successfully deleted processed file: ${filePath}`);
-            }
-          }
-        } catch (error) {
-          log.error(`Error handling file ${filePath}:`, error);
-        }
-      }
+      // for (const filePath of allProcessedFiles) {
+      //   try {
+      //     if (fs.existsSync(filePath)) {
+      //       if (failedFiles.has(filePath)) {
+      //         log.info(`Failed PDF retained: ${filePath}`);
+      //       } else if (successfulFiles.has(filePath)) {
+      //         fs.unlinkSync(filePath);
+      //         log.info(`Successfully deleted processed file: ${filePath}`);
+      //       }
+      //     }
+      //   } catch (error) {
+      //     log.error(`Error handling file ${filePath}:`, error);
+      //   }
+      // }
 
       return {
         success: true,
