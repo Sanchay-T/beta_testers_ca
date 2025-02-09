@@ -498,8 +498,8 @@ def returns_json_output_of_all_sheets(df, name_n_num_df):
     return json_output, missing_months_list
 
 
-def refresh_category_all_sheets(df, new_categories):
-    eod_sheet_df = eod(df)
+def refresh_category_all_sheets(df,eod_sheet_df, new_categories):
+    # eod_sheet_df = eod(df)
     opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df, df)
 
     if not new_categories:

@@ -12,6 +12,10 @@ const statements = sqliteTable("statements", {
   bankName: text("bank_name"),
   filePath: text("file_path").notNull().default("downloads"),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  startDate: integer("start_date", { mode: "timestamp" }),
+  endDate: integer("end_date", { mode: "timestamp" }),
+  password: text("password"),
+
 });
 
 module.exports = { statements };

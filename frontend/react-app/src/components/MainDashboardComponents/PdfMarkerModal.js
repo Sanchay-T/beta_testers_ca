@@ -23,29 +23,41 @@ const PDFMarkerModal = ({
   };
 
   const addColsToStatementData = (pdfPath, columns) => {
+    console.log({pdfPath,columns,selectedFailedFile})
     if (!selectedFailedFile) return;
-    if (selectedFailedFile.path !== pdfPath) return;
+    if(selectedFailedFile.path && selectedFailedFile.path !== pdfPath) return;
+
+    console.log("h2ey")
     selectedFailedFile.rectifiedColumns = columns;
     selectedFailedFile.resolved = true;
-    setFailedDatasOfCurrentReport((prev) =>
-      prev.map((item) =>
-        item.path === selectedFailedFile.path ? selectedFailedFile : item
-      )
-    );
+
+    if(source==="indiviualDashboard"){
+      handleSubmitEditPdf(selectedFailedFile)
+    }else{
+      setFailedDatasOfCurrentReport((prev) =>
+        prev.map((item) =>
+          item.path === selectedFailedFile.path ? selectedFailedFile : item
+    )
+  );
+    }
+
+    
+
+    if(source==="indiviualDashboard"){
+      console.log("Submitting form as source is indiviualDashboard")
+    }
 
     onClose();
   };
 
-  const handleSubmitEditPdf = async () => {
+  const handleSubmitEditPdf = async (modifiedelectedFailedFile) => {
+    // Edit pdf submit for individual table 
     setPdfEditLoading(true);
-    const allRectified = failedDatasOfCurrentReport.every(
-      (statement) => statement.resolved
-    );
+    console.log({modifiedelectedFailedFile})
 
-    if (allRectified) {
       // Call the API to update the statements
       const result = await window.electron.editPdf(
-        failedDatasOfCurrentReport,
+        [modifiedelectedFailedFile],
         currentCaseName
       );
       console.log("result", result);
@@ -85,15 +97,7 @@ const PDFMarkerModal = ({
           duration: 6000,
         });
       }
-    } else {
-      toast({
-        title: "Contact Sales",
-        description:
-          "Unable to rectify all statements. Please contact our sales team for assistance.",
-        variant: "destructive",
-        duration: 5000,
-      });
-    }
+  
     setPdfEditLoading(false);
   };
 
@@ -113,11 +117,7 @@ const PDFMarkerModal = ({
           <PdfMarker
             addColsToStatementData={addColsToStatementData}
             initialConfig={initialConfigFormatted}
-            pdfPath={
-              source === "indiviualDasboard"
-                ? selectedFailedFile?.filePath
-                : selectedFailedFile?.path
-            }
+            pdfPath={selectedFailedFile?.path}
           />
         ) : (
           <div className="text-center text-red-500">

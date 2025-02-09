@@ -92,7 +92,7 @@ const CaseDashboard = () => {
             {activeTab === "Acc No and Acc Name" && (
               <AccountNumNameManager caseId={caseId} />
             )}
-            {activeTab === "Reports" && <IndividualTable caseId={caseId} />}
+            {activeTab === "Reports" && <IndividualTable caseId={caseId} caseName={reportNameFromDb} />}
             {activeTab === "Combined Table" && <CombinedTable />}
             {activeTab === "Import to Tally" && <TallyDirectImport caseId={caseId}/>}
           </main>

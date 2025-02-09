@@ -96,8 +96,6 @@ const IndividualDashboard = () => {
       title: "Contra",
       icon: IndianRupee,
     },
-  ];
-    }
   ]);
 
   useEffect(() => {

@@ -302,7 +302,7 @@ export default function GenerateReport() {
                   <li key={index} className="text-red-400">{statement}</li>
                 ))}
                 {successfulStatements.map((statement, index) => (
-                  <li key={index} className="text-green-400">{statement}</li>
+                  <li key={index} className="text-green-700">{statement}</li>
                 ))}
               </ul>
             </div>

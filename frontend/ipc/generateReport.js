@@ -35,9 +35,9 @@ const validateAndTransformTransaction = (transaction, statementId) => {
 
   let date = null;
   try {
-    log.info({"before":"conversion",before:transaction["Value Date"]})
+    // log.info({"before":"conversion",before:transaction["Value Date"]})
     const [day, month, year] = transaction["Value Date"].split("-");
-    log.info({"after":"conversion",day,month,year})
+    // log.info({"after":"conversion",day,month,year})
     date = new Date(year, month - 1, day);
     if (isNaN(date.getTime())) {
       throw new Error("Invalid date");
@@ -282,6 +282,12 @@ const processStatementAndEOD = async (
 
     // Process Statement and Transactions
     try {
+      const [day1, month1, year1] = fileDetail["start_date"].split("-");
+      const start_date = new Date(year1, month1 - 1, day1);
+
+      const [day2, month2, year2] = fileDetail["end_date"].split("-");
+      const end_date = new Date(year2, month2 - 1, day2);
+
       const statementData = {
         caseId: validCaseId,
         accountNumber: accountNumber,
@@ -290,6 +296,9 @@ const processStatementAndEOD = async (
         bankName: fileDetail.bankName,
         filePath: fileDetail.pdf_paths,
         createdAt: new Date(),
+        startDate: start_date,
+        endDate: end_date,
+        password:fileDetail.passwords
       };
 
       log.info({ addingStatementData: statementData });
@@ -782,6 +791,8 @@ function generateReportIpc(tmpdir_path) {
 
       // Step 5: Process each file
       const processedData = [];
+      log.info({ exampleFileDetails: fileDetails });
+
       for (const fileDetail of fileDetails) {
         try {
           const result = await processStatementAndEOD(
@@ -963,14 +974,16 @@ function generateReportIpc(tmpdir_path) {
         // Get the case ID
         const validCaseId = await getOrCreateCase(caseName);
 
-        // Store failed statements in the database
-        await db.insert(failedStatements).values({
-          caseId: validCaseId,
-          data: JSON.stringify(modifiedData),
-        });
+        log.info({validCaseId})
 
-        // Track failed PDF paths
-        failedPdfPaths = modifiedData.paths || [];
+        // // Store failed statements in the database
+        // await db.insert(failedStatements).values({
+        //   caseId: validCaseId,
+        //   data: JSON.stringify(modifiedData),
+        // });
+
+        // // Track failed PDF paths
+        // failedPdfPaths = modifiedData.paths || [];
         log.warn("Some PDF paths were not extracted", failedPdfPaths);
       }
 

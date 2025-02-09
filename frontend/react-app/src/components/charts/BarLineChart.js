@@ -24,7 +24,7 @@ const BarLineChart = ({
   xAxisKey = null,
   columnTypes = {},
 }) => {
-  const [columnsToIgnore, setColumnsToIgnore] = useState(["transactionId","Balance","balance"]);
+  const [columnsToIgnore, setColumnsToIgnore] = useState(["id","transactionId","Balance","balance"]);
 
   let columns = data.length > 0 ? Object.keys(data[0]) : [];
   columns = columns.filter((column) => !columnsToIgnore.includes(column));

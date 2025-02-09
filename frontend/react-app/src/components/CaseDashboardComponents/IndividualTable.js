@@ -34,11 +34,13 @@ import { toast } from "../../hooks/use-toast";
 
 const ITEMS_PER_PAGE = 10;
 
-const IndividualTable = ({ caseId }) => {
+const IndividualTable = ({ caseId,caseName }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [statements, setStatements] = useState([]);
+
+  // Rerun pdf states
   const [isMarkerModalOpen, setIsMarkerModalOpen] = useState(false);
   const [selectedFailedFile, setSelectedFailedFile] = useState(null);
   const [pdfEditLoading, setPdfEditLoading] = useState(false);
@@ -53,6 +55,7 @@ const IndividualTable = ({ caseId }) => {
       setIsLoading(true);
       try {
         const result = await window.electron.getStatements(caseId);
+        console.log({result})
         setStatements(result);
       } catch (error) {
         console.error("Error fetching statements:", error);
@@ -62,8 +65,9 @@ const IndividualTable = ({ caseId }) => {
     };
     if (caseId) {
       fetchStatements();
+      setCurrentCaseName(caseName)
     }
-  }, [caseId]);
+  }, [caseId,caseName]);
 
   const filteredData = statements.filter((item) => {
     const name = item.customerName || "";
@@ -110,8 +114,33 @@ const IndividualTable = ({ caseId }) => {
         return;
       }
 
-      console.log("Selected file from DB:", selectedFile);
-      setSelectedFailedFile(selectedFile);
+      const startDate =  new Date(selectedFile.startDate).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      }).replace(/\//g, "-")
+
+
+      const endDate = new Date(selectedFile.endDate).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      }).replace(/\//g, "-")
+
+      const tempSelectedFile = {
+        bankName:selectedFile.bankName,
+        caseId:selectedFile.caseId,
+        createdAt:selectedFile.createdAt,
+        customerName:selectedFile.customerName,
+        path:selectedFile.filePath,
+        id:selectedFile.id,
+        passwords:selectedFile.password,
+        startDate:startDate,
+        endDate:endDate,
+      }
+
+      console.log("Selected file from DB:", tempSelectedFile);
+      setSelectedFailedFile(tempSelectedFile);
       setIsMarkerModalOpen(true);
     } catch (error) {
       console.error("Error handling rectify:", error);
@@ -162,6 +191,15 @@ const IndividualTable = ({ caseId }) => {
     }
   };
 
+  const handleCombinedDashboardClick = (caseId) => {
+    setIsLoading(true);
+    try {
+      navigate(`/individual-dashboard/${caseId}/defaultTab`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="p-8 space-y-8">
       <Card>
@@ -174,6 +212,9 @@ const IndividualTable = ({ caseId }) => {
               </CardDescription>
             </div>
             <div className="relative flex items-center space-x-4">
+            <Button onClick={() => handleCombinedDashboardClick(caseId)}>
+                Combined Dashboard
+              </Button>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -194,6 +235,7 @@ const IndividualTable = ({ caseId }) => {
                 <TableHead>File Name</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Account Number</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -225,20 +267,23 @@ const IndividualTable = ({ caseId }) => {
                         >
                           {item.filePath.split("\\").pop()}
                         </div>
-                        <div className="-space-x-2">
+                   
+                      </div>
+                    </TableCell>
+                    <TableCell>{item.customerName}</TableCell>
+                    <TableCell>{item.accountNumber}</TableCell>
+                    <TableCell>
+                    <div className="-space-x-2">
                           <Button
                             onClick={(e) => {
                               e.stopPropagation(); // Prevent row click
                               handleRectify(item.filePath);
                             }}
                           >
-                            Rectify
+                            Re-run
                           </Button>
                         </div>
-                      </div>
                     </TableCell>
-                    <TableCell>{item.customerName}</TableCell>
-                    <TableCell>{item.accountNumber}</TableCell>
                   </TableRow>
                 ))
               )}
@@ -289,12 +334,12 @@ const IndividualTable = ({ caseId }) => {
 
       <PDFMarkerModal
         isOpen={isMarkerModalOpen}
-        // onClose={handleModalClose}
         selectedFailedFile={selectedFailedFile}
-        source={"indiviualDasboard"}
+        source={"indiviualDashboard"}
         setFailedDatasOfCurrentReport={setFailedDatasOfCurrentReport}
         failedDatasOfCurrentReport={failedDatasOfCurrentReport}
         currentCaseName={currentCaseName}
+        onClose={()=>setIsMarkerModalOpen(false)}
       />
 
       {isLoading && (

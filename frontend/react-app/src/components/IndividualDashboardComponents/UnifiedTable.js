@@ -97,8 +97,8 @@ const categoryOptionsfixed = [
     "Utility Bills",
     "Loan taken",
     "Loan Given",
-    "Self Transfer",
-    "Suspense"
+    "Self transfer",
+    "Suspense",
   ];
 
 
@@ -195,7 +195,7 @@ useEffect(() => {
           const modifiedRow = prevFilteredData.find(
             (prevRow) => prevRow.id === newRow.id
           );
-          return modifiedRow ? { ...newRow, category: modifiedRow.category } : newRow;
+          return modifiedRow ? { ...newRow, category: modifiedRow.category,entity:modifiedRow.entity } : newRow;
         });
       });
 
@@ -275,6 +275,7 @@ useEffect(() => {
   };
 
   const applyUploadedCategoryChanges = async () => {
+    // Suspense excel upload handle
     try {
         console.log("Applying category updates:", uploadedChanges);
         

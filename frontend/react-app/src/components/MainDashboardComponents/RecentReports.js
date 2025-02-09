@@ -306,6 +306,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         variant: "success",
         className: "bg-white text-black opacity-100 shadow-lg",
       });
+      setIsChecked(false);
     } catch (error) {
       console.error("Error deleting report:", error);
       toast({

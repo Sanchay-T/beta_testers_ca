@@ -378,6 +378,8 @@ function registerEditReportHandlers() {
                 eod_data: eod_data
             }
 
+            log.info({serverEndpoint,payload})
+
             // use axios 
             const response = await axios.post(serverEndpoint, payload, {
                 headers: { "Content-Type": "application/json" },
