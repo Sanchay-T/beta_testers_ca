@@ -29,70 +29,72 @@ const Upi = () => {
     return new Date(parseInt(year), monthIndex);
   };
 
+  const fetchData = async () => {
+    try {
+      const crResponse = await window.electron.getTransactionsByUpiCr(
+        caseId,
+        parseInt(individualId)
+      );
+      const drResponse = await window.electron.getTransactionsByUpiDr(
+        caseId,
+        parseInt(individualId)
+      );
+
+      // Transform UPI-Cr data
+      const transformedUpiCrData = crResponse.map((item) => ({
+        date: new Date(item.date).toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        }),
+        Description: item.description,
+        Credit: item.amount || 0,
+        Balance: item.balance || 0,
+        category: item.category || '-',
+        entity: item.entity || '-',
+        id: item.id,
+        monthKey: getMonthKey(item.date)
+      }));
+
+      // Transform UPI-Dr data
+      const transformedUpiDrData = drResponse.map((item) => ({
+        date: new Date(item.date).toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        }),
+        Description: item.description,
+        Debit: Math.abs(item.amount) || 0,
+        Balance: item.balance || 0,
+        category: item.category || '-',
+        entity: item.entity || '-',
+        transactionId: item.id,
+        monthKey: getMonthKey(item.date)
+      }));
+
+      // Get unique months for both Cr and Dr transactions
+      const uniqueMonthsCr = [...new Set(transformedUpiCrData.map(item => item.monthKey))]
+        .sort((a, b) => getMonthDate(a) - getMonthDate(b));
+      const uniqueMonthsDr = [...new Set(transformedUpiDrData.map(item => item.monthKey))]
+        .sort((a, b) => getMonthDate(a) - getMonthDate(b));
+
+      setUpiCrData(transformedUpiCrData);
+      setAvailableMonthsCr(uniqueMonthsCr);
+      setSelectedMonthsCr(uniqueMonthsCr);
+      
+      setUpiDrData(transformedUpiDrData);
+      setAvailableMonthsDr(uniqueMonthsDr);
+      setSelectedMonthsDr(uniqueMonthsDr);
+      setIsLoading(false);
+    } catch (err) {
+      console.error("Error fetching UPI transactions:", err);
+      setError("Failed to fetch UPI transaction data");
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const crResponse = await window.electron.getTransactionsByUpiCr(
-          caseId,
-          parseInt(individualId)
-        );
-        const drResponse = await window.electron.getTransactionsByUpiDr(
-          caseId,
-          parseInt(individualId)
-        );
-
-        // Transform UPI-Cr data
-        const transformedUpiCrData = crResponse.map((item) => ({
-          date: new Date(item.date).toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-          }),
-          Description: item.description,
-          Credit: item.amount || 0,
-          Balance: item.balance || 0,
-          category: item.category || '-',
-          entity: item.entity || '-',
-          id: item.id,
-          monthKey: getMonthKey(item.date)
-        }));
-
-        // Transform UPI-Dr data
-        const transformedUpiDrData = drResponse.map((item) => ({
-          date: new Date(item.date).toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-          }),
-          Description: item.description,
-          Debit: Math.abs(item.amount) || 0,
-          Balance: item.balance || 0,
-          category: item.category || '-',
-          entity: item.entity || '-',
-          transactionId: item.id,
-          monthKey: getMonthKey(item.date)
-        }));
-
-        // Get unique months for both Cr and Dr transactions
-        const uniqueMonthsCr = [...new Set(transformedUpiCrData.map(item => item.monthKey))]
-          .sort((a, b) => getMonthDate(a) - getMonthDate(b));
-        const uniqueMonthsDr = [...new Set(transformedUpiDrData.map(item => item.monthKey))]
-          .sort((a, b) => getMonthDate(a) - getMonthDate(b));
-
-        setUpiCrData(transformedUpiCrData);
-        setAvailableMonthsCr(uniqueMonthsCr);
-        setSelectedMonthsCr(uniqueMonthsCr);
-        
-        setUpiDrData(transformedUpiDrData);
-        setAvailableMonthsDr(uniqueMonthsDr);
-        setSelectedMonthsDr(uniqueMonthsDr);
-        setIsLoading(false);
-      } catch (err) {
-        console.error("Error fetching UPI transactions:", err);
-        setError("Failed to fetch UPI transaction data");
-        setIsLoading(false);
-      }
-    };
+  
 
     fetchData();
   }, [caseId, individualId]);
@@ -182,7 +184,9 @@ const Upi = () => {
                     />
                   </div>
                   <div>
-                    <UnifiedTable data={filteredCrData} title="UPI Credit Transactions" />
+                    <UnifiedTable data={filteredCrData} title="UPI Credit Transactions" 
+                    caseId={caseId} refreshFunction={fetchData}
+                    />
                   </div>
                 </>
               )}
@@ -220,7 +224,9 @@ const Upi = () => {
                     />
                   </div>
                   <div>
-                    <UnifiedTable data={filteredDrData} title="UPI Debit Transactions" />
+                    <UnifiedTable data={filteredDrData} title="UPI Debit Transactions" 
+                    caseId={caseId} refreshFunction={fetchData}
+                    />
                   </div>
                 </>
               )}

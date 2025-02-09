@@ -96,7 +96,7 @@ const categoryOptionsfixed = [
   ];
 
 
-const DataTable = ({ data = [], title, subtitle,caseId,source}) => {
+const DataTable = ({ data = [], title, subtitle,caseId,source,handleUpload}) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [transactions, setTransactions] = useState([]);
     const [filteredData, setFilteredData] = useState(data);
@@ -759,6 +759,7 @@ useEffect(() => {
 
   const handleUploadToTally = async () => {
   console.log("Upload to Tally transaction", transactions);
+  handleUpload(transactions);
 
   }
   
@@ -879,7 +880,7 @@ useEffect(() => {
                   </TableHead>}
                 
                 {columns.map((column) => (
-                  <TableHead key={column} className={`whitespace-nowrap ${column==="bill_ref"&&"min-w-[180px]"} ${column==="narration"&&"min-w-[300px]"}`}
+                  <TableHead key={column} className={`whitespace-nowrap ${column==="bill_reference"&&"min-w-[180px]"} ${column==="narration"&&"min-w-[300px]"}`}
                   // className={source === "summary" ? "bg-gray-900 dark:bg-slate-800 text-white" : ""}
                   >
 
@@ -889,7 +890,7 @@ useEffect(() => {
                         .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Capitalize
                         .join(" ")}
                         
-                      {["narration","bill_ref","effective_date"].includes(column.toLowerCase())===false && (
+                      {["narration","bill_reference","effective_date","reference_number"].includes(column.toLowerCase())===false && (
                         <Button
                           variant="ghost"
                           size="sm"
@@ -1097,7 +1098,7 @@ useEffect(() => {
                       />
                       </TableCell>
                       }
-                      else if(column.toLowerCase()==="bill_ref"){
+                      else if(column.toLowerCase()==="bill_reference"){
                         return  <TableCell
                             key={column}
                             className="w-[250px] group relative"
@@ -1105,11 +1106,27 @@ useEffect(() => {
                         type="text"
                         value={row[column] || ""}
                         onChange={(e) => handleInputChange(row.id, column, e.target.value)}
-                        placeholder="Enter Bill Ref"
+                        placeholder="Enter Bill Reference"
                         className="w-full p-2 border border-gray-300 rounded-md"
                       />
                       </TableCell>
-                      } else {
+                      }   else if(column.toLowerCase()==="reference_number"){
+                        return  <TableCell
+                            key={column}
+                            className="w-[250px] group relative"
+                          ><Input
+                        type="text"
+                        value={row[column] || ""}
+                        onChange={(e) => handleInputChange(row.id, column, e.target.value)}
+                        placeholder="Enter Reference Number"
+                        className="w-full p-2 border border-gray-300 rounded-md"
+                      />
+                      </TableCell>
+                      } else if(column.toLowerCase()==="imported"){
+                        return  <TableCell key={column} className="max-w-[200px]">
+                        <div>{row[column]===true?"True":"False"}</div>
+                      </TableCell>
+                      }else {
                         return (
                           <TableCell key={column} className="max-w-[200px]">
                             <div>{row[column]}</div>
@@ -1177,7 +1194,12 @@ useEffect(() => {
                     )}
                   />
                 </PaginationItem>
+                
+            {/* <div>
+              <p className="text:lg font-bold">Total : {filteredData.length}</p>
+            </div> */}
               </PaginationContent>
+            
             </Pagination>
           </div>
         )}
@@ -1647,8 +1669,6 @@ useEffect(() => {
       </DialogContent>
     </Dialog>
 
-
-      
       {/* Loading Overlay */}
       {isLoading && (
         <div className="fixed inset-0 bg-white bg-opacity-80 backdrop-blur-sm flex items-center justify-center">

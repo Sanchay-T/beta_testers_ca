@@ -25,47 +25,50 @@ const Reversal = () => {
         return new Date(parseInt(year), monthIndex);
       };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        // Fetch transactions filtered by "debtor"
-        const result = await window.electron.getTransactionsByReversal(
-          caseId,
-          parseInt(individualId)
-        );
-        console.log("refund transactions:", result);
-        // Transform data to include only required fields
-        const transformedData = result.map((item) => ({
-          date: new Date(item.date).toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-          }),
-          description: item.description,
-          credit: item.amount,
-          balance: item.balance,
-          category: item.category,
-          monthKey: getMonthKey(item.date)
-        }));
+      const fetchData = async () => {
+        try {
+          setLoading(true);
+          // Fetch transactions filtered by "debtor"
+          const result = await window.electron.getTransactionsByReversal(
+            caseId,
+            parseInt(individualId)
+          );
+          console.log("refund transactions:", result);
+          // Transform data to include only required fields
+          const transformedData = result.map((item) => ({
+            date: new Date(item.date).toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            }),
+            description: item.description,
+            credit: item.amount,
+            balance: item.balance,
+            category: item.category,
+            monthKey: getMonthKey(item.date),
+            id: item.id,
+          }));
+  
+          const uniqueMonths = [...new Set(transformedData.map(item => item.monthKey))]
+            .sort((a, b) => {
+              const dateA = getMonthDate(a);
+              const dateB = getMonthDate(b);
+              return dateA - dateB;
+            });
+          setData(transformedData)
+          setAvailableMonths(uniqueMonths);
+          
+          // Initially select all months
+          setSelectedMonths(uniqueMonths);
+        } catch (error) {
+          console.error("Error fetching emi transactions:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
 
-        const uniqueMonths = [...new Set(transformedData.map(item => item.monthKey))]
-          .sort((a, b) => {
-            const dateA = getMonthDate(a);
-            const dateB = getMonthDate(b);
-            return dateA - dateB;
-          });
-        setData(transformedData)
-        setAvailableMonths(uniqueMonths);
-        
-        // Initially select all months
-        setSelectedMonths(uniqueMonths);
-      } catch (error) {
-        console.error("Error fetching emi transactions:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  useEffect(() => {
+   
 
     fetchData();
   }, []);
@@ -116,7 +119,10 @@ const Reversal = () => {
             />
           </div>
           <div>
-            <UnifiedTable data={filteredData} title="Refund/Reversal Transactions" />
+            <UnifiedTable data={filteredData} title="Refund/Reversal Transactions"
+                    caseId={caseId}
+                    refreshFunction={fetchData}
+                    />
           </div>
         </>
         )}

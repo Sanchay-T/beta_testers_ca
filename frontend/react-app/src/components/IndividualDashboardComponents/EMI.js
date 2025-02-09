@@ -24,8 +24,6 @@ const EMI = () => {
       const monthIndex = new Date(Date.parse(month + " 1, 2000")).getMonth();
       return new Date(parseInt(year), monthIndex);
     };
-
-  useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
@@ -45,7 +43,8 @@ const EMI = () => {
           debit: item.amount,
           balance: item.balance,
           category: item.category,
-          monthKey: getMonthKey(item.date)
+          monthKey: getMonthKey(item.date),
+          id: item.id,
         }));
 
 
@@ -70,6 +69,9 @@ const EMI = () => {
         setLoading(false);
       }
     };
+
+  useEffect(() => {
+    
 
     fetchData();
   }, []);
@@ -153,10 +155,15 @@ const EMI = () => {
               />
             </div>
             <div>
-            <UnifiedTable data={emiSummary} title="Emi Summary" />
+            <UnifiedTable data={emiSummary} title="Emi Summary" 
+                    caseId={caseId}
+                    />
           </div>
             <div className="w-full">
-              <UnifiedTable data={filteredData} title="Emi Transactions" />
+              <UnifiedTable data={filteredData} title="Emi Transactions" 
+                    caseId={caseId}
+                    refreshFunction={fetchData}
+                    />
             </div>
           </>
         )}

@@ -275,7 +275,7 @@ function registerEditReportHandlers() {
     ipcMain.handle('edit-category', async (event, data, caseId) => {
 
 
-        log.info('Edit Category : ', data);
+        log.info('Edit Category : ', data, 'Case ID : ', caseId);
         // const caseId = 26;
 
         let new_categories = [];

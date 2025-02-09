@@ -30,73 +30,78 @@ const Cash = () => {
     };
   
   console.log("in cash", caseId, individualId);
+  const fetchData = async () => {
+    try {
+      const withdrawalResponse =
+        await window.electron.getTransactionsByCashWithdrawal(
+          caseId,
+          parseInt(individualId)
+        );
+      const depositResponse =
+        await window.electron.getTransactionsByCashDeposit(
+          caseId,
+          parseInt(individualId)
+        );
+
+      // Transform withdrawal data
+      const transformedWithdrawalData = withdrawalResponse.map((item) => ({
+        date: new Date(item.date).toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        }),
+        Description: item.description,
+        Debit: Math.abs(item.amount) || 0, // Ensure positive value
+        Balance: item.balance || 0,
+        category: item.category || "-",
+        monthKey: getMonthKey(item.date),
+        id: item.id,
+
+      }));
+
+      console.log("withdrawal data", transformedWithdrawalData);
+
+      // Transform deposit data
+      const transformedDepositData = depositResponse.map((item) => ({
+        date: new Date(item.date).toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        }),
+        Description: item.description,
+        Credit: item.amount || 0,
+        Balance: item.balance || 0,
+        category: item.category || "-",
+        monthKey: getMonthKey(item.date),
+        id: item.id,
+
+
+      }));
+
+      console.log("deposit data", transformedDepositData);
+
+      const uniqueMonthsCr = [...new Set(transformedDepositData.map(item => item.monthKey))]
+      .sort((a, b) => getMonthDate(a) - getMonthDate(b));
+      const uniqueMonthsDr = [...new Set(transformedWithdrawalData.map(item => item.monthKey))]
+        .sort((a, b) => getMonthDate(a) - getMonthDate(b));
+
+      setWithdrawalData(transformedWithdrawalData);
+      setAvailableMonthsDr(uniqueMonthsDr);
+      setSelectedMonthsDr(uniqueMonthsDr);
+
+      setDepositData(transformedDepositData);
+      setAvailableMonthsCr(uniqueMonthsCr);
+      setSelectedMonthsCr(uniqueMonthsCr);
+      setIsLoading(false);
+    } catch (err) {
+      console.error("Error fetching cash transactions:", err);
+      setError("Failed to fetch transaction data");
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const withdrawalResponse =
-          await window.electron.getTransactionsByCashWithdrawal(
-            caseId,
-            parseInt(individualId)
-          );
-        const depositResponse =
-          await window.electron.getTransactionsByCashDeposit(
-            caseId,
-            parseInt(individualId)
-          );
-
-        // Transform withdrawal data
-        const transformedWithdrawalData = withdrawalResponse.map((item) => ({
-          date: new Date(item.date).toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-          }),
-          Description: item.description,
-          Debit: Math.abs(item.amount) || 0, // Ensure positive value
-          Balance: item.balance || 0,
-          category: item.category || "-",
-          monthKey: getMonthKey(item.date)
-        }));
-
-        console.log("withdrawal data", transformedWithdrawalData);
-
-        // Transform deposit data
-        const transformedDepositData = depositResponse.map((item) => ({
-          date: new Date(item.date).toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-          }),
-          Description: item.description,
-          Credit: item.amount || 0,
-          Balance: item.balance || 0,
-          category: item.category || "-",
-          monthKey: getMonthKey(item.date)
-
-        }));
-
-        console.log("deposit data", transformedDepositData);
-
-        const uniqueMonthsCr = [...new Set(transformedDepositData.map(item => item.monthKey))]
-        .sort((a, b) => getMonthDate(a) - getMonthDate(b));
-        const uniqueMonthsDr = [...new Set(transformedWithdrawalData.map(item => item.monthKey))]
-          .sort((a, b) => getMonthDate(a) - getMonthDate(b));
-
-        setWithdrawalData(transformedWithdrawalData);
-        setAvailableMonthsDr(uniqueMonthsDr);
-        setSelectedMonthsDr(uniqueMonthsDr);
-
-        setDepositData(transformedDepositData);
-        setAvailableMonthsCr(uniqueMonthsCr);
-        setSelectedMonthsCr(uniqueMonthsCr);
-        setIsLoading(false);
-      } catch (err) {
-        console.error("Error fetching cash transactions:", err);
-        setError("Failed to fetch transaction data");
-        setIsLoading(false);
-      }
-    };
+ 
 
     fetchData();
   }, []);
@@ -191,6 +196,8 @@ const Cash = () => {
                   <UnifiedTable
                     data={filteredDrData}
                     title="Cash Widthdrawal Transactions"
+                    caseId={caseId}
+                    refreshFunction={fetchData}
                   />
                 </div>
               </>
@@ -229,7 +236,10 @@ const Cash = () => {
                   />
                 </div>
                 <div>
-                  <UnifiedTable data={filteredCrData} title="Cash Deposit Transactions" />
+                  <UnifiedTable data={filteredCrData} title="Cash Deposit Transactions" 
+                    caseId={caseId}
+                    refreshFunction={fetchData}
+                    />
                 </div>
               </>
               )}

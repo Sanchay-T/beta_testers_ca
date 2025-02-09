@@ -4,6 +4,8 @@ import { useParams } from "react-router-dom";
 import { exportToExcel, shareExcelFile } from "../exportToExcel";
 import UnifiedTable from "./UnifiedTable";
 import ToggleStrip from "./ToggleStrip";
+import { RotateCw } from "lucide-react";
+import { Button } from "../ui/button";
 
 const Suspense = () => {
   // const [creditData, setCreditData] = useState([]);
@@ -51,40 +53,40 @@ const Suspense = () => {
     }));
   };
 
+  const fetchData = async () => {
+    try {
+      const suspenseTransactionaAll =
+        await window.electron.getTransactionsBySuspense(
+          caseId,
+          parseInt(individualId)
+        );
+
+      console.log("suspenseTransactionaAll", suspenseTransactionaAll);
+
+      const transformedSuspenseData = processData(suspenseTransactionaAll);
+
+      console.log("transformedSuspenseData", transformedSuspenseData);
+
+      const uniqueMonths = [
+        ...new Set(transformedSuspenseData.map((item) => item.monthKey)),
+      ].sort((a, b) => {
+        const dateA = getMonthDate(a);
+        const dateB = getMonthDate(b);
+        return dateA - dateB;
+      });
+      setSuspenseAllData(transformedSuspenseData);
+      setAvailableMonths(uniqueMonths);
+
+      // Initially select all months
+      setSelectedMonths(uniqueMonths);
+    } catch (error) {
+      console.error("Error fetching suspense transactions:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const suspenseTransactionaAll =
-          await window.electron.getTransactionsBySuspense(
-            caseId,
-            parseInt(individualId)
-          );
-
-        console.log("suspenseTransactionaAll", suspenseTransactionaAll);
-
-        const transformedSuspenseData = processData(suspenseTransactionaAll);
-
-        console.log("transformedSuspenseData", transformedSuspenseData);
-
-        const uniqueMonths = [
-          ...new Set(transformedSuspenseData.map((item) => item.monthKey)),
-        ].sort((a, b) => {
-          const dateA = getMonthDate(a);
-          const dateB = getMonthDate(b);
-          return dateA - dateB;
-        });
-        setSuspenseAllData(transformedSuspenseData);
-        setAvailableMonths(uniqueMonths);
-
-        // Initially select all months
-        setSelectedMonths(uniqueMonths);
-      } catch (error) {
-        console.error("Error fetching suspense transactions:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchData();
   }, []);
 
@@ -104,11 +106,23 @@ const Suspense = () => {
 
   return (
     <div className="rounded-lg m-8 mt-2 space-y-6">
-      {suspenseAllData.length === 0 ? (
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold text-gray-800 dark:text-white">Suspense Transactions</h2>
+
+        {/* Refresh Button */}
+        <Button onClick={fetchData} variant="outline" className="flex items-center gap-2">
+          <RotateCw className="w-4 h-4" />
+          Refresh
+        </Button>
+      </div>
+
+      {isLoading ? (
         <div className="bg-gray-100 p-4 rounded-md w-full h-[10vh]">
-          <p className="text-gray-800 text-center mt-3 font-medium text-lg">
-            No Data Available
-          </p>
+          <p className="text-gray-800 text-center mt-3 font-medium text-lg">Loading...</p>
+        </div>
+      ) : suspenseAllData.length === 0 ? (
+        <div className="bg-gray-100 p-4 rounded-md w-full h-[10vh]">
+          <p className="text-gray-800 text-center mt-3 font-medium text-lg">No Data Available</p>
         </div>
       ) : (
         <>
@@ -123,15 +137,13 @@ const Suspense = () => {
               Select months to display the graphs
             </div>
           ) : (
-            <div className="">
-              <div>
-                <UnifiedTable
-                  data={filteredData}
-                  title="Suspense Transactions"
-                  caseId={caseId}
-                />
-              </div>
-            </div>
+            <UnifiedTable
+              data={filteredData}
+              title="Suspense Transactions"
+              caseId={caseId}
+              refreshFunction={fetchData}
+              source="suspense"
+            />
           )}
         </>
       )}

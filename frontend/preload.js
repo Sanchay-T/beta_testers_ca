@@ -102,6 +102,9 @@ contextBridge.exposeInMainWorld("electron", {
 
   getTallyVoucher: (caseId, voucherType) =>
     ipcRenderer.invoke("get-tally-voucher", caseId, voucherType),
+
+  updateTransactionStatus: (transactionIds) =>
+    ipcRenderer.invoke("update-transaction-status", transactionIds),
   
 
   user: {

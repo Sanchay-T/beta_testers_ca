@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import { Search, Loader2, Check,Download,X,Save,Plus,MessageCircle,Mail, Share2 } from "lucide-react";
 import {
   Card,
@@ -42,7 +42,9 @@ import {
     SelectTrigger,
     SelectValue,
   } from "../ui/select";
-  import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
+import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
+import * as XLSX from "xlsx";
+
 
 const categoryOptionsfixed = [
     "Bank Charges",
@@ -95,11 +97,12 @@ const categoryOptionsfixed = [
     "Utility Bills",
     "Loan taken",
     "Loan Given",
-    "Self Transfer"
+    "Self Transfer",
+    "Suspense"
   ];
 
 
-const DataTable = ({ data = [], title, subtitle,caseId,source}) => {
+const DataTable = ({ data = [], title, subtitle,caseId,source,refreshFunction}) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [transactions, setTransactions] = useState([]);
     const [filteredData, setFilteredData] = useState(data);
@@ -114,7 +117,7 @@ const DataTable = ({ data = [], title, subtitle,caseId,source}) => {
     const [categorySearchTerm, setCategorySearchTerm] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [columnsToIgnore, setColumnsToIgnore] = useState(["id","transactionId"]);
+    const [columnsToIgnore, setColumnsToIgnore] = useState(["id","transactionId","monthKey"]);
     const [categoryOptions, setCategoryOptions] = useState(categoryOptionsfixed);
 
   // Category states
@@ -152,9 +155,14 @@ const DataTable = ({ data = [], title, subtitle,caseId,source}) => {
     // We now store pending change by transaction id
     const [pendingCategoryChange, setPendingCategoryChange] = useState(null);
     const [bulkReasoning, setBulkReasoning] = useState("");
-    const [showAllRows, setShowAllRows] = useState(false);
 
     const isFirstLoad = useRef(true);
+    // states for excel download and upload
+    const fileInputRef = useRef(null);
+    const [uploadedChanges, setUploadedChanges] = useState([]);
+    const [categoryUpdateModalOpen, setCategoryUpdateModalOpen] = useState(false);
+
+
 
   // Helper: Format dates
   const formatValue = (value) => {
@@ -174,12 +182,24 @@ useEffect(() => {
     });
 
     // If it's the first load, set the transactions
-    if (isFirstLoad) {
+    if (isFirstLoad.current) {
+      // console.log({isFirstLoad})
       setTransactions(formattedData);
       setFilteredData(formattedData);
       isFirstLoad.current = false;
       return;
     }
+    // Preserve user modifications while updating other data
+      setFilteredData((prevFilteredData) => {
+        return formattedData.map((newRow) => {
+          const modifiedRow = prevFilteredData.find(
+            (prevRow) => prevRow.id === newRow.id
+          );
+          return modifiedRow ? { ...newRow, category: modifiedRow.category } : newRow;
+        });
+      });
+
+      setTransactions(formattedData);
 
     const storedCategories = localStorage.getItem("categoryOptions");
     let localCats = storedCategories ? JSON.parse(storedCategories) : null;
@@ -214,6 +234,97 @@ useEffect(() => {
       return !isNaN(parseFloat(value)) && !value.includes("-");
     })
   );
+
+    const handleExcelFileUpload = async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+    
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const parsedData = XLSX.utils.sheet_to_json(sheet);
+    
+        console.log("Uploaded Suspense Data: ", parsedData);
+    
+        // Extract modified categories and compare with existing data
+        const updates = parsedData.map((row) => {
+          const existingTransaction = filteredData.find(tx => tx.id === row.Id);
+          if (!existingTransaction) return null;
+          if(existingTransaction.category === row.Category) return null;
+
+          return {
+            date: row.Date,
+            credit: row.Credit,
+            debit: row.Debit,
+            description: row.Description,
+            id: row.Id,
+            oldCategory: existingTransaction.category,
+            newCategory: row.Category,
+          };
+        }).filter(Boolean); // Remove nulls
+    
+        // Store updates and show confirmation modal
+        setUploadedChanges(updates);
+        setCategoryUpdateModalOpen(true);
+      };
+    
+      reader.readAsArrayBuffer(file);
+  };
+
+  const applyUploadedCategoryChanges = async () => {
+    try {
+        console.log("Applying category updates:", uploadedChanges);
+        
+        // Call API or Electron IPC to update database
+        // await window.electron.updateSuspenseCategories(uploadedChanges);
+
+        // TODO - Apply changes locally in the table
+
+        const dataOnUi = filteredData.map((row) => ({ ...row }));
+        uploadedChanges.forEach((change) => {
+          const index = dataOnUi.findIndex((row) => row.id === change.id);
+          if (index !== -1) {
+            dataOnUi[index].category = change.newCategory;
+          }
+        });
+        setFilteredData(dataOnUi);
+
+
+        const updatedTransactions = uploadedChanges.map((change) => {
+          const updatedTransaction = filteredData.find(tx => tx.id === change.id);
+          if (updatedTransaction) {
+            updatedTransaction.oldCategory = change.oldCategory;
+            updatedTransaction.category = change.newCategory;
+            updatedTransaction.reasoning = "";
+          }
+          return updatedTransaction;
+        });
+
+        const payload = convertArrayToObject(updatedTransactions);
+        console.log("Payload", payload);
+        const response = await window.electron.editCategory(payload, caseId);
+        setCategoryUpdateModalOpen(false);
+        toast({
+            title: "Categories Updated!",
+            description: "Suspense transactions have been updated successfully.",
+        });
+        if(refreshFunction)
+          refreshFunction();
+    } catch (error) {
+        console.error("Error updating categories:", error);
+        toast({
+            title: "Error",
+            description: "Failed to update categories. Please try again.",
+            variant: "destructive",
+        });
+    }
+  };
+
+
+  
 
   const handleCategoryClassification = (category, classificationType) => {
     console.log(`Category: ${category}, Type: ${classificationType}`);
@@ -517,7 +628,8 @@ useEffect(() => {
         title: "Changes saved successfully",
         description: "All category updates have been saved",
       });
-
+      if(refreshFunction)
+        refreshFunction();
     } catch (error) {
       toast({
         title: "Error saving changes",
@@ -635,16 +747,12 @@ useEffect(() => {
   };
 
    useEffect(() => {
-      const totalPagesTemp = showAllRows
-        ? 1
-        : Math.ceil(filteredData.length / rowsPerPage);
+      const totalPagesTemp =  Math.ceil(filteredData.length / rowsPerPage);
       setTotalPages(totalPagesTemp);
-      const startIndexTemp = showAllRows ? 0 : (currentPage - 1) * rowsPerPage;
-      const endIndexTemp = showAllRows
-        ? filteredData.length
-        : startIndexTemp + rowsPerPage;
+      const startIndexTemp = (currentPage - 1) * rowsPerPage;
+      const endIndexTemp =startIndexTemp + rowsPerPage;
       setCurrentdata(filteredData.slice(startIndexTemp, endIndexTemp));
-    }, [filteredData, currentPage, rowsPerPage, showAllRows]);
+    }, [filteredData, currentPage, rowsPerPage]);
   
 
   // Generate page numbers for pagination
@@ -717,12 +825,12 @@ useEffect(() => {
   };
 
   const handleDownload = ()=>{
-    exportToExcel(data,title);
+      exportToExcel(data,title,false,source==="suspense"?categoryOptions:null);
   }
 
 
   const handleMailShare = async () => {
-      const fileName = await exportToExcel(data, `${title}.xlsx`, true);
+      const fileName = await exportToExcel(data, `${title}.xlsx`, true,source==="suspense"?categoryOptions:null);
       if (!fileName) return alert("File saving was canceled.");
     
       // Generate mailto link (without attachment, since it's not possible)
@@ -736,7 +844,7 @@ useEffect(() => {
   
 
   const handleWhatsappShare = async () => {
-    const fileName = await exportToExcel(data, `${title}.xlsx`, true);
+    const fileName = await exportToExcel(data, `${title}.xlsx`, true, source==="suspense"?categoryOptions:null);
     if (!fileName) return alert("File saving was canceled.");
   
     // Generate WhatsApp sharing link (without attachment, since it's not possible)
@@ -785,14 +893,31 @@ useEffect(() => {
                 {/* <option value="all">Show all</option> */}
               </select>
               <Button
-  variant="outline"
-  className="px-3 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-600 
-             bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
-             transition-all rounded-md shadow-sm hover:shadow-md"
-  onClick={clearFilters}
->
-  Clear Filters
-</Button>
+                variant="outline"
+                className="px-3 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-600 
+                          bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
+                          transition-all rounded-md shadow-sm hover:shadow-md"
+                onClick={clearFilters}
+              >
+                Clear Filters
+              </Button>
+            {source==="suspense"&& <>
+            <Button onClick={() => fileInputRef.current.click()} 
+                variant="outline"
+            className="px-3 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-600 
+                          bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
+                          transition-all rounded-md shadow-sm hover:shadow-md"
+                          >
+                  Upload Modified Excel
+                </Button>
+                <input
+                  type="file"
+                  accept=".xlsx, .xls"
+                  ref={fileInputRef}
+                  onChange={handleExcelFileUpload}
+                  className="hidden"
+                />
+                </>}
               <div className="flex gap-2">
                 {/* Download Button */}
                 <Tooltip>
@@ -1077,6 +1202,7 @@ useEffect(() => {
               </TableFooter>
           </Table>
         </div>
+        
 
         {/* Pagination */}
         { totalPages > 1 && (
@@ -1198,7 +1324,7 @@ useEffect(() => {
                 className="bg-black hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
                 onClick={handleColumnFilter}
               >
-                Save changes
+                Apply Filter
               </Button>
             </div>
           </DialogContent>
@@ -1250,7 +1376,7 @@ useEffect(() => {
                   setNumericFilterModalOpen(false);
                 }}
               >
-                Save changes
+                Apply Filter
               </Button>
             </div>
           </DialogContent>
@@ -1591,6 +1717,55 @@ useEffect(() => {
       </DialogContent>
     </Dialog>
 
+    {/* Category Update Confirmation Modal */}
+    <Dialog open={categoryUpdateModalOpen} onOpenChange={setCategoryUpdateModalOpen}>
+      <DialogContent className="max-w-[80%]">
+        <DialogHeader>
+          <DialogTitle>Confirm Category Updates</DialogTitle>
+          <DialogDescription>
+            You are about to update the categories for {uploadedChanges.length} transactions. Please review the changes before proceeding.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="max-h-[400px] overflow-y-auto border p-2 rounded-md">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead >Date</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Credit</TableHead>
+                <TableHead>Debit</TableHead>
+                <TableHead className="whitespace-nowrap">Old Category</TableHead>
+                <TableHead className="whitespace-nowrap">New Category</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {uploadedChanges.map((change) => (
+                <TableRow key={change.id}>
+                  <TableCell>{change.date}</TableCell>
+                  <TableCell>{change.description}</TableCell>
+                  <TableCell>{change.credit}</TableCell>
+                  <TableCell>{change.debit}</TableCell>
+                  <TableCell>{change.oldCategory}</TableCell>
+                  <TableCell className="text-blue-600">{change.newCategory}</TableCell>
+
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => setCategoryUpdateModalOpen(false)}>
+            Cancel
+          </Button>
+          <Button variant="default" onClick={applyUploadedCategoryChanges}>
+            Confirm Updates
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
 
       
       {/* Loading Overlay */}
@@ -1627,6 +1802,8 @@ useEffect(() => {
           )}
         </div>
       )}
+
+      
     </Card>
 
     

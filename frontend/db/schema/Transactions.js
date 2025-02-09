@@ -16,6 +16,7 @@ const transactions = sqliteTable("transactions", {
   bank: text("bank").notNull().default("unknown"),
   entity: text("entity").notNull().default("unknown"),
   voucher_type: text("voucher_type").default("unknown"),
+  imported: integer("imported").default(0),
 });
 
 module.exports = { transactions };

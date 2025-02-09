@@ -24,51 +24,53 @@ const Debtors = () => {
     return new Date(parseInt(year), monthIndex);
   };
 
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      // Fetch transactions filtered by "debtor"
+      const result = await window.electron.getTransactionsByDebtor(
+        caseId,
+        parseInt(individualId)
+      );
+
+      // Transform data to include only required fields
+      const transformedData = result.map((item) => ({
+        date: new Date(item.date).toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        }),
+        description: item.description,
+        credit: item.amount,
+        balance: item.balance,
+        category: item.category,
+        entity: item.entity || '-',
+        id: item.id,
+        monthKey: getMonthKey(item.date)
+      }));
+
+      // Get unique months and sort them
+      const uniqueMonths = [...new Set(transformedData.map(item => item.monthKey))]
+        .sort((a, b) => {
+          const dateA = getMonthDate(a);
+          const dateB = getMonthDate(b);
+          return dateA - dateB;
+        });
+
+      setData(transformedData);
+      setAvailableMonths(uniqueMonths);
+      
+      // Initially select all months
+      setSelectedMonths(uniqueMonths);
+    } catch (error) {
+      console.error("Error fetching debtors' transactions:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        // Fetch transactions filtered by "debtor"
-        const result = await window.electron.getTransactionsByDebtor(
-          caseId,
-          parseInt(individualId)
-        );
-
-        // Transform data to include only required fields
-        const transformedData = result.map((item) => ({
-          date: new Date(item.date).toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-          }),
-          description: item.description,
-          credit: item.amount,
-          balance: item.balance,
-          category: item.category,
-          entity: item.entity || '-',
-          id: item.id,
-          monthKey: getMonthKey(item.date)
-        }));
-
-        // Get unique months and sort them
-        const uniqueMonths = [...new Set(transformedData.map(item => item.monthKey))]
-          .sort((a, b) => {
-            const dateA = getMonthDate(a);
-            const dateB = getMonthDate(b);
-            return dateA - dateB;
-          });
-
-        setData(transformedData);
-        setAvailableMonths(uniqueMonths);
-        
-        // Initially select all months
-        setSelectedMonths(uniqueMonths);
-      } catch (error) {
-        console.error("Error fetching debtors' transactions:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+   
 
     fetchData();
   }, [caseId]);
@@ -120,7 +122,9 @@ const Debtors = () => {
               />
             </div>
             <div className="w-full">
-              <UnifiedTable data={filteredData} title="Debtors Transactions" />
+              <UnifiedTable data={filteredData} title="Debtors Transactions"
+                    caseId={caseId} refreshFunction={fetchData}
+                    />
             </div>
           </>
         )}

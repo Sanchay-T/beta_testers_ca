@@ -15,7 +15,7 @@ import EMI from "../components/IndividualDashboardComponents/EMI";
 import Investment from "../components/IndividualDashboardComponents/Investment";
 import EodBalance from "../components/IndividualDashboardComponents/EodBalance";
 import Reversal from "../components/IndividualDashboardComponents/Reversal";
-import ForeignTransactions from "../components/IndividualDashboardComponents/ForeignTransactions";
+// import ForeignTransactions from "../components/IndividualDashboardComponents/ForeignTransactions";
 import Upi from "../components/IndividualDashboardComponents/Upi";
 import {
   ArrowDownWideNarrow,
@@ -36,49 +36,7 @@ const IndividualDashboard = () => {
   const { breadcrumbs, setIndividualDashboard } = useBreadcrumb();
   const { caseId, individualId, defaultTab } = useParams();
   const [customerName, setCustomerName] = useState(null);
-
-  useEffect(() => {
-    setIndividualDashboard(
-      activeTab,
-      `/individual-dashboard/${caseId}/${individualId}/${activeTab}`
-    );
-
-    console.log(
-      "CaseId : ",
-      caseId,
-      "Default Tab : ",
-      defaultTab,
-      " activetab",
-      activeTab
-    );
-  }, [activeTab]);
-
-  useEffect(() => {
-    const fetchCustomerName = async () => {
-      try {
-        const customerName = await window.electron.getCustomerName(
-          individualId
-        );
-        console.log("Customer name fetched successfully:", customerName);
-        if (customerName) {
-          setCustomerName(customerName);
-        }
-      } catch (error) {
-        console.error("Error fetching customer name:", error);
-      }
-    };
-
-    if (individualId) {
-      // Only fetch if we have an ID
-      fetchCustomerName();
-    }
-  }, [individualId]);
-
-  useEffect(() => {
-    console.log({ caseId, individualId, defaultTab });
-  }, []);
-
-  const navItems = [
+  const [navItems, setNavItems] = useState([
     {
       title: "Summary",
       icon: ClipboardList,
@@ -127,7 +85,65 @@ const IndividualDashboard = () => {
       title: "EOD",
       icon: History,
     },
-  ];
+  ]);
+
+  useEffect(() => {
+    setIndividualDashboard(
+      activeTab,
+      `/individual-dashboard/${caseId}/${individualId}/${activeTab}`
+    );
+
+    console.log(
+      "CaseId : ",
+      caseId,
+      "Default Tab : ",
+      defaultTab,
+      " activetab",
+      activeTab
+    );
+  }, [activeTab]);
+
+  useEffect(() => {
+    const fetchCustomerName = async () => {
+      console.log("Fetching customer name for individual ID:", individualId);
+      try {
+        const customerName = await window.electron.getCustomerName(
+          individualId
+        );
+        console.log("Customer name fetched successfully:", customerName);
+        if (customerName) {
+          setCustomerName(customerName);
+        }
+      } catch (error) {
+        console.error("Error fetching customer name:", error);
+      }
+    };
+
+    if (individualId!==undefined) {
+      // Only fetch if we have an ID
+      fetchCustomerName();
+      // hide eod for individual
+      setNavItems((prev) => {
+        return prev.filter((item) => item.title !== "EOD");
+      });
+    }else{
+      // show eod for where individual id is not present, first check if it is already present
+      if(!navItems.find((item) => item.title === "EOD")){
+        setNavItems((prev) => {
+          return [...prev, {
+            title: "EOD",
+            icon: History,
+          }]
+        });
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    console.log({ caseId, individualId, defaultTab });
+  }, []);
+
+
 
   useEffect(() => {
     if (defaultTab === "defaultTab") setActiveTab(navItems[0].title);

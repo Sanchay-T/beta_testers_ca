@@ -1,59 +1,121 @@
-import * as XLSX from "xlsx";
+import * as ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 
-const capitalizeFirstLetter = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+// Convert index to Excel column letter (A, B, C...)
+const getExcelColumnLetter = (colIndex) => {
+  let letter = "";
+  while (colIndex >= 0) {
+    letter = String.fromCharCode((colIndex % 26) + 65) + letter;
+    colIndex = Math.floor(colIndex / 26) - 1;
+  }
+  return letter;
+};
 
-const exportToExcel = async (transactions, fileName = "transactions.xlsx", forShare = false) => {
+const exportToExcel = async (transactions, fileName = "transactions.xlsx", forShare = false, categoryOptions = null) => {
+  const columnsToIgnore = ["monthKey"];
+  const colsToHide = ["id"];
+
   if (!transactions.length) return null;
-  // Convert JSON data to worksheet
-  const worksheet = XLSX.utils.json_to_sheet(transactions);
-  const headers = Object.keys(transactions[0]);
 
-  // Capitalize headers and update worksheet
-  const capitalizedHeaders = headers.map(capitalizeFirstLetter);
-  const range = XLSX.utils.decode_range(worksheet["!ref"]);
+  // Filter out ignored columns
+  const filteredTransactions = transactions.map((row) => {
+    const newRow = { ...row };
+    columnsToIgnore.forEach((col) => delete newRow[col]);
+    return newRow;
+  });
+
+  // Ensure ID column is first
+  const finalTransactions = filteredTransactions.map((row) => ({
+    id: row.id,
+    ...row,
+  }));
+
+  console.log({
+    transactionsLength: transactions.length,
+    fileName,
+    forShare,
+    categoryOptions,
+    exampleTransaction: transactions[0],
+  });
+
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("Transactions");
+
+  // Define headers
+  const headers = Object.keys(finalTransactions[0]);
+  sheet.columns = headers.map((header) => ({
+    header: header.charAt(0).toUpperCase() + header.slice(1),
+    key: header,
+  }));
+
+  // Add data rows
+  finalTransactions.forEach((row) => sheet.addRow(row));
+
+  // ✅ Hide specific columns
   headers.forEach((header, index) => {
-    const cellAddress = XLSX.utils.encode_cell({ r: range.s.r, c: index });
-    if (worksheet[cellAddress]) {
-      worksheet[cellAddress].v = capitalizedHeaders[index];
+    if (colsToHide.includes(header)) {
+      sheet.getColumn(index + 1).hidden = true;
     }
   });
 
-  // Create workbook and convert to binary
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions");
-  const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-  const data = new Blob([excelBuffer], {
+  // ✅ Apply category dropdown if `categoryOptions` is provided
+  if (categoryOptions && headers.includes("category")) {
+    const categoryColIndex = headers.indexOf("category");
+    const categoryColLetter = getExcelColumnLetter(categoryColIndex);
+    const numRows = finalTransactions.length;
+
+    // Add a "Categories" sheet with category options
+    const categorySheet = workbook.addWorksheet("Categories",{state:'hidden'});
+    categoryOptions.forEach((cat, i) => {
+      categorySheet.getCell(`A${i + 1}`).value = cat;
+    });
+
+    // Apply dropdown validation to the "Category" column
+    for (let i = 2; i <= numRows + 1; i++) {
+      sheet.getCell(`${categoryColLetter}${i}`).dataValidation = {
+        type: "list",
+        allowBlank: true,
+        formulae: [`'Categories'!$A$1:$A$${categoryOptions.length}`], // Reference to category sheet
+      };
+    }
+  }
+
+  // Save the file
+  const buffer = await workbook.xlsx.writeBuffer();
+  const data = new Blob([buffer], {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
 
-  // If not for sharing, trigger direct download
   if (!forShare) {
     saveAs(data, fileName);
     return null;
   } else {
-    // If `showSaveFilePicker` is available, use it (modern browsers)
+    // Modern file picker for saving
     if ("showSaveFilePicker" in window) {
       try {
         const handle = await window.showSaveFilePicker({
           suggestedName: fileName,
-          types: [{
-            description: "Excel File",
-            accept: { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"] },
-          }],
+          types: [
+            {
+              description: "Excel File",
+              accept: {
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+              },
+            },
+          ],
         });
 
         const writable = await handle.createWritable();
         await writable.write(data);
         await writable.close();
 
-        return handle.name; // Return the saved file path/name for sharing
+        return handle.name;
       } catch (error) {
         console.error("File save was canceled", error);
-        return null; // Return null if user cancels
+        return null;
       }
     } else {
-      // Fallback for browsers that do not support `showSaveFilePicker`
+      // Fallback for older browsers
       return new Promise((resolve) => {
         const a = document.createElement("a");
         a.href = URL.createObjectURL(data);
@@ -62,7 +124,6 @@ const exportToExcel = async (transactions, fileName = "transactions.xlsx", forSh
         a.click();
         document.body.removeChild(a);
 
-        // Ask user to confirm once they finish saving
         setTimeout(() => {
           const confirmSave = window.confirm("Did you finish saving the file?");
           resolve(confirmSave ? fileName : null);

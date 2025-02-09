@@ -25,8 +25,6 @@ const Creditors = () => {
       return new Date(parseInt(year), monthIndex);
     };
   
-
-  useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
@@ -70,6 +68,8 @@ const Creditors = () => {
         setLoading(false);
       }
     };
+  useEffect(() => {
+  
 
     fetchData();
   }, []);
@@ -121,7 +121,9 @@ const Creditors = () => {
             </div>
             <div className="w-full">
   
-            <UnifiedTable data={filteredData} title="Creditors Transactions" />
+            <UnifiedTable data={filteredData} title="Creditors Transactions"
+                    caseId={caseId} refreshFunction={fetchData}
+                    />
             </div>
           </>
         )}
