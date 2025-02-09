@@ -42,9 +42,7 @@ import {
     SelectTrigger,
     SelectValue,
   } from "../ui/select";
-import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
-import * as XLSX from "xlsx";
-
+  import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 
 const categoryOptionsfixed = [
     "Bank Charges",
@@ -97,12 +95,13 @@ const categoryOptionsfixed = [
     "Utility Bills",
     "Loan taken",
     "Loan Given",
-    "Self transfer",
-    "Suspense",
+    "Self Transfer"
   ];
 
 
-const DataTable = ({ data = [], title, subtitle,caseId,source,refreshFunction}) => {
+const DataTable = ({ data = [], title, subtitle,caseId,source}) => {
+
+
     const [currentPage, setCurrentPage] = useState(1);
     const [transactions, setTransactions] = useState([]);
     const [filteredData, setFilteredData] = useState(data);
@@ -117,13 +116,11 @@ const DataTable = ({ data = [], title, subtitle,caseId,source,refreshFunction}) 
     const [categorySearchTerm, setCategorySearchTerm] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [columnsToIgnore, setColumnsToIgnore] = useState(["id","transactionId","monthKey"]);
+    const [columnsToIgnore, setColumnsToIgnore] = useState(["id","transactionId"]);
     const [categoryOptions, setCategoryOptions] = useState(categoryOptionsfixed);
 
   // Category states
     const[similarCategoryTransactions,setSimilarCategoryTransactions] = useState([]);
-    const [selectedCategorySimilarTransactions, setSelectedCategorySimilarTransactions] = useState(new Set());
-
     const [hasChanges, setHasChanges] = useState(false);
     const [modifiedData, setModifiedData] = useState([]);
     const [showKeywordInput, setShowKeywordInput] = useState(false);
@@ -160,14 +157,9 @@ const DataTable = ({ data = [], title, subtitle,caseId,source,refreshFunction}) 
     // We now store pending change by transaction id
     const [pendingCategoryChange, setPendingCategoryChange] = useState(null);
     const [bulkReasoning, setBulkReasoning] = useState("");
+    const [showAllRows, setShowAllRows] = useState(false);
 
     const isFirstLoad = useRef(true);
-    // states for excel download and upload
-    const fileInputRef = useRef(null);
-    const [uploadedChanges, setUploadedChanges] = useState([]);
-    const [categoryUpdateModalOpen, setCategoryUpdateModalOpen] = useState(false);
-
-
 
   // Helper: Format dates
   const formatValue = (value) => {
@@ -185,26 +177,15 @@ useEffect(() => {
       });
       return newRow;
     });
+    // console.log("Formatted Data - ",formattedData);
 
     // If it's the first load, set the transactions
-    if (isFirstLoad.current) {
-      // console.log({isFirstLoad})
+    if (isFirstLoad) {
       setTransactions(formattedData);
       setFilteredData(formattedData);
       isFirstLoad.current = false;
       return;
     }
-    // Preserve user modifications while updating other data
-      setFilteredData((prevFilteredData) => {
-        return formattedData.map((newRow) => {
-          const modifiedRow = prevFilteredData.find(
-            (prevRow) => prevRow.id === newRow.id
-          );
-          return modifiedRow ? { ...newRow, category: modifiedRow.category,entity:modifiedRow.entity } : newRow;
-        });
-      });
-
-      setTransactions(formattedData);
 
     const storedCategories = localStorage.getItem("categoryOptions");
     let localCats = storedCategories ? JSON.parse(storedCategories) : null;
@@ -220,6 +201,7 @@ useEffect(() => {
       localStorage.setItem("categoryOptions", JSON.stringify(mergedCategories));
     }
     setCategoryOptions(mergedCategories);
+
 
   }, [data]);
 
@@ -239,98 +221,6 @@ useEffect(() => {
       return !isNaN(parseFloat(value)) && !value.includes("-");
     })
   );
-
-    const handleExcelFileUpload = async (event) => {
-      const file = event.target.files[0];
-      if (!file) return;
-    
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: "array" });
-        const sheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[sheetName];
-        const parsedData = XLSX.utils.sheet_to_json(sheet);
-    
-        console.log("Uploaded Suspense Data: ", parsedData);
-    
-        // Extract modified categories and compare with existing data
-        const updates = parsedData.map((row) => {
-          const existingTransaction = filteredData.find(tx => tx.id === row.Id);
-          if (!existingTransaction) return null;
-          if(existingTransaction.category === row.Category) return null;
-
-          return {
-            date: row.Date,
-            credit: row.Credit,
-            debit: row.Debit,
-            description: row.Description,
-            id: row.Id,
-            oldCategory: existingTransaction.category,
-            newCategory: row.Category,
-          };
-        }).filter(Boolean); // Remove nulls
-    
-        // Store updates and show confirmation modal
-        setUploadedChanges(updates);
-        setCategoryUpdateModalOpen(true);
-      };
-    
-      reader.readAsArrayBuffer(file);
-  };
-
-  const applyUploadedCategoryChanges = async () => {
-    // Suspense excel upload handle
-    try {
-        console.log("Applying category updates:", uploadedChanges);
-        
-        // Call API or Electron IPC to update database
-        // await window.electron.updateSuspenseCategories(uploadedChanges);
-
-        // TODO - Apply changes locally in the table
-
-        const dataOnUi = filteredData.map((row) => ({ ...row }));
-        uploadedChanges.forEach((change) => {
-          const index = dataOnUi.findIndex((row) => row.id === change.id);
-          if (index !== -1) {
-            dataOnUi[index].category = change.newCategory;
-          }
-        });
-        setFilteredData(dataOnUi);
-
-
-        const updatedTransactions = uploadedChanges.map((change) => {
-          const updatedTransaction = filteredData.find(tx => tx.id === change.id);
-          if (updatedTransaction) {
-            updatedTransaction.oldCategory = change.oldCategory;
-            updatedTransaction.category = change.newCategory;
-            updatedTransaction.reasoning = "";
-          }
-          return updatedTransaction;
-        });
-
-        const payload = convertArrayToObject(updatedTransactions);
-        console.log("Payload", payload);
-        const response = await window.electron.editCategory(payload, caseId);
-        setCategoryUpdateModalOpen(false);
-        toast({
-            title: "Categories Updated!",
-            description: "Suspense transactions have been updated successfully.",
-        });
-        if(refreshFunction)
-          refreshFunction();
-    } catch (error) {
-        console.error("Error updating categories:", error);
-        toast({
-            title: "Error",
-            description: "Failed to update categories. Please try again.",
-            variant: "destructive",
-        });
-    }
-  };
-
-
-  
 
   const handleCategoryClassification = (category, classificationType) => {
     console.log(`Category: ${category}, Type: ${classificationType}`);
@@ -418,13 +308,11 @@ useEffect(() => {
   const handleCategoryChange = (transaction, newCategory) => {
     const oldCategory = transaction.category;
       // Find similar transactions
-    const similarTransactions1 = processSimilarCategory(
+    const similarTransactions = processSimilarCategory(
       filteredData,
       oldCategory,
       transaction.description
     );
-    // remove already selected one
-    const similarTransactions = similarTransactions1.filter((t)=>t.id!=transaction.id)
     
     // Set the similar transactions in state
     setSimilarCategoryTransactions(similarTransactions);
@@ -459,38 +347,17 @@ useEffect(() => {
       keyword: showKeywordInput ? reasoning : "",
     };
     console.log("modifiedObject", modifiedObject);
-    console.log({selectedCategorySimilarTransactions})
-    if(selectedCategorySimilarTransactions.size >0){
-      setSelectedBulkCategory()
-      handleBulkCategoryChange("similarCategory")
-    }else{
-      console.log({aq:selectedType})
-      if (selectedType) {
-        modifiedObject = {
-          ...modifiedObject,
-          classification: selectedType,
-          is_new: true,
-        };
-      } else {
-        modifiedObject = { ...modifiedObject, is_new: false };
-      }
-
-      setModifiedData([...modifiedData, modifiedObject]);
+    if (selectedType) {
+      modifiedObject = {
+        ...modifiedObject,
+        classification: selectedType,
+        is_new: true,
+      };
+    } else {
+      modifiedObject = { ...modifiedObject, is_new: false };
     }
-  //   console.log("modifiedObject", modifiedObjects);
-  //     // Add selected similar transactions to modified data
-  //     selectedCategorySimilarTransactions.forEach((id) => {
-  //       const transaction = filteredData.find((tx) => tx.id === id);
-  //       if (transaction) {
-  //         modifiedObjects.push({
-  //           ...transaction,
-  //           oldCategory: pendingCategoryChange.oldCategory,
-  //           category: pendingCategoryChange.newCategory,
-  //           keyword: showKeywordInput ? reasoning : "",
-  //         });
-  //       }
-  // });
-
+    console.log("modifiedObject final", modifiedObject);
+    setModifiedData([...modifiedData, modifiedObject]);
     setHasChanges(true);
     setReasoningModalOpen(false);
     setPendingCategoryChange(null);
@@ -498,20 +365,18 @@ useEffect(() => {
     setShowKeywordInput(false);
   };
 
-
     // --- Bulk Update: Find each row by its id ---
-    const handleBulkCategoryChange = (source) => {
+    const handleBulkCategoryChange = () => {
         // Create a shallow copy so we don’t mutate state directly.
         const dataOnUi = filteredData.map((row) => ({ ...row }));
         const newModifiedData = [...modifiedData];
-        const ids = source==="similarCategory"?selectedCategorySimilarTransactions:globalSelectedRows
-        const newCategory = source==="similarCategory"?pendingCategoryChange.newCategory:(selectedBulkCategory === "" ? categorySearchTerm : selectedBulkCategory)
-        console.log({ids})
-        ids.forEach((id) => {
+        globalSelectedRows.forEach((id) => {
           const index = dataOnUi.findIndex((row) => row.id === id);
           if (index !== -1) {
             const oldCategory = dataOnUi[index].category;
-            dataOnUi[index].category =newCategory;
+            dataOnUi[index].category =
+              selectedBulkCategory === "" ? categorySearchTerm : selectedBulkCategory;
+              
               if(selectedType){
                 dataOnUi[index].classification = selectedType;
                 dataOnUi[index].is_new = true;
@@ -524,7 +389,6 @@ useEffect(() => {
             });
           }
         });
-        console.log({fromBulkUpdate:newModifiedData})
         setFilteredData(dataOnUi);
         setModifiedData(newModifiedData);
         setHasChanges(true);
@@ -533,7 +397,6 @@ useEffect(() => {
         setConfirmationModalOpen(false);
         setSelectedBulkCategory("");
         setBulkReasoning("");
-
       };
 
         // --- Now store selected rows as transaction IDs ---
@@ -639,7 +502,30 @@ useEffect(() => {
 
   // ===== Helper functions for inline & batch "Entity" editing =====
   const handleEntityChange = (tid, newValue) => {
+    // Find the transaction using tid
+    const transaction = filteredData.find(row => row.id === tid);
+    if (!transaction) return;
+
+    console.log("Transaction", transaction);
+    // Get the previous entity value before updating state
+    const prevEntity = editedEntities[tid] || transaction.entity;
+
     setEditedEntities((prev) => ({ ...prev, [tid]: newValue }));
+    
+    // Show the dialog box when entity changes
+    if (newValue) {
+      setSimilarEntityModal(true);
+      
+      // Use prevEntity in processSimilarEntity
+      const similarTransactions = processSimilarEntity(
+        filteredData,
+        prevEntity, // Pass the previous entity value
+        transaction.description 
+      );
+      
+      // Set the similar transactions in state
+      setSimilarEntityTransactions(similarTransactions);
+    }
   };
 
   const handleCategorySearch = (e) => {
@@ -670,8 +556,7 @@ useEffect(() => {
         title: "Changes saved successfully",
         description: "All category updates have been saved",
       });
-      if(refreshFunction)
-        refreshFunction();
+
     } catch (error) {
       toast({
         title: "Error saving changes",
@@ -789,12 +674,16 @@ useEffect(() => {
   };
 
    useEffect(() => {
-      const totalPagesTemp =  Math.ceil(filteredData.length / rowsPerPage);
+      const totalPagesTemp = showAllRows
+        ? 1
+        : Math.ceil(filteredData.length / rowsPerPage);
       setTotalPages(totalPagesTemp);
-      const startIndexTemp = (currentPage - 1) * rowsPerPage;
-      const endIndexTemp =startIndexTemp + rowsPerPage;
+      const startIndexTemp = showAllRows ? 0 : (currentPage - 1) * rowsPerPage;
+      const endIndexTemp = showAllRows
+        ? filteredData.length
+        : startIndexTemp + rowsPerPage;
       setCurrentdata(filteredData.slice(startIndexTemp, endIndexTemp));
-    }, [filteredData, currentPage, rowsPerPage]);
+    }, [filteredData, currentPage, rowsPerPage, showAllRows]);
   
 
   // Generate page numbers for pagination
@@ -867,12 +756,12 @@ useEffect(() => {
   };
 
   const handleDownload = ()=>{
-      exportToExcel(data,title,false,source==="suspense"?categoryOptions:null);
+    exportToExcel(data,title);
   }
 
 
   const handleMailShare = async () => {
-      const fileName = await exportToExcel(data, `${title}.xlsx`, true,source==="suspense"?categoryOptions:null);
+      const fileName = await exportToExcel(data, `${title}.xlsx`, true);
       if (!fileName) return alert("File saving was canceled.");
     
       // Generate mailto link (without attachment, since it's not possible)
@@ -886,7 +775,7 @@ useEffect(() => {
   
 
   const handleWhatsappShare = async () => {
-    const fileName = await exportToExcel(data, `${title}.xlsx`, true, source==="suspense"?categoryOptions:null);
+    const fileName = await exportToExcel(data, `${title}.xlsx`, true);
     if (!fileName) return alert("File saving was canceled.");
   
     // Generate WhatsApp sharing link (without attachment, since it's not possible)
@@ -1009,31 +898,14 @@ useEffect(() => {
                 {/* <option value="all">Show all</option> */}
               </select>
               <Button
-                variant="outline"
-                className="px-3 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-600 
-                          bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
-                          transition-all rounded-md shadow-sm hover:shadow-md"
-                onClick={clearFilters}
-              >
-                Clear Filters
-              </Button>
-            {source==="suspense"&& <>
-            <Button onClick={() => fileInputRef.current.click()} 
-                variant="outline"
-            className="px-3 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-600 
-                          bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
-                          transition-all rounded-md shadow-sm hover:shadow-md"
-                          >
-                  Upload Modified Excel
-                </Button>
-                <input
-                  type="file"
-                  accept=".xlsx, .xls"
-                  ref={fileInputRef}
-                  onChange={handleExcelFileUpload}
-                  className="hidden"
-                />
-                </>}
+  variant="outline"
+  className="px-3 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-600 
+             bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
+             transition-all rounded-md shadow-sm hover:shadow-md"
+  onClick={clearFilters}
+>
+  Clear Filters
+</Button>
               <div className="flex gap-2">
                 {/* Download Button */}
                 <Tooltip>
@@ -1318,7 +1190,6 @@ useEffect(() => {
               </TableFooter>
           </Table>
         </div>
-        
 
         {/* Pagination */}
         { totalPages > 1 && (
@@ -1440,7 +1311,7 @@ useEffect(() => {
                 className="bg-black hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
                 onClick={handleColumnFilter}
               >
-                Apply Filter
+                Save changes
               </Button>
             </div>
           </DialogContent>
@@ -1492,7 +1363,7 @@ useEffect(() => {
                   setNumericFilterModalOpen(false);
                 }}
               >
-                Apply Filter
+                Save changes
               </Button>
             </div>
           </DialogContent>
@@ -1707,7 +1578,7 @@ useEffect(() => {
         
     {/* Reasoning Modal for Single Category Change */}
         <Dialog open={reasoningModalOpen} onOpenChange={setReasoningModalOpen}>
-          <DialogContent className="max-w-[80%] max-h-[90vh] overflow-auto">
+          <DialogContent className="sm:max-w-[1100px]">
             <DialogHeader>
               <DialogTitle className="mb-2">
                 Category Change Reasoning
@@ -1718,7 +1589,7 @@ useEffect(() => {
                   <div className="mt-2 p-3 bg-muted rounded-md">
                     <p>
                       <strong>Description:</strong>{" "}
-                      {currentTransaction.description}
+                      {currentTransaction.Description}
                     </p>
                     <p>
                       <strong>Category Change:</strong>{" "}
@@ -1729,7 +1600,8 @@ useEffect(() => {
                 )}
               </DialogDescription>
             </DialogHeader>
-
+            
+              <DataTable data={similarCategoryTransactions} columns={["description", "amount", "category", "date", "balance"]} title="Similar Transactions" />
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -1755,104 +1627,6 @@ useEffect(() => {
                 </div>
               )}
             </div>
-          {similarCategoryTransactions.length>0&&  <div className="mt-6 p-4 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900">
-  {/* Header Section */}
-  <div className="mb-4">
-    <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-      📌 Similar Transactions Detected
-    </h2>
-    <p className="text-sm text-gray-600 dark:text-gray-400">
-      The following transactions have similar descriptions and categories. 
-      Select the ones you'd like to update alongside the manually changed transaction.
-    </p>
-  </div>
-
-  {/* Transactions Table */}
-  <div className="overflow-x-auto">
-    <Table className="w-full border border-gray-300 dark:border-gray-700 rounded-md">
-      <TableHeader className="bg-gray-100 dark:bg-gray-800">
-        <TableRow>
-          <TableHead className="w-10 p-3">
-            <Checkbox
-              checked={
-                similarCategoryTransactions.length > 0 &&
-                similarCategoryTransactions.every((t) =>
-                  selectedCategorySimilarTransactions.has(t.id)
-                )
-              }
-              onCheckedChange={() => {
-                const newSet = new Set(selectedCategorySimilarTransactions);
-                if (
-                  similarCategoryTransactions.every((t) =>
-                    newSet.has(t.id)
-                  )
-                ) {
-                  similarCategoryTransactions.forEach((t) =>
-                    newSet.delete(t.id)
-                  );
-                } else {
-                  similarCategoryTransactions.forEach((t) =>
-                    newSet.add(t.id)
-                  );
-                }
-                setSelectedCategorySimilarTransactions(newSet);
-              }}
-            />
-          </TableHead>
-          <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Date
-          </TableHead>
-          <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Description
-          </TableHead>
-          <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Credit
-          </TableHead>
-          <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Debit
-          </TableHead>
-          <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Category
-          </TableHead>
-        </TableRow>
-      </TableHeader>
-
-      <TableBody>
-        {similarCategoryTransactions.map((transaction, index) => (
-          <TableRow
-            key={transaction.id}
-            className={`transition-all ${
-              index % 2 === 0
-                ? "bg-white dark:bg-gray-900"
-                : "bg-gray-50 dark:bg-gray-800"
-            } hover:bg-gray-200 dark:hover:bg-gray-700`}
-          >
-            <TableCell className="p-3">
-              <Checkbox
-                checked={selectedCategorySimilarTransactions.has(transaction.id)}
-                onCheckedChange={() => {
-                  const newSet = new Set(selectedCategorySimilarTransactions);
-                  if (newSet.has(transaction.id)) {
-                    newSet.delete(transaction.id);
-                  } else {
-                    newSet.add(transaction.id);
-                  }
-                  setSelectedCategorySimilarTransactions(newSet);
-                }}
-              />
-            </TableCell>
-            <TableCell className="p-3">{transaction.date}</TableCell>
-            <TableCell className="p-3">{transaction.description}</TableCell>
-            <TableCell className="p-3">{transaction.credit}</TableCell>
-            <TableCell className="p-3">{transaction.debit}</TableCell>
-            <TableCell className="p-3">{transaction.category}</TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  </div>
-</div>
-}
 
             <DialogFooter>
               <Button
@@ -1979,55 +1753,6 @@ useEffect(() => {
       </DialogContent>
     </Dialog>
 
-    {/* Category Update Confirmation Modal */}
-    <Dialog open={categoryUpdateModalOpen} onOpenChange={setCategoryUpdateModalOpen}>
-      <DialogContent className="max-w-[80%]">
-        <DialogHeader>
-          <DialogTitle>Confirm Category Updates</DialogTitle>
-          <DialogDescription>
-            You are about to update the categories for {uploadedChanges.length} transactions. Please review the changes before proceeding.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="max-h-[400px] overflow-y-auto border p-2 rounded-md">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead >Date</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Credit</TableHead>
-                <TableHead>Debit</TableHead>
-                <TableHead className="whitespace-nowrap">Old Category</TableHead>
-                <TableHead className="whitespace-nowrap">New Category</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {uploadedChanges.map((change) => (
-                <TableRow key={change.id}>
-                  <TableCell>{change.date}</TableCell>
-                  <TableCell>{change.description}</TableCell>
-                  <TableCell>{change.credit}</TableCell>
-                  <TableCell>{change.debit}</TableCell>
-                  <TableCell>{change.oldCategory}</TableCell>
-                  <TableCell className="text-blue-600">{change.newCategory}</TableCell>
-
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => setCategoryUpdateModalOpen(false)}>
-            Cancel
-          </Button>
-          <Button variant="default" onClick={applyUploadedCategoryChanges}>
-            Confirm Updates
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-
 
       
       {/* Loading Overlay */}
@@ -2064,8 +1789,6 @@ useEffect(() => {
           )}
         </div>
       )}
-
-      
     </Card>
 
     
