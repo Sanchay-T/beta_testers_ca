@@ -110,6 +110,8 @@ contextBridge.exposeInMainWorld("electron", {
   updateTransactionStatus: (transactionIds) =>
     ipcRenderer.invoke("update-transaction-status", transactionIds),
   
+  editVoucherType: (data) => ipcRenderer.invoke("update-voucher", data),
+  
   user: {
     getData: (userId) => ipcRenderer.invoke("user:get-data", userId),
     updateData: (userData) => ipcRenderer.send("user:update-data", userData),

@@ -35,8 +35,10 @@ const TallyDirectImport = ({caseId}) => {
 
 
 
-       const formattedData = data.map((transaction) => ({
-        
+       const formattedData = data.map((transaction) => 
+        {
+        if(transaction.voucher_type==="unknown") return null
+          return {
         date: new Date(transaction.date).toLocaleDateString("en-GB", {
           day: "2-digit",
           month: "2-digit",
@@ -48,14 +50,16 @@ const TallyDirectImport = ({caseId}) => {
         dr_ledger: transaction.type==="debit" ? (transaction.entity!=="unknown"?transaction.entity:transaction.category):"",
         cr_ledger:transaction.type==="credit" ? (transaction.entity!=="unknown"?transaction.entity:transaction.category):"",
         amount:transaction.amount,
-        // voucher_type:transaction.voucher_type,
-        voucher_type:transaction.type==="debit" ? "Payment Voucher":"Receipt Voucher",
+        voucher_type:transaction.voucher_type,
+        // voucher_type:transaction.voucher_type==="debit" ? "Payment Voucher":"Receipt Voucher",
         narration:transaction.description,
         id:transaction.id,
         imported:transaction.imported===1?true:false,
         failed_reason: storedReasons[transaction.id] || "", // ✅ Include failed reason
-      }));
-      setTransactions(formattedData);
+      }});
+      // Remove null values
+      const filteredData = formattedData.filter((data) => data !== null);
+      setTransactions(filteredData);
       setSelectedVoucher("Payment Receipt Voucher");
     } catch (err) {
       console.error("Error fetching transactions:", err);

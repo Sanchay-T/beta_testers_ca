@@ -102,6 +102,13 @@ const categoryOptionsfixed = [
   ];
 
 
+const voucherOptions = [
+  "Payment",
+  "Receipt",
+  "Contra"
+];
+
+
 const DataTable = ({ data = [], title, subtitle,caseId,source,refreshFunction}) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [transactions, setTransactions] = useState([]);
@@ -460,7 +467,8 @@ useEffect(() => {
     };
     console.log("modifiedObject", modifiedObject);
     console.log({selectedCategorySimilarTransactions})
-    if(selectedCategorySimilarTransactions.size >0){
+    if(selectedCategorySimilarTransactions.size >0
+    ){
       setSelectedBulkCategory()
       handleBulkCategoryChange("similarCategory")
     }else{
@@ -972,6 +980,25 @@ useEffect(() => {
       return similarityB - similarityA;
     });
   };
+
+  const handleVoucherTypeChange = async (row,value) => {
+    console.log("Voucher Type: ", row,value);
+    const updatedData = filteredData.map((tx) => {
+      if (tx.id === row.id) {
+        if(value==="Contra"){
+          return { ...tx, voucher_type: value, category: "Self Transfer" };
+        }else{
+          return { ...tx, voucher_type: value };
+        }
+      }
+      return tx;
+    });
+
+    const response = await window.electron.editVoucherType([{id:row.id, voucher_type:value}]);
+    console.log("Response: ", response);
+    setFilteredData(updatedData);
+  }
+
   
 
   return (
@@ -1088,7 +1115,7 @@ useEffect(() => {
             <TableHeader>
               <TableRow>
                
-                 {                 (columns.includes("category") || columns.includes("entity") )&&  <TableHead className="w-10">
+                 {(columns.includes("category") || columns.includes("entity") )&&  <TableHead className="w-10 ">
                     <Checkbox
                         checked={
                         currentData.length > 0 &&
@@ -1102,9 +1129,12 @@ useEffect(() => {
                   <TableHead key={column} className="whitespace-nowrap"
                   // className={source === "summary" ? "bg-gray-900 dark:bg-slate-800 text-white" : ""}
                   >
+                    
                     <div className="flex items-center gap-2">
-                      {column.charAt(0).toUpperCase() +
-                        column.slice(1).toLowerCase()}
+                    {column
+                        .split("_") // Split by underscore
+                        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Capitalize
+                        .join(" ")}
                       {column.toLowerCase() !== "description" && (
                         <Button
                           variant="ghost"
@@ -1281,6 +1311,57 @@ useEffect(() => {
                                                   </TableCell>
                           
                         )
+                      }else if(column.toLowerCase() === "voucher_type"){
+                        return (
+                            <TableCell
+                              key={column}
+                              className="max-w-[200px] group relative"
+                            >
+                            <Select
+                            value={row[column]}
+                            onValueChange={(value) =>
+                              handleVoucherTypeChange(row, value)
+                            }
+                            className="w-full"
+                            disabled={globalSelectedRows.has(row.id)}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue>{row[column]}</SelectValue>
+                            </SelectTrigger>
+                            <SelectContent
+                              onCloseAutoFocus={(e) => {
+                                e.preventDefault();
+                              }}
+                            >
+                              <div className="max-h-[200px] overflow-y-auto">
+                                {voucherOptions.length > 0 ? (
+                                  voucherOptions.map((voucher) => (
+                                    <SelectItem
+                                      key={voucher}
+                                      value={voucher}
+                                    >
+                                      {voucher}
+                                    </SelectItem>
+                                  ))
+                                ) : (
+                                  <div className="p-4 max-w-[300px] text-center text-muted-foreground">
+                                    <p className="text-md">
+                                      No matching categories found
+                                    </p>
+                                    <p className="text-sm mt-1">
+                                      Click the{" "}
+                                      <Plus className="h-3 w-3 inline-block mx-1" />{" "}
+                                      icon above to add "{categorySearchTerm}"
+                                      as a new category
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            </SelectContent>
+                          </Select>
+                                                  </TableCell>
+                          
+                        )
                       }
                        else if (column.toLowerCase() === "description") {
                         return (
@@ -1297,7 +1378,14 @@ useEffect(() => {
                       } else {
                         return (
                           <TableCell key={column} className="max-w-[200px]">
-                            <div>{row[column]}</div>
+                            <div>
+                            {numericColumns.includes(column)
+                                ? (row[column].toString().includes(".")
+                                    ? parseFloat(row[column]).toFixed(2)
+                                    : row[column])
+                                : row[column]}
+
+                            </div>
                           </TableCell>
                         );
                       }

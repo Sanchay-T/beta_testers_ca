@@ -2453,6 +2453,7 @@ def summary_sheet(idf, open_bal, close_bal, new_tran_df, new_categories = None):
 
 
 def transaction_sheet( df):
+    # print all cols of df
     if len(df["Bank"].unique()) > 1:
         tdf = df[
             [
@@ -2464,12 +2465,13 @@ def transaction_sheet( df):
                 "Category",
                 "Entity",
                 "Bank",
+                "Voucher type"
             ]
         ]
     else:
         #1234_temp
         tdf = df[
-            ["Value Date", "Description", "Debit", "Credit", "Balance", "Category","Entity","Bank"]
+            ["Value Date", "Description", "Debit", "Credit", "Balance", "Category","Entity","Bank","Voucher type"]
         ]
     return tdf
 

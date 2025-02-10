@@ -73,6 +73,7 @@ const validateAndTransformTransaction = (transaction, statementId) => {
     balance: balance,
     bank: transaction.Bank || "unknown",
     entity: transaction.Entity || "unknown",
+    voucher_type: transaction["Voucher type"] || "unknown",
   };
 };
 
@@ -87,6 +88,7 @@ const isDuplicateTransaction = async (transaction, statementId) => {
         eq(transactions.amount, transaction.amount),
         eq(transactions.description, transaction.description)
       )
+      
     );
   return existing.length > 0;
 };
@@ -94,6 +96,7 @@ const isDuplicateTransaction = async (transaction, statementId) => {
 const storeTransactionsBatch = async (transformedTransactions) => {
   try {
     if (transformedTransactions.length === 0) return;
+
 
     const uniqueTransactions = [];
     for (const t of transformedTransactions) {
@@ -109,6 +112,7 @@ const storeTransactionsBatch = async (transformedTransactions) => {
           balance: t.balance,
           bank: t.bank,
           entity: t.entity,
+          voucher_type:t.voucher_type
         });
       } else {
         log.info(
@@ -116,6 +120,8 @@ const storeTransactionsBatch = async (transformedTransactions) => {
         );
       }
     }
+
+    log.info({uniqueTransactions})
 
     if (uniqueTransactions.length === 0) {
       log.info("No new unique transactions to store");
@@ -718,7 +724,7 @@ function generateReportIpc(tmpdir_path) {
       log.info("API response received:", response.data);
 
       // Step 3: Handle failed extractions
-      if (response.data?.["pdf_paths_not_extracted"]) {
+      if (response.data?.["pdf_paths_not_extracted"]?.paths?.length > 0) {
         const failedPdfPaths =
           response.data["pdf_paths_not_extracted"].paths || [];
 
@@ -766,6 +772,8 @@ function generateReportIpc(tmpdir_path) {
           },
         };
       }
+
+      log.info({aiyaz:parsedData.Transactions[0]})
 
       const transactions_temp = (parsedData.Transactions || []).filter(
         (transaction) => {

@@ -755,7 +755,7 @@ function registerIndividualDashboardIpc() {
                 eq(transactions.statementId, individualId.toString()),
                 or(
                   eq(transactions.category, "Self transfer"),
-                  eq(transactions.voucher_type, "contra")
+                  eq(transactions.voucher_type, "Contra")
                 )
               )
             );

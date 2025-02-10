@@ -39,7 +39,8 @@ const Transactions = () => {
           type: transaction.type,
           balance: transaction.balance,
           bank: transaction.bank,
-          id:transaction.id
+          id:transaction.id,
+          voucher_type: transaction.voucher_type,
         }));
         setTransactionData(formattedData);
       } catch (err) {
@@ -82,7 +83,8 @@ const Transactions = () => {
         bank: transaction.bank,
         // entity: transaction.entity,
         type: transaction.type,
-        id:transaction.id
+        id:transaction.id,
+        voucher_type: transaction.voucher_type,
       };
 
 
@@ -108,7 +110,8 @@ const Transactions = () => {
       balance: transaction.balance,
       category: transaction.category,
       bank: transaction.bank,
-      id:transaction.id
+      id:transaction.id,
+      voucher_type: transaction.voucher_type,
       // entity: transaction.entity,
     }));
   };

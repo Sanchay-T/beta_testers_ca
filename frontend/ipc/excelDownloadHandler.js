@@ -86,7 +86,8 @@ function registerExcelDownloadHandlers(downloadPath) {
                         "Balance": transactions.balance,
                         "Category": transactions.category,
                         "Entity": transactions.entity,
-                        "Bank": transactions.bank
+                        "Bank": transactions.bank,
+                        "Voucher type": transactions.voucher_type,
                     })
                     .from(transactions)
                     .innerJoin(statements, eq(transactions.statementId, statements.id))
@@ -99,6 +100,7 @@ function registerExcelDownloadHandlers(downloadPath) {
             }
 
             if (transactionsForCase.length > 0) {
+                log.info({transactionsForCase})
 
                 formattedTransactions = transactionsForCase.map(txn => {
 
@@ -144,6 +146,7 @@ function registerExcelDownloadHandlers(downloadPath) {
                 });
 
             }
+
             catch (err) {
                 log.error("API Error:", err.response.data.detail, err.code);
                 throw err.response.data.detail;
