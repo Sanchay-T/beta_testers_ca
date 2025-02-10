@@ -1165,7 +1165,7 @@ const DataTable = ({
                       onCheckedChange={toggleSelectAll}
                     />
                   </TableHead>
-                )}
+                }
 
                 {columns.map((column) => (
                   <TableHead
@@ -1197,7 +1197,7 @@ const DataTable = ({
                             }
                           }}
                         >
-                          ▼f
+                          ▼
                         </Button>
                       )}
                     </div>
@@ -1436,9 +1436,10 @@ const DataTable = ({
                           </TableCell>
                         );
                       }
+                      
                     })}
                   </TableRow>
-                })
+                  )})
               )}
             </TableBody>
             <TableFooter>
