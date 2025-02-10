@@ -21,11 +21,20 @@ const TallyDirectImport = ({caseId}) => {
   const [loading2, setLoading2] = useState(false);
   const [confirmationModal, setConfirmationModal] = useState(false);
   const [tallyUploadData, setTallyUploadData] = useState([]);
+  const [failedTransactions, setFailedTransactions] = useState([]);
+  const [companyName, setCompanyName] = useState("");
+  const [successIds, setSuccessIds] = useState([]); 
+
 
   async function fetchVouchersTransactions() {
     try {
       const data = await window.electron.getTransactions(caseId); // Fetch vouchers from Electron API
       console.log({aq:data});
+
+      const storedReasons = JSON.parse(localStorage.getItem("failedTransactions") || "{}");
+
+
+
        const formattedData = data.map((transaction) => ({
         
         date: new Date(transaction.date).toLocaleDateString("en-GB", {
@@ -43,8 +52,8 @@ const TallyDirectImport = ({caseId}) => {
         voucher_type:transaction.type==="debit" ? "Payment Voucher":"Receipt Voucher",
         narration:transaction.description,
         id:transaction.id,
-        imported:transaction.imported===1?true:false
-
+        imported:transaction.imported===1?true:false,
+        failed_reason: storedReasons[transaction.id] || "", // ✅ Include failed reason
       }));
       setTransactions(formattedData);
       setSelectedVoucher("Payment Receipt Voucher");
@@ -115,7 +124,28 @@ const TallyDirectImport = ({caseId}) => {
   }
 
   const handleTallyUpload = async (transactions) => {
+    if (!companyName.trim()) {
+      alert("Please enter a company name before uploading.");
+      return;
+    }
     console.log({transactions:transactions.length});
+
+  // ✅ Check if any transaction is missing DrLedger or CrLedger and their imported is false
+
+  const incompleteTransactions = transactions.filter(
+    (transaction) => {
+      if(transaction.imported) {
+        return false;
+      }else{
+        return !transaction.dr_ledger || !transaction.cr_ledger;
+      }
+    }
+  );
+
+  if (incompleteTransactions.length > 0) {
+    alert("Some transactions are missing DrLedger or CrLedger. Please fill them before uploading.");
+    return;
+  }
 
     const tallyData = transactions.map((transaction)=>{
       if(transaction.imported) {
@@ -124,12 +154,16 @@ const TallyDirectImport = ({caseId}) => {
       }
       const tempVoucherType = transaction.voucher_type==="Payment Voucher" ? "Payment":"Receipt";
       return {
-        companyName: "CypherSol",
+        companyName: companyName,
         invoiceDate: formatDateForTally(transaction.date),
-        effectiveDate: formatDateForTally(transaction.effective_date || transaction.date), // TODO : change this after asking poojan - Using invoice date if effective date is not available
-        referenceNumber: transaction.reference_number || "Ref002",
-        DrLedger: transaction.dr_ledger || "Cash",
-        CrLedger: transaction.cr_ledger || "Cash",
+        // invoiceDate:"20240401",
+        effectiveDate: formatDateForTally(transaction.effective_date ||null), // TODO : change this after asking poojan - Using invoice date if effective date is not available
+        // effectiveDate: "20240401", // TODO : change this after asking poojan - Using invoice date if effective date is not available
+        referenceNumber: transaction.reference_number ||null,
+        DrLedger: transaction.dr_ledger || null,
+        // DrLedger: "sbin" || null,
+        CrLedger: transaction.cr_ledger || null,
+        // CrLedger: "icic" || null,
         amount: transaction.amount,
         narration: transaction.narration,
         voucherName: tempVoucherType,
@@ -148,50 +182,64 @@ const TallyDirectImport = ({caseId}) => {
 
 
   const handleUploadAfterConfirmation=async ()=>{
-    const successIds = [];
     setLoading2(true);
 
-    // for (let i = 0; i < tallyUploadData.length; i++) {
-      for (let i = 10; i < 12; i++) {
-      const row = tallyUploadData[i];
-      const xmlContent = buildTallyXml(row);
-  
       try {
-        const response = await fetch("http://localhost:9000", {
-          method: "POST",
-          mode: "no-cors", // Allow CORS
-          headers: { "Content-Type": "application/xml" },
-          body: xmlContent
-        });
-        console.log({response});
-        const responseText = await response.text();
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(responseText, "text/xml");
-        const lineErrors = doc.getElementsByTagName("LINEERROR");
-  
-        if (lineErrors.length > 0) {
-          let errorMessages = [];
-          for (let k = 0; k < lineErrors.length; k++) {
-            errorMessages.push(lineErrors.item(k).textContent);
-          }
-          console.log(`Row ${i + 1} -> Failed with errors:`, errorMessages.join(" | "));
-        } else {
-          console.log(`Row ${i + 1} -> Success!`);
-          successIds.push(row.id);
-        }
-      } catch (err) {
-        console.log(`Row ${i + 1} -> Error sending data to Tally:`, err);
-      }
-    }
-    updateTallyStatus(successIds);
+        const response = await window.electron.uploadToTally(tallyUploadData);
+        const failedTransactions = response.failedTransactions; // strcutre = {id, error}
+        const successIds = response.successIds;
 
+        const storedReasons = JSON.parse(localStorage.getItem("failedTransactions") || "{}");
+        
+        // Update failed transactions with reasons
+        failedTransactions.forEach((transaction) => {
+            storedReasons[transaction.id] = transaction.error; // Store error by transaction ID
+        });
+
+        // Remove successIds from stored reasons (clear errors for successful transactions)
+        successIds.forEach((id) => {
+            delete storedReasons[id];
+          });
+
+        localStorage.setItem("failedTransactions", JSON.stringify(storedReasons));
+
+          // ✅ Update transactions immediately to reflect failed reasons in the table
+          setTransactions((prevTransactions) =>
+            prevTransactions.map((transaction) => ({
+              ...transaction,
+              failed_reason: storedReasons[transaction.id] || "", // Update failed reason immediately
+            }))
+          );
+
+        // show a dailog box with failed transactions
+        if (failedTransactions.length > 0) {
+          console.log("Failed Transactions:", failedTransactions);
+          setSuccessIds(successIds);
+          setTransactions((prevTransactions) =>
+            prevTransactions.map((transaction) => ({
+              ...transaction,
+              imported: successIds.includes(transaction.id) ? true : transaction.imported,
+            }))
+          );
+          // also update the status of the transactions
+          setFailedTransactions(failedTransactions);
+          setConfirmationModal(false);
+        }
+
+      } catch (err) {
+        // console.log(`Row ${i + 1} -> Error sending data to Tally:`, err);
+      }finally{
+          setLoading2(false);
+      }
   }
 
   return (
     <Card>
       <CardHeader>
+  
         <div className="flex justify-between items-center">
           <CardTitle className="text-lg font-semibold">{`Tally ${selectedVoucher} Transactions`}</CardTitle>
+          
           <div className="flex gap-4">
             <Select onValueChange={handleVoucherChange} value={selectedVoucher}>
               <SelectTrigger className="w-64">
@@ -207,6 +255,7 @@ const TallyDirectImport = ({caseId}) => {
             </Select>
           </div>
         </div>
+        
       </CardHeader>
       <CardContent className="">
         {loading ? (
@@ -214,46 +263,78 @@ const TallyDirectImport = ({caseId}) => {
             <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
           </div>
         ) : transactions.length > 0 ? (
-          <TallyTable data={transactions} title={" "} subtitle={" "} handleUpload={handleTallyUpload} />
+          <TallyTable data={transactions} title={" "} subtitle={" "} handleUpload={handleTallyUpload} setCompanyName={setCompanyName} companyName={companyName}/>
         ) : (
           <div className="text-center py-6 text-gray-500">No transactions available</div>
         )}
       </CardContent>
 
          {/* Category Update Confirmation Modal */}
-    <Dialog open={confirmationModal} onOpenChange={setConfirmationModal}>
-      <DialogContent className="min-w-[500px] max-w-[40%]">
-        <DialogHeader>
-          <DialogTitle>Confirm Tally Import</DialogTitle>
+      <Dialog open={confirmationModal} onOpenChange={setConfirmationModal}>
+        <DialogContent className="min-w-[500px] max-w-[40%]">
+          <DialogHeader>
+            <DialogTitle>Confirm Tally Import</DialogTitle>
+            <DialogDescription>
+              <p className="mt-4 text-lg">You are about to import {tallyUploadData.length} transactions to Tally. Are you sure you want to proceed?
+              </p>
+              {/* Show a note that already uploaded transaction wont get uploaded again */}
+
+              <p className="my-4 text-sm text-gray-500">
+                Note: Already uploaded transactions will not be uploaded again.
+              </p>
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setConfirmationModal(false)}>
+              Cancel
+            </Button>
+            
+            <Button disabled={loading2} variant="default" onClick={handleUploadAfterConfirmation}>
+              {loading2 ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <span>Processing...</span>
+                </>
+              ) : (
+                "Confirm"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog to show failed transaction and reasons */}
+      <Dialog open={failedTransactions.length > 0} onOpenChange={setFailedTransactions}>
+        <DialogContent className="min-w-[500px] max-w-[40%] max-h-[90%] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Alert</DialogTitle>
+          </DialogHeader>
           <DialogDescription>
-            <p className="mt-4 text-lg">You are about to import {tallyUploadData.length} transactions to Tally. Are you sure you want to proceed?
-            </p>
-            {/* Show a note that already uploaded transaction wont get uploaded again */}
-
-            <p className="my-4 text-sm text-gray-500">
-              Note: Already uploaded transactions will not be uploaded again.
-            </p>
+            <Table>
+            {successIds.length>0&&<TableHead>
+                <TableRow>
+                  {/* <TableHeader>Transaction ID</TableHeader> */}
+                  <TableHeader className="text-lg text-green-700">Successfully uploaded {successIds.length} transactions</TableHeader>
+                </TableRow>
+              </TableHead>}
+              <TableBody>
+                {failedTransactions.map((transaction) => (
+                  <TableRow key={transaction.id}>
+                    {/* <TableCell>{transaction.id}</TableCell> */}
+                    <TableCell>{transaction.error}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </DialogDescription>
-        </DialogHeader>
-
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => setConfirmationModal(false)}>
-            Cancel
-          </Button>
-          
-          <Button disabled={loading2} variant="default" onClick={handleUploadAfterConfirmation}>
-            {loading2 ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                <span>Processing...</span>
-              </>
-            ) : (
-              "Confirm"
-            )}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <DialogFooter className={"sticky bottom-0"}>
+            <Button variant="default" onClick={() => setFailedTransactions([])}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

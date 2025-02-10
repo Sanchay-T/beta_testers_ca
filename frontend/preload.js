@@ -146,6 +146,7 @@ contextBridge.exposeInMainWorld("electron", {
   editPdf: (result, reportName) =>
     ipcRenderer.invoke("edit-pdf", result, reportName),
   editEntity: (payload) => ipcRenderer.invoke("edit-entity", payload),
+  uploadToTally: (data) => ipcRenderer.invoke("tally-upload", data),
 
   // Add auto-update related methods
   updates: {

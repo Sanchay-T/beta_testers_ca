@@ -96,7 +96,7 @@ const categoryOptionsfixed = [
   ];
 
 
-const DataTable = ({ data = [], title, subtitle,caseId,source,handleUpload}) => {
+const DataTable = ({ data = [], title, subtitle,caseId,source,handleUpload,companyName,setCompanyName}) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [transactions, setTransactions] = useState([]);
     const [filteredData, setFilteredData] = useState(data);
@@ -149,7 +149,11 @@ const DataTable = ({ data = [], title, subtitle,caseId,source,handleUpload}) => 
     // We now store pending change by transaction id
     const [pendingCategoryChange, setPendingCategoryChange] = useState(null);
     const [bulkReasoning, setBulkReasoning] = useState("");
-    const [showAllRows, setShowAllRows] = useState(false);
+
+    const [selectedTransactions, setSelectedTransactions] = useState([]);
+    const [bulkLedgerValue, setBulkLedgerValue] = useState("");
+    const [ledgerField, setLedgerField] = useState("dr_ledger"); // "dr_ledger" or "cr_ledger"
+
 
     const isFirstLoad = useRef(true);
 
@@ -390,23 +394,6 @@ useEffect(() => {
     });
   };
 
-  const toggleSelectAll = () => {
-    const newGlobalSelected = new Set(globalSelectedRows);
-    const allCurrentPageSelected = filteredData.every((row) =>
-      newGlobalSelected.has(row.id)
-    );
-    if (allCurrentPageSelected) {
-      filteredData.forEach((row) => {
-        newGlobalSelected.delete(row.id);
-      });
-    } else {
-      filteredData.forEach((row) => {
-        newGlobalSelected.add(row.id);
-      });
-    }
-    setGlobalSelectedRows(newGlobalSelected);
-  };
-
 
 //   Filter functions
 
@@ -457,7 +444,7 @@ useEffect(() => {
 
   const clearFilters = () => {
     setSearchTerm("");
-    setFilteredData(data);
+    setFilteredData(transactions);
     setCurrentPage(1);
     setMinValue("");
     setMaxValue("");
@@ -629,16 +616,12 @@ useEffect(() => {
   };
 
    useEffect(() => {
-      const totalPagesTemp = showAllRows
-        ? 1
-        : Math.ceil(filteredData.length / rowsPerPage);
+      const totalPagesTemp =Math.ceil(filteredData.length / rowsPerPage);
       setTotalPages(totalPagesTemp);
-      const startIndexTemp = showAllRows ? 0 : (currentPage - 1) * rowsPerPage;
-      const endIndexTemp = showAllRows
-        ? filteredData.length
-        : startIndexTemp + rowsPerPage;
+      const startIndexTemp =(currentPage - 1) * rowsPerPage;
+      const endIndexTemp = startIndexTemp + rowsPerPage;
       setCurrentdata(filteredData.slice(startIndexTemp, endIndexTemp));
-    }, [filteredData, currentPage, rowsPerPage, showAllRows]);
+    }, [filteredData, currentPage, rowsPerPage]);
   
 
   // Generate page numbers for pagination
@@ -762,21 +745,110 @@ useEffect(() => {
   handleUpload(transactions);
 
   }
+
+  const handleLedgerChange = (transactionId, field, value) => {
+    console.log("transactionId", transactionId, "field", field, "value", value);
+    setTransactions((prevTransactions) =>
+      prevTransactions.map((transaction) =>
+        transaction.id === transactionId ? { ...transaction, [field]: value } : transaction
+      )
+    );
+
+    setFilteredData((prevData) =>
+      prevData.map((transaction) =>
+        transaction.id === transactionId ? { ...transaction, [field]: value } : transaction
+      )
+    );
+  };
+
+
+  const toggleTransactionSelection = (transactionId) => {
+    setSelectedTransactions((prev) =>
+      prev.includes(transactionId)
+        ? prev.filter((id) => id !== transactionId)
+        : [...prev, transactionId]
+    );
+  };
+  
+  const toggleSelectAll = () => {
+    setSelectedTransactions((prev) =>
+      prev.length === filteredData.length ? [] : filteredData.map((t) => t.id)
+    );
+  };
+  
+  const handleBulkLedgerUpdate = () => {
+    console.log(ledgerField, bulkLedgerValue, selectedTransactions);
+    setTransactions((prevTransactions) =>
+      prevTransactions.map((transaction) =>
+        selectedTransactions.includes(transaction.id)
+          ? { ...transaction, [ledgerField]: bulkLedgerValue }
+          : transaction
+      )
+    );
+
+    setFilteredData((prevData) =>
+      prevData.map((transaction) =>
+        selectedTransactions.includes(transaction.id)
+          ? { ...transaction, [ledgerField]: bulkLedgerValue }
+          : transaction
+      )
+    );
+    setSelectedTransactions([]);
+    setBulkLedgerValue("");
+  };
+  
   
 
   return (
     // if source is equal to lifo or fifo then show the table
     <Card className="min-w-full max-w-[0]">
+      <div className="flex justify-between items-center px-4 pt-2">
+
+      <div className="flex items-center gap-4">
+            <label htmlFor="companyName" className="font-medium">
+              Company Name:
+            </label>
+            <input
+              id="companyName"
+              type="text"
+              placeholder="Enter Company Name"
+              value={companyName}
+              tabIndex="0"  // ✅ Ensure the input is focusable
+              onChange={(e) => setCompanyName(e.target.value)}
+              className="border rounded-md p-2 w-64 dark:bg-gray-800 dark:text-white"
+                onFocus={(e) => e.target.select()} // ✅ Ensure it highlights the text when clicked
+      
+            />
+          </div>
+          <div className="flex gap-4 p-4 pb-0">
+            <select onChange={(e) => setLedgerField(e.target.value)} className="border rounded-md p-2">
+              <option value="dr_ledger">Dr Ledger</option>
+              <option value="cr_ledger">Cr Ledger</option>
+            </select>
+            <input
+              type="text"
+              placeholder={`Enter ${ledgerField}`}
+              value={bulkLedgerValue}
+              onChange={(e) => setBulkLedgerValue(e.target.value)}
+              className="border rounded-md p-2 w-64 dark:bg-gray-800 dark:text-white"
+            />
+            <Button onClick={handleBulkLedgerUpdate} disabled={selectedTransactions.length === 0}>
+              Set for Selected
+            </Button>
+          </div>
+      </div>
+
       <CardHeader>
-        <div className="flex justify-between items-center">
-          <div className="space-y-2">
-          <Button
-      onClick={handleUploadToTally}
-      className="px-6 py-3 text-base font-medium text-white bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 hover:bg-gray-700 transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
-    >
-      <UploadCloud className="w-5 h-5 text-white" />
-      Upload to Tally
-    </Button>
+        
+            <div className="flex justify-between items-center">
+              <div className="space-y-2">
+              <Button
+          onClick={handleUploadToTally}
+          className="px-6 py-3 text-base font-medium text-white bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 hover:bg-gray-700 transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
+        >
+          <UploadCloud className="w-5 h-5 text-white" />
+          Upload to Tally
+        </Button>
             {/* <CardTitle className="dark:text-slate-300">{title || "Data Table"}</CardTitle> */}
             {/* <CardDescription>{subtitle || "View and manage your data"}</CardDescription> */}
           </div>
@@ -866,10 +938,10 @@ useEffect(() => {
       <CardContent>
         <div className="relative  overflow-x-auto">
           <Table className="w-full">
-            <TableHeader>
-              <TableRow>
+          <TableHeader className="bg-gray-200 dark:bg-gray-900">
+          <TableRow>
                
-                 {(columns.includes("category") || columns.includes("entity") )&&  <TableHead className="w-10">
+                 {/* {(columns.includes("category") || columns.includes("entity") )&&  <TableHead className="w-10">
                     <Checkbox
                         checked={
                         currentData.length > 0 &&
@@ -877,10 +949,17 @@ useEffect(() => {
                         }
                         onCheckedChange={toggleSelectAll}
                     />
-                  </TableHead>}
-                
+                  </TableHead>} */}
+              <TableHead className="w-10">
+                <Checkbox
+                        checked={
+                          selectedTransactions.length === filteredData.length
+                        }
+                        onCheckedChange={toggleSelectAll}
+                    />
+                </TableHead>
                 {columns.map((column) => (
-                  <TableHead key={column} className={`whitespace-nowrap ${column==="bill_reference"&&"min-w-[180px]"} ${column==="narration"&&"min-w-[300px]"}`}
+                  <TableHead key={column} className={`whitespace-nowrap ${["bill_reference","dr_ledger","cr_ledger"].includes(column)&&"min-w-[180px]"} ${column==="narration"&&"min-w-[300px]"}`}
                   // className={source === "summary" ? "bg-gray-900 dark:bg-slate-800 text-white" : ""}
                   >
 
@@ -927,15 +1006,19 @@ useEffect(() => {
                 currentData.map((row) => {
                   return <TableRow
                     key={row.id}
-                  // className={source === "summary" ? "even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200" : ""}
+                    className={`${row.imported ? "bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800" : "hover:bg-gray-100 dark:hover:bg-gray-800"}`}
+                    // className={source === "summary" ? "even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200" : ""}
                   >
-                     {                 (columns.includes("category") || columns.includes("entity") )&&  <TableCell className="w-10">
+                    <TableCell>
                         <Checkbox
-                          checked={globalSelectedRows.has(row.id)}
-                          onCheckedChange={() => toggleRowSelection(row.id)}
-                        />
-                      </TableCell>}
+                        checked={
+                          selectedTransactions.includes(row.id)
+                        }
+                        onCheckedChange={() => toggleTransactionSelection(row.id)}
+                    />
+                      </TableCell>
                     {columns.map((column) => {
+                      
                       if (column.toLowerCase() === "entity") {
                         return (
                           <TableCell
@@ -1121,10 +1204,31 @@ useEffect(() => {
                         placeholder="Enter Reference Number"
                         className="w-full p-2 border border-gray-300 rounded-md"
                       />
+
                       </TableCell>
                       } else if(column.toLowerCase()==="imported"){
                         return  <TableCell key={column} className="max-w-[200px]">
-                        <div>{row[column]===true?"True":"False"}</div>
+                        <div>{row[column]===true?"Success":"Failed"}</div>
+                      </TableCell>
+                      } else if(column.toLowerCase()==="dr_ledger"){
+                        return <TableCell>
+                       <input
+                            type="text"
+                            placeholder="Enter Dr-Ledger"
+                            value={row[column] || ""}
+                            onChange={(e) => handleLedgerChange(row.id, "dr_ledger", e.target.value)}
+                            className="border rounded-md p-2 w-full dark:bg-gray-800 dark:text-white"
+                          />
+                      </TableCell>
+                      }else if(column.toLowerCase()==="cr_ledger"){
+                        return  <TableCell>
+                       <input
+                            type="text"
+                            placeholder="Enter Cr-Ledger"
+                            value={row[column] || ""}
+                            onChange={(e) => handleLedgerChange(row.id, "cr_ledger", e.target.value)}
+                            className="border rounded-md p-2 w-full dark:bg-gray-800 dark:text-white"
+                          />
                       </TableCell>
                       }else {
                         return (
