@@ -796,6 +796,8 @@ function generateReportIpc(tmpdir_path) {
         };
       }
 
+      console.log("parsedData", parsedData.length);
+
       const transactions_temp = (parsedData.Transactions || []).filter(
         (transaction) => {
           if (
