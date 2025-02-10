@@ -2226,6 +2226,10 @@ def category_add_ca(df):
     df.loc[(df["Description"].str.contains(last_move, regex=True)) & (df["Credit"] > 0) & (
                 df["Category"] == "Suspense"), "Category",] = ""
 
+    df["Voucher type"] = ""
+    df.loc[df["Category"].isin(["Cash Withdrawal", "Cash Deposits"]), "Voucher type"] = "Contra"
+    df.loc[(df["Debit"] > 0) & (~df["Category"].isin(["Cash Withdrawal", "Cash Deposits"])), "Voucher type"] = "Payment"
+    df.loc[(df["Credit"] > 0) & (~df["Category"].isin(["Cash Withdrawal", "Cash Deposits"])), "Voucher type"] = "Receipt"
     df["Balance"] = x  # Manish
     return df
 
