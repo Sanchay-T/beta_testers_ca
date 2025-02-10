@@ -1131,7 +1131,8 @@ useEffect(() => {
                   >
                     
                     <div className="flex items-center gap-2">
-                    {column
+                      
+                    {column.toLowerCase()==="entity"?"Party Name": column
                         .split("_") // Split by underscore
                         .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Capitalize
                         .join(" ")}
@@ -1152,7 +1153,7 @@ useEffect(() => {
                             }
                           }}
                         >
-                          ▼
+                          ▼f
                         </Button>
                       )}
                     </div>
@@ -1779,6 +1780,10 @@ useEffect(() => {
                         <RadioGroupItem value="Other Expenses / Payments" id="other_expenses" />
                         <Label htmlFor="other_expenses">Other Expenses</Label>
                       </div>}
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Contra" id="Contra" />
+                        <Label htmlFor="Contra">Contra</Label>
+                      </div>
                     </RadioGroup>
         
                     <DialogFooter>
