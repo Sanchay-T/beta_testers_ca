@@ -113,6 +113,20 @@
       "when": 1739110721923,
       "tag": "0015_empty_shadow_king",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "6",
+      "when": 1739169642389,
+      "tag": "0016_smiling_polaris",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1739169670945,
+      "tag": "0017_friendly_squadron_supreme",
+      "breakpoints": true
     }
   ]
 }

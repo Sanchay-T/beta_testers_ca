@@ -12,7 +12,6 @@ import {
 import RecentReports from "./RecentReports";
 import { Bell, Moon, Sun } from "lucide-react";
 import { useTheme } from "../theme-provider";
-
 import StatsMetricCard from "../Elements/StatsCard";
 
 const MainDashboard = () => {
@@ -38,80 +37,307 @@ const MainDashboard = () => {
       time: "1h ago",
     },
   ];
+
   const [totalReports, setTotalReports] = useState(0);
   const [totalStatements, setTotalStatements] = useState(0);
   const [reportChartData, setReportChartData] = useState([]);
   const [statementChartData, setStatementChartData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [reportStatus, setReportStatus] = useState({ success: 0, failed: 0 });
+  const [allData, setAllData] = useState([]);
+  const [currentDuration, setCurrentDuration] = useState("1M");
+  const [totalTransactions, setTotalTransactions] = useState(0);
+  const [reportsDuration, setReportsDuration] = useState("1M");
+  const [statementsDuration, setStatementsDuration] = useState("1Y");
+  const [pagesData, setPagesData] = useState([]);
+  const [AverageTimeSavedPerDay, setAverageTimeSavedPerDay] = useState(0);
+  const [timeMetrics, setTimeMetrics] = useState({
+    totalTimeSaved: 0,
+    averageTimeSavedPerDay: 0,
+    timeData: [],
+  });
+  const [timeMetricsDuration, setTimeMetricsDuration] = useState("1M");
+
+  const calculateTimeMetrics = (pagesData, duration) => {
+    const today = new Date();
+    let startDate;
+
+    const getFYDates = () => {
+      const currentYear = today.getFullYear();
+      const currentMonth = today.getMonth() + 1;
+      const fyStartYear = currentMonth <= 3 ? currentYear - 1 : currentYear;
+
+      return {
+        start: new Date(`${fyStartYear}-04-01`),
+        end: new Date(`${fyStartYear + 1}-03-31`),
+      };
+    };
+
+    switch (duration) {
+      case "1M":
+        startDate = new Date(
+          today.getFullYear(),
+          today.getMonth() - 1,
+          today.getDate()
+        );
+        break;
+      case "2M":
+        startDate = new Date(
+          today.getFullYear(),
+          today.getMonth() - 2,
+          today.getDate()
+        );
+        break;
+      case "6M":
+        startDate = new Date(
+          today.getFullYear(),
+          today.getMonth() - 6,
+          today.getDate()
+        );
+        break;
+      case "1Y":
+        const fyDates = getFYDates();
+        startDate = fyDates.start;
+        break;
+      default:
+        startDate = new Date(
+          today.getFullYear(),
+          today.getMonth() - 1,
+          today.getDate()
+        );
+    }
+
+    const filteredPages = pagesData.filter((item) => {
+      const itemDate = new Date(item.createdAt);
+      return duration === "1Y"
+        ? itemDate >= getFYDates().start && itemDate <= getFYDates().end
+        : itemDate >= startDate && itemDate <= today;
+    });
+
+    const totalPages = filteredPages.reduce((sum, item) => sum + item.pages, 0);
+    const daysInPeriod = Math.ceil(
+      (duration === "1Y"
+        ? getFYDates().end - getFYDates().start
+        : today - startDate) /
+        (1000 * 60 * 60 * 24)
+    );
+
+    const totalTimeSaved = totalPages * 10;
+    const averageTimeSavedPerDay = Math.round(totalTimeSaved / daysInPeriod);
+
+    return {
+      totalTimeSaved,
+      averageTimeSavedPerDay,
+      totalPages,
+      daysInPeriod,
+    };
+  };
+
+  const handleTimeMetricsDurationChange = (duration) => {
+    setTimeMetricsDuration(duration);
+    const newMetrics = calculateTimeMetrics(pagesData, duration);
+    setTimeMetrics((prevMetrics) => ({
+      ...prevMetrics,
+      totalTimeSaved: newMetrics.totalTimeSaved,
+      averageTimeSavedPerDay: newMetrics.averageTimeSavedPerDay,
+    }));
+  };
+
+  const filterDataByDuration = (data, duration) => {
+    const today = new Date();
+    let monthsToShow;
+
+    switch (duration) {
+      case "1M":
+        monthsToShow = 1;
+        break;
+      case "2M":
+        monthsToShow = 2;
+        break;
+      case "6M":
+        monthsToShow = 6;
+        break;
+      case "1Y":
+        monthsToShow = 12;
+        break;
+      default:
+        monthsToShow = 1;
+    }
+
+    const sortedData = [...data].sort((a, b) => {
+      const monthA = new Date(Date.parse(a.month + " 1, 2024"));
+      const monthB = new Date(Date.parse(b.month + " 1, 2024"));
+      return monthA - monthB;
+    });
+
+    const filteredData = sortedData.slice(-monthsToShow);
+    const reportTotal = filteredData.reduce(
+      (sum, item) => sum + (item.reports || 0),
+      0
+    );
+    const statementTotal = filteredData.reduce(
+      (sum, item) => sum + (item.statements || 0),
+      0
+    );
+
+    return { filteredData, reportTotal, statementTotal };
+  };
+
+  const filterStatementDataByDuration = (data, duration) => {
+    const today = new Date();
+    let monthsToShow;
+
+    switch (duration) {
+      case "1M":
+        monthsToShow = 1;
+        break;
+      case "2M":
+        monthsToShow = 2;
+        break;
+      case "6M":
+        monthsToShow = 6;
+        break;
+      case "1Y":
+        monthsToShow = 12;
+        break;
+      default:
+        monthsToShow = 12;
+    }
+
+    const sortedData = [...data].sort((a, b) => {
+      const monthA = new Date(Date.parse(a.month + " 1, 2024"));
+      const monthB = new Date(Date.parse(b.month + " 1, 2024"));
+      return monthA - monthB;
+    });
+
+    const filteredData = sortedData.slice(-monthsToShow);
+    return {
+      filteredData,
+      statementTotal: filteredData.reduce(
+        (sum, item) => sum + (item.statements || 0),
+        0
+      ),
+    };
+  };
+
+  const getFinancialYearDates = () => {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth() + 1;
+    const fyStartYear = currentMonth <= 3 ? currentYear - 1 : currentYear;
+
+    return {
+      start: new Date(`${fyStartYear}-04-01`),
+      end: new Date(`${fyStartYear + 1}-03-31`),
+    };
+  };
+
+  const filterStatementsByFinancialYear = (statements) => {
+    const { start, end } = getFinancialYearDates();
+
+    return statements.statementDates.filter((date) => {
+      const statementDate = new Date(date);
+      return statementDate >= start && statementDate <= end;
+    }).length;
+  };
 
   useEffect(() => {
     const fetchDashboardData = async () => {
-      setIsLoading(true);
       try {
         const reports = await window.electron.getReportsProcessed();
         const statements = await window.electron.getStatementsProcessed();
+        const transactions = await window.electron.getTransactionsProcessed();
+        const pages = await window.electron.getPages();
 
-        // Process reports status
-        const reportSuccessCount = reports.statusCounts?.success || 0;
-        const reportFailedCount = reports.statusCounts?.failed || 0;
+        setPagesData(pages);
 
-        console.log("reportSuccessCount", reportSuccessCount);
-        console.log("reportFailedCount", reportFailedCount);
-
-        // Process reports dates
-        const reportData =
-          reports.caseDates?.map((date) => ({
-            month: new Date(date).toLocaleString("default", { month: "short" }),
-            value: 1,
-          })) || [];
-
-        // Group by month and sum values
-        const reportsByMonth = reportData.reduce((acc, curr) => {
-          const existing = acc.find((item) => item.month === curr.month);
-          if (existing) {
-            existing.value += curr.value;
-          } else {
-            acc.push({ ...curr });
-          }
-          return acc;
-        }, []);
-
-        // Process statement dates
-        const statementData =
-          statements.statementDates?.map((date) => ({
-            month: new Date(date).toLocaleString("default", { month: "short" }),
-            value: 1,
-          })) || [];
-
-        // Group by month and sum values
-        const statementsByMonth = statementData.reduce((acc, curr) => {
-          const existing = acc.find((item) => item.month === curr.month);
-          if (existing) {
-            existing.value += curr.value;
-          } else {
-            acc.push({ ...curr });
-          }
-          return acc;
-        }, []);
-
-        setTotalReports(reports.totalCount || 0);
-        setTotalStatements(statements.totalCount || 0);
-        setReportChartData(reportsByMonth);
-        setStatementChartData(statementsByMonth);
-        setReportStatus({
-          success: reportSuccessCount,
-          failed: reportFailedCount,
+        const initialMetrics = calculateTimeMetrics(pages, "1Y");
+        setTimeMetrics({
+          totalTimeSaved: initialMetrics.totalTimeSaved,
+          averageTimeSavedPerDay: initialMetrics.averageTimeSavedPerDay,
+          timeData: [],
         });
+
+        const fyStatementCount = filterStatementsByFinancialYear(statements);
+        setTotalTransactions(transactions.totalCount);
+
+        const mergedData = processData(reports, statements);
+        setAllData(mergedData);
+
+        const reportsData = filterDataByDuration(mergedData, "1M");
+        const statementsData = filterStatementDataByDuration(mergedData, "1Y");
+
+        setReportChartData(reportsData.filteredData);
+        setStatementChartData(statementsData.filteredData);
+        setTotalReports(reportsData.reportTotal);
+        setTotalStatements(fyStatementCount);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
-      } finally {
-        setIsLoading(false);
       }
     };
 
     fetchDashboardData();
   }, []);
+
+  const handleReportsDurationChange = (duration) => {
+    setReportsDuration(duration);
+    const { filteredData, reportTotal } = filterDataByDuration(
+      allData,
+      duration
+    );
+    setReportChartData(filteredData);
+    setTotalReports(reportTotal);
+  };
+
+  const handleStatementsDurationChange = (duration) => {
+    setStatementsDuration(duration);
+    const { filteredData, statementTotal } = filterStatementDataByDuration(
+      allData,
+      duration
+    );
+    setStatementChartData(filteredData);
+  };
+
+  const handleDurationChange = (duration) => {
+    setCurrentDuration(duration);
+    const { filteredData, reportTotal, statementTotal } = filterDataByDuration(
+      allData,
+      duration
+    );
+    setReportChartData(filteredData);
+    setTotalReports(reportTotal);
+    setTotalStatements(statementTotal);
+  };
+
+  const processData = (reports, statements) => {
+    const processDataByMonth = (dates) => {
+      return dates.reduce((acc, date) => {
+        const month = new Date(date).toLocaleString("default", {
+          month: "short",
+        });
+        acc[month] = (acc[month] || 0) + 1;
+        return acc;
+      }, {});
+    };
+
+    const reportsByMonth = processDataByMonth(reports.caseDates || []);
+    const statementsByMonth = processDataByMonth(
+      statements.statementDates || []
+    );
+
+    const allMonths = [
+      ...new Set([
+        ...Object.keys(reportsByMonth),
+        ...Object.keys(statementsByMonth),
+      ]),
+    ];
+
+    return allMonths.map((month) => ({
+      month,
+      reports: reportsByMonth[month] || 0,
+      statements: statementsByMonth[month] || 0,
+    }));
+  };
 
   return (
     <ScrollArea className="h-full">
@@ -123,7 +349,8 @@ const MainDashboard = () => {
             </h2>
             <p className="text-muted-foreground">
               Analytics Dashboard : 1.0.1-alpha , the update has been
-              successfull
+              successfull Analytics Dashboard : 1.0.1-alpha , the update has
+              been successfull
             </p>
           </div>
           <div className="flex items-center space-x-4">
@@ -174,55 +401,36 @@ const MainDashboard = () => {
           <StatsMetricCard
             type="reports"
             title="Monthly Reports & Statements"
-            mainValue={totalReports + totalStatements}
-            mainValueLabel="Reports Generated and Statements Processed"
-            percentageChange={15}
-            bottomStats={[
-              { label: "Success", value: reportStatus.success },
-              { label: "Failed", value: reportStatus.failed },
-            ]}
-            // chartData={[
-            //   { month: "Jan", value: 30 },
-            //   { month: "Feb", value: 50 },
-            //   { month: "Mar", value: 40 },
-            // ]}
-            chartData={reportChartData.concat(statementChartData)}
+            value1="Total Reports"
+            value2="Total Statements"
+            mainValue1={totalReports}
+            mainValue2={totalStatements}
+            chartData={reportChartData}
             chartType="bar"
+            onDurationChange={handleReportsDurationChange}
           />
+
           <StatsMetricCard
             type="statements"
-            title="Monthly Statements"
-            mainValue={totalStatements}
-            mainValueLabel="Statements Processed"
-            percentageChange={10}
-            bottomStats={[
-              { label: "Success", value: "-" },
-              { label: "Failed", value: "-" },
-            ]}
-            // chartData={[
-            //   { month: "Jan", value: 120 },
-            //   { month: "Feb", value: 200 },
-            //   { month: "Mar", value: 180 },
-            //   { month: "Apr", value: 250 },
-            // ]}
+            title="Financial Year Statements"
+            value1="FY Statements"
+            value2="Total Transactions"
+            mainValue1={totalStatements}
+            mainValue2={totalTransactions}
             chartData={statementChartData}
             chartType="line"
+            handleDurationChange={handleStatementsDurationChange}
           />
           <StatsMetricCard
             type="timeSaved"
             title="Time Saved"
-            mainValue="-"
+            value1="Total Time Saved"
+            value2="Average Time Saved/Day"
+            mainValue1={timeMetrics.totalTimeSaved}
+            mainValue2={timeMetrics.averageTimeSavedPerDay}
             mainValueLabel="Minutes Saved"
-            percentageChange={25}
-            breakdownData={[
-              { label: "Manual Processing", value: "- mins" },
-              { label: "Automation", value: "- mins" },
-              { label: "Optimization", value: "- mins" },
-            ]}
-            bottomStats={[
-              { label: "Average Time Saved/Day", value: "- mins" },
-              { label: "Peak Savings", value: "- mins" },
-            ]}
+            currentDuration={timeMetricsDuration}
+            onDurationChange={handleTimeMetricsDurationChange}
           />
         </div>
 

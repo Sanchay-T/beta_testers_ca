@@ -30,14 +30,20 @@ const SidebarDynamic = ({
   caseId,
   reportName,
 }) => {
-  const { logout, setError } = useAuth();
+  const { logout, setError, user } = useAuth();
   const navigate = useNavigate();
   const { isCollapsed } = useSidebar();
-  const [user] = React.useState({
-    name: "",
-    email: "",
-    avatar: "#",
-  });
+
+  // Get initials for avatar fallback
+  const getInitials = (name) => {
+    if (!name) return "U";
+    return name
+      .split(" ")
+      .map((word) => word[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   const isIndividualDashboard = Boolean(name);
   const isCaseDashboard = Boolean(caseId);
@@ -139,15 +145,19 @@ const SidebarDynamic = ({
       <DropdownMenuTrigger asChild>
         <button className="flex items-center w-full p-2 hover:bg-gray-100 rounded-md transition-all duration-200">
           <Avatar className="h-8 w-8 rounded-lg">
-            <AvatarImage src={user.avatar} alt={user.name} />
-            <AvatarFallback className="rounded-lg">HJ</AvatarFallback>
+            <AvatarImage src={user?.avatar} alt={user?.name || "User"} />
+            <AvatarFallback className="rounded-lg">
+              {getInitials(user?.name)}
+            </AvatarFallback>
           </Avatar>
           {!isCollapsed && (
             <div className="ml-3 flex-1 text-left">
               <p className="text-sm font-medium hover:text-black">
-                {user.name}
+                {user?.name || "User"}
               </p>
-              <p className="text-xs text-gray-500">{user.email}</p>
+              {/* <p className="text-xs text-gray-500">
+                {user?.email || "No email"}
+              </p> */}
             </div>
           )}
         </button>
@@ -156,12 +166,14 @@ const SidebarDynamic = ({
         <DropdownMenuLabel>
           <div className="flex items-center gap-2">
             <Avatar className="h-8 w-8 rounded-lg">
-              <AvatarImage src={user.avatar} alt={user.name} />
-              <AvatarFallback>HJ</AvatarFallback>
+              <AvatarImage src={user?.avatar} alt={user?.name || "User"} />
+              <AvatarFallback>{getInitials(user?.name)}</AvatarFallback>
             </Avatar>
             <div>
-              <p className="text-sm font-medium">{user.name}</p>
-              <p className="text-xs text-gray-500">{user.email}</p>
+              <p className="text-sm font-medium">{user?.name || "User"}</p>
+              {/* <p className="text-xs text-gray-500">
+                {user?.email || "No email"}
+              </p> */}
             </div>
           </div>
         </DropdownMenuLabel>

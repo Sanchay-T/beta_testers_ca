@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const log = require("electron-log");
 const axios = require("axios");
+
 const databaseManager = require("../db/db");
 const { transactions } = require("../db/schema/Transactions");
 const { statements } = require("../db/schema/Statement");
@@ -40,7 +41,7 @@ const validateAndTransformTransaction = (transaction, statementId) => {
     // log.info({"after":"conversion",day,month,year})
     date = new Date(year, month - 1, day);
     if (isNaN(date.getTime())) {
-      throw new Error("Invalid date");
+      throw new Error("Invalid dat  e");
     }
   } catch (error) {
     throw new Error(`Invalid date format: ${transaction["Value Date"]}`);
@@ -143,6 +144,7 @@ const storeTransactionsBatch = async (transformedTransactions) => {
     console.log("Unique Transactions : ", uniqueTransactions.length);
     for (let i = 0; i < uniqueTransactions.length; i += chunkSize) {
       const chunk = uniqueTransactions.slice(i, i + chunkSize);
+      console.log("Chunk Size : ", chunk.length);
       await db.insert(transactions).values(chunk);
       log.info(
         `Stored transactions batch ${i / chunkSize + 1}, size: ${chunk.length}`
@@ -250,27 +252,51 @@ const getOrCreateCase = async (caseName, userId = 1) => {
 
 const processStatementAndEOD = async (
   fileDetail,
-  transactions_temp, // renamed cuz we had a schema as transactions
+  transactions_temp,
   eodData,
   caseName,
   nerResults,
-  fileIndex
+  fileIndex,
+  successPageNumber // Add this parameter
 ) => {
   try {
     const validCaseId = await getOrCreateCase(caseName);
     let statementId = null;
     let processedTransactions = 0;
 
+    // Update the pages count in the cases table
+    if (typeof successPageNumber === "number" && !isNaN(successPageNumber)) {
+      try {
+        await db
+          .update(cases)
+          .set({
+            pages: successPageNumber,
+            updatedAt: new Date(),
+          })
+          .where(eq(cases.id, validCaseId));
+
+        log.info(
+          `Updated pages count to ${successPageNumber} for case ${validCaseId}`
+        );
+      } catch (error) {
+        log.error(
+          `Failed to update pages count for case ${validCaseId}:`,
+          error
+        );
+        // Continue processing even if page count update fails
+      }
+    }
+
     // Get NER results for this file using passed fileIndex
     const customerName = nerResults?.Name?.[fileIndex] || "UNKNOWN";
     const accountNumber = nerResults?.["Acc Number"]?.[fileIndex] || "UNKNOWN";
 
-    // First validate all transactions before creating the statement
+    // Rest of the existing function code remains the same...
     const statementTransactions = transactions_temp
       .filter((t) => t.Bank === fileDetail.bankName)
       .map((transaction) => {
         try {
-          return validateAndTransformTransaction(transaction, null); // Pass null for statementId initially
+          return validateAndTransformTransaction(transaction, null);
         } catch (error) {
           log.warn(
             `Invalid transaction found during validation: ${error.message}`,
@@ -281,7 +307,6 @@ const processStatementAndEOD = async (
       })
       .filter(Boolean);
 
-    // If no valid transactions found, throw error
     if (statementTransactions.length === 0) {
       throw new Error("No valid transactions found for statement");
     }
@@ -304,7 +329,7 @@ const processStatementAndEOD = async (
         createdAt: new Date(),
         startDate: start_date,
         endDate: end_date,
-        password:fileDetail.passwords
+        password: fileDetail.passwords,
       };
 
       log.info({ addingStatementData: statementData });
@@ -319,7 +344,6 @@ const processStatementAndEOD = async (
       }
 
       statementId = statementResult[0].id;
-      // Now update transactions with the new statementId and store them
       const finalTransactions = statementTransactions.map((transaction) => ({
         ...transaction,
         statementId,
@@ -331,10 +355,8 @@ const processStatementAndEOD = async (
       throw error;
     }
 
-    // Process EOD data if available
     if (eodData && Array.isArray(eodData)) {
       try {
-        // Check if EOD data already exists for this case
         const existingEOD = await db
           .select()
           .from(eod)
@@ -747,6 +769,7 @@ function generateReportIpc(tmpdir_path) {
 
         log.warn("Some PDF paths were not extracted", Array.from(failedFiles));
       }
+      log.info("success page ", response.data?.["success_page_number"]);
 
       // Step 4: Process transactions
       const parsedData = JSON.parse(sanitizeJSONString(response.data.data));
@@ -773,8 +796,6 @@ function generateReportIpc(tmpdir_path) {
         };
       }
 
-      log.info({aiyaz:parsedData.Transactions[0]})
-
       const transactions_temp = (parsedData.Transactions || []).filter(
         (transaction) => {
           if (
@@ -797,6 +818,8 @@ function generateReportIpc(tmpdir_path) {
         }
       );
 
+      console.log("transactions_temp", transactions_temp.length);
+
       // Step 5: Process each file
       const processedData = [];
       log.info({ exampleFileDetails: fileDetails });
@@ -809,7 +832,8 @@ function generateReportIpc(tmpdir_path) {
             parsedData.EOD,
             caseName,
             response.data?.ner_results || { Name: [], "Acc Number": [] },
-            fileDetails.indexOf(fileDetail)
+            fileDetails.indexOf(fileDetail),
+            response.data?.success_page_number
           );
           processedData.push(result);
 
@@ -982,7 +1006,7 @@ function generateReportIpc(tmpdir_path) {
         // Get the case ID
         const validCaseId = await getOrCreateCase(caseName);
 
-        log.info({validCaseId})
+        log.info({ validCaseId });
 
         // // Store failed statements in the database
         // await db.insert(failedStatements).values({
@@ -996,7 +1020,7 @@ function generateReportIpc(tmpdir_path) {
       }
 
       // Continue processing if data exists
-      if (!response.data ) {
+      if (!response.data) {
         throw new Error(
           "Empty or invalid response received from analysis server"
         );
@@ -1018,7 +1042,8 @@ function generateReportIpc(tmpdir_path) {
               totalTransactions: 0,
               eodProcessed: false,
               summaryProcessed: false,
-              failedStatements: response.data["pdf_paths_not_extracted"] || null,
+              failedStatements:
+                response.data["pdf_paths_not_extracted"] || null,
               failedFiles: Array.from(failedFiles),
               successfulFiles: Array.from(successfulFiles),
               nerResults: response.data?.ner_results || {

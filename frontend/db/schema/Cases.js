@@ -10,6 +10,7 @@ const cases = sqliteTable("cases", {
     .notNull()
     .references(() => users.id, { onDelete: "CASCADE" }),
   status: text("status").notNull(),
+  pages: integer("pages").notNull().default(0),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(), // Timestamp of creation
 });
 

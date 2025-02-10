@@ -10,6 +10,10 @@ contextBridge.exposeInMainWorld("electron", {
 
   getReportsProcessed: () => ipcRenderer.invoke("get-reports-processed"),
   getStatementsProcessed: () => ipcRenderer.invoke("get-statements-processed"),
+  getTransactionsProcessed: () =>
+    ipcRenderer.invoke("get-transaction-processed"),
+
+  getPages: () => ipcRenderer.invoke("get-total-pages"),
 
   getTransactions: (caseId, individualId) =>
     ipcRenderer.invoke("get-transactions", caseId, individualId),

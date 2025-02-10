@@ -21,7 +21,14 @@ import { Input } from "../ui/input";
 import { Badge } from "../ui/badge";
 import { cn } from "../../lib/utils";
 import { Checkbox } from "../ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTitle,DialogFooter,DialogDescription } from "../ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "../ui/dialog";
 import {
   Pagination,
   PaginationContent,
@@ -33,18 +40,22 @@ import {
 } from "../ui/pagination";
 import { Label } from "../ui/label";
 import { useToast } from "../../hooks/use-toast";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../ui/tooltip";
 import { exportToExcel } from "../exportToExcel";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-  } from "../ui/select";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import * as XLSX from "xlsx";
-
 
 const categoryOptionsfixed = [
     "Bank Charges",
@@ -108,24 +119,34 @@ const voucherOptions = [
   "Contra"
 ];
 
-
-const DataTable = ({ data = [], title, subtitle,caseId,source,refreshFunction}) => {
-    const [currentPage, setCurrentPage] = useState(1);
-    const [transactions, setTransactions] = useState([]);
-    const [filteredData, setFilteredData] = useState(data);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [filterModalOpen, setFilterModalOpen] = useState(false);
-    const [currentFilterColumn, setCurrentFilterColumn] = useState(null);
-    const [numericFilterModalOpen, setNumericFilterModalOpen] = useState(false);
-    const [currentNumericColumn, setCurrentNumericColumn] = useState(null);
-    const [minValue, setMinValue] = useState("");
-    const [maxValue, setMaxValue] = useState("");
-    const [selectedCategories, setSelectedCategories] = useState([]);
-    const [categorySearchTerm, setCategorySearchTerm] = useState("");
-    const [isLoading, setIsLoading] = useState(false);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [columnsToIgnore, setColumnsToIgnore] = useState(["id","transactionId","monthKey"]);
-    const [categoryOptions, setCategoryOptions] = useState(categoryOptionsfixed);
+const DataTable = ({
+  data = [],
+  title,
+  subtitle,
+  caseId,
+  source,
+  refreshFunction,
+}) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [transactions, setTransactions] = useState([]);
+  const [filteredData, setFilteredData] = useState(data);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterModalOpen, setFilterModalOpen] = useState(false);
+  const [currentFilterColumn, setCurrentFilterColumn] = useState(null);
+  const [numericFilterModalOpen, setNumericFilterModalOpen] = useState(false);
+  const [currentNumericColumn, setCurrentNumericColumn] = useState(null);
+  const [minValue, setMinValue] = useState("");
+  const [maxValue, setMaxValue] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [categorySearchTerm, setCategorySearchTerm] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [columnsToIgnore, setColumnsToIgnore] = useState([
+    "id",
+    "transactionId",
+    "monthKey",
+  ]);
+  const [categoryOptions, setCategoryOptions] = useState(categoryOptionsfixed);
 
   // Category states
     const[similarCategoryTransactions,setSimilarCategoryTransactions] = useState([]);
@@ -145,36 +166,34 @@ const DataTable = ({ data = [], title, subtitle,caseId,source,refreshFunction}) 
     const [batchEntityValue, setBatchEntityValue] = useState("");
     const { toast } = useToast();
 
-    // States for sharing 
-    const [shareModalOpen, setShareModalOpen] = useState(false);
-    
-    // NEW: Using transaction id instead of row index
-    const [globalSelectedRows, setGlobalSelectedRows] = useState(new Set());
-    const [bulkCategoryModalOpen, setBulkCategoryModalOpen] = useState(false);
-    const [selectedBulkCategory, setSelectedBulkCategory] = useState("");
-    const [confirmationModalOpen, setConfirmationModalOpen] = useState(false);
-  
-    // Classification modal state
-    const [selectedType, setSelectedType] = useState("");
-    const [showClassificationModal, setShowClassificationModal] = useState(false);
-    const [newCategoryToClassify, setNewCategoryToClassify] = useState("");
-    const [isSearchInputFocused, setIsSearchInputFocused] = useState(false);
-  
-    // Reasoning modal state
-    const [reasoningModalOpen, setReasoningModalOpen] = useState(false);
-    const [currentTransaction, setCurrentTransaction] = useState(null);
-    const [reasoning, setReasoning] = useState("");
-    // We now store pending change by transaction id
-    const [pendingCategoryChange, setPendingCategoryChange] = useState(null);
-    const [bulkReasoning, setBulkReasoning] = useState("");
+  // States for sharing
+  const [shareModalOpen, setShareModalOpen] = useState(false);
 
-    const isFirstLoad = useRef(true);
-    // states for excel download and upload
-    const fileInputRef = useRef(null);
-    const [uploadedChanges, setUploadedChanges] = useState([]);
-    const [categoryUpdateModalOpen, setCategoryUpdateModalOpen] = useState(false);
+  // NEW: Using transaction id instead of row index
+  const [globalSelectedRows, setGlobalSelectedRows] = useState(new Set());
+  const [bulkCategoryModalOpen, setBulkCategoryModalOpen] = useState(false);
+  const [selectedBulkCategory, setSelectedBulkCategory] = useState("");
+  const [confirmationModalOpen, setConfirmationModalOpen] = useState(false);
 
+  // Classification modal state
+  const [selectedType, setSelectedType] = useState("");
+  const [showClassificationModal, setShowClassificationModal] = useState(false);
+  const [newCategoryToClassify, setNewCategoryToClassify] = useState("");
+  const [isSearchInputFocused, setIsSearchInputFocused] = useState(false);
 
+  // Reasoning modal state
+  const [reasoningModalOpen, setReasoningModalOpen] = useState(false);
+  const [currentTransaction, setCurrentTransaction] = useState(null);
+  const [reasoning, setReasoning] = useState("");
+  // We now store pending change by transaction id
+  const [pendingCategoryChange, setPendingCategoryChange] = useState(null);
+  const [bulkReasoning, setBulkReasoning] = useState("");
+
+  const isFirstLoad = useRef(true);
+  // states for excel download and upload
+  const fileInputRef = useRef(null);
+  const [uploadedChanges, setUploadedChanges] = useState([]);
+  const [categoryUpdateModalOpen, setCategoryUpdateModalOpen] = useState(false);
 
   // Helper: Format dates
   const formatValue = (value) => {
@@ -182,9 +201,8 @@ const DataTable = ({ data = [], title, subtitle,caseId,source,refreshFunction}) 
     return value;
   };
 
-  
-useEffect(() => {
-  console.log("Data from unified - ",data);
+  useEffect(() => {
+    console.log("Data from unified - ", data);
     const formattedData = data.map((row) => {
       const newRow = { ...row };
       Object.keys(row).forEach((key) => {
@@ -202,16 +220,22 @@ useEffect(() => {
       return;
     }
     // Preserve user modifications while updating other data
-      setFilteredData((prevFilteredData) => {
-        return formattedData.map((newRow) => {
-          const modifiedRow = prevFilteredData.find(
-            (prevRow) => prevRow.id === newRow.id
-          );
-          return modifiedRow ? { ...newRow, category: modifiedRow.category,entity:modifiedRow.entity } : newRow;
-        });
+    setFilteredData((prevFilteredData) => {
+      return formattedData.map((newRow) => {
+        const modifiedRow = prevFilteredData.find(
+          (prevRow) => prevRow.id === newRow.id
+        );
+        return modifiedRow
+          ? {
+              ...newRow,
+              category: modifiedRow.category,
+              entity: modifiedRow.entity,
+            }
+          : newRow;
       });
+    });
 
-      setTransactions(formattedData);
+    setTransactions(formattedData);
 
     const storedCategories = localStorage.getItem("categoryOptions");
     let localCats = storedCategories ? JSON.parse(storedCategories) : null;
@@ -227,17 +251,13 @@ useEffect(() => {
       localStorage.setItem("categoryOptions", JSON.stringify(mergedCategories));
     }
     setCategoryOptions(mergedCategories);
-
   }, [data]);
-
 
   // Get dynamic columns from first data item
   let columns = data.length > 0 ? Object.keys(data[0]) : [];
   columns = columns.filter((column) => !columnsToIgnore.includes(column));
 
-  const hasEntity = columns.some(
-    (column) => column.toLowerCase() === "entity"
-  );
+  const hasEntity = columns.some((column) => column.toLowerCase() === "entity");
 
   // Determine which columns are numeric
   const numericColumns = columns.filter((column) =>
@@ -247,25 +267,28 @@ useEffect(() => {
     })
   );
 
-    const handleExcelFileUpload = async (event) => {
-      const file = event.target.files[0];
-      if (!file) return;
-    
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: "array" });
-        const sheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[sheetName];
-        const parsedData = XLSX.utils.sheet_to_json(sheet);
-    
-        console.log("Uploaded Suspense Data: ", parsedData);
-    
-        // Extract modified categories and compare with existing data
-        const updates = parsedData.map((row) => {
-          const existingTransaction = filteredData.find(tx => tx.id === row.Id);
+  const handleExcelFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const parsedData = XLSX.utils.sheet_to_json(sheet);
+
+      console.log("Uploaded Suspense Data: ", parsedData);
+
+      // Extract modified categories and compare with existing data
+      const updates = parsedData
+        .map((row) => {
+          const existingTransaction = filteredData.find(
+            (tx) => tx.id === row.Id
+          );
           if (!existingTransaction) return null;
-          if(existingTransaction.category === row.Category) return null;
+          if (existingTransaction.category === row.Category) return null;
 
           return {
             date: row.Date,
@@ -276,68 +299,66 @@ useEffect(() => {
             oldCategory: existingTransaction.category,
             newCategory: row.Category,
           };
-        }).filter(Boolean); // Remove nulls
-    
-        // Store updates and show confirmation modal
-        setUploadedChanges(updates);
-        setCategoryUpdateModalOpen(true);
-      };
-    
-      reader.readAsArrayBuffer(file);
+        })
+        .filter(Boolean); // Remove nulls
+
+      // Store updates and show confirmation modal
+      setUploadedChanges(updates);
+      setCategoryUpdateModalOpen(true);
+    };
+
+    reader.readAsArrayBuffer(file);
   };
 
   const applyUploadedCategoryChanges = async () => {
     // Suspense excel upload handle
     try {
-        console.log("Applying category updates:", uploadedChanges);
-        
-        // Call API or Electron IPC to update database
-        // await window.electron.updateSuspenseCategories(uploadedChanges);
+      console.log("Applying category updates:", uploadedChanges);
 
-        // TODO - Apply changes locally in the table
+      // Call API or Electron IPC to update database
+      // await window.electron.updateSuspenseCategories(uploadedChanges);
 
-        const dataOnUi = filteredData.map((row) => ({ ...row }));
-        uploadedChanges.forEach((change) => {
-          const index = dataOnUi.findIndex((row) => row.id === change.id);
-          if (index !== -1) {
-            dataOnUi[index].category = change.newCategory;
-          }
-        });
-        setFilteredData(dataOnUi);
+      // TODO - Apply changes locally in the table
 
+      const dataOnUi = filteredData.map((row) => ({ ...row }));
+      uploadedChanges.forEach((change) => {
+        const index = dataOnUi.findIndex((row) => row.id === change.id);
+        if (index !== -1) {
+          dataOnUi[index].category = change.newCategory;
+        }
+      });
+      setFilteredData(dataOnUi);
 
-        const updatedTransactions = uploadedChanges.map((change) => {
-          const updatedTransaction = filteredData.find(tx => tx.id === change.id);
-          if (updatedTransaction) {
-            updatedTransaction.oldCategory = change.oldCategory;
-            updatedTransaction.category = change.newCategory;
-            updatedTransaction.reasoning = "";
-          }
-          return updatedTransaction;
-        });
+      const updatedTransactions = uploadedChanges.map((change) => {
+        const updatedTransaction = filteredData.find(
+          (tx) => tx.id === change.id
+        );
+        if (updatedTransaction) {
+          updatedTransaction.oldCategory = change.oldCategory;
+          updatedTransaction.category = change.newCategory;
+          updatedTransaction.reasoning = "";
+        }
+        return updatedTransaction;
+      });
 
-        const payload = convertArrayToObject(updatedTransactions);
-        console.log("Payload", payload);
-        const response = await window.electron.editCategory(payload, caseId);
-        setCategoryUpdateModalOpen(false);
-        toast({
-            title: "Categories Updated!",
-            description: "Suspense transactions have been updated successfully.",
-        });
-        if(refreshFunction)
-          refreshFunction();
+      const payload = convertArrayToObject(updatedTransactions);
+      console.log("Payload", payload);
+      const response = await window.electron.editCategory(payload, caseId);
+      setCategoryUpdateModalOpen(false);
+      toast({
+        title: "Categories Updated!",
+        description: "Suspense transactions have been updated successfully.",
+      });
+      if (refreshFunction) refreshFunction();
     } catch (error) {
-        console.error("Error updating categories:", error);
-        toast({
-            title: "Error",
-            description: "Failed to update categories. Please try again.",
-            variant: "destructive",
-        });
+      console.error("Error updating categories:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update categories. Please try again.",
+        variant: "destructive",
+      });
     }
   };
-
-
-  
 
   const handleCategoryClassification = (category, classificationType) => {
     console.log(`Category: ${category}, Type: ${classificationType}`);
@@ -350,76 +371,74 @@ useEffect(() => {
     });
   };
 
-    // When classification is complete, update either the bulk field or a single row change.
-    const handleClassificationSubmit = () => {
-        handleCategoryClassification(newCategoryToClassify, selectedType);
-        console.log({selectedType})
-        setShowClassificationModal(false);
-        if (bulkCategoryModalOpen) {
-          setSelectedBulkCategory(newCategoryToClassify);
-          setCategorySearchTerm("");
-          setPendingCategoryChange(null);
-        } else if (pendingCategoryChange) {
-          const transaction = filteredData.find(
-            (tx) => tx.id === pendingCategoryChange.transactionId
-          );
-          const oldCategory = transaction ? transaction.category : "";
-          setPendingCategoryChange({
-            ...pendingCategoryChange,
-            newCategory: newCategoryToClassify,
-            oldCategory: oldCategory,
-          });
-          setCurrentTransaction(transaction);
-          setReasoningModalOpen(true);
-        }
-        setNewCategoryToClassify("");
-      };
-    
+  // When classification is complete, update either the bulk field or a single row change.
+  const handleClassificationSubmit = () => {
+    handleCategoryClassification(newCategoryToClassify, selectedType);
+    console.log({ selectedType });
+    setShowClassificationModal(false);
+    if (bulkCategoryModalOpen) {
+      setSelectedBulkCategory(newCategoryToClassify);
+      setCategorySearchTerm("");
+      setPendingCategoryChange(null);
+    } else if (pendingCategoryChange) {
+      const transaction = filteredData.find(
+        (tx) => tx.id === pendingCategoryChange.transactionId
+      );
+      const oldCategory = transaction ? transaction.category : "";
+      setPendingCategoryChange({
+        ...pendingCategoryChange,
+        newCategory: newCategoryToClassify,
+        oldCategory: oldCategory,
+      });
+      setCurrentTransaction(transaction);
+      setReasoningModalOpen(true);
+    }
+    setNewCategoryToClassify("");
+  };
 
-//Search Functionality
-      const handleSearch = (searchValue) => {
-        setSearchTerm(searchValue);
-      
-        // Reset to original data if search value is empty
-        if (searchValue === "") {
-          setFilteredData(data);
-          setCurrentPage(1);
-          return;
+  //Search Functionality
+  const handleSearch = (searchValue) => {
+    setSearchTerm(searchValue);
+
+    // Reset to original data if search value is empty
+    if (searchValue === "") {
+      setFilteredData(data);
+      setCurrentPage(1);
+      return;
+    }
+
+    // Always filter from the full data set for consistent search results
+    const columnsToReplace = ["amount", "balance", "debit", "credit"];
+    const filtered = data.filter((row) =>
+      Object.entries(row).some(([key, value]) => {
+        if (columnsToReplace.includes(key)) {
+          return String(value)
+            .replace(/,/g, "")
+            .toLowerCase()
+            .includes(searchValue.toLowerCase());
         }
-      
-        // Always filter from the full data set for consistent search results
-        const columnsToReplace = ["amount", "balance", "debit", "credit"];
-        const filtered = data.filter((row) =>
-          Object.entries(row).some(([key, value]) => {
-            if (columnsToReplace.includes(key)) {
-              return String(value)
-                .replace(/,/g, "")
-                .toLowerCase()
-                .includes(searchValue.toLowerCase());
-            }
-            return String(value).toLowerCase().includes(searchValue.toLowerCase());
-          })
-        );
-      
-        setFilteredData(filtered);
-        setCurrentPage(1);
-      
-        // Calculate totals for numeric columns from the new filtered data
-        const totals = numericColumns.reduce((acc, column) => {
-          const total = filtered.reduce((sum, row) => {
-            const value = parseFloat(String(row[column]).replace(/,/g, ""));
-            return !isNaN(value) ? sum + value : sum;
-          }, 0);
-          return {
-            ...acc,
-            [column]: total.toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }),
-          };
-        }, {});
+        return String(value).toLowerCase().includes(searchValue.toLowerCase());
+      })
+    );
+
+    setFilteredData(filtered);
+    setCurrentPage(1);
+
+    // Calculate totals for numeric columns from the new filtered data
+    const totals = numericColumns.reduce((acc, column) => {
+      const total = filtered.reduce((sum, row) => {
+        const value = parseFloat(String(row[column]).replace(/,/g, ""));
+        return !isNaN(value) ? sum + value : sum;
+      }, 0);
+      return {
+        ...acc,
+        [column]: total.toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }),
       };
-      
+    }, {});
+  };
 
   // --- Single Row Update: Use the entire row (which includes its id) ---
   const handleCategoryChange = (transaction, newCategory) => {
@@ -448,17 +467,24 @@ useEffect(() => {
   const confirmCategoryChange = () => {
     if (!pendingCategoryChange) return;
     const transactionId = pendingCategoryChange.transactionId;
-    console.log("transactionId", transactionId, "pendingCategoryChange ",pendingCategoryChange);
+    console.log(
+      "transactionId",
+      transactionId,
+      "pendingCategoryChange ",
+      pendingCategoryChange
+    );
     const updatedFilteredData = filteredData.map((tx) => {
       console.log("tx.id", tx.id, "transactionId", transactionId);
       if (parseInt(tx.id) === parseInt(transactionId)) {
-        console.log("Transaction found")
+        console.log("Transaction found");
         return { ...tx, category: pendingCategoryChange.newCategory };
       }
       return tx;
     });
     setFilteredData(updatedFilteredData);
-    const transaction = updatedFilteredData.find((tx) => tx.id === transactionId);
+    const transaction = updatedFilteredData.find(
+      (tx) => tx.id === transactionId
+    );
     console.log("transaction aiyaz", transaction);
     let modifiedObject = {
       ...transaction,
@@ -544,7 +570,7 @@ useEffect(() => {
 
       };
 
-        // --- Now store selected rows as transaction IDs ---
+  // --- Now store selected rows as transaction IDs ---
   const toggleRowSelection = (id) => {
     setGlobalSelectedRows((prev) => {
       const newSet = new Set(prev);
@@ -574,8 +600,7 @@ useEffect(() => {
     setGlobalSelectedRows(newGlobalSelected);
   };
 
-
-//   Filter functions
+  //   Filter functions
 
   const handleCategorySelect = (category) => {
     setSelectedCategories((prev) =>
@@ -644,7 +669,6 @@ useEffect(() => {
     );
   };
 
-
   // ===== Helper functions for inline & batch "Entity" editing =====
   const handleEntityChange = (tid, newValue) => {
     setEditedEntities((prev) => ({ ...prev, [tid]: newValue }));
@@ -678,8 +702,7 @@ useEffect(() => {
         title: "Changes saved successfully",
         description: "All category updates have been saved",
       });
-      if(refreshFunction)
-        refreshFunction();
+      if (refreshFunction) refreshFunction();
     } catch (error) {
       toast({
         title: "Error saving changes",
@@ -688,8 +711,7 @@ useEffect(() => {
       });
     } finally {
       setIsLoading(false);
-    setSelectedType("");
-
+      setSelectedType("");
     }
   };
 
@@ -699,8 +721,8 @@ useEffect(() => {
 
     try {
       const response = await window.electron.editEntity(payload);
-      console.log({entityUpdateIpc:response});
-      if(response.success) {
+      console.log({ entityUpdateIpc: response });
+      if (response.success) {
         console.log("Entity updated successfully");
         // Show a success toast
         toast({
@@ -708,26 +730,23 @@ useEffect(() => {
           title: "Entity Update",
           description: "Entities updated successfully",
           type: "success",
-          duration:3000
+          duration: 3000,
         });
-      }else{
+      } else {
         // Show an error toast
         toast({
           id: "entity-update-error",
           title: "Entity Update",
           description: "Entity update failed",
           type: "error",
-          duration:3000
-          
+          duration: 3000,
         });
         console.log("Entity update failed");
       }
-    }
-    catch (err) {
+    } catch (err) {
       console.log(err);
     }
-  }
-
+  };
 
   const handleEntityUpdateConfirm = (row) => {
     const id = row.id;
@@ -737,22 +756,21 @@ useEffect(() => {
         "Are you sure you want to update the Entity for this transaction?"
       )
     ) {
-
-      const payload = [{ entity: newValue, transactionId: row.id }]
+      const payload = [{ entity: newValue, transactionId: row.id }];
       entityUpdateIpc(payload);
 
       // Update the local state so the UI immediately reflects the new value.
-    setFilteredData((prevData) => {
-      const updatedData = [...prevData];
-      // Determine the correct key (e.g., "Entity" or "entity")
-      const index = updatedData.findIndex((row) => row.id === id);
-      
-      updatedData[index] = {
-        ...updatedData[index],
-        entity: newValue,
-      };
-      return updatedData;
-    });
+      setFilteredData((prevData) => {
+        const updatedData = [...prevData];
+        // Determine the correct key (e.g., "Entity" or "entity")
+        const index = updatedData.findIndex((row) => row.id === id);
+
+        updatedData[index] = {
+          ...updatedData[index],
+          entity: newValue,
+        };
+        return updatedData;
+      });
 
       // Clear the edit state for this row.
       setEditedEntities((prev) => {
@@ -776,18 +794,20 @@ useEffect(() => {
       const payload = Array.from(globalSelectedRows).map((id) => {
         const index = dataOnUi.findIndex((row) => row.id === id);
         if (index !== -1) {
-          
           dataOnUi[index] = { ...dataOnUi[index], entity: batchEntityValue };
           // Update the local state so the UI immediately reflects the new value.
           setFilteredData(dataOnUi);
           // Replace this console.log with your backend call.
-          return { entity: batchEntityValue, transactionId: dataOnUi[index].id }
-        }else{
+          return {
+            entity: batchEntityValue,
+            transactionId: dataOnUi[index].id,
+          };
+        } else {
           return null;
         }
       });
       console.log("Payload aq", payload);
-      entityUpdateIpc(payload)
+      entityUpdateIpc(payload);
 
       // Clear selections and close the modal.
       setGlobalSelectedRows(new Set());
@@ -796,14 +816,13 @@ useEffect(() => {
     }
   };
 
-   useEffect(() => {
-      const totalPagesTemp =  Math.ceil(filteredData.length / rowsPerPage);
-      setTotalPages(totalPagesTemp);
-      const startIndexTemp = (currentPage - 1) * rowsPerPage;
-      const endIndexTemp =startIndexTemp + rowsPerPage;
-      setCurrentdata(filteredData.slice(startIndexTemp, endIndexTemp));
-    }, [filteredData, currentPage, rowsPerPage]);
-  
+  useEffect(() => {
+    const totalPagesTemp = Math.ceil(filteredData.length / rowsPerPage);
+    setTotalPages(totalPagesTemp);
+    const startIndexTemp = (currentPage - 1) * rowsPerPage;
+    const endIndexTemp = startIndexTemp + rowsPerPage;
+    setCurrentdata(filteredData.slice(startIndexTemp, endIndexTemp));
+  }, [filteredData, currentPage, rowsPerPage]);
 
   // Generate page numbers for pagination
   const getPageNumbers = () => {
@@ -833,15 +852,13 @@ useEffect(() => {
   const handleAddCategory = (newCategory, row) => {
     // Check if the new category is non-empty and not already in the options
     if (newCategory && !categoryOptions.includes(newCategory)) {
-      
       // Set the category that needs classification
       setNewCategoryToClassify(newCategory);
       // Add the new category to your category options and sort them
       const updatedOptions = [...categoryOptions, newCategory].sort();
       setCategoryOptions(updatedOptions);
       localStorage.setItem("categoryOptions", JSON.stringify(updatedOptions));
-      
-      
+
       if (row) {
         // Single-row update flow: store the pending change using the transaction id.
         setPendingCategoryChange({
@@ -849,7 +866,7 @@ useEffect(() => {
           newCategory,
           oldCategory: row.category,
           transaction: row,
-          isDebit:row.credit===0
+          isDebit: row.credit === 0,
         });
         setShowClassificationModal(true);
       } else {
@@ -874,35 +891,50 @@ useEffect(() => {
     setShareModalOpen(true);
   };
 
-  const handleDownload = ()=>{
-      exportToExcel(data,title,false,source==="suspense"?categoryOptions:null);
-  }
-
+  const handleDownload = () => {
+    exportToExcel(
+      data,
+      title,
+      false,
+      source === "suspense" ? categoryOptions : null
+    );
+  };
 
   const handleMailShare = async () => {
-      const fileName = await exportToExcel(data, `${title}.xlsx`, true,source==="suspense"?categoryOptions:null);
-      if (!fileName) return alert("File saving was canceled.");
-    
-      // Generate mailto link (without attachment, since it's not possible)
-      const subject = encodeURIComponent(`${title} Report`);
-      const body = encodeURIComponent(`Please find the attached ${title} report.\n\n📌 Don't forget to manually attach the saved file before sending.`);
-      const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
-  
+    const fileName = await exportToExcel(
+      data,
+      `${title}.xlsx`,
+      true,
+      source === "suspense" ? categoryOptions : null
+    );
+    if (!fileName) return alert("File saving was canceled.");
+
+    // Generate mailto link (without attachment, since it's not possible)
+    const subject = encodeURIComponent(`${title} Report`);
+    const body = encodeURIComponent(
+      `Please find the attached ${title} report.\n\n📌 Don't forget to manually attach the saved file before sending.`
+    );
+    const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
+
     // Open mail client **only after the file is saved**
     window.location.href = mailtoLink;
   };
-  
 
   const handleWhatsappShare = async () => {
-    const fileName = await exportToExcel(data, `${title}.xlsx`, true, source==="suspense"?categoryOptions:null);
+    const fileName = await exportToExcel(
+      data,
+      `${title}.xlsx`,
+      true,
+      source === "suspense" ? categoryOptions : null
+    );
     if (!fileName) return alert("File saving was canceled.");
-  
+
     // Generate WhatsApp sharing link (without attachment, since it's not possible)
     const message = encodeURIComponent(
       `📁 Please find the attached Report: ${title}\n\n📌 Don't forget to manually attach the saved file before sending.`
     );
     const whatsappLink = `https://api.whatsapp.com/send?text=${message}`;
-  
+
     // Open WhatsApp Web
     window.open(whatsappLink, "_blank");
   };
@@ -1007,8 +1039,12 @@ useEffect(() => {
       <CardHeader>
         <div className="flex justify-between items-center">
           <div className="space-y-2">
-            <CardTitle className="dark:text-slate-300">{title || "Data Table"}</CardTitle>
-            <CardDescription>{subtitle || "View and manage your data"}</CardDescription>
+            <CardTitle className="dark:text-slate-300">
+              {title || "Data Table"}
+            </CardTitle>
+            <CardDescription>
+              {subtitle || "View and manage your data"}
+            </CardDescription>
           </div>
           <div className="flex items-center gap-2">
             <div className="relative flex items-center gap-2">
@@ -1024,8 +1060,8 @@ useEffect(() => {
                 value={rowsPerPage}
                 onChange={(e) => {
                   const value = e.target.value;
-                    setRowsPerPage(Number(value));
-                    setCurrentPage(1);
+                  setRowsPerPage(Number(value));
+                  setCurrentPage(1);
                 }}
               >
                 {/* <option value="5">5 rows</option> */}
@@ -1044,23 +1080,26 @@ useEffect(() => {
               >
                 Clear Filters
               </Button>
-            {source==="suspense"&& <>
-            <Button onClick={() => fileInputRef.current.click()} 
-                variant="outline"
-            className="px-3 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-600 
+              {source === "suspense" && (
+                <>
+                  <Button
+                    onClick={() => fileInputRef.current.click()}
+                    variant="outline"
+                    className="px-3 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-600 
                           bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
                           transition-all rounded-md shadow-sm hover:shadow-md"
-                          >
-                  Upload Modified Excel
-                </Button>
-                <input
-                  type="file"
-                  accept=".xlsx, .xls"
-                  ref={fileInputRef}
-                  onChange={handleExcelFileUpload}
-                  className="hidden"
-                />
-                </>}
+                  >
+                    Upload Modified Excel
+                  </Button>
+                  <input
+                    type="file"
+                    accept=".xlsx, .xls"
+                    ref={fileInputRef}
+                    onChange={handleExcelFileUpload}
+                    className="hidden"
+                  />
+                </>
+              )}
               <div className="flex gap-2">
                 {/* Download Button */}
                 <Tooltip>
@@ -1117,17 +1156,22 @@ useEffect(() => {
                
                  {(columns.includes("category") || columns.includes("entity") )&&  <TableHead className="w-10 ">
                     <Checkbox
-                        checked={
+                      checked={
                         currentData.length > 0 &&
-                        currentData.every((row) => globalSelectedRows.has(row.id))
-                        }
-                        onCheckedChange={toggleSelectAll}
+                        currentData.every((row) =>
+                          globalSelectedRows.has(row.id)
+                        )
+                      }
+                      onCheckedChange={toggleSelectAll}
                     />
-                  </TableHead>}
-                
+                  </TableHead>
+                )}
+
                 {columns.map((column) => (
-                  <TableHead key={column} className="whitespace-nowrap"
-                  // className={source === "summary" ? "bg-gray-900 dark:bg-slate-800 text-white" : ""}
+                  <TableHead
+                    key={column}
+                    className="whitespace-nowrap"
+                    // className={source === "summary" ? "bg-gray-900 dark:bg-slate-800 text-white" : ""}
                   >
                     
                     <div className="flex items-center gap-2">
@@ -1164,61 +1208,63 @@ useEffect(() => {
             <TableBody>
               {currentData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={hasEntity ? columns.length + 1 : columns.length} className="text-center">
+                  <TableCell
+                    colSpan={hasEntity ? columns.length + 1 : columns.length}
+                    className="text-center"
+                  >
                     No matching results found
                   </TableCell>
                 </TableRow>
               ) : (
                 currentData.map((row) => {
-                  return <TableRow
-                    key={row.id}
-                  // className={source === "summary" ? "even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200" : ""}
-                  >
-                     {(columns.includes("category") || columns.includes("entity") )&& <TableCell className="w-10">
-                        <Checkbox
-                          checked={globalSelectedRows.has(row.id)}
-                          onCheckedChange={() => toggleRowSelection(row.id)}
-                        />
-                      </TableCell>}
-                    {columns.map((column) => {
-                      if (column.toLowerCase() === "entity") {
-                        return (
-                          <TableCell
-                            key={column}
-                            className="max-w-[200px] relative"
-                          >
-                            <div className="flex items-center">
-                              <Input
-                                type="text"
-                                value={
-                                  editedEntities[row.id] !== undefined
-                                    ? editedEntities[row.id]
-                                    : row[column]
-                                }
-                                onChange={(e) =>
-                                  handleEntityChange(
-                                    row.id,
-                                    e.target.value
-                                  )
-                                }
-                                className="w-full"
-                              />
-                              {editedEntities[row.id] !== undefined &&
-                                editedEntities[row.id] !== row[column] && (
-                                  <Check
-                                    className="ml-2 cursor-pointer text-green-500"
-                                    onClick={() =>
-                                      handleEntityUpdateConfirm(
-                                        row
-                                      )
-                                    }
-                                  />
-                                )}
-                            </div>
-                          </TableCell>
-                        );
-                      }else if(column.toLowerCase() === "category"){
-                        return (
+                  return (
+                    <TableRow
+                      key={row.id}
+                      // className={source === "summary" ? "even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200" : ""}
+                    >
+                      {(columns.includes("category") ||
+                        columns.includes("entity")) && (
+                        <TableCell className="w-10">
+                          <Checkbox
+                            checked={globalSelectedRows.has(row.id)}
+                            onCheckedChange={() => toggleRowSelection(row.id)}
+                          />
+                        </TableCell>
+                      )}
+                      {columns.map((column) => {
+                        if (column.toLowerCase() === "entity") {
+                          return (
+                            <TableCell
+                              key={column}
+                              className="max-w-[200px] relative"
+                            >
+                              <div className="flex items-center">
+                                <Input
+                                  type="text"
+                                  value={
+                                    editedEntities[row.id] !== undefined
+                                      ? editedEntities[row.id]
+                                      : row[column]
+                                  }
+                                  onChange={(e) =>
+                                    handleEntityChange(row.id, e.target.value)
+                                  }
+                                  className="w-full"
+                                />
+                                {editedEntities[row.id] !== undefined &&
+                                  editedEntities[row.id] !== row[column] && (
+                                    <Check
+                                      className="ml-2 cursor-pointer text-green-500"
+                                      onClick={() =>
+                                        handleEntityUpdateConfirm(row)
+                                      }
+                                    />
+                                  )}
+                              </div>
+                            </TableCell>
+                          );
+                        } else if (column.toLowerCase() === "category") {
+                          return (
                             <TableCell
                               key={column}
                               className="max-w-[200px] group relative"
@@ -1396,21 +1442,24 @@ useEffect(() => {
               )}
             </TableBody>
             <TableFooter>
-                <TableRow>
-                  <TableCell>Total</TableCell>
-                  {columns.slice(0).map((column) => (
-                    <TableCell key={column}>
-                      {['credit', 'debit', 'balance'].includes(column.toLowerCase()) ? totals[column] : ""}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableFooter>
+              <TableRow>
+                <TableCell>Total</TableCell>
+                {columns.slice(0).map((column) => (
+                  <TableCell key={column}>
+                    {["credit", "debit", "balance"].includes(
+                      column.toLowerCase()
+                    )
+                      ? totals[column]
+                      : ""}
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableFooter>
           </Table>
         </div>
-        
 
         {/* Pagination */}
-        { totalPages > 1 && (
+        {totalPages > 1 && (
           <div className="mt-6">
             <Pagination>
               <PaginationContent>
@@ -1448,7 +1497,7 @@ useEffect(() => {
                     className={cn(
                       "cursor-pointer",
                       currentPage === totalPages &&
-                      "pointer-events-none opacity-50"
+                        "pointer-events-none opacity-50"
                     )}
                   />
                 </PaginationItem>
@@ -1588,166 +1637,163 @@ useEffect(() => {
         </Dialog>
       )}
 
-         {/* Bulk Category Update Modal */}
-              <Dialog
-                open={bulkCategoryModalOpen}
-                onOpenChange={setBulkCategoryModalOpen}
-              >
-                <DialogContent className="sm:max-w-[600px]">
-                  <DialogHeader>
-                    <DialogTitle>Update Multiple Categories</DialogTitle>
-                    <DialogDescription>
-                      Select a new category for the {globalSelectedRows.size} selected
-                      transactions
-                    </DialogDescription>
-                  </DialogHeader>
-      
-                  <div className="space-y-4">
-                    <Select
-                      value={selectedBulkCategory}
-                      onValueChange={setSelectedBulkCategory}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select new category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <div className="p-2 border-b flex gap-2">
-                          <div className="relative flex-1">
-                            <Input
-                              placeholder="Search categories..."
-                              value={categorySearchTerm}
-                              onChange={(e) => handleCategorySearch(e)}
-                              onFocus={() =>
-                                setIsSearchInputFocused(true)
-                              }
-                              onBlur={() =>
-                                setIsSearchInputFocused(false)
-                              }
-                              onKeyDown={(e) => e.stopPropagation()}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                              }}
-                            />
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="px-2 h-10"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              if (categorySearchTerm.trim()) {
-                                // In bulk mode we do not pass a row
-                                const added = handleAddCategory(
-                                  categorySearchTerm.trim()
-                                );
-                                if (added) {
-                                  setCategorySearchTerm("");
-                                }
-                              }
-                            }}
-                          >
-                            <Plus className="h-4 w-4" />
-                            Add
-                          </Button>
-                        </div>
-                        <div className="overflow-y-auto">
-                          {filteredCategories.length > 0 ? (
-                            filteredCategories.map((category) => (
-                              <SelectItem key={category} value={category}>
-                                {category}
-                              </SelectItem>
-                            ))
-                          ) : (
-                            <div className="p-4 max-w-[300px] text-center text-muted-foreground">
-                              <p className="text-md">No matching categories found</p>
-                              <p className="text-sm mt-1">
-                                Click the{" "}
-                                <Plus className="h-3 w-3 inline-block mx-1" /> icon
-                                above to add "{categorySearchTerm}" as a new category
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      </SelectContent>
-                    </Select>
-      
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-2 mt-4">
-                        <Checkbox
-                          id="show-keywords"
-                          checked={showKeywordInput}
-                          onCheckedChange={setShowKeywordInput}
-                        />
-                        <Label htmlFor="show-keywords">
-                          Add keywords for category change
-                        </Label>
-                      </div>
-      
-                      {showKeywordInput && (
-                        <div className="space-y-2">
-                          <Label>
-                            What common keywords in these transactions made you choose
-                            "{selectedBulkCategory}" as their category?
-                          </Label>
-                          <Input
-                            value={reasoning}
-                            onChange={(e) => setReasoning(e.target.value)}
-                            placeholder="Enter Keyword..."
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-      
-                  <DialogFooter>
-                    <Button
-                      variant="ghost"
-                      onClick={() => setBulkCategoryModalOpen(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      variant="default"
-                      onClick={() => {
-                        setBulkCategoryModalOpen(false);
-                        setConfirmationModalOpen(true);
-                      }}
-                      disabled={!selectedBulkCategory}
-                    >
-                      Update Categories
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+      {/* Bulk Category Update Modal */}
+      <Dialog
+        open={bulkCategoryModalOpen}
+        onOpenChange={setBulkCategoryModalOpen}
+      >
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Update Multiple Categories</DialogTitle>
+            <DialogDescription>
+              Select a new category for the {globalSelectedRows.size} selected
+              transactions
+            </DialogDescription>
+          </DialogHeader>
 
-   {/* Confirmation Modal */}
-        <Dialog
-          open={confirmationModalOpen}
-          onOpenChange={setConfirmationModalOpen}
-        >
-          <DialogContent className="sm:max-w-[400px]">
-            <DialogHeader>
-              <DialogTitle>Confirm Category Update</DialogTitle>
-              <DialogDescription>
-                Are you sure you want to update the category to "
-                {selectedBulkCategory}" for {globalSelectedRows.size} transactions?
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button
-                variant="ghost"
-                onClick={() => setConfirmationModalOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button variant="default" onClick={handleBulkCategoryChange}>
-                Confirm Update
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          <div className="space-y-4">
+            <Select
+              value={selectedBulkCategory}
+              onValueChange={setSelectedBulkCategory}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select new category" />
+              </SelectTrigger>
+              <SelectContent>
+                <div className="p-2 border-b flex gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      placeholder="Search categories..."
+                      value={categorySearchTerm}
+                      onChange={(e) => handleCategorySearch(e)}
+                      onFocus={() => setIsSearchInputFocused(true)}
+                      onBlur={() => setIsSearchInputFocused(false)}
+                      onKeyDown={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                    />
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="px-2 h-10"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (categorySearchTerm.trim()) {
+                        // In bulk mode we do not pass a row
+                        const added = handleAddCategory(
+                          categorySearchTerm.trim()
+                        );
+                        if (added) {
+                          setCategorySearchTerm("");
+                        }
+                      }
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add
+                  </Button>
+                </div>
+                <div className="overflow-y-auto">
+                  {filteredCategories.length > 0 ? (
+                    filteredCategories.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <div className="p-4 max-w-[300px] text-center text-muted-foreground">
+                      <p className="text-md">No matching categories found</p>
+                      <p className="text-sm mt-1">
+                        Click the <Plus className="h-3 w-3 inline-block mx-1" />{" "}
+                        icon above to add "{categorySearchTerm}" as a new
+                        category
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </SelectContent>
+            </Select>
+
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2 mt-4">
+                <Checkbox
+                  id="show-keywords"
+                  checked={showKeywordInput}
+                  onCheckedChange={setShowKeywordInput}
+                />
+                <Label htmlFor="show-keywords">
+                  Add keywords for category change
+                </Label>
+              </div>
+
+              {showKeywordInput && (
+                <div className="space-y-2">
+                  <Label>
+                    What common keywords in these transactions made you choose "
+                    {selectedBulkCategory}" as their category?
+                  </Label>
+                  <Input
+                    value={reasoning}
+                    onChange={(e) => setReasoning(e.target.value)}
+                    placeholder="Enter Keyword..."
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setBulkCategoryModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="default"
+              onClick={() => {
+                setBulkCategoryModalOpen(false);
+                setConfirmationModalOpen(true);
+              }}
+              disabled={!selectedBulkCategory}
+            >
+              Update Categories
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation Modal */}
+      <Dialog
+        open={confirmationModalOpen}
+        onOpenChange={setConfirmationModalOpen}
+      >
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Confirm Category Update</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to update the category to "
+              {selectedBulkCategory}" for {globalSelectedRows.size}{" "}
+              transactions?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setConfirmationModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button variant="default" onClick={handleBulkCategoryChange}>
+              Confirm Update
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
             {/* Classification Modal */}
                 <Dialog
@@ -1823,17 +1869,17 @@ useEffect(() => {
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="show-keywords"
-                  checked={showKeywordInput}
-                  onCheckedChange={setShowKeywordInput}
-                />
-                <Label htmlFor="show-keywords">
-                  Add keywords for category change
-                </Label>
-              </div>
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="show-keywords"
+                checked={showKeywordInput}
+                onCheckedChange={setShowKeywordInput}
+              />
+              <Label htmlFor="show-keywords">
+                Add keywords for category change
+              </Label>
+            </div>
 
               {showKeywordInput && (
                 <div className="space-y-2">
@@ -1970,159 +2016,124 @@ useEffect(() => {
           </DialogContent>
         </Dialog>
 
-          {/* Reasoning Modal for Single Entity Change */}
-          <Dialog open={similarEntityModal} onOpenChange={setSimilarEntityModal}>
-          <DialogContent className="sm:max-w-[1100px]">
-            <DialogHeader>
-              <DialogTitle className="mb-2">
-                Entity Change Reasoning
-              </DialogTitle>
-              {/* <DialogDescription>
-                Transaction Details:
-                {currentTransaction && (
-                  <div className="mt-2 p-3 bg-muted rounded-md">
-                    <p>
-                      <strong>Description:</strong>{" "}
-                      {currentTransaction.Description}
-                    </p>
-                    <p>
-                      <strong>Category Change:</strong>{" "}
-                      {pendingCategoryChange?.oldCategory} →{" "}
-                      {pendingCategoryChange?.newCategory}
-                    </p>
-                  </div>
-                )}
-              </DialogDescription> */}
-            </DialogHeader>
-            
-              <DataTable data={similarEntityTransactions} columns={["description", "amount", "category", "date", "balance"]} title="Similar Transactions" />
-
-            <DialogFooter>
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  setSimilarEntityModal(false);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="default"
-                // onClick={handleEntityUpdateConfirm}
-                // disabled={showKeywordInput && !reasoning}
-              >
-                Change
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-        
-
       {/* share modal dialog */}
       <Dialog open={shareModalOpen} onOpenChange={setShareModalOpen}>
-      <DialogContent className="max-w-md p-6 rounded-lg shadow-lg border dark:border-gray-700 bg-white dark:bg-gray-900">
-        {/* Header with Close Button */}
-        <DialogHeader className="flex justify-between items-center">
-          <DialogTitle className="text-lg font-semibold text-gray-800 dark:text-white">Share This Report</DialogTitle>
-        </DialogHeader>
+        <DialogContent className="max-w-md p-6 rounded-lg shadow-lg border dark:border-gray-700 bg-white dark:bg-gray-900">
+          {/* Header with Close Button */}
+          <DialogHeader className="flex justify-between items-center">
+            <DialogTitle className="text-lg font-semibold text-gray-800 dark:text-white">
+              Share This Report
+            </DialogTitle>
+          </DialogHeader>
 
-        {/* Share Options */}
-        <div className="flex justify-center gap-6 py-4">
-          <TooltipProvider>
-            {/* Mail Button */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="p-4 transition-all rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
-                  onClick={handleMailShare}
-                >
-                  <Mail className="w-6 h-6 text-red-500" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Share via Email</TooltipContent>
-            </Tooltip>
+          {/* Share Options */}
+          <div className="flex justify-center gap-6 py-4">
+            <TooltipProvider>
+              {/* Mail Button */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="p-4 transition-all rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
+                    onClick={handleMailShare}
+                  >
+                    <Mail className="w-6 h-6 text-red-500" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Share via Email</TooltipContent>
+              </Tooltip>
 
-            {/* WhatsApp Button */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="p-4 transition-all rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
-                  onClick={handleWhatsappShare}
-                >
-                  <MessageCircle className="w-6 h-6 text-green-500" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Share via WhatsApp</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
+              {/* WhatsApp Button */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="p-4 transition-all rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
+                    onClick={handleWhatsappShare}
+                  >
+                    <MessageCircle className="w-6 h-6 text-green-500" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Share via WhatsApp</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
 
-        {/* Cancel Button */}
-        <div className="flex justify-end">
-          <Button
-            variant="outline"
-            className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-            onClick={() => setShareModalOpen(false)}
-          >
-            Cancel
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+          {/* Cancel Button */}
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+              onClick={() => setShareModalOpen(false)}
+            >
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-    {/* Category Update Confirmation Modal */}
-    <Dialog open={categoryUpdateModalOpen} onOpenChange={setCategoryUpdateModalOpen}>
-      <DialogContent className="max-w-[80%]">
-        <DialogHeader>
-          <DialogTitle>Confirm Category Updates</DialogTitle>
-          <DialogDescription>
-            You are about to update the categories for {uploadedChanges.length} transactions. Please review the changes before proceeding.
-          </DialogDescription>
-        </DialogHeader>
+      {/* Category Update Confirmation Modal */}
+      <Dialog
+        open={categoryUpdateModalOpen}
+        onOpenChange={setCategoryUpdateModalOpen}
+      >
+        <DialogContent className="max-w-[80%]">
+          <DialogHeader>
+            <DialogTitle>Confirm Category Updates</DialogTitle>
+            <DialogDescription>
+              You are about to update the categories for{" "}
+              {uploadedChanges.length} transactions. Please review the changes
+              before proceeding.
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="max-h-[400px] overflow-y-auto border p-2 rounded-md">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead >Date</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Credit</TableHead>
-                <TableHead>Debit</TableHead>
-                <TableHead className="whitespace-nowrap">Old Category</TableHead>
-                <TableHead className="whitespace-nowrap">New Category</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {uploadedChanges.map((change) => (
-                <TableRow key={change.id}>
-                  <TableCell>{change.date}</TableCell>
-                  <TableCell>{change.description}</TableCell>
-                  <TableCell>{change.credit}</TableCell>
-                  <TableCell>{change.debit}</TableCell>
-                  <TableCell>{change.oldCategory}</TableCell>
-                  <TableCell className="text-blue-600">{change.newCategory}</TableCell>
-
+          <div className="max-h-[400px] overflow-y-auto border p-2 rounded-md">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Credit</TableHead>
+                  <TableHead>Debit</TableHead>
+                  <TableHead className="whitespace-nowrap">
+                    Old Category
+                  </TableHead>
+                  <TableHead className="whitespace-nowrap">
+                    New Category
+                  </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {uploadedChanges.map((change) => (
+                  <TableRow key={change.id}>
+                    <TableCell>{change.date}</TableCell>
+                    <TableCell>{change.description}</TableCell>
+                    <TableCell>{change.credit}</TableCell>
+                    <TableCell>{change.debit}</TableCell>
+                    <TableCell>{change.oldCategory}</TableCell>
+                    <TableCell className="text-blue-600">
+                      {change.newCategory}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
 
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => setCategoryUpdateModalOpen(false)}>
-            Cancel
-          </Button>
-          <Button variant="default" onClick={applyUploadedCategoryChanges}>
-            Confirm Updates
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setCategoryUpdateModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button variant="default" onClick={applyUploadedCategoryChanges}>
+              Confirm Updates
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-
-      
       {/* Loading Overlay */}
       {isLoading && (
         <div className="fixed inset-0 bg-white bg-opacity-80 backdrop-blur-sm flex items-center justify-center">
@@ -2130,8 +2141,8 @@ useEffect(() => {
         </div>
       )}
 
-       {/* Fixed Bottom Actions Bar */}
-       {(hasChanges || globalSelectedRows.size > 0) && (
+      {/* Fixed Bottom Actions Bar */}
+      {(hasChanges || globalSelectedRows.size > 0) && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-lg flex justify-end gap-2 z-50">
           {globalSelectedRows.size > 0 && (
             <Button
@@ -2157,11 +2168,7 @@ useEffect(() => {
           )}
         </div>
       )}
-
-      
     </Card>
-
-    
   );
 };
 

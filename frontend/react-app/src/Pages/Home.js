@@ -5,6 +5,7 @@ import {
   Import,
   ChartNoAxesCombined,
   IndianRupee,
+  ReceiptText,
 } from "lucide-react";
 import ReportGenerator from "../components/MainDashboardComponents/GenerateReport";
 import { cn } from "../lib/utils";
@@ -70,11 +71,11 @@ const Dashboard = () => {
       url: "#",
       icon: IndianRupee,
     },
-    // {
-    //   title: "Billing",
-    //   url: "#",
-    //   icon: ReceiptText,
-    // },
+    {
+      title: "Billing",
+      url: "#",
+      icon: ReceiptText,
+    },
     // {
     //   title: "Marker",
     //   url: "#",

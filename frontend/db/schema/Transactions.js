@@ -17,6 +17,10 @@ const transactions = sqliteTable("transactions", {
   entity: text("entity").notNull().default("unknown"),
   voucher_type: text("voucher_type").default("unknown"),
   imported: integer("imported").default(0),
+  status: text("status").notNull().default("pending"),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .default(Date.now()),
 });
 
 module.exports = { transactions };

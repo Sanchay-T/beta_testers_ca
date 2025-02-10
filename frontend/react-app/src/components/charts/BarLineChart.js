@@ -24,7 +24,12 @@ const BarLineChart = ({
   xAxisKey = null,
   columnTypes = {},
 }) => {
-  const [columnsToIgnore, setColumnsToIgnore] = useState(["id","transactionId","Balance","balance"]);
+  const [columnsToIgnore, setColumnsToIgnore] = useState([
+    "id",
+    "transactionId",
+    "Balance",
+    "balance",
+  ]);
 
   let columns = data.length > 0 ? Object.keys(data[0]) : [];
   columns = columns.filter((column) => !columnsToIgnore.includes(column));
@@ -63,7 +68,7 @@ const BarLineChart = ({
     });
 
   return (
-    <Card className="w-full h-full">
+    <Card className="w-full h-full border-none">
       <CardHeader>
         <CardTitle className="dark:text-slate-300">{title}</CardTitle>
       </CardHeader>
