@@ -6,6 +6,29 @@ const { transactions } = require("../db/schema/Transactions");
 const { eod } = require("../db/schema/EodSchema");
 const { summary } = require("../db/schema/Summary");
 const { eq, gt, and, inArray, or } = require("drizzle-orm"); // Add this import
+const axios = require("axios");
+
+const formatDate = (dateString) => {
+  const date = new Date(dateString); // Parse the date string
+  const day = String(date.getDate()).padStart(2, '0'); // Get day and pad with zero
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Get month (0-based) and pad with zero
+  const year = date.getFullYear(); // Get full year
+
+  return `${day}-${month}-${year}`; // Format as dd-mm-yyyy
+};
+
+const sanitizeJSONString = (jsonString) => {
+  if (!jsonString) return jsonString;
+  if (typeof jsonString !== "string") return jsonString;
+  if (!jsonString) return jsonString;
+  if (typeof jsonString !== "string") return jsonString;
+
+  return jsonString
+    .replace(/: *NaN/g, ": null")
+    .replace(/: *undefined/g, ": null")
+    .replace(/: *Infinity/g, ": null")
+    .replace(/: *-Infinity/g, ": null");
+};
 
 function registerIndividualDashboardIpc() {
   const db = databaseManager.getInstance().getDatabase();
@@ -29,7 +52,9 @@ function registerIndividualDashboardIpc() {
   });
 
   // Handler for getting summary data
-  ipcMain.handle("get-summary", async (event, caseId) => {
+  ipcMain.handle("get-summary", async (event, caseId,individualId) => {
+    log.info({caseId,individualId});
+    if(!individualId){
     try {
       const result = await db
         .select()
@@ -41,6 +66,60 @@ function registerIndividualDashboardIpc() {
       log.error("Error fetching summary data:", error);
       throw error;
     }
+  }else{
+    try {
+
+      const allTransactions = await db
+      .select({
+        id: transactions.id,
+        ...transactions
+      })
+      .from(transactions)
+      .where(and(eq(transactions.statementId, individualId.toString())));
+
+      const updatedTransactions = allTransactions.map((transaction, index) => {
+                  const { id, date, amount, type,balance,bank ,...requiredFields } = transaction;
+                  return {
+                      "Value Date": formatDate(date),
+                      ...requiredFields,
+                      Debit: type === "debit" ? amount : 0,
+                      Credit: type === "credit" ? amount : 0,
+                      Balance:balance,
+                      Bank:bank
+                  };
+              });
+
+      log.info({ allTransactions: updatedTransactions.length })
+      // make a fastapi call to /individual-summary
+
+      log.info({exampleTransaction:allTransactions[8]})
+      log.info({exampleupdatedTransactions:updatedTransactions[8]})
+      const response = await axios.post("http://localhost:7500/individual-summary/", {
+        transactions_data: updatedTransactions
+      },
+      {
+        headers: { "Content-Type": "application/json" },
+        // timeout: 300000,
+        validateStatus: (status) => status === 200,
+      });
+
+      
+
+      log.info({aiyaz: response.data});
+
+      // const parsedData = JSON.parse(sanitizeJSONString(response.data));
+
+      // const summaryData = { ...parsedData };
+      log.info({summaryData:response.data});
+      return [{data:response.data}];
+     
+      // return response.data;
+    } catch (error) {
+      log.error("Error fetching summary data:", error);
+      throw error;
+    }
+  }
+
   });
 
   // Handler for getting all transactions

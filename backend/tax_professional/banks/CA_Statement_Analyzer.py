@@ -569,6 +569,44 @@ def refresh_category_all_sheets(df,eod_sheet_df, new_categories):
 
     return json_output
 
+def individual_summary(transactions_df):
+    eod_sheet_df = eod(transactions_df)
+    print(eod_sheet_df.head(10))
+    opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df, transactions_df)
+    # named print 
+    print("opening_bal", opening_bal)
+    print("closing_bal", closing_bal)
+
+
+    summary_df_list,mission_months = summary_sheet(transactions_df, opening_bal, closing_bal, transactions_df)
+
+    print("summary_df_list", len(summary_df_list))
+    particulars_df = summary_df_list[0]
+    print("particulars_df", particulars_df)
+    income_receipts_df = summary_df_list[1]
+    print("income_receipts_df", income_receipts_df)
+    imp_expenses_payments_df = summary_df_list[2]
+    print("imp_expenses_payments_df", imp_expenses_payments_df)
+    other_expenses_df = summary_df_list[3]
+    print("other_expenses_df", other_expenses_df)
+    contra_credit_df = summary_df_list[4]
+    print("contra_credit_df", contra_credit_df)
+    contra_debit_df = summary_df_list[5]
+    print("contra_debit_df", contra_debit_df)
+
+    result_dict = {
+        "Particulars": particulars_df.to_dict(orient="records"),
+        "Income Receipts": income_receipts_df.to_dict(orient="records"),
+        "Important Expenses": imp_expenses_payments_df.to_dict(orient="records"),
+        "Other Expenses": other_expenses_df.to_dict(orient="records"),
+        "Contra Credit": contra_credit_df.to_dict(orient="records"),
+        "Contra Debit": contra_debit_df.to_dict(orient="records"),
+    }
+
+    json_output = json.dumps(result_dict, indent=4)
+
+    return json_output
+    
 
 def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_dates, CA_ID, progress_data,
                              whole_transaction_sheet=None, aiyazs_array_of_array=None):

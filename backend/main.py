@@ -14,7 +14,7 @@ from backend.utils import get_saved_pdf_dir
 TEMP_SAVED_PDF_DIR = get_saved_pdf_dir()
 from pydantic import Field
 # If you have other custom imports:
-from backend.tax_professional.banks.CA_Statement_Analyzer import start_extraction_add_pdf, refresh_category_all_sheets, save_to_excel
+from backend.tax_professional.banks.CA_Statement_Analyzer import start_extraction_add_pdf, refresh_category_all_sheets, save_to_excel,individual_summary
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from backend.account_number_ifsc_extraction import extract_accno_ifsc
@@ -84,6 +84,9 @@ class ExcelDownloadRequest(BaseModel):
 
 class DummyRequest(BaseModel):
     data: str
+
+class InvididualSummaryRequest(BaseModel):
+    transactions_data:  List[dict]
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
@@ -383,6 +386,25 @@ async def excel_download(request: ExcelDownloadRequest):
             status_code=500, detail=f"{str(e)}"
         )
 
+@app.post("/individual-summary/")
+async def individual_summary_api(request: InvididualSummaryRequest):
+    try:
+        logger.info(f"Received request with data: {request.transactions_data}")
+
+        transaction_df = pd.DataFrame(request.transactions_data)
+        transaction_df["Value Date"] = pd.to_datetime(transaction_df["Value Date"], format="%d-%m-%Y")
+        print(transaction_df.head(10))
+        data = individual_summary(transaction_df)
+        print(data)
+
+        return data
+
+    except Exception as e:
+        print(e)
+        logger.error(f"Error processing bank statements: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error processing bank statements: {str(e)}"
+        )
 
 if __name__ == "__main__":
     # Optionally use environment variables for host/port. Falls back to "127.0.0.1" and 7500 if none provided.

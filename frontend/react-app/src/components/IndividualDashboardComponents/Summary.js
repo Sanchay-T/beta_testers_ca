@@ -80,9 +80,10 @@ const Summary = ({ caseId }) => {
 
       try {
         // console.log("Fetching summary data for caseId:", caseId);
-        const result = await window.electron.getSummary(caseId);
+        const result = await window.electron.getSummary(caseId,individualId);
+        console.log("result", result);
         const parsedData = result.length > 0 ? JSON.parse(result[0].data) : {};
-
+        console.log("parsedData", parsedData);
         const transactions = await window.electron.getTransactions(
           caseId,
           parseInt(individualId)
@@ -100,13 +101,26 @@ const Summary = ({ caseId }) => {
             return formattedItem;
           });
         };
+        
+        if(individualId){
+          setSummaryData({
+            Particulars: formatData(parsedData.Particulars || []),
+            "Income Receipts": formatData(parsedData["Income Receipts"] || []),
+            "Important Expenses": formatData(parsedData["Important Expenses"] || []),
+            "Other Expenses": formatData(parsedData["Other Expenses"] || []),
+            "Contra Debit": formatData(parsedData["Contra Debit"] || []), 
+            "Contra Credit": formatData(parsedData["Contra Credit"] || []), 
+          });
 
+        }else{
         setSummaryData({
           Particulars: formatData(parsedData.particulars || []),
           "Income Receipts": formatData(parsedData.incomeReceipts || []),
           "Important Expenses": formatData(parsedData.importantExpenses || []),
           "Other Expenses": formatData(parsedData.otherExpenses || []),
         });
+      }
+
         setTransactionData(transactions);
       } catch (error) {
         console.error("Error fetching summary data:", error);
