@@ -41,7 +41,7 @@ const validateAndTransformTransaction = (transaction, statementId) => {
     // log.info({"after":"conversion",day,month,year})
     date = new Date(year, month - 1, day);
     if (isNaN(date.getTime())) {
-      throw new Error("Invalid dat  e");
+      throw new Error("Invalid date");
     }
   } catch (error) {
     throw new Error(`Invalid date format: ${transaction["Value Date"]}`);
@@ -113,7 +113,8 @@ const storeTransactionsBatch = async (transformedTransactions) => {
           balance: t.balance,
           bank: t.bank,
           entity: t.entity,
-          voucher_type:t.voucher_type
+          voucher_type:t.voucher_type,
+          createdAt: new Date(),
         });
       } else {
         log.info(
@@ -142,6 +143,7 @@ const storeTransactionsBatch = async (transformedTransactions) => {
 
     const chunkSize = 50;
     console.log("Unique Transactions : ", uniqueTransactions.length);
+    log.info({uniqueTransactionsExample:uniqueTransactions[1]})
     for (let i = 0; i < uniqueTransactions.length; i += chunkSize) {
       const chunk = uniqueTransactions.slice(i, i + chunkSize);
       console.log("Chunk Size : ", chunk.length);
@@ -454,7 +456,9 @@ const processSummaryData = async (parsedData, caseName) => {
       // !parsedData["Particulars"] ||
       !parsedData["Income Receipts"] ||
       !parsedData["Important Expenses"] ||
-      !parsedData["Other Expenses"]
+      !parsedData["Other Expenses"] ||
+      !parsedData["Contra Debit"] ||
+      !parsedData["Contra Credit"]
     ) {
       throw new Error("Invalid summary data provided");
     }
@@ -465,6 +469,8 @@ const processSummaryData = async (parsedData, caseName) => {
       incomeReceipts: parsedData["Income Receipts"],
       importantExpenses: parsedData["Important Expenses"],
       otherExpenses: parsedData["Other Expenses"],
+      contraDebit: parsedData["Contra Debit"],
+      contraCredit: parsedData["Contra Credit"],
     };
 
     // Check if summary data already exists for this case
@@ -860,6 +866,8 @@ function generateReportIpc(tmpdir_path) {
             "Income Receipts": parsedData["Income Receipts"] || [],
             "Important Expenses": parsedData["Important Expenses"] || [],
             "Other Expenses": parsedData["Other Expenses"] || [],
+            "Contra Debit":parsedData["Contra Debit"] || [],
+            "Contra Credit":parsedData["Contra Credit"] || [],
           },
           caseName
         );
@@ -1142,6 +1150,8 @@ function generateReportIpc(tmpdir_path) {
             "Income Receipts": parsedData["Income Receipts"] || [],
             "Important Expenses": parsedData["Important Expenses"] || [],
             "Other Expenses": parsedData["Other Expenses"] || [],
+            "Contra Credit":parsedData["Contra Credit"] || [],
+            "Contra Debit":parsedData["Contra Debit"] || [],
           },
           caseName
         );

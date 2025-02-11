@@ -48,13 +48,15 @@ const MaximizableChart = ({ children, title, isMaximized, setIsMaximized }) => {
   );
 };
 
-const Summary = ({ caseId }) => {
+const Summary = () => {
   // const [activeTable, setActiveTable] = useState("Income Receipts");
   const [summaryData, setSummaryData] = useState({
     Particulars: [],
     "Income Receipts": [],
     "Important Expenses": [],
     "Other Expenses": [],
+    "Contra Debit": [],
+    "Contra Credit": [],
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -63,6 +65,8 @@ const Summary = ({ caseId }) => {
     "Income Receipts": incomeReceipts,
     "Important Expenses": importantExpenses,
     "Other Expenses": otherExpenses,
+    "Contra Debit": contraDebit,
+    "Contra Credit": contraCredit,
   } = summaryData;
 
   const [incomeMaximized, setIncomeMaximized] = useState(false);
@@ -72,7 +76,9 @@ const Summary = ({ caseId }) => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [filteredTransactions, setFilteredTransactions] = useState([]);
   const [transactionData, setTransactionData] = useState([]);
-  const {individualId } = useParams();
+  const {individualId,caseId } = useParams();
+
+  console.log({individualId,caseId})
 
   useEffect(() => {
     const fetchSummaryData = async () => {
@@ -101,8 +107,9 @@ const Summary = ({ caseId }) => {
             return formattedItem;
           });
         };
+        console.log("aiyaz",individualId, typeof individualId)
         
-        if(individualId){
+        if(individualId && individualId!=="undefined" && individualId!==undefined ){
           setSummaryData({
             Particulars: formatData(parsedData.Particulars || []),
             "Income Receipts": formatData(parsedData["Income Receipts"] || []),
@@ -118,6 +125,8 @@ const Summary = ({ caseId }) => {
           "Income Receipts": formatData(parsedData.incomeReceipts || []),
           "Important Expenses": formatData(parsedData.importantExpenses || []),
           "Other Expenses": formatData(parsedData.otherExpenses || []),
+          "Contra Debit": formatData(parsedData.contraDebit || []),
+          "Contra Credit": formatData(parsedData.contraCredit || []),
         });
       }
 
@@ -130,6 +139,8 @@ const Summary = ({ caseId }) => {
           "Income Receipts": [],
           "Important Expenses": [],
           "Other Expenses": [],
+          "Contra Credit":[],
+          "Contra Debit":[]
         });
         setTransactionData([]);
       } finally {
@@ -158,7 +169,7 @@ const Summary = ({ caseId }) => {
   const [selectedMonths, setSelectedMonths] = useState([]);
   const months = useMemo(() => {
     const allMonths = new Set();
-    [particulars, incomeReceipts, importantExpenses, otherExpenses].forEach(
+    [particulars, incomeReceipts, importantExpenses, otherExpenses,contraDebit,contraCredit].forEach(
       (category) => {
         category.forEach((item) => {
           Object.keys(item).forEach((key) => {
@@ -181,7 +192,7 @@ const Summary = ({ caseId }) => {
     return Array.from(allMonths).sort(
       (a, b) => monthOrder.indexOf(a) - monthOrder.indexOf(b)
     );
-  }, [incomeReceipts, importantExpenses, otherExpenses]);
+  }, [incomeReceipts, importantExpenses, otherExpenses,particulars,contraCredit,contraDebit]);
 
   useEffect(() => {
     if (months.length > 0) {
@@ -406,6 +417,17 @@ const Summary = ({ caseId }) => {
           title="Other Expenses"
           categoryKey="Other Expenses / Payments"
         />
+          <SummaryTable
+          data={contraCredit}
+          title="Contra Credit"
+          categoryKey="Contra Credit"
+        />
+           <SummaryTable
+          data={contraDebit}
+          title="Contra Debit"
+          categoryKey="Contra Debit"
+        />
+        
       </div>
     </div>
   );

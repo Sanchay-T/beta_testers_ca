@@ -169,3 +169,4 @@ new_ouptut.json
 local_model
 frontend/dist/
 backend/models/local_model
+new_output.json

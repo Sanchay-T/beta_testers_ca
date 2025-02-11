@@ -54,7 +54,7 @@ function registerIndividualDashboardIpc() {
   // Handler for getting summary data
   ipcMain.handle("get-summary", async (event, caseId,individualId) => {
     log.info({caseId,individualId});
-    if(!individualId){
+    if(!individualId || individualId=="undefined" || individualId==null || individualId==undefined){
     try {
       const result = await db
         .select()
