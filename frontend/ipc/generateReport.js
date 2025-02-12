@@ -89,7 +89,6 @@ const isDuplicateTransaction = async (transaction, statementId) => {
         eq(transactions.amount, transaction.amount),
         eq(transactions.description, transaction.description)
       )
-      
     );
   return existing.length > 0;
 };
@@ -97,7 +96,6 @@ const isDuplicateTransaction = async (transaction, statementId) => {
 const storeTransactionsBatch = async (transformedTransactions) => {
   try {
     if (transformedTransactions.length === 0) return;
-
 
     const uniqueTransactions = [];
     for (const t of transformedTransactions) {
@@ -113,6 +111,7 @@ const storeTransactionsBatch = async (transformedTransactions) => {
           balance: t.balance,
           bank: t.bank,
           entity: t.entity,
+
           voucher_type:t.voucher_type,
           createdAt: new Date(),
         });
@@ -123,7 +122,7 @@ const storeTransactionsBatch = async (transformedTransactions) => {
       }
     }
 
-    log.info({uniqueTransactions})
+    log.info({ uniqueTransactions });
 
     if (uniqueTransactions.length === 0) {
       log.info("No new unique transactions to store");
@@ -261,6 +260,7 @@ const processStatementAndEOD = async (
   fileIndex,
   successPageNumber // Add this parameter
 ) => {
+  log.info("inside", successPageNumber);
   try {
     const validCaseId = await getOrCreateCase(caseName);
     let statementId = null;
@@ -268,6 +268,9 @@ const processStatementAndEOD = async (
 
     // Update the pages count in the cases table
     if (typeof successPageNumber === "number" && !isNaN(successPageNumber)) {
+      log.info(
+        `Updating pages count to ${successPageNumber} for case ${validCaseId}`
+      );
       try {
         await db
           .update(cases)
