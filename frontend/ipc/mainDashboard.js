@@ -3,7 +3,7 @@ const log = require("electron-log");
 const databaseManager = require("../db/db");
 const { statements } = require("../db/schema/Statement");
 const { cases } = require("../db/schema/Cases");
-const { count, sql } = require("drizzle-orm");
+const { count, sql, eq } = require("drizzle-orm");
 const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
@@ -130,6 +130,51 @@ function registerMainDashboardIpc(tmpdir_path) {
       return result;
     } catch (error) {
       console.error("Error getting pages by period:", error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle("get-user-progress", async () => {
+    try {
+      const user = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, 1))
+        .limit(1);
+
+      if (!user || user.length === 0) {
+        log.error("No user found with ID 1");
+        throw new Error("No user found");
+      }
+
+      const dateJoined = new Date(user[0].dateJoined);
+      const currentDate = new Date();
+      const oneYearFromJoin = new Date(dateJoined);
+      oneYearFromJoin.setFullYear(dateJoined.getFullYear() + 1);
+
+      // Calculate progress percentage
+      const totalDuration = oneYearFromJoin - dateJoined;
+      const elapsed = currentDate - dateJoined;
+      const progress = Math.min(
+        Math.round((elapsed / totalDuration) * 100),
+        100
+      );
+
+      // Calculate remaining days
+      const remainingMs = oneYearFromJoin - currentDate;
+      const remainingDays = Math.max(
+        0,
+        Math.ceil(remainingMs / (1000 * 60 * 60 * 24))
+      );
+
+      return {
+        progress,
+        remainingDays,
+        dateJoined: dateJoined.toISOString(),
+        expiryDate: oneYearFromJoin.toISOString(),
+      };
+    } catch (error) {
+      log.error("Error fetching user progress:", error);
       throw error;
     }
   });

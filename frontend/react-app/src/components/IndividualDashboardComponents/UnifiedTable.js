@@ -126,6 +126,7 @@ const DataTable = ({
   caseId,
   source,
   refreshFunction,
+  customerName=null
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [transactions, setTransactions] = useState([]);
@@ -901,7 +902,7 @@ const DataTable = ({
   const handleDownload = () => {
     exportToExcel(
       data,
-      title,
+      title= source==="suspense"?`${customerName}_${title}`:`${title}`,
       false,
       source === "suspense" ? categoryOptions : null
     );

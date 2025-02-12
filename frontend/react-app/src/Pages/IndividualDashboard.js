@@ -210,7 +210,7 @@ const IndividualDashboard = () => {
                 <Upi caseId={caseId} individualId={individualId} />
               )}
               {activeTab === "Suspense" && (
-                <Suspense caseId={caseId} individualId={individualId} />
+                <Suspense caseId={caseId} individualId={individualId} customerName={customerName} />
               )}
               {activeTab === "Reversal" && (
                 <Reversal caseId={caseId} individualId={individualId} />

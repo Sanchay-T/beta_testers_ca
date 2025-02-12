@@ -217,11 +217,26 @@ const MainDashboard = () => {
 
   const filterDataForToday = (data) => {
     const today = new Date();
-    const currentMonth = today.toLocaleString("default", { month: "short" });
-    const currentYear = today.getFullYear();
-    const currentMonthYear = `${currentMonth} ${currentYear}`;
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
 
-    const todayData = data.filter((item) => item.month === currentMonthYear);
+    // Get today's date in the format "MMM DD YYYY"
+    const todayFormatted = today.toLocaleDateString("en-US", {
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+    });
+
+    // Filter data for today only
+    const todayData = data.filter((item) => {
+      const itemDate = new Date(item.date); // You'll need to add a 'date' field to your data
+      const itemDateFormatted = itemDate.toLocaleDateString("en-US", {
+        month: "short",
+        day: "2-digit",
+        year: "numeric",
+      });
+      return itemDateFormatted === todayFormatted;
+    });
 
     return {
       filteredData: todayData,
@@ -409,6 +424,7 @@ const MainDashboard = () => {
         const statements = await window.electron.getStatementsProcessed();
         const transactions = await window.electron.getTransactionsProcessed();
         const pages = await window.electron.getPages();
+        console.log({reports})
 
         setPagesData(pages);
         const mergedData = processData(reports, statements, transactions);

@@ -7,7 +7,7 @@ import ToggleStrip from "./ToggleStrip";
 import { RotateCw } from "lucide-react";
 import { Button } from "../ui/button";
 
-const Suspense = () => {
+const Suspense = ({customerName}) => {
   // const [creditData, setCreditData] = useState([]);
   // const [debitData, setDebitData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -153,6 +153,7 @@ const Suspense = () => {
               caseId={caseId}
               refreshFunction={fetchData}
               source="suspense"
+              customerName={customerName}
             />
           )}
         </>
