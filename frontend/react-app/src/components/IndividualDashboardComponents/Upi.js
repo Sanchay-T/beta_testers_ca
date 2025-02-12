@@ -1,9 +1,9 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import BarLineChart from "../charts/BarLineChart";
 import UnifiedTable from "./UnifiedTable";
 import { useParams } from "react-router-dom";
+import ToggleStrip from "./ToggleStrip";
+
 import { motion, AnimatePresence } from "framer-motion";
 
 const Upi = () => {
@@ -13,8 +13,25 @@ const Upi = () => {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("upi-cr");
   const { caseId, individualId } = useParams();
+  const [availableMonthsDr, setAvailableMonthsDr] = useState([]);
+  const [availableMonthsCr, setAvailableMonthsCr] = useState([]);
+  const [selectedMonthsDr, setSelectedMonthsDr] = useState([]);
+  const [selectedMonthsCr, setSelectedMonthsCr] = useState([]);
 
-  useEffect(() => {
+   // Helper function to get month key
+   const getMonthKey = (dateString) => {
+    const date = new Date(dateString);
+    return `${date.toLocaleString("en-GB", { month: "short" })}-${date.getFullYear()}`;
+  };
+
+  
+    // Helper function to parse month string to Date
+    const getMonthDate = (monthStr) => {
+      const [month, year] = monthStr.split("-");
+      const monthIndex = new Date(Date.parse(month + " 1, 2000")).getMonth();
+      return new Date(parseInt(year), monthIndex);
+    };
+
     const fetchData = async () => {
       try {
         const crResponse = await window.electron.getTransactionsByUpiCr(
@@ -37,6 +54,7 @@ const Upi = () => {
           Credit: item.amount || 0,
           Balance: item.balance || 0,
           category: item.category || "-",
+          monthKey: getMonthKey(item.date),
           entity: item.entity || "-",
           id: item.id,
         }));
@@ -52,10 +70,29 @@ const Upi = () => {
           Debit: Math.abs(item.amount) || 0, // Ensure positive value
           Balance: item.balance || 0,
           category: item.category || "-",
+          monthKey: getMonthKey(item.date),
           entity: item.entity || "-",
           transactionId: item.id,
         }));
 
+
+        const uniqueMonthsDr = [...new Set(transformedUpiDrData.map(item => item.monthKey))]
+        .sort((a, b) => {
+          const dateA = getMonthDate(a);
+          const dateB = getMonthDate(b);
+          return dateA - dateB;
+        });
+        const uniqueMonthsCr = [...new Set(transformedUpiDrData.map(item => item.monthKey))]
+        .sort((a, b) => {
+          const dateA = getMonthDate(a);
+          const dateB = getMonthDate(b);
+          return dateA - dateB;
+        });
+
+        setAvailableMonthsCr(uniqueMonthsCr);
+        setAvailableMonthsDr(uniqueMonthsDr);
+        setSelectedMonthsCr(uniqueMonthsCr)
+        setSelectedMonthsDr(uniqueMonthsDr)
         setUpiCrData(transformedUpiCrData);
         setUpiDrData(transformedUpiDrData);
         setIsLoading(false);
@@ -65,6 +102,9 @@ const Upi = () => {
         setIsLoading(false);
       }
     };
+
+  useEffect(() => {
+  
 
     fetchData();
   }, [caseId, individualId]);
@@ -105,6 +145,13 @@ const Upi = () => {
       </div>
     );
   }
+
+  const filteredUpiCrData = upiCrData.filter((item) =>
+    selectedMonthsCr.includes(item.monthKey)
+  );
+  const filteredUpiDrData = upiDrData.filter((item) =>
+    selectedMonthsDr.includes(item.monthKey)
+  );
 
   return (
     <div className="min-h-screen text-white p-8">
@@ -160,13 +207,18 @@ const Upi = () => {
                   </div>
                 ) : (
                   <>
+                   <ToggleStrip
+                        columns={availableMonthsCr}
+                        selectedColumns={selectedMonthsCr}
+                        setSelectedColumns={setSelectedMonthsCr}
+                      />
                     <div className="border border-gray-200 rounded-lg">
                       <h2 className="text-2xl font-semibold mb-4 p-6 text-black">
                         UPI Credit
                       </h2>
                       <div className="h-[400px]">
                         <BarLineChart
-                          data={upiCrData}
+                          data={filteredUpiCrData}
                           xAxisKey="date"
                           columnTypes={columnTypes}
                           config={chartConfig}
@@ -175,7 +227,7 @@ const Upi = () => {
                     </div>
                     <div className="w-full">
                       <UnifiedTable
-                        data={upiCrData}
+                        data={filteredUpiCrData}
                         title="UPI Credit Transactions"
                       />
                     </div>
@@ -194,22 +246,32 @@ const Upi = () => {
                   </div>
                 ) : (
                   <>
+                   <ToggleStrip
+                        columns={availableMonthsDr}
+                        selectedColumns={selectedMonthsDr}
+                        setSelectedColumns={setSelectedMonthsDr}
+                      />
                     <div className="border border-gray-200 rounded-lg">
                       <h2 className="text-2xl font-semibold mb-4 p-6 text-black">
                         UPI Debit
                       </h2>
+                      
                       <div className="h-[400px]">
                         <BarLineChart
-                          data={upiDrData}
+                          data={filteredUpiDrData}
                           xAxisKey="date"
                           columnTypes={columnTypes}
                           config={chartConfig}
                         />
                       </div>
                     </div>
+
+                   
+  
+
                     <div className="w-full">
                       <UnifiedTable
-                        data={upiDrData}
+                        data={filteredUpiDrData}
                         title="UPI Debit Transactions"
                       />
                     </div>

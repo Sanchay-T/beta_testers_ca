@@ -190,7 +190,7 @@ const Cash = () => {
           >
             {activeTab === "withdrawal" && (
               <div className="space-y-8">
-                {withdrawalData.length === 0 ? (
+                {filteredDrData.length === 0 ? (
                   <div className="bg-gray-100 p-4 rounded-md w-full h-[10vh]">
                     <p className="text-gray-800 text-center mt-3 font-medium text-lg">
                       No Data Available
@@ -198,13 +198,18 @@ const Cash = () => {
                   </div>
                 ) : (
                   <>
+                   <ToggleStrip
+                      columns={availableMonthsDr}
+                      selectedColumns={selectedMonthsDr}
+                      setSelectedColumns={setSelectedMonthsDr}
+                    />
                     <div className="border border-gray-200 rounded-lg">
                       <h2 className="text-2xl font-semibold mb-4 p-6 text-black">
                         Cash Withdrawal
                       </h2>
                       <div className="h-[400px]">
                         <BarLineChart
-                          data={withdrawalData}
+                          data={filteredDrData}
                           xAxisKey="date"
                           columnTypes={columnTypes}
                           config={chartConfig}
@@ -213,7 +218,7 @@ const Cash = () => {
                     </div>
                     <div className="w-full">
                       <UnifiedTable
-                        data={withdrawalData}
+                        data={filteredDrData}
                         title="Cash Withdrawal Transactions"
                       />
                     </div>

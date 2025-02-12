@@ -250,7 +250,12 @@ const DataTable = ({
     if (mergedCategories.length !== localCats.length) {
       localStorage.setItem("categoryOptions", JSON.stringify(mergedCategories));
     }
-    setCategoryOptions(mergedCategories);
+    // remove duplicates and null values
+    const mergedCategories0 = mergedCategories.filter(
+      (cat) => cat && cat.trim().length > 0
+    );
+
+    setCategoryOptions(mergedCategories0);
   }, [data]);
 
   // Get dynamic columns from first data item
@@ -406,6 +411,7 @@ const DataTable = ({
       setCurrentPage(1);
       return;
     }
+    console.log("AQ1")
 
     // Always filter from the full data set for consistent search results
     const columnsToReplace = ["amount", "balance", "debit", "credit"];
@@ -420,6 +426,7 @@ const DataTable = ({
         return String(value).toLowerCase().includes(searchValue.toLowerCase());
       })
     );
+    console.log("AQ2")
 
     setFilteredData(filtered);
     setCurrentPage(1);
@@ -498,7 +505,6 @@ const DataTable = ({
       setSelectedBulkCategory()
       handleBulkCategoryChange("similarCategory")
     }else{
-      console.log({aq:selectedType})
       if (selectedType) {
         modifiedObject = {
           ...modifiedObject,
@@ -610,8 +616,9 @@ const DataTable = ({
     );
   };
 
-  const filteredCategories = categoryOptions.filter((category) =>
-    category.toLowerCase().includes(categorySearchTerm.toLowerCase())
+  console.log({categoryOptions})
+  const filteredCategories = categoryOptions.filter((category) =>{
+    return category.toLowerCase().includes(categorySearchTerm.toLowerCase())}
   );
 
   const handleSelectAll = () => {
@@ -1847,7 +1854,7 @@ const DataTable = ({
         
     {/* Reasoning Modal for Single Category Change */}
         <Dialog open={reasoningModalOpen} onOpenChange={setReasoningModalOpen}>
-          <DialogContent className="max-w-[80%] max-h-[90vh] overflow-auto">
+          <DialogContent className="max-w-[80%] max-h-[90vh] overflow-auto pb-0">
             <DialogHeader>
               <DialogTitle className="mb-2">
                 Category Change Reasoning
@@ -1896,105 +1903,106 @@ const DataTable = ({
               )}
             </div>
           {similarCategoryTransactions.length>0&&  <div className="mt-6 p-4 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900">
-  {/* Header Section */}
-  <div className="mb-4">
-    <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-      📌 Similar Transactions Detected
-    </h2>
-    <p className="text-sm text-gray-600 dark:text-gray-400">
-      The following transactions have similar descriptions and categories. 
-      Select the ones you'd like to update alongside the manually changed transaction.
-    </p>
-  </div>
+        {/* Header Section */}
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+            📌 Similar Transactions Detected
+          </h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            The following transactions have similar descriptions and categories. 
+            Select the ones you'd like to update alongside the manually changed transaction.
+          </p>
+        </div>
 
-  {/* Transactions Table */}
-  <div className="overflow-x-auto">
-    <Table className="w-full border border-gray-300 dark:border-gray-700 rounded-md">
-      <TableHeader className="bg-gray-100 dark:bg-gray-800">
-        <TableRow>
-          <TableHead className="w-10 p-3">
-            <Checkbox
-              checked={
-                similarCategoryTransactions.length > 0 &&
-                similarCategoryTransactions.every((t) =>
-                  selectedCategorySimilarTransactions.has(t.id)
-                )
-              }
-              onCheckedChange={() => {
-                const newSet = new Set(selectedCategorySimilarTransactions);
-                if (
-                  similarCategoryTransactions.every((t) =>
-                    newSet.has(t.id)
-                  )
-                ) {
-                  similarCategoryTransactions.forEach((t) =>
-                    newSet.delete(t.id)
-                  );
-                } else {
-                  similarCategoryTransactions.forEach((t) =>
-                    newSet.add(t.id)
-                  );
-                }
-                setSelectedCategorySimilarTransactions(newSet);
-              }}
-            />
-          </TableHead>
-          <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Date
-          </TableHead>
-          <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Description
-          </TableHead>
-          <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Credit
-          </TableHead>
-          <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Debit
-          </TableHead>
-          <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Category
-          </TableHead>
-        </TableRow>
-      </TableHeader>
+        {/* Transactions Table */}
+        <div className="overflow-x-auto">
+          <Table className="w-full border border-gray-300 dark:border-gray-700 rounded-md">
+            <TableHeader className="bg-gray-100 dark:bg-gray-800">
+              <TableRow>
+                <TableHead className="w-10 p-3">
+                  <Checkbox
+                    checked={
+                      similarCategoryTransactions.length > 0 &&
+                      similarCategoryTransactions.every((t) =>
+                        selectedCategorySimilarTransactions.has(t.id)
+                      )
+                    }
+                    onCheckedChange={() => {
+                      const newSet = new Set(selectedCategorySimilarTransactions);
+                      if (
+                        similarCategoryTransactions.every((t) =>
+                          newSet.has(t.id)
+                        )
+                      ) {
+                        similarCategoryTransactions.forEach((t) =>
+                          newSet.delete(t.id)
+                        );
+                      } else {
+                        similarCategoryTransactions.forEach((t) =>
+                          newSet.add(t.id)
+                        );
+                      }
+                      setSelectedCategorySimilarTransactions(newSet);
+                    }}
+                  />
+                </TableHead>
+                <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Date
+                </TableHead>
+                <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Description
+                </TableHead>
+                <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Credit
+                </TableHead>
+                <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Debit
+                </TableHead>
+                <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Category
+                </TableHead>
+              </TableRow>
+            </TableHeader>
 
-      <TableBody>
-        {similarCategoryTransactions.map((transaction, index) => (
-          <TableRow
-            key={transaction.id}
-            className={`transition-all ${
-              index % 2 === 0
-                ? "bg-white dark:bg-gray-900"
-                : "bg-gray-50 dark:bg-gray-800"
-            } hover:bg-gray-200 dark:hover:bg-gray-700`}
-          >
-            <TableCell className="p-3">
-              <Checkbox
-                checked={selectedCategorySimilarTransactions.has(transaction.id)}
-                onCheckedChange={() => {
-                  const newSet = new Set(selectedCategorySimilarTransactions);
-                  if (newSet.has(transaction.id)) {
-                    newSet.delete(transaction.id);
-                  } else {
-                    newSet.add(transaction.id);
-                  }
-                  setSelectedCategorySimilarTransactions(newSet);
-                }}
-              />
-            </TableCell>
-            <TableCell className="p-3">{transaction.date}</TableCell>
-            <TableCell className="p-3">{transaction.description}</TableCell>
-            <TableCell className="p-3">{transaction.credit}</TableCell>
-            <TableCell className="p-3">{transaction.debit}</TableCell>
-            <TableCell className="p-3">{transaction.category}</TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  </div>
-</div>
-}
+            <TableBody>
+              {similarCategoryTransactions.map((transaction, index) => (
+                <TableRow
+                  key={transaction.id}
+                  className={`transition-all ${
+                    index % 2 === 0
+                      ? "bg-white dark:bg-gray-900"
+                      : "bg-gray-50 dark:bg-gray-800"
+                  } hover:bg-gray-200 dark:hover:bg-gray-700`}
+                >
+                  <TableCell className="p-3">
+                    <Checkbox
+                      checked={selectedCategorySimilarTransactions.has(transaction.id)}
+                      onCheckedChange={() => {
+                        const newSet = new Set(selectedCategorySimilarTransactions);
+                        if (newSet.has(transaction.id)) {
+                          newSet.delete(transaction.id);
+                        } else {
+                          newSet.add(transaction.id);
+                        }
+                        setSelectedCategorySimilarTransactions(newSet);
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell className="p-3">{transaction.date}</TableCell>
+                  <TableCell className="p-3">{transaction.description}</TableCell>
+                  <TableCell className="p-3">{transaction.credit}</TableCell>
+                  <TableCell className="p-3">{transaction.debit}</TableCell>
+                  <TableCell className="p-3">{transaction.category}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+      }
 
-            <DialogFooter>
+
+            <DialogFooter className="sticky bg-white bottom-0 p-4">
               <Button
                 variant="ghost"
                 onClick={() => {

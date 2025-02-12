@@ -27,7 +27,7 @@ const SingleBarChart = ({
   showLegends = false,
 }) => {
   // Get all columns from the first data item
-  const [columnsToIgnore, setColumnsToIgnore] = useState(["balance"]);
+  const [columnsToIgnore, setColumnsToIgnore] = useState(["balance","id"]);
 
   let columns = data.length > 0 ? Object.keys(data[0]) : [];
   columns = columns.filter((column) => !columnsToIgnore.includes(column));
