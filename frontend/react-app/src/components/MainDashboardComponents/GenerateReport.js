@@ -12,7 +12,8 @@ import {
 } from "../ui/dialog"; // Import shadcn/ui Dialog components
 import { Button } from "../ui/button"; // Import shadcn/ui Button component
 import { useNavigate } from "react-router-dom"; // Import useNavigate for navigation
-
+import { Card } from "../ui/card";
+import { AlertCircle, ChevronRight } from "lucide-react";
 export default function GenerateReport() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false); // State to control Dialog visibility
@@ -222,6 +223,16 @@ export default function GenerateReport() {
   //   window.electron.excelFileDownload(5);
   // };
 
+  const note = {
+    content: [
+      "Scanned Copies without OCR Support",
+      "Image statements in form of Pdfs instead of structured files",
+      "Encoded, Encrypted, or Corrupted Files",
+      "Handwritten Bank Statements",
+      "Some formats of Canara Bank"
+    ],
+  };
+
   return (
     <div className="p-8 pt-0 space-y-8 bg-white dark:bg-black min-h-screen">
       <div className="flex justify-between items-center">
@@ -269,6 +280,29 @@ export default function GenerateReport() {
       </div>
 
       <RecentReports key={refreshTrigger} onReportGenerated={refreshPage} />
+
+{/* statments which we dont work with */}
+      <Card className="p-6">
+            <h4 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+              <AlertCircle className="h-5 w-5 text-amber-500" />
+              Important Notes
+            </h4>
+            <h6 className="text-gray-600 dark:text-slate-300 mb-4">
+            Certain statements may not be processed properly due to various reasons. Below is a list of common unsupported or partially extracted formats:
+
+            </h6>
+            <ul className="space-y-3">
+              {note.content.map((item, idx) => (
+                <li
+                  key={idx}
+                  className="flex gap-3 items-center text-gray-600 dark:text-slate-300"
+                >
+                  <ChevronRight className="h-5 w-5 flex-shrink-0 text-gray-400" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </Card>
 
       {/* Dialog for successful report generation */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
