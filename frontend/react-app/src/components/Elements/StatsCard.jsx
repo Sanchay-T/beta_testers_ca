@@ -16,6 +16,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { TrendingUp, Clock, FileText, ClipboardList } from "lucide-react";
+import clsx from "clsx";
 
 const getCardStyles = (type) => {
   switch (type) {
@@ -107,51 +108,64 @@ const AnimatedPieChart = ({ data }) => {
 
 const StatsMetricCard = ({
   type,
-  title = "N/A",
-  value1 = "",
-  value2 = "",
-  mainValue1 = 0,
-  mainValue2 = 0,
-  chartData = [],
-  chartType = "line",
+  title,
+  value1,
+  value2,
+  mainValue1,
+  mainValue2,
+  chartData,
+  chartType,
   onDurationChange,
-  handleDurationChange,
-  currentDuration,
+  initialDuration = "1M",
 }) => {
   const cardStyles = getCardStyles(type);
   const [duration, setDuration] = useState(type === "statements" ? "1Y" : "1M");
-  const [progress, setProgress] = useState(65);
+  const [progress, setProgress] = useState(60);
+  const [localDuration, setLocalDuration] = useState(initialDuration);
+
+  // Change progress bar color dynamically
+  const progressColor = clsx(
+    "h-2 rounded-full transition-all",
+    progress < 40
+      ? "bg-green-500" // Red for low progress
+      : progress < 70
+      ? "bg-yellow-500" // Yellow for medium progress
+      : "bg-red-500" // Green for high progress
+  );
 
   const handleDurationClick = (newDuration) => {
-    if (type === "timeSaved") {
-      onDurationChange?.(newDuration);
-    } else {
-      setDuration(newDuration);
-      if (type === "reports") {
-        onDurationChange?.(newDuration);
-      } else if (type === "statements") {
-        handleDurationChange?.(newDuration);
-      }
-    }
+    setLocalDuration(newDuration);
+    onDurationChange?.(newDuration);
   };
 
   const renderChart = () => {
     if (type === "statements") {
       return (
-        <div className="space-y-4 py-14">
-          <div>
-            <div className="flex justify-between mb-2">
-              <span className="text-sm text-white font-medium">
-                Plan Validity
-              </span>
-              <span className="text-sm text-white">65% Complete</span>
+        <Card className="bg-transparent text-white py-4 px-2 rounded-2xl shadow-lg">
+          <CardContent className="space-y-4">
+            <div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-semibold pb-3">
+                  Plan Validity
+                </span>
+                <span className="text-sm text-gray-300">
+                  {progress}% Complete
+                </span>
+              </div>
+              <div className="relative w-full h-2 bg-gray-700 rounded-full overflow-hidden">
+                <div
+                  className={progressColor}
+                  style={{ width: `${progress}%` }}
+                ></div>
+              </div>
             </div>
-            <Progress value={progress} className="h-2" />
-          </div>
-          <p className="text-sm text-white">
-            Your Enterprise plan will expire in 127 days
-          </p>
-        </div>
+            <p className="text-sm text-gray-400">
+              Your <span className="text-white font-medium">Enterprise</span>{" "}
+              plan will expire in{" "}
+              <span className="text-white font-semibold">127 days</span>.
+            </p>
+          </CardContent>
+        </Card>
       );
     }
 
@@ -194,13 +208,13 @@ const StatsMetricCard = ({
           />
           <Bar
             dataKey="reports"
-            fill="rgba(99, 102, 241, 0.8)"
+            fill="#5A7DED"
             radius={[4, 4, 0, 0]}
             name="Reports"
           />
           <Bar
             dataKey="statements"
-            fill="rgba(255, 99, 132, 0.8)"
+            fill="#FF6B81"
             radius={[4, 4, 0, 0]}
             name="Statements"
           />
@@ -227,29 +241,35 @@ const StatsMetricCard = ({
           </div>
         </div>
 
-        <div>
-          <div className="text-md text-white/80 tracking-tight">
-            {value1} : {mainValue1.toLocaleString()}
+        <div className="flex flex-row gap-2 items-center">
+          <div className="bg-white/10 p-2 rounded-lg backdrop-blur-sm shadow-lg flex flex-col items-center text-white w-full">
+            <div>{value1}</div>{" "}
+            <div className="text-3xl font-semibold">
+              {mainValue1.toLocaleString()}
+            </div>
           </div>
-          <div className="text-md text-white/80 tracking-tight">
-            {value2} : {mainValue2.toLocaleString()}
+          <div className="bg-white/10 p-2 rounded-lg backdrop-blur-sm shadow-lg flex flex-col items-center text-white w-full">
+            <div>{value2}</div>{" "}
+            <div className="text-3xl font-semibold">
+              {mainValue2.toLocaleString()}
+            </div>
           </div>
         </div>
 
         <div className="h-44 w-full">{renderChart()}</div>
 
         <div className="flex justify-center gap-3 mt-4">
-          {["1M", "2M", "6M", "1Y"].map((option) => (
+          {["today", "1M", "2M", "6M", "1Y"].map((option) => (
             <button
               key={option}
               className={`px-3 py-1 rounded-lg font-medium text-sm transition-all duration-300 ${
-                (type === "timeSaved" ? currentDuration : duration) === option
+                localDuration === option
                   ? "bg-emerald-500 text-white"
                   : "bg-white/10 text-white/80 hover:bg-white/20"
               }`}
               onClick={() => handleDurationClick(option)}
             >
-              {option}
+              {option === "today" ? "Today" : option}
             </button>
           ))}
         </div>
