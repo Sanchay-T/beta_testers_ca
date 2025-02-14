@@ -128,6 +128,7 @@ function registerMainDashboardIpc(tmpdir_path) {
         })
         .from(cases);
 
+      log.info({result})
       return result;
     } catch (error) {
       console.error("Error getting pages by period:", error);

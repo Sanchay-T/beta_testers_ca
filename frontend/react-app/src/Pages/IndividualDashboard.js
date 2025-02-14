@@ -34,6 +34,7 @@ import {
   ShieldPlus,
 } from "lucide-react";
 import { useReportContext } from "../contexts/ReportContext";
+import DashboardDropdown from "../components/IndividualDashboardComponents/DashboardDropdown";
 
 
 const IndividualDashboard = () => {
@@ -107,44 +108,42 @@ const IndividualDashboard = () => {
   useEffect(() => {
     setIndividualDashboard(
       activeTab,
-      `/individual-dashboard/${caseId}/${individualId}/${activeTab}`
+      `/individual-dashboard/${caseId}/${individualId || "combined"}/${activeTab}`
     );
-
-    console.log(
-      "CaseId : ",
-      caseId,
-      "Default Tab : ",
-      defaultTab,
-      " activetab",
-      activeTab
-    );
-  }, [activeTab]);
+  }, [activeTab, caseId, individualId, setIndividualDashboard]);
 
 
-  useEffect(() => {
-    if (individualId!==undefined) {
-      // hide eod for individual
-      setNavItems((prev) => {
-        return prev.filter((item) => item.title !== "EOD");
-      });
-    }else{
-      // show eod for where individual id is not present, first check if it is already present
-      if(!navItems.find((item) => item.title === "EOD")){
-        setNavItems((prev) => {
-          return [...prev, {
-            title: "EOD",
-            icon: History,
-          }]
-        });
-      }
+ // Update the context and navigation items based on whether an individualId exists.
+ useEffect(() => {
+  if (individualId && individualId !== "undefined") {
+    // Set the context with the valid individualId instead of null
+    updateReportData({
+      ...reportData,
+      individualId: individualId,
+      // Optionally, update customerName from somewhere (e.g., fetched data)
+    });
+    // Hide EOD if we are in individual mode
+    setNavItems((prev) => prev.filter((item) => item.title !== "EOD"));
+  } else {
+    // In combined mode, add EOD if not already present
+    if (!navItems.find((item) => item.title === "EOD")) {
+      setNavItems((prev) => [
+        ...prev,
+        { title: "EOD", icon: History },
+      ]);
     }
-  }, []);
+  }
+}, [individualId, navItems, reportData, updateReportData]);
 
-
-  useEffect(() => {
-    if (defaultTab === "defaultTab") setActiveTab(navItems[0].title);
-    else setActiveTab(defaultTab);
-  }, []);
+ // Update activeTab when the URL parameter (defaultTab) changes
+ useEffect(() => {
+  if (defaultTab && defaultTab !== "defaultTab") {
+    setActiveTab(defaultTab);
+  } else {
+    // Default to the first nav item’s title if no specific defaultTab is provided
+    setActiveTab(navItems[0]?.title || "Summary");
+  }
+}, [defaultTab, navItems]);
 
   const handleTabChange = (newTab) => {
     setActiveTab(newTab);
@@ -165,7 +164,14 @@ const IndividualDashboard = () => {
           setActiveTab={handleTabChange}
         />
         <ScrollArea className="w-full">
+          <div className="flex justify-between items-center w-full pr-14">
+
           <BreadcrumbDynamic items={breadcrumbs} />
+          <div>
+            <DashboardDropdown/>
+
+          </div>
+          </div>
           <div className="flex-1 flex flex-col overflow-hidden">
             <main className="flex-1">
               {activeTab === "Summary" && (

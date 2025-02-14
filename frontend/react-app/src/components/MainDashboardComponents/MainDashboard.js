@@ -133,6 +133,8 @@ const MainDashboard = () => {
   };
 
   const handlePagesDurationChange = (duration) => {
+    console.log("Duration changed to ", duration, pagesData);
+
     const filteredResults = filterPagesDataByDuration(pagesData, duration);
 
     setPagesMetrics({
@@ -184,6 +186,7 @@ const MainDashboard = () => {
   // };
 
   const filterDataByDuration = (data, duration) => {
+    console.log("Aiyaz",{data,duration})
     const endDate = new Date();
     const startDate = new Date();
     // console.log("duration", duration);

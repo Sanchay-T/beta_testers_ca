@@ -208,7 +208,7 @@ export default function GenerateReport() {
   };
   const viewAnalysis = () => {
     console.log("View Analysis clicked - ", currentCaseId);
-    navigate(`/case-dashboard/${currentCaseId}/defaultTab`);
+    navigate(`/individual-dashboard/${currentCaseId}/defaultTab`);
   };
 
   const handleRectify = () => {
@@ -301,7 +301,7 @@ export default function GenerateReport() {
         <DialogContent>
           <DialogHeader>
             {failedStatements.length === 0 ? (
-              <DialogTitle>{currentCaseName} Report Generated Successfully!</DialogTitle>
+              <DialogTitle>Report {currentCaseName}  Generated Successfully!</DialogTitle>
             ) : (
               <DialogTitle className="flex items-end gap-x-2">
                 <AlertTriangle className="text-yellow-500 w-6 h-6 mt-2" />

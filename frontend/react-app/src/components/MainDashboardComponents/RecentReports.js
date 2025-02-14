@@ -116,6 +116,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
   const fileInputRef = useRef(null);
   const [uploadedChanges, setUploadedChanges] = useState({});
   const [categoryUpdateModalOpen, setCategoryUpdateModalOpen] = useState(false);
+  const [isRectifyAlertOpen, setIsRectifyAlertOpen] = useState(false);
 
 
   const handleSubmitEditPdf = async () => {
@@ -753,7 +754,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         (item, index, self) =>
           index === self.findIndex((t) => t.pdfName === item.pdfName)
       );
-
+      setIsRectifyAlertOpen(true);
       setFailedDatasOfCurrentReport(uniqueFailedDataOfReport);
     } catch (error) {
       console.error("Error fetching failed statements:", error);
@@ -769,7 +770,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
   };
 
   useEffect(()=>{
-    console.log({aiyazzz:reportData})
       handleDetails(reportData?.triggerRectify?.caseId,reportData?.triggerRectify?.caseName)
   },[reportData.triggerRectify])
  
@@ -1032,6 +1032,16 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
     input.click();
   };
 
+  const handleDialogOpenChange = (open) => {
+    setIsRectifyAlertOpen(open);
+    if (!open) {
+      // Remove focus from the active element so tooltips do not trigger
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+    }
+  };
+
   return (
     <Card>
       <PDFMarkerModal
@@ -1183,16 +1193,14 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                           </AlertDialogContent>
                         </AlertDialog>
 
-                        <Tooltip>
-                          <TooltipTrigger asChild>
+                        
                           <DropdownMenu>
+                          <Tooltip>
                           <DropdownMenuTrigger asChild>
+                          <TooltipTrigger asChild>
                             <Button
                               variant="outline"
                               size="icon"
-                              onClick={() =>
-                                handleDownload(report.id, report.status)
-                              }
                               className={cn(
                                 "h-8 w-8",
                                 report.status === "In Progress" &&
@@ -1202,7 +1210,14 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                             >
                               <Download className="h-4 w-4" />
                             </Button>
+                            </TooltipTrigger>
                             </DropdownMenuTrigger>
+                          <TooltipContent>
+                            {report.status === "Pending"
+                              ? "Download not available while processing"
+                              : "Download Excel"}
+                          </TooltipContent>
+                        </Tooltip>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem
                                 className="cursor-pointer"
@@ -1224,13 +1239,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            {report.status === "Pending"
-                              ? "Download not available while processing"
-                              : "Download Excel"}
-                          </TooltipContent>
-                        </Tooltip>
+                          
 
                          {/* Upload Button */}
                         <Tooltip>
@@ -1253,11 +1262,12 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
 
                       </div>
                     </TableCell>
+                    
                     <TableCell>
-                      <AlertDialog>
+                      <AlertDialog open={isRectifyAlertOpen} onOpenChange={handleDialogOpenChange} >
                         <Tooltip>
-                          <TooltipTrigger asChild>
-                            <AlertDialogTrigger asChild>
+                          <TooltipTrigger asChild >
+                            <AlertDialogTrigger  asChild>
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -1315,7 +1325,8 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                         <div className="flex gap-2 items-center">
                                           <p className="flex-[4.5]">
                                             <strong>File Name:</strong>{" "}
-                                            {statement.pdfName}
+                                            {/* {statement.pdfName} */}
+                                            { statement.pdfName ? statement.pdfName.substring(statement.pdfName.indexOf("-") + 1): ""}
                                           </p>
                                           {/* Only show button if there's no error and the statement isn't done */}
                                           {!hasError && (

@@ -855,11 +855,8 @@ const DataTable = ({
   const handleDownload = () => {
     let newTitle = title;
 
-    if(source==="suspense"){
-      const tmpName = reportData.customerName?reportData.customerName:reportData.reportName
-      console.log({tmpName})
-      newTitle = `${tmpName}_${newTitle}`
-    }
+    const tmpName = reportData.customerName?reportData.customerName:reportData.reportName
+    newTitle = `${tmpName} ${newTitle}`
 
     exportToExcel(
       data,

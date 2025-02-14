@@ -570,6 +570,7 @@ def refresh_category_all_sheets(df,eod_sheet_df, new_categories):
     return json_output
 
 def individual_summary(transactions_df):
+    
     eod_sheet_df = eod(transactions_df)
     print(eod_sheet_df.head(10))
     opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df, transactions_df)
