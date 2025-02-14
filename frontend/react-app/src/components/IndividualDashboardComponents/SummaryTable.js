@@ -91,34 +91,42 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
 
   const filterTransactionsByCategory = (row) => {
     if (!row || !transactionData.length) {
-      console.log("No row or transaction data:", {
-        row,
-        transactionLength: transactionData.length,
-      });
       return [];
     }
 
     // Get the category value from the summary row
-    const categoryColumn = Object.keys(row)[0]; // "Income / Receipts"
-    const categoryValue = row[categoryColumn]; // "Cash Deposits"
+    const categoryColumn = Object.keys(row)[0];
+    const categoryValue = row[categoryColumn];
 
     return transactionData
       .filter((transaction) => transaction.category === categoryValue)
       .map((transaction) => {
-        const { id, statementId, type, ...rest } = transaction;
+        // Create a formatted date string from the date object
+        let formattedDate;
+        try {
+          if (transaction.date instanceof Date) {
+            formattedDate = transaction.date.toLocaleDateString('en-GB');
+          } else if (typeof transaction.date === 'string') {
+            // If it's already a string date, try to parse and format it
+            const dateObj = new Date(transaction.date);
+            formattedDate = dateObj.toLocaleDateString('en-GB');
+          }
+        } catch (error) {
+          console.error('Error formatting date:', error);
+        }
+
+        // Return a new object with all fields, including the formatted date
         return {
-          ...rest,
-          date:
-            transaction.date instanceof Date
-              ? transaction.date.toLocaleDateString("en-GB", {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                })
-              : transaction.date,
+          date: formattedDate,
+          description: transaction.description,
+          amount: transaction.amount,
+          category: transaction.category,
+          balance: transaction.balance,
+          bank: transaction.bank,
+          entity: transaction.entity
         };
       });
-  };
+};
 
   // Add a new sorting function
   const sortDataByTotal = (data) => {
@@ -140,6 +148,7 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
   }, [data]);
 
   const handleRowClick = (row) => {
+
     console.log({clicked:row})
     setSelectedRow(row);
     const filtered = filterTransactionsByCategory(row);
