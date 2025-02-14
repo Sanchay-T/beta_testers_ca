@@ -78,11 +78,11 @@ const Dashboard = () => {
       url: "#",
       icon: IndianRupee,
     },
-    {
-      title: "Billing",
-      url: "#",
-      icon: ReceiptText,
-    },
+    // {
+    //   title: "Billing",
+    //   url: "#",
+    //   icon: ReceiptText,
+    // },
     // {
     //   title: "Marker",
     //   url: "#",

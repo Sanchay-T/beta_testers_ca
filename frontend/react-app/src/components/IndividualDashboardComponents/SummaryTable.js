@@ -91,34 +91,42 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
 
   const filterTransactionsByCategory = (row) => {
     if (!row || !transactionData.length) {
-      console.log("No row or transaction data:", {
-        row,
-        transactionLength: transactionData.length,
-      });
       return [];
     }
 
     // Get the category value from the summary row
-    const categoryColumn = Object.keys(row)[0]; // "Income / Receipts"
-    const categoryValue = row[categoryColumn]; // "Cash Deposits"
+    const categoryColumn = Object.keys(row)[0];
+    const categoryValue = row[categoryColumn];
 
     return transactionData
       .filter((transaction) => transaction.category === categoryValue)
       .map((transaction) => {
-        const { id, statementId, type, ...rest } = transaction;
+        // Create a formatted date string from the date object
+        let formattedDate;
+        try {
+          if (transaction.date instanceof Date) {
+            formattedDate = transaction.date.toLocaleDateString('en-GB');
+          } else if (typeof transaction.date === 'string') {
+            // If it's already a string date, try to parse and format it
+            const dateObj = new Date(transaction.date);
+            formattedDate = dateObj.toLocaleDateString('en-GB');
+          }
+        } catch (error) {
+          console.error('Error formatting date:', error);
+        }
+
+        // Return a new object with all fields, including the formatted date
         return {
-          ...rest,
-          date:
-            transaction.date instanceof Date
-              ? transaction.date.toLocaleDateString("en-GB", {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                })
-              : transaction.date,
+          date: formattedDate,
+          description: transaction.description,
+          amount: transaction.amount,
+          category: transaction.category,
+          balance: transaction.balance,
+          bank: transaction.bank,
+          entity: transaction.entity
         };
       });
-  };
+};
 
   // Add a new sorting function
   const sortDataByTotal = (data) => {
@@ -140,6 +148,7 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
   }, [data]);
 
   const handleRowClick = (row) => {
+
     console.log({clicked:row})
     setSelectedRow(row);
     const filtered = filterTransactionsByCategory(row);
@@ -342,9 +351,9 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
               {/* Fixed First Column */}
               <div className="sticky left-0 z-20 min-w-[300px] bg-white dark:bg-slate-950">
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="border-r-2 border-slate-300">
                     <TableRow>
-                      <TableHead className="bg-gray-300 dark:bg-slate-800 text-black opacity-80 whitespace-nowrap">
+                      <TableHead className="bg-gray-300 dark:bg-slate-800  text-black opacity-80 whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           {columns[0].charAt(0).toUpperCase() +
                             columns[0].slice(1).toLowerCase()}
@@ -376,7 +385,7 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
                             : () => handleRowClick(row)
                         }
                       >
-                        <TableCell className="max-w-[200px] whitespace-nowrap">
+                        <TableCell className="max-w-[200px] whitespace-nowrap border-r-2 border-slate-300">
                           {row[columns[0]]}
                         </TableCell>
                       </TableRow>
@@ -456,7 +465,7 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
               {/* Fixed Last Column */}
               <div className="sticky right-0 z-20 bg-white dark:bg-slate-950">
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="border-l-2 border-slate-300">
                     <TableRow>
                       <TableHead className="bg-gray-300 dark:bg-slate-800 text-black opacity-80 whitespace-nowrap">
                         <div className="flex items-center gap-2">
@@ -490,7 +499,7 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
                             : () => handleRowClick(row)
                         }
                       >
-                        <TableCell className="max-w-[200px] whitespace-nowrap">
+                        <TableCell className="max-w-[200px] whitespace-nowrap border-l-2 border-slate-300">
                           {row[columns[columns.length - 1]]}
                         </TableCell>
                       </TableRow>

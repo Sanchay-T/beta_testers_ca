@@ -15,13 +15,16 @@ contextBridge.exposeInMainWorld("electron", {
 
   getPages: () => ipcRenderer.invoke("get-total-pages"),
 
+  getProgressed: () => ipcRenderer.invoke("get-user-progress"),
+
   getTransactions: (caseId, individualId) =>
     ipcRenderer.invoke("get-transactions", caseId, individualId),
 
   getTransactionsCount: (caseId) =>
     ipcRenderer.invoke("get-transactions-count", caseId),
   getEodBalance: (caseId) => ipcRenderer.invoke("get-eod-balance", caseId),
-  getSummary: (caseId,individualId) => ipcRenderer.invoke("get-summary", caseId,individualId),
+  getSummary: (caseId, individualId) =>
+    ipcRenderer.invoke("get-summary", caseId, individualId),
   getTransactionsByDebtor: (caseId, individualId) =>
     ipcRenderer.invoke("get-transactions-by-debtor", caseId, individualId),
 
@@ -110,12 +113,11 @@ contextBridge.exposeInMainWorld("electron", {
   getTallyVoucher: (caseId, voucherType) =>
     ipcRenderer.invoke("get-tally-voucher", caseId, voucherType),
 
-
   updateTransactionStatus: (transactionIds) =>
     ipcRenderer.invoke("update-transaction-status", transactionIds),
-  
+
   editVoucherType: (data) => ipcRenderer.invoke("update-voucher", data),
-  
+
   user: {
     getData: (userId) => ipcRenderer.invoke("user:get-data", userId),
     updateData: (userData) => ipcRenderer.send("user:update-data", userData),
