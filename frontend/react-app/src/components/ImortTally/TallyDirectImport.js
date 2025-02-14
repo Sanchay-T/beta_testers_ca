@@ -250,24 +250,83 @@ const TallyDirectImport = () => {
     const totalTransactions = tallyUploadData.length;
     const failedTransactionsCount = failedTransactions.length;
     const successTransactionsCount = successIds.length;
-
-    // find out count of transactions failed due to ledger missing
-    const ledgerMissingCount = failedTransactions.filter((transaction) => transaction.error.toLowerCase().includes("does not exist")).length;
-    console.log({ledgerMissingCount})
-
-
-
-    return <div>
-      <div className="flex justify-between items-center">
-        <div className="text-lg font-semibold">Transactions Uploaded</div>
-        <div className="flex gap-4">
-          <div className="text-lg font-semibold text-green-500">{successTransactionsCount}</div>
-          <div className="text-lg font-semibold text-red-500">{failedTransactionsCount}</div>
+  
+    // Aggregate error counts by type.
+    const errorCounts = failedTransactions.reduce((acc, transaction) => {
+      const errorMessage = transaction.error.toLowerCase();
+      let errorCategory = "Other Errors";
+  
+      if (errorMessage.includes("ledger") && errorMessage.includes("does not exist")) {
+        errorCategory = "Ledger Not Found";
+      } else if (errorMessage.toLowerCase().includes(["out of range"])) {
+        errorCategory = "Date Range Error";
+      }
+      // You can add more conditions here for additional error types.
+  
+      acc[errorCategory] = (acc[errorCategory] || 0) + 1;
+      return acc;
+    }, {});
+  
+    return (
+      <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">
+          Transaction Upload Summary
+        </h2>
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex flex-col items-center">
+            <span className="text-xl font-semibold text-green-600">
+              {successTransactionsCount}
+            </span>
+            <span className="text-sm text-gray-600 dark:text-gray-300">
+              Successful
+            </span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="text-xl font-semibold text-red-600">
+              {failedTransactionsCount}
+            </span>
+            <span className="text-sm text-gray-600 dark:text-gray-300">
+              Failed
+            </span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="text-xl font-semibold text-blue-600">
+              {totalTransactions}
+            </span>
+            <span className="text-sm text-gray-600 dark:text-gray-300">
+              Total
+            </span>
+          </div>
         </div>
-        
+        <div>
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">
+            Error Breakdown
+          </h3>
+          {Object.entries(errorCounts).length > 0 ? (
+            <ul className="space-y-2">
+              {Object.entries(errorCounts).map(([errorType, count]) => (
+                <li
+                  key={errorType}
+                  className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-md"
+                >
+                  <span className="font-medium text-gray-700 dark:text-gray-200">
+                    {errorType}
+                  </span>
+                  <span className="font-bold text-gray-800 dark:text-gray-100">
+                    {count}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-600 dark:text-gray-300">No errors found.</p>
+          )}
         </div>
-    </div>
-  }
+      </div>
+    );
+  };
+  
+  
 
   return (
     <Card>
@@ -344,13 +403,14 @@ const TallyDirectImport = () => {
       <Dialog open={failedTransactions.length > 0} onOpenChange={setFailedTransactions}>
         <DialogContent className="min-w-[500px] max-w-[40%] max-h-[90%] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Alert</DialogTitle>
           </DialogHeader>
           <DialogDescription>
            {tallyUploadResponseStats()}
           </DialogDescription>
           <DialogFooter className={"sticky bottom-0"}>
-            <Button variant="default" onClick={() => setFailedTransactions([])}>
+            <Button variant="default" onClick={() => {
+              setFailedTransactions([]);
+              setSuccessIds([])}}>
               Close
             </Button>
           </DialogFooter>
