@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useRef } from "react";
 import {
   Card,
   CardContent,
@@ -33,6 +33,7 @@ import {
   AlertTriangle,
   XCircle,
   Download,
+  Upload,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -62,6 +63,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter
 } from "../ui/dialog"; // Import shadcn/ui Dialog components
 import {
   Tooltip,
@@ -71,9 +73,17 @@ import {
 } from "../ui/tooltip";
 import { Checkbox } from "../ui/checkbox";
 import { useReportContext } from "../../contexts/ReportContext";
-
 import PDFMarkerModal from "./PdfMarkerModal";
 import { useLoading } from "../../contexts/LoadingContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  
+} from "../ui/dropdown-menu";
+import { exportToExcel } from "../exportToExcel";
+import * as XLSX from "xlsx";
 
 const RecentReportsComp = ({ key, onReportGenerated }) => {
   const { toast } = useToast();
@@ -103,6 +113,10 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
   const [isChecked, setIsChecked] = useState(false);
   const { setIsExcelLoading } = useLoading();
   const { reportData, updateReportData } = useReportContext();
+  const fileInputRef = useRef(null);
+  const [uploadedChanges, setUploadedChanges] = useState({});
+  const [categoryUpdateModalOpen, setCategoryUpdateModalOpen] = useState(false);
+
 
   const handleSubmitEditPdf = async () => {
     setPdfEditLoading(true);
@@ -177,6 +191,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
 
   useEffect(() => {
     const fetchReports = async () => {
+      setIsLoading(true);
       try {
         const result = await window.electron.getRecentReports();
         console.log({ recentReports: result });
@@ -213,8 +228,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         setIsLoading(false);
       }
     };
-
-    console.log({ setShowRectifyButton, setFailedStatements, setDialogOpen });
 
     fetchReports();
   }, []);
@@ -846,6 +859,179 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
     }
   };
 
+  const processSuspenseData = (transactions) => {
+    return transactions.map((transaction) => ({
+      date: new Date(transaction.date).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      }),
+      description: transaction.description,
+      credit:
+        transaction.type.toLowerCase() === "credit" ? transaction.amount : 0,
+      debit:
+        transaction.type.toLowerCase() === "debit" ? transaction.amount : 0,
+      balance: transaction.balance,
+      category: transaction.category,
+      id: transaction.id,
+    }));
+  };
+
+  const fetchSuspenseData = async (caseId) => {
+    try {
+      const suspenseTransactionaAll =
+        await window.electron.getTransactionsBySuspense(
+          caseId,
+          null
+        );
+
+      console.log("suspenseTransactionaAll", suspenseTransactionaAll);
+
+      const transformedSuspenseData = processSuspenseData(suspenseTransactionaAll);
+
+      console.log("transformedSuspenseData", transformedSuspenseData);
+
+      return transformedSuspenseData;
+
+      // Initially select all months
+    } catch (error) {
+      console.error("Error fetching suspense transactions:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSuspenseDownload = async (caseId, caseName)=>{
+    const suspenseData = await fetchSuspenseData(caseId);
+
+    let newTitle = `${caseName} Suspense Transactions.xlsx`;
+
+    exportToExcel(suspenseData, newTitle,false,reportData.categoryOptions);
+
+
+    console.log({suspenseData})
+
+  }
+  const handleSummaryDownload = ()=>{
+  }
+
+  const handleExcelFileUpload = async (event,caseId) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      console.log({caseId,event});
+
+      const suspenseData = await fetchSuspenseData(caseId);
+
+      console.log("Suspense Data: ", suspenseData);
+  
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const parsedData = XLSX.utils.sheet_to_json(sheet);
+  
+        console.log("Uploaded Suspense Data: ", parsedData);
+  
+        // Extract modified categories and compare with existing data
+        const updates = parsedData
+          .map((row) => {
+            const existingTransaction = suspenseData.find(
+              (tx) => tx.id === row.Id
+            );
+            if (!existingTransaction) return null;
+            if (existingTransaction.category === row.Category) return null;
+  
+            return {
+              date: row.Date,
+              credit: row.Credit,
+              debit: row.Debit,
+              description: row.Description,
+              id: row.Id,
+              oldCategory: existingTransaction.category,
+              newCategory: row.Category,
+            };
+          })
+          .filter(Boolean); // Remove nulls
+          
+          console.log({updates})
+        // Store updates and show confirmation modal
+        setUploadedChanges({updates,suspenseData,caseId});
+        setCategoryUpdateModalOpen(true);
+      };
+  
+      reader.readAsArrayBuffer(file);
+    };
+
+    const convertArrayToObject = (array) => {
+      return array.reduce((acc, transaction) => {
+        const id = transaction.id;
+        if (id) {
+          acc[Number(id)] = transaction;
+        }
+        return acc;
+      }, {});
+    };
+
+
+    
+  const applyUploadedCategoryChanges = async () => {
+    // Suspense excel upload handle
+    try {
+      console.log("Applying category updates:", uploadedChanges);
+      const suspenseTransactions = uploadedChanges.suspenseData;
+      const uploadedData = uploadedChanges.updates;
+
+      // Call API or Electron IPC to update database
+      // await window.electron.updateSuspenseCategories(uploadedChanges);
+
+      // TODO - Apply changes locally in the table
+
+      const updatedTransactions = uploadedData.map((change) => {
+        const updatedTransaction = suspenseTransactions.find(
+          (tx) => tx.id === change.id
+        );
+        if (updatedTransaction) {
+          updatedTransaction.oldCategory = change.oldCategory;
+          updatedTransaction.category = change.newCategory;
+          updatedTransaction.reasoning = "";
+        }
+        return updatedTransaction;
+      });
+
+      console.log("Updated Transactions", updatedTransactions);
+    
+      const payload = convertArrayToObject(updatedTransactions);
+      console.log("Payload", payload);
+      const response = await window.electron.editCategory(payload, uploadedChanges.caseId);
+      console.log({response})
+      setCategoryUpdateModalOpen(false);
+      setUploadedChanges({});
+      toast({
+        title: "Categories Updated!",
+        description: "Suspense transactions have been updated successfully.",
+      });
+      // if (refreshFunction) refreshFunction();
+    } catch (error) {
+      console.error("Error updating categories:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update categories. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUploadClick = (reportId) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".xlsx, .xls";
+    input.onchange = (e) => handleExcelFileUpload(e, reportId);
+    input.click();
+  };
+
   return (
     <Card>
       <PDFMarkerModal
@@ -996,8 +1182,11 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
+
                         <Tooltip>
                           <TooltipTrigger asChild>
+                          <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
                             <Button
                               variant="outline"
                               size="icon"
@@ -1013,6 +1202,28 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                             >
                               <Download className="h-4 w-4" />
                             </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                className="cursor-pointer"
+                                onClick={() =>handleDownload(report.id, report.status)}
+                              >
+                                Download Report
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="cursor-pointer"
+                                onClick={() => handleSuspenseDownload(report.id, report.name)}
+                              >
+                                Download Suspense
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="cursor-pointer"
+                                onClick={() => handleSummaryDownload(report.id)}
+                              >
+                                Download Summary
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                           </TooltipTrigger>
                           <TooltipContent>
                             {report.status === "Pending"
@@ -1020,6 +1231,26 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                               : "Download Excel"}
                           </TooltipContent>
                         </Tooltip>
+
+                         {/* Upload Button */}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleUploadClick(report.id)}
+                            className={cn(
+                              "h-8 w-8",
+                              report.status === "In Progress" && "opacity-50 cursor-not-allowed"
+                            )}
+                            disabled={report.status === "In Progress"}
+                          >
+                            <Upload className="h-4 w-4" />
+                          </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Upload</TooltipContent>
+                        </Tooltip>
+
                       </div>
                     </TableCell>
                     <TableCell>
@@ -1200,7 +1431,9 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
             </TableBody>
           </Table>
         ) : (
-          <div className="text-center text-grey-600 opacity-70 font-semibold">
+          isLoading?<div className="text-center text-grey-600 opacity-70 w-full font-semibold">
+            <Loader2/>
+            </div>:<div className="text-center text-grey-600 opacity-70 font-semibold">
             No Reports Found
           </div>
         )}
@@ -1322,6 +1555,69 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
           </div>
         </DialogContent>
       </Dialog>
+
+          {/* Category Update Confirmation Modal */}
+            <Dialog
+              open={categoryUpdateModalOpen}
+              onOpenChange={setCategoryUpdateModalOpen}
+            >
+              <DialogContent className="max-w-[80%]">
+                <DialogHeader>
+                  <DialogTitle>Confirm Category Updates</DialogTitle>
+                  <DialogDescription>
+                    You are about to update the categories for{" "}
+                    {uploadedChanges?.updates?.length} transactions. Please review the changes
+                    before proceeding.
+                  </DialogDescription>
+                </DialogHeader>
+      
+                <div className="max-h-[400px] overflow-y-auto border p-2 rounded-md">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead>Credit</TableHead>
+                        <TableHead>Debit</TableHead>
+                        <TableHead className="whitespace-nowrap">
+                          Old Category
+                        </TableHead>
+                        <TableHead className="whitespace-nowrap">
+                          New Category
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {uploadedChanges?.updates?.map((change) => (
+                        <TableRow key={change.id}>
+                          <TableCell>{change.date}</TableCell>
+                          <TableCell>{change.description}</TableCell>
+                          <TableCell>{change.credit}</TableCell>
+                          <TableCell>{change.debit}</TableCell>
+                          <TableCell>{change.oldCategory}</TableCell>
+                          <TableCell className="text-blue-600">
+                            {change.newCategory}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+      
+                <DialogFooter>
+                  <Button
+                    variant="ghost"
+                    onClick={() => {setCategoryUpdateModalOpen(false);
+                      fileInputRef.current.value = "";}}
+                  >
+                    Cancel
+                  </Button>
+                  <Button variant="default" onClick={applyUploadedCategoryChanges}>
+                    Confirm Updates
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
     </Card>
   );
 };

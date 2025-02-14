@@ -964,6 +964,9 @@ useEffect(() => {
                   >
 
                     <div className="flex items-center gap-2">
+                      {["dr_ledger","cr_ledger"].includes(column) && <p className="text-lg text-gray-500 dark:text-gray-400">
+                        *
+                      </p>}
                       {column
                         .split("_") // Split by underscore
                         .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Capitalize
@@ -989,6 +992,7 @@ useEffect(() => {
                           ▼
                         </Button>
                       )}
+
                     </div>
                   </TableHead>
                 ))}
@@ -1208,7 +1212,7 @@ useEffect(() => {
                       </TableCell>
                       } else if(column.toLowerCase()==="imported"){
                         return  <TableCell key={column} className="max-w-[200px]">
-                        <div>{row[column]===true?"Success":"Failed"}</div>
+                        <div>{row[column]===true?"Success":row.failed_reason===""?"Not Uploaded Yet":"Failed"}</div>
                       </TableCell>
                       } else if(column.toLowerCase()==="dr_ledger"){
                         return <TableCell>

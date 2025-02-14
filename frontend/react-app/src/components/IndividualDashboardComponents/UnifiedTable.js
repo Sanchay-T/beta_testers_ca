@@ -59,60 +59,6 @@ import * as XLSX from "xlsx";
 import { useReportContext } from "../../contexts/ReportContext";
 
 
-const categoryOptionsfixed = [
-    "Bank Charges",
-    "Bank Interest Received",
-    "Bonus Paid",
-    "Bonus Received",
-    "Bounce",
-    "Cash Deposits",
-    "Cash Reversal",
-    "Cash Withdrawal",
-    "Closing Balance",
-    "Credit Card Payment",
-    "Debtor List",
-    "Departmental Stores",
-    "Donation",
-    "Food Expense/Hotel",
-    "General Insurance",
-    "Gold Loan",
-    "GST Paid",
-    "Income Tax Paid",
-    "Income Tax Refund",
-    "Indirect tax",
-    "Interest Debit",
-    "Interest Received",
-    "Investment",
-    "Life insurance",
-    "Loan",
-    "Loan given",
-    "Local Cheque Collection",
-    "Online Shopping",
-    "Opening Balance",
-    "Other Expenses",
-    "POS-Cr",
-    "POS-Dr",
-    "Probable Claim Settlement",
-    "Property Tax",
-    "Provident Fund",
-    "Redemption, Dividend & Interest",
-    "Refund/Reversal",
-    "Rent Paid",
-    "Rent Received",
-    "Salary Paid",
-    "Salary Received",
-    "Subscription / Entertainment",
-    "TDS Deducted",
-    "Total Income Tax Paid",
-    "Travelling Expense",
-    "UPI-Cr",
-    "UPI-Dr",
-    "Utility Bills",
-    "Loan taken",
-    "Loan Given",
-    "Self transfer",
-    "Suspense",
-  ];
 
 
 const voucherOptions = [
@@ -147,7 +93,7 @@ const DataTable = ({
     "transactionId",
     "monthKey",
   ]);
-  const [categoryOptions, setCategoryOptions] = useState(categoryOptionsfixed);
+  const [categoryOptions, setCategoryOptions] = useState([]);
 
   // Category states
     const[similarCategoryTransactions,setSimilarCategoryTransactions] = useState([]);
@@ -196,7 +142,7 @@ const DataTable = ({
   const [uploadedChanges, setUploadedChanges] = useState([]);
   const [categoryUpdateModalOpen, setCategoryUpdateModalOpen] = useState(false);
 
-    const { reportData, updateReportData } = useReportContext();
+  const { reportData, updateReportData } = useReportContext();
   
 
   // Helper: Format dates
@@ -244,7 +190,7 @@ const DataTable = ({
     const storedCategories = localStorage.getItem("categoryOptions");
     let localCats = storedCategories ? JSON.parse(storedCategories) : null;
     if (!localCats) {
-      localCats = categoryOptions;
+      localCats = reportData.categoryOptions;
       localStorage.setItem("categoryOptions", JSON.stringify(localCats));
     }
 
@@ -869,6 +815,10 @@ const DataTable = ({
       const updatedOptions = [...categoryOptions, newCategory].sort();
       setCategoryOptions(updatedOptions);
       localStorage.setItem("categoryOptions", JSON.stringify(updatedOptions));
+      updateReportData(({
+        ...reportData,
+        categoryOptions: updatedOptions,
+      }))
 
       if (row) {
         // Single-row update flow: store the pending change using the transaction id.
@@ -2194,3 +2144,4 @@ const DataTable = ({
 };
 
 export default DataTable;
+

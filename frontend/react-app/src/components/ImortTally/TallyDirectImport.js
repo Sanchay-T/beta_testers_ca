@@ -245,6 +245,30 @@ const TallyDirectImport = () => {
       }
   }
 
+
+  const tallyUploadResponseStats = () => {
+    const totalTransactions = tallyUploadData.length;
+    const failedTransactionsCount = failedTransactions.length;
+    const successTransactionsCount = successIds.length;
+
+    // find out count of transactions failed due to ledger missing
+    const ledgerMissingCount = failedTransactions.filter((transaction) => transaction.error.toLowerCase().includes("does not exist")).length;
+    console.log({ledgerMissingCount})
+
+
+
+    return <div>
+      <div className="flex justify-between items-center">
+        <div className="text-lg font-semibold">Transactions Uploaded</div>
+        <div className="flex gap-4">
+          <div className="text-lg font-semibold text-green-500">{successTransactionsCount}</div>
+          <div className="text-lg font-semibold text-red-500">{failedTransactionsCount}</div>
+        </div>
+        
+        </div>
+    </div>
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -323,22 +347,7 @@ const TallyDirectImport = () => {
             <DialogTitle>Alert</DialogTitle>
           </DialogHeader>
           <DialogDescription>
-            <Table>
-            {successIds.length>0&&<TableHead>
-                <TableRow>
-                  {/* <TableHeader>Transaction ID</TableHeader> */}
-                  <TableHeader className="text-lg text-green-700">Successfully uploaded {successIds.length} transactions</TableHeader>
-                </TableRow>
-              </TableHead>}
-              <TableBody>
-                {failedTransactions.map((transaction) => (
-                  <TableRow key={transaction.id}>
-                    {/* <TableCell>{transaction.id}</TableCell> */}
-                    <TableCell>{transaction.error}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+           {tallyUploadResponseStats()}
           </DialogDescription>
           <DialogFooter className={"sticky bottom-0"}>
             <Button variant="default" onClick={() => setFailedTransactions([])}>
