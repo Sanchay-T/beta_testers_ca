@@ -8,6 +8,7 @@ const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
 const { transactions } = require("../db/schema/Transactions");
+const { users } = require("../db/schema/User");
 
 function registerMainDashboardIpc(tmpdir_path) {
   const db = databaseManager.getInstance().getDatabase();

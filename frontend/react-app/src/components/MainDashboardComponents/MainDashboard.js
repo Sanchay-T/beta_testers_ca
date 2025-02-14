@@ -23,13 +23,13 @@ const MainDashboard = () => {
   const [reportsMetrics, setReportsMetrics] = useState({
     totalReports: 0,
     totalStatements: 0,
-    totalTransactions: 0,
+    // totalTransactions: 0,
     chartData: [],
     duration: "all",
   });
 
-  const [statementsMetrics, setStatementsMetrics] = useState({
-    totalStatements: 0,
+  const [pagesMetrics, setPagesMetrics] = useState({
+    totalPages: 0,
     totalTransactions: 0,
     chartData: [],
     duration: "all",
@@ -63,125 +63,195 @@ const MainDashboard = () => {
     },
   ];
 
-  const calculateTimeMetrics = (pagesData, duration) => {
-    const today = new Date();
+  const filterPagesDataByDuration = (pagesData, duration) => {
+    const endDate = new Date();
     const startDate = new Date();
 
     switch (duration) {
-      case "1M":
-        startDate.setMonth(today.getMonth() - 1);
+      case "today":
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
         break;
-      case "2M":
-        startDate.setMonth(today.getMonth() - 2);
+      case "1M":
+        startDate.setMonth(endDate.getMonth() - 1);
+        break;
+      case "3M":
+        startDate.setMonth(endDate.getMonth() - 3);
         break;
       case "6M":
-        startDate.setMonth(today.getMonth() - 6);
+        startDate.setMonth(endDate.getMonth() - 6);
         break;
       case "1Y":
-        startDate.setFullYear(today.getFullYear() - 1);
+        startDate.setFullYear(endDate.getFullYear() - 1);
         break;
-      default:
-        startDate.setMonth(today.getMonth() - 1);
+      case "all":
+        return {
+          filteredData: pagesData,
+          totalPages: pagesData.reduce((sum, item) => sum + item.pages, 0),
+          totalTransactions: allData.reduce(
+            (sum, item) => sum + (item.transactions || 0),
+            0
+          ),
+        };
     }
 
     const filteredPages = pagesData.filter((item) => {
       const itemDate = new Date(item.createdAt);
-      return itemDate >= startDate && itemDate <= today;
+      return itemDate >= startDate && itemDate <= endDate;
     });
 
-    const totalPages = filteredPages.reduce((sum, item) => sum + item.pages, 0);
-    const daysInPeriod = Math.ceil((today - startDate) / (1000 * 60 * 60 * 24)); // Dynamically calculate days
-    const totalTimeSaved = totalPages * 10;
-    const averageTimeSavedPerDay =
-      daysInPeriod > 0 ? Math.round(totalTimeSaved / daysInPeriod) : 0;
+    // Group pages by date for chart data
+    const chartData = filteredPages.reduce((acc, item) => {
+      const date = new Date(item.createdAt).toLocaleDateString("en-US", {
+        month: "short",
+        day: "2-digit",
+        year: "numeric",
+      });
+
+      const existingEntry = acc.find((entry) => entry.date === date);
+      if (existingEntry) {
+        existingEntry.pages += item.pages;
+      } else {
+        acc.push({
+          date: date,
+          pages: item.pages,
+        });
+      }
+      return acc;
+    }, []);
 
     return {
-      totalTimeSaved,
-      averageTimeSavedPerDay,
-      totalPages,
-      daysInPeriod,
+      filteredData: chartData,
+      totalPages: filteredPages.reduce((sum, item) => sum + item.pages, 0),
+      totalTransactions: allData
+        .filter((item) => {
+          const itemDate = new Date(item.date);
+          return itemDate >= startDate && itemDate <= endDate;
+        })
+        .reduce((sum, item) => sum + (item.transactions || 0), 0),
     };
   };
+
+  const handlePagesDurationChange = (duration) => {
+    const filteredResults = filterPagesDataByDuration(pagesData, duration);
+
+    setPagesMetrics({
+      totalPages: filteredResults.totalPages,
+      totalTransactions: filteredResults.totalTransactions,
+      chartData: filteredResults.filteredData,
+      duration: duration,
+    });
+  };
+
+  // const calculateTimeMetrics = (pagesData, duration) => {
+  //   const today = new Date();
+  //   const startDate = new Date();
+
+  //   switch (duration) {
+  //     case "1M":
+  //       startDate.setMonth(today.getMonth() - 1);
+  //       break;
+  //     case "3M":
+  //       startDate.setMonth(today.getMonth() - 3);
+  //       break;
+  //     case "6M":
+  //       startDate.setMonth(today.getMonth() - 6);
+  //       break;
+  //     case "1Y":
+  //       startDate.setFullYear(today.getFullYear() - 1);
+  //       break;
+  //     default:
+  //       startDate.setMonth(today.getMonth() - 1);
+  //   }
+
+  //   const filteredPages = pagesData.filter((item) => {
+  //     const itemDate = new Date(item.createdAt);
+  //     return itemDate >= startDate && itemDate <= today;
+  //   });
+
+  //   const totalPages = filteredPages.reduce((sum, item) => sum + item.pages, 0);
+  //   const daysInPeriod = Math.ceil((today - startDate) / (1000 * 60 * 60 * 24)); // Dynamically calculate days
+  //   const totalTimeSaved = totalPages * 10;
+  //   const averageTimeSavedPerDay =
+  //     daysInPeriod > 0 ? Math.round(totalTimeSaved / daysInPeriod) : 0;
+
+  //   return {
+  //     totalTimeSaved,
+  //     averageTimeSavedPerDay,
+  //     totalPages,
+  //     daysInPeriod,
+  //   };
+  // };
 
   const filterDataByDuration = (data, duration) => {
-    const today = new Date();
+    const endDate = new Date();
     const startDate = new Date();
+    // console.log("duration", duration);
 
     switch (duration) {
-      case "1M":
-        startDate.setMonth(today.getMonth() - 1);
+      case "today":
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(0, 0, 0, 0);
         break;
-      case "2M":
-        startDate.setMonth(today.getMonth() - 2);
+      case "1M":
+        startDate.setMonth(endDate.getMonth() - 1);
+        break;
+      case "3M":
+        startDate.setMonth(endDate.getMonth() - 3);
         break;
       case "6M":
-        startDate.setMonth(today.getMonth() - 6);
+        startDate.setMonth(endDate.getMonth() - 6);
         break;
       case "1Y":
-        startDate.setFullYear(today.getFullYear() - 1);
+        startDate.setFullYear(endDate.getFullYear() - 1);
         break;
+      case "all":
+        return filterDataForAll(data);
       default:
-        startDate.setMonth(today.getMonth() - 1);
+        return filterDataForAll(data);
     }
+
+    // console.log("start date", startDate);
+    // console.log("end date", endDate);
 
     const filteredData = data.filter((item) => {
-      const itemDate = new Date(
-        Date.parse(item.month + " 1, " + today.getFullYear())
-      );
-      return itemDate >= startDate && itemDate <= today;
+      const itemDate = new Date(item.date);
+      // console.log("item date", itemDate);
+      return itemDate >= startDate && itemDate <= endDate;
     });
+    // console.log("filtered data", filteredData);
 
-    const reportTotal = filteredData.reduce(
-      (sum, item) => sum + (item.reports || 0),
-      0
-    );
-    const statementTotal = filteredData.reduce(
-      (sum, item) => sum + (item.statements || 0),
-      0
-    );
-    const transactionTotal = filteredData.reduce(
-      (sum, item) => sum + (item.transactions || 0),
-      0
-    );
+    const aggregatedData = filteredData.reduce((acc, item) => {
+      const itemDate = new Date(item.date);
+      const monthKey = itemDate.toLocaleDateString("en-US", {
+        month: "short",
+        year: "numeric",
+      });
+
+      if (!acc[monthKey]) {
+        acc[monthKey] = {
+          date: monthKey,
+          reports: 0,
+          statements: 0,
+          transactions: 0,
+        };
+      }
+
+      acc[monthKey].reports += item.reports || 0;
+      acc[monthKey].statements += item.statements || 0;
+      acc[monthKey].transactions += item.transactions || 0;
+
+      return acc;
+    }, {});
+
+    const aggregatedArray = Object.values(aggregatedData);
 
     return {
-      filteredData,
-      reportTotal,
-      statementTotal,
-      transactionTotal,
-    };
-  };
-
-  const filterStatementDataByDuration = (data, duration) => {
-    const today = new Date();
-    let monthsToShow;
-
-    switch (duration) {
-      case "1M":
-        monthsToShow = 1;
-        break;
-      case "2M":
-        monthsToShow = 2;
-        break;
-      case "6M":
-        monthsToShow = 6;
-        break;
-      case "1Y":
-        monthsToShow = 12;
-        break;
-      default:
-        monthsToShow = 12;
-    }
-
-    const sortedData = [...data].sort((a, b) => {
-      const monthA = new Date(Date.parse(a.month + " 1, 2024"));
-      const monthB = new Date(Date.parse(b.month + " 1, 2024"));
-      return monthA - monthB;
-    });
-
-    const filteredData = sortedData.slice(-monthsToShow);
-    return {
-      filteredData,
+      filteredData: aggregatedArray,
+      reportTotal: filteredData.reduce(
+        (sum, item) => sum + (item.reports || 0),
+        0
+      ),
       statementTotal: filteredData.reduce(
         (sum, item) => sum + (item.statements || 0),
         0
@@ -192,6 +262,47 @@ const MainDashboard = () => {
       ),
     };
   };
+
+  // const filterStatementDataByDuration = (data, duration) => {
+  //   const today = new Date();
+  //   let monthsToShow;
+
+  //   switch (duration) {
+  //     case "1M":
+  //       monthsToShow = 1;
+  //       break;
+  //     case "3M":
+  //       monthsToShow = 3;
+  //       break;
+  //     case "6M":
+  //       monthsToShow = 6;
+  //       break;
+  //     case "1Y":
+  //       monthsToShow = 12;
+  //       break;
+  //     default:
+  //       monthsToShow = 12;
+  //   }
+
+  //   const sortedData = [...data].sort((a, b) => {
+  //     const monthA = new Date(Date.parse(a.month + " 1, 2024"));
+  //     const monthB = new Date(Date.parse(b.month + " 1, 2024"));
+  //     return monthA - monthB;
+  //   });
+
+  //   const filteredData = sortedData.slice(-monthsToShow);
+  //   return {
+  //     filteredData,
+  //     statementTotal: filteredData.reduce(
+  //       (sum, item) => sum + (item.statements || 0),
+  //       0
+  //     ),
+  //     transactionTotal: filteredData.reduce(
+  //       (sum, item) => sum + (item.transactions || 0),
+  //       0
+  //     ),
+  //   };
+  // };
 
   const filterDataForAll = (data) => {
     const reportTotal = data.reduce(
@@ -215,45 +326,40 @@ const MainDashboard = () => {
     };
   };
 
-  const filterDataForToday = (data) => {
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
+  // const filterDataForToday = (data) => {
+  //   const today = new Date();
+  //   // console.log("today", today);
+  //   const todayString = today.toLocaleDateString("en-US", {
+  //     month: "short",
+  //     day: "2-digit",
+  //     year: "numeric",
+  //   });
+  //   // console.log("today date", todayString);
 
-    // Get today's date in the format "MMM DD YYYY"
-    const todayFormatted = today.toLocaleDateString("en-US", {
-      month: "short",
-      day: "2-digit",
-      year: "numeric",
-    });
+  //   // console.log("data1", data);
+  //   // Find the entry for the current month/year
+  //   const todayData = data.find((item) => {
+  //     const itemDate = item.month; // Already in "MMM YYYY" format
+  //     return itemDate === todayString;
+  //   });
+  //   // console.log("today data", todayData);
 
-    // Filter data for today only
-    const todayData = data.filter((item) => {
-      const itemDate = new Date(item.date); // You'll need to add a 'date' field to your data
-      const itemDateFormatted = itemDate.toLocaleDateString("en-US", {
-        month: "short",
-        day: "2-digit",
-        year: "numeric",
-      });
-      return itemDateFormatted === todayFormatted;
-    });
+  //   if (!todayData) {
+  //     return {
+  //       filteredData: [],
+  //       reportTotal: 0,
+  //       statementTotal: 0,
+  //       transactionTotal: 0,
+  //     };
+  //   }
 
-    return {
-      filteredData: todayData,
-      reportTotal: todayData.reduce(
-        (sum, item) => sum + (item.reports || 0),
-        0
-      ),
-      statementTotal: todayData.reduce(
-        (sum, item) => sum + (item.statements || 0),
-        0
-      ),
-      transactionTotal: todayData.reduce(
-        (sum, item) => sum + (item.transactions || 0),
-        0
-      ),
-    };
-  };
+  //   return {
+  //     filteredData: [todayData],
+  //     reportTotal: todayData.reports || 0,
+  //     statementTotal: todayData.statements || 0,
+  //     transactionTotal: todayData.transactions || 0,
+  //   };
+  // };
 
   const calculateTimeMetricsAll = (pagesData) => {
     const totalPages = pagesData.reduce((sum, item) => sum + item.pages, 0);
@@ -269,151 +375,137 @@ const MainDashboard = () => {
     };
   };
 
-  const calculateTimeMetricsToday = (pagesData) => {
-    const today = new Date();
-    const todayPages = pagesData.filter((item) => {
-      const itemDate = new Date(item.createdAt);
-      return itemDate.toDateString() === today.toDateString();
-    });
+  // const calculateTimeMetricsToday = (pagesData) => {
+  //   const today = new Date();
+  //   const todayPages = pagesData.filter((item) => {
+  //     const itemDate = new Date(item.createdAt);
+  //     return itemDate.toDateString() === today.toDateString();
+  //   });
 
-    const totalPages = todayPages.reduce((sum, item) => sum + item.pages, 0);
-    const totalTimeSaved = totalPages * 10;
+  //   const totalPages = todayPages.reduce((sum, item) => sum + item.pages, 0);
+  //   const totalTimeSaved = totalPages * 10;
 
-    return {
-      totalTimeSaved,
-      averageTimeSavedPerDay: totalTimeSaved, // For today, total = average
-      totalPages,
-      daysCount: 1,
-    };
-  };
+  //   return {
+  //     totalTimeSaved,
+  //     averageTimeSavedPerDay: totalTimeSaved, // For today, total = average
+  //     totalPages,
+  //     daysCount: 1,
+  //   };
+  // };
 
   const processData = (reports, statements, transactions) => {
-    const processDataByMonth = (dates) => {
+    const processDataByDate = (dates) => {
       return dates.reduce((acc, date) => {
         const dateObj = new Date(date);
-        const month = dateObj.toLocaleString("default", { month: "short" });
-        const year = dateObj.getFullYear();
-        const key = `${month} ${year}`;
+        const key = dateObj.toLocaleDateString("en-US", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        });
         acc[key] = (acc[key] || 0) + 1;
         return acc;
       }, {});
     };
 
-    const reportsByMonth = processDataByMonth(reports.caseDates || []);
-    const statementsByMonth = processDataByMonth(
-      statements.statementDates || []
-    );
-    const transactionsByMonth = processDataByMonth(
+    const reportsByDate = processDataByDate(reports.caseDates || []);
+    const statementsByDate = processDataByDate(statements.statementDates || []);
+    const transactionsByDate = processDataByDate(
       transactions.transactionDates || []
     );
 
-    const allMonths = [
+    // Get all unique dates
+    const allDates = [
       ...new Set([
-        ...Object.keys(reportsByMonth),
-        ...Object.keys(statementsByMonth),
-        ...Object.keys(transactionsByMonth),
+        ...Object.keys(reportsByDate),
+        ...Object.keys(statementsByDate),
+        ...Object.keys(transactionsByDate),
       ]),
-    ];
+    ].sort((a, b) => new Date(a) - new Date(b));
 
-    return allMonths.map((monthYear) => ({
-      month: monthYear,
-      reports: reportsByMonth[monthYear] || 0,
-      statements: statementsByMonth[monthYear] || 0,
-      transactions: transactionsByMonth[monthYear] || 0,
+    return allDates.map((date) => ({
+      date: date,
+      reports: reportsByDate[date] || 0,
+      statements: statementsByDate[date] || 0,
+      transactions: transactionsByDate[date] || 0,
     }));
   };
 
   // Separate handlers for each metric card
   const handleReportsDurationChange = (duration) => {
-    let filteredResults;
-
-    if (duration === "today") {
-      filteredResults = filterDataForToday(allData);
-    } else if (duration === null) {
-      // null represents showing all data
-      filteredResults = {
-        filteredData: allData,
-        reportTotal: allData.reduce(
-          (sum, item) => sum + (item.reports || 0),
-          0
-        ),
-        statementTotal: allData.reduce(
-          (sum, item) => sum + (item.statements || 0),
-          0
-        ),
-        transactionTotal: allData.reduce(
-          (sum, item) => sum + (item.transactions || 0),
-          0
-        ),
-      };
-    } else {
-      filteredResults = filterDataByDuration(allData, duration);
-    }
+    const filteredResults = filterDataByDuration(allData, duration);
 
     setReportsMetrics({
       totalReports: filteredResults.reportTotal,
       totalStatements: filteredResults.statementTotal,
       totalTransactions: filteredResults.transactionTotal,
       chartData: filteredResults.filteredData,
-      duration: duration || null,
+      duration: duration,
     });
   };
 
-  const handleStatementsDurationChange = (duration) => {
-    let filteredResults;
+  // const handleStatementsDurationChange = (duration) => {
+  //   // console.log("alldata", allData);
 
-    if (duration === "today") {
-      filteredResults = filterDataForToday(allData);
-    } else if (duration === null) {
-      // null represents showing all data
-      filteredResults = {
-        filteredData: allData,
-        statementTotal: allData.reduce(
-          (sum, item) => sum + (item.statements || 0),
-          0
-        ),
-        transactionTotal: allData.reduce(
-          (sum, item) => sum + (item.transactions || 0),
-          0
-        ),
-      };
-    } else {
-      filteredResults = filterStatementDataByDuration(allData, duration);
-    }
+  //   const filteredResults = filterDataByDuration(allData, duration);
+  //   // console.log("transaction", filteredResults.transactionTotal);
 
-    setStatementsMetrics({
-      totalStatements: filteredResults.statementTotal,
-      totalTransactions: filteredResults.transactionTotal,
-      chartData: filteredResults.filteredData,
-      duration: duration || null,
-    });
-  };
-
+  //   // setStatementsMetrics({
+  //   //   totalStatements: filteredResults.statementTotal,
+  //   //   totalTransactions: filteredResults.transactionTotal,
+  //   //   chartData: filteredResults.filteredData,
+  //   //   duration: duration,
+  //   // });
+  // };
   const handleTimeMetricsDurationChange = (duration) => {
-    let newMetrics;
+    const endDate = new Date();
+    const startDate = new Date();
 
-    if (duration === "today") {
-      newMetrics = calculateTimeMetricsToday(pagesData);
-    } else if (duration === null) {
-      // null represents showing all data
-      const totalPages = pagesData.reduce((sum, item) => sum + item.pages, 0);
-      const totalTimeSaved = totalPages * 10;
-      const daysCount = pagesData.length > 0 ? pagesData.length : 1;
-      newMetrics = {
-        totalTimeSaved,
-        averageTimeSavedPerDay: Math.round(totalTimeSaved / daysCount),
-        totalPages,
-        daysCount,
-      };
-    } else {
-      newMetrics = calculateTimeMetrics(pagesData, duration);
+    switch (duration) {
+      case "today":
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      case "1M":
+        startDate.setMonth(endDate.getMonth() - 1);
+        break;
+      case "3M":
+        startDate.setMonth(endDate.getMonth() - 3);
+        break;
+      case "6M":
+        startDate.setMonth(endDate.getMonth() - 6);
+        break;
+      case "1Y":
+        startDate.setFullYear(endDate.getFullYear() - 1);
+        break;
+      case "all":
+        const allMetrics = calculateTimeMetricsAll(pagesData);
+        setTimeMetrics({
+          totalTimeSaved: allMetrics.totalTimeSaved,
+          averageTimeSavedPerDay: allMetrics.averageTimeSavedPerDay,
+          timeData: [],
+          duration: duration,
+        });
+        return;
     }
+
+    const filteredPages = pagesData.filter((item) => {
+      const itemDate = new Date(item.createdAt);
+      return itemDate >= startDate && itemDate <= endDate;
+    });
+
+    const totalPages = filteredPages.reduce((sum, item) => sum + item.pages, 0);
+    const totalTimeSaved = totalPages * 10;
+    const daysInPeriod = Math.max(
+      1,
+      Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24))
+    );
+    const averageTimeSavedPerDay = Math.round(totalTimeSaved / daysInPeriod);
 
     setTimeMetrics({
-      totalTimeSaved: newMetrics.totalTimeSaved,
-      averageTimeSavedPerDay: newMetrics.averageTimeSavedPerDay,
+      totalTimeSaved,
+      averageTimeSavedPerDay,
       timeData: [],
-      duration: duration || null,
+      duration: duration,
     });
   };
 
@@ -424,11 +516,15 @@ const MainDashboard = () => {
         const statements = await window.electron.getStatementsProcessed();
         const transactions = await window.electron.getTransactionsProcessed();
         const pages = await window.electron.getPages();
-        console.log({reports})
+        // console.log({ reports });
 
         setPagesData(pages);
+        console.log("pages", pages);
+        // console.log("pages data", pagesData);
+
         const mergedData = processData(reports, statements, transactions);
         setAllData(mergedData);
+        // console.log("set all data", allData);
 
         // Initialize with all data
         const totalPages = pages.reduce((sum, item) => sum + item.pages, 0);
@@ -463,11 +559,18 @@ const MainDashboard = () => {
           duration: null,
         });
 
-        setStatementsMetrics({
-          totalStatements: statementTotal,
+        setPagesMetrics({
+          totalPages: totalPages,
           totalTransactions: transactionTotal,
-          chartData: mergedData,
-          duration: null,
+          chartData: pages.map((item) => ({
+            date: new Date(item.createdAt).toLocaleDateString("en-US", {
+              month: "short",
+              day: "2-digit",
+              year: "numeric",
+            }),
+            pages: item.pages,
+          })),
+          duration: "all",
         });
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
@@ -548,16 +651,16 @@ const MainDashboard = () => {
           />
 
           <StatsMetricCard
-            type="statements"
-            title="Financial Year Statements"
-            value1="FY Statements"
+            type="pages"
+            title="Pages & Transactions"
+            value1="Total Pages"
             value2="Total Transactions"
-            mainValue1={statementsMetrics.totalStatements}
-            mainValue2={statementsMetrics.totalTransactions}
-            chartData={statementsMetrics.chartData}
+            mainValue1={pagesMetrics.totalPages}
+            mainValue2={pagesMetrics.totalTransactions}
+            chartData={pagesMetrics.chartData}
             chartType="line"
-            onDurationChange={handleStatementsDurationChange}
-            initialDuration={statementsMetrics.duration}
+            onDurationChange={handlePagesDurationChange}
+            initialDuration={pagesMetrics.duration}
           />
 
           <StatsMetricCard

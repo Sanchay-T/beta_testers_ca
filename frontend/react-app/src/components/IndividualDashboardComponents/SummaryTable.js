@@ -342,9 +342,9 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
               {/* Fixed First Column */}
               <div className="sticky left-0 z-20 min-w-[300px] bg-white dark:bg-slate-950">
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="border-r-2 border-slate-300">
                     <TableRow>
-                      <TableHead className="bg-gray-300 dark:bg-slate-800 text-black opacity-80 whitespace-nowrap">
+                      <TableHead className="bg-gray-300 dark:bg-slate-800  text-black opacity-80 whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           {columns[0].charAt(0).toUpperCase() +
                             columns[0].slice(1).toLowerCase()}
@@ -376,7 +376,7 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
                             : () => handleRowClick(row)
                         }
                       >
-                        <TableCell className="max-w-[200px] whitespace-nowrap">
+                        <TableCell className="max-w-[200px] whitespace-nowrap border-r-2 border-slate-300">
                           {row[columns[0]]}
                         </TableCell>
                       </TableRow>
@@ -456,7 +456,7 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
               {/* Fixed Last Column */}
               <div className="sticky right-0 z-20 bg-white dark:bg-slate-950">
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="border-l-2 border-slate-300">
                     <TableRow>
                       <TableHead className="bg-gray-300 dark:bg-slate-800 text-black opacity-80 whitespace-nowrap">
                         <div className="flex items-center gap-2">
@@ -490,7 +490,7 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
                             : () => handleRowClick(row)
                         }
                       >
-                        <TableCell className="max-w-[200px] whitespace-nowrap">
+                        <TableCell className="max-w-[200px] whitespace-nowrap border-l-2 border-slate-300">
                           {row[columns[columns.length - 1]]}
                         </TableCell>
                       </TableRow>

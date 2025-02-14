@@ -16,7 +16,6 @@ import { Card } from "../ui/card";
 import { AlertCircle, ChevronRight } from "lucide-react";
 import { useReportContext } from "../../contexts/ReportContext";
 
-
 export default function GenerateReport() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false); // State to control Dialog visibility
@@ -29,7 +28,6 @@ export default function GenerateReport() {
   const navigate = useNavigate(); // Hook for navigation
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const { reportData, updateReportData } = useReportContext();
-
 
   const handleSubmit = async (
     setProgress,
@@ -128,7 +126,7 @@ export default function GenerateReport() {
         toast.dismiss(newToastId);
         toast({
           title: "Success",
-          description: "Report generated successfully!",
+          description: `${caseName} Report generated successfully!`,
           duration: 3000,
           variant: "success",
         });
@@ -213,8 +211,8 @@ export default function GenerateReport() {
 
     updateReportData({
       ...reportData,
-      triggerRectify:{caseId:currentCaseId,caseName:currentCaseName}
-    })
+      triggerRectify: { caseId: currentCaseId, caseName: currentCaseName },
+    });
     console.log("Rectify clicked ", currentCaseId, currentCaseName);
   };
 
@@ -241,7 +239,7 @@ export default function GenerateReport() {
       "Handwritten Statements: Handwritten bank statements are not accepted.",
       "Canara Bank Formats: Certain formats of Canara Bank statements may not be compatible with our processing system.",
       "Data Authenticity: Please ensure that the uploaded data has not been tampered with, as alterations can result in incorrect responses.",
-      "Statement Recency: Avoid uploading very old bank statements, as changes in keyword formats over time may affect processing accuracy."
+      "Statement Recency: Avoid uploading very old bank statements, as changes in keyword formats over time may affect processing accuracy.",
     ],
   };
 
@@ -293,35 +291,12 @@ export default function GenerateReport() {
 
       <RecentReports key={refreshTrigger} onReportGenerated={refreshPage} />
 
-{/* statments which we dont work with */}
-      <Card className="p-6">
-            <h4 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
-              <AlertCircle className="h-5 w-5 text-amber-500" />
-              Important Notes
-            </h4>
-            <h6 className="text-gray-600 dark:text-slate-300 mb-4">
-            Certain statements may not be processed properly due to various reasons. Below is a list of common unsupported or partially extracted formats:
-
-            </h6>
-            <ul className="space-y-3">
-              {note.content.map((item, idx) => (
-                <li
-                  key={idx}
-                  className="flex gap-3 items-center text-gray-600 dark:text-slate-300"
-                >
-                  <ChevronRight className="h-5 w-5 flex-shrink-0 text-gray-400" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </Card>
-
       {/* Dialog for successful report generation */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
             {failedStatements.length === 0 ? (
-              <DialogTitle>Report Generated Successfully!</DialogTitle>
+              <DialogTitle>Report Generated Successfully!jjk</DialogTitle>
             ) : (
               <DialogTitle className="flex items-end gap-x-2">
                 <AlertTriangle className="text-yellow-500 w-6 h-6 mt-2" />
@@ -345,10 +320,14 @@ export default function GenerateReport() {
             <div className="mb-4">
               <ul className="list-disc pl-5">
                 {failedStatements.map((statement, index) => (
-                  <li key={index} className="text-red-400">{statement}</li>
+                  <li key={index} className="text-red-400">
+                    {statement}
+                  </li>
                 ))}
                 {successfulStatements.map((statement, index) => (
-                  <li key={index} className="text-green-700">{statement}</li>
+                  <li key={index} className="text-green-700">
+                    {statement}
+                  </li>
                 ))}
               </ul>
             </div>
