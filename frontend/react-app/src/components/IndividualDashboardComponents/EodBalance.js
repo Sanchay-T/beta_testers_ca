@@ -2,17 +2,19 @@ import React, { useState, useMemo, useEffect } from "react";
 import SingleLineChart from "../charts/LineChart";
 import DataTable from "./TableData";
 import ToggleStrip from "./ToggleStrip";
+import { useReportContext } from "../../contexts/ReportContext";
 
-const EodBalance = ({ caseId }) => {
+const EodBalance = () => {
   const [eodData, setEodData] = useState([]);
   const [numericColumns, setNumericColumns] = useState([]);
   const [error, setError] = useState(null);
+  const { reportData } = useReportContext();
 
   useEffect(() => {
     const fetchEodData = async () => {
       try {
-        console.log("Fetching EOD data for caseId:", caseId);
-        const fetchData = await window.electron.getEodBalance(caseId);
+        console.log("Fetching EOD data for caseId:", reportData.caseId);
+        const fetchData = await window.electron.getEodBalance(reportData.caseId);
         console.log("data", fetchData);
         if(fetchData.length < 0){
           throw error;
@@ -51,10 +53,10 @@ const EodBalance = ({ caseId }) => {
       }
     };
 
-    if (caseId) {
+    if (reportData.caseId) {
       fetchEodData();
     }
-  }, [caseId]);
+  }, [reportData.caseId]);
 
   const [selectedColumns, setSelectedColumns] = useState([]);
 

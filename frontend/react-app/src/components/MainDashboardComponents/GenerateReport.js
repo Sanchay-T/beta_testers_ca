@@ -14,6 +14,9 @@ import { Button } from "../ui/button"; // Import shadcn/ui Button component
 import { useNavigate } from "react-router-dom"; // Import useNavigate for navigation
 import { Card } from "../ui/card";
 import { AlertCircle, ChevronRight } from "lucide-react";
+import { useReportContext } from "../../contexts/ReportContext";
+
+
 export default function GenerateReport() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false); // State to control Dialog visibility
@@ -25,6 +28,8 @@ export default function GenerateReport() {
   const [currentCaseName, setCurrentCaseName] = useState(""); // State to store current case name
   const navigate = useNavigate(); // Hook for navigation
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const { reportData, updateReportData } = useReportContext();
+
 
   const handleSubmit = async (
     setProgress,
@@ -128,14 +133,14 @@ export default function GenerateReport() {
           variant: "success",
         });
         if (result.data.failedFiles.length > 0) {
-          // setShowRectifyButton(true);
+          setShowRectifyButton(true);
           const failedFiles = result.data.failedFiles.map((file_path) => {
             return file_path.split("\\").pop();
           });
           setFailedStatements(failedFiles || []); // Store failed
         }
         if (result.data.successfulFiles.length > 0) {
-          // setShowRectifyButton(true);
+          setShowRectifyButton(true);
           const successfulFiles = result.data.successfulFiles.map(
             (file_path) => {
               return file_path.split("\\").pop();
@@ -205,6 +210,11 @@ export default function GenerateReport() {
 
   const handleRectify = () => {
     setDialogOpen(false);
+
+    updateReportData({
+      ...reportData,
+      triggerRectify:{caseId:currentCaseId,caseName:currentCaseName}
+    })
     console.log("Rectify clicked ", currentCaseId, currentCaseName);
   };
 
@@ -225,11 +235,13 @@ export default function GenerateReport() {
 
   const note = {
     content: [
-      "Scanned Copies without OCR Support",
-      "Image statements in form of Pdfs instead of structured files",
-      "Encoded, Encrypted, or Corrupted Files",
-      "Handwritten Bank Statements",
-      "Some formats of Canara Bank"
+      "Scanned copies",
+      "Image-Based PDF Statements: Bank statements provided as image-based PDFs, rather than in a structured file format, might lead to processing issues.",
+      "File Integrity: Encoded, encrypted, or corrupted files cannot be processed and should not be uploaded.",
+      "Handwritten Statements: Handwritten bank statements are not accepted.",
+      "Canara Bank Formats: Certain formats of Canara Bank statements may not be compatible with our processing system.",
+      "Data Authenticity: Please ensure that the uploaded data has not been tampered with, as alterations can result in incorrect responses.",
+      "Statement Recency: Avoid uploading very old bank statements, as changes in keyword formats over time may affect processing accuracy."
     ],
   };
 

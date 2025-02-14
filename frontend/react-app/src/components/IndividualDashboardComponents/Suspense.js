@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from "react";
-import DataTable from "./TableData";
-import { useParams } from "react-router-dom";
-import { exportToExcel, shareExcelFile } from "../exportToExcel";
 import UnifiedTable from "./UnifiedTable";
 import ToggleStrip from "./ToggleStrip";
 import { RotateCw } from "lucide-react";
 import { Button } from "../ui/button";
+import { useParams } from "react-router-dom";
 
-const Suspense = ({customerName}) => {
+
+const Suspense = () => {
   // const [creditData, setCreditData] = useState([]);
   // const [debitData, setDebitData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -16,9 +15,10 @@ const Suspense = ({customerName}) => {
   //   totalCreditDebitTransactionCount,
   //   setTotalCreditDebitTransactionCount,
   // ] = useState(0);
-  const { caseId, individualId } = useParams();
   const [availableMonths, setAvailableMonths] = useState([]);
   const [selectedMonths, setSelectedMonths] = useState([]);
+  const { caseId, individualId, defaultTab } = useParams();
+
 
   const getMonthKey = (dateString) => {
     const date = new Date(dateString);
@@ -150,10 +150,8 @@ const Suspense = ({customerName}) => {
             <UnifiedTable
               data={filteredData}
               title="Suspense Transactions"
-              caseId={caseId}
               refreshFunction={fetchData}
               source="suspense"
-              customerName={customerName}
             />
           )}
         </>

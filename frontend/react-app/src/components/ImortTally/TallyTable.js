@@ -92,7 +92,7 @@ const categoryOptionsfixed = [
     "Utility Bills",
     "Loan taken",
     "Loan Given",
-    "Self Transfer"
+    "Self transfer"
   ];
 
 

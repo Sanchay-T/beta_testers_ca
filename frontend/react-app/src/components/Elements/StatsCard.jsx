@@ -176,9 +176,9 @@ const StatsMetricCard = ({
 
   const renderChart = () => {
     // For types that depend on external data (e.g., "reports"), show a loader if chartData is missing.
-    if (type === "reports" && (!chartData || chartData.length === 0)) {
-      return <Loader />;
-    }
+    // if (type === "reports" && (!chartData || chartData.length === 0)) {
+    //   return <Loader />;
+    // }
 
     if (type === "statements") {
       return (

@@ -6,6 +6,8 @@ import { Maximize2, Minimize2 } from "lucide-react";
 import SummaryTable from "./SummaryTable";
 import DataTable from "./TableData";
 import { useParams } from "react-router-dom";
+import { useReportContext } from "../../contexts/ReportContext";
+
 
 const formatDecimal = (value) => {
   return Number(parseFloat(value || 0).toFixed(2));
@@ -49,6 +51,8 @@ const MaximizableChart = ({ children, title, isMaximized, setIsMaximized }) => {
 };
 
 const Summary = () => {
+const { reportData, updateReportData } = useReportContext();
+
   // const [activeTable, setActiveTable] = useState("Income Receipts");
   const [summaryData, setSummaryData] = useState({
     Particulars: [],
@@ -77,8 +81,6 @@ const Summary = () => {
   const [filteredTransactions, setFilteredTransactions] = useState([]);
   const [transactionData, setTransactionData] = useState([]);
   const {individualId,caseId } = useParams();
-
-  console.log({individualId,caseId})
 
   useEffect(() => {
     const fetchSummaryData = async () => {
@@ -422,7 +424,7 @@ const Summary = () => {
           title="Contra Credit"
           categoryKey="Contra Credit"
         />
-           <SummaryTable
+          <SummaryTable
           data={contraDebit}
           title="Contra Debit"
           categoryKey="Contra Debit"

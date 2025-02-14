@@ -21,18 +21,21 @@ import {
 } from "./ui/dropdown-menu";
 import logo from "../data/assets/logo.png";
 import { useAuth } from "../contexts/AuthContext";
+import { useReportContext } from "../contexts/ReportContext";
+import { useParams } from "react-router-dom";
+
 
 const SidebarDynamic = ({
   navItems,
   activeTab,
   setActiveTab,
-  name,
-  caseId,
-  reportName,
 }) => {
   const { logout, setError, user } = useAuth();
   const navigate = useNavigate();
   const { isCollapsed } = useSidebar();
+  const { reportData, updateReportData } = useReportContext();
+  const {caseId,individualId} = useParams();
+
 
   // Get initials for avatar fallback
   const getInitials = (name) => {
@@ -45,8 +48,75 @@ const SidebarDynamic = ({
       .slice(0, 2);
   };
 
-  const isIndividualDashboard = Boolean(name);
-  const isCaseDashboard = Boolean(caseId);
+  const tabs = navItems.map((item) => item.title);
+
+
+  // const isIndividualDashboard = Boolean(customerName);
+  // const isCaseDashboard = Boolean(caseId);
+
+
+
+  useEffect(()=>{
+    let fetchedCustomerName = reportData.customerName
+    let fetchedReportName = reportData.reportName
+
+    const fetchCustomerName = async () => {
+      console.log("Fetching customer name for individual ID:", individualId);
+      try {
+        const customerNametemp = await window.electron.getCustomerName(
+          individualId
+        );
+        if (customerNametemp) {
+          console.log("Customer name fetched successfully:", customerNametemp);
+       
+          updateReportData({
+            ...reportData,
+            customerName:customerNametemp,
+            caseId,
+            individualId,
+            reportName:fetchedReportName
+          })
+          fetchedCustomerName=customerNametemp
+        }
+      } catch (error) {
+        console.error("Error fetching customer name:", error);
+      }
+    };
+
+    const fetchReportName = async () => {
+      try {
+        const reportName = await window.electron.getReportName(caseId);
+      
+        updateReportData({
+          ...reportData,
+          reportName,
+          caseId,
+          individualId,
+          customerName:fetchedCustomerName
+        })
+        
+        fetchedReportName=reportName
+
+      } catch (error) {
+        // console.error("Error fetching report name:", error);
+      }
+    };
+
+    if(individualId){
+      fetchCustomerName();
+    }
+    
+    if(caseId){
+      fetchReportName();
+    }
+
+  },[caseId,individualId])
+  
+  console.log({navItems,individualId,caseId,reportData})
+
+  const isIndividualDashboard = tabs.includes("Summary");
+  const isCaseDashboard = tabs.includes("Reports");
+  const isCombinedInvidualDashboard = tabs.includes("Summary") && (reportData.individualId===null || reportData.individualId===undefined || reportData.individualId==='undefined' ) 
 
   useEffect(() => {
     console.log({ isCollapsed });
@@ -104,24 +174,24 @@ const SidebarDynamic = ({
 
     return (
       <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm">
-        {isIndividualDashboard && (
+        {(isIndividualDashboard && !isCombinedInvidualDashboard) && (
           <div className="space-y-1">
             <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
               Account Name :{" "}
               <span className="text-sm text-gray-800 dark:text-gray-200 font-semibold hover:text-gray-600 dark:hover:text-gray-400 transition-colors duration-300">
-                {name}
+                {reportData.customerName}
               </span>
             </p>
           </div>
         )}
-        {isCaseDashboard && (
+        {(isCaseDashboard || isCombinedInvidualDashboard) && (
           <div className="space-y-2">
-            {reportName && (
+            {reportData.reportName && (
               <div>
                 <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
                   Report Name :{" "}
                   <span className="text-sm text-gray-800 dark:text-gray-200 font-semibold hover:text-gray-600 dark:hover:text-gray-400 transition-colors duration-300">
-                    {reportName}
+                    {reportData.reportName}
                   </span>
                 </p>
               </div>

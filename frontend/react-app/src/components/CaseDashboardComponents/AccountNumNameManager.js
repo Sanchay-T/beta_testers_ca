@@ -39,8 +39,10 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "../ui/pagination";
+import { useReportContext } from "../../contexts/ReportContext";
 
-const AccountNumNameManager = ({ caseId }) => {
+
+const AccountNumNameManager = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [statements, setStatements] = useState([]);
@@ -49,6 +51,9 @@ const AccountNumNameManager = ({ caseId }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [modifiedStatements, setModifiedStatements] = useState(new Set()); // Track modified statements
   const itemsPerPage = 10;
+  const { reportData, updateReportData } = useReportContext();
+  const { caseId } = reportData;
+
 
   // Fetch statements when component mounts
   useEffect(() => {

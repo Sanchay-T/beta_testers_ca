@@ -27,6 +27,7 @@ const Contra = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        
         // Fetch transactions filtered by "debtor"
         const result = await window.electron.getTransactionsByContra(
           caseId,
@@ -53,6 +54,8 @@ const Contra = () => {
             const dateB = getMonthDate(b);
             return dateA - dateB;
           });
+
+          console.log({transformedData})
         setData(transformedData)
         setAvailableMonths(uniqueMonths);
         

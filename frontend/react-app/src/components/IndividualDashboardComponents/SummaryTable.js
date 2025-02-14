@@ -51,7 +51,6 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
   const [categorySearchTerm, setCategorySearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   // const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [showAllRows, setShowAllRows] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);
   const [transactionData, setTransactionData] = useState([]);
   const [filteredTransactions, setFilteredTransactions] = useState([]);
@@ -141,6 +140,7 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
   }, [data]);
 
   const handleRowClick = (row) => {
+    console.log({clicked:row})
     setSelectedRow(row);
     const filtered = filterTransactionsByCategory(row);
     // console.log("Filtered transactions:", filtered);

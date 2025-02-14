@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Dialog, DialogContent } from "../ui/dialog";
 import { useToast } from "../../hooks/use-toast";
 import PdfMarker from "./PdfMarker";
-
+  import { useReportContext } from "../../contexts/ReportContext";
+  
 const PDFMarkerModal = ({
   isOpen,
   onClose,
@@ -10,13 +11,14 @@ const PDFMarkerModal = ({
   source,
   setFailedDatasOfCurrentReport,
   failedDatasOfCurrentReport,
-  currentCaseName,
 }) => {
   const [initialConfigFormatted, setInitialConfigFormatted] = useState({
     lines: [],
   });
   const [pdfEditLoading, setPdfEditLoading] = useState(false);
   const { toast } = useToast();
+  const { reportData, updateReportData } = useReportContext();
+  const { reportName } = reportData;
 
   const handleSave = (data) => {
     onClose();
@@ -58,7 +60,7 @@ const PDFMarkerModal = ({
       // Call the API to update the statements
       const result = await window.electron.editPdf(
         [modifiedelectedFailedFile],
-        currentCaseName
+        reportName
       );
       console.log("result", result);
 

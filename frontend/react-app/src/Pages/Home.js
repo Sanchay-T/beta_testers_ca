@@ -24,12 +24,19 @@ import { useBreadcrumb } from "../contexts/BreadcrumbContext";
 import { useParams } from "react-router-dom";
 import PdfColumnMarker from "../components/MainDashboardComponents/PdfMarker";
 import TallyPrimeDirect from "../components/ImortTally/TallyDirectImport";
+import { useReportContext } from "../contexts/ReportContext";
+
 
 const Dashboard = () => {
   const { breadcrumbs, setMainDashboard } = useBreadcrumb();
   const [activeTab, setActiveTab] = useState("Dashboard");
   const [pdfColMarkerData, setPdfColMarkerData] = useState([]);
   const { defaultTab } = useParams();
+  const { reportData, updateReportData } = useReportContext();
+
+
+
+
 
   const navItems = [
     {
@@ -87,6 +94,14 @@ const Dashboard = () => {
     if (!defaultTab || defaultTab === "defaultTab")
       setActiveTab(navItems[0].title);
     else setActiveTab(defaultTab);
+
+    updateReportData({
+      ...reportData,
+      reportName: null,
+      caseId: null,
+      individualId: null,
+      customerName: null,
+    });
   }, []);
 
   useEffect(() => {

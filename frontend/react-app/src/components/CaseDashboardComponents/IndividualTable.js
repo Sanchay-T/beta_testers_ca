@@ -31,10 +31,11 @@ import { Button } from "../ui/button";
 import PDFMarkerModal from "../MainDashboardComponents/PdfMarkerModal";
 import { toast } from "../../hooks/use-toast";
 // import IndividualDashboard from "@/Pages/IndividualDashboard";
+import { useReportContext } from "../../contexts/ReportContext";
 
 const ITEMS_PER_PAGE = 10;
 
-const IndividualTable = ({ caseId,caseName }) => {
+const IndividualTable = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -47,8 +48,9 @@ const IndividualTable = ({ caseId,caseName }) => {
   const [failedDatasOfCurrentReport, setFailedDatasOfCurrentReport] = useState(
     []
   );
-  const [currentCaseName, setCurrentCaseName] = useState("");
   const navigate = useNavigate();
+  const { reportData, updateReportData } = useReportContext();
+  const { caseId, reportName } = reportData;
 
   useEffect(() => {
     const fetchStatements = async () => {
@@ -65,9 +67,8 @@ const IndividualTable = ({ caseId,caseName }) => {
     };
     if (caseId) {
       fetchStatements();
-      setCurrentCaseName(caseName)
     }
-  }, [caseId,caseName]);
+  }, [caseId]);
 
   const filteredData = statements.filter((item) => {
     const name = item.customerName || "";
@@ -338,7 +339,6 @@ const IndividualTable = ({ caseId,caseName }) => {
         source={"indiviualDashboard"}
         setFailedDatasOfCurrentReport={setFailedDatasOfCurrentReport}
         failedDatasOfCurrentReport={failedDatasOfCurrentReport}
-        currentCaseName={currentCaseName}
         onClose={()=>setIsMarkerModalOpen(false)}
       />
 

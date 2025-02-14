@@ -33,12 +33,16 @@ import {
   Undo2,
   ShieldPlus,
 } from "lucide-react";
+import { useReportContext } from "../contexts/ReportContext";
+
 
 const IndividualDashboard = () => {
   const [activeTab, setActiveTab] = useState("Summary");
   const { breadcrumbs, setIndividualDashboard } = useBreadcrumb();
   const { caseId, individualId, defaultTab } = useParams();
-  const [customerName, setCustomerName] = useState(null);
+  const { reportData, updateReportData } = useReportContext();
+  const {currentCustomerName,setCurrentCustomerName} = useState(null);
+  
   const [navItems, setNavItems] = useState([
     {
       title: "Summary",
@@ -98,6 +102,8 @@ const IndividualDashboard = () => {
     },
   ]);
 
+   
+
   useEffect(() => {
     setIndividualDashboard(
       activeTab,
@@ -114,25 +120,9 @@ const IndividualDashboard = () => {
     );
   }, [activeTab]);
 
-  useEffect(() => {
-    const fetchCustomerName = async () => {
-      console.log("Fetching customer name for individual ID:", individualId);
-      try {
-        const customerName = await window.electron.getCustomerName(
-          individualId
-        );
-        console.log("Customer name fetched successfully:", customerName);
-        if (customerName) {
-          setCustomerName(customerName);
-        }
-      } catch (error) {
-        console.error("Error fetching customer name:", error);
-      }
-    };
 
+  useEffect(() => {
     if (individualId!==undefined) {
-      // Only fetch if we have an ID
-      fetchCustomerName();
       // hide eod for individual
       setNavItems((prev) => {
         return prev.filter((item) => item.title !== "EOD");
@@ -149,11 +139,6 @@ const IndividualDashboard = () => {
       }
     }
   }, []);
-
-  useEffect(() => {
-    console.log({ caseId, individualId, defaultTab });
-  }, []);
-
 
 
   useEffect(() => {
@@ -178,48 +163,47 @@ const IndividualDashboard = () => {
           navItems={navItems}
           activeTab={activeTab}
           setActiveTab={handleTabChange}
-          name={customerName}
         />
         <ScrollArea className="w-full">
           <BreadcrumbDynamic items={breadcrumbs} />
           <div className="flex-1 flex flex-col overflow-hidden">
             <main className="flex-1">
               {activeTab === "Summary" && (
-                <Summary caseId={caseId} individualId={individualId} />
+                <Summary  />
               )}
               {activeTab === "Transactions" && <Transactions />}
               {activeTab === "Debtors" && (
-                <Debtors caseId={caseId} individualId={individualId} />
+                <Debtors  />
               )}
               {activeTab === "Creditors" && (
-                <Creditors caseId={caseId} individualId={individualId} />
+                <Creditors  />
               )}
               {activeTab === "EMI" && (
-                <EMI caseId={caseId} individualId={individualId} />
+                <EMI  />
               )}
               {activeTab === "Investment" && (
-                <Investment caseId={caseId} individualId={individualId} />
+                <Investment  />
               )}
               {activeTab === "EOD" && (
-                <EodBalance caseId={caseId} individualId={individualId} />
+                <EodBalance  />
               )}
               {activeTab === "Cash" && (
-                <Cash caseId={caseId} individualId={individualId} />
+                <Cash />
               )}
               {activeTab === "UPI" && (
-                <Upi caseId={caseId} individualId={individualId} />
+                <Upi />
               )}
               {activeTab === "Suspense" && (
-                <Suspense caseId={caseId} individualId={individualId} customerName={customerName} />
+                <Suspense  />
               )}
               {activeTab === "Reversal" && (
-                <Reversal caseId={caseId} individualId={individualId} />
+                <Reversal  />
               )}
               {activeTab === "Insurance" && (
-                <Insurance caseId={caseId} individualId={individualId} />
+                <Insurance  />
               )}
               {activeTab === "Contra" && (
-                <Contra caseId={caseId} individualId={individualId} />
+                <Contra  />
               )}
             </main>
           </div>

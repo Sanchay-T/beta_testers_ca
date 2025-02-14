@@ -70,6 +70,7 @@ import {
   TooltipTrigger,
 } from "../ui/tooltip";
 import { Checkbox } from "../ui/checkbox";
+import { useReportContext } from "../../contexts/ReportContext";
 
 import PDFMarkerModal from "./PdfMarkerModal";
 import { useLoading } from "../../contexts/LoadingContext";
@@ -101,6 +102,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
   const [dialogOpen, setDialogOpen] = useState(false); // State to control Dialog visibility
   const [isChecked, setIsChecked] = useState(false);
   const { setIsExcelLoading } = useLoading();
+  const { reportData, updateReportData } = useReportContext();
 
   const handleSubmitEditPdf = async () => {
     setPdfEditLoading(true);
@@ -630,6 +632,8 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
     console.log("recent reports failed pdf handleSave data:", data);
     setIsMarkerModalOpen(false);
   };
+
+
   // Function to handle opening the modal and fetching the failed statements
   const handleDetails = async (reportId, reportName) => {
     setIsLoading(true);
@@ -751,6 +755,12 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
     }
   };
 
+  useEffect(()=>{
+    console.log({aiyazzz:reportData})
+      handleDetails(reportData?.triggerRectify?.caseId,reportData?.triggerRectify?.caseName)
+  },[reportData.triggerRectify])
+ 
+  
   const handleDownload = async (caseid, status) => {
     if (status === "Pending") {
       toast({
@@ -1033,7 +1043,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                             View Failed Statements
                           </TooltipContent>
                         </Tooltip>
-                        <AlertDialogContent className="max-w-2xl bg-white shadow-lg border-0 dark:bg-slate-950">
+                        <AlertDialogContent  className="max-w-2xl bg-white shadow-lg border-0 dark:bg-slate-950">
                           <AlertDialogHeader>
                             <AlertDialogTitle className="text-xl font-medium text-black bg-black/[0.03] -mx-6 -mt-6 p-4 border-b border-black/10 dark:bg-slate-900 dark:text-slate-300">
                               Report Details

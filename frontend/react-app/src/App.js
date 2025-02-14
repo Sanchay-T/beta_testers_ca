@@ -9,6 +9,7 @@ import ElectronIntro from "./components/ElectronIntro";
 import { useState } from "react";
 import { SidebarProvider } from "./components/ui/sidebar";
 import { BreadcrumbProvider } from "./contexts/BreadcrumbContext";
+import { ReportProvider } from "./contexts/ReportContext";
 import { PrivateRoute } from "./components/PrivateRoute";
 import Login from "./components/Authentication/Login";
 import UpdateNotification from "./components/UpdateNotification";
@@ -54,6 +55,8 @@ function App() {
       <SidebarProvider>
         <HashRouter>
           <BreadcrumbProvider>
+            <ReportProvider>
+
             {/* <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/:defaultTab" element={<Dashboard />} />
@@ -117,6 +120,7 @@ function App() {
                 }
               />
             </Routes>
+            </ReportProvider>
           </BreadcrumbProvider>
         </HashRouter>
       </SidebarProvider>

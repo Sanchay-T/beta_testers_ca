@@ -31,7 +31,8 @@ const CategoryEditModal = ({ open, onOpenChange, caseId }) => {
           type: transaction.type,
           balance: transaction.balance,
           bank: transaction.bank,
-          id:transaction.id
+          id:transaction.id,
+          voucher_type:transaction.voucher_type
         }));
 
         setTransactionData(formattedData);

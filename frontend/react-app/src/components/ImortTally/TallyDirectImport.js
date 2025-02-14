@@ -8,12 +8,13 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Ambulance, Loader2 } from "lucide-react";
 import TallyTable from "./TallyTable";
-import { buildTallyXml } from "./TallyUploadScript";
 import { Dialog, DialogContent, DialogHeader, DialogTitle,DialogFooter,DialogDescription } from "../ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Button } from "../ui/button";
+import { useReportContext } from "../../contexts/ReportContext";
 
-const TallyDirectImport = ({caseId}) => {
+
+const TallyDirectImport = () => {
   const [vouchers, setVouchers] = useState(["Payment Receipt Voucher", "Contra Voucher"]);
   const [selectedVoucher, setSelectedVoucher] = useState("");
   const [transactions, setTransactions] = useState([]);
@@ -24,12 +25,16 @@ const TallyDirectImport = ({caseId}) => {
   const [failedTransactions, setFailedTransactions] = useState([]);
   const [companyName, setCompanyName] = useState("");
   const [successIds, setSuccessIds] = useState([]); 
-
+  const { reportData, updateReportData } = useReportContext();
+  const { caseId } = reportData;
 
   async function fetchVouchersTransactions() {
     try {
       const data = await window.electron.getTransactions(caseId); // Fetch vouchers from Electron API
       console.log({aq:data});
+      console.log({beforeSort:data.data});
+      const sortedData = data.sort((a, b) => a.imported - b.imported);
+      console.log({sortedData:sortedData});
 
       const storedReasons = JSON.parse(localStorage.getItem("failedTransactions") || "{}");
 
@@ -81,6 +86,9 @@ const TallyDirectImport = ({caseId}) => {
     try {
       const response = await window.electron.getVoucherTransactions(voucherId);
       if (!response.success) throw new Error(response.message);
+      // Sort by imported satatus
+
+
       setTransactions(response.data);
     } catch (err) {
       console.error("Error fetching transactions:", err);

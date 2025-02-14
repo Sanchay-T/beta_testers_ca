@@ -56,6 +56,8 @@ import {
 } from "../ui/select";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import * as XLSX from "xlsx";
+import { useReportContext } from "../../contexts/ReportContext";
+
 
 const categoryOptionsfixed = [
     "Bank Charges",
@@ -123,10 +125,8 @@ const DataTable = ({
   data = [],
   title,
   subtitle,
-  caseId,
   source,
   refreshFunction,
-  customerName=null
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [transactions, setTransactions] = useState([]);
@@ -195,6 +195,9 @@ const DataTable = ({
   const fileInputRef = useRef(null);
   const [uploadedChanges, setUploadedChanges] = useState([]);
   const [categoryUpdateModalOpen, setCategoryUpdateModalOpen] = useState(false);
+
+    const { reportData, updateReportData } = useReportContext();
+  
 
   // Helper: Format dates
   const formatValue = (value) => {
@@ -349,7 +352,7 @@ const DataTable = ({
 
       const payload = convertArrayToObject(updatedTransactions);
       console.log("Payload", payload);
-      const response = await window.electron.editCategory(payload, caseId);
+      const response = await window.electron.editCategory(payload, reportData.caseId);
       setCategoryUpdateModalOpen(false);
       toast({
         title: "Categories Updated!",
@@ -704,7 +707,7 @@ const DataTable = ({
       console.log("Modified Data", modifiedData);
       const payload = convertArrayToObject(modifiedData);
       console.log("Payload", payload);
-      const response = await window.electron.editCategory(payload, caseId);
+      const response = await window.electron.editCategory(payload, reportData.caseId);
       setHasChanges(false);
       toast({
         title: "Changes saved successfully",
@@ -900,9 +903,17 @@ const DataTable = ({
   };
 
   const handleDownload = () => {
+    let newTitle = title;
+
+    if(source==="suspense"){
+      const tmpName = reportData.customerName?reportData.customerName:reportData.reportName
+      console.log({tmpName})
+      newTitle = `${tmpName}_${newTitle}`
+    }
+
     exportToExcel(
       data,
-      title= source==="suspense"?`${customerName}_${title}`:`${title}`,
+      title= newTitle,
       false,
       source === "suspense" ? categoryOptions : null
     );
@@ -1026,7 +1037,7 @@ const DataTable = ({
     const updatedData = filteredData.map((tx) => {
       if (tx.id === row.id) {
         if(value==="Contra"){
-          return { ...tx, voucher_type: value, category: "Self Transfer" };
+          return { ...tx, voucher_type: value, category: "Self transfer" };
         }else{
           return { ...tx, voucher_type: value };
         }
