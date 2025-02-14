@@ -242,51 +242,45 @@ const IndividualTable = () => {
             <TableBody>
               {currentData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center">
+                  <TableCell colSpan={5} className="text-center">
                     No matching results found
                   </TableCell>
                 </TableRow>
               ) : (
-                currentData.map((item, index) => (
-                  <TableRow
-                    key={index}
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() =>
-                      handleRowClick(
-                        item.customerName,
-                        item.accountNumber,
-                        item.id
-                      )
-                    }
-                  >
-                    <TableCell>{startIndex + index + 1}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-row justify-between">
-                        <div
-                          className="truncate max-w-96"
-                          title={item.filePath}
+                currentData.map((item, index) => {
+                  const filePath = item.filePath || "";
+                  const filename = filePath.split("\\").pop(); // Get filename from path
+                  const filenameWithoutTimestamp = filename
+                    ? filename.substring(filename.indexOf("-") + 1)
+                    : "";
+
+                  return (
+                    <TableRow
+                      key={index}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => handleRowClick(item.customerName, item.accountNumber, item.id)}
+                    >
+                      <TableCell>{startIndex + index + 1}</TableCell>
+                      <TableCell>
+                        <div className="truncate max-w-96" title={filenameWithoutTimestamp}>
+                          {filenameWithoutTimestamp}
+                        </div>
+                      </TableCell>
+                      <TableCell>{item.customerName}</TableCell>
+                      <TableCell>{item.accountNumber}</TableCell>
+                      <TableCell>
+                        <Button
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent row click
+                            handleRectify(item.filePath);
+                          }}
                         >
-                          {item.filePath.split("\\").pop()}
-                        </div>
-                   
-                      </div>
-                    </TableCell>
-                    <TableCell>{item.customerName}</TableCell>
-                    <TableCell>{item.accountNumber}</TableCell>
-                    <TableCell>
-                    <div className="-space-x-2">
-                          <Button
-                            onClick={(e) => {
-                              e.stopPropagation(); // Prevent row click
-                              handleRectify(item.filePath);
-                            }}
-                          >
-                            Re-run
-                          </Button>
-                        </div>
-                    </TableCell>
-                  </TableRow>
-                ))
+                          Re-run
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>

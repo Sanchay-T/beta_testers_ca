@@ -253,57 +253,63 @@ const AccountNumNameManager = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>No.</TableHead>
-                <TableHead>File Location</TableHead>
+                <TableHead>File Name</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Account Number</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {currentStatements.map((statement, index) => (
-                <TableRow
-                  key={statement.id}
-                  className={
-                    modifiedStatements.has(statement.id) ? "bg-muted/50" : ""
-                  }
-                >
-                  <TableCell>
-                    {(currentPage - 1) * itemsPerPage + index + 1}
-                  </TableCell>
-                  <TableCell>
-                    <div
-                      className="truncate max-w-96"
-                      title={statement.filePath}
-                    >
-                      {statement.filePath}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Input
-                      value={statement.customerName || ""}
-                      onChange={(e) =>
-                        handleNameChange(statement.id, e.target.value)
-                      }
-                      className="max-w-52"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Input
-                      value={statement.accountNumber || ""}
-                      onChange={(e) =>
-                        handleAccNumberChange(statement.id, e.target.value)
-                      }
-                      className="max-w-52"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    {modifiedStatements.has(statement.id) && (
-                      <span className="text-sm text-muted-foreground">
-                        Modified
-                      </span>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
+              {currentStatements.map((statement, index) => {
+                const filePath = statement.filePath || "";
+                const filename = filePath.split("\\").pop(); // Get filename from path
+                const filenameWithoutTimestamp = filename
+                  ? filename.substring(filename.indexOf("-") + 1)
+                  : "";
+
+                return (
+                  <TableRow
+                    key={statement.id}
+                    className={modifiedStatements.has(statement.id) ? "bg-muted/50" : ""}
+                  >
+                    <TableCell>
+                      {(currentPage - 1) * itemsPerPage + index + 1}
+                    </TableCell>
+                    <TableCell>
+                      <div
+                        className="truncate max-w-96"
+                        title={filenameWithoutTimestamp}
+                      >
+                        {filenameWithoutTimestamp}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        value={statement.customerName || ""}
+                        onChange={(e) =>
+                          handleNameChange(statement.id, e.target.value)
+                        }
+                        className="max-w-52"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        value={statement.accountNumber || ""}
+                        onChange={(e) =>
+                          handleAccNumberChange(statement.id, e.target.value)
+                        }
+                        className="max-w-52"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {modifiedStatements.has(statement.id) && (
+                        <span className="text-sm text-muted-foreground">
+                          Modified
+                        </span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
 
