@@ -920,7 +920,7 @@ const DataTable = ({
     };
   
     // Similarity threshold
-    const threshold = 0.8;
+    const threshold = 0.85;
   
     // Filter transactions with similar descriptions and same category
     const similarTransactions = transactions.filter((transaction) => {
@@ -957,7 +957,7 @@ const DataTable = ({
     };
   
     // Similarity threshold
-    const threshold = 0.8;
+    const threshold = 0.85;
   
     // Filter transactions with similar descriptions and same category
     const similarTransactions = transactions.filter((transaction) => {
@@ -1236,7 +1236,7 @@ const DataTable = ({
                           return (
                             <TableCell
                               key={column}
-                              className="max-w-[200px] group relative"
+                              className="max-w-[20vw] group relative"
                             >
                             <Select
                             value={row[column]}
@@ -1998,7 +1998,7 @@ const DataTable = ({
           </DialogHeader>
 
           {/* Share Options */}
-          <div className="flex justify-center gap-6 py-4">
+          <div className="flex justify-center gap-6 py-2">
             <TooltipProvider>
               {/* Mail Button */}
               <Tooltip>
@@ -2028,6 +2028,10 @@ const DataTable = ({
                 <TooltipContent>Share via WhatsApp</TooltipContent>
               </Tooltip>
             </TooltipProvider>
+          </div>
+
+          <div className="text-sm font-medium text-center">
+            <p>NOTE: The report will be downloaded to your device before sharing. Once downloaded, you can select your preferred sharing method.</p>
           </div>
 
           {/* Cancel Button */}

@@ -73,7 +73,7 @@ const Insurance = () => {
 
   const processInsuranceSummary = (transactions) => {
     const grouped = [];
-    const threshold = 0.7;
+    const threshold = 0.85;
   
     transactions.forEach((transaction) => {
       const existing = grouped.find(
