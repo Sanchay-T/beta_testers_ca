@@ -67,6 +67,8 @@ const MainDashboard = () => {
     const endDate = new Date();
     const startDate = new Date();
 
+    // console.log("pag", pagesData);
+
     switch (duration) {
       case "today":
         startDate.setHours(0, 0, 0, 0);
@@ -97,6 +99,12 @@ const MainDashboard = () => {
 
     const filteredPages = pagesData.filter((item) => {
       const itemDate = new Date(item.createdAt);
+      return itemDate >= startDate && itemDate <= endDate;
+    });
+
+    const filteredData = allData.filter((item) => {
+      const itemDate = new Date(item.date);
+      // console.log("item date", itemDate);
       return itemDate >= startDate && itemDate <= endDate;
     });
 
@@ -134,7 +142,6 @@ const MainDashboard = () => {
 
   const handlePagesDurationChange = (duration) => {
     const filteredResults = filterPagesDataByDuration(pagesData, duration);
-
     setPagesMetrics({
       totalPages: filteredResults.totalPages,
       totalTransactions: filteredResults.totalTransactions,
@@ -186,7 +193,6 @@ const MainDashboard = () => {
   const filterDataByDuration = (data, duration) => {
     const endDate = new Date();
     const startDate = new Date();
-    // console.log("duration", duration);
 
     switch (duration) {
       case "today":
@@ -206,6 +212,7 @@ const MainDashboard = () => {
         startDate.setFullYear(endDate.getFullYear() - 1);
         break;
       case "all":
+        console.log("all data", data);
         return filterDataForAll(data);
       default:
         return filterDataForAll(data);
@@ -220,6 +227,8 @@ const MainDashboard = () => {
       return itemDate >= startDate && itemDate <= endDate;
     });
     // console.log("filtered data", filteredData);
+    if (duration === "1M") {
+    }
 
     const aggregatedData = filteredData.reduce((acc, item) => {
       const itemDate = new Date(item.date);
@@ -247,7 +256,7 @@ const MainDashboard = () => {
     const aggregatedArray = Object.values(aggregatedData);
 
     return {
-      filteredData: aggregatedArray,
+      filteredData: duration === "1M" ? filteredData : aggregatedArray,
       reportTotal: filteredData.reduce(
         (sum, item) => sum + (item.reports || 0),
         0
@@ -305,6 +314,8 @@ const MainDashboard = () => {
   // };
 
   const filterDataForAll = (data) => {
+    console.log("hello");
+    console.log("data1", data);
     const reportTotal = data.reduce(
       (sum, item) => sum + (item.reports || 0),
       0
@@ -517,9 +528,10 @@ const MainDashboard = () => {
         const transactions = await window.electron.getTransactionsProcessed();
         const pages = await window.electron.getPages();
         // console.log({ reports });
+        // console.log("yes", transactions);
 
         setPagesData(pages);
-        console.log("pages", pages);
+        // console.log("pages", pages);
         // console.log("pages data", pagesData);
 
         const mergedData = processData(reports, statements, transactions);
@@ -551,11 +563,38 @@ const MainDashboard = () => {
           0
         );
 
+        console.log("merge data", mergedData);
+
+        const aggregatedData = mergedData.reduce((acc, item) => {
+          const itemDate = new Date(item.date);
+          const monthKey = itemDate.toLocaleDateString("en-US", {
+            month: "short",
+            year: "numeric",
+          });
+
+          if (!acc[monthKey]) {
+            acc[monthKey] = {
+              date: monthKey,
+              reports: 0,
+              statements: 0,
+              transactions: 0,
+            };
+          }
+
+          acc[monthKey].reports += item.reports || 0;
+          acc[monthKey].statements += item.statements || 0;
+          acc[monthKey].transactions += item.transactions || 0;
+
+          return acc;
+        }, {});
+
+        const aggregatedArray = Object.values(aggregatedData);
+
         setReportsMetrics({
           totalReports: reportTotal,
           totalStatements: statementTotal,
           totalTransactions: transactionTotal,
-          chartData: mergedData,
+          chartData: aggregatedArray,
           duration: null,
         });
 
@@ -579,6 +618,8 @@ const MainDashboard = () => {
 
     fetchDashboardData();
   }, []);
+
+  console.log("pagesss", pagesMetrics);
 
   return (
     <ScrollArea className="h-full">

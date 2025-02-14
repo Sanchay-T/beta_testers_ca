@@ -102,14 +102,17 @@ function registerMainDashboardIpc(tmpdir_path) {
         .then((rows) => rows[0]?.count || 0);
 
       const transactionDates = await db
-        .select({ date: transactions.date })
+        .select({ createdAt: transactions.createdAt }) // Changed to select createdAt
         .from(transactions)
         .where(sql`${transactions.date} >= ${startTimestamp}`)
         .where(sql`${transactions.date} <= ${endTimestamp}`);
 
+      // console.log("createdAt", transactionDates);
       return {
         totalCount,
-        transactionDates: transactionDates.map((row) => new Date(row.date)),
+        transactionDates: transactionDates.map(
+          (row) => new Date(row.createdAt)
+        ),
       };
     } catch (error) {
       console.error("Detailed error in get-transaction-processed:", error);

@@ -135,20 +135,26 @@ export default function GenerateReport() {
           const failedFiles = result.data.failedFiles.map((file_path) => {
             // Get the filename from the path and remove the timestamp
             const filename = file_path.split("\\").pop(); // Get filename from path
-            const filenameWithoutTimestamp = filename.substring(filename.indexOf('-') + 1); // Remove everything before first hyphen
+            const filenameWithoutTimestamp = filename.substring(
+              filename.indexOf("-") + 1
+            ); // Remove everything before first hyphen
             return filenameWithoutTimestamp;
           });
           setFailedStatements(failedFiles || []); // Store failed
         }
-        
+
         if (result.data.successfulFiles.length > 0) {
           setShowRectifyButton(true);
-          const successfulFiles = result.data.successfulFiles.map((file_path) => {
-            // Get the filename from the path and remove the timestamp
-            const filename = file_path.split("\\").pop(); // Get filename from path
-            const filenameWithoutTimestamp = filename.substring(filename.indexOf('-') + 1); // Remove everything before first hyphen
-            return filenameWithoutTimestamp;
-          });
+          const successfulFiles = result.data.successfulFiles.map(
+            (file_path) => {
+              // Get the filename from the path and remove the timestamp
+              const filename = file_path.split("\\").pop(); // Get filename from path
+              const filenameWithoutTimestamp = filename.substring(
+                filename.indexOf("-") + 1
+              ); // Remove everything before first hyphen
+              return filenameWithoutTimestamp;
+            }
+          );
           setSuccessfulStatements(successfulFiles || []); // Store successful
         }
 
@@ -301,7 +307,9 @@ export default function GenerateReport() {
         <DialogContent>
           <DialogHeader>
             {failedStatements.length === 0 ? (
-              <DialogTitle>{currentCaseName} Report Generated Successfully!</DialogTitle>
+              <DialogTitle>
+                {currentCaseName} Report Generated Successfully!
+              </DialogTitle>
             ) : (
               <DialogTitle className="flex items-end gap-x-2">
                 <AlertTriangle className="text-yellow-500 w-6 h-6 mt-2" />
