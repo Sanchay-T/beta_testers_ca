@@ -1249,7 +1249,7 @@ const DataTable = ({
                           return (
                             <TableCell
                               key={column}
-                              className="min-w-[300px] group relative"
+                              className="min-w-[280px] group relative"
                             >
                             <Select
                             value={row[column]}
