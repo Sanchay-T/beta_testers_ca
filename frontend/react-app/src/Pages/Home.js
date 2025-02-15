@@ -24,6 +24,7 @@ import { useBreadcrumb } from "../contexts/BreadcrumbContext";
 import { useParams } from "react-router-dom";
 import PdfColumnMarker from "../components/MainDashboardComponents/PdfMarker";
 import TallyPrimeDirect from "../components/ImortTally/TallyDirectImport";
+import TallyPrime from "../components/ImortTally/TallyPrime";
 import { useReportContext } from "../contexts/ReportContext";
 
 
@@ -66,6 +67,11 @@ const Dashboard = () => {
           icon: null,
         },
         {
+          title: "TallyPrime Vouchers",
+          url: "#",
+          icon: null,
+        },
+        {
           title: "TallyERP",
           url: "#",
           icon: null,
@@ -78,6 +84,7 @@ const Dashboard = () => {
       url: "#",
       icon: IndianRupee,
     },
+    
     // {
     //   title: "Billing",
     //   url: "#",
@@ -165,8 +172,8 @@ const Dashboard = () => {
               {activeTab === "Marker" && (
                 <PdfColumnMarker setPdfColMarkerData={setPdfColMarkerData} />
               )}
-              {/* {activeTab === "Import to Tally" && <ImportToTally />} */}
-              {activeTab === "TallyPrime" && <TallyPrimeDirect />}
+              {activeTab === "TallyPrime Vouchers" && <TallyPrime />}
+              {activeTab === "TallyPrime" && <TallyPrimeDirect source="manual" />}
               {activeTab === "TallyERP" && <ExcelERP />}
             </main>
           </div>

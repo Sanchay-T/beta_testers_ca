@@ -12,9 +12,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle,DialogFooter,DialogDes
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Button } from "../ui/button";
 import { useReportContext } from "../../contexts/ReportContext";
+import ManualEntryTable from "./ManualTable";
 
 
-const TallyDirectImport = () => {
+const TallyDirectImport = ({source}) => {
   const [vouchers, setVouchers] = useState(["Payment Receipt Voucher", "Contra Voucher"]);
   const [selectedVoucher, setSelectedVoucher] = useState("");
   const [transactions, setTransactions] = useState([]);
@@ -325,8 +326,8 @@ const TallyDirectImport = () => {
       </div>
     );
   };
-  
-  
+
+
 
   return (
     <Card>
@@ -358,8 +359,10 @@ const TallyDirectImport = () => {
             <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
           </div>
         ) : transactions.length > 0 ? (
+          
           <TallyTable data={transactions} title={" "} subtitle={" "} handleUpload={handleTallyUpload} setCompanyName={setCompanyName} companyName={companyName}/>
-        ) : (
+
+        ) : source==="manual"?<ManualEntryTable colnames={["Date","VoucherType","VoucherNumber","PartyName","Amount","Narration"]} onSubmit={handleTallyUpload} />:(
           <div className="text-center py-6 text-gray-500">No transactions available</div>
         )}
       </CardContent>

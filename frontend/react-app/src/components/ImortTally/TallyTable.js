@@ -1220,7 +1220,19 @@ useEffect(() => {
                             type="text"
                             placeholder="Enter Dr-Ledger"
                             value={row[column] || ""}
-                            onChange={(e) => handleLedgerChange(row.id, "dr_ledger", e.target.value)}
+                            onChange={(e) => {
+                                // Update individual row
+                              handleLedgerChange(row.id, "dr_ledger", e.target.value);
+
+                              // If this row is selected, update all selected rows
+                              if (selectedTransactions.includes(row.id)) {
+                                selectedTransactions.forEach(id => {
+                                  if (id !== row.id) { // Skip current row since already updated
+                                    handleLedgerChange(id, "dr_ledger", e.target.value);
+                                  }
+                                });
+                              }
+                            }}
                             className="border rounded-md p-2 w-full dark:bg-gray-800 dark:text-white"
                           />
                       </TableCell>
@@ -1230,7 +1242,19 @@ useEffect(() => {
                             type="text"
                             placeholder="Enter Cr-Ledger"
                             value={row[column] || ""}
-                            onChange={(e) => handleLedgerChange(row.id, "cr_ledger", e.target.value)}
+                            onChange={(e) => {
+                              // Update individual row
+                            handleLedgerChange(row.id, "cr_ledger", e.target.value);
+
+                            // If this row is selected, update all selected rows
+                            if (selectedTransactions.includes(row.id)) {
+                              selectedTransactions.forEach(id => {
+                                if (id !== row.id) { // Skip current row since already updated
+                                  handleLedgerChange(id, "cr_ledger", e.target.value);
+                                }
+                              });
+                            }
+                          }}
                             className="border rounded-md p-2 w-full dark:bg-gray-800 dark:text-white"
                           />
                       </TableCell>

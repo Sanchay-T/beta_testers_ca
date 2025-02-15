@@ -113,37 +113,35 @@ const IndividualDashboard = () => {
   }, [activeTab, caseId, individualId, setIndividualDashboard]);
 
 
- // Update the context and navigation items based on whether an individualId exists.
- useEffect(() => {
-  if (individualId && individualId !== "undefined") {
-    // Set the context with the valid individualId instead of null
-    updateReportData({
-      ...reportData,
-      individualId: individualId,
-      // Optionally, update customerName from somewhere (e.g., fetched data)
-    });
-    // Hide EOD if we are in individual mode
-    setNavItems((prev) => prev.filter((item) => item.title !== "EOD"));
-  } else {
-    // In combined mode, add EOD if not already present
-    if (!navItems.find((item) => item.title === "EOD")) {
-      setNavItems((prev) => [
-        ...prev,
-        { title: "EOD", icon: History },
-      ]);
+  useEffect(() => {
+    if (individualId!==undefined && individualId!==null && individualId!=="undefined") {
+      updateReportData({
+        ...reportData,
+        individualId:null,
+        customerName: null
+      })
+      // hide eod for individual
+      setNavItems((prev) => {
+        return prev.filter((item) => item.title !== "EOD");
+      });
+    }else{
+      // show eod for where individual id is not present, first check if it is already present
+      if(!navItems.find((item) => item.title === "EOD")){
+        setNavItems((prev) => {
+          return [...prev, {
+            title: "EOD",
+            icon: History,
+          }]
+        });
+      }
     }
-  }
-}, [individualId, navItems, reportData, updateReportData]);
+  }, []);
 
- // Update activeTab when the URL parameter (defaultTab) changes
- useEffect(() => {
-  if (defaultTab && defaultTab !== "defaultTab") {
-    setActiveTab(defaultTab);
-  } else {
-    // Default to the first nav item’s title if no specific defaultTab is provided
-    setActiveTab(navItems[0]?.title || "Summary");
-  }
-}, [defaultTab, navItems]);
+
+  useEffect(() => {
+    if (defaultTab === "defaultTab") setActiveTab(navItems[0].title);
+    else setActiveTab(defaultTab);
+  }, []);
 
   const handleTabChange = (newTab) => {
     setActiveTab(newTab);

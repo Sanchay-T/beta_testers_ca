@@ -1012,12 +1012,12 @@ const DataTable = ({
               {subtitle || "View and manage your data"}
             </CardDescription>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 ">
             <div className="relative flex items-center gap-2">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search..."
-                className="pl-10 w-[300px]"
+                className="pl-10 w-[300px] "
                 value={searchTerm}
                 onChange={(e) => handleSearch(e.target.value)}
               />
@@ -1140,7 +1140,7 @@ const DataTable = ({
                     // className={source === "summary" ? "bg-gray-900 dark:bg-slate-800 text-white" : ""}
                   >
                     
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 ">
                       
                     {column.toLowerCase()==="entity"?"Party Name": column
                         .split("_") // Split by underscore
@@ -1233,7 +1233,7 @@ const DataTable = ({
                           return (
                             <TableCell
                               key={column}
-                              className="max-w-[20vw] group relative"
+                              className="min-w-[300px] group relative"
                             >
                             <Select
                             value={row[column]}
@@ -1948,7 +1948,7 @@ const DataTable = ({
                     />
                   </TableCell>
                   <TableCell className="p-3">{transaction.date}</TableCell>
-                  <TableCell className="p-3">{transaction.description}</TableCell>
+                  <TableCell className="p-3 max-w-[400px] overflow-hidden">{transaction.description}</TableCell>
                   <TableCell className="p-3">{transaction.credit}</TableCell>
                   <TableCell className="p-3">{transaction.debit}</TableCell>
                   <TableCell className="p-3">{transaction.category}</TableCell>
@@ -1995,7 +1995,7 @@ const DataTable = ({
           </DialogHeader>
 
           {/* Share Options */}
-          <div className="flex justify-center gap-6 py-2">
+          <div className="flex justify-center gap-6 py-6">
             <TooltipProvider>
               {/* Mail Button */}
               <Tooltip>
@@ -2027,8 +2027,8 @@ const DataTable = ({
             </TooltipProvider>
           </div>
 
-          <div className="text-sm font-medium text-center">
-            <p>NOTE: The report will be downloaded to your device before sharing. Once downloaded, you can select your preferred sharing method.</p>
+          <div className="text-xs text-center">
+            <p>NOTE: The report will be downloaded to your device before sharing as it is a completely offline software. Don't Forget to attach the downloaded file.</p>
           </div>
 
           {/* Cancel Button */}
