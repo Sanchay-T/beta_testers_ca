@@ -17,7 +17,7 @@ import ManualEntryTable from "./ManualTable";
 
 const TallyDirectImport = ({source}) => {
   const [vouchers, setVouchers] = useState(["Payment Receipt Voucher", "Contra Voucher"]);
-  const [selectedVoucher, setSelectedVoucher] = useState("");
+  const [selectedVoucher, setSelectedVoucher] = useState("Payment Receipt Voucher");
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loading2, setLoading2] = useState(false);
@@ -29,9 +29,9 @@ const TallyDirectImport = ({source}) => {
   const { reportData, updateReportData } = useReportContext();
   const { caseId } = reportData;
 
-  async function fetchVouchersTransactions() {
+  async function fetchVouchersTransactions(newVoucher) {
     try {
-      const data = await window.electron.getTransactions(caseId); // Fetch vouchers from Electron API
+      const data = await window.electron.getTallyVoucherTransactions(caseId,newVoucher||selectedVoucher); // Fetch vouchers from Electron API
       console.log({aq:data});
       console.log({beforeSort:data.data});
       const sortedData = data.sort((a, b) => a.imported - b.imported);
@@ -65,8 +65,8 @@ const TallyDirectImport = ({source}) => {
       }});
       // Remove null values
       const filteredData = formattedData.filter((data) => data !== null);
+
       setTransactions(filteredData);
-      setSelectedVoucher("Payment Receipt Voucher");
     } catch (err) {
       console.error("Error fetching transactions:", err);
     } finally {
@@ -85,12 +85,7 @@ const TallyDirectImport = ({source}) => {
     setSelectedVoucher(voucherId);
     setLoading(true);
     try {
-      const response = await window.electron.getVoucherTransactions(voucherId);
-      if (!response.success) throw new Error(response.message);
-      // Sort by imported satatus
-
-
-      setTransactions(response.data);
+      fetchVouchersTransactions(voucherId);
     } catch (err) {
       console.error("Error fetching transactions:", err);
     }
@@ -126,7 +121,7 @@ const TallyDirectImport = ({source}) => {
       console.log("Transaction status updated successfully!");
 
       // Re-fetch transactions
-      fetchVouchersTransactions();
+      // fetchVouchersTransactions();
       setConfirmationModal(false);
       setLoading2(false);
 

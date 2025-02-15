@@ -110,8 +110,8 @@ contextBridge.exposeInMainWorld("electron", {
   downloadExcelReport: (data) =>
     ipcRenderer.invoke("download-excel-report", data),
 
-  getTallyVoucher: (caseId, voucherType) =>
-    ipcRenderer.invoke("get-tally-voucher", caseId, voucherType),
+  getTallyVoucherTransactions: (caseId, voucherType) =>
+    ipcRenderer.invoke("get-tally-voucher-transactions", caseId, voucherType),
 
   updateTransactionStatus: (transactionIds) =>
     ipcRenderer.invoke("update-transaction-status", transactionIds),
