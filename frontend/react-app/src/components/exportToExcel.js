@@ -47,18 +47,21 @@ const exportToExcel = async (transactions, fileName = "transactions.xlsx", forSh
     const column = {
       header: header.charAt(0).toUpperCase() + header.slice(1),
       key: header,
-      width: 15 // default width for most columns
+      width: 12, // default width for columns
     };
-    
+
     // Set specific widths for certain columns
-    if (header === 'description') {
+    if (header === "description") {
       column.width = 70; // wider width for description column
-    } else if (header === 'entity') {
+    } else if (header === "entity") {
       column.width = 20;
-    }else if (header === 'category') {
+    } else if (header === "category") {
       column.width = 20;
+    } else if (header === "debit" || header === "credit" || header === "balance") {
+      column.width = 15;
     }
-    
+
+
     return column;
   });
 
@@ -70,6 +73,41 @@ const exportToExcel = async (transactions, fileName = "transactions.xlsx", forSh
     if (colsToHide.includes(header)) {
       sheet.getColumn(index + 1).hidden = true;
     }
+
+
+    const cell = sheet.getRow(1).getCell(index + 1);
+
+    // Center align all cells in the header row
+    cell.alignment = { vertical: "middle", horizontal: "center" };
+
+    // Apply background color to header row
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FF000058" }
+    };
+
+    // Apply font style to header row
+    cell.font = {
+      name: 'Calibri',
+      size: 11,
+      color: { argb: "FFFFFFFF" },
+      bold: true
+    };
+
+    // Apply color to alternate rows except header row
+    sheet.eachRow((row, rowNumber) => {
+      if (rowNumber > 1 && rowNumber % 2 !== 0) {  // Skip header row (1) and apply to odd rows
+      row.eachCell((cell) => {
+        cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFB5CBE0" }
+        };
+      });
+      }
+    });
+
   });
 
   // ✅ Apply category dropdown if `categoryOptions` is provided
