@@ -43,10 +43,24 @@ const exportToExcel = async (transactions, fileName = "transactions.xlsx", forSh
 
   // Define headers
   const headers = Object.keys(finalTransactions[0]);
-  sheet.columns = headers.map((header) => ({
-    header: header.charAt(0).toUpperCase() + header.slice(1),
-    key: header,
-  }));
+  sheet.columns = headers.map((header) => {
+    const column = {
+      header: header.charAt(0).toUpperCase() + header.slice(1),
+      key: header,
+      width: 15 // default width for most columns
+    };
+    
+    // Set specific widths for certain columns
+    if (header === 'description') {
+      column.width = 70; // wider width for description column
+    } else if (header === 'entity') {
+      column.width = 20;
+    }else if (header === 'category') {
+      column.width = 20;
+    }
+    
+    return column;
+  });
 
   // Add data rows
   finalTransactions.forEach((row) => sheet.addRow(row));
