@@ -571,6 +571,13 @@ def refresh_category_all_sheets(df,eod_sheet_df, new_categories):
 
 def individual_summary(transactions_df):
     
+    transactions_df.rename(columns={
+        "description": "Description",
+        "category": "Category",
+        "entity": "Entity",
+        "voucher_type": "Voucher type"
+    }, inplace=True)
+    
     eod_sheet_df = eod(transactions_df)
     print(eod_sheet_df.head(10))
     opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df, transactions_df)
