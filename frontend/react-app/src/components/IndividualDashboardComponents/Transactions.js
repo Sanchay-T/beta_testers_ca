@@ -80,11 +80,11 @@ const Transactions = () => {
         amount: transaction.amount,
         balance: transaction.balance,
         category: transaction.category,
+        voucher_type: transaction.voucher_type,
         bank: transaction.bank,
         // entity: transaction.entity,
         type: transaction.type,
         id:transaction.id,
-        voucher_type: transaction.voucher_type,
       };
 
 
@@ -109,9 +109,9 @@ const Transactions = () => {
         transaction.type.toLowerCase() === "debit" ? transaction.amount : 0,
       balance: transaction.balance,
       category: transaction.category,
+      voucher_type: transaction.voucher_type,
       bank: transaction.bank,
       id:transaction.id,
-      voucher_type: transaction.voucher_type,
       // entity: transaction.entity,
     }));
   };

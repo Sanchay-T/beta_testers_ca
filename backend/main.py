@@ -189,7 +189,8 @@ async def analyze_bank_statements(request: BankStatementRequest):
             "data": result["sheets_in_json"],
             "pdf_paths_not_extracted": result["pdf_paths_not_extracted"],
             "ner_results": ner_results, 
-            "success_page_number": result["success_page_number"]
+            "success_page_number": result["success_page_number"],
+            "missing_months_list":result["missing_months_list"]
         }
 
     except Exception as e:

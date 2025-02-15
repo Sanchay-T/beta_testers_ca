@@ -433,8 +433,11 @@ const DataTable = ({
     const updatedFilteredData = filteredData.map((tx) => {
       console.log("tx.id", tx.id, "transactionId", transactionId);
       if (parseInt(tx.id) === parseInt(transactionId)) {
-        console.log("Transaction found");
-        return { ...tx, category: pendingCategoryChange.newCategory };
+        let updatedTx = { ...tx, category: pendingCategoryChange.newCategory };
+        if (pendingCategoryChange.newCategory === "Self transfer") {
+          updatedTx = { ...updatedTx, voucher_type: "Contra" };
+        }
+        return updatedTx;
       }
       return tx;
     });
@@ -448,6 +451,9 @@ const DataTable = ({
       oldCategory: pendingCategoryChange.oldCategory,
       keyword: showKeywordInput ? reasoning : "",
     };
+    if (pendingCategoryChange.newCategory === "Self transfer") {
+      modifiedObject = { ...modifiedObject, voucher_type: "Contra" };
+    }
     console.log("modifiedObject", modifiedObject);
     console.log({selectedCategorySimilarTransactions})
     if(selectedCategorySimilarTransactions.size >0
@@ -502,6 +508,10 @@ const DataTable = ({
           if (index !== -1) {
             const oldCategory = dataOnUi[index].category;
             dataOnUi[index].category =newCategory;
+             // If the new category is "Self transfer", update voucher_type
+            if (newCategory === "Self transfer") {
+              dataOnUi[index].voucher_type = "Contra";
+            }
               if(selectedType){
                 dataOnUi[index].classification = selectedType;
                 dataOnUi[index].is_new = true;
@@ -651,9 +661,17 @@ const DataTable = ({
     try {
       setIsLoading(true);
       console.log("Modified Data", modifiedData);
+     
       const payload = convertArrayToObject(modifiedData);
       console.log("Payload", payload);
       const response = await window.electron.editCategory(payload, reportData.caseId);
+      
+      modifiedData.map((row)=>{
+        if(row.category==="Self transfer"){
+          handleVoucherTypeChange(row,"Contra");
+        }
+      });
+      
       setHasChanges(false);
       toast({
         title: "Changes saved successfully",
@@ -996,8 +1014,6 @@ const DataTable = ({
     console.log("Response: ", response);
     setFilteredData(updatedData);
   }
-
-  
 
   return (
     // if source is equal to lifo or fifo then show the table
