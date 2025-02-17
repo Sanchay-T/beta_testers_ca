@@ -39,7 +39,8 @@ import {
     SelectTrigger,
     SelectValue,
   } from "../ui/select";
-  import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
+import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
+import { useReportContext } from "../../contexts/ReportContext";
 
 const ledgerGroups = [
   "Travelling Expenses"
@@ -104,6 +105,8 @@ const DataTable = ({ data = [], title, subtitle,caseId,source,handleUpload,compa
     const [bulkLedgerValue, setBulkLedgerValue] = useState("");
     const [ledgerField, setLedgerField] = useState("dr_ledger"); // "dr_ledger" or "cr_ledger"
 
+    // Get report data from context
+    const { reportData, updateReportData } = useReportContext();
     const [numbericInput, setNumbericInput] = useState(["pincode","opening_balance"]);
     const [dateInput, setDateInput] = useState([""]);
     const [textAreaInput, setTextAreaInput] = useState(["address","state","city","country","gst_number"]);
@@ -618,13 +621,28 @@ useEffect(() => {
     setShareModalOpen(true);
   };
 
-  const handleDownload = ()=>{
-    exportToExcel(data,title);
-  }
+  // const handleDownload = ()=>{
+  //   exportToExcel(data,title);
+  // }
 
+  const handleDownload = () => {
+    let newTitle = title;
+
+    const tmpName = reportData.reportName
+    newTitle = `${tmpName} ${newTitle}`
+
+    exportToExcel(
+      data,
+      title= newTitle
+    );
+  };
 
   const handleMailShare = async () => {
-      const fileName = await exportToExcel(data, `${title}.xlsx`, true);
+    let newTitle = title;
+    const tmpName = reportData.customerName ? reportData.customerName : reportData.reportName;
+    newTitle = `${tmpName} ${title}`;
+
+      const fileName = await exportToExcel(data, `${newTitle}.xlsx`, true);
       if (!fileName) return alert("File saving was canceled.");
     
       // Generate mailto link (without attachment, since it's not possible)
@@ -638,7 +656,11 @@ useEffect(() => {
   
 
   const handleWhatsappShare = async () => {
-    const fileName = await exportToExcel(data, `${title}.xlsx`, true);
+    let newTitle = title;
+    const tmpName = reportData.customerName ? reportData.customerName : reportData.reportName;
+    newTitle = `${tmpName} ${title}`;
+
+    const fileName = await exportToExcel(data, `${newTitle}.xlsx`, true);
     if (!fileName) return alert("File saving was canceled.");
   
     // Generate WhatsApp sharing link (without attachment, since it's not possible)
@@ -1647,6 +1669,12 @@ useEffect(() => {
               <TooltipContent>Share via WhatsApp</TooltipContent>
             </Tooltip>
           </TooltipProvider>
+        </div>
+
+        <div className="text-xs text-left">
+            <p>
+            <span className="font-bold">Note:</span> Since this software operates entirely offline, the report is first downloaded to your device before sharing, Please remember to attach the downloaded file.
+            </p> 
         </div>
 
         {/* Cancel Button */}
