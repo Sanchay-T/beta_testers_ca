@@ -885,9 +885,13 @@ const DataTable = ({
   };
 
   const handleMailShare = async () => {
+    let newTitle = title;
+    const tmpName = reportData.customerName ? reportData.customerName : reportData.reportName;
+    newTitle = `${tmpName} ${title}`;
+    
     const fileName = await exportToExcel(
       data,
-      `${title}.xlsx`,
+      `${newTitle}.xlsx`,
       true,
       source === "suspense" ? categoryOptions : null
     );
@@ -905,9 +909,13 @@ const DataTable = ({
   };
 
   const handleWhatsappShare = async () => {
+    let newTitle = title;
+    const tmpName = reportData.customerName ? reportData.customerName : reportData.reportName;
+    newTitle = `${tmpName} ${title}`;
+
     const fileName = await exportToExcel(
       data,
-      `${title}.xlsx`,
+      `${newTitle}.xlsx`,
       true,
       source === "suspense" ? categoryOptions : null
     );
@@ -2047,8 +2055,6 @@ const DataTable = ({
             <p>
             <span className="font-bold">Note:</span> Since this software operates entirely offline, the report is first downloaded to your device before sharing, Please remember to attach the downloaded file.
             </p> 
-            <p>
-            </p>
           </div>
 
           {/* Cancel Button */}
