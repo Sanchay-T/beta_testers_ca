@@ -15,7 +15,7 @@ import ManualTallyTable from "./ManualTable";
 import * as XLSX from "xlsx";
 
 const defaultColumns = {
-  "Payment Receipt Voucher":[
+  "Payment Receipt Contra Voucher":[
     "invoice_date",
     "effective_date",
     "reference_number",
@@ -25,14 +25,6 @@ const defaultColumns = {
     "narration",
     "voucher_type",
   ],
-  "Contra Voucher":[
-    "date",
-    "DrLedger",
-    "CrLedger",
-    "amount",
-    "narration",
-    "voucher_type",
-  ]
 };
 
 const TallyDirectImport = ({ source }) => {
@@ -389,7 +381,19 @@ const TallyDirectImport = ({ source }) => {
   // ----------------------------------
   // 3) MANUAL MODE / EXCEL UPLOAD
   // ----------------------------------
+  function excelSerialToJSDate(serial) {
+    const dateObj = XLSX.SSF.parse_date_code(serial);
+    if (!dateObj) return null;
+    return new Date(dateObj.y, dateObj.m - 1, dateObj.d);
+  }
 
+  // Helper: Format a JS Date to "dd-mm-yyyy"
+function formatDateToDDMMYYYY(date) {
+  const day = ("0" + date.getDate()).slice(-2);
+  const month = ("0" + (date.getMonth() + 1)).slice(-2);
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+}
   // Example: parse Excel with an IPC call or local library
   const handleExcelUpload = async (e) => {
     console.log({hey: "hey",e})
@@ -409,27 +413,59 @@ const TallyDirectImport = ({ source }) => {
         console.log({sheetName})
         const sheet = workbook.Sheets[sheetName];
         console.log({sheet})
-        const parsedData = XLSX.utils.sheet_to_json(sheet);
+        // const parsedData = XLSX.utils.sheet_to_json(sheet);
+        // We assume the second row is your actual data row, so we skip the first row with range: 0 or 1
+        const parsedData = XLSX.utils.sheet_to_json(sheet, {
+          header: [
+            "Company name *",
+            "Date *",
+            "Effective Date",
+            "Bill Refrence *",
+            "Dr Ledger *",
+            "Cr Ledger *",
+            "Amount *",
+            "Voucher",
+            "Narration",
+            "Status"
+          ],
+        });
+        const newParsedData = parsedData.slice(2);
 
-        console.log({parsedData})
+       // Example in your mapping logic:
 
-      // Either parse in the renderer with xlsx, or call a function in `window.electron`
-      // Transform “parsed” to match your transactions structure
-      // e.g. if each row has columns { date, voucher_type, dr_ledger, cr_ledger, amount, narration, ...}
-      // you might want to rename them or add “imported: false,” etc.
-      const newTransactions = parsedData.map((row, idx) => ({
-        id: `excel-${idx}`, // generate a local ID
-        invoice_date: row.Date || "",
-        effective_date: row.Effective_date || "",
-        reference_number: row.Reference_number || "",
-        dr_ledger: row.Dr_ledger || "",
-        cr_ledger: row.Cr_ledger || "",
-        amount: row.Amount || 0,
-        narration: row.Narration || "",
-        voucher_type: row.voucher_type || "Payment Voucher",
-        imported: false,
-        failed_reason: ""
-      }));
+const newTransactions = newParsedData.map((row, idx) => {
+  let invoiceDateVal = row["Date *"];
+  let effectiveDateVal = row["Effective Date"];
+
+  // Convert numeric date serials to JS date strings in dd-mm-yyyy format
+  if (typeof invoiceDateVal === "number") {
+    const date = excelSerialToJSDate(invoiceDateVal);
+    invoiceDateVal = date ? formatDateToDDMMYYYY(date) : "";
+  } else if (invoiceDateVal instanceof Date) {
+    invoiceDateVal = formatDateToDDMMYYYY(invoiceDateVal);
+  }
+
+  if (typeof effectiveDateVal === "number") {
+    const date = excelSerialToJSDate(effectiveDateVal);
+    effectiveDateVal = date ? formatDateToDDMMYYYY(date) : "";
+  } else if (effectiveDateVal instanceof Date) {
+    effectiveDateVal = formatDateToDDMMYYYY(effectiveDateVal);
+  }
+
+  return {
+    id: `excel-${idx}`,
+    invoice_date: invoiceDateVal,
+    effective_date: effectiveDateVal,
+    reference_number: row["Bill Refrence *"] || "",
+    dr_ledger: row["Dr Ledger *"] || "",
+    cr_ledger: row["Cr Ledger *"] || "",
+    amount: row["Amount *"] || 0,
+    narration: row["Narration"] || "",
+    voucher_type: row["Voucher"] || "Payment Voucher",
+    imported: false,
+    failed_reason: "",
+  };
+});
 
       console.log({newTransactions})
       // Add them to our table
@@ -512,7 +548,7 @@ const TallyDirectImport = ({ source }) => {
                   <input
                     id="excelUpload"
                     type="file"
-                    accept=".xlsx, .csv"
+                    accept=".xlsx, .csv, .xlsm"
                     className="hidden"
                     ref={fileInputRef}
                     onChange={handleExcelUpload}

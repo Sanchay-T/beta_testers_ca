@@ -1231,12 +1231,12 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                               >
                                 Download Suspense
                               </DropdownMenuItem>
-                              <DropdownMenuItem
+                              {/* <DropdownMenuItem
                                 className="cursor-pointer"
                                 onClick={() => handleSummaryDownload(report.id)}
                               >
                                 Download Summary
-                              </DropdownMenuItem>
+                              </DropdownMenuItem> */}
                             </DropdownMenuContent>
                           </DropdownMenu>
                           

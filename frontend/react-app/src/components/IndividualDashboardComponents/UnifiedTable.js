@@ -73,6 +73,7 @@ const DataTable = ({
   subtitle,
   source,
   refreshFunction,
+  caseId
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [transactions, setTransactions] = useState([]);
@@ -298,7 +299,7 @@ const DataTable = ({
 
       const payload = convertArrayToObject(updatedTransactions);
       console.log("Payload", payload);
-      const response = await window.electron.editCategory(payload, reportData.caseId);
+      const response = await window.electron.editCategory(payload, caseId||reportData.caseId);
       setCategoryUpdateModalOpen(false);
       toast({
         title: "Categories Updated!",
@@ -434,7 +435,7 @@ const DataTable = ({
       console.log("tx.id", tx.id, "transactionId", transactionId);
       if (parseInt(tx.id) === parseInt(transactionId)) {
         let updatedTx = { ...tx, category: pendingCategoryChange.newCategory };
-        if (pendingCategoryChange.newCategory === "Self transfer") {
+        if (pendingCategoryChange.newCategory === "Self transfer" || selectedType === "Contra") {
           updatedTx = { ...updatedTx, voucher_type: "Contra" };
         }
         return updatedTx;
@@ -451,7 +452,7 @@ const DataTable = ({
       oldCategory: pendingCategoryChange.oldCategory,
       keyword: showKeywordInput ? reasoning : "",
     };
-    if (pendingCategoryChange.newCategory === "Self transfer") {
+    if (pendingCategoryChange.newCategory === "Self transfer" || selectedType === "Contra") {
       modifiedObject = { ...modifiedObject, voucher_type: "Contra" };
     }
     console.log("modifiedObject", modifiedObject);
@@ -509,9 +510,10 @@ const DataTable = ({
             const oldCategory = dataOnUi[index].category;
             dataOnUi[index].category =newCategory;
              // If the new category is "Self transfer", update voucher_type
-            if (newCategory === "Self transfer") {
+             if (newCategory === "Self transfer" || selectedType === "Contra") {
               dataOnUi[index].voucher_type = "Contra";
             }
+            
               if(selectedType){
                 dataOnUi[index].classification = selectedType;
                 dataOnUi[index].is_new = true;
@@ -664,7 +666,7 @@ const DataTable = ({
      
       const payload = convertArrayToObject(modifiedData);
       console.log("Payload", payload);
-      const response = await window.electron.editCategory(payload, reportData.caseId);
+      const response = await window.electron.editCategory(payload, caseId||reportData.caseId);
       
       modifiedData.map((row)=>{
         if(row.category==="Self transfer"){

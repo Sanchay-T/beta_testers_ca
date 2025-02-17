@@ -535,113 +535,56 @@ const MainDashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
+        // Check if cached data exists
+        const cachedData = localStorage.getItem("dashboardData");
+
+        if (cachedData) {
+          console.log("Loading data from cache...");
+          const parsedData = JSON.parse(cachedData);
+          setAllData(parsedData.allData);
+          setPagesData(parsedData.pagesData);
+          setReportsMetrics(parsedData.reportsMetrics);
+          setPagesMetrics(parsedData.pagesMetrics);
+          setTimeMetrics(parsedData.timeMetrics);
+          return;
+        }
+
+        console.log("Fetching fresh data...");
+
+        // Fetch fresh data
         const reports = await window.electron.getReportsProcessed();
         const statements = await window.electron.getStatementsProcessed();
         const transactions = await window.electron.getTransactionsProcessed();
         const pages = await window.electron.getPages();
-        // console.log({ reports });
-        // console.log("yes", transactions);
-        // console.log("yes", transactions);
 
         setPagesData(pages);
-        // console.log("pages", pages);
-        // console.log("pages", pages);
-        // console.log("pages data", pagesData);
-
         const mergedData = processData(reports, statements, transactions);
         setAllData(mergedData);
-        // console.log("set all data", allData);
 
-        // Initialize with all data
         const totalPages = pages.reduce((sum, item) => sum + item.pages, 0);
         const totalTimeSaved = totalPages * 10;
         const daysCount = pages.length > 0 ? pages.length : 1;
 
-        setTimeMetrics({
-          totalTimeSaved,
-          averageTimeSavedPerDay: Math.round(totalTimeSaved / daysCount),
-          timeData: [],
-          duration: null,
-        });
+        const reportsMetricsData = {
+          totalReports: mergedData.reduce(
+            (sum, item) => sum + (item.reports || 0),
+            0
+          ),
+          totalStatements: mergedData.reduce(
+            (sum, item) => sum + (item.statements || 0),
+            0
+          ),
+          totalTransactions: mergedData.reduce(
+            (sum, item) => sum + (item.transactions || 0),
+            0
+          ),
+          chartData: mergedData,
+          duration: "all",
+        };
 
-        const reportTotal = mergedData.reduce(
-          (sum, item) => sum + (item.reports || 0),
-          0
-        );
-        const statementTotal = mergedData.reduce(
-          (sum, item) => sum + (item.statements || 0),
-          0
-        );
-        const transactionTotal = mergedData.reduce(
-          (sum, item) => sum + (item.transactions || 0),
-          0
-        );
-
-        console.log("merge data", mergedData);
-
-        // const aggregatedData = mergedData.reduce((acc, item) => {
-        //   const itemDate = new Date(item.date);
-        //   const monthKey = itemDate.toLocaleDateString("en-US", {
-        //     month: "short",
-        //     year: "numeric",
-        //   });
-
-        //   if (!acc[monthKey]) {
-        //     acc[monthKey] = {
-        //       date: monthKey,
-        //       reports: 0,
-        //       statements: 0,
-        //       transactions: 0,
-        //     };
-        //   }
-
-        //   acc[monthKey].reports += item.reports || 0;
-        //   acc[monthKey].statements += item.statements || 0;
-        //   acc[monthKey].transactions += item.transactions || 0;
-
-        //   return acc;
-        // }, {});
-
-        // const aggregatedArray = Object.values(aggregatedData);
-
-        // console.log("merge data", mergedData);
-
-        const aggregatedData = mergedData.reduce((acc, item) => {
-          const itemDate = new Date(item.date);
-          const monthKey = itemDate.toLocaleDateString("en-US", {
-            month: "short",
-            year: "numeric",
-          });
-
-          if (!acc[monthKey]) {
-            acc[monthKey] = {
-              date: monthKey,
-              reports: 0,
-              statements: 0,
-              transactions: 0,
-            };
-          }
-
-          acc[monthKey].reports += item.reports || 0;
-          acc[monthKey].statements += item.statements || 0;
-          acc[monthKey].transactions += item.transactions || 0;
-
-          return acc;
-        }, {});
-
-        const aggregatedArray = Object.values(aggregatedData);
-
-        setReportsMetrics({
-          totalReports: reportTotal,
-          totalStatements: statementTotal,
-          totalTransactions: transactionTotal,
-          chartData: aggregatedArray,
-          duration: null,
-        });
-
-        setPagesMetrics({
+        const pagesMetricsData = {
           totalPages: totalPages,
-          totalTransactions: transactionTotal,
+          totalTransactions: reportsMetricsData.totalTransactions,
           chartData: pages.map((item) => ({
             date: new Date(item.createdAt).toLocaleDateString("en-US", {
               month: "short",
@@ -651,7 +594,32 @@ const MainDashboard = () => {
             pages: item.pages,
           })),
           duration: "all",
-        });
+        };
+
+        const timeMetricsData = {
+          totalTimeSaved: totalTimeSaved,
+          averageTimeSavedPerDay: Math.round(totalTimeSaved / daysCount),
+          timeData: [],
+          duration: "all",
+        };
+
+        setReportsMetrics(reportsMetricsData);
+        setPagesMetrics(pagesMetricsData);
+        setTimeMetrics(timeMetricsData);
+
+        // Store data in cache
+        localStorage.setItem(
+          "dashboardData",
+          JSON.stringify({
+            allData: mergedData,
+            pagesData: pages,
+            reportsMetrics: reportsMetricsData,
+            pagesMetrics: pagesMetricsData,
+            timeMetrics: timeMetricsData,
+          })
+        );
+
+        console.log("Dashboard data cached successfully.");
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       }

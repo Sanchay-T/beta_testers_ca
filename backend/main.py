@@ -332,12 +332,16 @@ async def edit_category(request: EditCategoryRequest):
         transaction_data = request.transaction_data
         new_categories = request.new_categories
         eod_data = request.eod_data
+        print("New Categories : ", new_categories)
+        print("Transaction Data : ", transaction_data)
+        print("EOD Data : ", eod_data)
         logger.info(f"Received request with new categories: {new_categories}")
         logger.info(f"Received request with transaction data: {transaction_data[0]}")
         logger.info(f"Received request with eod data: {eod_data}")
 
         # convert transaction_data to df
         transaction_df = pd.DataFrame(transaction_data)
+        print("Transactions : ", transaction_df.head())
         transaction_df["Value Date"] = pd.to_datetime(transaction_df["Value Date"], format="%d-%m-%Y")
         eod_df = pd.DataFrame(eod_data)
         print("Transactions : ", transaction_df.head())
