@@ -27,7 +27,6 @@ const Debtors = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      // Fetch transactions filtered by "debtor"
       const result = await window.electron.getTransactionsByDebtor(
         caseId,
         parseInt(individualId)
@@ -70,8 +69,6 @@ const Debtors = () => {
   };
 
   useEffect(() => {
-   
-
     fetchData();
   }, [caseId]);
 
@@ -79,6 +76,27 @@ const Debtors = () => {
   const filteredData = data.filter(item => 
     selectedMonths.includes(item.monthKey)
   );
+
+  // Transform data for chart to show monthly aggregates
+  const getChartData = () => {
+    const monthlyData = {};
+    
+    filteredData.forEach(item => {
+      if (!monthlyData[item.monthKey]) {
+        monthlyData[item.monthKey] = {
+          date: item.monthKey, // Using monthKey as date for x-axis
+          credit: 0
+        };
+      }
+      monthlyData[item.monthKey].credit += item.credit;
+    });
+
+    return Object.values(monthlyData).sort((a, b) => {
+      const dateA = getMonthDate(a.date);
+      const dateB = getMonthDate(b.date);
+      return dateA - dateB;
+    });
+  };
 
   if (loading) {
     return (
@@ -116,8 +134,8 @@ const Debtors = () => {
             <div className="w-full h-[60vh]">
               <BarLineChart
                 xAxisKey="date"
-                yAxisKey="balance"
-                data={filteredData}
+                yAxisKey="credit"
+                data={getChartData()}
                 title="Debtors"
               />
             </div>

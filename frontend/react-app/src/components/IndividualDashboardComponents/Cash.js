@@ -53,9 +53,9 @@ const Cash = () => {
           month: "2-digit",
           year: "numeric",
         }),
-        Description: item.description,
-        Debit: Math.abs(item.amount) || 0, // Ensure positive value
-        Balance: item.balance || 0,
+        description: item.description,
+        debit: Math.abs(item.amount) || 0, // Ensure positive value
+        balance: item.balance || 0,
         category: item.category || "-",
         monthKey: getMonthKey(item.date),
         id: item.id,
@@ -68,9 +68,9 @@ const Cash = () => {
           month: "2-digit",
           year: "numeric",
         }),
-        Description: item.description,
-        Credit: item.amount || 0,
-        Balance: item.balance || 0,
+        description: item.description,
+        credit: item.amount || 0,
+        balance: item.balance || 0,
         category: item.category || "-",
         monthKey: getMonthKey(item.date),
         id: item.id,
@@ -110,10 +110,53 @@ const Cash = () => {
   const filteredCrData = depositData.filter((item) =>
     selectedMonthsCr.includes(item.monthKey)
   );
+  
+  // Transform data for chart to show monthly aggregates
+  const getCrChartData = () => {
+    const monthlyData = {};
+    
+    filteredCrData.forEach(item => {
+      if (!monthlyData[item.monthKey]) {
+        monthlyData[item.monthKey] = {
+          date: item.monthKey, // Using monthKey as date for x-axis
+          credit: 0
+        };
+      }
+      monthlyData[item.monthKey].credit += item.credit;
+    });
+
+    return Object.values(monthlyData).sort((a, b) => {
+      const dateA = getMonthDate(a.date);
+      const dateB = getMonthDate(b.date);
+      return dateA - dateB;
+    });
+  };
 
   const filteredDrData = withdrawalData.filter((item) =>
     selectedMonthsDr.includes(item.monthKey)
   );
+
+  
+  // Transform data for chart to show monthly aggregates
+  const getDrChartData = () => {
+    const monthlyData = {};
+    
+    filteredDrData.forEach(item => {
+      if (!monthlyData[item.monthKey]) {
+        monthlyData[item.monthKey] = {
+          date: item.monthKey, // Using monthKey as date for x-axis
+          debit: 0
+        };
+      }
+      monthlyData[item.monthKey].debit += item.debit;
+    });
+
+    return Object.values(monthlyData).sort((a, b) => {
+      const dateA = getMonthDate(a.date);
+      const dateB = getMonthDate(b.date);
+      return dateA - dateB;
+    });
+  };
 
   const chartConfig = {
     yAxis: {
@@ -209,7 +252,7 @@ const Cash = () => {
                       </h2>
                       <div className="h-[400px]">
                         <BarLineChart
-                          data={filteredDrData}
+                          data={getDrChartData()}
                           xAxisKey="date"
                           columnTypes={columnTypes}
                           config={chartConfig}
@@ -255,7 +298,7 @@ const Cash = () => {
                           </h2>
                           <div className="h-[400px]">
                             <BarLineChart
-                              data={filteredCrData}
+                              data={getCrChartData()}
                               xAxisKey="date"
                               columnTypes={columnTypes}
                               config={chartConfig}
