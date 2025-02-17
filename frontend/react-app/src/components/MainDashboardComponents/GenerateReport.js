@@ -219,6 +219,7 @@ export default function GenerateReport() {
       setLoading(false);
       refreshPage();
       progressIntervalRef.current = null;
+      localStorage.removeItem("dashboardData");
     }
   };
   const viewAnalysis = () => {

@@ -541,12 +541,13 @@ const MainDashboard = () => {
         if (cachedData) {
           console.log("Loading data from cache...");
           const parsedData = JSON.parse(cachedData);
+
           setAllData(parsedData.allData);
           setPagesData(parsedData.pagesData);
           setReportsMetrics(parsedData.reportsMetrics);
           setPagesMetrics(parsedData.pagesMetrics);
           setTimeMetrics(parsedData.timeMetrics);
-          return;
+          return; // Exit the function if cache exists
         }
 
         console.log("Fetching fresh data...");
@@ -561,6 +562,34 @@ const MainDashboard = () => {
         const mergedData = processData(reports, statements, transactions);
         setAllData(mergedData);
 
+        // Aggregate Data for Charts
+        const aggregatedData = mergedData.reduce((acc, item) => {
+          const itemDate = new Date(item.date);
+          const monthKey = itemDate.toLocaleDateString("en-US", {
+            month: "short",
+            year: "numeric",
+          });
+
+          if (!acc[monthKey]) {
+            acc[monthKey] = {
+              date: monthKey,
+              reports: 0,
+              statements: 0,
+              transactions: 0,
+            };
+          }
+
+          acc[monthKey].reports += item.reports || 0;
+          acc[monthKey].statements += item.statements || 0;
+          acc[monthKey].transactions += item.transactions || 0;
+
+          return acc;
+        }, {});
+
+        const aggregatedArray = Object.values(aggregatedData);
+        console.log("Aggregated Data:", aggregatedArray);
+
+        // Calculate Metrics
         const totalPages = pages.reduce((sum, item) => sum + item.pages, 0);
         const totalTimeSaved = totalPages * 10;
         const daysCount = pages.length > 0 ? pages.length : 1;
@@ -578,7 +607,7 @@ const MainDashboard = () => {
             (sum, item) => sum + (item.transactions || 0),
             0
           ),
-          chartData: mergedData,
+          chartData: aggregatedArray,
           duration: "all",
         };
 
@@ -607,11 +636,11 @@ const MainDashboard = () => {
         setPagesMetrics(pagesMetricsData);
         setTimeMetrics(timeMetricsData);
 
-        // Store data in cache
+        // Store Data in Cache
         localStorage.setItem(
           "dashboardData",
           JSON.stringify({
-            allData: mergedData,
+            allData: mergedData, // Store mergedData instead of aggregatedArray
             pagesData: pages,
             reportsMetrics: reportsMetricsData,
             pagesMetrics: pagesMetricsData,
