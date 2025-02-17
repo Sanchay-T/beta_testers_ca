@@ -4,18 +4,21 @@ import {
   Loader2,
   Check,
   Download,
+  X,
   Save,
   Plus,
   MessageCircle,
   Mail,
   Share2,
-  UploadCloud,
+  Trash2,
 } from "lucide-react";
 
 import {
   Card,
   CardContent,
   CardHeader,
+  // CardTitle,
+  // CardDescription,
 } from "../ui/card";
 
 import {
@@ -40,15 +43,23 @@ import {
   DialogFooter,
   DialogDescription,
 } from "../ui/dialog";
-import { Label } from "../ui/label";
-import { useToast } from "../../hooks/use-toast";
+
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "../ui/tooltip";
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "../ui/pagination";
+
+import { Label } from "../ui/label";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
+
+// If you have your own exportToExcel logic, import it:
 import { exportToExcel } from "../exportToExcel";
+
 import {
   Select,
   SelectContent,
@@ -56,239 +67,209 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 
-/** Default category options */
-const categoryOptionsfixed = [
-  "Bank Charges",
-  "Bank Interest Received",
-  "Bonus Paid",
-  "Bonus Received",
-  "Bounce",
-  "Cash Deposits",
-  "Cash Reversal",
-  "Cash Withdrawal",
-  "Closing Balance",
-  "Credit Card Payment",
-  "Debtor List",
-  "Departmental Stores",
-  "Donation",
-  "Food Expense/Hotel",
-  "General Insurance",
-  "Gold Loan",
-  "GST Paid",
-  "Income Tax Paid",
-  "Income Tax Refund",
-  "Indirect tax",
-  "Interest Debit",
-  "Interest Received",
-  "Investment",
-  "Life insurance",
-  "Loan",
-  "Loan given",
-  "Local Cheque Collection",
-  "Online Shopping",
-  "Opening Balance",
-  "Other Expenses",
-  "POS-Cr",
-  "POS-Dr",
-  "Probable Claim Settlement",
-  "Property Tax",
-  "Provident Fund",
-  "Redemption, Dividend & Interest",
-  "Refund/Reversal",
-  "Rent Paid",
-  "Rent Received",
-  "Salary Paid",
-  "Salary Received",
-  "Subscription / Entertainment",
-  "TDS Deducted",
-  "Total Income Tax Paid",
-  "Travelling Expense",
-  "UPI-Cr",
-  "UPI-Dr",
-  "Utility Bills",
-  "Loan taken",
-  "Loan Given",
-  "Self transfer",
-];
+// This is just a placeholder: your real toast or error-handling approach
+import { useToast } from "../../hooks/use-toast";
 
-const DataTableWithColumns = ({
-  /**
-   * Array of column names to be rendered as table headers.
-   * e.g. ["date", "category", "dr_ledger", "cr_ledger", ...]
-   * If not provided, the table defaults to 5 columns.
-   */
-  colnames,
-  /**
-   * Table data array, each object must have an "id" and matching keys for colnames.
-   */
-  data = [],
-  title,
-  subtitle,
-  caseId,
-  source,
-  handleUpload,
+
+//
+const ManualTallyTable = ({
+  initialData = [],    
+  columnsProp = [],    
+  tableTitle = "Manual Tally Table",
+  handleUpload,         
   companyName,
   setCompanyName,
 }) => {
-  // ========= State Hooks =========
-  const [transactions, setTransactions] = useState([]);
+  const { toast } = useToast();
+
+  // ---------------------------------------------
+  // 1) Internal State
+  // ---------------------------------------------
+
+  // "transactions" or "rows" we are displaying
+  const [allRows, setAllRows] = useState(initialData);
+
+  // The "filtered" array after search/filter
   const [filteredData, setFilteredData] = useState([]);
+  // Searching
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Category filter states
-  const [categoryOptions, setCategoryOptions] = useState(categoryOptionsfixed);
-  const [categorySearchTerm, setCategorySearchTerm] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState([]);
-
-  // Modal & filter states
+  // Category filtering
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [currentFilterColumn, setCurrentFilterColumn] = useState(null);
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [categorySearchTerm, setCategorySearchTerm] = useState("");
+
+  // Numeric filtering
   const [numericFilterModalOpen, setNumericFilterModalOpen] = useState(false);
   const [currentNumericColumn, setCurrentNumericColumn] = useState(null);
   const [minValue, setMinValue] = useState("");
   const [maxValue, setMaxValue] = useState("");
 
-  // Classification & category update
+  // Category classification logic
   const [showClassificationModal, setShowClassificationModal] = useState(false);
-  const [selectedType, setSelectedType] = useState("");
   const [newCategoryToClassify, setNewCategoryToClassify] = useState("");
+  const [selectedType, setSelectedType] = useState("");
+  const [pendingCategoryChange, setPendingCategoryChange] = useState(null);
+
+  // Reasoning modal
+  const [reasoningModalOpen, setReasoningModalOpen] = useState(false);
+  const [currentTransaction, setCurrentTransaction] = useState(null);
+  const [reasoning, setReasoning] = useState("");
+  const [showKeywordInput, setShowKeywordInput] = useState(false);
+
+  // Bulk category update
+  const [globalSelectedRows, setGlobalSelectedRows] = useState(new Set());
   const [bulkCategoryModalOpen, setBulkCategoryModalOpen] = useState(false);
   const [confirmationModalOpen, setConfirmationModalOpen] = useState(false);
   const [selectedBulkCategory, setSelectedBulkCategory] = useState("");
   const [bulkReasoning, setBulkReasoning] = useState("");
-  const [reasoningModalOpen, setReasoningModalOpen] = useState(false);
-  const [pendingCategoryChange, setPendingCategoryChange] = useState(null);
-  const [currentTransaction, setCurrentTransaction] = useState(null);
-  const [showKeywordInput, setShowKeywordInput] = useState(false);
-  const [reasoning, setReasoning] = useState("");
 
-  // Columns to ignore
-  const [columnsToIgnore] = useState(["id", "transactionId"]);
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [currentData, setCurrentData] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
 
-  // Entity editing
+  // Category options. Possibly load from localStorage or a fixed set
+  const [categoryOptions, setCategoryOptions] = useState([
+    "Bank Charges",
+    "Bank Interest Received",
+    "Bonus Paid",
+    "Cash Deposits",
+    "Cash Withdrawal",
+    "Income Tax Paid",
+    "Loan",
+    "Loan given",
+    "Other Expenses",
+    "Receipt",
+    // ... your bigger list
+  ]);
+
+  // Entities editing
   const [editedEntities, setEditedEntities] = useState({});
-  const [batchModalOpen, setBatchModalOpen] = useState(false);
-  const [batchEntityValue, setBatchEntityValue] = useState("");
-
-  // Global row selection for bulk operations
-  const [globalSelectedRows, setGlobalSelectedRows] = useState(new Set());
+  // For ledger bulk changes
   const [selectedTransactions, setSelectedTransactions] = useState([]);
-
-  // Ledger fields
-  const [ledgerField, setLedgerField] = useState("dr_ledger");
   const [bulkLedgerValue, setBulkLedgerValue] = useState("");
+  const [ledgerField, setLedgerField] = useState("dr_ledger");
 
-  // Toast
-  const { toast } = useToast();
-
-  // Change tracking
-  const [hasChanges, setHasChanges] = useState(false);
-  const [modifiedData, setModifiedData] = useState([]);
+  // Loading states
   const [isLoading, setIsLoading] = useState(false);
 
-  // Sharing modal
+  // For share
   const [shareModalOpen, setShareModalOpen] = useState(false);
 
-  // For one-time load
-  const isFirstLoad = useRef(true);
+  // If the user wants to track "hasChanges" (like TallyTable did for category changes)
+  const [hasChanges, setHasChanges] = useState(false);
+  const [modifiedData, setModifiedData] = useState([]);
 
-  // ========= Determine Final Columns =========
-  const defaultColnames = ["Column 1", "Column 2", "Column 3", "Column 4", "Column 5"];
-  const finalColnames = colnames && colnames.length > 0 ? colnames : defaultColnames;
-  const columns = finalColnames.filter((col) => !columnsToIgnore.includes(col));
+  // For "Add Row": We create new blank rows
+  const handleAddRow = () => {
+    // Create a new row object. We'll assume each column is blank or a default
+    const newRow = {};
+    columns.forEach((col) => {
+      newRow[col] = "";
+    });
+    // Also might want an ID. E.g. a local negative ID or a random string
+    newRow.id = `temp-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    newRow.imported = false;
+    newRow.failed_reason = "";
 
+
+  // Update both allRows and filteredData if no search is active
+  setAllRows((prev) => {
+    const updated = [...prev, newRow];
+    // If there's no active search term, update filteredData too
+    if (!searchTerm) {
+      setFilteredData(updated);
+    }
+    return updated;
+  });  };
+
+  // For "Remove Row"
+  const handleRemoveRow = (rowId) => {
+    // Check if row was newly added or from DB, etc.
+    setAllRows((prev) => prev.filter((row) => row.id !== rowId));
+    // Also remove from selection sets
+    setGlobalSelectedRows((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(rowId);
+      return newSet;
+    });
+  };
+
+  // Instead of deriving columns from data[0], we rely on columnsProp or fallback
+  let columns = columnsProp.length > 0 ? columnsProp : [];
+  // If still no columns, we try from allRows
+  if (columns.length === 0 && allRows.length > 0) {
+    columns = Object.keys(allRows[0]).filter((c) => c !== "id");
+  }
+
+  // Numeric columns detection
   const numericColumns = columns.filter((column) =>
-    data.some((row) => {
+    allRows.some((row) => {
       const value = String(row[column]);
       return !isNaN(parseFloat(value)) && !value.includes("-");
     })
   );
-   // Calculate totals for numeric columns
-   const totals = numericColumns.reduce((acc, column) => {
-    const total = filteredData.reduce((sum, row) => {
-      const value = parseFloat(String(row[column]).replace(/,/g, ""));
-      return !isNaN(value) ? sum + value : sum;
-    }, 0);
-    return {
-      ...acc,
-      [column]: total.toLocaleString(undefined, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }),
-    };
-  }, {});
-  // ========= Data & Default Rows Effect =========
+
+  // ---------------------------------------------
+  // 2) Effects: searching, filtering, pagination
+  // ---------------------------------------------
+
+  // Whenever allRows changes, we reset filteredData
   useEffect(() => {
-    if (data.length === 0) {
-      // If no data is provided, create 5 default empty rows
-      const emptyRows = [];
-      for (let i = 0; i < 5; i++) {
-        const newRow = { id: Date.now() + i };
-        columns.forEach((col) => (newRow[col] = ""));
-        emptyRows.push(newRow);
-      }
-      setTransactions(emptyRows);
-      setFilteredData(emptyRows);
-    } else {
-      const formatted = data.map((row) => ({ ...row }));
-      setTransactions(formatted);
-      setFilteredData(formatted);
-    }
+    console.log({allRows})
+    setAllRows(initialData)
+    setFilteredData(initialData);
+  }, [initialData]);
 
-    // Category options from localStorage merge with data
-    const storedCats = localStorage.getItem("categoryOptions");
-    let localCats = storedCats ? JSON.parse(storedCats) : null;
-    if (!localCats) {
-      localCats = categoryOptions;
-      localStorage.setItem("categoryOptions", JSON.stringify(localCats));
-    }
-    const dataCats = data.map((tx) => tx.category).filter(Boolean);
-    const mergedCats = Array.from(new Set([...localCats, ...dataCats]));
-    if (mergedCats.length !== localCats.length) {
-      localStorage.setItem("categoryOptions", JSON.stringify(mergedCats));
-    }
-    setCategoryOptions(mergedCats);
-  }, [data, columns]);
+  // Recalculate pagination
+  useEffect(() => {
+    const totalPagesTemp = Math.ceil(filteredData.length / rowsPerPage) || 1;
+    setTotalPages(totalPagesTemp);
 
-  // ========= Handlers =========
+    const startIndex = (currentPage - 1) * rowsPerPage;
+    const endIndex = startIndex + rowsPerPage;
+    setCurrentData(filteredData.slice(startIndex, endIndex));
+  }, [filteredData, currentPage, rowsPerPage]);
 
-  const handleSearch = (value) => {
-    setSearchTerm(value);
-    if (!value) {
-      setFilteredData(transactions);
+  // Searching
+  const handleSearch = (term) => {
+    setSearchTerm(term);
+    if (!term) {
+      // Reset
+      setFilteredData(allRows);
+      setCurrentPage(1);
       return;
     }
-    const filtered = transactions.filter((row) =>
+    const lower = term.toLowerCase();
+    // Filter any row if it matches any column
+    const filtered = allRows.filter((row) =>
       Object.entries(row).some(([key, val]) => {
         if (!val) return false;
-        return String(val).toLowerCase().includes(value.toLowerCase());
+        return String(val).toLowerCase().includes(lower);
       })
     );
     setFilteredData(filtered);
+    setCurrentPage(1);
   };
 
+  // Clear filters
   const clearFilters = () => {
     setSearchTerm("");
-    setFilteredData(transactions);
-    setMinValue("");
-    setMaxValue("");
     setSelectedCategories([]);
     setCategorySearchTerm("");
+    setMinValue("");
+    setMaxValue("");
+    setFilteredData(allRows);
+    setCurrentPage(1);
   };
 
-  const handleColumnFilter = () => {
-    if (selectedCategories.length === 0) {
-      setFilteredData(transactions);
-    } else {
-      const filtered = transactions.filter((row) =>
-        selectedCategories.includes(String(row[currentFilterColumn]))
-      );
-      setFilteredData(filtered);
-    }
-  };
-
+  // Category filtering
   const handleCategorySelect = (category) => {
     setSelectedCategories((prev) =>
       prev.includes(category)
@@ -296,98 +277,190 @@ const DataTableWithColumns = ({
         : [...prev, category]
     );
   };
-
-  const handleSelectAllCategoryValues = () => {
-    const allValues = getFilteredUniqueValues(currentFilterColumn);
-    const allSelected = allValues.every((val) => selectedCategories.includes(val));
-    setSelectedCategories(allSelected ? [] : allValues);
+  const getUniqueValues = (col) => {
+    const setVals = new Set();
+    allRows.forEach((r) => setVals.add(String(r[col] || "")));
+    return [...setVals];
   };
-
-  const getUniqueValues = (colName) => {
-    return [...new Set(transactions.map((row) => String(row[colName] || "")))];
-  };
-  const getFilteredUniqueValues = (colName) => {
-    const unique = getUniqueValues(colName);
-    if (!categorySearchTerm) return unique;
-    return unique.filter((v) =>
-      v.toLowerCase().includes(categorySearchTerm.toLowerCase())
+  const getFilteredUniqueValues = (col) => {
+    const allVals = getUniqueValues(col);
+    if (!categorySearchTerm) return allVals;
+    return allVals.filter((val) =>
+      val.toLowerCase().includes(categorySearchTerm.toLowerCase())
     );
   };
+  const handleSelectAllFilter = () => {
+    const visibleCats = getFilteredUniqueValues(currentFilterColumn);
+    // if everything is already selected, unselect them
+    const allSelected = visibleCats.every((c) => selectedCategories.includes(c));
+    setSelectedCategories(allSelected ? [] : visibleCats);
+  };
+  const handleColumnFilter = () => {
+    if (selectedCategories.length === 0) {
+      setFilteredData(allRows);
+    } else {
+      const filtered = allRows.filter((row) =>
+        selectedCategories.includes(String(row[currentFilterColumn]))
+      );
+      setFilteredData(filtered);
+    }
+    setFilterModalOpen(false);
+    setCurrentPage(1);
+  };
 
-  const handleNumericFilter = (colName, min, max) => {
-    const filtered = transactions.filter((row) => {
-      const val = parseFloat(row[colName]);
+  // Numeric filter
+  const handleNumericFilter = (columnName, min, max) => {
+    const filtered = allRows.filter((row) => {
+      const val = parseFloat(row[columnName]);
       if (isNaN(val)) return false;
-      const meetsMin = min === "" || val >= parseFloat(min);
-      const meetsMax = max === "" || val <= parseFloat(max);
+      const meetsMin = !min || val >= parseFloat(min);
+      const meetsMax = !max || val <= parseFloat(max);
       return meetsMin && meetsMax;
     });
     setFilteredData(filtered);
+    setCurrentPage(1);
   };
 
-  const handleCategoryChange = (row, newCategory) => {
-    const oldCategory = row.category;
-    const isDebit = row.credit === 0; // adjust as needed
+  // ---------------------------------------------
+  // 3) Category classification & editing
+  // ---------------------------------------------
+  const handleAddCategory = (newCategory, row) => {
+    if (!newCategory) return false;
+    if (!categoryOptions.includes(newCategory)) {
+      // Show classification modal
+      setNewCategoryToClassify(newCategory);
+      // Insert into categoryOptions
+      const updatedOptions = [...categoryOptions, newCategory].sort();
+      setCategoryOptions(updatedOptions);
+
+      if (row) {
+        // Single row flow
+        setPendingCategoryChange({
+          transactionId: row.id,
+          newCategory,
+          oldCategory: row.category,
+          transaction: row,
+          isDebit: row.credit === 0, // or your logic
+        });
+      }
+      setShowClassificationModal(true);
+      return true;
+    }
+    return false;
+  };
+
+  const handleCategoryChange = (transaction, newCategory) => {
+    // We'll capture the old category
+    const oldCategory = transaction.category || "";
     setPendingCategoryChange({
-      transactionId: row.id,
-      oldCategory,
+      transactionId: transaction.id,
       newCategory,
-      isDebit,
+      oldCategory,
+      transaction,
+      // isDebit depends on your logic
+      isDebit: (transaction.credit || 0) === 0,
     });
-    setCurrentTransaction(row);
-    setReasoningModalOpen(true);
+    setCurrentTransaction(transaction);
+    // Show reasoning modal or classification if it’s brand new
+    // But first check if it's an existing or brand new category
+    if (!categoryOptions.includes(newCategory)) {
+      // brand new category => classification flow
+      handleAddCategory(newCategory, transaction);
+    } else {
+      // existing => just open reasoning
+      setReasoningModalOpen(true);
+    }
   };
 
+  // Once user confirms
   const confirmCategoryChange = () => {
     if (!pendingCategoryChange) return;
-    const { transactionId, oldCategory, newCategory } = pendingCategoryChange;
-    const updated = filteredData.map((tx) =>
-      tx.id === transactionId ? { ...tx, category: newCategory } : tx
+    const { transactionId, newCategory, oldCategory } = pendingCategoryChange;
+    // Update row in filteredData & allRows
+    setFilteredData((prev) =>
+      prev.map((row) =>
+        row.id === transactionId ? { ...row, category: newCategory } : row
+      )
     );
-    setFilteredData(updated);
-    const changedRow = updated.find((r) => r.id === transactionId);
-    let finalObj = {
-      ...changedRow,
+    setAllRows((prev) =>
+      prev.map((row) =>
+        row.id === transactionId ? { ...row, category: newCategory } : row
+      )
+    );
+
+    // Keep track of changes if you do IPC later
+    let modifiedObj = {
+      transactionId,
       oldCategory,
-      keyword: showKeywordInput ? reasoning : "",
+      newCategory,
+      reasoning: showKeywordInput ? reasoning : "",
     };
     if (selectedType) {
-      finalObj.classification = selectedType;
-      finalObj.is_new = true;
+      modifiedObj = {
+        ...modifiedObj,
+        classification: selectedType,
+        is_new: true,
+      };
     } else {
-      finalObj.is_new = false;
+      modifiedObj = { ...modifiedObj, is_new: false };
     }
-    setModifiedData((prev) => [...prev, finalObj]);
+    setModifiedData((prev) => [...prev, modifiedObj]);
     setHasChanges(true);
+
+    // close modals
+    setReasoningModalOpen(false);
+    setPendingCategoryChange(null);
     setReasoning("");
     setShowKeywordInput(false);
     setSelectedType("");
-    setReasoningModalOpen(false);
-    setPendingCategoryChange(null);
   };
 
+  // Bulk category
+  const toggleRowSelection = (id) => {
+    setGlobalSelectedRows((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
   const handleBulkCategoryChange = () => {
-    const dataCopy = [...filteredData];
-    const newModified = [...modifiedData];
+    // create copy
+    const dataOnUi = filteredData.map((r) => ({ ...r }));
+    const newModifiedData = [...modifiedData];
+
     globalSelectedRows.forEach((id) => {
-      const index = dataCopy.findIndex((r) => r.id === id);
-      if (index !== -1) {
-        const oldCategory = dataCopy[index].category;
-        dataCopy[index].category =
-          selectedBulkCategory === "" ? categorySearchTerm : selectedBulkCategory;
+      const idx = dataOnUi.findIndex((row) => row.id === id);
+      if (idx !== -1) {
+        const oldCategory = dataOnUi[idx].category || "";
+        const newCat = selectedBulkCategory || categorySearchTerm;
+        dataOnUi[idx].category = newCat;
         if (selectedType) {
-          dataCopy[index].classification = selectedType;
-          dataCopy[index].is_new = true;
+          dataOnUi[idx].classification = selectedType;
+          dataOnUi[idx].is_new = true;
         }
-        newModified.push({
-          ...dataCopy[index],
+        // record the change
+        newModifiedData.push({
+          transactionId: id,
           oldCategory,
+          newCategory: newCat,
           reasoning: bulkReasoning,
         });
       }
     });
-    setFilteredData(dataCopy);
-    setModifiedData(newModified);
+
+    setFilteredData(dataOnUi);
+    setAllRows((prevRows) =>
+      prevRows.map((row) => {
+        const updated = dataOnUi.find((r) => r.id === row.id);
+        return updated || row;
+      })
+    );
+
+    setModifiedData(newModifiedData);
     setHasChanges(true);
     setGlobalSelectedRows(new Set());
     setBulkCategoryModalOpen(false);
@@ -397,131 +470,95 @@ const DataTableWithColumns = ({
     setSelectedType("");
   };
 
-  const handleAddCategory = (newCategory, row) => {
-    if (newCategory && !categoryOptions.includes(newCategory)) {
-      setNewCategoryToClassify(newCategory);
-      const updatedCats = [...categoryOptions, newCategory].sort();
-      setCategoryOptions(updatedCats);
-      localStorage.setItem("categoryOptions", JSON.stringify(updatedCats));
-      if (row) {
-        setPendingCategoryChange({
-          transactionId: row.id,
-          newCategory,
-          oldCategory: row.category,
-          isDebit: row.credit === 0,
-        });
-        setShowClassificationModal(true);
-      } else {
-        setShowClassificationModal(true);
-      }
-      return true;
-    }
-    return false;
-  };
-
+  // Classification modal
   const handleClassificationSubmit = () => {
-    if (!newCategoryToClassify) return;
-    if (pendingCategoryChange) {
+    // brand new category classification
+    if (bulkCategoryModalOpen) {
+      // Bulk route
+      setSelectedBulkCategory(newCategoryToClassify);
+      setNewCategoryToClassify("");
+      setShowClassificationModal(false);
+    } else if (pendingCategoryChange) {
+      // Single route
       setPendingCategoryChange({
         ...pendingCategoryChange,
         newCategory: newCategoryToClassify,
       });
-      setCurrentTransaction(
-        filteredData.find((tx) => tx.id === pendingCategoryChange.transactionId)
-      );
+      setNewCategoryToClassify("");
+      setShowClassificationModal(false);
       setReasoningModalOpen(true);
-    } else if (bulkCategoryModalOpen) {
-      setSelectedBulkCategory(newCategoryToClassify);
-      setPendingCategoryChange(null);
     }
-    setShowClassificationModal(false);
-    setNewCategoryToClassify("");
   };
 
-  // ===== Entity Editing =====
+  // ---------------------------------------------
+  // 4) Entities, ledger field updates, etc.
+  // ---------------------------------------------
   const handleEntityChange = (tid, newValue) => {
     setEditedEntities((prev) => ({ ...prev, [tid]: newValue }));
   };
 
   const handleEntityUpdateConfirm = (row) => {
-    if (!row) return;
-    const tid = row.id;
-    const newVal = editedEntities[tid];
-    if (
-      window.confirm("Are you sure you want to update the Entity for this row?")
-    ) {
-      entityUpdateIpc([{ entity: newVal, transactionId: tid }]);
-      setFilteredData((prev) => {
-        const copy = [...prev];
-        const idx = copy.findIndex((r) => r.id === tid);
-        if (idx !== -1) {
-          copy[idx] = { ...copy[idx], entity: newVal };
-        }
-        return copy;
-      });
-      setEditedEntities((prev) => {
-        const copy = { ...prev };
-        delete copy[tid];
-        return copy;
-      });
-    }
-  };
-
-  const entityUpdateIpc = async (payload) => {
-    try {
-      console.log("Entity update payload => ", payload);
-      toast({
-        title: "Entity Updated",
-        description: "Entity update successful.",
-      });
-    } catch (err) {
-      toast({
-        title: "Error updating entity",
-        description: err.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleBatchUpdate = () => {
-    if (!batchEntityValue) return;
-    if (
-      window.confirm(
-        "Are you sure you want to update the Entity for the selected rows?"
-      )
-    ) {
-      const dataCopy = [...filteredData];
-      const payload = [];
-      globalSelectedRows.forEach((id) => {
-        const idx = dataCopy.findIndex((r) => r.id === id);
-        if (idx !== -1) {
-          dataCopy[idx].entity = batchEntityValue;
-          payload.push({ entity: batchEntityValue, transactionId: dataCopy[idx].id });
-        }
-      });
-      setFilteredData(dataCopy);
-      entityUpdateIpc(payload);
-      setGlobalSelectedRows(new Set());
-      setBatchEntityValue("");
-      setBatchModalOpen(false);
-    }
-  };
-
-  const toggleRowSelection = (id) => {
-    setGlobalSelectedRows((prev) => {
-      const copy = new Set(prev);
-      copy.has(id) ? copy.delete(id) : copy.add(id);
-      return copy;
+    const newVal = editedEntities[row.id];
+    // Could confirm() here or just do it
+    // Update row in allRows
+    setAllRows((prev) =>
+      prev.map((r) => (r.id === row.id ? { ...r, entity: newVal } : r))
+    );
+    setFilteredData((prev) =>
+      prev.map((r) => (r.id === row.id ? { ...r, entity: newVal } : r))
+    );
+    // Clear the local editing
+    setEditedEntities((prev) => {
+      const newState = { ...prev };
+      delete newState[row.id];
+      return newState;
+    });
+    toast({
+      title: "Entity updated",
+      description: `Updated entity for transaction ${row.id} to "${newVal}"`,
     });
   };
 
-  const toggleTransactionSelection = (id) => {
+  // If user wants to do a batch entity update
+  const [batchModalOpen, setBatchModalOpen] = useState(false);
+  const [batchEntityValue, setBatchEntityValue] = useState("");
+  const handleBatchUpdate = () => {
+    if (!batchEntityValue) return;
+    const dataOnUi = filteredData.map((r) => ({ ...r }));
+    globalSelectedRows.forEach((id) => {
+      const idx = dataOnUi.findIndex((r) => r.id === id);
+      if (idx !== -1) {
+        dataOnUi[idx].entity = batchEntityValue;
+      }
+    });
+    setFilteredData(dataOnUi);
+    setAllRows((prev) =>
+      prev.map((row) => {
+        const updated = dataOnUi.find((r) => r.id === row.id);
+        return updated || row;
+      })
+    );
+    setGlobalSelectedRows(new Set());
+    setBatchEntityValue("");
+    setBatchModalOpen(false);
+
+    toast({
+      title: "Batch entity update",
+      description: "Successfully updated selected rows.",
+    });
+  };
+
+  // Ledger updates
+  const toggleTransactionSelection = (transactionId) => {
     setSelectedTransactions((prev) =>
-      prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id]
+      prev.includes(transactionId)
+        ? prev.filter((id) => id !== transactionId)
+        : [...prev, transactionId]
     );
   };
 
-  const toggleSelectAllTransactions = () => {
+  const toggleSelectAll = () => {
+    // if everything is selected, unselect all
     if (selectedTransactions.length === filteredData.length) {
       setSelectedTransactions([]);
     } else {
@@ -531,278 +568,322 @@ const DataTableWithColumns = ({
 
   const handleBulkLedgerUpdate = () => {
     if (!bulkLedgerValue) return;
-    const dataCopy = [...filteredData];
-    dataCopy.forEach((row) => {
-      if (selectedTransactions.includes(row.id)) {
-        row[ledgerField] = bulkLedgerValue;
-      }
-    });
-    setFilteredData(dataCopy);
-    setTransactions(dataCopy);
+    setAllRows((prev) =>
+      prev.map((row) =>
+        selectedTransactions.includes(row.id)
+          ? { ...row, [ledgerField]: bulkLedgerValue }
+          : row
+      )
+    );
+    setFilteredData((prev) =>
+      prev.map((row) =>
+        selectedTransactions.includes(row.id)
+          ? { ...row, [ledgerField]: bulkLedgerValue }
+          : row
+      )
+    );
     setSelectedTransactions([]);
     setBulkLedgerValue("");
   };
 
-  // ===== Add Transaction: Directly add a new empty row =====
-  const handleAddTransaction = () => {
-    const newId = Date.now();
-    const newRow = { id: newId };
-    columns.forEach((col) => (newRow[col] = ""));
-    setTransactions((prev) => [...prev, newRow]);
-    setFilteredData((prev) => [...prev, newRow]);
+  const handleLedgerChange = (transactionId, field, value) => {
+    // Single row
+    setAllRows((prev) =>
+      prev.map((row) =>
+        row.id === transactionId ? { ...row, [field]: value } : row
+      )
+    );
+    setFilteredData((prev) =>
+      prev.map((row) =>
+        row.id === transactionId ? { ...row, [field]: value } : row
+      )
+    );
   };
 
-  const handleSaveChanges = async () => {
-    setIsLoading(true);
-    try {
-      console.log("Modified Data => ", modifiedData);
-      const payload = modifiedData.reduce((acc, transaction) => {
-        acc[transaction.id] = transaction;
-        return acc;
-      }, {});
-      console.log("Payload => ", payload);
-      toast({
-        title: "Changes saved successfully",
-        description: "All category updates have been saved",
-      });
-      setHasChanges(false);
-      setModifiedData([]);
-      setSelectedType("");
-    } catch (err) {
-      toast({
-        title: "Error saving changes",
-        description: err.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+  // Updating an input in a row
+  const handleInputChange = (transactionId, column, value) => {
+    setAllRows((prev) =>
+      prev.map((row) =>
+        row.id === transactionId ? { ...row, [column]: value } : row
+      )
+    );
+    setFilteredData((prev) =>
+      prev.map((row) =>
+        row.id === transactionId ? { ...row, [column]: value } : row
+      )
+    );
+  };
+
+  // ---------------------------------------------
+  // 5) Summations, pagination, other helpers
+  // ---------------------------------------------
+  const getPageNumbers = () => {
+    const pageNumbers = [];
+    const maxVisiblePages = 5;
+
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pageNumbers.push(i);
+      }
+    } else {
+      pageNumbers.push(1);
+      if (currentPage > 2) {
+        pageNumbers.push("ellipsis");
+      }
+      if (currentPage !== 1 && currentPage !== totalPages) {
+        pageNumbers.push(currentPage);
+      }
+      if (currentPage < totalPages - 1) {
+        pageNumbers.push("ellipsis");
+      }
+      pageNumbers.push(totalPages);
     }
+    return pageNumbers;
   };
 
-  const handleDownload = () => {
-    exportToExcel(filteredData, title);
+  // Summations for numeric columns
+  const totals = numericColumns.reduce((acc, column) => {
+    const total = filteredData.reduce((sum, row) => {
+      const val = parseFloat(row[column]);
+      return !isNaN(val) ? sum + val : sum;
+    }, 0);
+    return { ...acc, [column]: total.toFixed(2) };
+  }, {});
+
+  // Download
+  const handleDownload = async () => {
+    exportToExcel(allRows, tableTitle);
   };
 
-  const handleUploadToTally = () => {
-    console.log("Uploading to Tally => ", transactions);
-    if (handleUpload) handleUpload(transactions);
-  };
-
-  const handleShare = () => {
-    setShareModalOpen(true);
-  };
-
+  // Email / WhatsApp share
   const handleMailShare = async () => {
-    const fileName = await exportToExcel(filteredData, `${title}.xlsx`, true);
-    if (!fileName) {
-      alert("File saving was canceled.");
-      return;
-    }
-    const subject = encodeURIComponent(`${title} Report`);
+    const fileName = await exportToExcel(allRows, `${tableTitle}.xlsx`, true);
+    if (!fileName) return alert("File saving was canceled.");
+    const subject = encodeURIComponent(`${tableTitle} Report`);
     const body = encodeURIComponent(
-      `Please find the attached ${title} report.\n\n📌 Don't forget to manually attach the saved file before sending.`
+      `Please find attached ${tableTitle}.\n\n(Attach the file manually if needed.)`
     );
     const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
     window.location.href = mailtoLink;
   };
-
   const handleWhatsappShare = async () => {
-    const fileName = await exportToExcel(filteredData, `${title}.xlsx`, true);
-    if (!fileName) {
-      alert("File saving was canceled.");
-      return;
-    }
+    const fileName = await exportToExcel(allRows, `${tableTitle}.xlsx`, true);
+    if (!fileName) return alert("File saving was canceled.");
     const message = encodeURIComponent(
-      `📁 Please find the attached Report: ${title}\n\n📌 Don't forget to manually attach the saved file before sending.`
+      `Please find attached: ${tableTitle}\n(Attach the file manually if needed.)`
     );
     const whatsappLink = `https://api.whatsapp.com/send?text=${message}`;
     window.open(whatsappLink, "_blank");
   };
 
-  const handleInputChange = (transactionId, column, value) => {
-    setFilteredData((prev) =>
-      prev.map((r) => (r.id === transactionId ? { ...r, [column]: value } : r))
-    );
-    setTransactions((prev) =>
-      prev.map((r) => (r.id === transactionId ? { ...r, [column]: value } : r))
-    );
+
+  // For Tally direct upload
+  const handleUploadToTally = () => {
+    if (!handleUpload) return;
+    handleUpload(allRows);
   };
 
-  // ========= Render =========
+  // ---------------------------------------------
+  // 6) Render
+  // ---------------------------------------------
   return (
-    <Card className="min-w-full">
-      {/* Top Bar */}
-      <div className="flex justify-between items-center px-4 pt-2">
-        <div className="flex items-center gap-4">
-          <label htmlFor="companyName" className="font-medium">
-            Company Name:
-          </label>
-          <input
-            id="companyName"
-            type="text"
-            placeholder="Enter Company Name"
-            value={companyName}
-            tabIndex="0"
-            onChange={(e) => setCompanyName?.(e.target.value)}
-            onFocus={(e) => e.target.select()}
-            className="border rounded-md p-2 w-64 dark:bg-gray-800 dark:text-white"
-          />
-        </div>
-        <div className="flex gap-4 p-4 pb-0">
-          <select
-            onChange={(e) => setLedgerField(e.target.value)}
-            className="border rounded-md p-2"
-          >
-            <option value="dr_ledger">Dr Ledger</option>
-            <option value="cr_ledger">Cr Ledger</option>
-          </select>
-          <input
-            type="text"
-            placeholder={`Enter ${ledgerField}`}
-            value={bulkLedgerValue}
-            onChange={(e) => setBulkLedgerValue(e.target.value)}
-            className="border rounded-md p-2 w-64 dark:bg-gray-800 dark:text-white"
-          />
-          <Button onClick={handleBulkLedgerUpdate} disabled={selectedTransactions.length === 0}>
-            Set for Selected
-          </Button>
-        </div>
-      </div>
-
+    <Card className="min-w-full max-w-[0]">
       <CardHeader>
         <div className="flex justify-between items-center">
-          <div className="space-y-2">
-            <Button
-              onClick={handleUploadToTally}
-              className="px-6 py-3 text-base font-medium text-white bg-gray-900 dark:bg-gray-800 hover:bg-gray-700 transition-all rounded-lg flex items-center gap-2 shadow-sm"
-            >
-              <UploadCloud className="w-5 h-5 text-white" />
-              Upload to Tally
-            </Button>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="relative flex items-center gap-2">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search..."
-                className="pl-10 w-[300px]"
-                value={searchTerm}
-                onChange={(e) => handleSearch(e.target.value)}
-              />
-              <Button
-                variant="outline"
-                className="px-3 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-600 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-md shadow-sm"
-                onClick={clearFilters}
-              >
-                Clear Filters
-              </Button>
-              <div className="flex gap-2">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 shadow-sm"
-                      onClick={handleDownload}
-                    >
-                      <Download className="w-4 h-4 text-blue-500" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Download</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 shadow-sm"
-                      onClick={handleShare}
-                    >
-                      <Share2 className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Share</TooltipContent>
-                </Tooltip>
-              </div>
-              {columns.includes("entity") && (
-                <Button
-                  variant="default"
-                  className="ml-2"
-                  disabled={globalSelectedRows.size === 0}
-                  onClick={() => setBatchModalOpen(true)}
-                >
-                  Batch Edit Entities
-                </Button>
-              )}
-            </div>
-          </div>
+          <h2 className="text-lg font-semibold">{tableTitle}</h2>
         </div>
       </CardHeader>
 
       <CardContent>
-        {filteredData.length === 0 ? (
-          <div className="p-4 bg-gray-100 dark:bg-gray-800 rounded-md text-center">
-            <p className="text-gray-600 dark:text-gray-300 mb-4">
-              No transactions found.
-            </p>
-            <Button onClick={handleAddTransaction}>Add Transaction</Button>
+        {/* Controls row: Company name, Bulk ledger, add row, etc. */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
+          <div className="flex items-center gap-4">
+            <label htmlFor="companyName" className="font-medium">
+              Company Name:
+            </label>
+            <input
+              id="companyName"
+              type="text"
+              placeholder="Enter Company Name"
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+              className="border rounded-md p-2 w-64 dark:bg-gray-800 dark:text-white"
+            />
           </div>
-        ) : (
-          <div className="relative overflow-x-auto">
-            <Table className="w-full">
-              <TableHeader className="bg-gray-200 dark:bg-gray-900">
-                <TableRow>
-                  <TableHead className="w-10">
-                    <Checkbox
-                      checked={selectedTransactions.length === filteredData.length}
-                      onCheckedChange={toggleSelectAllTransactions}
-                    />
+
+          <div className="flex flex-wrap gap-4">
+            {/* "Add Row" button for manual creation */}
+            <Button onClick={handleAddRow} variant="default">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Row
+            </Button>
+
+            {/* Bulk Ledger */}
+            <div className="flex items-center gap-2">
+              <select
+                onChange={(e) => setLedgerField(e.target.value)}
+                className="border rounded-md p-2"
+              >
+                <option value="dr_ledger">Dr Ledger</option>
+                <option value="cr_ledger">Cr Ledger</option>
+              </select>
+              <input
+                type="text"
+                placeholder={`Enter ${ledgerField}`}
+                value={bulkLedgerValue}
+                onChange={(e) => setBulkLedgerValue(e.target.value)}
+                className="border rounded-md p-2 w-32 dark:bg-gray-800 dark:text-white"
+              />
+              <Button
+                onClick={handleBulkLedgerUpdate}
+                disabled={selectedTransactions.length === 0}
+              >
+                Set Ledger
+              </Button>
+            </div>
+
+            <Button onClick={handleUploadToTally} variant="default">
+              <Share2 className="w-4 h-4 mr-2" />
+              Upload to Tally
+            </Button>
+          </div>
+        </div>
+
+        {/* Search & pagination controls */}
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search..."
+              className="pl-10 w-48"
+              value={searchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <select
+              className="p-2 border rounded-md text-sm dark:bg-slate-800 dark:border-slate-700"
+              value={rowsPerPage}
+              onChange={(e) => {
+                setRowsPerPage(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+            >
+              <option value="10">10 rows</option>
+              <option value="20">20 rows</option>
+              <option value="50">50 rows</option>
+            </select>
+
+            <Button variant="outline" onClick={clearFilters}>
+              Clear Filters
+            </Button>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleDownload}
+                  >
+                    <Download className="w-4 h-4 text-blue-500" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Download</TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShareModalOpen(true)}
+                  >
+                    <Share2 className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Share</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        </div>
+
+        {/* Data Table */}
+        <div className="overflow-x-auto max-w-full">
+        <Table className="min-w-full table-auto">
+        <TableHeader className="bg-gray-200 dark:bg-gray-900">
+              <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={selectedTransactions.length === filteredData.length && filteredData.length > 0}
+                    onCheckedChange={toggleSelectAll}
+                  />
+                </TableHead>
+
+                {columns.map((column) => (
+                  <TableHead
+                    key={column}
+                    className={cn(
+                      "whitespace-nowrap",
+                      ["narration"].includes(column) && "min-w-[300px]"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      {column
+                        .split("_")
+                        .map(
+                          (w) =>
+                            w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
+                        )
+                        .join(" ")}
+                      {/* filter button, except for certain columns */}
+                      {!["narration", "effective_date", "imported", "reference_number"].includes(
+                        column.toLowerCase()
+                      ) && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => {
+                            if (numericColumns.includes(column)) {
+                              setCurrentNumericColumn(column);
+                              setNumericFilterModalOpen(true);
+                            } else {
+                              setCurrentFilterColumn(column);
+                              setCategorySearchTerm("");
+                              setFilterModalOpen(true);
+                            }
+                          }}
+                        >
+                          ▼
+                        </Button>
+                      )}
+                    </div>
                   </TableHead>
-                  {columns.map((col) => {
-                    const colTitle = col
-                      .split("_")
-                      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                      .join(" ");
-                    return (
-                      <TableHead key={col} className="whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                          {["dr_ledger", "cr_ledger"].includes(col) && (
-                            <p className="text-lg text-gray-500 dark:text-gray-400">*</p>
-                          )}
-                          {colTitle}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                            onClick={() => {
-                              if (numericColumns.includes(col)) {
-                                setCurrentNumericColumn(col);
-                                setNumericFilterModalOpen(true);
-                              } else {
-                                setCurrentFilterColumn(col);
-                                setSelectedCategories([]);
-                                setCategorySearchTerm("");
-                                setFilterModalOpen(true);
-                              }
-                            }}
-                          >
-                            ▼
-                          </Button>
-                        </div>
-                      </TableHead>
-                    );
-                  })}
+                ))}
+
+                {/* "Actions" for removing row */}
+                <TableHead className="min-w-[80px]">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+
+            <TableBody>
+              {currentData.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={columns.length + 2} className="text-center">
+                    No matching results found
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredData.map((row) => (
+              ) : (
+                currentData.map((row) => (
                   <TableRow
                     key={row.id}
-                    className={`${
+                    className={cn(
                       row.imported
                         ? "bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800"
-                        : "hover:bg-gray-100 dark:hover:bg-gray-800"
-                    }`}
+                        : "hover:bg-gray-50 dark:hover:bg-gray-800"
+                    )}
                   >
                     <TableCell>
                       <Checkbox
@@ -810,48 +891,63 @@ const DataTableWithColumns = ({
                         onCheckedChange={() => toggleTransactionSelection(row.id)}
                       />
                     </TableCell>
-                    {columns.map((col) => {
-                      const lowerCol = col.toLowerCase();
-                      if (lowerCol === "entity") {
-                        const original = row[col];
-                        const editing = editedEntities[row.id] !== undefined;
-                        const newVal = editing ? editedEntities[row.id] : original;
+
+                    {columns.map((column) => {
+                      // Some special cases from TallyTable:
+                      if (column.toLowerCase() === "entity") {
                         return (
-                          <TableCell key={col}>
+                          <TableCell key={column}>
                             <div className="flex items-center">
                               <Input
                                 type="text"
-                                value={newVal || ""}
-                                onChange={(e) => handleEntityChange(row.id, e.target.value)}
+                                value={
+                                  editedEntities[row.id] !== undefined
+                                    ? editedEntities[row.id]
+                                    : row[column] || ""
+                                }
+                                onChange={(e) =>
+                                  handleEntityChange(row.id, e.target.value)
+                                }
                                 className="w-full"
                               />
-                              {editing && newVal !== original && (
-                                <Check
-                                  className="ml-2 cursor-pointer text-green-500"
-                                  onClick={() => handleEntityUpdateConfirm(row)}
-                                />
-                              )}
+                              {/* If user changed the entity from the original, show a check to confirm */}
+                              {editedEntities[row.id] !== undefined &&
+                                editedEntities[row.id] !== row[column] && (
+                                  <Check
+                                    className="ml-2 cursor-pointer text-green-500"
+                                    onClick={() => handleEntityUpdateConfirm(row)}
+                                  />
+                                )}
                             </div>
                           </TableCell>
                         );
                       }
-                      if (lowerCol === "category") {
+
+                      if (column.toLowerCase() === "category") {
                         return (
-                          <TableCell key={col} className="max-w-[200px] group relative">
+                          <TableCell key={column} className="min-w-[200px]">
                             <Select
-                              value={row[col] || ""}
-                              onValueChange={(value) => handleCategoryChange(row, value)}
+                              value={row[column] || ""}
+                              onValueChange={(value) =>
+                                handleCategoryChange(row, value)
+                              }
                             >
                               <SelectTrigger className="w-full">
-                                <SelectValue>{row[col] || "Select category"}</SelectValue>
+                                <SelectValue>
+                                  {row[column] || "Select category"}
+                                </SelectValue>
                               </SelectTrigger>
-                              <SelectContent onCloseAutoFocus={(e) => e.preventDefault()}>
+
+                              <SelectContent>
+                                {/* a small “search input + add” for categories */}
                                 <div className="p-2 border-b flex gap-2">
                                   <div className="relative flex-1">
                                     <Input
                                       placeholder="Search categories..."
                                       value={categorySearchTerm}
-                                      onChange={(e) => setCategorySearchTerm(e.target.value)}
+                                      onChange={(e) =>
+                                        setCategorySearchTerm(e.target.value)
+                                      }
                                       onKeyDown={(e) => e.stopPropagation()}
                                       onClick={(e) => {
                                         e.preventDefault();
@@ -862,25 +958,33 @@ const DataTableWithColumns = ({
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    className="px-2 h-10"
                                     onClick={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
                                       if (categorySearchTerm.trim()) {
-                                        const added = handleAddCategory(categorySearchTerm.trim(), row);
+                                        const added = handleAddCategory(
+                                          categorySearchTerm.trim(),
+                                          row
+                                        );
                                         if (added) {
                                           setCategorySearchTerm("");
                                         }
                                       }
                                     }}
                                   >
-                                    <Plus className="h-4 w-4" /> Add
+                                    <Plus className="h-4 w-4" />
+                                    Add
                                   </Button>
                                 </div>
-                                <div className="max-h-[200px] overflow-y-auto">
+                                {/* list categories */}
+                                <div className="max-h-52 overflow-y-auto">
                                   {categoryOptions
                                     .filter((c) =>
-                                      c.toLowerCase().includes(categorySearchTerm.toLowerCase())
+                                      c
+                                        .toLowerCase()
+                                        .includes(
+                                          categorySearchTerm.toLowerCase()
+                                        )
                                     )
                                     .map((cat) => (
                                       <SelectItem key={cat} value={cat}>
@@ -893,390 +997,276 @@ const DataTableWithColumns = ({
                           </TableCell>
                         );
                       }
-                      if (lowerCol === "narration") {
+
+                      if (["dr_ledger", "cr_ledger"].includes(column.toLowerCase())) {
                         return (
-                          <TableCell key={col} className="max-w-[500px] group relative">
+                          <TableCell key={column}>
                             <Input
                               type="text"
-                              value={row[col] || ""}
-                              onChange={(e) => handleInputChange(row.id, col, e.target.value)}
-                              placeholder="Enter Narration"
-                              className="w-full p-2 border border-gray-300 truncate rounded-md"
+                              value={row[column] || ""}
+                              onChange={(e) => {
+                                // Single row
+                                handleLedgerChange(row.id, column, e.target.value);
+
+                                // If row is selected, update the others
+                                if (selectedTransactions.includes(row.id)) {
+                                  selectedTransactions.forEach((id) => {
+                                    if (id !== row.id) {
+                                      handleLedgerChange(id, column, e.target.value);
+                                    }
+                                  });
+                                }
+                              }}
+                              placeholder={`Enter ${column
+                                .split("_") // Split by underscore
+                                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Capitalize
+                                .join(" ")}`}
+                              className="w-full min-w-[200px]"
                             />
                           </TableCell>
                         );
                       }
-                      if (lowerCol === "bill_reference" || lowerCol === "reference_number") {
+
+                      if (column.toLowerCase() === "narration") {
                         return (
-                          <TableCell key={col}>
+                          <TableCell key={column} className="min-w-[300px]">
                             <Input
                               type="text"
-                              value={row[col] || ""}
-                              onChange={(e) => handleInputChange(row.id, col, e.target.value)}
-                              placeholder={`Enter ${col.split("_").join(" ")}`}
-                              className="w-full p-2 border border-gray-300 rounded-md"
+                              value={row[column] || ""}
+                              onChange={(e) =>
+                                handleInputChange(row.id, column, e.target.value)
+                              }
+                              placeholder="Enter narration"
+                              className="w-full"
                             />
                           </TableCell>
                         );
                       }
-                      if (lowerCol === "effective_date") {
-                        return (
-                          <TableCell key={col}>
-                            <Input
-                              type="date"
-                              value={row[col] ? row[col].split("T")[0] : ""}
-                              onChange={(e) => handleInputChange(row.id, col, e.target.value)}
-                              className="w-full p-2 border border-gray-300 rounded-md"
-                            />
-                          </TableCell>
-                        );
-                      }
-                      if (["dr_ledger", "cr_ledger"].includes(lowerCol)) {
-                        return (
-                          <TableCell key={col}>
-                            <Input
-                              type="text"
-                              placeholder={`Enter ${col.split("_").join(" ")}`}
-                              value={row[col] || ""}
-                              onChange={(e) => handleInputChange(row.id, col, e.target.value)}
-                              className="border rounded-md p-2 w-full dark:bg-gray-800 dark:text-white"
-                            />
-                          </TableCell>
-                        );
-                      }
-                      if (lowerCol === "imported") {
-                        const text =
-                          row.imported === true
-                            ? "Success"
-                            : row.failed_reason === ""
-                            ? "Not Uploaded Yet"
-                            : "Failed";
-                        return (
-                          <TableCell key={col}>
-                            <div>{text}</div>
-                          </TableCell>
-                        );
-                      }
+
+                      // Default text input
                       return (
-                        <TableCell key={col} className="max-w-[200px]">
-                          {row[col]}
+                        <TableCell key={column}>
+                          <Input
+                            type="text"
+                            value={row[column] || ""}
+                            onChange={(e) =>
+                              handleInputChange(row.id, column, e.target.value)
+                            }
+                            className="w-full min-w-[200px]"
+                            placeholder={`Enter ${column
+                              .split("_") // Split by underscore
+                              .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Capitalize
+                              .join(" ")}`}
+                          />
                         </TableCell>
                       );
                     })}
+
+                    {/* Actions cell for removing row */}
+                    <TableCell className="text-center">
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleRemoveRow(row.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-              {numericColumns.length > 0 && (
-                <TableFooter>
-                  <TableRow>
-                    <TableCell>Total</TableCell>
-                    {columns.map((col) => (
-                      <TableCell key={col}>
-                        {["credit", "debit", "balance", "amount"].includes(
-                          col.toLowerCase()
-                        )
-                          ? totals[col] || ""
-                          : ""}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                </TableFooter>
+                ))
               )}
-            </Table>
+            </TableBody>
+            <TableFooter>
+              <TableRow>
+                <TableCell>Total</TableCell>
+                {columns.map((col) => {
+                  if (["credit", "debit", "balance", "amount"].includes(col.toLowerCase())) {
+                    return <TableCell key={col}>{totals[col] || ""}</TableCell>;
+                  }
+                  return <TableCell key={col} />;
+                })}
+                <TableCell />
+              </TableRow>
+            </TableFooter>
+          </Table>
+        </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="mt-4">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                    className={cn(
+                      "cursor-pointer",
+                      currentPage === 1 && "pointer-events-none opacity-50"
+                    )}
+                  />
+                </PaginationItem>
+                {getPageNumbers().map((num, i) => (
+                  <PaginationItem key={i}>
+                    {num === "ellipsis" ? (
+                      <PaginationEllipsis />
+                    ) : (
+                      <PaginationLink
+                        onClick={() => setCurrentPage(num)}
+                        isActive={currentPage === num}
+                        className="cursor-pointer"
+                      >
+                        {num}
+                      </PaginationLink>
+                    )}
+                  </PaginationItem>
+                ))}
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() =>
+                      setCurrentPage((p) => Math.min(p + 1, totalPages))
+                    }
+                    className={cn(
+                      "cursor-pointer",
+                      currentPage === totalPages &&
+                        "pointer-events-none opacity-50"
+                    )}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           </div>
         )}
-        {/* Add Transaction Button */}
-        <div className="mt-4">
-          <Button onClick={handleAddTransaction}>
-            <Plus className="w-4 h-4 mr-2" /> Add Transaction
-          </Button>
-        </div>
-      </CardContent>
 
-      {/* Fixed Bottom Actions Bar */}
-      {(hasChanges || globalSelectedRows.size > 0) && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-lg flex justify-end gap-2 z-50">
-          {globalSelectedRows.size > 0 && (
-            <Button variant="secondary" onClick={() => setBulkCategoryModalOpen(true)}>
-              Update Selected ({globalSelectedRows.size})
-            </Button>
-          )}
-          {hasChanges && (
-            <Button
-              onClick={handleSaveChanges}
-              disabled={isLoading}
-              className="flex items-center gap-2"
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4" />
-              )}
-              Save Changes
-            </Button>
-          )}
-        </div>
-      )}
 
-      {/* ----- All Modals (filter, classification, share, etc.) remain unchanged ----- */}
-      <Dialog open={filterModalOpen} onOpenChange={setFilterModalOpen}>
-        <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle>Filter {currentFilterColumn}</DialogTitle>
-            <p className="text-sm text-gray-600">
-              Make changes to your filter here.
-            </p>
-          </DialogHeader>
-          <Input
-            type="text"
-            placeholder="Search categories..."
-            value={categorySearchTerm}
-            onChange={(e) => setCategorySearchTerm(e.target.value)}
-            className="mb-4"
-          />
-          <div className="max-h-60 overflow-y-auto space-y-[1px] mb-4">
-            {getFilteredUniqueValues(currentFilterColumn).map((val) => (
-              <label
-                key={val}
-                className="flex items-center gap-1 p-2 hover:bg-gray-50 rounded-md cursor-pointer dark:hover:bg-gray-700"
-              >
-                <Checkbox
-                  checked={selectedCategories.includes(val)}
-                  onCheckedChange={() => handleCategorySelect(val)}
-                />
-                <span className="text-gray-700 dark:text-white">{val}</span>
-              </label>
-            ))}
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={handleSelectAllCategoryValues}>
-              Select All
-            </Button>
-            <Button
-              variant="default"
-              className="bg-black hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
-              onClick={handleColumnFilter}
-            >
-              Save changes
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+        {/* Filter Modal for text columns */}
+        <Dialog open={filterModalOpen} onOpenChange={setFilterModalOpen}>
+          <DialogContent className="sm:max-w-[400px]">
+            <DialogHeader>
+              <DialogTitle>Filter {currentFilterColumn}</DialogTitle>
+              <p className="text-sm text-gray-600">
+                Make changes to your filter here.
+              </p>
+            </DialogHeader>
 
-      <Dialog open={numericFilterModalOpen} onOpenChange={setNumericFilterModalOpen}>
-        <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle>Filter {currentNumericColumn}</DialogTitle>
-            <p className="text-sm text-gray-600">
-              Set the min and max values for the filter.
-            </p>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Minimum Value</Label>
-              <Input
-                type="number"
-                value={minValue}
-                onChange={(e) => setMinValue(e.target.value)}
-              />
+            <Input
+              type="text"
+              placeholder="Search categories..."
+              value={categorySearchTerm}
+              onChange={(e) => setCategorySearchTerm(e.target.value)}
+              className="mb-4"
+            />
+
+            <div className="max-h-60 overflow-y-auto space-y-[1px] mb-4">
+              {getFilteredUniqueValues(currentFilterColumn).map((val) => (
+                <label
+                  key={val}
+                  
+                  className="flex items-center gap-1 p-2 hover:bg-gray-50 rounded-md cursor-pointer dark:hover:bg-gray-700"
+                >
+                  <Checkbox
+                    checked={selectedCategories.includes(val)}
+                    onCheckedChange={() => handleCategorySelect(val)}
+                  />
+                  <span className="text-gray-700 dark:text-white">
+                    {val || "(empty)"}
+                  </span>
+                </label>
+              ))}
             </div>
-            <div className="space-y-2">
-              <Label>Maximum Value</Label>
-              <Input
-                type="number"
-                value={maxValue}
-                onChange={(e) => setMaxValue(e.target.value)}
-              />
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={handleSelectAllFilter}>
+                Select All
+              </Button>
+              <Button variant="default" onClick={handleColumnFilter}>
+                Save changes
+              </Button>
             </div>
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => setNumericFilterModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              variant="default"
-              className="bg-black hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
-              onClick={() => {
-                handleNumericFilter(currentNumericColumn, minValue, maxValue);
-                setNumericFilterModalOpen(false);
-              }}
-            >
-              Save changes
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
 
-  
-
-      <Dialog open={confirmationModalOpen} onOpenChange={setConfirmationModalOpen}>
-        <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle>Confirm Category Update</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to update the category to "{selectedBulkCategory}" for {globalSelectedRows.size} transactions?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setConfirmationModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="default" onClick={handleBulkCategoryChange}>
-              Confirm Update
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showClassificationModal} onOpenChange={setShowClassificationModal}>
-        <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle>Classify New Category</DialogTitle>
-            <DialogDescription>
-              Please classify "{newCategoryToClassify}" into one of the following types
-            </DialogDescription>
-          </DialogHeader>
-          <RadioGroup
-            value={selectedType}
-            onValueChange={setSelectedType}
-            className="space-y-3"
-          >
-            {(!pendingCategoryChange?.isDebit || bulkCategoryModalOpen) && (
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Income" id="income" />
-                <Label htmlFor="income">Income</Label>
-              </div>
-            )}
-            {(pendingCategoryChange?.isDebit || bulkCategoryModalOpen) && (
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Important Expenses / Payments" id="important_expenses" />
-                <Label htmlFor="important_expenses">Important Expenses</Label>
-              </div>
-            )}
-            {(pendingCategoryChange?.isDebit || bulkCategoryModalOpen) && (
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Other Expenses / Payments" id="other_expenses" />
-                <Label htmlFor="other_expenses">Other Expenses</Label>
-              </div>
-            )}
-          </RadioGroup>
-          <DialogFooter>
-            <Button variant="default" onClick={handleClassificationSubmit} disabled={!selectedType}>
-              Save Classification
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={reasoningModalOpen} onOpenChange={setReasoningModalOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle className="mb-2">Category Change Reasoning</DialogTitle>
-            <DialogDescription>
-              Transaction Details:
-              {currentTransaction && (
-                <div className="mt-2 p-3 bg-muted rounded-md">
-                  <p>
-                    <strong>Description:</strong> {currentTransaction.Description}
-                  </p>
-                  <p>
-                    <strong>Category Change:</strong> {pendingCategoryChange?.oldCategory} → {pendingCategoryChange?.newCategory}
-                  </p>
-                </div>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <Checkbox id="show-keywords" checked={showKeywordInput} onCheckedChange={setShowKeywordInput} />
-              <Label htmlFor="show-keywords">Add keywords for category change</Label>
-            </div>
-            {showKeywordInput && (
+        {/* Numeric Filter Modal */}
+        <Dialog open={numericFilterModalOpen} onOpenChange={setNumericFilterModalOpen}>
+          <DialogContent className="sm:max-w-[400px]">
+            <DialogHeader>
+              <DialogTitle>Filter {currentNumericColumn}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
               <div className="space-y-2">
-                <Label>
-                  Which keywords made you change the category from "{pendingCategoryChange?.oldCategory}" to "{pendingCategoryChange?.newCategory}"?
-                </Label>
+                <Label>Min Value</Label>
                 <Input
-                  value={reasoning}
-                  onChange={(e) => setReasoning(e.target.value)}
-                  placeholder="Enter Keyword..."
+                  type="number"
+                  value={minValue}
+                  onChange={(e) => setMinValue(e.target.value)}
                 />
               </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button
-              variant="ghost"
-              onClick={() => {
-                setReasoningModalOpen(false);
-                setPendingCategoryChange(null);
-                setReasoning("");
-                setShowKeywordInput(false);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button variant="default" onClick={confirmCategoryChange} disabled={showKeywordInput && !reasoning}>
-              Confirm Change
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              <div className="space-y-2">
+                <Label>Max Value</Label>
+                <Input
+                  type="number"
+                  value={maxValue}
+                  onChange={(e) => setMaxValue(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 mt-4">
+              <Button
+                variant="ghost"
+                onClick={() => setNumericFilterModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="default"
+                onClick={() => {
+                  handleNumericFilter(currentNumericColumn, minValue, maxValue);
+                  setNumericFilterModalOpen(false);
+                }}
+              >
+                Save changes
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
-      <Dialog open={shareModalOpen} onOpenChange={setShareModalOpen}>
-        <DialogContent className="max-w-md p-6 rounded-lg shadow-lg border dark:border-gray-700 bg-white dark:bg-gray-900">
-          <DialogHeader className="flex justify-between items-center">
-            <DialogTitle className="text-lg font-semibold text-gray-800 dark:text-white">
-              Share This Report
-            </DialogTitle>
-          </DialogHeader>
-          <div className="flex justify-center gap-6 py-4">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="p-4 transition-all rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
-                    onClick={handleMailShare}
-                  >
-                    <Mail className="w-6 h-6 text-red-500" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Share via Email</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="p-4 transition-all rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
-                    onClick={handleWhatsappShare}
-                  >
-                    <MessageCircle className="w-6 h-6 text-green-500" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Share via WhatsApp</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-          <div className="flex justify-end">
-            <Button
-              variant="outline"
-              className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-              onClick={() => setShareModalOpen(false)}
-            >
-              Cancel
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+       
+        {/* Share Modal */}
+        <Dialog open={shareModalOpen} onOpenChange={setShareModalOpen}>
+          <DialogContent className="max-w-md p-6">
+            <DialogHeader className="flex justify-between items-center">
+              <DialogTitle>Share This Report</DialogTitle>
+            </DialogHeader>
+            <div className="flex justify-center gap-6 py-4">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" className="p-4" onClick={handleMailShare}>
+                      <Mail className="w-6 h-6 text-red-500" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Share via Email</TooltipContent>
+                </Tooltip>
 
-      {isLoading && (
-        <div className="fixed inset-0 bg-white bg-opacity-80 backdrop-blur-sm flex items-center justify-center">
-          <Loader2 className="animate-spin h-8 w-8 text-[#3498db]" />
-        </div>
-      )}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" className="p-4" onClick={handleWhatsappShare}>
+                      <MessageCircle className="w-6 h-6 text-green-500" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Share via WhatsApp</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            <div className="flex justify-end">
+              <Button variant="outline" onClick={() => setShareModalOpen(false)}>
+                Cancel
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+      </CardContent>
     </Card>
   );
 };
 
-export default DataTableWithColumns;
+export default ManualTallyTable;

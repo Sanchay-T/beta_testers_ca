@@ -1,4 +1,4 @@
-  function buildTallyXml(row) {
+  function buildTallyXmlPaymentReceipt(row) {
     const {
       companyName,
       invoiceDate,
@@ -86,4 +86,69 @@
     return xml;
   }
 
-module.exports = { buildTallyXml };
+  function buildTallyXmlContra({ date, narration, Crledger, voucherNumber, amount, Drledger, companyName }) {
+    const formattedDate = formatDateYyyymmdd(date);
+
+    return `
+<ENVELOPE>
+ <HEADER>
+  <TALLYREQUEST>Import Data</TALLYREQUEST>
+ </HEADER>
+ <BODY>
+  <IMPORTDATA>
+   <REQUESTDESC>
+    <REPORTNAME>Vouchers</REPORTNAME>
+    <STATICVARIABLES>
+     <SVCURRENTCOMPANY>${companyName}</SVCURRENTCOMPANY>
+    </STATICVARIABLES>
+   </REQUESTDESC>
+   <REQUESTDATA>
+    <TALLYMESSAGE xmlns:UDF="TallyUDF">
+     <VOUCHER VCHTYPE="Contra" ACTION="Create" OBJVIEW="Accounting Voucher View">
+      <DATE>${formattedDate}</DATE>
+      <VCHSTATUSDATE>${formattedDate}</VCHSTATUSDATE>
+      <NARRATION>${narration}</NARRATION>
+      <VOUCHERTYPENAME>Contra</VOUCHERTYPENAME>
+      <PARTYLEDGERNAME>${Drledger}</PARTYLEDGERNAME>
+      <VOUCHERNUMBER>${voucherNumber}</VOUCHERNUMBER>
+      <NUMBERINGSTYLE>Auto Retain</NUMBERINGSTYLE>
+      <FBTPAYMENTTYPE>Default</FBTPAYMENTTYPE>
+      <PERSISTEDVIEW>Accounting Voucher View</PERSISTEDVIEW>
+      <VCHSTATUSTAXADJUSTMENT>Default</VCHSTATUSTAXADJUSTMENT>
+      <VCHSTATUSVOUCHERTYPE>Contra</VCHSTATUSVOUCHERTYPE>
+      <EFFECTIVEDATE>${formattedDate}</EFFECTIVEDATE>
+      <ISELIGIBLEFORITC>Yes</ISELIGIBLEFORITC>
+      <HASCASHFLOW>Yes</HASCASHFLOW>
+      <ISVATDUTYPAID>Yes</ISVATDUTYPAID>
+      <VOUCHERNUMBERSERIES>Default</VOUCHERNUMBERSERIES>
+      <ALLLEDGERENTRIES.LIST>
+       <LEDGERNAME>${Drledger}</LEDGERNAME>
+       <ISPARTYLEDGER>Yes</ISPARTYLEDGER>
+       <AMOUNT>${amount.toFixed(2)}</AMOUNT>
+      </ALLLEDGERENTRIES.LIST>
+      <ALLLEDGERENTRIES.LIST>
+       <LEDGERNAME>${Crledger}</LEDGERNAME>
+       <GSTCLASS>&#4; Not Applicable</GSTCLASS>
+       <ISDEEMEDPOSITIVE>Yes</ISDEEMEDPOSITIVE>
+       <ISPARTYLEDGER>Yes</ISPARTYLEDGER>
+       <ISLASTDEEMEDPOSITIVE>Yes</ISLASTDEEMEDPOSITIVE>
+       <AMOUNT>-${amount.toFixed(2)}</AMOUNT >
+    <BANKALLOCATIONS.LIST>
+        <DATE>${formattedDate}</DATE>
+        <INSTRUMENTDATE>${formattedDate}</INSTRUMENTDATE>
+        <CASHDENOMINATION>1-0-0-0-0-0-0-0-0-0-0-0</CASHDENOMINATION>
+        <PAYMENTMODE>Transacted</PAYMENTMODE>
+        <AMOUNT>-${amount.toFixed(2)}</AMOUNT>
+    </BANKALLOCATIONS.LIST>
+      </ALLLEDGERENTRIES.LIST >
+     </VOUCHER >
+    </TALLYMESSAGE >
+   </REQUESTDATA >
+  </IMPORTDATA >
+ </BODY >
+</ENVELOPE >
+
+    `;
+}
+
+module.exports = { buildTallyXmlPaymentReceipt,buildTallyXmlContra };

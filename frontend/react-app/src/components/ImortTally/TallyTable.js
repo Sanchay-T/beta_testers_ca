@@ -800,7 +800,6 @@ useEffect(() => {
   
 
   return (
-    // if source is equal to lifo or fifo then show the table
     <Card className="min-w-full max-w-[0]">
       <div className="flex justify-between items-center px-4 pt-2">
 
@@ -941,15 +940,6 @@ useEffect(() => {
           <TableHeader className="bg-gray-200 dark:bg-gray-900">
           <TableRow>
                
-                 {/* {(columns.includes("category") || columns.includes("entity") )&&  <TableHead className="w-10">
-                    <Checkbox
-                        checked={
-                        currentData.length > 0 &&
-                        currentData.every((row) => globalSelectedRows.has(row.id))
-                        }
-                        onCheckedChange={toggleSelectAll}
-                    />
-                  </TableHead>} */}
               <TableHead className="w-10">
                 <Checkbox
                         checked={

@@ -72,7 +72,7 @@ const Dashboard = () => {
           icon: null,
         },
         {
-          title: "TallyERP",
+          title: "TallyERP Vouchers",
           url: "#",
           icon: null,
         },
@@ -174,7 +174,7 @@ const Dashboard = () => {
               )}
               {activeTab === "TallyPrime Vouchers" && <TallyPrime />}
               {activeTab === "TallyPrime" && <TallyPrimeDirect source="manual" />}
-              {activeTab === "TallyERP" && <ExcelERP />}
+              {activeTab === "TallyERP Vouchers" && <ExcelERP />}
             </main>
           </div>
         </ScrollArea>

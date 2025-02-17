@@ -5,7 +5,7 @@ const { eq,inArray,and } = require("drizzle-orm");
 const { statements } = require("../db/schema/Statement");
 const { transactions } = require("../db/schema/Transactions");
 const axios = require("axios");
-const { buildTallyXml } = require("./buildTallyXml");
+const { buildTallyXmlPaymentReceipt,buildTallyXmlContra } = require("./buildTallyXml");
 const { XMLParser } = require("fast-xml-parser");
 
 function registerTallyIpc() {
@@ -85,11 +85,21 @@ function registerTallyIpc() {
     const failedTransactions = [];
     const parser = new XMLParser(); // XML Parser for response
 
+    log.info({tallyUploadData})
     const end = tallyUploadData.length;
+    const voucherName = tallyUploadData[0].voucherName;
+    const isContra = voucherName === "Contra";
     // const end = 2;
     for (let i = 0; i <end; i++) {
       const row = tallyUploadData[i];
-      const xmlContent = buildTallyXml(row);
+      let xmlContent = null;
+      if(!isContra){
+        xmlContent = buildTallyXmlPaymentReceipt(row);
+      }else{
+        xmlContent = buildTallyXmlContra(row);
+      }
+      
+      
       try {
         const response = await axios.post("http://localhost:9000", xmlContent, {
           headers: { "Content-Type": "application/xml" },
@@ -105,8 +115,6 @@ function registerTallyIpc() {
           console.log(`Transaction ${row.id} Successful`);
           successIds.push(row.id);
       }
-
-
 
         } catch (error) {
           console.error(`Transaction ${row.id} Failed (Server Error): ${error.message}`);

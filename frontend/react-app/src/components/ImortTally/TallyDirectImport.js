@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Card,
   CardContent,
@@ -12,10 +12,31 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle,DialogFooter,DialogDes
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Button } from "../ui/button";
 import { useReportContext } from "../../contexts/ReportContext";
-import ManualEntryTable from "./ManualTable";
+import ManualTallyTable from "./ManualTable";
+import * as XLSX from "xlsx";
 
+const defaultColumns = {
+  "Payment Receipt Voucher":[
+    "invoice_date",
+    "effective_date",
+    "reference_number",
+    "dr_ledger",
+    "cr_ledger",
+    "amount",
+    "narration",
+    "voucher_type",
+  ],
+  "Contra Voucher":[
+    "date",
+    "DrLedger",
+    "CrLedger",
+    "amount",
+    "narration",
+    "voucher_type",
+  ]
+};
 
-const TallyDirectImport = ({source}) => {
+const TallyDirectImport = ({ source }) => {
   const [vouchers, setVouchers] = useState(["Payment Receipt Voucher", "Contra Voucher"]);
   const [selectedVoucher, setSelectedVoucher] = useState("Payment Receipt Voucher");
   const [transactions, setTransactions] = useState([]);
@@ -25,48 +46,84 @@ const TallyDirectImport = ({source}) => {
   const [tallyUploadData, setTallyUploadData] = useState([]);
   const [failedTransactions, setFailedTransactions] = useState([]);
   const [companyName, setCompanyName] = useState("");
-  const [successIds, setSuccessIds] = useState([]); 
-  const { reportData, updateReportData } = useReportContext();
+  const [successIds, setSuccessIds] = useState([]);
+  const fileInputRef = useRef(null);
+  
+  // If you have a caseId in the ReportContext:
+  const { reportData } = useReportContext();
   const { caseId } = reportData;
+
+  // ----------------------------------
+  // 1) FETCHING VOUCHERS/TRANSACTIONS 
+  //    (only if not in “manual” source)
+  // ----------------------------------
 
   async function fetchVouchersTransactions(newVoucher) {
     try {
-      const data = await window.electron.getTallyVoucherTransactions(caseId,newVoucher||selectedVoucher); // Fetch vouchers from Electron API
-      console.log({aq:data});
-      console.log({beforeSort:data.data});
+      const data = await window.electron.getTallyVoucherTransactions(
+        caseId,
+        newVoucher || selectedVoucher
+      );
+      // Sort, map, etc. as you did before
       const sortedData = data.sort((a, b) => a.imported - b.imported);
-      console.log({sortedData:sortedData});
 
       const storedReasons = JSON.parse(localStorage.getItem("failedTransactions") || "{}");
 
+      const formattedData = data
+        .map((transaction) => {
+          if (transaction.voucher_type === "unknown") return null;
 
-
-       const formattedData = data.map((transaction) => 
-        {
-        if(transaction.voucher_type==="unknown") return null
           return {
-        date: new Date(transaction.date).toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        }),
-        effective_date: "",
-        reference_number:"",
-        bill_reference:"",
-        dr_ledger: transaction.type==="debit" ? (transaction.entity!=="unknown"?transaction.entity:transaction.category):"",
-        cr_ledger:transaction.type==="credit" ? (transaction.entity!=="unknown"?transaction.entity:transaction.category):"",
-        amount:transaction.amount,
-        voucher_type:transaction.voucher_type,
-        // voucher_type:transaction.voucher_type==="debit" ? "Payment Voucher":"Receipt Voucher",
-        narration:transaction.description,
-        id:transaction.id,
-        imported:transaction.imported===1?true:false,
-        failed_reason: storedReasons[transaction.id] || "", // ✅ Include failed reason
-      }});
-      // Remove null values
-      const filteredData = formattedData.filter((data) => data !== null);
+            date: new Date(transaction.date).toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            }),
+            effective_date: "",
+            reference_number: "",
+            bill_reference: "",
+            dr_ledger:
+              transaction.type === "debit"
+                ? transaction.entity !== "unknown"
+                  ? transaction.entity
+                  : transaction.category
+                : "",
+            cr_ledger:
+              transaction.type === "credit"
+                ? transaction.entity !== "unknown"
+                  ? transaction.entity
+                  : transaction.category
+                : "",
+            amount: transaction.amount,
+            voucher_type: transaction.voucher_type,
+            narration: transaction.description,
+            id: transaction.id,
+            imported: transaction.imported === 1,
+            failed_reason: storedReasons[transaction.id] || "",
+          };
+        })
+        .filter((t) => t !== null);
+      
+      console.log({selectedVoucher})
+      if (newVoucher === "Contra Voucher"){
+      const contraFormatted = formattedData.map((transaction) => {
+        return {
+          date: transaction.date,
+          dr_ledger: transaction.dr_ledger,
+          cr_ledger: transaction.cr_ledger,
+          amount: transaction.amount,
+          narration: transaction.narration,
+          voucher_type: transaction.voucher_type,
+          id: transaction.id,
+          imported: transaction.imported,
+          failed_reason: transaction.failed_reason
+        }
+      });
+      setTransactions(contraFormatted);
 
-      setTransactions(filteredData);
+      }else{
+      setTransactions(formattedData);
+    }
     } catch (err) {
       console.error("Error fetching transactions:", err);
     } finally {
@@ -74,197 +131,160 @@ const TallyDirectImport = ({source}) => {
     }
   }
 
-  // Fetch available vouchers
   useEffect(() => {
-   
-    fetchVouchersTransactions();
-  }, []);
+    if (source !== "manual") {
+      // If we’re NOT in “manual” mode, fetch transactions from your existing logic
+      setLoading(true);
+      fetchVouchersTransactions();
+    }
+  }, [source]);
 
-  // Fetch transactions for selected voucher
+  // Changing voucher
   const handleVoucherChange = async (voucherId) => {
     setSelectedVoucher(voucherId);
     setLoading(true);
     try {
-      fetchVouchersTransactions(voucherId);
+      console.log({voucherId})
+      await fetchVouchersTransactions(voucherId);
     } catch (err) {
       console.error("Error fetching transactions:", err);
     }
     setLoading(false);
   };
 
+  // ----------------------------------
+  // 2) UPLOAD TO TALLY LOGIC 
+  //    (common for both modes)
+  // ----------------------------------
+
   const formatDateForTally = (dateString) => {
     if (!dateString) return "";
 
-    // Handle "YYYY-MM-DD" format (effectiveDate)
+    // If user enters YYYY-MM-DD
     if (dateString.includes("-")) {
-        return dateString.replace(/-/g, ""); // Remove hyphens
+      return dateString.replace(/-/g, "");
     }
 
-    // Handle "DD/MM/YYYY" format (invoiceDate)
+    // If user enters DD/MM/YYYY
     if (dateString.includes("/")) {
-        const [day, month, year] = dateString.split("/");
-        return `${year}${month}${day}`;
+      const [day, month, year] = dateString.split("/");
+      return `${year}${month}${day}`;
     }
 
-    return dateString; // Return unchanged if format is unexpected
-};
+    return dateString;
+  };
 
-  const updateTallyStatus = async (successIds) => {
-    console.log({successIds});
-    try {
-      console.log("Sending requet to Ipc")
-      const response = await window.electron.updateTransactionStatus(successIds);
-      console.log(response);
-
-      if (!response) throw new Error(response.message);
-
-      console.log("Transaction status updated successfully!");
-
-      // Re-fetch transactions
-      // fetchVouchersTransactions();
-      setConfirmationModal(false);
-      setLoading2(false);
-
-    } catch (err) {
-      console.log(err)
-      console.error("Error updating transaction status:", err);
-    }
-  }
-
-  const handleTallyUpload = async (transactions) => {
+  const handleTallyUpload = async (txData = transactions) => {
+    // “txData” is optional—ManualEntryTable might pass it.
     if (!companyName.trim()) {
       alert("Please enter a company name before uploading.");
       return;
     }
-    console.log({transactions:transactions.length});
 
-  // ✅ Check if any transaction is missing DrLedger or CrLedger and their imported is false
-
-  const incompleteTransactions = transactions.filter(
-    (transaction) => {
-      if(transaction.imported) {
-        return false;
-      }else{
-        return !transaction.dr_ledger || !transaction.cr_ledger;
-      }
+    // Check if any non-imported transaction is missing DrLedger or CrLedger
+    const incompleteTransactions = txData.filter((transaction) => {
+      if (transaction.imported) return false;
+      return !transaction.dr_ledger || !transaction.cr_ledger;
+    });
+    if (incompleteTransactions.length > 0) {
+      alert("Some transactions are missing DrLedger or CrLedger. Please fill them before uploading.");
+      return;
     }
-  );
 
-  if (incompleteTransactions.length > 0) {
-    alert("Some transactions are missing DrLedger or CrLedger. Please fill them before uploading.");
-    return;
-  }
-
-    const tallyData = transactions.map((transaction)=>{
-      if(transaction.imported) {
-        console.log("Already Imported");
+    // Prepare data for Tally
+    const tallyData = txData.map((transaction) => {
+      if (transaction.imported) {
+        // Already uploaded
         return null;
       }
-      const tempVoucherType = transaction.voucher_type==="Payment Voucher" ? "Payment":"Receipt";
+      const tempVoucherType =
+        transaction.voucher_type === "Payment Voucher" ? "Payment"
+          : transaction.voucher_type === "Receipt Voucher" ? "Receipt"
+          : transaction.voucher_type || "Payment"; // fallback
+
       return {
         companyName: companyName,
         invoiceDate: formatDateForTally(transaction.date),
-        // invoiceDate:"20240401",
-        effectiveDate: formatDateForTally(transaction.effective_date ||null), // TODO : change this after asking poojan - Using invoice date if effective date is not available
-        // effectiveDate: "20240401", // TODO : change this after asking poojan - Using invoice date if effective date is not available
-        referenceNumber: transaction.reference_number ||null,
+        effectiveDate: formatDateForTally(transaction.effective_date || ""),
+        referenceNumber: transaction.reference_number || null,
         DrLedger: transaction.dr_ledger || null,
-        // DrLedger: "sbin" || null,
         CrLedger: transaction.cr_ledger || null,
-        // CrLedger: "icic" || null,
-        amount: transaction.amount,
+        amount: parseInt(transaction.amount),
         narration: transaction.narration,
         voucherName: tempVoucherType,
-        id:transaction.id
-      }
-    })
+        id: transaction.id,
+      };
+    }).filter(Boolean);
 
-    // Remove null values
-    const filteredData = tallyData.filter((data) => data !== null);
-
-
-
+    setTallyUploadData(tallyData);
     setConfirmationModal(true);
-    setTallyUploadData(filteredData);
-  }
+  };
 
-
-  const handleUploadAfterConfirmation=async ()=>{
+  const handleUploadAfterConfirmation = async () => {
     setLoading2(true);
+    try {
+      const response = await window.electron.uploadToTally(tallyUploadData);
+      const { failedTransactions = [], successIds = [] } = response;
+      
+      // Store failed reasons in localStorage
+      const storedReasons = JSON.parse(localStorage.getItem("failedTransactions") || "{}");
+      failedTransactions.forEach((ft) => {
+        storedReasons[ft.id] = ft.error;
+      });
+      // Remove success IDs from stored reasons
+      successIds.forEach((id) => {
+        delete storedReasons[id];
+      });
+      localStorage.setItem("failedTransactions", JSON.stringify(storedReasons));
 
-      try {
-        const response = await window.electron.uploadToTally(tallyUploadData);
-        const failedTransactions = response.failedTransactions; // strcutre = {id, error}
-        const successIds = response.successIds;
+      // Update local transactions with new “failed_reason” or “imported” flags
+      setTransactions((prev) =>
+        prev.map((tr) => {
+          if (successIds.includes(tr.id)) {
+            return { ...tr, imported: true, failed_reason: "" };
+          }
+          if (storedReasons[tr.id]) {
+            return { ...tr, failed_reason: storedReasons[tr.id] };
+          }
+          return tr;
+        })
+      );
 
-        const storedReasons = JSON.parse(localStorage.getItem("failedTransactions") || "{}");
-        
-        // Update failed transactions with reasons
-        failedTransactions.forEach((transaction) => {
-            storedReasons[transaction.id] = transaction.error; // Store error by transaction ID
-        });
+      // Show summary
+      setFailedTransactions(failedTransactions);
+      setSuccessIds(successIds);
+    } catch (err) {
+      console.error("Error uploading to Tally:", err);
+    } finally {
+      setLoading2(false);
+      setConfirmationModal(false);
+    }
+  };
 
-        // Remove successIds from stored reasons (clear errors for successful transactions)
-        successIds.forEach((id) => {
-            delete storedReasons[id];
-          });
-
-        localStorage.setItem("failedTransactions", JSON.stringify(storedReasons));
-
-          // ✅ Update transactions immediately to reflect failed reasons in the table
-          setTransactions((prevTransactions) =>
-            prevTransactions.map((transaction) => ({
-              ...transaction,
-              failed_reason: storedReasons[transaction.id] || "", // Update failed reason immediately
-            }))
-          );
-
-        // show a dailog box with failed transactions
-        if (failedTransactions.length > 0) {
-          console.log("Failed Transactions:", failedTransactions);
-          setSuccessIds(successIds);
-          setTransactions((prevTransactions) =>
-            prevTransactions.map((transaction) => ({
-              ...transaction,
-              imported: successIds.includes(transaction.id) ? true : transaction.imported,
-            }))
-          );
-          // also update the status of the transactions
-          setFailedTransactions(failedTransactions);
-          setConfirmationModal(false);
-        }
-
-      } catch (err) {
-        // console.log(`Row ${i + 1} -> Error sending data to Tally:`, err);
-      }finally{
-          setLoading2(false);
-      }
-  }
-
-
+  // Simple summary for the Tally upload dialog
   const tallyUploadResponseStats = () => {
     const totalTransactions = tallyUploadData.length;
     const failedTransactionsCount = failedTransactions.length;
     const successTransactionsCount = successIds.length;
-  
-    // Aggregate error counts by type.
+
+    // Aggregate error types if needed
     const errorCounts = failedTransactions.reduce((acc, transaction) => {
       const errorMessage = transaction.error.toLowerCase();
       let errorCategory = "Other Errors";
-  
+
       if (errorMessage.includes("ledger") && errorMessage.includes("does not exist")) {
         errorCategory = "Ledger Not Found";
-      } else if (errorMessage.toLowerCase().includes(["out of range"])) {
+      } else if (errorMessage.includes("out of range")) {
         errorCategory = "Date Range Error";
       }
-      // You can add more conditions here for additional error types.
-  
+      // more conditions here if needed
+
       acc[errorCategory] = (acc[errorCategory] || 0) + 1;
       return acc;
     }, {});
-  
+
     return (
-      <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
+      <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
         <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">
           Transaction Upload Summary
         </h2>
@@ -322,67 +342,193 @@ const TallyDirectImport = ({source}) => {
     );
   };
 
+  // ----------------------------------
+  // 3) MANUAL MODE / EXCEL UPLOAD
+  // ----------------------------------
+
+  // Example: parse Excel with an IPC call or local library
+  const handleExcelUpload = async (e) => {
+    console.log({hey: "hey",e})
+    const file = e.target.files?.[0];
+    console.log({file})
+    if (!file) return;
+    try {
+
+      const reader = new FileReader();
+      console.log({reader})
+      reader.onload = async (e) => {
+        const data = new Uint8Array(e.target.result);
+        console.log({data})
+        const workbook = XLSX.read(data, { type: "array" });
+        console.log({workbook})
+        const sheetName = workbook.SheetNames[0];
+        console.log({sheetName})
+        const sheet = workbook.Sheets[sheetName];
+        console.log({sheet})
+        const parsedData = XLSX.utils.sheet_to_json(sheet);
+
+        console.log({parsedData})
+
+      // Either parse in the renderer with xlsx, or call a function in `window.electron`
+      // Transform “parsed” to match your transactions structure
+      // e.g. if each row has columns { date, voucher_type, dr_ledger, cr_ledger, amount, narration, ...}
+      // you might want to rename them or add “imported: false,” etc.
+      const newTransactions = parsedData.map((row, idx) => ({
+        id: `excel-${idx}`, // generate a local ID
+        invoice_date: row.Date || "",
+        effective_date: row.Effective_date || "",
+        reference_number: row.Reference_number || "",
+        dr_ledger: row.Dr_ledger || "",
+        cr_ledger: row.Cr_ledger || "",
+        amount: row.Amount || 0,
+        narration: row.Narration || "",
+        voucher_type: row.voucher_type || "Payment Voucher",
+        imported: false,
+        failed_reason: ""
+      }));
+
+      console.log({newTransactions})
+      // Add them to our table
+      setTransactions(newTransactions);
+    }
+    reader.readAsArrayBuffer(file);
+
+    } catch (err) {
+      console.error("Error parsing Excel:", err);
+    }finally{
+      fileInputRef.current.value = "";
+    }
+  };
+
+  // If the user manually enters rows, “ManualEntryTable” might call this:
+  const handleManualEntriesSubmit = (rows) => {
+    console.log({rows})
+    // rows is an array from ManualEntryTable
+    // setTransactions(rows);
+    handleTallyUpload(rows)
+  };
 
 
+  const handleClear = () => {
+    // Clear the file input value so that the same file can be re-selected if needed
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+    // Optionally clear transactions if you want to remove any parsed data:
+    setTransactions([]);
+  };
   return (
     <Card>
       <CardHeader>
-  
         <div className="flex justify-between items-center">
-          <CardTitle className="text-lg font-semibold">{`Tally ${selectedVoucher} Transactions`}</CardTitle>
-          
-          <div className="flex gap-4">
-            <Select onValueChange={handleVoucherChange} value={selectedVoucher}>
-              <SelectTrigger className="w-64">
-                <SelectValue placeholder="Select a Voucher" />
-              </SelectTrigger>
-              <SelectContent>
-                {vouchers.map((voucher) => (
-                  <SelectItem key={voucher} value={voucher}>
-                    {voucher}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <CardTitle className="text-lg font-semibold">
+            {source === "manual" ? "Manual Tally Import" : `Tally ${selectedVoucher} Transactions`}
+          </CardTitle>
+
+          {source !== "manual" && (
+            <div className="flex gap-4">
+              <Select onValueChange={handleVoucherChange} value={selectedVoucher}>
+                <SelectTrigger className="w-64">
+                  <SelectValue placeholder="Select a Voucher" />
+                </SelectTrigger>
+                <SelectContent>
+                  {vouchers.map((voucher) => (
+                    <SelectItem key={voucher} value={voucher}>
+                      {voucher}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
-        
       </CardHeader>
-      <CardContent className="">
+
+      <CardContent>
         {loading ? (
           <div className="flex justify-center py-10">
             <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
           </div>
-        ) : transactions.length > 0 ? (
-          
-          <TallyTable data={transactions} title={" "} subtitle={" "} handleUpload={handleTallyUpload} setCompanyName={setCompanyName} companyName={companyName}/>
+        ) : (
+          <>
+            {/* If we are in manual mode and have no transactions, show “ManualEntryTable” + an Excel upload button */}
+            {source === "manual" ? (
+              <div className="space-y-4 ">
+                <div className="flex items-center gap-4">
+                  <label
+                    htmlFor="excelUpload"
+                    // onClick={() => fileInputRef.current.click()}
+                    className="flex-shrink-0 py-2 px-4 bg-gray-800 text-white rounded-md cursor-pointer"
+                  >
+                    Upload Excel
+                  </label>
+                  <input
+                    id="excelUpload"
+                    type="file"
+                    accept=".xlsx, .csv"
+                    className="hidden"
+                    ref={fileInputRef}
+                    onChange={handleExcelUpload}
+                  />
+                  <Button variant="outline" onClick={handleClear}>
+                    Clear
+                  </Button>
 
-        ) : source==="manual"?<ManualEntryTable colnames={["Date","VoucherType","VoucherNumber","PartyName","Amount","Narration"]} onSubmit={handleTallyUpload} />:(
-          <div className="text-center py-6 text-gray-500">No transactions available</div>
+                  <p className="text-sm text-gray-500">
+                    or manually add rows below
+                  </p>
+                </div>
+
+                {/* Show ManualEntryTable (simple table where user can add row by row) */}
+                <ManualTallyTable
+                  initialData={transactions}
+                  columnsProp={defaultColumns[selectedVoucher]}
+                  handleUpload={handleManualEntriesSubmit}
+                  setCompanyName={setCompanyName}
+                  companyName={companyName}
+                />
+              </div>
+            ) : transactions.length > 0 ? (
+              // Otherwise, show the TallyTable with the “transactions” we have
+              <TallyTable
+                data={transactions}
+                title={source === "manual" ? "Manual Transactions" : "Tally Transactions"}
+                subtitle=""
+                handleUpload={handleTallyUpload}
+                setCompanyName={setCompanyName}
+                companyName={companyName}
+              />
+            ) : (
+              // Fallback if not manual and no data
+              source !== "manual" && (
+                <div className="text-center py-6 text-gray-500">
+                  No transactions available
+                </div>
+              )
+            )}
+          </>
         )}
       </CardContent>
 
-         {/* Category Update Confirmation Modal */}
+      {/* Confirmation Modal */}
       <Dialog open={confirmationModal} onOpenChange={setConfirmationModal}>
         <DialogContent className="min-w-[500px] max-w-[40%]">
           <DialogHeader>
             <DialogTitle>Confirm Tally Import</DialogTitle>
             <DialogDescription>
-              <p className="mt-4 text-lg">You are about to import {tallyUploadData.length} transactions to Tally. Are you sure you want to proceed?
+              <p className="mt-4 text-lg">
+                You are about to import {tallyUploadData.length} transactions to Tally. 
+                Are you sure you want to proceed?
               </p>
-              {/* Show a note that already uploaded transaction wont get uploaded again */}
-
               <p className="my-4 text-sm text-gray-500">
                 Note: Already uploaded transactions will not be uploaded again.
               </p>
             </DialogDescription>
           </DialogHeader>
-
           <DialogFooter>
             <Button variant="ghost" onClick={() => setConfirmationModal(false)}>
               Cancel
             </Button>
-            
             <Button disabled={loading2} variant="default" onClick={handleUploadAfterConfirmation}>
               {loading2 ? (
                 <>
@@ -397,18 +543,19 @@ const TallyDirectImport = ({source}) => {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog to show failed transaction and reasons */}
-      <Dialog open={failedTransactions.length > 0} onOpenChange={setFailedTransactions}>
+      {/* Show summary of Tally upload if there are any failed transactions */}
+      <Dialog open={failedTransactions.length > 0 || successIds.length>0} onOpenChange={setFailedTransactions}>
         <DialogContent className="min-w-[500px] max-w-[40%] max-h-[90%] overflow-y-auto">
-          <DialogHeader>
-          </DialogHeader>
-          <DialogDescription>
-           {tallyUploadResponseStats()}
-          </DialogDescription>
-          <DialogFooter className={"sticky bottom-0"}>
-            <Button variant="default" onClick={() => {
-              setFailedTransactions([]);
-              setSuccessIds([])}}>
+          <DialogHeader />
+          <DialogDescription>{tallyUploadResponseStats()}</DialogDescription>
+          <DialogFooter className="sticky bottom-0">
+            <Button
+              variant="default"
+              onClick={() => {
+                setFailedTransactions([]);
+                setSuccessIds([]);
+              }}
+            >
               Close
             </Button>
           </DialogFooter>
@@ -416,6 +563,6 @@ const TallyDirectImport = ({source}) => {
       </Dialog>
     </Card>
   );
-}
+};
 
-export default TallyDirectImport
+export default TallyDirectImport;
