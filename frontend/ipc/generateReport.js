@@ -112,7 +112,7 @@ const storeTransactionsBatch = async (transformedTransactions) => {
           bank: t.bank,
           entity: t.entity,
 
-          voucher_type:t.voucher_type,
+          voucher_type: t.voucher_type,
           createdAt: new Date(),
         });
       } else {
@@ -142,7 +142,7 @@ const storeTransactionsBatch = async (transformedTransactions) => {
 
     const chunkSize = 50;
     console.log("Unique Transactions : ", uniqueTransactions.length);
-    log.info({uniqueTransactionsExample:uniqueTransactions[1]})
+    log.info({ uniqueTransactionsExample: uniqueTransactions[1] });
     for (let i = 0; i < uniqueTransactions.length; i += chunkSize) {
       const chunk = uniqueTransactions.slice(i, i + chunkSize);
       console.log("Chunk Size : ", chunk.length);
@@ -753,6 +753,7 @@ function generateReportIpc(tmpdir_path) {
       });
 
       log.info("API response received:", response.data);
+      log.info("missing month list", response.data?.["missing_months_list"]);
 
       // Step 3: Handle failed extractions
       if (response.data?.["pdf_paths_not_extracted"]?.paths?.length > 0) {
@@ -869,8 +870,8 @@ function generateReportIpc(tmpdir_path) {
             "Income Receipts": parsedData["Income Receipts"] || [],
             "Important Expenses": parsedData["Important Expenses"] || [],
             "Other Expenses": parsedData["Other Expenses"] || [],
-            "Contra Debit":parsedData["Contra Debit"] || [],
-            "Contra Credit":parsedData["Contra Credit"] || [],
+            "Contra Debit": parsedData["Contra Debit"] || [],
+            "Contra Credit": parsedData["Contra Credit"] || [],
           },
           caseName
         );
@@ -911,6 +912,8 @@ function generateReportIpc(tmpdir_path) {
       //   }
       // }
 
+      log.info("missingMonthsList", response.data?.["missing_months_list"]);
+
       return {
         success: true,
         data: {
@@ -929,6 +932,7 @@ function generateReportIpc(tmpdir_path) {
             Name: [],
             "Acc Number": [],
           },
+          missingMonthsList: response.data?.["missing_months_list"] || [],
         },
       };
     } catch (error) {
@@ -947,6 +951,7 @@ function generateReportIpc(tmpdir_path) {
         failedFiles: Array.from(failedFiles || []),
         successfulFiles: Array.from(successfulFiles || []),
         nerResults: {},
+        missingMonthsList: [],
       };
     }
   });
@@ -1153,8 +1158,8 @@ function generateReportIpc(tmpdir_path) {
             "Income Receipts": parsedData["Income Receipts"] || [],
             "Important Expenses": parsedData["Important Expenses"] || [],
             "Other Expenses": parsedData["Other Expenses"] || [],
-            "Contra Credit":parsedData["Contra Credit"] || [],
-            "Contra Debit":parsedData["Contra Debit"] || [],
+            "Contra Credit": parsedData["Contra Credit"] || [],
+            "Contra Debit": parsedData["Contra Debit"] || [],
           },
           caseName
         );

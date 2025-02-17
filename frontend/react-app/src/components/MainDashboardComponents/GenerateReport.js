@@ -28,6 +28,7 @@ export default function GenerateReport() {
   const navigate = useNavigate(); // Hook for navigation
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const { reportData, updateReportData } = useReportContext();
+  const [missingMonthsList, setMissingMonthsList] = useState([]);
 
   const handleSubmit = async (
     setProgress,
@@ -116,6 +117,14 @@ export default function GenerateReport() {
         caseName,
         "generate-report"
       );
+
+      // console.log("months", result.data.missingMonthsList);
+      if (
+        result.data.missingMonthsList &&
+        result.data.missingMonthsList.length > 0
+      ) {
+        setMissingMonthsList(result.data.missingMonthsList);
+      }
 
       console.log("Report generation result:", result.data);
       setCurrentCaseId(result.data.caseId); // Store caseId
@@ -307,7 +316,9 @@ export default function GenerateReport() {
         <DialogContent>
           <DialogHeader>
             {failedStatements.length === 0 ? (
-              <DialogTitle>Report {currentCaseName}  Generated Successfully!</DialogTitle>
+              <DialogTitle>
+                Report {currentCaseName} Generated Successfully!
+              </DialogTitle>
             ) : (
               <DialogTitle className="flex items-end gap-x-2">
                 <AlertTriangle className="text-yellow-500 w-6 h-6 mt-2" />
@@ -327,8 +338,9 @@ export default function GenerateReport() {
               )} */}
             </DialogDescription>
           </DialogHeader>
+
           {(failedStatements.length > 0 || successfulStatements.length > 0) && (
-            <div className="mb-4">
+            <div className="mb-2">
               <ul className="list-disc pl-5">
                 {failedStatements.map((statement, index) => (
                   <li key={index} className="text-red-400">
@@ -341,6 +353,32 @@ export default function GenerateReport() {
                   </li>
                 ))}
               </ul>
+            </div>
+          )}
+          {/* Display Missing Months Section */}
+          {missingMonthsList.length > 0 && (
+            <div className="mb-4 mt-2">
+              <h3 className="text-md font-semibold flex items-center gap-x-2 mb-2">
+                <AlertCircle className="text-amber-500 w-5 h-5" />
+                Missing Months
+              </h3>
+              <Card className="p-3 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800">
+                <ul className="space-y-1">
+                  {missingMonthsList.map((month, index) => (
+                    <li
+                      key={index}
+                      className="text-amber-700 dark:text-amber-400 flex items-center"
+                    >
+                      <ChevronRight className="w-4 h-4 mr-1 flex-shrink-0" />
+                      <span>{month}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="text-sm text-amber-700 dark:text-amber-400 mt-3">
+                  These months are missing from your statements. You may want to
+                  add them for a complete analysis.
+                </p>
+              </Card>
             </div>
           )}
           <div className="flex gap-4">

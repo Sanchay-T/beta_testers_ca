@@ -69,6 +69,8 @@ const MainDashboard = () => {
 
     // console.log("pag", pagesData);
 
+    // console.log("pag", pagesData);
+
     switch (duration) {
       case "today":
         startDate.setHours(0, 0, 0, 0);
@@ -107,6 +109,12 @@ const MainDashboard = () => {
       // console.log("item date", itemDate);
       return itemDate >= startDate && itemDate <= endDate;
     });
+
+    // const filteredData = allData.filter((item) => {
+    //   const itemDate = new Date(item.date);
+    //   // console.log("item date", itemDate);
+    //   return itemDate >= startDate && itemDate <= endDate;
+    // });
 
     // Group pages by date for chart data
     const chartData = filteredPages.reduce((acc, item) => {
@@ -193,7 +201,7 @@ const MainDashboard = () => {
   // };
 
   const filterDataByDuration = (data, duration) => {
-    console.log("Aiyaz",{data,duration})
+    console.log("Aiyaz", { data, duration });
     const endDate = new Date();
     const startDate = new Date();
 
@@ -216,6 +224,7 @@ const MainDashboard = () => {
         break;
       case "all":
         console.log("all data", data);
+        console.log("all data", data);
         return filterDataForAll(data);
       default:
         return filterDataForAll(data);
@@ -230,8 +239,6 @@ const MainDashboard = () => {
       return itemDate >= startDate && itemDate <= endDate;
     });
     // console.log("filtered data", filteredData);
-    if (duration === "1M") {
-    }
 
     const aggregatedData = filteredData.reduce((acc, item) => {
       const itemDate = new Date(item.date);
@@ -317,6 +324,8 @@ const MainDashboard = () => {
   // };
 
   const filterDataForAll = (data) => {
+    console.log("hello");
+    console.log("data1", data);
     console.log("hello");
     console.log("data1", data);
     const reportTotal = data.reduce(
@@ -532,8 +541,10 @@ const MainDashboard = () => {
         const pages = await window.electron.getPages();
         // console.log({ reports });
         // console.log("yes", transactions);
+        // console.log("yes", transactions);
 
         setPagesData(pages);
+        // console.log("pages", pages);
         // console.log("pages", pages);
         // console.log("pages data", pagesData);
 
@@ -567,6 +578,33 @@ const MainDashboard = () => {
         );
 
         console.log("merge data", mergedData);
+
+        // const aggregatedData = mergedData.reduce((acc, item) => {
+        //   const itemDate = new Date(item.date);
+        //   const monthKey = itemDate.toLocaleDateString("en-US", {
+        //     month: "short",
+        //     year: "numeric",
+        //   });
+
+        //   if (!acc[monthKey]) {
+        //     acc[monthKey] = {
+        //       date: monthKey,
+        //       reports: 0,
+        //       statements: 0,
+        //       transactions: 0,
+        //     };
+        //   }
+
+        //   acc[monthKey].reports += item.reports || 0;
+        //   acc[monthKey].statements += item.statements || 0;
+        //   acc[monthKey].transactions += item.transactions || 0;
+
+        //   return acc;
+        // }, {});
+
+        // const aggregatedArray = Object.values(aggregatedData);
+
+        // console.log("merge data", mergedData);
 
         const aggregatedData = mergedData.reduce((acc, item) => {
           const itemDate = new Date(item.date);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2, Search } from "lucide-react";
 import {
@@ -32,24 +32,32 @@ const IndividualTable = () => {
   const [isMarkerModalOpen, setIsMarkerModalOpen] = useState(false);
   const [selectedFailedFile, setSelectedFailedFile] = useState(null);
   const [pdfEditLoading, setPdfEditLoading] = useState(false);
-  const [failedDatasOfCurrentReport, setFailedDatasOfCurrentReport] = useState([]);
+  const [failedDatasOfCurrentReport, setFailedDatasOfCurrentReport] = useState(
+    []
+  );
+
+  // Use a ref to store the file path being processed
+  const processingFilePathRef = useRef(null);
+  const [processingState, setProcessingState] = useState({});
+
   const navigate = useNavigate();
   const { reportData, updateReportData } = useReportContext();
   const { caseId, reportName } = reportData;
 
+  const fetchStatements = async () => {
+    setIsLoading(true);
+    try {
+      const result = await window.electron.getStatements(caseId);
+      console.log({ result });
+      setStatements(result);
+    } catch (error) {
+      console.error("Error fetching statements:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchStatements = async () => {
-      setIsLoading(true);
-      try {
-        const result = await window.electron.getStatements(caseId);
-        console.log({ result });
-        setStatements(result);
-      } catch (error) {
-        console.error("Error fetching statements:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
     if (caseId) {
       fetchStatements();
     }
@@ -66,9 +74,6 @@ const IndividualTable = () => {
     );
   });
 
-  // Show all filtered data (no pagination)
-  const currentData = filteredData;
-
   const handleSaveMarkerData = (data) => {
     // Handle saving marker data here
     console.log("recent reports failed pdf handleSave data:", data);
@@ -84,13 +89,21 @@ const IndividualTable = () => {
     }
   };
 
-  const handleRectify = (filePath) => {
+  const handleRectify = async (filePath) => {
+    // Update processing state for this specific file path
+    setProcessingState((prev) => ({ ...prev, [filePath]: true }));
+    processingFilePathRef.current = filePath;
+    console.log("filePath", processingFilePathRef.current);
+
     try {
       const selectedFile = statements.find(
         (stmt) => stmt.filePath === filePath
       );
       if (!selectedFile) {
         console.error("File not found in statements list:", filePath);
+        // Reset processing state if file not found
+        setProcessingState((prev) => ({ ...prev, [filePath]: false }));
+        processingFilePathRef.current = null;
         return;
       }
 
@@ -122,11 +135,82 @@ const IndividualTable = () => {
         endDate: endDate,
       };
 
-      console.log("Selected file from DB:", tempSelectedFile);
       setSelectedFailedFile(tempSelectedFile);
       setIsMarkerModalOpen(true);
     } catch (error) {
       console.error("Error handling rectify:", error);
+      // Clear processing state for this file on error
+      setProcessingState((prev) => ({ ...prev, [filePath]: false }));
+      processingFilePathRef.current = null;
+    }
+  };
+
+  // Handle modal close - clear processing state
+  const handleModalClose = () => {
+    setIsMarkerModalOpen(false);
+    // Important: Reset processing state when modal is closed
+    if (processingFilePathRef.current) {
+      setProcessingState((prev) => ({
+        ...prev,
+        [processingFilePathRef.current]: false,
+      }));
+      processingFilePathRef.current = null;
+    }
+    console.log("processingFilePathRef.current", processingFilePathRef.current);
+  };
+  // Add this new function to handle completion
+  const handleProcessingComplete = () => {
+    // First, fetch the updated statements
+    fetchStatements();
+
+    // Then, reset the processing state for the current file being processed
+    if (processingFilePathRef.current) {
+      setProcessingState((prev) => ({
+        ...prev,
+        [processingFilePathRef.current]: false,
+      }));
+      processingFilePathRef.current = null;
+    }
+    console.log("handle", processingFilePathRef.current);
+    setProcessingState(false);
+  };
+
+  const getPageNumbers = () => {
+    const pageNumbers = [];
+    const maxVisiblePages = 5;
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pageNumbers.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) {
+          pageNumbers.push(i);
+        }
+        pageNumbers.push("ellipsis");
+        pageNumbers.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pageNumbers.push(1);
+        pageNumbers.push("ellipsis");
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pageNumbers.push(i);
+        }
+      } else {
+        pageNumbers.push(1);
+        pageNumbers.push("ellipsis");
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pageNumbers.push(i);
+        }
+        pageNumbers.push("ellipsis");
+        pageNumbers.push(totalPages);
+      }
+    }
+    return pageNumbers;
+  };
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
     }
   };
 
@@ -191,17 +275,29 @@ const IndividualTable = () => {
                   const filenameWithoutTimestamp = filename
                     ? filename.substring(filename.indexOf("-") + 1)
                     : "";
+
+                  // Check if this specific row is processing
+                  const isProcessing = processingState[filePath];
+                  console.log("is Processing", isProcessing);
+
                   return (
                     <TableRow
                       key={index}
                       className="cursor-pointer hover:bg-muted/50"
                       onClick={() =>
-                        handleRowClick(item.customerName, item.accountNumber, item.id)
+                        handleRowClick(
+                          item.customerName,
+                          item.accountNumber,
+                          item.id
+                        )
                       }
                     >
                       <TableCell>{index + 1}</TableCell>
                       <TableCell>
-                        <div className="truncate max-w-96" title={filenameWithoutTimestamp}>
+                        <div
+                          className="truncate max-w-96"
+                          title={filenameWithoutTimestamp}
+                        >
                           {filenameWithoutTimestamp}
                         </div>
                       </TableCell>
@@ -213,8 +309,16 @@ const IndividualTable = () => {
                             e.stopPropagation(); // Prevent row click
                             handleRectify(item.filePath);
                           }}
+                          disabled={isProcessing}
                         >
-                          Re-run
+                          {isProcessing ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                              <span>Processing...</span>
+                            </>
+                          ) : (
+                            "Re-run"
+                          )}
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -233,7 +337,8 @@ const IndividualTable = () => {
         source={"indiviualDashboard"}
         setFailedDatasOfCurrentReport={setFailedDatasOfCurrentReport}
         failedDatasOfCurrentReport={failedDatasOfCurrentReport}
-        onClose={() => setIsMarkerModalOpen(false)}
+        onClose={handleModalClose}
+        onProcessingComplete={handleProcessingComplete}
       />
 
       {isLoading && (
