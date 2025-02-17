@@ -68,13 +68,9 @@ import {
   SelectValue,
 } from "../ui/select";
 
-import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 
-// This is just a placeholder: your real toast or error-handling approach
 import { useToast } from "../../hooks/use-toast";
 
-
-//
 const ManualTallyTable = ({
   initialData = [],    
   columnsProp = [],    

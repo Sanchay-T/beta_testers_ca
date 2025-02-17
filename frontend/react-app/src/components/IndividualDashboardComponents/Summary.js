@@ -347,10 +347,10 @@ const { reportData, updateReportData } = useReportContext();
       <div className="flex flex-wrap -mx-2">
         {renderChart(
           incomeData,
-          "Income Receipts",
+          "Income / Receipts",
           incomeMaximized,
           setIncomeMaximized,
-          "Income Receipts"
+          "Income / Receipts"
         )}
         {renderChart(
           importantExpensesData,

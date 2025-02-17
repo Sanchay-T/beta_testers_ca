@@ -17,7 +17,6 @@ import { ScrollArea } from "../ui/scroll-area";
 import { Card } from "../ui/card";
 import { Phone, Mail, AlertCircle, ChevronRight, Download } from "lucide-react";
 import { Button } from "../ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { exportToExcel } from "../exportToExcel";
 import {
   DropdownMenu,
@@ -132,7 +131,7 @@ export default function Eligibility() {
           "Amount (₹)": item.amount.toLocaleString(undefined),
         };
         if (includeCommission) {
-          formattedItem["Commission %"] = item.rate;
+          formattedItem["Commission %"] = parseInt(item.rate);
           formattedItem["Commission (₹)"] =
             item.value.toLocaleString(undefined);
         }
@@ -146,30 +145,30 @@ export default function Eligibility() {
 
     const allFormattedData = opportunityData.map((data) => {
       const formattedItem = {
-        "Client Name": data.statementCustomerName,
-        "Case Name": data.caseName,
+        "Statement Name": data.statementCustomerName,
+        "Report Name": data.caseName,
         "Home Loan Amount (₹)":
-          data.homeLoanValue?.amount.toLocaleString(undefined) || "0",
+          parseInt(data.homeLoanValue?.amount) || 0,
         "LAP Amount (₹)":
-          data.loanAgainstProperty?.amount.toLocaleString(undefined) || "0",
+        parseInt(data.loanAgainstProperty?.amount) || 0,
         "Business Loan Amount (₹)":
-          data.businessLoan?.amount.toLocaleString(undefined) || "0",
+        parseInt(data.businessLoan?.amount) || 0,
         "Term Plan Amount (₹)":
-          data.termPlan?.amount.toLocaleString(undefined) || "0",
+        parseInt(data.termPlan?.amount) || 0,
         "General Insurance Amount (₹)":
-          data.generalInsurance?.amount.toLocaleString(undefined) || "0",
+        parseInt(data.generalInsurance?.amount) || 0,
       };
       if (includeCommission) {
         formattedItem["Home Loan Commission (₹)"] =
-          data.homeLoanValue?.value.toLocaleString(undefined) || "0";
+        parseInt(data.homeLoanValue?.value) || 0;
         formattedItem["LAP Commission (₹)"] =
-          data.loanAgainstProperty?.value.toLocaleString(undefined) || "0";
+        parseInt(data.loanAgainstProperty?.value) || 0;
         formattedItem["Business Loan Commission (₹)"] =
-          data.businessLoan?.value.toLocaleString(undefined) || "0";
+        parseInt(data.businessLoan?.value) || 0;
         formattedItem["Term Plan Commission (₹)"] =
-          data.termPlan?.value.toLocaleString(undefined) || "0";
+        parseInt(data.termPlan?.value) || 0;
         formattedItem["General Insurance Commission (₹)"] =
-          data.generalInsurance?.value.toLocaleString(undefined) || "0";
+        parseInt(data.generalInsurance?.value) || 0;
       }
       return formattedItem;
     });

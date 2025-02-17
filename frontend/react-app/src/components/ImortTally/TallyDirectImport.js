@@ -6,10 +6,9 @@ import {
   CardTitle,
 } from "../ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Ambulance, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import TallyTable from "./TallyTable";
 import { Dialog, DialogContent, DialogHeader, DialogTitle,DialogFooter,DialogDescription } from "../ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Button } from "../ui/button";
 import { useReportContext } from "../../contexts/ReportContext";
 import ManualTallyTable from "./ManualTable";
@@ -37,8 +36,8 @@ const defaultColumns = {
 };
 
 const TallyDirectImport = ({ source }) => {
-  const [vouchers, setVouchers] = useState(["Payment Receipt Voucher", "Contra Voucher"]);
-  const [selectedVoucher, setSelectedVoucher] = useState("Payment Receipt Voucher");
+  const [vouchers, setVouchers] = useState(["Payment Receipt Contra Voucher","Ledger"]);
+  const [selectedVoucher, setSelectedVoucher] = useState("Payment Receipt Contra Voucher");
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loading2, setLoading2] = useState(false);
@@ -48,6 +47,8 @@ const TallyDirectImport = ({ source }) => {
   const [companyName, setCompanyName] = useState("");
   const [successIds, setSuccessIds] = useState([]);
   const fileInputRef = useRef(null);
+  const [uniqueLedgers, setUniqueLedgers] = useState([]);
+  const [dataToRender, setDataToRender] = useState([]);
   
   // If you have a caseId in the ReportContext:
   const { reportData } = useReportContext();
@@ -60,16 +61,17 @@ const TallyDirectImport = ({ source }) => {
 
   async function fetchVouchersTransactions(newVoucher) {
     try {
-      const data = await window.electron.getTallyVoucherTransactions(
-        caseId,
-        newVoucher || selectedVoucher
-      );
+      // const data = await window.electron.getTallyVoucherTransactions(
+      //   caseId,
+      //   newVoucher || selectedVoucher
+      // );
+      const data = await window.electron.getTransactions(caseId)
       // Sort, map, etc. as you did before
       const sortedData = data.sort((a, b) => a.imported - b.imported);
 
       const storedReasons = JSON.parse(localStorage.getItem("failedTransactions") || "{}");
 
-      const formattedData = data
+      const formattedData = sortedData
         .map((transaction) => {
           if (transaction.voucher_type === "unknown") return null;
 
@@ -103,27 +105,29 @@ const TallyDirectImport = ({ source }) => {
           };
         })
         .filter((t) => t !== null);
-      
-      console.log({selectedVoucher})
-      if (newVoucher === "Contra Voucher"){
-      const contraFormatted = formattedData.map((transaction) => {
-        return {
-          date: transaction.date,
-          dr_ledger: transaction.dr_ledger,
-          cr_ledger: transaction.cr_ledger,
-          amount: transaction.amount,
-          narration: transaction.narration,
-          voucher_type: transaction.voucher_type,
-          id: transaction.id,
-          imported: transaction.imported,
-          failed_reason: transaction.failed_reason
-        }
-      });
-      setTransactions(contraFormatted);
+        
+        setTransactions(formattedData);
+        setDataToRender(formattedData);
+    //   if (newVoucher === "Contra Voucher"){
+    //   const contraFormatted = formattedData.map((transaction) => {
+    //     return {
+    //       date: transaction.date,
+    //       dr_ledger: transaction.dr_ledger,
+    //       cr_ledger: transaction.cr_ledger,
+    //       amount: transaction.amount,
+    //       narration: transaction.narration,
+    //       voucher_type: transaction.voucher_type,
+    //       id: transaction.id,
+    //       imported: transaction.imported,
+    //       failed_reason: transaction.failed_reason
+    //     }
+    //   });
+    //   setTransactions(contraFormatted);
 
-      }else{
-      setTransactions(formattedData);
-    }
+    //   }else{
+    //   setTransactions(formattedData);
+    //   setBackupTransactions(formattedData);
+    // }
     } catch (err) {
       console.error("Error fetching transactions:", err);
     } finally {
@@ -140,12 +144,46 @@ const TallyDirectImport = ({ source }) => {
   }, [source]);
 
   // Changing voucher
-  const handleVoucherChange = async (voucherId) => {
-    setSelectedVoucher(voucherId);
+  const handleVoucherChange = async (voucherName) => {
+    setSelectedVoucher(voucherName);
     setLoading(true);
     try {
-      console.log({voucherId})
-      await fetchVouchersTransactions(voucherId);
+      console.log({voucherName})
+      
+      if(voucherName === "Ledger"){
+        const uniqueLeds = transactions.map((transaction) => {
+          return transaction.dr_ledger || transaction.cr_ledger;
+        })
+
+        const uniqueLedgers = [...new Set(uniqueLeds)];
+
+        setUniqueLedgers(uniqueLedgers);
+
+        const tableDataForLedgerCreation = uniqueLedgers.map((ledger,index) => {
+          return {
+            date: new Date().toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            }),
+            ledger_name: ledger,
+            ledger_group: null,
+            gst_number: null,
+            address: null,
+            pincode: null,
+            state: null,
+            country: null,
+            opening_balance: null,
+            id:index
+          }
+        });
+
+        console.log({tableDataForLedgerCreation})
+        setDataToRender(tableDataForLedgerCreation);
+
+      }else{
+        await fetchVouchersTransactions(voucherName);
+      }
     } catch (err) {
       console.error("Error fetching transactions:", err);
     }
@@ -239,21 +277,26 @@ const TallyDirectImport = ({ source }) => {
       localStorage.setItem("failedTransactions", JSON.stringify(storedReasons));
 
       // Update local transactions with new “failed_reason” or “imported” flags
-      setTransactions((prev) =>
-        prev.map((tr) => {
-          if (successIds.includes(tr.id)) {
-            return { ...tr, imported: true, failed_reason: "" };
-          }
-          if (storedReasons[tr.id]) {
-            return { ...tr, failed_reason: storedReasons[tr.id] };
-          }
-          return tr;
-        })
+      const tempTransactions = transactions.map((tr) => {
+        if (successIds.includes(tr.id)) {
+          return { ...tr, imported: true, failed_reason: "" };
+        }
+        if (storedReasons[tr.id]) {
+          return { ...tr, failed_reason: storedReasons[tr.id] };
+        }
+        return tr;
+      }
       );
+
+      const tempSortedTransactions = tempTransactions.sort((a, b) => a.imported - b.imported);
+
+      setTransactions(tempSortedTransactions)
+      setDataToRender(tempSortedTransactions);
 
       // Show summary
       setFailedTransactions(failedTransactions);
       setSuccessIds(successIds);
+
     } catch (err) {
       console.error("Error uploading to Tally:", err);
     } finally {
@@ -391,6 +434,7 @@ const TallyDirectImport = ({ source }) => {
       console.log({newTransactions})
       // Add them to our table
       setTransactions(newTransactions);
+      setDataToRender(newTransactions);
     }
     reader.readAsArrayBuffer(file);
 
@@ -406,7 +450,7 @@ const TallyDirectImport = ({ source }) => {
     console.log({rows})
     // rows is an array from ManualEntryTable
     // setTransactions(rows);
-    handleTallyUpload(rows)
+    handleTallyUpload(rows);
   };
 
 
@@ -417,6 +461,8 @@ const TallyDirectImport = ({ source }) => {
     }
     // Optionally clear transactions if you want to remove any parsed data:
     setTransactions([]);
+
+    setDataToRender([]);
   };
   return (
     <Card>
@@ -429,7 +475,7 @@ const TallyDirectImport = ({ source }) => {
           {source !== "manual" && (
             <div className="flex gap-4">
               <Select onValueChange={handleVoucherChange} value={selectedVoucher}>
-                <SelectTrigger className="w-64">
+                <SelectTrigger className="w-98">
                   <SelectValue placeholder="Select a Voucher" />
                 </SelectTrigger>
                 <SelectContent>
@@ -482,7 +528,7 @@ const TallyDirectImport = ({ source }) => {
 
                 {/* Show ManualEntryTable (simple table where user can add row by row) */}
                 <ManualTallyTable
-                  initialData={transactions}
+                  initialData={dataToRender}
                   columnsProp={defaultColumns[selectedVoucher]}
                   handleUpload={handleManualEntriesSubmit}
                   setCompanyName={setCompanyName}
@@ -492,7 +538,7 @@ const TallyDirectImport = ({ source }) => {
             ) : transactions.length > 0 ? (
               // Otherwise, show the TallyTable with the “transactions” we have
               <TallyTable
-                data={transactions}
+                data={dataToRender}
                 title={source === "manual" ? "Manual Transactions" : "Tally Transactions"}
                 subtitle=""
                 handleUpload={handleTallyUpload}

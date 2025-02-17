@@ -87,7 +87,7 @@
   }
 
   function buildTallyXmlContra({ invoiceDate, narration, CrLedger, voucherName, amount, DrLedger, companyName }) {
-    const formattedDate = formatDateYyyymmdd(invoiceDate);
+    const formattedDate = invoiceDate
 
     return `
 <ENVELOPE>

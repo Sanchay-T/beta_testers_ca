@@ -41,58 +41,8 @@ import {
   } from "../ui/select";
   import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 
-const categoryOptionsfixed = [
-    "Bank Charges",
-    "Bank Interest Received",
-    "Bonus Paid",
-    "Bonus Received",
-    "Bounce",
-    "Cash Deposits",
-    "Cash Reversal",
-    "Cash Withdrawal",
-    "Closing Balance",
-    "Credit Card Payment",
-    "Debtor List",
-    "Departmental Stores",
-    "Donation",
-    "Food Expense/Hotel",
-    "General Insurance",
-    "Gold Loan",
-    "GST Paid",
-    "Income Tax Paid",
-    "Income Tax Refund",
-    "Indirect tax",
-    "Interest Debit",
-    "Interest Received",
-    "Investment",
-    "Life insurance",
-    "Loan",
-    "Loan given",
-    "Local Cheque Collection",
-    "Online Shopping",
-    "Opening Balance",
-    "Other Expenses",
-    "POS-Cr",
-    "POS-Dr",
-    "Probable Claim Settlement",
-    "Property Tax",
-    "Provident Fund",
-    "Redemption, Dividend & Interest",
-    "Refund/Reversal",
-    "Rent Paid",
-    "Rent Received",
-    "Salary Paid",
-    "Salary Received",
-    "Subscription / Entertainment",
-    "TDS Deducted",
-    "Total Income Tax Paid",
-    "Travelling Expense",
-    "UPI-Cr",
-    "UPI-Dr",
-    "Utility Bills",
-    "Loan taken",
-    "Loan Given",
-    "Self transfer"
+const ledgerGroups = [
+  "Travelling Expenses"
   ];
 
 
@@ -112,7 +62,7 @@ const DataTable = ({ data = [], title, subtitle,caseId,source,handleUpload,compa
     const [isLoading, setIsLoading] = useState(false);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [columnsToIgnore, setColumnsToIgnore] = useState(["id","transactionId"]);
-    const [categoryOptions, setCategoryOptions] = useState(categoryOptionsfixed);
+    const [categoryOptions, setCategoryOptions] = useState([]);
 
   // Category states
     const [hasChanges, setHasChanges] = useState(false);
@@ -154,6 +104,9 @@ const DataTable = ({ data = [], title, subtitle,caseId,source,handleUpload,compa
     const [bulkLedgerValue, setBulkLedgerValue] = useState("");
     const [ledgerField, setLedgerField] = useState("dr_ledger"); // "dr_ledger" or "cr_ledger"
 
+    const [numbericInput, setNumbericInput] = useState(["pincode","opening_balance"]);
+    const [dateInput, setDateInput] = useState([""]);
+    const [textAreaInput, setTextAreaInput] = useState(["address","state","city","country","gst_number"]);
 
     const isFirstLoad = useRef(true);
 
@@ -209,12 +162,14 @@ useEffect(() => {
   );
 
   // Determine which columns are numeric
-  const numericColumns = columns.filter((column) =>
+  const numericColumnstemp = columns.filter((column) =>
     data.some((row) => {
       const value = String(row[column]);
       return !isNaN(parseFloat(value)) && !value.includes("-");
     })
   );
+
+  const numericColumns = [...numericColumnstemp,...numbericInput]
 
   const handleCategoryClassification = (category, classificationType) => {
     console.log(`Category: ${category}, Type: ${classificationType}`);
@@ -649,36 +604,6 @@ useEffect(() => {
     return pageNumbers;
   };
 
-  const handleAddCategory = (newCategory, row) => {
-    // Check if the new category is non-empty and not already in the options
-    if (newCategory && !categoryOptions.includes(newCategory)) {
-      
-      // Set the category that needs classification
-      setNewCategoryToClassify(newCategory);
-      // Add the new category to your category options and sort them
-      const updatedOptions = [...categoryOptions, newCategory].sort();
-      setCategoryOptions(updatedOptions);
-      localStorage.setItem("categoryOptions", JSON.stringify(updatedOptions));
-      
-      
-      if (row) {
-        // Single-row update flow: store the pending change using the transaction id.
-        setPendingCategoryChange({
-          transactionId: row.id,
-          newCategory,
-          oldCategory: row.category,
-          transaction: row,
-          isDebit:row.credit===0
-        });
-        setShowClassificationModal(true);
-      } else {
-        // Bulk update flow: simply show the classification modal.
-        setShowClassificationModal(true);
-      }
-      return true;
-    }
-    return false;
-  };
 
   // Calculate totals for numeric columns
   const totals = numericColumns.reduce((acc, column) => {
@@ -796,7 +721,52 @@ useEffect(() => {
     setSelectedTransactions([]);
     setBulkLedgerValue("");
   };
+
+  const renderCell = (row, column) => {
+    console.log({row,column})
+
+    const value = row[column];
   
+    // If we're in editing mode and an input type is defined,
+    // render an input field based on the inputType.
+    let typeProp =null;
+
+    if (numbericInput.includes(column)) {
+      typeProp = "number";
+    }
+    if (dateInput.includes(column)) {
+      typeProp = "date";
+    }
+    if(textAreaInput.includes(column)){
+      typeProp = "text";
+    }
+    console.log({typeProp})
+
+    if (typeProp) {
+     
+      return (
+        <Input
+          type={typeProp}
+          value={value || ""}
+          onChange={(e) => handleInputChange(row.id, column, e.target.value)}
+          className="w-full p-2 border rounded-md"
+        />
+      );
+    }
+  
+    // Otherwise, simply render the value.
+    return <div>{value}</div>;
+  };
+  
+  
+
+  const handleLedgerGroupChange = (row, value) => {
+    setFilteredData((prevData) =>
+      prevData.map((transaction) =>
+        transaction.id === row.id ? { ...transaction, ledger_group: value } : transaction
+      )
+    );
+  }
   
 
   return (
@@ -1049,16 +1019,16 @@ useEffect(() => {
                             </div>
                           </TableCell>
                         );
-                      }else if(column.toLowerCase() === "category"){
+                      }else if(column.toLowerCase() === "ledger_group"){
                         return (
                             <TableCell
                               key={column}
-                              className="max-w-[200px] group relative"
+                              className="min-w-[250px] group relative"
                             >
                             <Select
                             value={row[column]}
                             onValueChange={(value) =>
-                              handleCategoryChange(row, value)
+                              handleLedgerGroupChange(row, value)
                             }
                             className="w-full"
                             disabled={globalSelectedRows.has(row.id)}
@@ -1074,7 +1044,7 @@ useEffect(() => {
                               <div className="p-2 border-b flex gap-2">
                                 <div className="relative flex-1">
                                   <Input
-                                    placeholder="Search categories..."
+                                    placeholder="Search Group..."
                                     value={categorySearchTerm}
                                     onChange={(e) =>
                                       handleCategorySearch(e)
@@ -1092,7 +1062,7 @@ useEffect(() => {
                                     }}
                                   />
                                 </div>
-                                <Button
+                                {/* <Button
                                   variant="outline"
                                   size="sm"
                                   className="px-2 h-10"
@@ -1113,16 +1083,16 @@ useEffect(() => {
                                 >
                                   <Plus className="h-4 w-4" />
                                   Add
-                                </Button>
+                                </Button> */}
                               </div>
                               <div className="max-h-[200px] overflow-y-auto">
-                                {filteredCategories.length > 0 ? (
-                                  filteredCategories.map((category) => (
+                                {ledgerGroups.length > 0 ? (
+                                  ledgerGroups.map((ledgerGroup) => (
                                     <SelectItem
-                                      key={category}
-                                      value={category}
+                                      key={ledgerGroup}
+                                      value={ledgerGroup}
                                     >
-                                      {category}
+                                      {ledgerGroup}
                                     </SelectItem>
                                   ))
                                 ) : (
@@ -1251,7 +1221,7 @@ useEffect(() => {
                       }else {
                         return (
                           <TableCell key={column} className="max-w-[200px]">
-                            <div>{row[column]}</div>
+                            {renderCell(row,column)}
                           </TableCell>
                         );
                       }
@@ -1499,7 +1469,7 @@ useEffect(() => {
                               }}
                             />
                           </div>
-                          <Button
+                          {/* <Button
                             variant="outline"
                             size="sm"
                             className="px-2 h-10"
@@ -1519,11 +1489,11 @@ useEffect(() => {
                           >
                             <Plus className="h-4 w-4" />
                             Add
-                          </Button>
+                          </Button> */}
                         </div>
                         <div className="overflow-y-auto">
-                          {filteredCategories.length > 0 ? (
-                            filteredCategories.map((category) => (
+                          {ledgerGroups.length > 0 ? (
+                            ledgerGroups.map((category) => (
                               <SelectItem key={category} value={category}>
                                 {category}
                               </SelectItem>
@@ -1591,32 +1561,6 @@ useEffect(() => {
                 </DialogContent>
               </Dialog>
 
-   {/* Confirmation Modal */}
-        <Dialog
-          open={confirmationModalOpen}
-          onOpenChange={setConfirmationModalOpen}
-        >
-          <DialogContent className="sm:max-w-[400px]">
-            <DialogHeader>
-              <DialogTitle>Confirm Category Update</DialogTitle>
-              <DialogDescription>
-                Are you sure you want to update the category to "
-                {selectedBulkCategory}" for {globalSelectedRows.size} transactions?
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button
-                variant="ghost"
-                onClick={() => setConfirmationModalOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button variant="default" onClick={handleBulkCategoryChange}>
-                Confirm Update
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
 
             {/* Classification Modal */}
                 <Dialog
@@ -1663,79 +1607,6 @@ useEffect(() => {
                   </DialogContent>
                 </Dialog>
         
-    {/* Reasoning Modal for Single Category Change */}
-        <Dialog open={reasoningModalOpen} onOpenChange={setReasoningModalOpen}>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle className="mb-2">
-                Category Change Reasoning
-              </DialogTitle>
-              <DialogDescription>
-                Transaction Details:
-                {currentTransaction && (
-                  <div className="mt-2 p-3 bg-muted rounded-md">
-                    <p>
-                      <strong>Description:</strong>{" "}
-                      {currentTransaction.Description}
-                    </p>
-                    <p>
-                      <strong>Category Change:</strong>{" "}
-                      {pendingCategoryChange?.oldCategory} →{" "}
-                      {pendingCategoryChange?.newCategory}
-                    </p>
-                  </div>
-                )}
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="show-keywords"
-                  checked={showKeywordInput}
-                  onCheckedChange={setShowKeywordInput}
-                />
-                <Label htmlFor="show-keywords">
-                  Add keywords for category change
-                </Label>
-              </div>
-
-              {showKeywordInput && (
-                <div className="space-y-2">
-                  <Label>
-                    What keywords from the description made you change the category from "{pendingCategoryChange?.oldCategory}" to "{pendingCategoryChange?.newCategory}"?
-                  </Label>
-                  <Input
-                    value={reasoning}
-                    onChange={(e) => setReasoning(e.target.value)}
-                    placeholder="Enter Keyword..."
-                  />
-                </div>
-              )}
-            </div>
-
-            <DialogFooter>
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  setReasoningModalOpen(false);
-                  setPendingCategoryChange(null);
-                  setReasoning("");
-                  setShowKeywordInput(false);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="default"
-                onClick={confirmCategoryChange}
-                disabled={showKeywordInput && !reasoning}
-              >
-                Confirm Change
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
 
       {/* share modal dialog */}
       <Dialog open={shareModalOpen} onOpenChange={setShareModalOpen}>

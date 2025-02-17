@@ -153,7 +153,7 @@ export default function GenerateReport() {
         }
 
         if (result.data.successfulFiles.length > 0) {
-          setShowRectifyButton(true);
+          // setShowRectifyButton(true);
           const successfulFiles = result.data.successfulFiles.map(
             (file_path) => {
               // Get the filename from the path and remove the timestamp

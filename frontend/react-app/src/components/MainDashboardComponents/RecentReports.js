@@ -1257,7 +1257,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                             <Upload className="h-4 w-4" />
                           </Button>
                           </TooltipTrigger>
-                          <TooltipContent>Upload</TooltipContent>
+                          <TooltipContent>Upload Modified Suspense</TooltipContent>
                         </Tooltip>
 
                       </div>

@@ -59,6 +59,8 @@ const exportToExcel = async (transactions, fileName = "transactions.xlsx", forSh
       column.width = 20;
     } else if (header === "debit" || header === "credit" || header === "balance") {
       column.width = 15;
+    }else if(header === "Statement Name" || header==="Report Name"||header==="Home Loan Amount (₹)"||header==="LAP Amount (₹)"||header==="Business Loan Amount (₹)"||header==="Term Plan Amount (₹)"||header==="General Insurance Amount (₹)"||header==="Home Loan Commission (₹)"||header==="LAP Commission (₹)"||header==="Business Loan Commission (₹)"||header==="Term Plan Commission (₹)"||header==="General Insurance Commission (₹)" ){
+      column.width = 20;
     }
 
 
