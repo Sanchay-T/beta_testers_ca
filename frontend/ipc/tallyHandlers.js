@@ -87,11 +87,14 @@ function registerTallyIpc() {
 
     log.info({tallyUploadData})
     const end = tallyUploadData.length;
-    const voucherName = tallyUploadData[0].voucherName;
-    const isContra = voucherName === "Contra";
+  
     // const end = 2;
     for (let i = 0; i <end; i++) {
+    
       const row = tallyUploadData[i];
+      const voucherName = row.voucherName;
+      const isContra = voucherName === "Contra";
+      
       let xmlContent = null;
       if(!isContra){
         xmlContent = buildTallyXmlPaymentReceipt(row);
