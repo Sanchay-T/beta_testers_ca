@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Dialog, DialogContent } from "../ui/dialog";
 import { useToast } from "../../hooks/use-toast";
 import PdfMarker from "./PdfMarker";
-  import { useReportContext } from "../../contexts/ReportContext";
-  
+import { useReportContext } from "../../contexts/ReportContext";
+
 const PDFMarkerModal = ({
   isOpen,
   onClose,
@@ -11,67 +11,41 @@ const PDFMarkerModal = ({
   source,
   setFailedDatasOfCurrentReport,
   failedDatasOfCurrentReport,
+  onProcessingComplete, // Ensure we're properly handling this prop
 }) => {
   const [initialConfigFormatted, setInitialConfigFormatted] = useState({
     lines: [],
   });
   const [pdfEditLoading, setPdfEditLoading] = useState(false);
   const { toast } = useToast();
-  const { reportData, updateReportData } = useReportContext();
+  const { reportData } = useReportContext();
   const { reportName } = reportData;
 
-  const handleSave = (data) => {
-    onClose();
-  };
-
-  const addColsToStatementData = (pdfPath, columns) => {
-    console.log({pdfPath,columns,selectedFailedFile})
-    if (!selectedFailedFile) return;
-    if(selectedFailedFile.path && selectedFailedFile.path !== pdfPath) return;
-
-    console.log("h2ey")
-    selectedFailedFile.rectifiedColumns = columns;
-    selectedFailedFile.resolved = true;
-
-    if(source==="indiviualDashboard"){
-      handleSubmitEditPdf(selectedFailedFile)
-    }else{
-      setFailedDatasOfCurrentReport((prev) =>
-        prev.map((item) =>
-          item.path === selectedFailedFile.path ? selectedFailedFile : item
-    )
-  );
-    }
-
-    
-
-    if(source==="indiviualDashboard"){
-      console.log("Submitting form as source is indiviualDashboard")
-    }
-
-    onClose();
-  };
-
-  const handleSubmitEditPdf = async (modifiedelectedFailedFile) => {
-    // Edit pdf submit for individual table 
+  const handleSubmitEditPdf = async (modifiedSelectedFailedFile) => {
+    // Set loading state
     setPdfEditLoading(true);
-    console.log({modifiedelectedFailedFile})
 
+    try {
       // Call the API to update the statements
       const result = await window.electron.editPdf(
-        [modifiedelectedFailedFile],
+        [modifiedSelectedFailedFile],
         reportName
       );
-      console.log("result", result);
 
-      if (result.success && result.data.failedStatements.length === 0) {
+      console.log("result11", result);
+      if (result.success) {
+        console.log("result success", result.success);
         toast({
           title: "Success",
           description: "All statements have been rectified.",
           variant: "success",
           className: "bg-white text-black opacity-100 shadow-lg",
         });
-        setPdfEditLoading(false);
+
+        // IMPORTANT: Call the onProcessingComplete callback to reset the button state
+        if (typeof onProcessingComplete === "function") {
+          onProcessingComplete();
+        }
       } else {
         // If the rectification failed, show error message and reasons
         const unrectifiedStatements = failedDatasOfCurrentReport.filter(
@@ -98,9 +72,59 @@ const PDFMarkerModal = ({
           variant: "destructive",
           duration: 6000,
         });
+
+        // Even on error, we should reset the button state
+        if (typeof onProcessingComplete === "function") {
+          onProcessingComplete();
+        }
       }
-  
-    setPdfEditLoading(false);
+    } catch (error) {
+      console.error("Error in handleSubmitEditPdf:", error);
+      toast({
+        title: "An error occurred",
+        description: "Failed to process the PDF. Please try again.",
+        variant: "destructive",
+      });
+
+      // On exception, also reset the button state
+      if (typeof onProcessingComplete === "function") {
+        onProcessingComplete();
+      }
+    } finally {
+      // Always reset loading state
+      setPdfEditLoading(false);
+    }
+  };
+
+  const addColsToStatementData = (pdfPath, columns) => {
+    if (!selectedFailedFile) return;
+    if (selectedFailedFile.path && selectedFailedFile.path !== pdfPath) return;
+
+    const updatedFile = {
+      ...selectedFailedFile,
+      rectifiedColumns: columns,
+      resolved: true,
+    };
+
+    if (source === "indiviualDashboard") {
+      // For individual dashboard, call the edit PDF function
+      handleSubmitEditPdf(updatedFile);
+    } else {
+      // For other sources, update the failed data list
+      setFailedDatasOfCurrentReport((prev) =>
+        prev.map((item) =>
+          item.path === selectedFailedFile.path ? updatedFile : item
+        )
+      );
+
+      // Call onProcessingComplete if it's provided and we're not going through handleSubmitEditPdf
+      if (typeof onProcessingComplete === "function") {
+        onProcessingComplete();
+      }
+    }
+
+    // Close the modal
+    onClose();
   };
 
   useEffect(() => {
@@ -109,7 +133,6 @@ const PDFMarkerModal = ({
         lines: selectedFailedFile.columns.map((line) => ({ x: line })),
       });
     }
-    console.log("PDFMarkerModal: selectedFailedFile", selectedFailedFile);
   }, [selectedFailedFile]);
 
   return (
