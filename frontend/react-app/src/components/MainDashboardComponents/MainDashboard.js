@@ -721,7 +721,7 @@ const MainDashboard = () => {
         <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           <StatsMetricCard
             type="reports"
-            title="Reports & Statements"
+            title="Overview"
             value1="Total Reports"
             value2="Total Statements"
             mainValue1={reportsMetrics.totalReports}
@@ -734,7 +734,7 @@ const MainDashboard = () => {
 
           <StatsMetricCard
             type="pages"
-            title="Pages & Transactions"
+            title="Platform Activity"
             value1="Total Pages"
             value2="Total Transactions"
             mainValue1={pagesMetrics.totalPages}
@@ -747,7 +747,7 @@ const MainDashboard = () => {
 
           <StatsMetricCard
             type="timeSaved"
-            title="Time Saved"
+            title="Productivity"
             value1="Total Time Saved"
             value2="Avg Time Saved/Day"
             mainValue1={timeMetrics.totalTimeSaved}

@@ -47,7 +47,7 @@ const CaseDashboard = () => {
 
     },
     {
-      title: "Acc No and Acc Name",
+      title: "Account Information",
       url: "#",
       icon: UserPen,
     },
@@ -85,7 +85,7 @@ const CaseDashboard = () => {
         <BreadcrumbDynamic items={breadcrumbs} />
         <div className="flex-1 flex flex-col overflow-hidden">
           <main className="flex-1">
-            {activeTab === "Acc No and Acc Name" && (
+            {activeTab === "Account Information" && (
               <AccountNumNameManager />
             )}
             {activeTab === "Reports" && <IndividualTable />}

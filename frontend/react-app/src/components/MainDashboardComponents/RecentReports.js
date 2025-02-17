@@ -1062,7 +1062,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
           <div>
             <CardTitle>Recent Reports</CardTitle>
             <CardDescription className="py-3">
-              A list of recent reports from all projects
+              A list of recent reports 
             </CardDescription>
           </div>
           <div className="relative">
@@ -1441,13 +1441,15 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
               ))}
             </TableBody>
           </Table>
-        ) : (
-          isLoading?<div className="text-center text-grey-600 opacity-70 w-full font-semibold">
-            <Loader2/>
-            </div>:<div className="text-center text-grey-600 opacity-70 font-semibold">
-            No Reports Found
-          </div>
-        )}
+        )  : isLoading ? (
+                  <div className="flex justify-center items-center w-full text-grey-600 opacity-70 font-semibold">
+                    <Loader2 />
+                  </div>
+                ) : recentReports.length === 0 ? (
+                  <div className="flex justify-center items-center w-full text-grey-600 opacity-70 font-semibold">
+                    No Reports Found
+                  </div>
+                ) : null}
         {totalPages > 1 && (
           <div className="mt-6">
             <Pagination>

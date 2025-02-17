@@ -86,8 +86,8 @@
     return xml;
   }
 
-  function buildTallyXmlContra({ date, narration, Crledger, voucherNumber, amount, Drledger, companyName }) {
-    const formattedDate = formatDateYyyymmdd(date);
+  function buildTallyXmlContra({ invoiceDate, narration, CrLedger, voucherName, amount, DrLedger, companyName }) {
+    const formattedDate = formatDateYyyymmdd(invoiceDate);
 
     return `
 <ENVELOPE>
@@ -109,8 +109,8 @@
       <VCHSTATUSDATE>${formattedDate}</VCHSTATUSDATE>
       <NARRATION>${narration}</NARRATION>
       <VOUCHERTYPENAME>Contra</VOUCHERTYPENAME>
-      <PARTYLEDGERNAME>${Drledger}</PARTYLEDGERNAME>
-      <VOUCHERNUMBER>${voucherNumber}</VOUCHERNUMBER>
+      <PARTYLEDGERNAME>${DrLedger}</PARTYLEDGERNAME>
+      <VOUCHERNUMBER>${voucherName}</VOUCHERNUMBER>
       <NUMBERINGSTYLE>Auto Retain</NUMBERINGSTYLE>
       <FBTPAYMENTTYPE>Default</FBTPAYMENTTYPE>
       <PERSISTEDVIEW>Accounting Voucher View</PERSISTEDVIEW>
@@ -122,12 +122,12 @@
       <ISVATDUTYPAID>Yes</ISVATDUTYPAID>
       <VOUCHERNUMBERSERIES>Default</VOUCHERNUMBERSERIES>
       <ALLLEDGERENTRIES.LIST>
-       <LEDGERNAME>${Drledger}</LEDGERNAME>
+       <LEDGERNAME>${DrLedger}</LEDGERNAME>
        <ISPARTYLEDGER>Yes</ISPARTYLEDGER>
        <AMOUNT>${amount.toFixed(2)}</AMOUNT>
       </ALLLEDGERENTRIES.LIST>
       <ALLLEDGERENTRIES.LIST>
-       <LEDGERNAME>${Crledger}</LEDGERNAME>
+       <LEDGERNAME>${CrLedger}</LEDGERNAME>
        <GSTCLASS>&#4; Not Applicable</GSTCLASS>
        <ISDEEMEDPOSITIVE>Yes</ISDEEMEDPOSITIVE>
        <ISPARTYLEDGER>Yes</ISPARTYLEDGER>

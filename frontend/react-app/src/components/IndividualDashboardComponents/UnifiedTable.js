@@ -1123,7 +1123,7 @@ const DataTable = ({
                   disabled={globalSelectedRows.size === 0}
                   onClick={() => setBatchModalOpen(true)}
                 >
-                  Batch Edit Entities
+                  Bulk Edit Party Name
                 </Button>
               )}
             </div>
@@ -2043,8 +2043,12 @@ const DataTable = ({
             </TooltipProvider>
           </div>
 
-          <div className="text-xs text-center">
-            <p>NOTE: The report will be downloaded to your device before sharing as it is a completely offline software. Don't Forget to attach the downloaded file.</p>
+          <div className="text-xs text-left">
+            <p>
+            <span className="font-bold">Note:</span> Since this software operates entirely offline, the report is first downloaded to your device before sharing, Please remember to attach the downloaded file.
+            </p> 
+            <p>
+            </p>
           </div>
 
           {/* Cancel Button */}
