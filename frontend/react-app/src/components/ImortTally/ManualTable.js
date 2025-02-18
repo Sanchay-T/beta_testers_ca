@@ -695,7 +695,7 @@ const ManualTallyTable = ({
           <h2 className="text-lg font-semibold flex items-center space-x-2">
             {tableTitle}
           </h2>
-          <div className="bg-blue-100 border border-blue-200 shadow-lg p-3 rounded-md text-sm text-gray-800 max-w-xl">
+          <div className="bg-blue-100 border border-blue-200 p-3 rounded-md text-sm text-gray-800 max-w-xl">
             <div className="flex items-center space-x-4">
               <Info className="w-5 h-5 text-black" />
               <h1>
