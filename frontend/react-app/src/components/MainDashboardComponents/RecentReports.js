@@ -751,6 +751,8 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         (item, index, self) =>
           index === self.findIndex((t) => t.pdfName === item.pdfName)
       );
+
+      console.log("Unique failed data for shubh:", uniqueFailedDataOfReport);
       setIsRectifyAlertOpen(true);
       setFailedDatasOfCurrentReport(uniqueFailedDataOfReport);
     } catch (error) {
@@ -1058,7 +1060,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
           <div>
             <CardTitle>Recent Reports</CardTitle>
             <CardDescription className="py-3">
-              A list of recent reports from all projects
+              A list of recent reports
             </CardDescription>
           </div>
           <div className="relative">
@@ -1230,12 +1232,12 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                             >
                               Download Suspense
                             </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="cursor-pointer"
-                              onClick={() => handleSummaryDownload(report.id)}
-                            >
-                              Download Summary
-                            </DropdownMenuItem>
+                            {/* <DropdownMenuItem
+                                className="cursor-pointer"
+                                onClick={() => handleSummaryDownload(report.id)}
+                              >
+                                Download Summary
+                              </DropdownMenuItem> */}
                           </DropdownMenuContent>
                         </DropdownMenu>
 
@@ -1256,7 +1258,9 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                               <Upload className="h-4 w-4" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent>Upload</TooltipContent>
+                          <TooltipContent>
+                            Upload Modified Suspense
+                          </TooltipContent>
                         </Tooltip>
                       </div>
                     </TableCell>
@@ -1309,11 +1313,11 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                       : -1;
                                   })
                                   .map((statement, index) => {
-                                    console.log({statement})
                                     const isDone = statement.resolved;
                                     const hasError = Boolean(
                                       statement.respectiveReasonsForError
                                     );
+                                    console.log({ isDone, hasError });
 
                                     return (
                                       <div
@@ -1351,11 +1355,9 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                                 <Button
                                                   variant="secondary"
                                                   size="sm"
-                                                  disabled={
-                                                    report.status === "Success"
-                                                  }
+                                                  disabled={isDone}
                                                   className={`${
-                                                    report.status === "Success"
+                                                    isDone
                                                       ? "bg-green-600 hover:bg-green-700 text-white"
                                                       : "flex-1 hover:bg-primary hover:text-primary-foreground transition-colors"
                                                   }`}
@@ -1366,8 +1368,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                                     );
                                                   }}
                                                 >
-                                                  {report.status ===
-                                                  "Success" ? (
+                                                  {isDone ? (
                                                     <CheckCircle className="w-4 h-4 mr-2" />
                                                   ) : (
                                                     ""
@@ -1414,7 +1415,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                             {failedDatasOfCurrentReport &&
                               failedDatasOfCurrentReport.length > 0 && (
                                 <div className="flex justify-center ">
-                                  {report.status === "Success" ? (
+                                  {report.resolved ? (
                                     ""
                                   ) : (
                                     <Button
@@ -1449,14 +1450,14 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
             </TableBody>
           </Table>
         ) : isLoading ? (
-          <div className="text-center text-grey-600 opacity-70 w-full font-semibold">
+          <div className="flex justify-center items-center w-full text-grey-600 opacity-70 font-semibold">
             <Loader2 />
           </div>
-        ) : (
-          <div className="text-center text-grey-600 opacity-70 font-semibold">
+        ) : recentReports.length === 0 ? (
+          <div className="flex justify-center items-center w-full text-grey-600 opacity-70 font-semibold">
             No Reports Found
           </div>
-        )}
+        ) : null}
         {totalPages > 1 && (
           <div className="mt-6">
             <Pagination>

@@ -168,9 +168,9 @@ const IndividualDashboard = () => {
         <ScrollArea className="w-full">
           <div className="flex justify-between items-center w-full pr-14">
             <BreadcrumbDynamic items={breadcrumbs} />
-            <div>
+            {/* <div>
               <DashboardDropdown />
-            </div>
+            </div> */}
           </div>
           <div className="flex-1 flex flex-col overflow-hidden">
             <main className="flex-1">
