@@ -76,7 +76,6 @@ const IndividualTable = () => {
 
   const currentData = filteredData;
 
-
   const handleSaveMarkerData = (data) => {
     // Handle saving marker data here
     console.log("recent reports failed pdf handleSave data:", data);
@@ -177,10 +176,6 @@ const IndividualTable = () => {
     console.log("handle", processingFilePathRef.current);
     setProcessingState(false);
   };
-
-  
-
-
 
   const handleCombinedDashboardClick = (caseId) => {
     setIsLoading(true);

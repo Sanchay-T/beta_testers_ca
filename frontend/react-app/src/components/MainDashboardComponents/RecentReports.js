@@ -1,4 +1,4 @@
-import React, { useState, useEffect,useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Card,
   CardContent,
@@ -63,7 +63,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter
+  DialogFooter,
 } from "../ui/dialog"; // Import shadcn/ui Dialog components
 import {
   Tooltip,
@@ -80,7 +80,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  
 } from "../ui/dropdown-menu";
 import { exportToExcel } from "../exportToExcel";
 import * as XLSX from "xlsx";
@@ -117,7 +116,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
   const [uploadedChanges, setUploadedChanges] = useState({});
   const [categoryUpdateModalOpen, setCategoryUpdateModalOpen] = useState(false);
   const [isRectifyAlertOpen, setIsRectifyAlertOpen] = useState(false);
-
 
   const handleSubmitEditPdf = async () => {
     setPdfEditLoading(true);
@@ -647,7 +645,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
     setIsMarkerModalOpen(false);
   };
 
-
   // Function to handle opening the modal and fetching the failed statements
   const handleDetails = async (reportId, reportName) => {
     setIsLoading(true);
@@ -769,11 +766,13 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
     }
   };
 
-  useEffect(()=>{
-      handleDetails(reportData?.triggerRectify?.caseId,reportData?.triggerRectify?.caseName)
-  },[reportData.triggerRectify])
- 
-  
+  useEffect(() => {
+    handleDetails(
+      reportData?.triggerRectify?.caseId,
+      reportData?.triggerRectify?.caseName
+    );
+  }, [reportData.triggerRectify]);
+
   const handleDownload = async (caseid, status) => {
     if (status === "Pending") {
       toast({
@@ -880,14 +879,13 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
   const fetchSuspenseData = async (caseId) => {
     try {
       const suspenseTransactionaAll =
-        await window.electron.getTransactionsBySuspense(
-          caseId,
-          null
-        );
+        await window.electron.getTransactionsBySuspense(caseId, null);
 
       console.log("suspenseTransactionaAll", suspenseTransactionaAll);
 
-      const transformedSuspenseData = processSuspenseData(suspenseTransactionaAll);
+      const transformedSuspenseData = processSuspenseData(
+        suspenseTransactionaAll
+      );
 
       console.log("transformedSuspenseData", transformedSuspenseData);
 
@@ -901,82 +899,77 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
     }
   };
 
-  const handleSuspenseDownload = async (caseId, caseName)=>{
+  const handleSuspenseDownload = async (caseId, caseName) => {
     const suspenseData = await fetchSuspenseData(caseId);
 
     let newTitle = `${caseName} Suspense Transactions.xlsx`;
 
-    exportToExcel(suspenseData, newTitle,false,reportData.categoryOptions);
+    exportToExcel(suspenseData, newTitle, false, reportData.categoryOptions);
 
+    console.log({ suspenseData });
+  };
+  const handleSummaryDownload = () => {};
 
-    console.log({suspenseData})
+  const handleExcelFileUpload = async (event, caseId) => {
+    const file = event.target.files[0];
+    if (!file) return;
 
-  }
-  const handleSummaryDownload = ()=>{
-  }
+    console.log({ caseId, event });
 
-  const handleExcelFileUpload = async (event,caseId) => {
-      const file = event.target.files[0];
-      if (!file) return;
+    const suspenseData = await fetchSuspenseData(caseId);
 
-      console.log({caseId,event});
+    console.log("Suspense Data: ", suspenseData);
 
-      const suspenseData = await fetchSuspenseData(caseId);
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const parsedData = XLSX.utils.sheet_to_json(sheet);
 
-      console.log("Suspense Data: ", suspenseData);
-  
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: "array" });
-        const sheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[sheetName];
-        const parsedData = XLSX.utils.sheet_to_json(sheet);
-  
-        console.log("Uploaded Suspense Data: ", parsedData);
-  
-        // Extract modified categories and compare with existing data
-        const updates = parsedData
-          .map((row) => {
-            const existingTransaction = suspenseData.find(
-              (tx) => tx.id === row.Id
-            );
-            if (!existingTransaction) return null;
-            if (existingTransaction.category === row.Category) return null;
-  
-            return {
-              date: row.Date,
-              credit: row.Credit,
-              debit: row.Debit,
-              description: row.Description,
-              id: row.Id,
-              oldCategory: existingTransaction.category,
-              newCategory: row.Category,
-            };
-          })
-          .filter(Boolean); // Remove nulls
-          
-          console.log({updates})
-        // Store updates and show confirmation modal
-        setUploadedChanges({updates,suspenseData,caseId});
-        setCategoryUpdateModalOpen(true);
-      };
-  
-      reader.readAsArrayBuffer(file);
+      console.log("Uploaded Suspense Data: ", parsedData);
+
+      // Extract modified categories and compare with existing data
+      const updates = parsedData
+        .map((row) => {
+          const existingTransaction = suspenseData.find(
+            (tx) => tx.id === row.Id
+          );
+          if (!existingTransaction) return null;
+          if (existingTransaction.category === row.Category) return null;
+
+          return {
+            date: row.Date,
+            credit: row.Credit,
+            debit: row.Debit,
+            description: row.Description,
+            id: row.Id,
+            oldCategory: existingTransaction.category,
+            newCategory: row.Category,
+          };
+        })
+        .filter(Boolean); // Remove nulls
+
+      console.log({ updates });
+      // Store updates and show confirmation modal
+      setUploadedChanges({ updates, suspenseData, caseId });
+      setCategoryUpdateModalOpen(true);
     };
 
-    const convertArrayToObject = (array) => {
-      return array.reduce((acc, transaction) => {
-        const id = transaction.id;
-        if (id) {
-          acc[Number(id)] = transaction;
-        }
-        return acc;
-      }, {});
-    };
+    reader.readAsArrayBuffer(file);
+  };
 
+  const convertArrayToObject = (array) => {
+    return array.reduce((acc, transaction) => {
+      const id = transaction.id;
+      if (id) {
+        acc[Number(id)] = transaction;
+      }
+      return acc;
+    }, {});
+  };
 
-    
   const applyUploadedCategoryChanges = async () => {
     // Suspense excel upload handle
     try {
@@ -1002,11 +995,14 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       });
 
       console.log("Updated Transactions", updatedTransactions);
-    
+
       const payload = convertArrayToObject(updatedTransactions);
       console.log("Payload", payload);
-      const response = await window.electron.editCategory(payload, uploadedChanges.caseId);
-      console.log({response})
+      const response = await window.electron.editCategory(
+        payload,
+        uploadedChanges.caseId
+      );
+      console.log({ response });
       setCategoryUpdateModalOpen(false);
       setUploadedChanges({});
       toast({
@@ -1062,7 +1058,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
           <div>
             <CardTitle>Recent Reports</CardTitle>
             <CardDescription className="py-3">
-              A list of recent reports 
+              A list of recent reports from all projects
             </CardDescription>
           </div>
           <div className="relative">
@@ -1193,14 +1189,63 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                           </AlertDialogContent>
                         </AlertDialog>
 
-                        
-                          <DropdownMenu>
+                        <DropdownMenu>
                           <Tooltip>
-                          <DropdownMenuTrigger asChild>
+                            <DropdownMenuTrigger asChild>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  className={cn(
+                                    "h-8 w-8",
+                                    report.status === "In Progress" &&
+                                      "opacity-50 cursor-not-allowed"
+                                  )}
+                                  disabled={report.status === "In Progress"}
+                                >
+                                  <Download className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                            </DropdownMenuTrigger>
+                            <TooltipContent>
+                              {report.status === "Pending"
+                                ? "Download not available while processing"
+                                : "Download Excel"}
+                            </TooltipContent>
+                          </Tooltip>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              className="cursor-pointer"
+                              onClick={() =>
+                                handleDownload(report.id, report.status)
+                              }
+                            >
+                              Download Report
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="cursor-pointer"
+                              onClick={() =>
+                                handleSuspenseDownload(report.id, report.name)
+                              }
+                            >
+                              Download Suspense
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="cursor-pointer"
+                              onClick={() => handleSummaryDownload(report.id)}
+                            >
+                              Download Summary
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+
+                        {/* Upload Button */}
+                        <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
                               variant="outline"
                               size="icon"
+                              onClick={() => handleUploadClick(report.id)}
                               className={cn(
                                 "h-8 w-8",
                                 report.status === "In Progress" &&
@@ -1208,66 +1253,21 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                               )}
                               disabled={report.status === "In Progress"}
                             >
-                              <Download className="h-4 w-4" />
+                              <Upload className="h-4 w-4" />
                             </Button>
-                            </TooltipTrigger>
-                            </DropdownMenuTrigger>
-                          <TooltipContent>
-                            {report.status === "Pending"
-                              ? "Download not available while processing"
-                              : "Download Excel"}
-                          </TooltipContent>
-                        </Tooltip>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                className="cursor-pointer"
-                                onClick={() =>handleDownload(report.id, report.status)}
-                              >
-                                Download Report
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="cursor-pointer"
-                                onClick={() => handleSuspenseDownload(report.id, report.name)}
-                              >
-                                Download Suspense
-                              </DropdownMenuItem>
-                              {/* <DropdownMenuItem
-                                className="cursor-pointer"
-                                onClick={() => handleSummaryDownload(report.id)}
-                              >
-                                Download Summary
-                              </DropdownMenuItem> */}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                          
-
-                         {/* Upload Button */}
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleUploadClick(report.id)}
-                            className={cn(
-                              "h-8 w-8",
-                              report.status === "In Progress" && "opacity-50 cursor-not-allowed"
-                            )}
-                            disabled={report.status === "In Progress"}
-                          >
-                            <Upload className="h-4 w-4" />
-                          </Button>
                           </TooltipTrigger>
-                          <TooltipContent>Upload Modified Suspense</TooltipContent>
+                          <TooltipContent>Upload</TooltipContent>
                         </Tooltip>
-
                       </div>
                     </TableCell>
-                    
                     <TableCell>
-                      <AlertDialog open={isRectifyAlertOpen} onOpenChange={handleDialogOpenChange} >
+                      <AlertDialog
+                        open={isRectifyAlertOpen}
+                        onOpenChange={handleDialogOpenChange}
+                      >
                         <Tooltip>
-                          <TooltipTrigger asChild >
-                            <AlertDialogTrigger  asChild>
+                          <TooltipTrigger asChild>
+                            <AlertDialogTrigger asChild>
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -1284,7 +1284,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                             View Failed Statements
                           </TooltipContent>
                         </Tooltip>
-                        <AlertDialogContent  className="max-w-2xl bg-white shadow-lg border-0 dark:bg-slate-950">
+                        <AlertDialogContent className="max-w-2xl bg-white shadow-lg border-0 dark:bg-slate-950">
                           <AlertDialogHeader>
                             <AlertDialogTitle className="text-xl font-medium text-black bg-black/[0.03] -mx-6 -mt-6 p-4 border-b border-black/10 dark:bg-slate-900 dark:text-slate-300">
                               Report Details
@@ -1327,7 +1327,13 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                           <p className="flex-[4.5]">
                                             <strong>File Name:</strong>{" "}
                                             {/* {statement.pdfName} */}
-                                            { statement.pdfName ? statement.pdfName.substring(statement.pdfName.indexOf("-") + 1): ""}
+                                            {statement.pdfName
+                                              ? statement.pdfName.substring(
+                                                  statement.pdfName.indexOf(
+                                                    "-"
+                                                  ) + 1
+                                                )
+                                              : ""}
                                           </p>
                                           {/* Only show button if there's no error and the statement isn't done */}
                                           {!hasError && (
@@ -1442,15 +1448,15 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
               ))}
             </TableBody>
           </Table>
-        )  : isLoading ? (
-                  <div className="flex justify-center items-center w-full text-grey-600 opacity-70 font-semibold">
-                    <Loader2 />
-                  </div>
-                ) : recentReports.length === 0 ? (
-                  <div className="flex justify-center items-center w-full text-grey-600 opacity-70 font-semibold">
-                    No Reports Found
-                  </div>
-                ) : null}
+        ) : isLoading ? (
+          <div className="text-center text-grey-600 opacity-70 w-full font-semibold">
+            <Loader2 />
+          </div>
+        ) : (
+          <div className="text-center text-grey-600 opacity-70 font-semibold">
+            No Reports Found
+          </div>
+        )}
         {totalPages > 1 && (
           <div className="mt-6">
             <Pagination>
@@ -1570,68 +1576,70 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         </DialogContent>
       </Dialog>
 
-          {/* Category Update Confirmation Modal */}
-            <Dialog
-              open={categoryUpdateModalOpen}
-              onOpenChange={setCategoryUpdateModalOpen}
+      {/* Category Update Confirmation Modal */}
+      <Dialog
+        open={categoryUpdateModalOpen}
+        onOpenChange={setCategoryUpdateModalOpen}
+      >
+        <DialogContent className="max-w-[80%]">
+          <DialogHeader>
+            <DialogTitle>Confirm Category Updates</DialogTitle>
+            <DialogDescription>
+              You are about to update the categories for{" "}
+              {uploadedChanges?.updates?.length} transactions. Please review the
+              changes before proceeding.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="max-h-[400px] overflow-y-auto border p-2 rounded-md">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Credit</TableHead>
+                  <TableHead>Debit</TableHead>
+                  <TableHead className="whitespace-nowrap">
+                    Old Category
+                  </TableHead>
+                  <TableHead className="whitespace-nowrap">
+                    New Category
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {uploadedChanges?.updates?.map((change) => (
+                  <TableRow key={change.id}>
+                    <TableCell>{change.date}</TableCell>
+                    <TableCell>{change.description}</TableCell>
+                    <TableCell>{change.credit}</TableCell>
+                    <TableCell>{change.debit}</TableCell>
+                    <TableCell>{change.oldCategory}</TableCell>
+                    <TableCell className="text-blue-600">
+                      {change.newCategory}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setCategoryUpdateModalOpen(false);
+                fileInputRef.current.value = "";
+              }}
             >
-              <DialogContent className="max-w-[80%]">
-                <DialogHeader>
-                  <DialogTitle>Confirm Category Updates</DialogTitle>
-                  <DialogDescription>
-                    You are about to update the categories for{" "}
-                    {uploadedChanges?.updates?.length} transactions. Please review the changes
-                    before proceeding.
-                  </DialogDescription>
-                </DialogHeader>
-      
-                <div className="max-h-[400px] overflow-y-auto border p-2 rounded-md">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>Credit</TableHead>
-                        <TableHead>Debit</TableHead>
-                        <TableHead className="whitespace-nowrap">
-                          Old Category
-                        </TableHead>
-                        <TableHead className="whitespace-nowrap">
-                          New Category
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {uploadedChanges?.updates?.map((change) => (
-                        <TableRow key={change.id}>
-                          <TableCell>{change.date}</TableCell>
-                          <TableCell>{change.description}</TableCell>
-                          <TableCell>{change.credit}</TableCell>
-                          <TableCell>{change.debit}</TableCell>
-                          <TableCell>{change.oldCategory}</TableCell>
-                          <TableCell className="text-blue-600">
-                            {change.newCategory}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-      
-                <DialogFooter>
-                  <Button
-                    variant="ghost"
-                    onClick={() => {setCategoryUpdateModalOpen(false);
-                      fileInputRef.current.value = "";}}
-                  >
-                    Cancel
-                  </Button>
-                  <Button variant="default" onClick={applyUploadedCategoryChanges}>
-                    Confirm Updates
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+              Cancel
+            </Button>
+            <Button variant="default" onClick={applyUploadedCategoryChanges}>
+              Confirm Updates
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

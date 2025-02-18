@@ -11,6 +11,7 @@ import {
   Mail,
   Share2,
   Trash2,
+  Info,
 } from "lucide-react";
 
 import {
@@ -55,7 +56,12 @@ import {
 } from "../ui/pagination";
 
 import { Label } from "../ui/label";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../ui/tooltip";
 
 // If you have your own exportToExcel logic, import it:
 import { exportToExcel } from "../exportToExcel";
@@ -68,14 +74,13 @@ import {
   SelectValue,
 } from "../ui/select";
 
-
 import { useToast } from "../../hooks/use-toast";
 
 const ManualTallyTable = ({
-  initialData = [],    
-  columnsProp = [],    
+  initialData = [],
+  columnsProp = [],
   tableTitle = "Manual Tally Table",
-  handleUpload,         
+  handleUpload,
   companyName,
   setCompanyName,
 }) => {
@@ -174,16 +179,16 @@ const ManualTallyTable = ({
     newRow.imported = false;
     newRow.failed_reason = "";
 
-
-  // Update both allRows and filteredData if no search is active
-  setAllRows((prev) => {
-    const updated = [...prev, newRow];
-    // If there's no active search term, update filteredData too
-    if (!searchTerm) {
-      setFilteredData(updated);
-    }
-    return updated;
-  });  };
+    // Update both allRows and filteredData if no search is active
+    setAllRows((prev) => {
+      const updated = [...prev, newRow];
+      // If there's no active search term, update filteredData too
+      if (!searchTerm) {
+        setFilteredData(updated);
+      }
+      return updated;
+    });
+  };
 
   // For "Remove Row"
   const handleRemoveRow = (rowId) => {
@@ -218,8 +223,8 @@ const ManualTallyTable = ({
 
   // Whenever allRows changes, we reset filteredData
   useEffect(() => {
-    console.log({allRows})
-    setAllRows(initialData)
+    console.log({ allRows });
+    setAllRows(initialData);
     setFilteredData(initialData);
   }, [initialData]);
 
@@ -288,7 +293,9 @@ const ManualTallyTable = ({
   const handleSelectAllFilter = () => {
     const visibleCats = getFilteredUniqueValues(currentFilterColumn);
     // if everything is already selected, unselect them
-    const allSelected = visibleCats.every((c) => selectedCategories.includes(c));
+    const allSelected = visibleCats.every((c) =>
+      selectedCategories.includes(c)
+    );
     setSelectedCategories(allSelected ? [] : visibleCats);
   };
   const handleColumnFilter = () => {
@@ -672,7 +679,6 @@ const ManualTallyTable = ({
     window.open(whatsappLink, "_blank");
   };
 
-
   // For Tally direct upload
   const handleUploadToTally = () => {
     if (!handleUpload) return;
@@ -685,8 +691,19 @@ const ManualTallyTable = ({
   return (
     <Card className="min-w-full max-w-[0]">
       <CardHeader>
-        <div className="flex justify-between items-center">
-          <h2 className="text-lg font-semibold">{tableTitle}</h2>
+        <div className="flex items-center justify-between w-full py-2 space-x-2">
+          <h2 className="text-lg font-semibold flex items-center space-x-2">
+            {tableTitle}
+          </h2>
+          <div className="bg-blue-100 border border-blue-200 shadow-lg p-3 rounded-md text-sm text-gray-800 max-w-xl">
+            <div className="flex items-center space-x-4">
+              <Info className="w-5 h-5 text-black" />
+              <h1>
+                Ensure that Tally is running on port 9000 for the Upload to
+                work.
+              </h1>
+            </div>
+          </div>
         </div>
       </CardHeader>
 
@@ -778,11 +795,7 @@ const ManualTallyTable = ({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleDownload}
-                  >
+                  <Button variant="ghost" size="icon" onClick={handleDownload}>
                     <Download className="w-4 h-4 text-blue-500" />
                   </Button>
                 </TooltipTrigger>
@@ -807,12 +820,15 @@ const ManualTallyTable = ({
 
         {/* Data Table */}
         <div className="overflow-x-auto max-w-full">
-        <Table className="min-w-full table-auto">
-        <TableHeader className="bg-gray-200 dark:bg-gray-900">
+          <Table className="min-w-full table-auto">
+            <TableHeader className="bg-gray-200 dark:bg-gray-900">
               <TableRow>
                 <TableHead className="w-10">
                   <Checkbox
-                    checked={selectedTransactions.length === filteredData.length && filteredData.length > 0}
+                    checked={
+                      selectedTransactions.length === filteredData.length &&
+                      filteredData.length > 0
+                    }
                     onCheckedChange={toggleSelectAll}
                   />
                 </TableHead>
@@ -834,9 +850,12 @@ const ManualTallyTable = ({
                         )
                         .join(" ")}
                       {/* filter button, except for certain columns */}
-                      {!["narration", "effective_date", "imported", "reference_number"].includes(
-                        column.toLowerCase()
-                      ) && (
+                      {![
+                        "narration",
+                        "effective_date",
+                        "imported",
+                        "reference_number",
+                      ].includes(column.toLowerCase()) && (
                         <Button
                           variant="ghost"
                           size="sm"
@@ -867,7 +886,10 @@ const ManualTallyTable = ({
             <TableBody>
               {currentData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={columns.length + 2} className="text-center">
+                  <TableCell
+                    colSpan={columns.length + 2}
+                    className="text-center"
+                  >
                     No matching results found
                   </TableCell>
                 </TableRow>
@@ -884,7 +906,9 @@ const ManualTallyTable = ({
                     <TableCell>
                       <Checkbox
                         checked={selectedTransactions.includes(row.id)}
-                        onCheckedChange={() => toggleTransactionSelection(row.id)}
+                        onCheckedChange={() =>
+                          toggleTransactionSelection(row.id)
+                        }
                       />
                     </TableCell>
 
@@ -911,7 +935,9 @@ const ManualTallyTable = ({
                                 editedEntities[row.id] !== row[column] && (
                                   <Check
                                     className="ml-2 cursor-pointer text-green-500"
-                                    onClick={() => handleEntityUpdateConfirm(row)}
+                                    onClick={() =>
+                                      handleEntityUpdateConfirm(row)
+                                    }
                                   />
                                 )}
                             </div>
@@ -994,7 +1020,11 @@ const ManualTallyTable = ({
                         );
                       }
 
-                      if (["dr_ledger", "cr_ledger"].includes(column.toLowerCase())) {
+                      if (
+                        ["dr_ledger", "cr_ledger"].includes(
+                          column.toLowerCase()
+                        )
+                      ) {
                         return (
                           <TableCell key={column}>
                             <Input
@@ -1002,20 +1032,32 @@ const ManualTallyTable = ({
                               value={row[column] || ""}
                               onChange={(e) => {
                                 // Single row
-                                handleLedgerChange(row.id, column, e.target.value);
+                                handleLedgerChange(
+                                  row.id,
+                                  column,
+                                  e.target.value
+                                );
 
                                 // If row is selected, update the others
                                 if (selectedTransactions.includes(row.id)) {
                                   selectedTransactions.forEach((id) => {
                                     if (id !== row.id) {
-                                      handleLedgerChange(id, column, e.target.value);
+                                      handleLedgerChange(
+                                        id,
+                                        column,
+                                        e.target.value
+                                      );
                                     }
                                   });
                                 }
                               }}
                               placeholder={`Enter ${column
                                 .split("_") // Split by underscore
-                                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Capitalize
+                                .map(
+                                  (word) =>
+                                    word.charAt(0).toUpperCase() +
+                                    word.slice(1).toLowerCase()
+                                ) // Capitalize
                                 .join(" ")}`}
                               className="w-full min-w-[200px]"
                             />
@@ -1030,7 +1072,11 @@ const ManualTallyTable = ({
                               type="text"
                               value={row[column] || ""}
                               onChange={(e) =>
-                                handleInputChange(row.id, column, e.target.value)
+                                handleInputChange(
+                                  row.id,
+                                  column,
+                                  e.target.value
+                                )
                               }
                               placeholder="Enter narration"
                               className="w-full"
@@ -1051,7 +1097,11 @@ const ManualTallyTable = ({
                             className="w-full min-w-[200px]"
                             placeholder={`Enter ${column
                               .split("_") // Split by underscore
-                              .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Capitalize
+                              .map(
+                                (word) =>
+                                  word.charAt(0).toUpperCase() +
+                                  word.slice(1).toLowerCase()
+                              ) // Capitalize
                               .join(" ")}`}
                           />
                         </TableCell>
@@ -1076,7 +1126,11 @@ const ManualTallyTable = ({
               <TableRow>
                 <TableCell>Total</TableCell>
                 {columns.map((col) => {
-                  if (["credit", "debit", "balance", "amount"].includes(col.toLowerCase())) {
+                  if (
+                    ["credit", "debit", "balance", "amount"].includes(
+                      col.toLowerCase()
+                    )
+                  ) {
                     return <TableCell key={col}>{totals[col] || ""}</TableCell>;
                   }
                   return <TableCell key={col} />;
@@ -1133,7 +1187,6 @@ const ManualTallyTable = ({
           </div>
         )}
 
-
         {/* Filter Modal for text columns */}
         <Dialog open={filterModalOpen} onOpenChange={setFilterModalOpen}>
           <DialogContent className="sm:max-w-[400px]">
@@ -1156,7 +1209,6 @@ const ManualTallyTable = ({
               {getFilteredUniqueValues(currentFilterColumn).map((val) => (
                 <label
                   key={val}
-                  
                   className="flex items-center gap-1 p-2 hover:bg-gray-50 rounded-md cursor-pointer dark:hover:bg-gray-700"
                 >
                   <Checkbox
@@ -1181,7 +1233,10 @@ const ManualTallyTable = ({
         </Dialog>
 
         {/* Numeric Filter Modal */}
-        <Dialog open={numericFilterModalOpen} onOpenChange={setNumericFilterModalOpen}>
+        <Dialog
+          open={numericFilterModalOpen}
+          onOpenChange={setNumericFilterModalOpen}
+        >
           <DialogContent className="sm:max-w-[400px]">
             <DialogHeader>
               <DialogTitle>Filter {currentNumericColumn}</DialogTitle>
@@ -1224,7 +1279,6 @@ const ManualTallyTable = ({
           </DialogContent>
         </Dialog>
 
-       
         {/* Share Modal */}
         <Dialog open={shareModalOpen} onOpenChange={setShareModalOpen}>
           <DialogContent className="max-w-md p-6">
@@ -1235,7 +1289,11 @@ const ManualTallyTable = ({
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" className="p-4" onClick={handleMailShare}>
+                    <Button
+                      variant="ghost"
+                      className="p-4"
+                      onClick={handleMailShare}
+                    >
                       <Mail className="w-6 h-6 text-red-500" />
                     </Button>
                   </TooltipTrigger>
@@ -1244,7 +1302,11 @@ const ManualTallyTable = ({
 
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" className="p-4" onClick={handleWhatsappShare}>
+                    <Button
+                      variant="ghost"
+                      className="p-4"
+                      onClick={handleWhatsappShare}
+                    >
                       <MessageCircle className="w-6 h-6 text-green-500" />
                     </Button>
                   </TooltipTrigger>
@@ -1253,13 +1315,15 @@ const ManualTallyTable = ({
               </TooltipProvider>
             </div>
             <div className="flex justify-end">
-              <Button variant="outline" onClick={() => setShareModalOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setShareModalOpen(false)}
+              >
                 Cancel
               </Button>
             </div>
           </DialogContent>
         </Dialog>
-
       </CardContent>
     </Card>
   );

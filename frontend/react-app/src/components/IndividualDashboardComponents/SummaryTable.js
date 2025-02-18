@@ -105,14 +105,14 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
         let formattedDate;
         try {
           if (transaction.date instanceof Date) {
-            formattedDate = transaction.date.toLocaleDateString('en-GB');
-          } else if (typeof transaction.date === 'string') {
+            formattedDate = transaction.date.toLocaleDateString("en-GB");
+          } else if (typeof transaction.date === "string") {
             // If it's already a string date, try to parse and format it
             const dateObj = new Date(transaction.date);
-            formattedDate = dateObj.toLocaleDateString('en-GB');
+            formattedDate = dateObj.toLocaleDateString("en-GB");
           }
         } catch (error) {
-          console.error('Error formatting date:', error);
+          console.error("Error formatting date:", error);
         }
 
         // Return a new object with all fields, including the formatted date
@@ -123,10 +123,10 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
           category: transaction.category,
           balance: transaction.balance,
           bank: transaction.bank,
-          entity: transaction.entity
+          entity: transaction.entity,
         };
       });
-};
+  };
 
   // Add a new sorting function
   const sortDataByTotal = (data) => {
@@ -148,8 +148,7 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
   }, [data]);
 
   const handleRowClick = (row) => {
-
-    console.log({clicked:row})
+    console.log({ clicked: row });
     setSelectedRow(row);
     const filtered = filterTransactionsByCategory(row);
     // console.log("Filtered transactions:", filtered);

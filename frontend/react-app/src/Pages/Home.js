@@ -27,17 +27,12 @@ import TallyPrimeDirect from "../components/ImortTally/TallyDirectImport";
 import TallyPrime from "../components/ImortTally/TallyPrime";
 import { useReportContext } from "../contexts/ReportContext";
 
-
 const Dashboard = () => {
   const { breadcrumbs, setMainDashboard } = useBreadcrumb();
   const [activeTab, setActiveTab] = useState("Dashboard");
   const [pdfColMarkerData, setPdfColMarkerData] = useState([]);
   const { defaultTab } = useParams();
   const { reportData, updateReportData } = useReportContext();
-
-
-
-
 
   const navItems = [
     {
@@ -84,7 +79,7 @@ const Dashboard = () => {
       url: "#",
       icon: IndianRupee,
     },
-    
+
     // {
     //   title: "Billing",
     //   url: "#",
@@ -173,7 +168,9 @@ const Dashboard = () => {
                 <PdfColumnMarker setPdfColMarkerData={setPdfColMarkerData} />
               )}
               {activeTab === "TallyPrime Vouchers" && <TallyPrime />}
-              {activeTab === "TallyPrime" && <TallyPrimeDirect source="manual" />}
+              {activeTab === "TallyPrime" && (
+                <TallyPrimeDirect source="manual" />
+              )}
               {activeTab === "TallyERP Vouchers" && <ExcelERP />}
             </main>
           </div>

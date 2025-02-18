@@ -11,9 +11,16 @@ const getExcelColumnLetter = (colIndex) => {
   return letter;
 };
 
-const exportToExcel = async (transactions, fileName = "transactions.xlsx", forShare = false, categoryOptions = null) => {
+const exportToExcel = async (
+  transactions,
+  fileName = "transactions.xlsx",
+  forShare = false,
+  categoryOptions = null
+) => {
   const columnsToIgnore = ["monthKey"];
   const colsToHide = ["id"];
+
+  console.log({ transactions, fileName, forShare, categoryOptions });
 
   if (!transactions.length) return null;
 
@@ -119,7 +126,9 @@ const exportToExcel = async (transactions, fileName = "transactions.xlsx", forSh
     const numRows = finalTransactions.length;
 
     // Add a "Categories" sheet with category options
-    const categorySheet = workbook.addWorksheet("Categories",{state:'hidden'});
+    const categorySheet = workbook.addWorksheet("Categories", {
+      state: "hidden",
+    });
     categoryOptions.forEach((cat, i) => {
       categorySheet.getCell(`A${i + 1}`).value = cat;
     });
@@ -153,7 +162,8 @@ const exportToExcel = async (transactions, fileName = "transactions.xlsx", forSh
             {
               description: "Excel File",
               accept: {
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+                  [".xlsx"],
               },
             },
           ],

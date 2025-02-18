@@ -36,14 +36,13 @@ import {
 import { useReportContext } from "../contexts/ReportContext";
 import DashboardDropdown from "../components/IndividualDashboardComponents/DashboardDropdown";
 
-
 const IndividualDashboard = () => {
   const [activeTab, setActiveTab] = useState("Summary");
   const { breadcrumbs, setIndividualDashboard } = useBreadcrumb();
   const { caseId, individualId, defaultTab } = useParams();
   const { reportData, updateReportData } = useReportContext();
-  const {currentCustomerName,setCurrentCustomerName} = useState(null);
-  
+  const { currentCustomerName, setCurrentCustomerName } = useState(null);
+
   const [navItems, setNavItems] = useState([
     {
       title: "Summary",
@@ -106,35 +105,42 @@ const IndividualDashboard = () => {
   useEffect(() => {
     setIndividualDashboard(
       activeTab,
-      `/individual-dashboard/${caseId}/${individualId || "combined"}/${activeTab}`
+      `/individual-dashboard/${caseId}/${
+        individualId || "combined"
+      }/${activeTab}`
     );
   }, [activeTab, caseId, individualId, setIndividualDashboard]);
 
-
   useEffect(() => {
-    if (individualId!==undefined && individualId!==null && individualId!=="undefined") {
+    if (
+      individualId !== undefined &&
+      individualId !== null &&
+      individualId !== "undefined"
+    ) {
       updateReportData({
         ...reportData,
-        individualId:null,
-        customerName: null
-      })
+        individualId: null,
+        customerName: null,
+      });
       // hide eod for individual
       setNavItems((prev) => {
         return prev.filter((item) => item.title !== "EOD");
       });
-    }else{
+    } else {
       // show eod for where individual id is not present, first check if it is already present
-      if(!navItems.find((item) => item.title === "EOD")){
+      if (!navItems.find((item) => item.title === "EOD")) {
         setNavItems((prev) => {
-          return [...prev, {
-            title: "EOD",
-            icon: History,
-          }]
+          return [
+            ...prev,
+            {
+              title: "EOD",
+              icon: History,
+            },
+          ];
         });
       }
     }
   }, []);
-
 
   useEffect(() => {
     if (defaultTab === "defaultTab") setActiveTab(navItems[0].title);
@@ -161,52 +167,26 @@ const IndividualDashboard = () => {
         />
         <ScrollArea className="w-full">
           <div className="flex justify-between items-center w-full pr-14">
-
-          <BreadcrumbDynamic items={breadcrumbs} />
-          <div>
-            <DashboardDropdown/>
-
-          </div>
+            <BreadcrumbDynamic items={breadcrumbs} />
+            <div>
+              <DashboardDropdown />
+            </div>
           </div>
           <div className="flex-1 flex flex-col overflow-hidden">
             <main className="flex-1">
-              {activeTab === "Summary" && (
-                <Summary  />
-              )}
+              {activeTab === "Summary" && <Summary />}
               {activeTab === "Transactions" && <Transactions />}
-              {activeTab === "Debtors" && (
-                <Debtors  />
-              )}
-              {activeTab === "Creditors" && (
-                <Creditors  />
-              )}
-              {activeTab === "EMI" && (
-                <EMI  />
-              )}
-              {activeTab === "Investment" && (
-                <Investment  />
-              )}
-              {activeTab === "EOD" && (
-                <EodBalance  />
-              )}
-              {activeTab === "Cash" && (
-                <Cash />
-              )}
-              {activeTab === "UPI" && (
-                <Upi />
-              )}
-              {activeTab === "Suspense" && (
-                <Suspense  />
-              )}
-              {activeTab === "Reversal" && (
-                <Reversal  />
-              )}
-              {activeTab === "Insurance" && (
-                <Insurance  />
-              )}
-              {activeTab === "Contra" && (
-                <Contra  />
-              )}
+              {activeTab === "Debtors" && <Debtors />}
+              {activeTab === "Creditors" && <Creditors />}
+              {activeTab === "EMI" && <EMI />}
+              {activeTab === "Investment" && <Investment />}
+              {activeTab === "EOD" && <EodBalance />}
+              {activeTab === "Cash" && <Cash />}
+              {activeTab === "UPI" && <Upi />}
+              {activeTab === "Suspense" && <Suspense />}
+              {activeTab === "Reversal" && <Reversal />}
+              {activeTab === "Insurance" && <Insurance />}
+              {activeTab === "Contra" && <Contra />}
             </main>
           </div>
         </ScrollArea>

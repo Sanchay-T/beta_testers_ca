@@ -153,7 +153,7 @@ export default function GenerateReport() {
         }
 
         if (result.data.successfulFiles.length > 0) {
-          // setShowRectifyButton(true);
+          setShowRectifyButton(true);
           const successfulFiles = result.data.successfulFiles.map(
             (file_path) => {
               // Get the filename from the path and remove the timestamp
@@ -219,7 +219,6 @@ export default function GenerateReport() {
       setLoading(false);
       refreshPage();
       progressIntervalRef.current = null;
-      localStorage.removeItem("dashboardData");
     }
   };
   const viewAnalysis = () => {
@@ -311,6 +310,30 @@ export default function GenerateReport() {
       </div>
 
       <RecentReports key={refreshTrigger} onReportGenerated={refreshPage} />
+
+      {/* statments which we dont work with */}
+      <Card className="p-6">
+        <h4 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+          <AlertCircle className="h-5 w-5 text-amber-500" />
+          Important Notes
+        </h4>
+        <h6 className="text-gray-600 dark:text-slate-300 mb-4">
+          Certain statements may not be processed properly due to various
+          reasons. Below is a list of common unsupported or partially extracted
+          formats:
+        </h6>
+        <ul className="space-y-3">
+          {note.content.map((item, idx) => (
+            <li
+              key={idx}
+              className="flex gap-3 items-center text-gray-600 dark:text-slate-300"
+            >
+              <ChevronRight className="h-5 w-5 flex-shrink-0 text-gray-400" />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+      </Card>
 
       {/* Dialog for successful report generation */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

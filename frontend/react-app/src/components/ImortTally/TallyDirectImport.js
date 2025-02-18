@@ -1,21 +1,29 @@
 import React, { useState, useEffect, useRef } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 import { Loader2 } from "lucide-react";
 import TallyTable from "./TallyTable";
-import { Dialog, DialogContent, DialogHeader, DialogTitle,DialogFooter,DialogDescription } from "../ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "../ui/dialog";
 import { Button } from "../ui/button";
 import { useReportContext } from "../../contexts/ReportContext";
 import ManualTallyTable from "./ManualTable";
 import * as XLSX from "xlsx";
 
 const defaultColumns = {
-  "Payment Receipt Contra Voucher":[
+  "Payment Receipt Contra Voucher": [
     "invoice_date",
     "effective_date",
     "reference_number",
@@ -28,8 +36,13 @@ const defaultColumns = {
 };
 
 const TallyDirectImport = ({ source }) => {
-  const [vouchers, setVouchers] = useState(["Payment Receipt Contra Voucher","Ledger"]);
-  const [selectedVoucher, setSelectedVoucher] = useState("Payment Receipt Contra Voucher");
+  const [vouchers, setVouchers] = useState([
+    "Payment Receipt Contra Voucher",
+    "Ledger",
+  ]);
+  const [selectedVoucher, setSelectedVoucher] = useState(
+    "Payment Receipt Contra Voucher"
+  );
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loading2, setLoading2] = useState(false);
@@ -41,14 +54,14 @@ const TallyDirectImport = ({ source }) => {
   const fileInputRef = useRef(null);
   const [uniqueLedgers, setUniqueLedgers] = useState([]);
   const [dataToRender, setDataToRender] = useState([]);
-  
+
   // If you have a caseId in the ReportContext:
   const { reportData } = useReportContext();
   const { caseId } = reportData;
   const [ledgerCreationTableData,setLedgerCreationTableData] = useState([]);
 
   // ----------------------------------
-  // 1) FETCHING VOUCHERS/TRANSACTIONS 
+  // 1) FETCHING VOUCHERS/TRANSACTIONS
   //    (only if not in “manual” source)
   // ----------------------------------
 
@@ -58,11 +71,13 @@ const TallyDirectImport = ({ source }) => {
       //   caseId,
       //   newVoucher || selectedVoucher
       // );
-      const data = await window.electron.getTransactions(caseId)
+      const data = await window.electron.getTransactions(caseId);
       // Sort, map, etc. as you did before
       const sortedData = data.sort((a, b) => a.imported - b.imported);
 
-      const storedReasons = JSON.parse(localStorage.getItem("failedTransactions") || "{}");
+      const storedReasons = JSON.parse(
+        localStorage.getItem("failedTransactions") || "{}"
+      );
 
       const formattedData = sortedData
         .map((transaction) => {
@@ -98,29 +113,29 @@ const TallyDirectImport = ({ source }) => {
           };
         })
         .filter((t) => t !== null);
-        
-        setTransactions(formattedData);
-        setDataToRender(formattedData);
-    //   if (newVoucher === "Contra Voucher"){
-    //   const contraFormatted = formattedData.map((transaction) => {
-    //     return {
-    //       date: transaction.date,
-    //       dr_ledger: transaction.dr_ledger,
-    //       cr_ledger: transaction.cr_ledger,
-    //       amount: transaction.amount,
-    //       narration: transaction.narration,
-    //       voucher_type: transaction.voucher_type,
-    //       id: transaction.id,
-    //       imported: transaction.imported,
-    //       failed_reason: transaction.failed_reason
-    //     }
-    //   });
-    //   setTransactions(contraFormatted);
 
-    //   }else{
-    //   setTransactions(formattedData);
-    //   setBackupTransactions(formattedData);
-    // }
+      setTransactions(formattedData);
+      setDataToRender(formattedData);
+      //   if (newVoucher === "Contra Voucher"){
+      //   const contraFormatted = formattedData.map((transaction) => {
+      //     return {
+      //       date: transaction.date,
+      //       dr_ledger: transaction.dr_ledger,
+      //       cr_ledger: transaction.cr_ledger,
+      //       amount: transaction.amount,
+      //       narration: transaction.narration,
+      //       voucher_type: transaction.voucher_type,
+      //       id: transaction.id,
+      //       imported: transaction.imported,
+      //       failed_reason: transaction.failed_reason
+      //     }
+      //   });
+      //   setTransactions(contraFormatted);
+
+      //   }else{
+      //   setTransactions(formattedData);
+      //   setBackupTransactions(formattedData);
+      // }
     } catch (err) {
       console.error("Error fetching transactions:", err);
     } finally {
@@ -191,7 +206,7 @@ const TallyDirectImport = ({ source }) => {
   };
 
   // ----------------------------------
-  // 2) UPLOAD TO TALLY LOGIC 
+  // 2) UPLOAD TO TALLY LOGIC
   //    (common for both modes)
   // ----------------------------------
 
@@ -225,35 +240,41 @@ const TallyDirectImport = ({ source }) => {
       return !transaction.dr_ledger || !transaction.cr_ledger;
     });
     if (incompleteTransactions.length > 0) {
-      alert("Some transactions are missing DrLedger or CrLedger. Please fill them before uploading.");
+      alert(
+        "Some transactions are missing DrLedger or CrLedger. Please fill them before uploading."
+      );
       return;
     }
 
     // Prepare data for Tally
-    const tallyData = txData.map((transaction) => {
-      if (transaction.imported) {
-        // Already uploaded
-        return null;
-      }
-      const tempVoucherType =
-        transaction.voucher_type === "Payment Voucher" ? "Payment"
-          : transaction.voucher_type === "Receipt Voucher" ? "Receipt"
-          : transaction.voucher_type || "Payment"; // fallback
+    const tallyData = txData
+      .map((transaction) => {
+        if (transaction.imported) {
+          // Already uploaded
+          return null;
+        }
+        const tempVoucherType =
+          transaction.voucher_type === "Payment Voucher"
+            ? "Payment"
+            : transaction.voucher_type === "Receipt Voucher"
+            ? "Receipt"
+            : transaction.voucher_type || "Payment"; // fallback
 
-      return {
-        companyName: companyName,
-        invoiceDate: formatDateForTally(transaction.date),
-        // effectiveDate: formatDateForTally(transaction.effective_date || ""),
-        effectiveDate: 20240401,
-        referenceNumber: transaction.reference_number || null,
-        DrLedger: transaction.dr_ledger || null,
-        CrLedger: transaction.cr_ledger || null,
-        amount: parseInt(transaction.amount),
-        narration: transaction.narration,
-        voucherName: tempVoucherType,
-        id: transaction.id,
-      };
-    }).filter(Boolean);
+        return {
+          companyName: companyName,
+          invoiceDate: formatDateForTally(transaction.date),
+          // effectiveDate: formatDateForTally(transaction.effective_date || ""),
+          effectiveDate: 20240401,
+          referenceNumber: transaction.reference_number || null,
+          DrLedger: transaction.dr_ledger || null,
+          CrLedger: transaction.cr_ledger || null,
+          amount: parseInt(transaction.amount),
+          narration: transaction.narration,
+          voucherName: tempVoucherType,
+          id: transaction.id,
+        };
+      })
+      .filter(Boolean);
 
     setTallyUploadData(tallyData);
     setConfirmationModal(true);
@@ -299,9 +320,11 @@ const TallyDirectImport = ({ source }) => {
       const response = await window.electron.uploadToTally(tallyUploadData);
       
       const { failedTransactions = [], successIds = [] } = response;
-      
+
       // Store failed reasons in localStorage
-      const storedReasons = JSON.parse(localStorage.getItem("failedTransactions") || "{}");
+      const storedReasons = JSON.parse(
+        localStorage.getItem("failedTransactions") || "{}"
+      );
       failedTransactions.forEach((ft) => {
         storedReasons[ft.id] = ft.error;
       });
@@ -320,12 +343,13 @@ const TallyDirectImport = ({ source }) => {
           return { ...tr, failed_reason: storedReasons[tr.id] };
         }
         return tr;
-      }
+      });
+
+      const tempSortedTransactions = tempTransactions.sort(
+        (a, b) => a.imported - b.imported
       );
 
-      const tempSortedTransactions = tempTransactions.sort((a, b) => a.imported - b.imported);
-
-      setTransactions(tempSortedTransactions)
+      setTransactions(tempSortedTransactions);
       setDataToRender(tempSortedTransactions);
 
       // Show summary
@@ -354,7 +378,10 @@ const TallyDirectImport = ({ source }) => {
       const errorMessage = transaction.error.toLowerCase();
       let errorCategory = "Other Errors";
 
-      if (errorMessage.includes("ledger") && errorMessage.includes("does not exist")) {
+      if (
+        errorMessage.includes("ledger") &&
+        errorMessage.includes("does not exist")
+      ) {
         errorCategory = "Ledger Not Found";
       } else if (errorMessage.includes("out of range")) {
         errorCategory = "Date Range Error";
@@ -434,31 +461,30 @@ const TallyDirectImport = ({ source }) => {
   }
 
   // Helper: Format a JS Date to "dd-mm-yyyy"
-function formatDateToDDMMYYYY(date) {
-  const day = ("0" + date.getDate()).slice(-2);
-  const month = ("0" + (date.getMonth() + 1)).slice(-2);
-  const year = date.getFullYear();
-  return `${day}/${month}/${year}`;
-}
+  function formatDateToDDMMYYYY(date) {
+    const day = ("0" + date.getDate()).slice(-2);
+    const month = ("0" + (date.getMonth() + 1)).slice(-2);
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
   // Example: parse Excel with an IPC call or local library
   const handleExcelUpload = async (e) => {
-    console.log({hey: "hey",e})
+    console.log({ hey: "hey", e });
     const file = e.target.files?.[0];
-    console.log({file})
+    console.log({ file });
     if (!file) return;
     try {
-
       const reader = new FileReader();
-      console.log({reader})
+      console.log({ reader });
       reader.onload = async (e) => {
         const data = new Uint8Array(e.target.result);
-        console.log({data})
+        console.log({ data });
         const workbook = XLSX.read(data, { type: "array" });
-        console.log({workbook})
+        console.log({ workbook });
         const sheetName = workbook.SheetNames[0];
-        console.log({sheetName})
+        console.log({ sheetName });
         const sheet = workbook.Sheets[sheetName];
-        console.log({sheet})
+        console.log({ sheet });
         // const parsedData = XLSX.utils.sheet_to_json(sheet);
         // We assume the second row is your actual data row, so we skip the first row with range: 0 or 1
         const parsedData = XLSX.utils.sheet_to_json(sheet, {
@@ -472,69 +498,67 @@ function formatDateToDDMMYYYY(date) {
             "Amount *",
             "Voucher",
             "Narration",
-            "Status"
+            "Status",
           ],
         });
         const newParsedData = parsedData.slice(2);
 
-       // Example in your mapping logic:
+        // Example in your mapping logic:
 
-const newTransactions = newParsedData.map((row, idx) => {
-  let invoiceDateVal = row["Date *"];
-  let effectiveDateVal = row["Effective Date"];
+        const newTransactions = newParsedData.map((row, idx) => {
+          let invoiceDateVal = row["Date *"];
+          let effectiveDateVal = row["Effective Date"];
 
-  // Convert numeric date serials to JS date strings in dd-mm-yyyy format
-  if (typeof invoiceDateVal === "number") {
-    const date = excelSerialToJSDate(invoiceDateVal);
-    invoiceDateVal = date ? formatDateToDDMMYYYY(date) : "";
-  } else if (invoiceDateVal instanceof Date) {
-    invoiceDateVal = formatDateToDDMMYYYY(invoiceDateVal);
-  }
+          // Convert numeric date serials to JS date strings in dd-mm-yyyy format
+          if (typeof invoiceDateVal === "number") {
+            const date = excelSerialToJSDate(invoiceDateVal);
+            invoiceDateVal = date ? formatDateToDDMMYYYY(date) : "";
+          } else if (invoiceDateVal instanceof Date) {
+            invoiceDateVal = formatDateToDDMMYYYY(invoiceDateVal);
+          }
 
-  if (typeof effectiveDateVal === "number") {
-    const date = excelSerialToJSDate(effectiveDateVal);
-    effectiveDateVal = date ? formatDateToDDMMYYYY(date) : "";
-  } else if (effectiveDateVal instanceof Date) {
-    effectiveDateVal = formatDateToDDMMYYYY(effectiveDateVal);
-  }
+          if (typeof effectiveDateVal === "number") {
+            const date = excelSerialToJSDate(effectiveDateVal);
+            effectiveDateVal = date ? formatDateToDDMMYYYY(date) : "";
+          } else if (effectiveDateVal instanceof Date) {
+            effectiveDateVal = formatDateToDDMMYYYY(effectiveDateVal);
+          }
 
-  return {
-    id: `excel-${idx}`,
-    invoice_date: invoiceDateVal,
-    effective_date: effectiveDateVal,
-    reference_number: row["Bill Refrence *"] || "",
-    dr_ledger: row["Dr Ledger *"] || "",
-    cr_ledger: row["Cr Ledger *"] || "",
-    amount: row["Amount *"] || 0,
-    narration: row["Narration"] || "",
-    voucher_type: row["Voucher"] || "Payment Voucher",
-    imported: false,
-    failed_reason: "",
-  };
-});
+          return {
+            id: `excel-${idx}`,
+            invoice_date: invoiceDateVal,
+            effective_date: effectiveDateVal,
+            reference_number: row["Bill Refrence *"] || "",
+            dr_ledger: row["Dr Ledger *"] || "",
+            cr_ledger: row["Cr Ledger *"] || "",
+            amount: row["Amount *"] || 0,
+            narration: row["Narration"] || "",
+            voucher_type: row["Voucher"] || "Payment Voucher",
+            imported: false,
+            failed_reason: "",
+          };
+        });
 
-      console.log({newTransactions})
-      // Add them to our table
-      setTransactions(newTransactions);
-      setDataToRender(newTransactions);
-    }
-    reader.readAsArrayBuffer(file);
-
+        console.log({ newTransactions });
+        // Add them to our table
+        setTransactions(newTransactions);
+        setDataToRender(newTransactions);
+      };
+      reader.readAsArrayBuffer(file);
     } catch (err) {
       console.error("Error parsing Excel:", err);
-    }finally{
+    } finally {
       fileInputRef.current.value = "";
     }
   };
 
   // If the user manually enters rows, “ManualEntryTable” might call this:
   const handleManualEntriesSubmit = (rows) => {
-    console.log({rows})
+    console.log({ rows });
     // rows is an array from ManualEntryTable
     // setTransactions(rows);
     handleTallyUpload(rows);
   };
-
 
   const handleClear = () => {
     // Clear the file input value so that the same file can be re-selected if needed
@@ -563,12 +587,17 @@ const newTransactions = newParsedData.map((row, idx) => {
       <CardHeader>
         <div className="flex justify-between items-center">
           <CardTitle className="text-lg font-semibold">
-            {source === "manual" ? "Manual Tally Import" : `Tally ${selectedVoucher} Transactions`}
+            {source === "manual"
+              ? "Manual Tally Import"
+              : `Tally ${selectedVoucher} Transactions`}
           </CardTitle>
 
           {source !== "manual" && (
             <div className="flex gap-4">
-              <Select onValueChange={handleVoucherChange} value={selectedVoucher}>
+              <Select
+                onValueChange={handleVoucherChange}
+                value={selectedVoucher}
+              >
                 <SelectTrigger className="w-98">
                   <SelectValue placeholder="Select a Voucher" />
                 </SelectTrigger>
@@ -633,7 +662,11 @@ const newTransactions = newParsedData.map((row, idx) => {
               // Otherwise, show the TallyTable with the “transactions” we have
               <TallyTable
                 data={dataToRender}
-                title={source === "manual" ? "Manual Transactions" : "Tally Transactions"}
+                title={
+                  source === "manual"
+                    ? "Manual Transactions"
+                    : "Tally Transactions"
+                }
                 subtitle=""
                 handleUpload={handleUploadClick}
                 setCompanyName={setCompanyName}
@@ -659,8 +692,8 @@ const newTransactions = newParsedData.map((row, idx) => {
             <DialogTitle>Confirm Tally Import</DialogTitle>
             <DialogDescription>
               <p className="mt-4 text-lg">
-                You are about to import {tallyUploadData.length} transactions to Tally. 
-                Are you sure you want to proceed?
+                You are about to import {tallyUploadData.length} transactions to
+                Tally. Are you sure you want to proceed?
               </p>
               <p className="my-4 text-sm text-gray-500">
                 Note: Already uploaded transactions will not be uploaded again.
@@ -671,7 +704,11 @@ const newTransactions = newParsedData.map((row, idx) => {
             <Button variant="ghost" onClick={() => setConfirmationModal(false)}>
               Cancel
             </Button>
-            <Button disabled={loading2} variant="default" onClick={handleUploadAfterConfirmation}>
+            <Button
+              disabled={loading2}
+              variant="default"
+              onClick={handleUploadAfterConfirmation}
+            >
               {loading2 ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -686,7 +723,10 @@ const newTransactions = newParsedData.map((row, idx) => {
       </Dialog>
 
       {/* Show summary of Tally upload if there are any failed transactions */}
-      <Dialog open={failedTransactions.length > 0 || successIds.length>0} onOpenChange={setFailedTransactions}>
+      <Dialog
+        open={failedTransactions.length > 0 || successIds.length > 0}
+        onOpenChange={setFailedTransactions}
+      >
         <DialogContent className="min-w-[500px] max-w-[40%] max-h-[90%] overflow-y-auto">
           <DialogHeader />
           <DialogDescription>{tallyUploadResponseStats()}</DialogDescription>
