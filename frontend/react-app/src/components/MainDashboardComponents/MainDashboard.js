@@ -23,7 +23,6 @@ const MainDashboard = () => {
   const [reportsMetrics, setReportsMetrics] = useState({
     totalReports: 0,
     totalStatements: 0,
-    // totalTransactions: 0,
     chartData: [],
     duration: "all",
   });
@@ -721,12 +720,12 @@ const MainDashboard = () => {
             title="Overview"
             value1="Total Reports"
             value2="Total Statements"
-            mainValue1={reportsMetrics.totalReports}
-            mainValue2={reportsMetrics.totalStatements}
-            chartData={reportsMetrics.chartData}
+            mainValue1={reportsMetrics?.totalReports || 0}
+            mainValue2={reportsMetrics?.totalStatements || 0}
+            chartData={reportsMetrics?.chartData || []}
             chartType="bar"
             onDurationChange={handleReportsDurationChange}
-            initialDuration={reportsMetrics.duration}
+            initialDuration={reportsMetrics?.duration || "all"}
           />
 
           <StatsMetricCard
@@ -734,12 +733,12 @@ const MainDashboard = () => {
             title="Platform Activity"
             value1="Total Pages"
             value2="Total Transactions"
-            mainValue1={pagesMetrics.totalPages}
-            mainValue2={pagesMetrics.totalTransactions}
-            chartData={pagesMetrics.chartData}
+            mainValue1={pagesMetrics?.totalPages || 0}
+            mainValue2={pagesMetrics?.totalTransactions || 0}
+            chartData={pagesMetrics?.chartData || []}
             chartType="line"
             onDurationChange={handlePagesDurationChange}
-            initialDuration={pagesMetrics.duration}
+            initialDuration={pagesMetrics?.duration || "all"}
           />
 
           <StatsMetricCard
@@ -747,11 +746,11 @@ const MainDashboard = () => {
             title="Productivity"
             value1="Total Time Saved"
             value2="Avg Time Saved/Day"
-            mainValue1={timeMetrics.totalTimeSaved}
-            mainValue2={timeMetrics.averageTimeSavedPerDay}
+            mainValue1={timeMetrics?.totalTimeSaved || 0}
+            mainValue2={timeMetrics?.averageTimeSavedPerDay || 0}
             mainValueLabel="Minutes Saved"
             onDurationChange={handleTimeMetricsDurationChange}
-            initialDuration={timeMetrics.duration}
+            initialDuration={timeMetrics?.duration || "all"}
           />
         </div>
 
