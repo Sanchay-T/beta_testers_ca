@@ -1309,6 +1309,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                       : -1;
                                   })
                                   .map((statement, index) => {
+                                    console.log({statement})
                                     const isDone = statement.resolved;
                                     const hasError = Boolean(
                                       statement.respectiveReasonsForError

@@ -103,8 +103,6 @@ const IndividualDashboard = () => {
     },
   ]);
 
-   
-
   useEffect(() => {
     setIndividualDashboard(
       activeTab,

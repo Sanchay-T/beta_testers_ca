@@ -43,11 +43,45 @@ import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { useReportContext } from "../../contexts/ReportContext";
 
 const ledgerGroups = [
-  "Travelling Expenses"
-  ];
+  "Branch / Divisions",
+  "Capital Account",
+  "Current Assets",
+  "Current Liabilities",
+  "Direct Expenses",
+  "Direct Incomes",
+  "Fixed Assets",
+  "Indirect Expenses",
+  "Indirect Incomes",
+  "Investments",
+  "Loans (Liability)",
+  "Misc. Expenses (ASSET)",
+  "Purchase Accounts",
+  "Sales Accounts",
+  "Suspense A/c",
+  "Bank Accounts",
+  "Bank OD A/c",
+  "Cash-in-Hand",
+  "Deposits (Asset)",
+  "Duties &amp; Taxes",          // <--- &amp; is preserved
+  "Loans &amp; Advances (Asset)", // <--- &amp; is preserved
+  "Provisions",
+  "Reserves &amp; Surplus",     // <--- &amp; is preserved
+  "Secured Loans",
+  "Stock-in-Hand",
+  "Sundry Creditors",
+  "Sundry Debtors",
+  "Unsecured Loans",
+  "Profit &amp; Loss A/c",      // <--- &amp; is preserved
+  "Bank OCC A/c"
+];
+
+function decodeHtmlEntities(str) {
+  // Replace any &amp; with &
+  return str.replace(/&amp;/g, "&");
+}
 
 
-const DataTable = ({ data = [], title, subtitle,caseId,source,handleUpload,companyName,setCompanyName}) => {
+const DataTable = ({ data = [], title, subtitle,caseId,source,handleUpload,companyName,setCompanyName,selectedVoucher}) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [transactions, setTransactions] = useState([]);
     const [filteredData, setFilteredData] = useState(data);
@@ -363,7 +397,7 @@ useEffect(() => {
     );
   };
 
-  const filteredCategories = categoryOptions.filter((category) =>
+  const filteredCategories = ledgerGroups.filter((category) =>
     category.toLowerCase().includes(categorySearchTerm.toLowerCase())
   );
 
@@ -688,8 +722,21 @@ useEffect(() => {
   };
 
   const handleUploadToTally = async () => {
-  console.log("Upload to Tally transaction", transactions);
-  handleUpload(transactions);
+  let data = transactions ;
+  // if(selectedVoucher==="Ledger"){
+  //   // If no rows selected, show a warning (optional)
+  //   if (globalSelectedRows.length === 0) {
+  //     alert("Please select at least one row to upload.");
+  //     return;
+  //   }
+
+  //   // 2) Grab only those transactions whose IDs are in `selectedTransactions`
+  //   const selectedRows = data.filter((tx) =>
+  //     globalSelectedRows.includes(tx.id)
+  //   );
+  //   data=selectedRows
+  // }
+  handleUpload(data);
 
   }
 
@@ -745,7 +792,6 @@ useEffect(() => {
   };
 
   const renderCell = (row, column) => {
-    console.log({row,column})
 
     const value = row[column];
   
@@ -762,7 +808,6 @@ useEffect(() => {
     if(textAreaInput.includes(column)){
       typeProp = "text";
     }
-    console.log({typeProp})
 
     if (typeProp) {
      
@@ -1108,13 +1153,13 @@ useEffect(() => {
                                 </Button> */}
                               </div>
                               <div className="max-h-[200px] overflow-y-auto">
-                                {ledgerGroups.length > 0 ? (
-                                  ledgerGroups.map((ledgerGroup) => (
+                                {filteredCategories.length > 0 ? (
+                                  filteredCategories.map((ledgerGroup) => (
                                     <SelectItem
                                       key={ledgerGroup}
                                       value={ledgerGroup}
                                     >
-                                      {ledgerGroup}
+                                      {decodeHtmlEntities(ledgerGroup)}
                                     </SelectItem>
                                   ))
                                 ) : (

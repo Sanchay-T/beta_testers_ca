@@ -151,4 +151,58 @@
     `;
 }
 
-module.exports = { buildTallyXmlPaymentReceipt,buildTallyXmlContra };
+
+function buildTallyLedgerXml({ ledgerName, ledgerGroup, GSTnum, Address, pincode, state, country, openingBalance, date, companyName }) {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<ENVELOPE>
+<HEADER>
+<TALLYREQUEST>Import Data</TALLYREQUEST>
+</HEADER>
+<BODY>
+<IMPORTDATA>
+ <REQUESTDESC>
+  <REPORTNAME>All Masters</REPORTNAME>
+  <STATICVARIABLES>
+   <SVCURRENTCOMPANY>${companyName}</SVCURRENTCOMPANY>
+  </STATICVARIABLES>
+ </REQUESTDESC>
+ <REQUESTDATA>
+  <TALLYMESSAGE xmlns:UDF="TallyUDF">
+   <LEDGER NAME="${ledgerName}">
+    <PRIORSTATENAME>${state}</PRIORSTATENAME>
+    <VATDEALERTYPE>Regular</VATDEALERTYPE>
+    <PARENT>${ledgerGroup}</PARENT>
+    <COUNTRYOFRESIDENCE>${country}</COUNTRYOFRESIDENCE>
+    <SORTPOSITION>${openingBalance}</SORTPOSITION>
+    <OPENINGBALANCE>${openingBalance}</OPENINGBALANCE>
+    <LANGUAGENAME.LIST>
+     <NAME.LIST TYPE="String">
+      <NAME>${ledgerName}</NAME>
+     </NAME.LIST>
+     <LANGUAGEID>1033</LANGUAGEID>
+    </LANGUAGENAME.LIST>
+    <LEDGSTREGDETAILS.LIST>
+     <APPLICABLEFROM>${date}</APPLICABLEFROM>
+     <GSTREGISTRATIONTYPE>Regular</GSTREGISTRATIONTYPE>
+     <PLACEOFSUPPLY>${state}</PLACEOFSUPPLY>
+     <GSTIN>${GSTnum}</GSTIN>
+    </LEDGSTREGDETAILS.LIST>
+    <LEDMAILINGDETAILS.LIST>
+     <ADDRESS.LIST TYPE="String">
+      <ADDRESS>${Address}</ADDRESS>
+     </ADDRESS.LIST>
+     <APPLICABLEFROM>${date}</APPLICABLEFROM>
+     <PINCODE>${pincode}</PINCODE>
+     <MAILINGNAME>${ledgerName}</MAILINGNAME>
+     <STATE>${state}</STATE>
+     <COUNTRY>India</COUNTRY>
+    </LEDMAILINGDETAILS.LIST>
+   </LEDGER>
+  </TALLYMESSAGE>
+ </REQUESTDATA>
+</IMPORTDATA>
+</BODY>
+</ENVELOPE>`;
+}
+
+module.exports = { buildTallyXmlPaymentReceipt,buildTallyXmlContra,buildTallyLedgerXml };
