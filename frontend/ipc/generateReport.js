@@ -307,11 +307,12 @@ const processStatementAndEOD = async (
     log.info({len:transactions_temp.length,example:transactions_temp[1]});
 
     // const tempBankName = fileDetail.bankName.replace(/\d/g, "");
-    // log.info({tempBankName})
+    log.info({withFileIndex:fileDetail.bankName+fileIndex})
 
     // Rest of the existing function code remains the same...
     const statementTransactions = transactions_temp
-      .filter((t) => t.Bank.replace(/\d/g, "") === fileDetail.bankName)
+      // .filter((t) => t.Bank.replace(/\d/g, "") === fileDetail.bankName)
+      .filter((t) => t.Bank === fileDetail.bankName+fileIndex)
       .map((transaction) => {
         try {
           return validateAndTransformTransaction(transaction, null);

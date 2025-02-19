@@ -21,6 +21,8 @@ import { Button } from "../ui/button";
 import { useReportContext } from "../../contexts/ReportContext";
 import ManualTallyTable from "./ManualTable";
 import * as XLSX from "xlsx";
+import { Info } from "lucide-react";
+import  {Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 const defaultColumns = {
   "Payment Receipt Contra Voucher": [
@@ -615,6 +617,17 @@ const TallyDirectImport = ({ source }) => {
                   ))}
                 </SelectContent>
               </Select>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline">
+                    <Info className="w-5 h-5 text-black" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Ensure that Tally is running on port 9000 for the Upload to
+                  work.
+                </TooltipContent>
+              </Tooltip>
             </div>
           )}
         </div>
@@ -653,6 +666,15 @@ const TallyDirectImport = ({ source }) => {
                   <p className="text-sm text-gray-500">
                     or manually add rows below
                   </p>
+                  <div className=" ml-auto bg-blue-100 border border-blue-200 p-3 rounded-md text-sm text-gray-800 max-w-xl">
+                    <div className="flex items-center space-x-4">
+                      <Info className="w-5 h-5 text-black" />
+                      <h1>
+                        Ensure that Tally is running on port 9000 for the Upload
+                        to work.
+                      </h1>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Show ManualEntryTable (simple table where user can add row by row) */}

@@ -689,23 +689,7 @@ const ManualTallyTable = ({
   // 6) Render
   // ---------------------------------------------
   return (
-    <Card className="min-w-full max-w-[0]">
-      <CardHeader>
-        <div className="flex items-center justify-between w-full py-2 space-x-2">
-          <h2 className="text-lg font-semibold flex items-center space-x-2">
-            {tableTitle}
-          </h2>
-          <div className="bg-blue-100 border border-blue-200 p-3 rounded-md text-sm text-gray-800 max-w-xl">
-            <div className="flex items-center space-x-4">
-              <Info className="w-5 h-5 text-black" />
-              <h1>
-                Ensure that Tally is running on port 9000 for the Upload to
-                work.
-              </h1>
-            </div>
-          </div>
-        </div>
-      </CardHeader>
+    <Card className="min-w-full max-w-[0] pt-6">
 
       <CardContent>
         {/* Controls row: Company name, Bulk ledger, add row, etc. */}
