@@ -1,7 +1,7 @@
 {
   "name": "cyphersol-ats-electron-app",
   "version": "1.0.0",
-  "description": "CypherSOL Fintech Pvt Ltd ",
+  "description": "CA OFFLINE APP",
   "main": "main.js",
   "icon": "./assets/cyphersol-icon.png",
   "scripts": {
@@ -18,7 +18,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "SEE LICENSE IN LICENSE.txt",
   "optionalDependencies": {
     "dmg-license": "^1.0.11"
   },
