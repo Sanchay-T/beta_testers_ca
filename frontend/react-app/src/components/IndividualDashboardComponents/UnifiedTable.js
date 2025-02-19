@@ -112,7 +112,7 @@ const DataTable = ({
     "Cash Withdrawal",
     "Closing Balance",
     "Credit Card Payment",
-    "Debtor List",
+    "Debtors",
     "Departmental Stores",
     "Donation",
     "Food Expense/Hotel",

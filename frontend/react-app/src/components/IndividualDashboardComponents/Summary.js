@@ -88,15 +88,32 @@ const { reportData, updateReportData } = useReportContext();
 
       try {
         // console.log("Fetching summary data for caseId:", caseId);
-        const result = await window.electron.getSummary(caseId,individualId);
-        console.log("result", result);
-        const parsedData = result.length > 0 ? JSON.parse(result[0].data) : {};
-        console.log("parsedData", parsedData);
-        const transactions = await window.electron.getTransactions(
-          caseId,
-          parseInt(individualId)
-        );
-        // console.log("transactions", transactions.length);
+        let result = null;
+        let parsedData = {};
+        let tempTransactions = [];
+        let isCombinedDashboard = individualId!==undefined || individualId!=="undefined" || individualId!==null || individualId!=="combined";
+
+        if(isCombinedDashboard){
+          result = await window.electron.getSummary(caseId,null);
+          console.log("result", result);
+          parsedData = result.length > 0 ? JSON.parse(result[0].data) : {};
+          console.log("parsedData", parsedData);
+          tempTransactions = await window.electron.getTransactions(
+            caseId,
+            null
+          );
+        }else{
+          result = await window.electron.getSummary(caseId,individualId);
+          console.log("result", result);
+          parsedData = result.length > 0 ? JSON.parse(result[0].data) : {};
+          console.log("parsedData", parsedData);
+          tempTransactions = await window.electron.getTransactions(
+            caseId,
+            parseInt(individualId)
+          );
+        }
+      
+        console.log("transactions", tempTransactions.length);
 
         const formatData = (data) => {
           return data.map((item) => {
@@ -109,9 +126,18 @@ const { reportData, updateReportData } = useReportContext();
             return formattedItem;
           });
         };
-        console.log("aiyaz",individualId, typeof individualId)
         
-        if(individualId && individualId!=="undefined" && individualId!==undefined ){
+        if(isCombinedDashboard ){
+         
+          setSummaryData({
+            Particulars: formatData(parsedData.particulars || []),
+            "Income Receipts": formatData(parsedData.incomeReceipts || []),
+            "Important Expenses": formatData(parsedData.importantExpenses || []),
+            "Other Expenses": formatData(parsedData.otherExpenses || []),
+            "Contra Debit": formatData(parsedData.contraDebit || []),
+            "Contra Credit": formatData(parsedData.contraCredit || []),
+          });
+        }else{
           setSummaryData({
             Particulars: formatData(parsedData.Particulars || []),
             "Income Receipts": formatData(parsedData["Income Receipts"] || []),
@@ -120,19 +146,9 @@ const { reportData, updateReportData } = useReportContext();
             "Contra Debit": formatData(parsedData["Contra Debit"] || []), 
             "Contra Credit": formatData(parsedData["Contra Credit"] || []), 
           });
-
-        }else{
-        setSummaryData({
-          Particulars: formatData(parsedData.particulars || []),
-          "Income Receipts": formatData(parsedData.incomeReceipts || []),
-          "Important Expenses": formatData(parsedData.importantExpenses || []),
-          "Other Expenses": formatData(parsedData.otherExpenses || []),
-          "Contra Debit": formatData(parsedData.contraDebit || []),
-          "Contra Credit": formatData(parsedData.contraCredit || []),
-        });
       }
 
-        setTransactionData(transactions);
+        setTransactionData(tempTransactions);
       } catch (error) {
         console.error("Error fetching summary data:", error);
         setError(error);
@@ -255,7 +271,6 @@ const { reportData, updateReportData } = useReportContext();
 
   const handlePieClick = (data) => {
     const categoryName = data.name.trim().toLowerCase();
-    
     const matchingTransactions = transactionData.filter(transaction => {
       if (!transaction || !transaction.category) return false;
       const transactionCategory = transaction.category.trim().toLowerCase();

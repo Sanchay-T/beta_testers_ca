@@ -36,7 +36,6 @@ const SidebarDynamic = ({
   const { reportData, updateReportData } = useReportContext();
   const {caseId,individualId} = useParams();
 
-
   // Get initials for avatar fallback
   const getInitials = (name) => {
     if (!name) return "U";
@@ -51,9 +50,12 @@ const SidebarDynamic = ({
   const tabs = navItems.map((item) => item.title);
 
 
-  // const isIndividualDashboard = Boolean(customerName);
-  // const isCaseDashboard = Boolean(caseId);
+  // const isIndividualDashboard =false;
+  // const isCaseDashboard = false;
 
+  const isIndividualDashboard = tabs.includes("Summary");
+  const isCaseDashboard = tabs.includes("Reports");
+  let isCombinedInvidualDashboard = tabs.includes("Summary") && (reportData.individualId===null || reportData.individualId===undefined || reportData.individualId==='undefined'|| reportData.individualId==='combined') 
 
 
   useEffect(()=>{
@@ -98,25 +100,25 @@ const SidebarDynamic = ({
         fetchedReportName=reportName
 
       } catch (error) {
-        // console.error("Error fetching report name:", error);
+        console.error("Error fetching report name:", error);
       }
     };
-
-    if(individualId){
-      fetchCustomerName();
+    if( individualId === undefined ||
+      individualId === null ||
+      individualId === "undefined"||
+      individualId === "combined"){
+      if(!fetchedReportName)
+        fetchReportName();
+    }
+    else{
+      if(!fetchedCustomerName)
+        fetchCustomerName();
     }
     
-    if(caseId){
-      fetchReportName();
-    }
-
+   
   },[caseId,individualId])
   
   console.log({navItems,individualId,caseId,reportData})
-
-  const isIndividualDashboard = tabs.includes("Summary");
-  const isCaseDashboard = tabs.includes("Reports");
-  const isCombinedInvidualDashboard = tabs.includes("Summary") && (reportData.individualId===null || reportData.individualId===undefined || reportData.individualId==='undefined' ) 
 
   useEffect(() => {
     console.log({ isCollapsed });

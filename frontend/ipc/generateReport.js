@@ -33,7 +33,7 @@ const validateAndTransformTransaction = (transaction, statementId) => {
   if (!transaction["Value Date"] || !transaction.Description) {
     throw new Error("Missing required transaction fields");
   }
-
+  log.info({BeforeTransformation:transaction})
   let date = null;
   try {
     // log.info({"before":"conversion",before:transaction["Value Date"]})
@@ -48,14 +48,14 @@ const validateAndTransformTransaction = (transaction, statementId) => {
   }
 
   let amount = 0;
-  if (transaction.Credit !== null && !isNaN(transaction.Credit)) {
+  if (transaction.Credit !== null && !isNaN(transaction.Credit) && transaction.Credit>0) {
     amount = Math.abs(transaction.Credit);
-  } else if (transaction.Debit !== null && !isNaN(transaction.Debit)) {
+  } else if (transaction.Debit !== null && !isNaN(transaction.Debit)&& transaction.Debit>0) {
     amount = Math.abs(transaction.Debit);
   }
 
   let balance = 0;
-  if (transaction.Balance !== null && !isNaN(transaction.Balance)) {
+  if (transaction.Balance !== null && !isNaN(transaction.Balance )) {
     balance = parseFloat(transaction.Balance);
   }
 

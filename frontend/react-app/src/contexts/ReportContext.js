@@ -24,7 +24,7 @@ export const ReportProvider = ({ children }) => {
         "Cash Withdrawal",
         "Closing Balance",
         "Credit Card Payment",
-        "Debtor List",
+        "Debtors",
         "Departmental Stores",
         "Donation",
         "Food Expense/Hotel",

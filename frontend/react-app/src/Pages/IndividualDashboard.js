@@ -113,22 +113,18 @@ const IndividualDashboard = () => {
 
   useEffect(() => {
     if (
-      individualId !== undefined &&
-      individualId !== null &&
-      individualId !== "undefined"
+      individualId === undefined ||
+      individualId === null ||
+      individualId === "undefined"
     ) {
       updateReportData({
         ...reportData,
         individualId: null,
         customerName: null,
       });
-      // hide eod for individual
-      setNavItems((prev) => {
-        return prev.filter((item) => item.title !== "EOD");
-      });
-    } else {
-      // show eod for where individual id is not present, first check if it is already present
       if (!navItems.find((item) => item.title === "EOD")) {
+      // show eod for where individual id is not present, first check if it is already present
+
         setNavItems((prev) => {
           return [
             ...prev,
@@ -139,6 +135,12 @@ const IndividualDashboard = () => {
           ];
         });
       }
+     
+    } else {
+    // hide eod for individual
+    setNavItems((prev) => {
+      return prev.filter((item) => item.title !== "EOD");
+    });
     }
   }, []);
 

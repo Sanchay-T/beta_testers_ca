@@ -119,6 +119,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
 
   const handleSubmitEditPdf = async () => {
     setPdfEditLoading(true);
+
     const allRectified = failedDatasOfCurrentReport.every(
       (statement) => statement.resolved
     );
@@ -176,6 +177,8 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       });
     }
     setPdfEditLoading(false);
+    localStorage.removeItem("dashboardData");
+    
   };
 
   const handleRectify = () => {
@@ -330,6 +333,8 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         }`,
         variant: "destructive",
       });
+    }finally{
+      localStorage.removeItem("dashboardData");
     }
   };
 
@@ -623,6 +628,8 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       setLoading(false);
       progressIntervalRef.current = null;
       setIsAddPdfModalOpen(false);
+      localStorage.removeItem("dashboardData");
+
     }
   };
   const toggleEdit = (id) => {
