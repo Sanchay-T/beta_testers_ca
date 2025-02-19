@@ -48,21 +48,19 @@ const validateAndTransformTransaction = (transaction, statementId) => {
   }
 
   let amount = 0;
+  let type = "";
   if (transaction.Credit !== null && !isNaN(transaction.Credit) && transaction.Credit>0) {
     amount = Math.abs(transaction.Credit);
+    type="credit";
   } else if (transaction.Debit !== null && !isNaN(transaction.Debit)&& transaction.Debit>0) {
     amount = Math.abs(transaction.Debit);
+    type="debit";
   }
 
   let balance = 0;
   if (transaction.Balance !== null && !isNaN(transaction.Balance )) {
     balance = parseFloat(transaction.Balance);
   }
-
-  const type =
-    transaction.Credit !== null && !isNaN(transaction.Credit)
-      ? "credit"
-      : "debit";
 
   return {
     statementId,
