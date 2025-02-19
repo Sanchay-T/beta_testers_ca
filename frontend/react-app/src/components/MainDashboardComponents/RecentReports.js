@@ -132,7 +132,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       );
       console.log("result", result);
 
-      if (result.success && result.data.failedStatements.length === 0) {
+      if (result.success && result.data.failedStatements.bank_names.length === 0) {
         toast({
           title: "Success",
           description: "All statements have been rectified.",

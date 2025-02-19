@@ -292,8 +292,8 @@ const processStatementAndEOD = async (
     // Get NER results for this file using passed fileIndex
     const customerName = nerResults?.Name?.[fileIndex] || "UNKNOWN";
     const accountNumber = nerResults?.["Acc Number"]?.[fileIndex] || "UNKNOWN";
-    log.info({len:transactions_temp.length,example:transactions_temp[1]});
-
+    log.info("transaction_temp",{len:transactions_temp.length,example:transactions_temp[1]});
+    log.info("fileDetail ",{fileDetail});
     // const tempBankName = fileDetail.bankName.replace(/\d/g, "");
     // log.info({withFileIndex:fileDetail.bankName+fileIndex})
 
@@ -1187,15 +1187,15 @@ function generateReportIpc(tmpdir_path) {
       }
 
       // Cleanup
-      fileDetails.forEach((detail) => {
-        try {
-          if (fs.existsSync(detail.pdf_paths)) {
-            fs.unlinkSync(detail.pdf_paths);
-          }
-        } catch (error) {
-          log.warn(`Failed to cleanup temp file: ${detail.pdf_paths}`, error);
-        }
-      });
+      // fileDetails.forEach((detail) => {
+      //   try {
+      //     if (fs.existsSync(detail.pdf_paths)) {
+      //       fs.unlinkSync(detail.pdf_paths);
+      //     }
+      //   } catch (error) {
+      //     log.warn(`Failed to cleanup temp file: ${detail.pdf_paths}`, error);
+      //   }
+      // });
       await updateCaseStatus(caseId, "Success");
 
       return {

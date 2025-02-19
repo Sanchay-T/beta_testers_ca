@@ -179,7 +179,15 @@ async def analyze_bank_statements(request: BankStatementRequest):
 
         logger.info("Starting extraction")
         whole_transaction_sheet = request.whole_transaction_sheet or None
-        result = start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_date, end_date, CA_ID, progress_data,whole_transaction_sheet=whole_transaction_sheet)
+        temp_aiyaz_array_of_array = []
+        if(request.aiyazs_array_of_array):
+            for statement in request.aiyazs_array_of_array:
+                temp_aiyaz_array = []
+                for col in statement:
+                    temp_aiyaz_array.append(col.model_dump())
+                temp_aiyaz_array_of_array.append(temp_aiyaz_array)
+                
+        result = start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_date, end_date, CA_ID, progress_data,whole_transaction_sheet=whole_transaction_sheet,aiyazs_array_of_array=temp_aiyaz_array_of_array)
         
         print("RESULT GENERATED")
         logger.info("Extraction completed successfully")
