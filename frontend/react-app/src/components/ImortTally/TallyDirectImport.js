@@ -36,9 +36,12 @@ const defaultColumns = {
 };
 
 const TallyDirectImport = ({ source }) => {
+  // const [vouchers, setVouchers] = useState([
+  //   "Payment Receipt Contra Voucher",
+  //   "Ledger",
+  // ]);
   const [vouchers, setVouchers] = useState([
     "Payment Receipt Contra Voucher",
-    "Ledger",
   ]);
   const [selectedVoucher, setSelectedVoucher] = useState(
     "Payment Receipt Contra Voucher"

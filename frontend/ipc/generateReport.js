@@ -30,15 +30,14 @@ const sanitizeJSONString = (jsonString) => {
 };
 
 const validateAndTransformTransaction = (transaction, statementId) => {
+  log.info({BeforeTransformation:transaction})
   if (!transaction["Value Date"] || !transaction.Description) {
+    log.info("Missing required transaction fields")
     throw new Error("Missing required transaction fields");
   }
-  log.info({BeforeTransformation:transaction})
   let date = null;
   try {
-    // log.info({"before":"conversion",before:transaction["Value Date"]})
     const [day, month, year] = transaction["Value Date"].split("-");
-    // log.info({"after":"conversion",day,month,year})
     date = new Date(year, month - 1, day);
     if (isNaN(date.getTime())) {
       throw new Error("Invalid date");
@@ -62,6 +61,18 @@ const validateAndTransformTransaction = (transaction, statementId) => {
     balance = parseFloat(transaction.Balance);
   }
 
+  log.info({AfterTransformation:{
+    statementId,
+    date: date,
+    description: transaction.Description,
+    amount: amount,
+    category: transaction.Category || "uncategorized",
+    type: type,
+    balance: balance,
+    bank: transaction.Bank || "unknown",
+    entity: transaction.Entity || "unknown",
+    voucher_type: transaction["Voucher type"] || "unknown",
+  }})
   return {
     statementId,
     date: date,
@@ -293,10 +304,14 @@ const processStatementAndEOD = async (
     // Get NER results for this file using passed fileIndex
     const customerName = nerResults?.Name?.[fileIndex] || "UNKNOWN";
     const accountNumber = nerResults?.["Acc Number"]?.[fileIndex] || "UNKNOWN";
+    log.info({len:transactions_temp.length,example:transactions_temp[1]});
+
+    // const tempBankName = fileDetail.bankName.replace(/\d/g, "");
+    // log.info({tempBankName})
 
     // Rest of the existing function code remains the same...
     const statementTransactions = transactions_temp
-      .filter((t) => t.Bank === fileDetail.bankName)
+      .filter((t) => t.Bank.replace(/\d/g, "") === fileDetail.bankName)
       .map((transaction) => {
         try {
           return validateAndTransformTransaction(transaction, null);
@@ -781,6 +796,7 @@ function generateReportIpc(tmpdir_path) {
 
       // Step 4: Process transactions
       const parsedData = JSON.parse(sanitizeJSONString(response.data.data));
+
       if (parsedData == null) {
         await updateCaseStatus(caseId, "Failed");
         const failedPDFsDir = path.join(tmpdir_path, "failed_pdfs", caseName);
@@ -804,7 +820,7 @@ function generateReportIpc(tmpdir_path) {
         };
       }
 
-      console.log("parsedData", parsedData.length);
+      console.log("parsedData transactions", parsedData.Transactions);
 
       const transactions_temp = (parsedData.Transactions || []).filter(
         (transaction) => {
@@ -828,13 +844,14 @@ function generateReportIpc(tmpdir_path) {
         }
       );
 
-      console.log("transactions_temp", transactions_temp.length);
+      console.log("transactions_temp", transactions_temp.length,{example:transactions_temp[1]});
 
       // Step 5: Process each file
       const processedData = [];
-      log.info({ exampleFileDetails: fileDetails });
+      // log.info({ exampleFileDetails: fileDetails });
 
       for (const fileDetail of fileDetails) {
+        console.log({fileDetail})
         try {
           const result = await processStatementAndEOD(
             fileDetail,
