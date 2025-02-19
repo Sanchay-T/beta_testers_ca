@@ -61,18 +61,6 @@ const validateAndTransformTransaction = (transaction, statementId) => {
     balance = parseFloat(transaction.Balance);
   }
 
-  log.info({AfterTransformation:{
-    statementId,
-    date: date,
-    description: transaction.Description,
-    amount: amount,
-    category: transaction.Category || "uncategorized",
-    type: type,
-    balance: balance,
-    bank: transaction.Bank || "unknown",
-    entity: transaction.Entity || "unknown",
-    voucher_type: transaction["Voucher type"] || "unknown",
-  }})
   return {
     statementId,
     date: date,
@@ -81,7 +69,7 @@ const validateAndTransformTransaction = (transaction, statementId) => {
     category: transaction.Category || "uncategorized",
     type: type,
     balance: balance,
-    bank: transaction.Bank || "unknown",
+    bank: transaction.Bank.replace(/\d/g, "") || "unknown",
     entity: transaction.Entity || "unknown",
     voucher_type: transaction["Voucher type"] || "unknown",
   };

@@ -70,7 +70,7 @@ const validateAndTransformTransaction = (transaction, statementId) => {
     category: transaction.Category || "uncategorized",
     type: type, // Type is now determined by the transaction field used, not the amount sign
     balance: balance,
-    entity: transaction.Bank || "unknown",
+    entity: transaction.Bank.replace(/\d/g, "") || "unknown",
   };
 };
 
