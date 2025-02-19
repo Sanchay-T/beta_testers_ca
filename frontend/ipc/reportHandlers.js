@@ -208,11 +208,11 @@ const createStatement = async (fileDetail, caseId) => {
 };
 
 // Helper function to process transactions
-const processTransactions = async (transactions, fileDetail, statementId) => {
+const processTransactions = async (transactions, fileDetail, statementId,index) => {
   try {
     // Transform and validate transactions for this statement
     const statementTransactions = transactions
-      .filter((t) => t.Bank === fileDetail.bankName)
+      .filter((t) => t.Bank === fileDetail.bankName+index)
       .map((transaction) => {
         try {
           return validateAndTransformTransaction(transaction, statementId);
@@ -491,7 +491,8 @@ function registerReportHandlers(tmpdir_path) {
           const transactionCount = await processTransactions(
             transactions,
             fileDetail,
-            statementId
+            statementId,
+            fileDetails.indexOf(fileDetail),
           );
 
           processedData.push({
