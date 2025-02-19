@@ -1,7 +1,7 @@
 {
   "name": "cyphersol-ats-electron-app",
-  "version": "1.0.1",
-  "description": "Cyphersol ATS Electron Application",
+  "version": "1.0.0",
+  "description": "CypherSOL Fintech Pvt Ltd ",
   "main": "main.js",
   "icon": "./assets/cyphersol-icon.png",
   "scripts": {

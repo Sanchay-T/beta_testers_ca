@@ -77,7 +77,7 @@ const DataTable = ({
   subtitle,
   source,
   refreshFunction,
-  caseId
+  caseId,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [transactions, setTransactions] = useState([]);
@@ -101,7 +101,60 @@ const DataTable = ({
     "transactionId",
     "monthKey",
   ]);
-  const [categoryOptions, setCategoryOptions] = useState([]);
+  const [categoryOptions, setCategoryOptions] = useState([
+    "Bank Charges",
+    "Bank Interest Received",
+    "Bonus Paid",
+    "Bonus Received",
+    "Bounce",
+    "Cash Deposits",
+    "Cash Reversal",
+    "Cash Withdrawal",
+    "Closing Balance",
+    "Credit Card Payment",
+    "Debtor List",
+    "Departmental Stores",
+    "Donation",
+    "Food Expense/Hotel",
+    "General Insurance",
+    "Gold Loan",
+    "GST Paid",
+    "Income Tax Paid",
+    "Income Tax Refund",
+    "Indirect tax",
+    "Interest Debit",
+    "Interest Received",
+    "Investment",
+    "Life insurance",
+    "Loan",
+    "Loan given",
+    "Local Cheque Collection",
+    "Online Shopping",
+    "Opening Balance",
+    "Other Expenses",
+    "POS-Cr",
+    "POS-Dr",
+    "Probable Claim Settlement",
+    "Property Tax",
+    "Provident Fund",
+    "Redemption, Dividend & Interest",
+    "Refund/Reversal",
+    "Rent Paid",
+    "Rent Received",
+    "Salary Paid",
+    "Salary Received",
+    "Subscription / Entertainment",
+    "TDS Deducted",
+    "Total Income Tax Paid",
+    "Travelling Expense",
+    "UPI-Cr",
+    "UPI-Dr",
+    "Utility Bills",
+    "Loan taken",
+    "Loan Given",
+    "Self transfer",
+    "Suspense",
+  ]);
   const [currentDateColumn, setCurrentDateColumn] = useState([]);
 
   // Category states
@@ -204,7 +257,7 @@ const DataTable = ({
     const storedCategories = localStorage.getItem("categoryOptions");
     let localCats = storedCategories ? JSON.parse(storedCategories) : null;
     if (!localCats) {
-      localCats = reportData.categoryOptions;
+      localCats = categoryOptions;
       localStorage.setItem("categoryOptions", JSON.stringify(localCats));
     }
 
@@ -321,7 +374,10 @@ const DataTable = ({
 
       const payload = convertArrayToObject(updatedTransactions);
       console.log("Payload", payload);
-      const response = await window.electron.editCategory(payload, caseId||reportData.caseId);
+      const response = await window.electron.editCategory(
+        payload,
+        caseId || reportData.caseId
+      );
       setCategoryUpdateModalOpen(false);
       toast({
         title: "Categories Updated!",
@@ -459,7 +515,10 @@ const DataTable = ({
       console.log("tx.id", tx.id, "transactionId", transactionId);
       if (parseInt(tx.id) === parseInt(transactionId)) {
         let updatedTx = { ...tx, category: pendingCategoryChange.newCategory };
-        if (pendingCategoryChange.newCategory === "Self transfer" || selectedType === "Contra") {
+        if (
+          pendingCategoryChange.newCategory === "Self transfer" ||
+          selectedType === "Contra"
+        ) {
           updatedTx = { ...updatedTx, voucher_type: "Contra" };
         }
         return updatedTx;
@@ -476,7 +535,10 @@ const DataTable = ({
       oldCategory: pendingCategoryChange.oldCategory,
       keyword: showKeywordInput ? reasoning : "",
     };
-    if (pendingCategoryChange.newCategory === "Self transfer" || selectedType === "Contra") {
+    if (
+      pendingCategoryChange.newCategory === "Self transfer" ||
+      selectedType === "Contra"
+    ) {
       modifiedObject = { ...modifiedObject, voucher_type: "Contra" };
     }
     console.log("modifiedObject", modifiedObject);
@@ -518,47 +580,53 @@ const DataTable = ({
     setShowKeywordInput(false);
   };
 
-    // --- Bulk Update: Find each row by its id ---
-    const handleBulkCategoryChange = (source) => {
-        // Create a shallow copy so we don’t mutate state directly.
-        const dataOnUi = filteredData.map((row) => ({ ...row }));
-        const newModifiedData = [...modifiedData];
-        const ids = source==="similarCategory"?selectedCategorySimilarTransactions:globalSelectedRows
-        const newCategory = source==="similarCategory"?pendingCategoryChange.newCategory:(selectedBulkCategory === "" ? categorySearchTerm : selectedBulkCategory)
-        console.log({ids})
-        ids.forEach((id) => {
-          const index = dataOnUi.findIndex((row) => row.id === id);
-          if (index !== -1) {
-            const oldCategory = dataOnUi[index].category;
-            dataOnUi[index].category =newCategory;
-             // If the new category is "Self transfer", update voucher_type
-             if (newCategory === "Self transfer" || selectedType === "Contra") {
-              dataOnUi[index].voucher_type = "Contra";
-            }
-            
-              if(selectedType){
-                dataOnUi[index].classification = selectedType;
-                dataOnUi[index].is_new = true;
-              }
-            newModifiedData.push({
-              ...dataOnUi[index],
-              oldCategory,
-              reasoning: bulkReasoning,
+  // --- Bulk Update: Find each row by its id ---
+  const handleBulkCategoryChange = (source) => {
+    // Create a shallow copy so we don’t mutate state directly.
+    const dataOnUi = filteredData.map((row) => ({ ...row }));
+    const newModifiedData = [...modifiedData];
+    const ids =
+      source === "similarCategory"
+        ? selectedCategorySimilarTransactions
+        : globalSelectedRows;
+    const newCategory =
+      source === "similarCategory"
+        ? pendingCategoryChange.newCategory
+        : selectedBulkCategory === ""
+        ? categorySearchTerm
+        : selectedBulkCategory;
+    console.log({ ids });
+    ids.forEach((id) => {
+      const index = dataOnUi.findIndex((row) => row.id === id);
+      if (index !== -1) {
+        const oldCategory = dataOnUi[index].category;
+        dataOnUi[index].category = newCategory;
+        // If the new category is "Self transfer", update voucher_type
+        if (newCategory === "Self transfer" || selectedType === "Contra") {
+          dataOnUi[index].voucher_type = "Contra";
+        }
 
-            });
-          }
+        if (selectedType) {
+          dataOnUi[index].classification = selectedType;
+          dataOnUi[index].is_new = true;
+        }
+        newModifiedData.push({
+          ...dataOnUi[index],
+          oldCategory,
+          reasoning: bulkReasoning,
         });
-        console.log({fromBulkUpdate:newModifiedData})
-        setFilteredData(dataOnUi);
-        setModifiedData(newModifiedData);
-        setHasChanges(true);
-        setGlobalSelectedRows(new Set());
-        setBulkCategoryModalOpen(false);
-        setConfirmationModalOpen(false);
-        setSelectedBulkCategory("");
-        setBulkReasoning("");
-
-      };
+      }
+    });
+    console.log({ fromBulkUpdate: newModifiedData });
+    setFilteredData(dataOnUi);
+    setModifiedData(newModifiedData);
+    setHasChanges(true);
+    setGlobalSelectedRows(new Set());
+    setBulkCategoryModalOpen(false);
+    setConfirmationModalOpen(false);
+    setSelectedBulkCategory("");
+    setBulkReasoning("");
+  };
 
   // --- Now store selected rows as transaction IDs ---
   const toggleRowSelection = (id) => {
@@ -774,11 +842,14 @@ const DataTable = ({
 
       const payload = convertArrayToObject(modifiedData);
       console.log("Payload", payload);
-      const response = await window.electron.editCategory(payload, caseId||reportData.caseId);
-      
-      modifiedData.map((row)=>{
-        if(row.category==="Self transfer"){
-          handleVoucherTypeChange(row,"Contra");
+      const response = await window.electron.editCategory(
+        payload,
+        caseId || reportData.caseId
+      );
+
+      modifiedData.map((row) => {
+        if (row.category === "Self transfer") {
+          handleVoucherTypeChange(row, "Contra");
         }
       });
 
@@ -998,9 +1069,11 @@ const DataTable = ({
 
   const handleMailShare = async () => {
     let newTitle = title;
-    const tmpName = reportData.customerName ? reportData.customerName : reportData.reportName;
+    const tmpName = reportData.customerName
+      ? reportData.customerName
+      : reportData.reportName;
     newTitle = `${tmpName} ${title}`;
-    
+
     const fileName = await exportToExcel(
       data,
       `${newTitle}.xlsx`,
@@ -1022,7 +1095,9 @@ const DataTable = ({
 
   const handleWhatsappShare = async () => {
     let newTitle = title;
-    const tmpName = reportData.customerName ? reportData.customerName : reportData.reportName;
+    const tmpName = reportData.customerName
+      ? reportData.customerName
+      : reportData.reportName;
     newTitle = `${tmpName} ${title}`;
 
     const fileName = await exportToExcel(
@@ -2287,8 +2362,11 @@ const DataTable = ({
 
           <div className="text-xs text-left">
             <p>
-            <span className="font-bold">Note:</span> Since this software operates entirely offline, the report is first downloaded to your device before sharing, Please remember to attach the downloaded file.
-            </p> 
+              <span className="font-bold">Note:</span> Since this software
+              operates entirely offline, the report is first downloaded to your
+              device before sharing, Please remember to attach the downloaded
+              file.
+            </p>
           </div>
 
           {/* Cancel Button */}

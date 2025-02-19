@@ -153,7 +153,7 @@ export default function GenerateReport() {
         }
 
         if (result.data.successfulFiles.length > 0) {
-          setShowRectifyButton(true);
+          // setShowRectifyButton(true);
           const successfulFiles = result.data.successfulFiles.map(
             (file_path) => {
               // Get the filename from the path and remove the timestamp
@@ -217,6 +217,7 @@ export default function GenerateReport() {
       refreshPage();
     } finally {
       setLoading(false);
+      localStorage.removeItem("dashboardData");
       refreshPage();
       progressIntervalRef.current = null;
     }
