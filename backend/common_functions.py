@@ -306,7 +306,7 @@ def extraction_process(bank, pdf_path, pdf_password, start_date, end_date):
     empty_idf = pd.DataFrame()
     default_name_n_num = ["_", "XXXXXXXXXX"]
     a = ""
-    bank = re.sub(r"\d+", "", bank)
+    # bank = re.sub(r"\d+", "", bank)
     ext = extract_extension(pdf_path)
 
     try:
@@ -361,7 +361,7 @@ def extraction_process_explicit_lines(bank, pdf_path, pdf_password, start_date, 
     CA_ID = "1234_temp"
     empty_idf = pd.DataFrame()
     default_name_n_num = ["_", "XXXXXXXXXX"]
-    bank = re.sub(r"\d+", "", bank)
+    # bank = re.sub(r"\d+", "", bank)
     a = ""
 
     try:
