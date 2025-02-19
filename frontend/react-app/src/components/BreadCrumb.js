@@ -17,10 +17,12 @@ import {
 import { useNavigate, useLocation, matchPath } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "../components/ui/button";
+import { useBreadcrumb } from "../contexts/BreadcrumbContext";
 
 export function BreadcrumbDynamic({ items, className = "py-4 px-8" }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { lastStates, navigationStack } = useBreadcrumb();
   const [isLoading, setIsLoading] = useState(false);
   const [currentItems, setCurrentItems] = useState(items);
 
@@ -29,34 +31,75 @@ export function BreadcrumbDynamic({ items, className = "py-4 px-8" }) {
   }, [items]);
 
   const handleNavigation = async (path) => {
-    if (path) {
-      setIsLoading(true);
-      try {
-        await navigate(path);
-      } finally {
-        setIsLoading(false);
-      }
+    if (!path || typeof path !== "string") {
+      console.warn("Invalid navigation path:", path);
+      return;
+    }
+    setIsLoading(true);
+    try {
+      await navigate(path);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleBack = () => {
-    const currentIndex = currentItems.findIndex((item) => item.isCurrentPage);
-    if (currentIndex > 0) {
-      const previousItem = currentItems[currentIndex - 1];
-      handleNavigation(previousItem.path);
+    const currentPath = location.pathname;
+
+    // Match report page
+    const reportMatch = matchPath(
+      "/individual-dashboard/:caseId/:individualId/:defaultTab/report/:reportName",
+      currentPath
+    );
+
+    // Match individual dashboard
+    const individualDashboardMatch = matchPath(
+      "/individual-dashboard/:caseId/:individualId/:defaultTab",
+      currentPath
+    );
+
+    if (reportMatch) {
+      const { caseId, individualId, defaultTab } = reportMatch.params;
+      if (caseId && individualId && defaultTab) {
+        handleNavigation(
+          `/individual-dashboard/${caseId}/${individualId}/${defaultTab}`
+        );
+        return;
+      }
     }
+
+    if (individualDashboardMatch) {
+      const { caseId } = individualDashboardMatch.params;
+      if (caseId) {
+        handleNavigation(`/case-dashboard/${caseId}/defaultTab`);
+        return;
+      }
+    }
+
+    // Navigate to last known main dashboard
+    if (lastStates.mainDashboard?.length > 0) {
+      handleNavigation(
+        lastStates.mainDashboard[lastStates.mainDashboard.length - 1].path
+      );
+      return;
+    }
+
+    // Fallback: Use browser history back
+    window.history.back();
   };
 
   const isBackButtonVisible = () => {
-    const caseDashboardMatch = matchPath(
-      "/case-dashboard/:caseId/:defaultTab",
-      location.pathname
+    return (
+      matchPath(
+        "/individual-dashboard/:caseId/:individualId/:defaultTab/report/:reportName",
+        location.pathname
+      ) ||
+      matchPath(
+        "/individual-dashboard/:caseId/:individualId/:defaultTab",
+        location.pathname
+      ) ||
+      matchPath("/case-dashboard/:caseId/:defaultTab", location.pathname)
     );
-    const individualDashboardMatch = matchPath(
-      "/individual-dashboard/:caseId/:individualId/:defaultTab",
-      location.pathname
-    );
-    return caseDashboardMatch || individualDashboardMatch;
   };
 
   if (!currentItems?.length) {
