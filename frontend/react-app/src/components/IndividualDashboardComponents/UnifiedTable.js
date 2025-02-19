@@ -1222,7 +1222,7 @@ const DataTable = ({
     // if source is equal to lifo or fifo then show the table
     <Card className="min-w-full max-w-[0]">
       <CardHeader>
-        <div className="flex justify-between items-center">
+        <div className="flex  lg:flex-col xl:flex-row lg:gap-8 xl:justify-between">
           <div className="space-y-2">
             <CardTitle className="dark:text-slate-300">
               {title || "Data Table"}
@@ -1319,17 +1319,17 @@ const DataTable = ({
                 </Tooltip>
               </div>
 
-              {hasEntity && (
-                <Button
-                  variant="default"
-                  className="ml-2"
-                  disabled={globalSelectedRows.size === 0}
-                  onClick={() => setBatchModalOpen(true)}
-                >
-                  Bulk Edit Party Name
-                </Button>
-              )}
-            </div>
+            {hasEntity && (
+              <Button
+                variant="default"
+                className="w-full sm:w-auto"
+                disabled={globalSelectedRows.size === 0}
+                onClick={() => setBatchModalOpen(true)}
+              >
+                Bulk Edit Party Name
+              </Button>
+            )}
+          </div>
           </div>
         </div>
       </CardHeader>

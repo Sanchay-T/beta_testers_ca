@@ -72,7 +72,7 @@ const SingleBarChart = ({
       </CardHeader>
       <CardContent className="h-[calc(100%-4rem)]">
         <ChartContainer className="w-full h-full" config={config}>
-          <ResponsiveContainer width="100%" height="100%">
+          {/* <ResponsiveContainer width="100%" height="100%"> */}
             <BarChart
               data={data}
               margin={{
@@ -105,7 +105,7 @@ const SingleBarChart = ({
                 />
               ))}
             </BarChart>
-          </ResponsiveContainer>
+          {/* </ResponsiveContainer> */}
         </ChartContainer>
       </CardContent>
     </Card>

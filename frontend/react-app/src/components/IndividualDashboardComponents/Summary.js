@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle } from "../ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Maximize2, Minimize2 } from "lucide-react";
 import SummaryTable from "./SummaryTable";
-import DataTable from "./TableData";
+import DataTable from "./UnifiedTable";
 import { useParams } from "react-router-dom";
 import { useReportContext } from "../../contexts/ReportContext";
 

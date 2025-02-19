@@ -74,7 +74,7 @@ const BarLineChart = ({
       </CardHeader>
       <CardContent className="h-[calc(100%-4rem)]">
         <ChartContainer className="w-full h-full" config={config}>
-          <ResponsiveContainer width="100%" height="100%">
+          {/* <ResponsiveContainer width="100%" height="100%"> */}
             <ComposedChart
               data={data}
               margin={{
@@ -124,7 +124,7 @@ const BarLineChart = ({
                 )
               )}
             </ComposedChart>
-          </ResponsiveContainer>
+          {/* </ResponsiveContainer> */}
         </ChartContainer>
       </CardContent>
     </Card>
