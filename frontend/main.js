@@ -23,7 +23,7 @@ const licenseManager = require("./LicenseManager");
 const { generateReportIpc } = require("./ipc/generateReport");
 const { registerOpportunityToEarnIpc } = require("./ipc/opportunityToEarn");
 const { registerTallyIpc } = require("./ipc/tallyHandlers.js");
-const { registerVoucherIpc} = require("./ipc/VoucherHandlers.js");
+const { registerVoucherIpc } = require("./ipc/VoucherHandlers.js");
 const { registerExcelDownloadHandlers } = require("./ipc/excelDownloadHandler")
 const databaseManager = require("./db/db");
 const { spawn, execFile } = require("child_process");
@@ -630,14 +630,14 @@ app.whenReady().then(async () => {
     }
 
     try {
-      sessionManager.init();
+      await sessionManager.init();
     } catch (error) {
       log.error("SessionManager initialization failed:", error);
       throw error;
     }
 
     try {
-      licenseManager.init();
+      await licenseManager.init();
       log.info("Python process started successfully");
     } catch (error) {
       log.error("LicenseManager initialization failed:", error);
@@ -645,7 +645,7 @@ app.whenReady().then(async () => {
     }
 
     try {
-      startPythonExecutable();
+      await startPythonExecutable();
     } catch (error) {
       log.error("Python initialization failed:", error);
       throw error;
