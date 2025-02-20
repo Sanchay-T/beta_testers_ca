@@ -62,15 +62,15 @@ const Dashboard = () => {
           icon: null,
         },
         {
-          title: "TallyPrime Vouchers",
+          title: "Tally Vouchers",
           url: "#",
           icon: null,
         },
-        {
-          title: "TallyERP Vouchers",
-          url: "#",
-          icon: null,
-        },
+        // {
+        //   title: "TallyERP Vouchers",
+        //   url: "#",
+        //   icon: null,
+        // },
       ],
       alwaysOpen: true, // Ensures the section remains open
     },
@@ -167,7 +167,7 @@ const Dashboard = () => {
               {activeTab === "Marker" && (
                 <PdfColumnMarker setPdfColMarkerData={setPdfColMarkerData} />
               )}
-              {activeTab === "TallyPrime Vouchers" && <TallyPrime />}
+              {activeTab === "Tally Vouchers" && <TallyPrime />}
               {activeTab === "TallyPrime" && (
                 <TallyPrimeDirect source="manual" />
               )}

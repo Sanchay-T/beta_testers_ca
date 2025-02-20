@@ -132,7 +132,10 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       );
       console.log("result", result);
 
-      if (result.success && result.data.failedStatements.bank_names.length === 0) {
+      if (
+        result.success &&
+        result.data.failedStatements.bank_names.length === 0
+      ) {
         toast({
           title: "Success",
           description: "All statements have been rectified.",
@@ -178,7 +181,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
     }
     setPdfEditLoading(false);
     localStorage.removeItem("dashboardData");
-    
   };
 
   const handleRectify = () => {
@@ -333,7 +335,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         }`,
         variant: "destructive",
       });
-    }finally{
+    } finally {
       localStorage.removeItem("dashboardData");
     }
   };
@@ -629,7 +631,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       progressIntervalRef.current = null;
       setIsAddPdfModalOpen(false);
       localStorage.removeItem("dashboardData");
-
     }
   };
   const toggleEdit = (id) => {
@@ -1272,10 +1273,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <AlertDialog
-                        open={isRectifyAlertOpen}
-                        onOpenChange={handleDialogOpenChange}
-                      >
+                      <AlertDialog>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <AlertDialogTrigger asChild>
@@ -1302,8 +1300,22 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                             </AlertDialogTitle>
                           </AlertDialogHeader>
                           <div className="p-6 overflow-auto max-h-[400px]">
-                            {failedDatasOfCurrentReport &&
-                            failedDatasOfCurrentReport.length > 0 ? (
+                            {!failedDatasOfCurrentReport ? (
+                              <div className="text-center py-4">
+                                <Loader2 className="w-8 h-8 animate-spin mx-auto text-gray-400" />
+                                <p className="text-gray-600 mt-2">
+                                  Loading report details...
+                                </p>
+                              </div>
+                            ) : failedDatasOfCurrentReport.length === 0 &&
+                              !report.hasFailedStatements ? (
+                              <div className="text-center py-4">
+                                <div className="text-green-600 font-semibold mb-2">
+                                  Report Processed Successfully
+                                </div>
+                                <CheckCircle className="w-8 h-8 text-green-600 mx-auto" />
+                              </div>
+                            ) : (
                               <div>
                                 {[...failedDatasOfCurrentReport]
                                   .sort((a, b) => {
@@ -1324,12 +1336,13 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                     const hasError = Boolean(
                                       statement.respectiveReasonsForError
                                     );
-                                    console.log({ isDone, hasError });
 
                                     return (
                                       <div
-                                        key={index}
-                                        className="mb-4 border-b pb-4"
+                                        key={`statement-${
+                                          statement.id || index
+                                        }`}
+                                        className="mb-4 border-b pb-4 last:border-b-0"
                                       >
                                         <h3 className="font-semibold mb-2">
                                           Failed Statement {index + 1}
@@ -1337,7 +1350,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                         <div className="flex gap-2 items-center">
                                           <p className="flex-[4.5]">
                                             <strong>File Name:</strong>{" "}
-                                            {/* {statement.pdfName} */}
                                             {statement.pdfName
                                               ? statement.pdfName.substring(
                                                   statement.pdfName.indexOf(
@@ -1346,14 +1358,13 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                                 )
                                               : ""}
                                           </p>
-                                          {/* Only show button if there's no error and the statement isn't done */}
                                           {!hasError && (
-                                            <>
+                                            <div className="flex-1">
                                               {isDone ? (
                                                 <Button
                                                   size="sm"
                                                   disabled
-                                                  className="flex-1 bg-green-600 hover:bg-green-700 text-white transition-colors"
+                                                  className="w-full bg-green-600 hover:bg-green-700 text-white transition-colors"
                                                 >
                                                   <CheckCircle className="w-4 h-4 mr-2" />
                                                   Done
@@ -1362,12 +1373,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                                 <Button
                                                   variant="secondary"
                                                   size="sm"
-                                                  disabled={isDone}
-                                                  className={`${
-                                                    isDone
-                                                      ? "bg-green-600 hover:bg-green-700 text-white"
-                                                      : "flex-1 hover:bg-primary hover:text-primary-foreground transition-colors"
-                                                  }`}
+                                                  className="w-full hover:bg-primary hover:text-primary-foreground transition-colors"
                                                   onClick={() => {
                                                     setIsMarkerModalOpen(true);
                                                     setSelectedFailedFile(
@@ -1375,15 +1381,10 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                                     );
                                                   }}
                                                 >
-                                                  {isDone ? (
-                                                    <CheckCircle className="w-4 h-4 mr-2" />
-                                                  ) : (
-                                                    ""
-                                                  )}
                                                   Rectify
                                                 </Button>
                                               )}
-                                            </>
+                                            </div>
                                           )}
                                         </div>
                                         {hasError && (
@@ -1394,56 +1395,42 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                                 statement.respectiveReasonsForError
                                               }
                                             </p>
-                                            {
-                                              <p className="text-red-500 text-xs mt-1">
-                                                {statement.respectiveReasonsForError
-                                                  .toLowerCase()
-                                                  .includes(
-                                                    "start and end date"
-                                                  )
-                                                  ? "Please Re-run this statement with correct dates."
-                                                  : "Please contact sales for assistance with this issue."}
-                                              </p>
-                                            }
+                                            <p className="text-red-500 text-xs mt-1">
+                                              {statement.respectiveReasonsForError
+                                                .toLowerCase()
+                                                .includes("start and end date")
+                                                ? "Please Re-run this statement with correct dates."
+                                                : "Please contact sales for assistance with this issue."}
+                                            </p>
                                           </div>
                                         )}
                                       </div>
                                     );
                                   })}
                               </div>
-                            ) : (
-                              <div className="text-center text-green-600 font-semibold">
-                                Report Processed Successfully
-                              </div>
                             )}
                           </div>
                           <AlertDialogFooter className="border-t border-black/10 pt-6">
-                            {/* create a submit button */}
-                            {failedDatasOfCurrentReport &&
-                              failedDatasOfCurrentReport.length > 0 && (
-                                <div className="flex justify-center ">
-                                  {report.resolved ? (
-                                    ""
-                                  ) : (
-                                    <Button
-                                      type="submit"
-                                      disabled={pdfEditLoading}
-                                      onClick={handleSubmitEditPdf}
-                                      className="relative inline-flex items-center px-4 py-2"
-                                    >
-                                      {pdfEditLoading ? (
-                                        <>
-                                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                          <span>Processing...</span>
-                                        </>
-                                      ) : (
-                                        "Submit"
-                                      )}
-                                    </Button>
-                                  )}
+                            {failedDatasOfCurrentReport?.length > 0 &&
+                              !report.resolved && (
+                                <div className="flex justify-center">
+                                  <Button
+                                    type="submit"
+                                    disabled={pdfEditLoading}
+                                    onClick={handleSubmitEditPdf}
+                                    className="relative inline-flex items-center px-4 py-2"
+                                  >
+                                    {pdfEditLoading ? (
+                                      <>
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        <span>Processing...</span>
+                                      </>
+                                    ) : (
+                                      "Submit"
+                                    )}
+                                  </Button>
                                 </div>
                               )}
-
                             <AlertDialogCancel className="px-8 bg-black text-white hover:bg-black/90 hover:text-white dark:bg-white dark:text-black">
                               Close
                             </AlertDialogCancel>
