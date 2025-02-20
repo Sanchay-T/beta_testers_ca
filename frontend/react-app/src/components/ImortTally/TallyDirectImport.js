@@ -266,9 +266,9 @@ const TallyDirectImport = ({ source }) => {
 
         return {
           companyName: companyName,
-          invoiceDate: formatDateForTally(transaction.date),
-          // effectiveDate: formatDateForTally(transaction.effective_date || ""),
-          effectiveDate: 20240401,
+          invoiceDate: formatDateForTally(transaction.date||transaction.invoice_date || ""),
+          effectiveDate: formatDateForTally(transaction.effective_date || ""),
+          // effectiveDate: 20240401,
           referenceNumber: transaction.reference_number || null,
           DrLedger: transaction.dr_ledger || null,
           CrLedger: transaction.cr_ledger || null,
