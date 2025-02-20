@@ -193,7 +193,9 @@ const ManualTallyTable = ({
   // For "Remove Row"
   const handleRemoveRow = (rowId) => {
     // Check if row was newly added or from DB, etc.
-    setAllRows((prev) => prev.filter((row) => row.id !== rowId));
+    const tempSetAllRows = (prev) => prev.filter((row) => row.id !== rowId) 
+    setAllRows(tempSetAllRows);
+    setFilteredData(tempSetAllRows)
     // Also remove from selection sets
     setGlobalSelectedRows((prev) => {
       const newSet = new Set(prev);
@@ -927,6 +929,28 @@ const ManualTallyTable = ({
                             </div>
                           </TableCell>
                         );
+                      }else if(column.toLowerCase()==="effective_date"){
+                        return <TableCell
+                        key={column}
+                        className="w-[250px] group relative"
+                      > <Input
+                        type="date"
+                        value={row[column] ? row[column].split("T")[0] : ""}
+                        onChange={(e) => handleInputChange(row.id, column, e.target.value) }
+                        className="w-full p-2 border border-gray-300 rounded-md"
+                      />
+                      </TableCell>
+                      }else if(column.toLowerCase()==="invoice_date"){
+                        return <TableCell
+                        key={column}
+                        className="w-[250px] group relative"
+                      > <Input
+                        type="date"
+                        value={row[column] ? row[column].split("T")[0] : ""}
+                        onChange={(e) => handleInputChange(row.id, column, e.target.value) }
+                        className="w-full p-2 border border-gray-300 rounded-md"
+                      />
+                      </TableCell>
                       }
 
                       if (column.toLowerCase() === "category") {
