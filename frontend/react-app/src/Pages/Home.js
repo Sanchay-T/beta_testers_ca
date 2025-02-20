@@ -57,7 +57,7 @@ const Dashboard = () => {
       icon: Import,
       items: [
         {
-          title: "TallyPrime",
+          title: "Tally Manual",
           url: "#",
           icon: null,
         },
@@ -168,7 +168,7 @@ const Dashboard = () => {
                 <PdfColumnMarker setPdfColMarkerData={setPdfColMarkerData} />
               )}
               {activeTab === "Tally Vouchers" && <TallyPrime />}
-              {activeTab === "TallyPrime" && (
+              {activeTab === "Tally Manual" && (
                 <TallyPrimeDirect source="manual" />
               )}
               {activeTab === "TallyERP Vouchers" && <ExcelERP />}

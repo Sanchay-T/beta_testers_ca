@@ -18,22 +18,22 @@ function ExcelViewer() {
   const files = [
     { label: "Ledgers ERP", path: "tallyprime/Ledgers_Erp.xlsm" },
     {
-      label: "Payment & Receipt Voucher",
+      label: "Ledgers Prime",
       path: "tallyprime/Ledgers_Prime.xlsm",
     },
     {
-      label: "Purchase Multi-Stock Items Voucher",
+      label: "Payment Voucher",
       path: "tallyprime/Payment_Voucher.xlsm",
     },
     {
-      label: "Sales Voucher",
-      path: "tallyprime/Purchase_MultiStock_Items_Voucher.xlsm",
+      label: "Receipt Voucher",
+      path: "tallyprime/Receipt_Voucher.xlsm",
     },
-    { label: "Stock Items Voucher", path: "tallyprime/Purchase_Voucher.xlsm" },
-    { label: "Stock Items Voucher", path: "tallyprime/Receipt_Voucher.xlsm" },
-    { label: "Stock Items Voucher", path: "tallyprime/Sales_Voucher.xlsm" },
+    { label: "Purchase Voucher", path: "tallyprime/Purchase_Voucher.xlsm" },
+    { label: "Purchase Multistock items voucher", path: "tallyprime/Purchase_MultiStock_Items_Voucher.xlsm" },
+    { label: "Sales Voucher", path: "tallyprime/Sale_Voucher.xlsm" },
     {
-      label: "Stock Items Voucher",
+      label: "Sales Multistock Items Voucher",
       path: "tallyprime/Sales_MultiStock_Item.xlsm",
     },
   ];
