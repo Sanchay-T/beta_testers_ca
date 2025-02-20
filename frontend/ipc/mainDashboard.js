@@ -9,10 +9,14 @@ const path = require("path");
 const axios = require("axios");
 const { transactions } = require("../db/schema/Transactions");
 const { users } = require("../db/schema/User");
+const sessionManager = require('../SessionManager');
 
 function registerMainDashboardIpc(tmpdir_path) {
   const db = databaseManager.getInstance().getDatabase();
   log.info("Database instance : ", db);
+
+  const userId = sessionManager.getUserId() || 1;
+  log.info("User ID : ", userId);
 
   ipcMain.handle("get-reports-processed", async (event) => {
     try {
@@ -131,7 +135,7 @@ function registerMainDashboardIpc(tmpdir_path) {
         })
         .from(cases);
 
-      log.info({result})
+      log.info({ result })
       return result;
     } catch (error) {
       console.error("Error getting pages by period:", error);
@@ -144,7 +148,7 @@ function registerMainDashboardIpc(tmpdir_path) {
       const user = await db
         .select()
         .from(users)
-        .where(eq(users.id, 1))
+        .where(eq(users.id, userId))
         .limit(1);
 
       if (!user || user.length === 0) {

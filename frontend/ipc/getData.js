@@ -11,6 +11,7 @@ function getdata() {
   log.info("Database instance : ", db);
 
   ipcMain.handle("get-Report-Name", async (event, caseId) => {
+    log.info("Case ID : ", caseId);
     try {
       const reportName = await db
         .select({

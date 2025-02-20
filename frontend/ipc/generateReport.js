@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const log = require("electron-log");
 const axios = require("axios");
-
+const sessionManager = require('../SessionManager');
 const databaseManager = require("../db/db");
 const { transactions } = require("../db/schema/Transactions");
 const { statements } = require("../db/schema/Statement");
@@ -30,7 +30,7 @@ const sanitizeJSONString = (jsonString) => {
 };
 
 const validateAndTransformTransaction = (transaction, statementId) => {
-  log.info({BeforeTransformation:transaction})
+  log.info({ BeforeTransformation: transaction })
   if (!transaction["Value Date"] || !transaction.Description) {
     log.info("Missing required transaction fields")
     throw new Error("Missing required transaction fields");
@@ -48,16 +48,16 @@ const validateAndTransformTransaction = (transaction, statementId) => {
 
   let amount = 0;
   let type = "";
-  if (transaction.Credit !== null && !isNaN(transaction.Credit) && transaction.Credit>0) {
+  if (transaction.Credit !== null && !isNaN(transaction.Credit) && transaction.Credit > 0) {
     amount = Math.abs(transaction.Credit);
-    type="credit";
-  } else if (transaction.Debit !== null && !isNaN(transaction.Debit)&& transaction.Debit>0) {
+    type = "credit";
+  } else if (transaction.Debit !== null && !isNaN(transaction.Debit) && transaction.Debit > 0) {
     amount = Math.abs(transaction.Debit);
-    type="debit";
+    type = "debit";
   }
 
   let balance = 0;
-  if (transaction.Balance !== null && !isNaN(transaction.Balance )) {
+  if (transaction.Balance !== null && !isNaN(transaction.Balance)) {
     balance = parseFloat(transaction.Balance);
   }
 
@@ -156,7 +156,11 @@ const storeTransactionsBatch = async (transformedTransactions) => {
   }
 };
 
-const getOrCreateCase = async (caseName, userId = 1) => {
+const getOrCreateCase = async (caseName) => {
+
+  const userId = sessionManager.getUserId() || 1;
+  log.info("User ID : ", userId);
+
   try {
     // First try to find existing case with exact match on name
     const existingCase = await db
@@ -164,8 +168,8 @@ const getOrCreateCase = async (caseName, userId = 1) => {
       .from(cases)
       .where(
         and(
-          eq(cases.name, caseName)
-          // eq(cases.userId, userId),
+          eq(cases.name, caseName),
+          eq(cases.userId, userId),
           // eq(cases.status, "active")
         )
       )
@@ -179,6 +183,7 @@ const getOrCreateCase = async (caseName, userId = 1) => {
     }
 
     log.info({ creatingNewCase: caseName });
+
     // Create new case if not found
     const newCase = await db
       .insert(cases)
@@ -292,15 +297,15 @@ const processStatementAndEOD = async (
     // Get NER results for this file using passed fileIndex
     const customerName = nerResults?.Name?.[fileIndex] || "UNKNOWN";
     const accountNumber = nerResults?.["Acc Number"]?.[fileIndex] || "UNKNOWN";
-    log.info("transaction_temp",{len:transactions_temp.length,example:transactions_temp[1]});
-    log.info("fileDetail ",{fileDetail});
+    log.info("transaction_temp", { len: transactions_temp.length, example: transactions_temp[1] });
+    log.info("fileDetail ", { fileDetail });
     // const tempBankName = fileDetail.bankName.replace(/\d/g, "");
     // log.info({withFileIndex:fileDetail.bankName+fileIndex})
 
     // Rest of the existing function code remains the same...
     const statementTransactions = transactions_temp
       // .filter((t) => t.Bank.replace(/\d/g, "") === fileDetail.bankName)
-      .filter((t) => t.Bank === fileDetail.bankName+fileIndex)
+      .filter((t) => t.Bank === fileDetail.bankName + fileIndex)
       .map((transaction) => {
         try {
           return validateAndTransformTransaction(transaction, null);
@@ -661,28 +666,7 @@ function generateReportIpc(tmpdir_path) {
   const baseUrl = `http://localhost:7500`;
   const generateReportEndpoint = `${baseUrl}/analyze-statements/`;
   const editPdfEndpoint = `${baseUrl}/column-rectify-add-pdf/`;
-  // const client = axios.create({ socketPath: udsPath, baseURL: 'http://unix' });
-  // const payload = {
-  //   bank_names: ["ICICI", "HDFC"],
-  //   pdf_paths: ['/home/Downloads/ICICI.pdf', '/home/Downloads/HDFC.pdf'],
-  //   passwords: ["1234", "1234"],
-  //   start_date: ["2023-01-01", "2023-01-01"],
-  //   end_date: ["2023-12-31", "2023-12-31"],
-  //   ca_id: "DEFAULT_CASE",
-  // };
-  // const client = new axios.Axios({ socketPath: `unix://${udsPath}`, baseURL: 'http://localhost' });
-  // console.log("Client : ", client);
-  // client.post("/", 'test', {
-  //   headers: { "Content-Type": "application/json" },
-  //   timeout: 300000,
-  // }).then((res) => {
-  //   console.log(res.status);
-  //   console.log(res.data);
-  // }).catch((err) => {
-  //   console.error(err.response.data);
-  //   console.error(err.message);
-  //   console.error(err.response.data.detail[0].loc);
-  // });
+
   ipcMain.handle("generate-report", async (event, receivedResult, caseName) => {
     const caseId = await getOrCreateCase(caseName);
     // Track file status
@@ -833,14 +817,14 @@ function generateReportIpc(tmpdir_path) {
         }
       );
 
-      console.log("transactions_temp", transactions_temp.length,{example:transactions_temp[1]});
+      console.log("transactions_temp", transactions_temp.length, { example: transactions_temp[1] });
 
       // Step 5: Process each file
       const processedData = [];
       // log.info({ exampleFileDetails: fileDetails });
 
       for (const fileDetail of fileDetails) {
-        console.log({fileDetail})
+        console.log({ fileDetail })
         try {
           const result = await processStatementAndEOD(
             fileDetail,

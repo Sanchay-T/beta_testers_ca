@@ -79,8 +79,12 @@ class SessionManager extends EventEmitter {
     }
 
     getUser() {
-        log.info("GetUser : ", this._user);
-        return this._user;
+        return this._user || null;
+    }
+
+    getUserId() {
+        const user = this.getUser();
+        return user ? user.id : 1;
     }
 
     isAuthenticated() {
