@@ -8,11 +8,15 @@ const databaseManager = require('../db/db');
 
 const { eq, exists, sql } = require("drizzle-orm");
 
+
+log.info('License manager process.env.NODE_ENV', process.env.NODE_ENV);
+
+const toValidateLicense = process.env.VALIDATE_LICENSE == "true"
+log.info("Validate License : ", toValidateLicense);
+
 function registerAuthHandlers() {
     const db = databaseManager.getInstance().getDatabase();
-    log.info("Database instance : ", db);
 
-    log.info('Registering auth IPC handlers');
     // Handle login
     ipcMain.handle('auth:login', async (event, credentials) => {
         try {
@@ -90,6 +94,7 @@ function registerAuthHandlers() {
 
     ipcMain.handle("auth:signUp", async (event, credentials) => {
 
+        let user;
         const result = await licenseManager.validateLicense(credentials.licenseKey, credentials.email);
         console.log("License activation result:", result);
 
@@ -102,34 +107,40 @@ function registerAuthHandlers() {
             const userAlreadyExists = await db.select().from(users).where(eq(users.name, credentials.email));
 
             console.log("User already exists: ", userAlreadyExists);
+
             if (userAlreadyExists.length > 0) {
-                return { success: false, error: "User already exists." };
+
+                if (toValidateLicense) {
+                    return { success: false, error: "User already exists." };
+                }
+
+                user = userAlreadyExists
             }
+            else {
 
-            // const user = await db.insert(users).values({ ...credentials }).returning({ id: users.id }).get();
+                // Step 3: Create New User
+                const hashedPassword = await bcrypt.hash(credentials.password, 10);
 
-            // Step 3: Create New User
-            const hashedPassword = await bcrypt.hash(credentials.password, 10);
+                const dateJoined = new Date();
 
-            const dateJoined = new Date();
+                // console.log("dateJoined : ", dateJoined, "HashPassword : ", hashedPassword);
+                try {
 
-            // console.log("dateJoined : ", dateJoined, "HashPassword : ", hashedPassword);
-            let newUser;
-            try {
+                    user = await db
+                        .insert(users)
+                        .values({
+                            // name: credentials.name || credentials.email.split("@")[0],
+                            name: credentials.email,
+                            email: credentials.email,
+                            password: hashedPassword,
+                            dateJoined: dateJoined,
+                        })
+                        .returning();
+                } catch (err) {
+                    log.info("Error in creating new user : ", err);
+                    return { success: false, error: "Failed to register user." };
+                }
 
-                newUser = await db
-                    .insert(users)
-                    .values({
-                        // name: credentials.name || credentials.email.split("@")[0],
-                        name: credentials.email,
-                        email: credentials.email,
-                        password: hashedPassword,
-                        dateJoined: dateJoined,
-                    })
-                    .returning();
-            } catch (err) {
-                log.info("Error in creating new user : ", err);
-                return { success: false, error: "Failed to register user." };
             }
 
             const remainingSeconds = licenseManager.calculateRemainingSeconds(result.data.expiry_timestamp);
@@ -142,7 +153,7 @@ function registerAuthHandlers() {
             return {
                 success: true,
                 message: "User created successfully.",
-                user: newUser[0],
+                user: user[0],
             };
         }
 

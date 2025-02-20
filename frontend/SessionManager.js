@@ -95,8 +95,15 @@ class SessionManager extends EventEmitter {
 
     clearUser() {
         this._user = null;
-        this.store.delete('user');
-        return { success: true };
+        try {
+            this.store.delete('user');
+            log.info("User deleted");
+            return { success: true };
+        }
+        catch (err) {
+            log.error("Error deleting user:", err);
+            return { success: false };
+        }
     }
 
     updateUser(userData) {
