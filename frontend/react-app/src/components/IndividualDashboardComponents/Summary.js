@@ -91,7 +91,7 @@ const { reportData, updateReportData } = useReportContext();
         let result = null;
         let parsedData = {};
         let tempTransactions = [];
-        let isCombinedDashboard = individualId!==undefined || individualId!=="undefined" || individualId!==null || individualId!=="combined";
+        let isCombinedDashboard = individualId===undefined || individualId==="undefined" || individualId===null || individualId==="combined";
 
         if(isCombinedDashboard){
           result = await window.electron.getSummary(caseId,null);
