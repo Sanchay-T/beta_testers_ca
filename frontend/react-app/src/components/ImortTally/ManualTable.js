@@ -192,6 +192,7 @@ const ManualTallyTable = ({
 
   // For "Remove Row"
   const handleRemoveRow = (rowId) => {
+    console.log({rowId,allRows})
     // Check if row was newly added or from DB, etc.
     const tempSetAllRows = (prev) => prev.filter((row) => row.id !== rowId) 
     setAllRows(tempSetAllRows);

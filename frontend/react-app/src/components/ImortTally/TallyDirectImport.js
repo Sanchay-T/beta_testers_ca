@@ -504,7 +504,6 @@ const TallyDirectImport = ({ source }) => {
             "Dr Ledger *",
             "Cr Ledger *",
             "Amount *",
-            "Voucher",
             "Narration",
             "Status",
           ],
@@ -514,6 +513,7 @@ const TallyDirectImport = ({ source }) => {
         // Example in your mapping logic:
 
         const newTransactions = newParsedData.map((row, idx) => {
+          console.log({row})
           let invoiceDateVal = row["Date *"];
           let effectiveDateVal = row["Effective Date"];
 
