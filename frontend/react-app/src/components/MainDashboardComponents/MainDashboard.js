@@ -13,16 +13,23 @@ import RecentReports from "./RecentReports";
 import { Bell, Moon, Sun } from "lucide-react";
 import { useTheme } from "../theme-provider";
 import StatsMetricCard from "../Elements/StatsCard";
+import Card1 from "../Elements/Card1";
+import Card2 from "../Elements/Card2";
+import Card3 from "../Elements/Card3";
+import { ResponsiveContainer } from "recharts";
 
 const MainDashboard = () => {
   const { theme, setTheme } = useTheme();
   const [allData, setAllData] = useState([]);
   const [pagesData, setPagesData] = useState([]);
+  const [totalEligibility, setTotalEligibility] = useState(0);
+  const [totalCommission, setTotalCommission] = useState(0);
 
   // Separate states for each metric card
   const [reportsMetrics, setReportsMetrics] = useState({
     totalReports: 0,
     totalStatements: 0,
+    // totalTransactions: 0,
     chartData: [],
     duration: "all",
   });
@@ -30,16 +37,18 @@ const MainDashboard = () => {
   const [pagesMetrics, setPagesMetrics] = useState({
     totalPages: 0,
     totalTransactions: 0,
+    totalTimeSaved: 0,
+    averageTimeSavedPerDay: 0,
     chartData: [],
     duration: "all",
   });
 
-  const [timeMetrics, setTimeMetrics] = useState({
-    totalTimeSaved: 0,
-    averageTimeSavedPerDay: 0,
-    timeData: [],
-    duration: "all",
-  });
+  // const [timeMetrics, setTimeMetrics] = useState({
+  //   totalTimeSaved: 0,
+  //   averageTimeSavedPerDay: 0,
+  //   timeData: [],
+  //   duration: "all",
+  // });
 
   const notifications = [
     {
@@ -66,10 +75,6 @@ const MainDashboard = () => {
     const endDate = new Date();
     const startDate = new Date();
 
-    // console.log("pag", pagesData);
-
-    // console.log("pag", pagesData);
-
     switch (duration) {
       case "today":
         startDate.setHours(0, 0, 0, 0);
@@ -88,13 +93,29 @@ const MainDashboard = () => {
         startDate.setFullYear(endDate.getFullYear() - 1);
         break;
       case "all":
+        const totalPagesAll = pagesData.reduce(
+          (sum, item) => sum + item.pages,
+          0
+        );
+        const totalTimeSavedAll = totalPagesAll * 10;
+        const daysCountAll = pagesData.length > 0 ? pagesData.length : 1;
+
         return {
-          filteredData: pagesData,
-          totalPages: pagesData.reduce((sum, item) => sum + item.pages, 0),
+          filteredData: pagesData.map((item) => ({
+            date: new Date(item.createdAt).toLocaleDateString("en-US", {
+              month: "short",
+              day: "2-digit",
+              year: "numeric",
+            }),
+            pages: item.pages,
+          })),
+          totalPages: totalPagesAll,
           totalTransactions: allData.reduce(
             (sum, item) => sum + (item.transactions || 0),
             0
           ),
+          totalTimeSaved: totalTimeSavedAll,
+          averageTimeSavedPerDay: Math.round(totalTimeSavedAll / daysCountAll),
         };
     }
 
@@ -103,17 +124,12 @@ const MainDashboard = () => {
       return itemDate >= startDate && itemDate <= endDate;
     });
 
-    const filteredData = allData.filter((item) => {
-      const itemDate = new Date(item.date);
-      // console.log("item date", itemDate);
-      return itemDate >= startDate && itemDate <= endDate;
-    });
-
-    // const filteredData = allData.filter((item) => {
-    //   const itemDate = new Date(item.date);
-    //   // console.log("item date", itemDate);
-    //   return itemDate >= startDate && itemDate <= endDate;
-    // });
+    const totalPages = filteredPages.reduce((sum, item) => sum + item.pages, 0);
+    const totalTimeSaved = totalPages * 10; // Calculate time saved based on filtered pages
+    const daysInPeriod = Math.max(
+      1,
+      Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24))
+    );
 
     // Group pages by date for chart data
     const chartData = filteredPages.reduce((acc, item) => {
@@ -135,15 +151,20 @@ const MainDashboard = () => {
       return acc;
     }, []);
 
+    // Calculate transactions for the filtered period
+    const filteredTransactions = allData
+      .filter((item) => {
+        const itemDate = new Date(item.date);
+        return itemDate >= startDate && itemDate <= endDate;
+      })
+      .reduce((sum, item) => sum + (item.transactions || 0), 0);
+
     return {
       filteredData: chartData,
-      totalPages: filteredPages.reduce((sum, item) => sum + item.pages, 0),
-      totalTransactions: allData
-        .filter((item) => {
-          const itemDate = new Date(item.date);
-          return itemDate >= startDate && itemDate <= endDate;
-        })
-        .reduce((sum, item) => sum + (item.transactions || 0), 0),
+      totalPages: totalPages,
+      totalTransactions: filteredTransactions,
+      totalTimeSaved: totalTimeSaved,
+      averageTimeSavedPerDay: Math.round(totalTimeSaved / daysInPeriod),
     };
   };
 
@@ -151,10 +172,10 @@ const MainDashboard = () => {
     console.log("Duration changed to ", duration, pagesData);
 
     const filteredResults = filterPagesDataByDuration(pagesData, duration);
+    console.log("filtered results", filteredResults);
+
     setPagesMetrics({
-      totalPages: filteredResults.totalPages,
-      totalTransactions: filteredResults.totalTransactions,
-      chartData: filteredResults.filteredData,
+      ...filteredResults,
       duration: duration,
     });
   };
@@ -478,58 +499,58 @@ const MainDashboard = () => {
   //   //   duration: duration,
   //   // });
   // };
-  const handleTimeMetricsDurationChange = (duration) => {
-    const endDate = new Date();
-    const startDate = new Date();
+  // const handleTimeMetricsDurationChange = (duration) => {
+  //   const endDate = new Date();
+  //   const startDate = new Date();
 
-    switch (duration) {
-      case "today":
-        startDate.setHours(0, 0, 0, 0);
-        endDate.setHours(23, 59, 59, 999);
-        break;
-      case "1M":
-        startDate.setMonth(endDate.getMonth() - 1);
-        break;
-      case "3M":
-        startDate.setMonth(endDate.getMonth() - 3);
-        break;
-      case "6M":
-        startDate.setMonth(endDate.getMonth() - 6);
-        break;
-      case "1Y":
-        startDate.setFullYear(endDate.getFullYear() - 1);
-        break;
-      case "all":
-        const allMetrics = calculateTimeMetricsAll(pagesData);
-        setTimeMetrics({
-          totalTimeSaved: allMetrics.totalTimeSaved,
-          averageTimeSavedPerDay: allMetrics.averageTimeSavedPerDay,
-          timeData: [],
-          duration: duration,
-        });
-        return;
-    }
+  //   switch (duration) {
+  //     case "today":
+  //       startDate.setHours(0, 0, 0, 0);
+  //       endDate.setHours(23, 59, 59, 999);
+  //       break;
+  //     case "1M":
+  //       startDate.setMonth(endDate.getMonth() - 1);
+  //       break;
+  //     case "3M":
+  //       startDate.setMonth(endDate.getMonth() - 3);
+  //       break;
+  //     case "6M":
+  //       startDate.setMonth(endDate.getMonth() - 6);
+  //       break;
+  //     case "1Y":
+  //       startDate.setFullYear(endDate.getFullYear() - 1);
+  //       break;
+  //     case "all":
+  //       const allMetrics = calculateTimeMetricsAll(pagesData);
+  //       setTimeMetrics({
+  //         totalTimeSaved: allMetrics.totalTimeSaved,
+  //         averageTimeSavedPerDay: allMetrics.averageTimeSavedPerDay,
+  //         timeData: [],
+  //         duration: duration,
+  //       });
+  //       return;
+  //   }
 
-    const filteredPages = pagesData.filter((item) => {
-      const itemDate = new Date(item.createdAt);
-      return itemDate >= startDate && itemDate <= endDate;
-    });
+  //   const filteredPages = pagesData.filter((item) => {
+  //     const itemDate = new Date(item.createdAt);
+  //     return itemDate >= startDate && itemDate <= endDate;
+  //   });
 
-    const totalPages = filteredPages.reduce((sum, item) => sum + item.pages, 0);
-    const totalTimeSaved = totalPages * 10;
-    const daysInPeriod = Math.max(
-      1,
-      Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24))
-    );
-    const averageTimeSavedPerDay = Math.round(totalTimeSaved / daysInPeriod);
+  //   const totalPages = filteredPages.reduce((sum, item) => sum + item.pages, 0);
+  //   const totalTimeSaved = totalPages * 10;
+  //   const daysInPeriod = Math.max(
+  //     1,
+  //     Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24))
+  //   );
+  //   const averageTimeSavedPerDay = Math.round(totalTimeSaved / daysInPeriod);
 
-    setTimeMetrics({
-      totalTimeSaved,
-      averageTimeSavedPerDay,
-      timeData: [],
-      duration: duration,
-    });
-  };
+  //   setTimeMetrics({
+  //     totalTimeSaved,
+  //     averageTimeSavedPerDay,
+  //     timeData: [],
+  //     duration: duration,
+  //   });
+  // };
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -545,7 +566,9 @@ const MainDashboard = () => {
           setPagesData(parsedData.pagesData);
           setReportsMetrics(parsedData.reportsMetrics);
           setPagesMetrics(parsedData.pagesMetrics);
-          setTimeMetrics(parsedData.timeMetrics);
+          setTotalEligibility(parsedData.totalEligibility || 0);
+          setTotalCommission(parsedData.totalCommission || 0);
+          // setTimeMetrics(parsedData.timeMetrics);
           return; // Exit the function if cache exists
         }
 
@@ -556,7 +579,47 @@ const MainDashboard = () => {
         const statements = await window.electron.getStatementsProcessed();
         const transactions = await window.electron.getTransactionsProcessed();
         const pages = await window.electron.getPages();
+        const opportunityToEarn = await window.electron.getOpportunityToEarn();
+        let totalEligibility1 = 0;
 
+        let totalCommission1 = 0;
+
+        if (
+          opportunityToEarn.success &&
+          Array.isArray(opportunityToEarn.data)
+        ) {
+          totalEligibility1 = opportunityToEarn.data.reduce((sum, item) => {
+            return (
+              sum +
+              (item.homeLoanValue || 0) +
+              (item.loanAgainstProperty || 0) +
+              (item.businessLoan || 0) +
+              (item.termPlan || 0) +
+              (item.generalInsurance || 0)
+            );
+          }, 0);
+
+          totalCommission1 = opportunityToEarn.data.reduce((sum, item) => {
+            return (
+              sum +
+              (item.homeLoanValue || 0) * 0.0045 +
+              (item.loanAgainstProperty || 0) * 0.0065 +
+              (item.businessLoan || 0) * 0.01 +
+              (item.termPlan || 0) +
+              (item.generalInsurance || 0)
+            );
+          }, 0);
+
+          console.log("Total Eligibility Amount:", totalEligibility1);
+          console.log("Total Commission Amount:", totalCommission1);
+        } else {
+          console.log("Invalid data structure");
+        }
+
+        setTotalEligibility(totalEligibility1);
+        setTotalCommission(totalCommission1);
+        console.log("total eligibility", totalEligibility);
+        console.log("total commission", totalCommission);
         setPagesData(pages);
         const mergedData = processData(reports, statements, transactions);
         setAllData(mergedData);
@@ -613,6 +676,8 @@ const MainDashboard = () => {
         const pagesMetricsData = {
           totalPages: totalPages,
           totalTransactions: reportsMetricsData.totalTransactions,
+          totalTimeSaved: totalTimeSaved,
+          averageTimeSavedPerDay: Math.round(totalTimeSaved / daysCount),
           chartData: pages.map((item) => ({
             date: new Date(item.createdAt).toLocaleDateString("en-US", {
               month: "short",
@@ -633,7 +698,7 @@ const MainDashboard = () => {
 
         setReportsMetrics(reportsMetricsData);
         setPagesMetrics(pagesMetricsData);
-        setTimeMetrics(timeMetricsData);
+        // setTimeMetrics(timeMetricsData);
 
         // Store Data in Cache
         localStorage.setItem(
@@ -643,7 +708,9 @@ const MainDashboard = () => {
             pagesData: pages,
             reportsMetrics: reportsMetricsData,
             pagesMetrics: pagesMetricsData,
-            timeMetrics: timeMetricsData,
+            totalEligibility: totalEligibility1,
+            totalCommission: totalCommission1,
+            // timeMetrics: timeMetricsData,
           })
         );
 
@@ -714,45 +781,53 @@ const MainDashboard = () => {
           </div>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          <StatsMetricCard
+        {/* <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          
+        </div> */}
+
+        <ResponsiveContainer
+          className={
+            "grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 h-[300px]"
+          }
+        >
+          <Card1
             type="reports"
             title="Overview"
             value1="Total Reports"
             value2="Total Statements"
-            mainValue1={reportsMetrics?.totalReports || 0}
-            mainValue2={reportsMetrics?.totalStatements || 0}
-            chartData={reportsMetrics?.chartData || []}
+            mainValue1={reportsMetrics.totalReports}
+            mainValue2={reportsMetrics.totalStatements}
+            chartData={reportsMetrics.chartData}
             chartType="bar"
             onDurationChange={handleReportsDurationChange}
-            initialDuration={reportsMetrics?.duration || "all"}
+            initialDuration={reportsMetrics.duration}
           />
 
-          <StatsMetricCard
+          <Card2
             type="pages"
             title="Platform Activity"
             value1="Total Pages"
             value2="Total Transactions"
-            mainValue1={pagesMetrics?.totalPages || 0}
-            mainValue2={pagesMetrics?.totalTransactions || 0}
-            chartData={pagesMetrics?.chartData || []}
+            value3="Total Time Saved"
+            value4="Avg Time Saved/Day"
+            mainValue1={pagesMetrics.totalPages}
+            mainValue2={pagesMetrics.totalTransactions}
+            mainValue3={pagesMetrics.totalTimeSaved}
+            mainValue4={pagesMetrics.averageTimeSavedPerDay}
             chartType="line"
             onDurationChange={handlePagesDurationChange}
-            initialDuration={pagesMetrics?.duration || "all"}
+            initialDuration={pagesMetrics.duration}
           />
 
-          <StatsMetricCard
-            type="timeSaved"
-            title="Productivity"
-            value1="Total Time Saved"
-            value2="Avg Time Saved/Day"
-            mainValue1={timeMetrics?.totalTimeSaved || 0}
-            mainValue2={timeMetrics?.averageTimeSavedPerDay || 0}
-            mainValueLabel="Minutes Saved"
-            onDurationChange={handleTimeMetricsDurationChange}
-            initialDuration={timeMetrics?.duration || "all"}
+          <Card3
+            type="Total Eligible Cases"
+            title="Total Eligible reports"
+            value1="Total Eligibilty"
+            value2="Total Commission"
+            mainValue1={totalEligibility}
+            mainValue2={totalCommission}
           />
-        </div>
+        </ResponsiveContainer>
 
         <RecentReports />
       </div>

@@ -1,10 +1,18 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Search, Loader2, Check,Download,X,Save,Plus,MessageCircle,Mail, Share2 , UploadCloud} from "lucide-react";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-} from "../ui/card";
+  Search,
+  Loader2,
+  Check,
+  Download,
+  X,
+  Save,
+  Plus,
+  MessageCircle,
+  Mail,
+  Share2,
+  UploadCloud,
+} from "lucide-react";
+import { Card, CardContent, CardHeader } from "../ui/card";
 import {
   Table,
   TableHeader,
@@ -18,7 +26,14 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { cn } from "../../lib/utils";
 import { Checkbox } from "../ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTitle,DialogFooter,DialogDescription } from "../ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "../ui/dialog";
 import {
   Pagination,
   PaginationContent,
@@ -30,15 +45,20 @@ import {
 } from "../ui/pagination";
 import { Label } from "../ui/label";
 import { useToast } from "../../hooks/use-toast";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../ui/tooltip";
 import { exportToExcel } from "../exportToExcel";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-  } from "../ui/select";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { useReportContext } from "../../contexts/ReportContext";
 
@@ -62,17 +82,17 @@ const ledgerGroups = [
   "Bank OD A/c",
   "Cash-in-Hand",
   "Deposits (Asset)",
-  "Duties &amp; Taxes",          // <--- &amp; is preserved
+  "Duties &amp; Taxes", // <--- &amp; is preserved
   "Loans &amp; Advances (Asset)", // <--- &amp; is preserved
   "Provisions",
-  "Reserves &amp; Surplus",     // <--- &amp; is preserved
+  "Reserves &amp; Surplus", // <--- &amp; is preserved
   "Secured Loans",
   "Stock-in-Hand",
   "Sundry Creditors",
   "Sundry Debtors",
   "Unsecured Loans",
-  "Profit &amp; Loss A/c",      // <--- &amp; is preserved
-  "Bank OCC A/c"
+  "Profit &amp; Loss A/c", // <--- &amp; is preserved
+  "Bank OCC A/c",
 ];
 
 function decodeHtmlEntities(str) {
@@ -80,72 +100,98 @@ function decodeHtmlEntities(str) {
   return str.replace(/&amp;/g, "&");
 }
 
-
-const DataTable = ({ data = [], title, subtitle,caseId,source,handleUpload,companyName,setCompanyName,selectedVoucher}) => {
-    const [currentPage, setCurrentPage] = useState(1);
-    const [transactions, setTransactions] = useState([]);
-    const [filteredData, setFilteredData] = useState(data);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [filterModalOpen, setFilterModalOpen] = useState(false);
-    const [currentFilterColumn, setCurrentFilterColumn] = useState(null);
-    const [numericFilterModalOpen, setNumericFilterModalOpen] = useState(false);
-    const [currentNumericColumn, setCurrentNumericColumn] = useState(null);
-    const [minValue, setMinValue] = useState("");
-    const [maxValue, setMaxValue] = useState("");
-    const [selectedCategories, setSelectedCategories] = useState([]);
-    const [categorySearchTerm, setCategorySearchTerm] = useState("");
-    const [isLoading, setIsLoading] = useState(false);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [columnsToIgnore, setColumnsToIgnore] = useState(["id","transactionId"]);
-    const [categoryOptions, setCategoryOptions] = useState([]);
+const DataTable = ({
+  data = [],
+  title,
+  subtitle,
+  caseId,
+  source,
+  handleUpload,
+  companyName,
+  setCompanyName,
+  selectedVoucher,
+}) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [transactions, setTransactions] = useState([]);
+  const [filteredData, setFilteredData] = useState(data);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterModalOpen, setFilterModalOpen] = useState(false);
+  const [currentFilterColumn, setCurrentFilterColumn] = useState(null);
+  const [numericFilterModalOpen, setNumericFilterModalOpen] = useState(false);
+  const [currentNumericColumn, setCurrentNumericColumn] = useState(null);
+  const [minValue, setMinValue] = useState("");
+  const [maxValue, setMaxValue] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [categorySearchTerm, setCategorySearchTerm] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [columnsToIgnore, setColumnsToIgnore] = useState([
+    "id",
+    "transactionId",
+  ]);
+  const [categoryOptions, setCategoryOptions] = useState([]);
+  const [dateFilterModalOpen, setDateFilterModalOpen] = useState(false);
+  const [currentDateColumn, setCurrentDateColumn] = useState([]);
+  const [toDate, setToDate] = useState("");
+  const [fromDate, setFromDate] = useState("");
 
   // Category states
-    const [hasChanges, setHasChanges] = useState(false);
-    const [modifiedData, setModifiedData] = useState([]);
-    const [showKeywordInput, setShowKeywordInput] = useState(false);
-    const [currentData, setCurrentdata] = useState([]);
-    const [totalPages, setTotalPages] = useState(0);
+  const [hasChanges, setHasChanges] = useState(false);
+  const [modifiedData, setModifiedData] = useState([]);
+  const [showKeywordInput, setShowKeywordInput] = useState(false);
+  const [currentData, setCurrentdata] = useState([]);
+  const [totalPages, setTotalPages] = useState(0);
 
-    // States for entity updating
-    const [editedEntities, setEditedEntities] = useState({});
-    const [batchModalOpen, setBatchModalOpen] = useState(false);
-    const [batchEntityValue, setBatchEntityValue] = useState("");
-    const { toast } = useToast();
+  // States for entity updating
+  const [editedEntities, setEditedEntities] = useState({});
+  const [batchModalOpen, setBatchModalOpen] = useState(false);
+  const [batchEntityValue, setBatchEntityValue] = useState("");
+  const { toast } = useToast();
 
-    // States for sharing 
-    const [shareModalOpen, setShareModalOpen] = useState(false);
-    
-    // NEW: Using transaction id instead of row index
-    const [globalSelectedRows, setGlobalSelectedRows] = useState(new Set());
-    const [bulkCategoryModalOpen, setBulkCategoryModalOpen] = useState(false);
-    const [selectedBulkCategory, setSelectedBulkCategory] = useState("");
-    const [confirmationModalOpen, setConfirmationModalOpen] = useState(false);
-  
-    // Classification modal state
-    const [selectedType, setSelectedType] = useState("");
-    const [showClassificationModal, setShowClassificationModal] = useState(false);
-    const [newCategoryToClassify, setNewCategoryToClassify] = useState("");
-    const [isSearchInputFocused, setIsSearchInputFocused] = useState(false);
-  
-    // Reasoning modal state
-    const [reasoningModalOpen, setReasoningModalOpen] = useState(false);
-    const [currentTransaction, setCurrentTransaction] = useState(null);
-    const [reasoning, setReasoning] = useState("");
-    // We now store pending change by transaction id
-    const [pendingCategoryChange, setPendingCategoryChange] = useState(null);
-    const [bulkReasoning, setBulkReasoning] = useState("");
+  // States for sharing
+  const [shareModalOpen, setShareModalOpen] = useState(false);
 
-    const [selectedTransactions, setSelectedTransactions] = useState([]);
-    const [bulkLedgerValue, setBulkLedgerValue] = useState("");
-    const [ledgerField, setLedgerField] = useState("dr_ledger"); // "dr_ledger" or "cr_ledger"
+  // NEW: Using transaction id instead of row index
+  const [globalSelectedRows, setGlobalSelectedRows] = useState(new Set());
+  const [bulkCategoryModalOpen, setBulkCategoryModalOpen] = useState(false);
+  const [selectedBulkCategory, setSelectedBulkCategory] = useState("");
+  const [confirmationModalOpen, setConfirmationModalOpen] = useState(false);
 
-    // Get report data from context
-    const { reportData, updateReportData } = useReportContext();
-    const [numbericInput, setNumbericInput] = useState(["pincode","opening_balance"]);
-    const [dateInput, setDateInput] = useState([""]);
-    const [textAreaInput, setTextAreaInput] = useState(["address","state","city","country","gst_number"]);
+  // Classification modal state
+  const [selectedType, setSelectedType] = useState("");
+  const [showClassificationModal, setShowClassificationModal] = useState(false);
+  const [newCategoryToClassify, setNewCategoryToClassify] = useState("");
+  const [isSearchInputFocused, setIsSearchInputFocused] = useState(false);
 
-    const isFirstLoad = useRef(true);
+  // Reasoning modal state
+  const [reasoningModalOpen, setReasoningModalOpen] = useState(false);
+  const [currentTransaction, setCurrentTransaction] = useState(null);
+  const [reasoning, setReasoning] = useState("");
+  // We now store pending change by transaction id
+  const [pendingCategoryChange, setPendingCategoryChange] = useState(null);
+  const [bulkReasoning, setBulkReasoning] = useState("");
+
+  const [selectedTransactions, setSelectedTransactions] = useState([]);
+  const [bulkLedgerValue, setBulkLedgerValue] = useState("");
+  const [ledgerField, setLedgerField] = useState("dr_ledger"); // "dr_ledger" or "cr_ledger"
+
+  // Get report data from context
+  const { reportData, updateReportData } = useReportContext();
+  const [numbericInput, setNumbericInput] = useState([
+    "pincode",
+    "opening_balance",
+  ]);
+  const [dateInput, setDateInput] = useState([""]);
+  const [textAreaInput, setTextAreaInput] = useState([
+    "address",
+    "state",
+    "city",
+    "country",
+    "gst_number",
+  ]);
+  const [existingFilterData, setExistingFilterData] = useState([]);
+
+  const isFirstLoad = useRef(true);
 
   // Helper: Format dates
   const formatValue = (value) => {
@@ -153,9 +199,8 @@ const DataTable = ({ data = [], title, subtitle,caseId,source,handleUpload,compa
     return value;
   };
 
-  
-useEffect(() => {
-  console.log("Data from unified - ",data);
+  useEffect(() => {
+    console.log("Data from unified - ", data);
     const formattedData = data.map((row) => {
       const newRow = { ...row };
       Object.keys(row).forEach((key) => {
@@ -186,17 +231,13 @@ useEffect(() => {
       localStorage.setItem("categoryOptions", JSON.stringify(mergedCategories));
     }
     setCategoryOptions(mergedCategories);
-
   }, [data]);
-
 
   // Get dynamic columns from first data item
   let columns = data.length > 0 ? Object.keys(data[0]) : [];
   columns = columns.filter((column) => !columnsToIgnore.includes(column));
 
-  const hasEntity = columns.some(
-    (column) => column.toLowerCase() === "entity"
-  );
+  const hasEntity = columns.some((column) => column.toLowerCase() === "entity");
 
   // Determine which columns are numeric
   const numericColumnstemp = columns.filter((column) =>
@@ -206,7 +247,7 @@ useEffect(() => {
     })
   );
 
-  const numericColumns = [...numericColumnstemp,...numbericInput]
+  const numericColumns = [...numericColumnstemp, ...numbericInput];
 
   const handleCategoryClassification = (category, classificationType) => {
     console.log(`Category: ${category}, Type: ${classificationType}`);
@@ -219,32 +260,30 @@ useEffect(() => {
     });
   };
 
-    // When classification is complete, update either the bulk field or a single row change.
-    const handleClassificationSubmit = () => {
-        handleCategoryClassification(newCategoryToClassify, selectedType);
-        console.log({selectedType})
-        setShowClassificationModal(false);
-        if (bulkCategoryModalOpen) {
-          setSelectedBulkCategory(newCategoryToClassify);
-          setCategorySearchTerm("");
-          setPendingCategoryChange(null);
-        } else if (pendingCategoryChange) {
-          const transaction = filteredData.find(
-            (tx) => tx.id === pendingCategoryChange.transactionId
-          );
-          const oldCategory = transaction ? transaction.category : "";
-          setPendingCategoryChange({
-            ...pendingCategoryChange,
-            newCategory: newCategoryToClassify,
-            oldCategory: oldCategory,
-          });
-          setCurrentTransaction(transaction);
-          setReasoningModalOpen(true);
-        }
-        setNewCategoryToClassify("");
-      };
-    
-
+  // When classification is complete, update either the bulk field or a single row change.
+  const handleClassificationSubmit = () => {
+    handleCategoryClassification(newCategoryToClassify, selectedType);
+    console.log({ selectedType });
+    setShowClassificationModal(false);
+    if (bulkCategoryModalOpen) {
+      setSelectedBulkCategory(newCategoryToClassify);
+      setCategorySearchTerm("");
+      setPendingCategoryChange(null);
+    } else if (pendingCategoryChange) {
+      const transaction = filteredData.find(
+        (tx) => tx.id === pendingCategoryChange.transactionId
+      );
+      const oldCategory = transaction ? transaction.category : "";
+      setPendingCategoryChange({
+        ...pendingCategoryChange,
+        newCategory: newCategoryToClassify,
+        oldCategory: oldCategory,
+      });
+      setCurrentTransaction(transaction);
+      setReasoningModalOpen(true);
+    }
+    setNewCategoryToClassify("");
+  };
 
   const handleSearch = (searchValue) => {
     setSearchTerm(searchValue);
@@ -253,7 +292,6 @@ useEffect(() => {
       setCurrentPage(1);
       return;
     }
-
 
     // Calculate totals for numeric columns
     const totals = numericColumns.reduce((acc, column) => {
@@ -303,17 +341,24 @@ useEffect(() => {
   const confirmCategoryChange = () => {
     if (!pendingCategoryChange) return;
     const transactionId = pendingCategoryChange.transactionId;
-    console.log("transactionId", transactionId, "pendingCategoryChange ",pendingCategoryChange);
+    console.log(
+      "transactionId",
+      transactionId,
+      "pendingCategoryChange ",
+      pendingCategoryChange
+    );
     const updatedFilteredData = filteredData.map((tx) => {
       console.log("tx.id", tx.id, "transactionId", transactionId);
       if (parseInt(tx.id) === parseInt(transactionId)) {
-        console.log("Transaction found")
+        console.log("Transaction found");
         return { ...tx, category: pendingCategoryChange.newCategory };
       }
       return tx;
     });
     setFilteredData(updatedFilteredData);
-    const transaction = updatedFilteredData.find((tx) => tx.id === transactionId);
+    const transaction = updatedFilteredData.find(
+      (tx) => tx.id === transactionId
+    );
     console.log("transaction aiyaz", transaction);
     let modifiedObject = {
       ...transaction,
@@ -339,41 +384,42 @@ useEffect(() => {
     setShowKeywordInput(false);
   };
 
-    // --- Bulk Update: Find each row by its id ---
-    const handleBulkCategoryChange = () => {
-        // Create a shallow copy so we don’t mutate state directly.
-        const dataOnUi = filteredData.map((row) => ({ ...row }));
-        const newModifiedData = [...modifiedData];
-        globalSelectedRows.forEach((id) => {
-          const index = dataOnUi.findIndex((row) => row.id === id);
-          if (index !== -1) {
-            const oldCategory = dataOnUi[index].category;
-            dataOnUi[index].category =
-              selectedBulkCategory === "" ? categorySearchTerm : selectedBulkCategory;
-              
-              if(selectedType){
-                dataOnUi[index].classification = selectedType;
-                dataOnUi[index].is_new = true;
-              }
-            newModifiedData.push({
-              ...dataOnUi[index],
-              oldCategory,
-              reasoning: bulkReasoning,
+  // --- Bulk Update: Find each row by its id ---
+  const handleBulkCategoryChange = () => {
+    // Create a shallow copy so we don’t mutate state directly.
+    const dataOnUi = filteredData.map((row) => ({ ...row }));
+    const newModifiedData = [...modifiedData];
+    globalSelectedRows.forEach((id) => {
+      const index = dataOnUi.findIndex((row) => row.id === id);
+      if (index !== -1) {
+        const oldCategory = dataOnUi[index].category;
+        dataOnUi[index].category =
+          selectedBulkCategory === ""
+            ? categorySearchTerm
+            : selectedBulkCategory;
 
-            });
-          }
+        if (selectedType) {
+          dataOnUi[index].classification = selectedType;
+          dataOnUi[index].is_new = true;
+        }
+        newModifiedData.push({
+          ...dataOnUi[index],
+          oldCategory,
+          reasoning: bulkReasoning,
         });
-        setFilteredData(dataOnUi);
-        setModifiedData(newModifiedData);
-        setHasChanges(true);
-        setGlobalSelectedRows(new Set());
-        setBulkCategoryModalOpen(false);
-        setConfirmationModalOpen(false);
-        setSelectedBulkCategory("");
-        setBulkReasoning("");
-      };
+      }
+    });
+    setFilteredData(dataOnUi);
+    setModifiedData(newModifiedData);
+    setHasChanges(true);
+    setGlobalSelectedRows(new Set());
+    setBulkCategoryModalOpen(false);
+    setConfirmationModalOpen(false);
+    setSelectedBulkCategory("");
+    setBulkReasoning("");
+  };
 
-        // --- Now store selected rows as transaction IDs ---
+  // --- Now store selected rows as transaction IDs ---
   const toggleRowSelection = (id) => {
     setGlobalSelectedRows((prev) => {
       const newSet = new Set(prev);
@@ -386,8 +432,7 @@ useEffect(() => {
     });
   };
 
-
-//   Filter functions
+  //   Filter functions
 
   const handleCategorySelect = (category) => {
     setSelectedCategories((prev) =>
@@ -410,20 +455,25 @@ useEffect(() => {
   };
 
   const handleColumnFilter = () => {
+    const dataToFilter =
+      existingFilterData.length > 0 ? existingFilterData : data;
     if (selectedCategories.length === 0) {
       setFilteredData(data);
     } else {
-      const filtered = data.filter((row) =>
+      const filtered = dataToFilter.filter((row) =>
         selectedCategories.includes(String(row[currentFilterColumn]))
       );
       setFilteredData(filtered);
+      setExistingFilterData(filtered);
     }
     setCurrentPage(1);
     setFilterModalOpen(false);
   };
 
   const handleNumericFilter = (columnName, min, max) => {
-    const filtered = data.filter((row) => {
+    const dataToFilter =
+      existingFilterData.length > 0 ? existingFilterData : data;
+    const filtered = dataToFilter.filter((row) => {
       const value = parseFloat(row[columnName]);
       if (isNaN(value)) return false;
       const meetsMin = min === "" || value >= parseFloat(min);
@@ -431,6 +481,94 @@ useEffect(() => {
       return meetsMin && meetsMax;
     });
     setFilteredData(filtered);
+    setExistingFilterData(filtered);
+    setCurrentPage(1);
+  };
+
+  const handleDateFilter = (columnName, fromDate, toDate) => {
+    console.log("Initial filter params:", { columnName, fromDate, toDate });
+
+    const dataToFilter =
+      existingFilterData.length > 0 ? existingFilterData : data;
+
+    const parseDate = (dateStr) => {
+      if (!dateStr) return null;
+      console.log("Parsing date:", dateStr);
+
+      // Handle date input format (yyyy-mm-dd)
+      if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const date = new Date(dateStr);
+        date.setHours(0, 0, 0, 0);
+        console.log("Parsed input date:", date);
+        return date;
+      }
+
+      // Handle data format (dd/mm/yyyy)
+      let day, month, year;
+      if (dateStr.includes("/")) {
+        [day, month, year] = dateStr.split("/");
+      } else if (dateStr.includes("-")) {
+        [day, month, year] = dateStr.split("-");
+      } else {
+        console.warn("Unsupported date format:", dateStr);
+        return null;
+      }
+
+      // Ensure we have all parts
+      if (!day || !month || !year) {
+        console.warn("Invalid date parts:", { day, month, year });
+        return null;
+      }
+
+      // Create date (month - 1 because months are 0-based in JavaScript)
+      const date = new Date(year, parseInt(month) - 1, parseInt(day));
+      date.setHours(0, 0, 0, 0);
+
+      // Validate the date is correct
+      if (isNaN(date.getTime())) {
+        console.warn("Invalid date created:", dateStr);
+        return null;
+      }
+
+      console.log("Parsed data date:", date);
+      return date;
+    };
+
+    const from = parseDate(fromDate);
+    const to = parseDate(toDate);
+
+    if (!from || !to) {
+      console.warn("Invalid date range:", { fromDate, toDate });
+      return;
+    }
+
+    // Set end of day for to date
+    to.setHours(23, 59, 59, 999);
+
+    console.log("Processing with date range:", { from, to });
+
+    const filtered = dataToFilter.filter((row) => {
+      const rowDateStr = row[columnName];
+      const rowDate = parseDate(rowDateStr);
+
+      if (!rowDate) {
+        console.warn("Invalid row date:", rowDateStr);
+        return false;
+      }
+
+      const isInRange = rowDate >= from && rowDate <= to;
+      console.log("Row date check:", {
+        date: rowDate.toISOString(), // Convert to string for better logging
+        isInRange,
+        value: row[columnName],
+      });
+
+      return isInRange;
+    });
+
+    // console.log("Filtered results count:", filtered.length);
+    setFilteredData(filtered);
+    setExistingFilterData(filtered);
     setCurrentPage(1);
   };
 
@@ -442,6 +580,9 @@ useEffect(() => {
     setMaxValue("");
     setSelectedCategories([]);
     setCategorySearchTerm("");
+    setFromDate("");
+    setToDate("");
+    setExistingFilterData([]);
   };
 
   const getUniqueValues = (columnName) => {
@@ -455,7 +596,6 @@ useEffect(() => {
       value.toLowerCase().includes(categorySearchTerm.toLowerCase())
     );
   };
-
 
   // ===== Helper functions for inline & batch "Entity" editing =====
   const handleEntityChange = (tid, newValue) => {
@@ -490,7 +630,6 @@ useEffect(() => {
         title: "Changes saved successfully",
         description: "All category updates have been saved",
       });
-
     } catch (error) {
       toast({
         title: "Error saving changes",
@@ -499,8 +638,7 @@ useEffect(() => {
       });
     } finally {
       setIsLoading(false);
-    setSelectedType("");
-
+      setSelectedType("");
     }
   };
 
@@ -510,8 +648,8 @@ useEffect(() => {
 
     try {
       const response = await window.electron.editEntity(payload);
-      console.log({entityUpdateIpc:response});
-      if(response.success) {
+      console.log({ entityUpdateIpc: response });
+      if (response.success) {
         console.log("Entity updated successfully");
         // Show a success toast
         toast({
@@ -519,26 +657,23 @@ useEffect(() => {
           title: "Entity Update",
           description: "Entities updated successfully",
           type: "success",
-          duration:3000
+          duration: 3000,
         });
-      }else{
+      } else {
         // Show an error toast
         toast({
           id: "entity-update-error",
           title: "Entity Update",
           description: "Entity update failed",
           type: "error",
-          duration:3000
-          
+          duration: 3000,
         });
         console.log("Entity update failed");
       }
-    }
-    catch (err) {
+    } catch (err) {
       console.log(err);
     }
-  }
-
+  };
 
   const handleEntityUpdateConfirm = (row) => {
     const id = row.id;
@@ -548,22 +683,21 @@ useEffect(() => {
         "Are you sure you want to update the Entity for this transaction?"
       )
     ) {
-
-      const payload = [{ entity: newValue, transactionId: row.id }]
+      const payload = [{ entity: newValue, transactionId: row.id }];
       entityUpdateIpc(payload);
 
       // Update the local state so the UI immediately reflects the new value.
-    setFilteredData((prevData) => {
-      const updatedData = [...prevData];
-      // Determine the correct key (e.g., "Entity" or "entity")
-      const index = updatedData.findIndex((row) => row.id === id);
-      
-      updatedData[index] = {
-        ...updatedData[index],
-        entity: newValue,
-      };
-      return updatedData;
-    });
+      setFilteredData((prevData) => {
+        const updatedData = [...prevData];
+        // Determine the correct key (e.g., "Entity" or "entity")
+        const index = updatedData.findIndex((row) => row.id === id);
+
+        updatedData[index] = {
+          ...updatedData[index],
+          entity: newValue,
+        };
+        return updatedData;
+      });
 
       // Clear the edit state for this row.
       setEditedEntities((prev) => {
@@ -587,18 +721,20 @@ useEffect(() => {
       const payload = Array.from(globalSelectedRows).map((id) => {
         const index = dataOnUi.findIndex((row) => row.id === id);
         if (index !== -1) {
-          
           dataOnUi[index] = { ...dataOnUi[index], entity: batchEntityValue };
           // Update the local state so the UI immediately reflects the new value.
           setFilteredData(dataOnUi);
           // Replace this console.log with your backend call.
-          return { entity: batchEntityValue, transactionId: dataOnUi[index].id }
-        }else{
+          return {
+            entity: batchEntityValue,
+            transactionId: dataOnUi[index].id,
+          };
+        } else {
           return null;
         }
       });
       console.log("Payload aq", payload);
-      entityUpdateIpc(payload)
+      entityUpdateIpc(payload);
 
       // Clear selections and close the modal.
       setGlobalSelectedRows(new Set());
@@ -607,14 +743,13 @@ useEffect(() => {
     }
   };
 
-   useEffect(() => {
-      const totalPagesTemp =Math.ceil(filteredData.length / rowsPerPage);
-      setTotalPages(totalPagesTemp);
-      const startIndexTemp =(currentPage - 1) * rowsPerPage;
-      const endIndexTemp = startIndexTemp + rowsPerPage;
-      setCurrentdata(filteredData.slice(startIndexTemp, endIndexTemp));
-    }, [filteredData, currentPage, rowsPerPage]);
-  
+  useEffect(() => {
+    const totalPagesTemp = Math.ceil(filteredData.length / rowsPerPage);
+    setTotalPages(totalPagesTemp);
+    const startIndexTemp = (currentPage - 1) * rowsPerPage;
+    const endIndexTemp = startIndexTemp + rowsPerPage;
+    setCurrentdata(filteredData.slice(startIndexTemp, endIndexTemp));
+  }, [filteredData, currentPage, rowsPerPage]);
 
   // Generate page numbers for pagination
   const getPageNumbers = () => {
@@ -641,7 +776,6 @@ useEffect(() => {
     return pageNumbers;
   };
 
-
   // Calculate totals for numeric columns
   const totals = numericColumns.reduce((acc, column) => {
     const total = filteredData.reduce((sum, row) => {
@@ -662,47 +796,49 @@ useEffect(() => {
   const handleDownload = () => {
     let newTitle = title;
 
-    const tmpName = reportData.reportName
-    newTitle = `${tmpName} ${newTitle}`
+    const tmpName = reportData.reportName;
+    newTitle = `${tmpName} ${newTitle}`;
 
-    exportToExcel(
-      data,
-      title= newTitle
-    );
+    exportToExcel(data, (title = newTitle));
   };
 
   const handleMailShare = async () => {
     let newTitle = title;
-    const tmpName = reportData.customerName ? reportData.customerName : reportData.reportName;
-    newTitle = `${tmpName} ${title}`;
-
-      const fileName = await exportToExcel(data, `${newTitle}.xlsx`, true);
-      if (!fileName) return alert("File saving was canceled.");
-    
-      // Generate mailto link (without attachment, since it's not possible)
-      const subject = encodeURIComponent(`${title} Report`);
-      const body = encodeURIComponent(`Please find the attached ${title} report.\n\n📌 Don't forget to manually attach the saved file before sending.`);
-      const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
-  
-    // Open mail client **only after the file is saved**
-    window.location.href = mailtoLink;
-  };
-  
-
-  const handleWhatsappShare = async () => {
-    let newTitle = title;
-    const tmpName = reportData.customerName ? reportData.customerName : reportData.reportName;
+    const tmpName = reportData.customerName
+      ? reportData.customerName
+      : reportData.reportName;
     newTitle = `${tmpName} ${title}`;
 
     const fileName = await exportToExcel(data, `${newTitle}.xlsx`, true);
     if (!fileName) return alert("File saving was canceled.");
-  
+
+    // Generate mailto link (without attachment, since it's not possible)
+    const subject = encodeURIComponent(`${title} Report`);
+    const body = encodeURIComponent(
+      `Please find the attached ${title} report.\n\n📌 Don't forget to manually attach the saved file before sending.`
+    );
+    const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
+
+    // Open mail client **only after the file is saved**
+    window.location.href = mailtoLink;
+  };
+
+  const handleWhatsappShare = async () => {
+    let newTitle = title;
+    const tmpName = reportData.customerName
+      ? reportData.customerName
+      : reportData.reportName;
+    newTitle = `${tmpName} ${title}`;
+
+    const fileName = await exportToExcel(data, `${newTitle}.xlsx`, true);
+    if (!fileName) return alert("File saving was canceled.");
+
     // Generate WhatsApp sharing link (without attachment, since it's not possible)
     const message = encodeURIComponent(
       `📁 Please find the attached Report: ${title}\n\n📌 Don't forget to manually attach the saved file before sending.`
     );
     const whatsappLink = `https://api.whatsapp.com/send?text=${message}`;
-  
+
     // Open WhatsApp Web
     window.open(whatsappLink, "_blank");
   };
@@ -710,51 +846,57 @@ useEffect(() => {
   const handleInputChange = (transactionId, column, value) => {
     setFilteredData((prevData) => {
       return prevData.map((transaction) =>
-        transaction.id === transactionId ? { ...transaction, [column]: value } : transaction
+        transaction.id === transactionId
+          ? { ...transaction, [column]: value }
+          : transaction
       );
     });
-  
+
     setTransactions((prevTransactions) => {
       return prevTransactions.map((transaction) =>
-        transaction.id === transactionId ? { ...transaction, [column]: value } : transaction
+        transaction.id === transactionId
+          ? { ...transaction, [column]: value }
+          : transaction
       );
     });
   };
 
   const handleUploadToTally = async () => {
-  let data = transactions ;
-  // if(selectedVoucher==="Ledger"){
-  //   // If no rows selected, show a warning (optional)
-  //   if (globalSelectedRows.length === 0) {
-  //     alert("Please select at least one row to upload.");
-  //     return;
-  //   }
+    let data = transactions;
+    // if(selectedVoucher==="Ledger"){
+    //   // If no rows selected, show a warning (optional)
+    //   if (globalSelectedRows.length === 0) {
+    //     alert("Please select at least one row to upload.");
+    //     return;
+    //   }
 
-  //   // 2) Grab only those transactions whose IDs are in `selectedTransactions`
-  //   const selectedRows = data.filter((tx) =>
-  //     globalSelectedRows.includes(tx.id)
-  //   );
-  //   data=selectedRows
-  // }
-  handleUpload(data);
-
-  }
+    //   // 2) Grab only those transactions whose IDs are in `selectedTransactions`
+    //   const selectedRows = data.filter((tx) =>
+    //     globalSelectedRows.includes(tx.id)
+    //   );
+    //   data=selectedRows
+    // }
+    handleUpload(data);
+  };
 
   const handleLedgerChange = (transactionId, field, value) => {
     console.log("transactionId", transactionId, "field", field, "value", value);
     setTransactions((prevTransactions) =>
       prevTransactions.map((transaction) =>
-        transaction.id === transactionId ? { ...transaction, [field]: value } : transaction
+        transaction.id === transactionId
+          ? { ...transaction, [field]: value }
+          : transaction
       )
     );
 
     setFilteredData((prevData) =>
       prevData.map((transaction) =>
-        transaction.id === transactionId ? { ...transaction, [field]: value } : transaction
+        transaction.id === transactionId
+          ? { ...transaction, [field]: value }
+          : transaction
       )
     );
   };
-
 
   const toggleTransactionSelection = (transactionId) => {
     setSelectedTransactions((prev) =>
@@ -763,13 +905,13 @@ useEffect(() => {
         : [...prev, transactionId]
     );
   };
-  
+
   const toggleSelectAll = () => {
     setSelectedTransactions((prev) =>
       prev.length === filteredData.length ? [] : filteredData.map((t) => t.id)
     );
   };
-  
+
   const handleBulkLedgerUpdate = () => {
     console.log(ledgerField, bulkLedgerValue, selectedTransactions);
     setTransactions((prevTransactions) =>
@@ -792,12 +934,11 @@ useEffect(() => {
   };
 
   const renderCell = (row, column) => {
-
     const value = row[column];
-  
+
     // If we're in editing mode and an input type is defined,
     // render an input field based on the inputType.
-    let typeProp =null;
+    let typeProp = null;
 
     if (numbericInput.includes(column)) {
       typeProp = "number";
@@ -805,12 +946,11 @@ useEffect(() => {
     if (dateInput.includes(column)) {
       typeProp = "date";
     }
-    if(textAreaInput.includes(column)){
+    if (textAreaInput.includes(column)) {
       typeProp = "text";
     }
 
     if (typeProp) {
-     
       return (
         <Input
           type={typeProp}
@@ -820,71 +960,73 @@ useEffect(() => {
         />
       );
     }
-  
+
     // Otherwise, simply render the value.
     return <div>{value}</div>;
   };
-  
-  
 
   const handleLedgerGroupChange = (row, value) => {
     setFilteredData((prevData) =>
       prevData.map((transaction) =>
-        transaction.id === row.id ? { ...transaction, ledger_group: value } : transaction
+        transaction.id === row.id
+          ? { ...transaction, ledger_group: value }
+          : transaction
       )
     );
-  }
-  
+  };
 
   return (
     <Card className="min-w-full max-w-[0]">
       <div className="flex justify-between items-center px-4 pt-2">
-
-      <div className="flex items-center gap-4">
-            <label htmlFor="companyName" className="font-medium">
-              Company Name:
-            </label>
-            <input
-              id="companyName"
-              type="text"
-              placeholder="Enter Company Name"
-              value={companyName}
-              tabIndex="0"  // ✅ Ensure the input is focusable
-              onChange={(e) => setCompanyName(e.target.value)}
-              className="border rounded-md p-2 w-64 dark:bg-gray-800 dark:text-white"
-                onFocus={(e) => e.target.select()} // ✅ Ensure it highlights the text when clicked
-      
-            />
-          </div>
-          <div className="flex gap-4 p-4 pb-0">
-            <select onChange={(e) => setLedgerField(e.target.value)} className="border rounded-md p-2">
-              <option value="dr_ledger">Dr Ledger</option>
-              <option value="cr_ledger">Cr Ledger</option>
-            </select>
-            <input
-              type="text"
-              placeholder={`Enter ${ledgerField}`}
-              value={bulkLedgerValue}
-              onChange={(e) => setBulkLedgerValue(e.target.value)}
-              className="border rounded-md p-2 w-64 dark:bg-gray-800 dark:text-white"
-            />
-            <Button onClick={handleBulkLedgerUpdate} disabled={selectedTransactions.length === 0}>
-              Set for Selected
-            </Button>
-          </div>
+        <div className="flex items-center gap-4">
+          <label htmlFor="companyName" className="font-medium">
+            Company Name:
+          </label>
+          <input
+            id="companyName"
+            type="text"
+            placeholder="Enter Company Name"
+            value={companyName}
+            tabIndex="0" // ✅ Ensure the input is focusable
+            onChange={(e) => setCompanyName(e.target.value)}
+            className="border rounded-md p-2 w-64 dark:bg-gray-800 dark:text-white"
+            onFocus={(e) => e.target.select()} // ✅ Ensure it highlights the text when clicked
+          />
+        </div>
+        <div className="flex gap-4 p-4 pb-0">
+          <select
+            onChange={(e) => setLedgerField(e.target.value)}
+            className="border rounded-md p-2"
+          >
+            <option value="dr_ledger">Dr Ledger</option>
+            <option value="cr_ledger">Cr Ledger</option>
+          </select>
+          <input
+            type="text"
+            placeholder={`Enter ${ledgerField}`}
+            value={bulkLedgerValue}
+            onChange={(e) => setBulkLedgerValue(e.target.value)}
+            className="border rounded-md p-2 w-64 dark:bg-gray-800 dark:text-white"
+          />
+          <Button
+            onClick={handleBulkLedgerUpdate}
+            disabled={selectedTransactions.length === 0}
+          >
+            Set for Selected
+          </Button>
+        </div>
       </div>
 
       <CardHeader>
-        
-            <div className="flex justify-between items-center">
-              <div className="space-y-2">
-              <Button
-          onClick={handleUploadToTally}
-          className="px-6 py-3 text-base font-medium text-white bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 hover:bg-gray-700 transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
-        >
-          <UploadCloud className="w-5 h-5 text-white" />
-          Upload to Tally
-        </Button>
+        <div className="flex justify-between items-center">
+          <div className="space-y-2">
+            <Button
+              onClick={handleUploadToTally}
+              className="px-6 py-3 text-base font-medium text-white bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 hover:bg-gray-700 transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
+            >
+              <UploadCloud className="w-5 h-5 text-white" />
+              Upload to Tally
+            </Button>
             {/* <CardTitle className="dark:text-slate-300">{title || "Data Table"}</CardTitle> */}
             {/* <CardDescription>{subtitle || "View and manage your data"}</CardDescription> */}
           </div>
@@ -902,8 +1044,8 @@ useEffect(() => {
                 value={rowsPerPage}
                 onChange={(e) => {
                   const value = e.target.value;
-                    setRowsPerPage(Number(value));
-                    setCurrentPage(1);
+                  setRowsPerPage(Number(value));
+                  setCurrentPage(1);
                 }}
               >
                 {/* <option value="5">5 rows</option> */}
@@ -914,14 +1056,14 @@ useEffect(() => {
                 {/* <option value="all">Show all</option> */}
               </select>
               <Button
-              variant="outline"
-              className="px-3 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-600 
+                variant="outline"
+                className="px-3 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-600 
                         bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
                         transition-all rounded-md shadow-sm hover:shadow-md"
-              onClick={clearFilters}
-            >
-              Clear Filters
-            </Button>
+                onClick={clearFilters}
+              >
+                Clear Filters
+              </Button>
               <div className="flex gap-2">
                 {/* Download Button */}
                 <Tooltip>
@@ -974,52 +1116,72 @@ useEffect(() => {
       <CardContent>
         <div className="relative  overflow-x-auto">
           <Table className="w-full">
-          <TableHeader className="bg-gray-200 dark:bg-gray-900">
-          <TableRow>
-               
-              <TableHead className="w-10">
-                <Checkbox
-                        checked={
-                          selectedTransactions.length === filteredData.length
-                        }
-                        onCheckedChange={toggleSelectAll}
-                    />
+            <TableHeader className="bg-gray-200 dark:bg-gray-900">
+              <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={
+                      selectedTransactions.length === filteredData.length
+                    }
+                    onCheckedChange={toggleSelectAll}
+                  />
                 </TableHead>
                 {columns.map((column) => (
-                  <TableHead key={column} className={`whitespace-nowrap ${["bill_reference","dr_ledger","cr_ledger"].includes(column)&&"min-w-[180px]"} ${column==="narration"&&"min-w-[300px]"}`}
-                  // className={source === "summary" ? "bg-gray-900 dark:bg-slate-800 text-white" : ""}
+                  <TableHead
+                    key={column}
+                    className={`whitespace-nowrap ${
+                      ["bill_reference", "dr_ledger", "cr_ledger"].includes(
+                        column
+                      ) && "min-w-[180px]"
+                    } ${column === "narration" && "min-w-[300px]"}`}
+                    // className={source === "summary" ? "bg-gray-900 dark:bg-slate-800 text-white" : ""}
                   >
-
                     <div className="flex items-center gap-2">
-                      {["dr_ledger","cr_ledger"].includes(column) && <p className="text-lg text-gray-500 dark:text-gray-400">
-                        *
-                      </p>}
+                      {["dr_ledger", "cr_ledger"].includes(column) && (
+                        <p className="text-lg text-gray-500 dark:text-gray-400">
+                          *
+                        </p>
+                      )}
                       {column
                         .split("_") // Split by underscore
-                        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Capitalize
+                        .map(
+                          (word) =>
+                            word.charAt(0).toUpperCase() +
+                            word.slice(1).toLowerCase()
+                        ) // Capitalize
                         .join(" ")}
-                        
-                      {["narration","bill_reference","effective_date","reference_number"].includes(column.toLowerCase())===false && (
+
+                      {[
+                        "narration",
+                        "bill_reference",
+                        "effective_date",
+                        "reference_number",
+                      ].includes(column.toLowerCase()) === false && (
                         <Button
                           variant="ghost"
                           size="sm"
                           className="h-8 w-8 p-0"
                           onClick={() => {
-                            if (numericColumns.includes(column)) {
+                            if (column.toLowerCase() === "date") {
+                              setCurrentFilterColumn(column);
+                              setCurrentDateColumn(column);
+                              setDateFilterModalOpen(true);
+                            } else if (numericColumns.includes(column)) {
                               setCurrentNumericColumn(column);
                               setNumericFilterModalOpen(true);
+                              setDateFilterModalOpen(false);
                             } else {
                               setCurrentFilterColumn(column);
                               setSelectedCategories([]);
                               setCategorySearchTerm("");
                               setFilterModalOpen(true);
+                              setDateFilterModalOpen(false);
                             }
                           }}
                         >
                           ▼
                         </Button>
                       )}
-
                     </div>
                   </TableHead>
                 ))}
@@ -1029,107 +1191,109 @@ useEffect(() => {
             <TableBody>
               {currentData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={hasEntity ? columns.length + 1 : columns.length} className="text-center">
+                  <TableCell
+                    colSpan={hasEntity ? columns.length + 1 : columns.length}
+                    className="text-center"
+                  >
                     No matching results found
                   </TableCell>
                 </TableRow>
               ) : (
                 currentData.map((row) => {
-                  return <TableRow
-                    key={row.id}
-                    className={`${row.imported ? "bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800" : "hover:bg-gray-100 dark:hover:bg-gray-800"}`}
-                    // className={source === "summary" ? "even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200" : ""}
-                  >
-                    <TableCell>
+                  return (
+                    <TableRow
+                      key={row.id}
+                      className={`${
+                        row.imported
+                          ? "bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800"
+                          : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                      }`}
+                      // className={source === "summary" ? "even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200" : ""}
+                    >
+                      <TableCell>
                         <Checkbox
-                        checked={
-                          selectedTransactions.includes(row.id)
-                        }
-                        onCheckedChange={() => toggleTransactionSelection(row.id)}
-                    />
+                          checked={selectedTransactions.includes(row.id)}
+                          onCheckedChange={() =>
+                            toggleTransactionSelection(row.id)
+                          }
+                        />
                       </TableCell>
-                    {columns.map((column) => {
-                      
-                      if (column.toLowerCase() === "entity") {
-                        return (
-                          <TableCell
-                            key={column}
-                            className="max-w-[00px] relative"
-                          >
-                            <div className="flex items-center">
-                              <Input
-                                type="text"
-                                value={
-                                  editedEntities[row.id] !== undefined
-                                    ? editedEntities[row.id]
-                                    : row[column]
-                                }
-                                onChange={(e) =>
-                                  handleEntityChange(
-                                    row.id,
-                                    e.target.value
-                                  )
-                                }
-                                className="w-full"
-                              />
-                              {editedEntities[row.id] !== undefined &&
-                                editedEntities[row.id] !== row[column] && (
-                                  <Check
-                                    className="ml-2 cursor-pointer text-green-500"
-                                    onClick={() =>
-                                      handleEntityUpdateConfirm(
-                                        row
-                                      )
-                                    }
-                                  />
-                                )}
-                            </div>
-                          </TableCell>
-                        );
-                      }else if(column.toLowerCase() === "ledger_group"){
-                        return (
+                      {columns.map((column) => {
+                        if (column.toLowerCase() === "entity") {
+                          return (
+                            <TableCell
+                              key={column}
+                              className="max-w-[00px] relative"
+                            >
+                              <div className="flex items-center">
+                                <Input
+                                  type="text"
+                                  value={
+                                    editedEntities[row.id] !== undefined
+                                      ? editedEntities[row.id]
+                                      : row[column]
+                                  }
+                                  onChange={(e) =>
+                                    handleEntityChange(row.id, e.target.value)
+                                  }
+                                  className="w-full"
+                                />
+                                {editedEntities[row.id] !== undefined &&
+                                  editedEntities[row.id] !== row[column] && (
+                                    <Check
+                                      className="ml-2 cursor-pointer text-green-500"
+                                      onClick={() =>
+                                        handleEntityUpdateConfirm(row)
+                                      }
+                                    />
+                                  )}
+                              </div>
+                            </TableCell>
+                          );
+                        } else if (column.toLowerCase() === "ledger_group") {
+                          return (
                             <TableCell
                               key={column}
                               className="min-w-[250px] group relative"
                             >
-                            <Select
-                            value={row[column]}
-                            onValueChange={(value) =>
-                              handleLedgerGroupChange(row, value)
-                            }
-                            className="w-full"
-                            disabled={globalSelectedRows.has(row.id)}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue>{row[column]}</SelectValue>
-                            </SelectTrigger>
-                            <SelectContent
-                              onCloseAutoFocus={(e) => {
-                                e.preventDefault();
-                              }}
-                            >
-                              <div className="p-2 border-b flex gap-2">
-                                <div className="relative flex-1">
-                                  <Input
-                                    placeholder="Search Group..."
-                                    value={categorySearchTerm}
-                                    onChange={(e) =>
-                                      handleCategorySearch(e)
-                                    }
-                                    onFocus={() =>
-                                      setIsSearchInputFocused(true)
-                                    }
-                                    onBlur={() =>
-                                      setIsSearchInputFocused(false)
-                                    }
-                                    onKeyDown={(e) => e.stopPropagation()}
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                    }}
-                                  />
-                                </div>
-                                {/* <Button
+                              <Select
+                                value={row[column]}
+                                onValueChange={(value) =>
+                                  handleLedgerGroupChange(row, value)
+                                }
+                                className="w-full"
+                                disabled={globalSelectedRows.has(row.id)}
+                              >
+                                <SelectTrigger className="w-full">
+                                  <SelectValue>{row[column]}</SelectValue>
+                                </SelectTrigger>
+                                <SelectContent
+                                  onCloseAutoFocus={(e) => {
+                                    e.preventDefault();
+                                  }}
+                                >
+                                  <div className="p-2 border-b flex gap-2">
+                                    <div className="relative flex-1">
+                                      <Input
+                                        placeholder="Search Group..."
+                                        value={categorySearchTerm}
+                                        onChange={(e) =>
+                                          handleCategorySearch(e)
+                                        }
+                                        onFocus={() =>
+                                          setIsSearchInputFocused(true)
+                                        }
+                                        onBlur={() =>
+                                          setIsSearchInputFocused(false)
+                                        }
+                                        onKeyDown={(e) => e.stopPropagation()}
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                        }}
+                                      />
+                                    </div>
+                                    {/* <Button
                                   variant="outline"
                                   size="sm"
                                   className="px-2 h-10"
@@ -1151,167 +1315,237 @@ useEffect(() => {
                                   <Plus className="h-4 w-4" />
                                   Add
                                 </Button> */}
-                              </div>
-                              <div className="max-h-[200px] overflow-y-auto">
-                                {filteredCategories.length > 0 ? (
-                                  filteredCategories.map((ledgerGroup) => (
-                                    <SelectItem
-                                      key={ledgerGroup}
-                                      value={ledgerGroup}
-                                    >
-                                      {decodeHtmlEntities(ledgerGroup)}
-                                    </SelectItem>
-                                  ))
-                                ) : (
-                                  <div className="p-4 max-w-[300px] text-center text-muted-foreground">
-                                    <p className="text-md">
-                                      No matching categories found
-                                    </p>
-                                    <p className="text-sm mt-1">
-                                      Click the{" "}
-                                      <Plus className="h-3 w-3 inline-block mx-1" />{" "}
-                                      icon above to add "{categorySearchTerm}"
-                                      as a new category
-                                    </p>
                                   </div>
-                                )}
-                              </div>
-                            </SelectContent>
-                          </Select>
-                          </TableCell>
-                          
-                        )
-                      }
-                       else if (column.toLowerCase() === "narration") {
-                        return (
-                          <TableCell
-                            key={column}
-                            className="max-w-[500px] group relative"
-                          ><Input
-                          type="text"
-                          value={row[column] || ""}
-                          onChange={(e) => handleInputChange(row.id, column, e.target.value)}
-                          placeholder="Enter Narration"
-                          className="w-full p-2 border border-gray-300  truncate rounded-md"
-                        />
-                            <div className="absolute right-24 top-12 hidden group-hover:block bg-black text-white text-sm rounded p-2 z-50 whitespace-normal min-w-[200px] ">
-                              {row[column]}
-                            </div>
-                          </TableCell>
-                        );
-
-                      }else if(column.toLowerCase()==="effective_date"){
-                        return <TableCell
-                        key={column}
-                        className="w-[250px] group relative"
-                      > <Input
-                        type="date"
-                        value={row[column] ? row[column].split("T")[0] : ""}
-                        onChange={(e) => handleInputChange(row.id, column, e.target.value) }
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                      />
-                      </TableCell>
-                      }
-                      else if(column.toLowerCase()==="bill_reference"){
-                        return  <TableCell
-                            key={column}
-                            className="w-[250px] group relative"
-                          ><Input
-                        type="text"
-                        value={row[column] || ""}
-                        onChange={(e) => handleInputChange(row.id, column, e.target.value)}
-                        placeholder="Enter Bill Reference"
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                      />
-                      </TableCell>
-                      }   else if(column.toLowerCase()==="reference_number"){
-                        return  <TableCell
-                            key={column}
-                            className="w-[250px] group relative"
-                          ><Input
-                        type="text"
-                        value={row[column] || ""}
-                        onChange={(e) => handleInputChange(row.id, column, e.target.value)}
-                        placeholder="Enter Reference Number"
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                      />
-
-                      </TableCell>
-                      } else if(column.toLowerCase()==="imported"){
-                        return  <TableCell key={column} className="max-w-[200px]">
-                        <div>{row[column]===true?"Success":row.failed_reason===""?"Not Uploaded Yet":"Failed"}</div>
-                      </TableCell>
-                      } else if(column.toLowerCase()==="dr_ledger"){
-                        return <TableCell>
-                       <input
-                            type="text"
-                            placeholder="Enter Dr-Ledger"
-                            value={row[column] || ""}
-                            onChange={(e) => {
-                                // Update individual row
-                              handleLedgerChange(row.id, "dr_ledger", e.target.value);
-
-                              // If this row is selected, update all selected rows
-                              if (selectedTransactions.includes(row.id)) {
-                                selectedTransactions.forEach(id => {
-                                  if (id !== row.id) { // Skip current row since already updated
-                                    handleLedgerChange(id, "dr_ledger", e.target.value);
-                                  }
-                                });
-                              }
-                            }}
-                            className="border rounded-md p-2 w-full dark:bg-gray-800 dark:text-white"
-                          />
-                      </TableCell>
-                      }else if(column.toLowerCase()==="cr_ledger"){
-                        return  <TableCell>
-                       <input
-                            type="text"
-                            placeholder="Enter Cr-Ledger"
-                            value={row[column] || ""}
-                            onChange={(e) => {
-                              // Update individual row
-                            handleLedgerChange(row.id, "cr_ledger", e.target.value);
-
-                            // If this row is selected, update all selected rows
-                            if (selectedTransactions.includes(row.id)) {
-                              selectedTransactions.forEach(id => {
-                                if (id !== row.id) { // Skip current row since already updated
-                                  handleLedgerChange(id, "cr_ledger", e.target.value);
+                                  <div className="max-h-[200px] overflow-y-auto">
+                                    {filteredCategories.length > 0 ? (
+                                      filteredCategories.map((ledgerGroup) => (
+                                        <SelectItem
+                                          key={ledgerGroup}
+                                          value={ledgerGroup}
+                                        >
+                                          {decodeHtmlEntities(ledgerGroup)}
+                                        </SelectItem>
+                                      ))
+                                    ) : (
+                                      <div className="p-4 max-w-[300px] text-center text-muted-foreground">
+                                        <p className="text-md">
+                                          No matching categories found
+                                        </p>
+                                        <p className="text-sm mt-1">
+                                          Click the{" "}
+                                          <Plus className="h-3 w-3 inline-block mx-1" />{" "}
+                                          icon above to add "
+                                          {categorySearchTerm}" as a new
+                                          category
+                                        </p>
+                                      </div>
+                                    )}
+                                  </div>
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                          );
+                        } else if (column.toLowerCase() === "narration") {
+                          return (
+                            <TableCell
+                              key={column}
+                              className="max-w-[500px] group relative"
+                            >
+                              <Input
+                                type="text"
+                                value={row[column] || ""}
+                                onChange={(e) =>
+                                  handleInputChange(
+                                    row.id,
+                                    column,
+                                    e.target.value
+                                  )
                                 }
-                              });
-                            }
-                          }}
-                            className="border rounded-md p-2 w-full dark:bg-gray-800 dark:text-white"
-                          />
-                      </TableCell>
-                      }else {
-                        return (
-                          <TableCell key={column} className="max-w-[200px]">
-                            {renderCell(row,column)}
-                          </TableCell>
-                        );
-                      }
-                    })}
-                  </TableRow>
+                                placeholder="Enter Narration"
+                                className="w-full p-2 border border-gray-300  truncate rounded-md"
+                              />
+                              <div className="absolute right-24 top-12 hidden group-hover:block bg-black text-white text-sm rounded p-2 z-50 whitespace-normal min-w-[200px] ">
+                                {row[column]}
+                              </div>
+                            </TableCell>
+                          );
+                        } else if (column.toLowerCase() === "effective_date") {
+                          return (
+                            <TableCell
+                              key={column}
+                              className="w-[250px] group relative"
+                            >
+                              {" "}
+                              <Input
+                                type="date"
+                                value={
+                                  row[column] ? row[column].split("T")[0] : ""
+                                }
+                                onChange={(e) =>
+                                  handleInputChange(
+                                    row.id,
+                                    column,
+                                    e.target.value
+                                  )
+                                }
+                                className="w-full p-2 border border-gray-300 rounded-md"
+                              />
+                            </TableCell>
+                          );
+                        } else if (column.toLowerCase() === "bill_reference") {
+                          return (
+                            <TableCell
+                              key={column}
+                              className="w-[250px] group relative"
+                            >
+                              <Input
+                                type="text"
+                                value={row[column] || ""}
+                                onChange={(e) =>
+                                  handleInputChange(
+                                    row.id,
+                                    column,
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="Enter Bill Reference"
+                                className="w-full p-2 border border-gray-300 rounded-md"
+                              />
+                            </TableCell>
+                          );
+                        } else if (
+                          column.toLowerCase() === "reference_number"
+                        ) {
+                          return (
+                            <TableCell
+                              key={column}
+                              className="w-[250px] group relative"
+                            >
+                              <Input
+                                type="text"
+                                value={row[column] || ""}
+                                onChange={(e) =>
+                                  handleInputChange(
+                                    row.id,
+                                    column,
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="Enter Reference Number"
+                                className="w-full p-2 border border-gray-300 rounded-md"
+                              />
+                            </TableCell>
+                          );
+                        } else if (column.toLowerCase() === "imported") {
+                          return (
+                            <TableCell key={column} className="max-w-[200px]">
+                              <div>
+                                {row[column] === true
+                                  ? "Success"
+                                  : row.failed_reason === ""
+                                  ? "Not Uploaded Yet"
+                                  : "Failed"}
+                              </div>
+                            </TableCell>
+                          );
+                        } else if (column.toLowerCase() === "dr_ledger") {
+                          return (
+                            <TableCell>
+                              <input
+                                type="text"
+                                placeholder="Enter Dr-Ledger"
+                                value={row[column] || ""}
+                                onChange={(e) => {
+                                  // Update individual row
+                                  handleLedgerChange(
+                                    row.id,
+                                    "dr_ledger",
+                                    e.target.value
+                                  );
+
+                                  // If this row is selected, update all selected rows
+                                  if (selectedTransactions.includes(row.id)) {
+                                    selectedTransactions.forEach((id) => {
+                                      if (id !== row.id) {
+                                        // Skip current row since already updated
+                                        handleLedgerChange(
+                                          id,
+                                          "dr_ledger",
+                                          e.target.value
+                                        );
+                                      }
+                                    });
+                                  }
+                                }}
+                                className="border rounded-md p-2 w-full dark:bg-gray-800 dark:text-white"
+                              />
+                            </TableCell>
+                          );
+                        } else if (column.toLowerCase() === "cr_ledger") {
+                          return (
+                            <TableCell>
+                              <input
+                                type="text"
+                                placeholder="Enter Cr-Ledger"
+                                value={row[column] || ""}
+                                onChange={(e) => {
+                                  // Update individual row
+                                  handleLedgerChange(
+                                    row.id,
+                                    "cr_ledger",
+                                    e.target.value
+                                  );
+
+                                  // If this row is selected, update all selected rows
+                                  if (selectedTransactions.includes(row.id)) {
+                                    selectedTransactions.forEach((id) => {
+                                      if (id !== row.id) {
+                                        // Skip current row since already updated
+                                        handleLedgerChange(
+                                          id,
+                                          "cr_ledger",
+                                          e.target.value
+                                        );
+                                      }
+                                    });
+                                  }
+                                }}
+                                className="border rounded-md p-2 w-full dark:bg-gray-800 dark:text-white"
+                              />
+                            </TableCell>
+                          );
+                        } else {
+                          return (
+                            <TableCell key={column} className="max-w-[200px]">
+                              {renderCell(row, column)}
+                            </TableCell>
+                          );
+                        }
+                      })}
+                    </TableRow>
+                  );
                 })
               )}
             </TableBody>
             <TableFooter>
-                <TableRow>
-                  <TableCell>Total</TableCell>
-                  {columns.slice(0).map((column) => (
-                    <TableCell key={column}>
-                      {['credit', 'debit', 'balance','amount'].includes(column.toLowerCase()) ? totals[column] : ""}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableFooter>
+              <TableRow>
+                <TableCell>Total</TableCell>
+                {columns.slice(0).map((column) => (
+                  <TableCell key={column}>
+                    {["credit", "debit", "balance", "amount"].includes(
+                      column.toLowerCase()
+                    )
+                      ? totals[column]
+                      : ""}
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableFooter>
           </Table>
         </div>
 
         {/* Pagination */}
-        { totalPages > 1 && (
+        {totalPages > 1 && (
           <div className="mt-6">
             <Pagination>
               <PaginationContent>
@@ -1349,16 +1583,15 @@ useEffect(() => {
                     className={cn(
                       "cursor-pointer",
                       currentPage === totalPages &&
-                      "pointer-events-none opacity-50"
+                        "pointer-events-none opacity-50"
                     )}
                   />
                 </PaginationItem>
-                
-            {/* <div>
+
+                {/* <div>
               <p className="text:lg font-bold">Total : {filteredData.length}</p>
             </div> */}
               </PaginationContent>
-            
             </Pagination>
           </div>
         )}
@@ -1494,49 +1727,109 @@ useEffect(() => {
         </Dialog>
       )}
 
-         {/* Bulk Category Update Modal */}
-              <Dialog
-                open={bulkCategoryModalOpen}
-                onOpenChange={setBulkCategoryModalOpen}
+      {/* Date Filter Modal */}
+      {dateFilterModalOpen && (
+        <Dialog
+          open={dateFilterModalOpen}
+          onOpenChange={setDateFilterModalOpen}
+        >
+          <DialogContent className="sm:max-w-[400px]">
+            <DialogHeader>
+              <DialogTitle>Filter {currentDateColumn}</DialogTitle>
+              <p className="text-sm text-gray-600">
+                Select a start and end date for the filter.
+              </p>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Start Date</Label>
+                <Input
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => {
+                    console.log("Start date changed:", e.target.value);
+                    setFromDate(e.target.value);
+                  }}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>End Date</Label>
+                <Input
+                  type="date"
+                  value={toDate}
+                  onChange={(e) => {
+                    console.log("End date changed:", e.target.value);
+                    setToDate(e.target.value);
+                  }}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="ghost"
+                onClick={() => setDateFilterModalOpen(false)}
               >
-                <DialogContent className="sm:max-w-[600px]">
-                  <DialogHeader>
-                    <DialogTitle>Update Multiple Categories</DialogTitle>
-                    <DialogDescription>
-                      Select a new category for the {globalSelectedRows.size} selected
-                      transactions
-                    </DialogDescription>
-                  </DialogHeader>
-      
-                  <div className="space-y-4">
-                    <Select
-                      value={selectedBulkCategory}
-                      onValueChange={setSelectedBulkCategory}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select new category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <div className="p-2 border-b flex gap-2">
-                          <div className="relative flex-1">
-                            <Input
-                              placeholder="Search categories..."
-                              value={categorySearchTerm}
-                              onChange={(e) => handleCategorySearch(e)}
-                              onFocus={() =>
-                                setIsSearchInputFocused(true)
-                              }
-                              onBlur={() =>
-                                setIsSearchInputFocused(false)
-                              }
-                              onKeyDown={(e) => e.stopPropagation()}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                              }}
-                            />
-                          </div>
-                          {/* <Button
+                Cancel
+              </Button>
+              <Button
+                variant="default"
+                className="bg-black hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
+                onClick={() => {
+                  console.log("Applying filter with:", {
+                    fromDate,
+                    toDate,
+                    currentDateColumn,
+                  });
+                  handleDateFilter(currentDateColumn, fromDate, toDate);
+                  setDateFilterModalOpen(false);
+                }}
+              >
+                Apply Filter
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Bulk Category Update Modal */}
+      <Dialog
+        open={bulkCategoryModalOpen}
+        onOpenChange={setBulkCategoryModalOpen}
+      >
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Update Multiple Categories</DialogTitle>
+            <DialogDescription>
+              Select a new category for the {globalSelectedRows.size} selected
+              transactions
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <Select
+              value={selectedBulkCategory}
+              onValueChange={setSelectedBulkCategory}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select new category" />
+              </SelectTrigger>
+              <SelectContent>
+                <div className="p-2 border-b flex gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      placeholder="Search categories..."
+                      value={categorySearchTerm}
+                      onChange={(e) => handleCategorySearch(e)}
+                      onFocus={() => setIsSearchInputFocused(true)}
+                      onBlur={() => setIsSearchInputFocused(false)}
+                      onKeyDown={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                    />
+                  </div>
+                  {/* <Button
                             variant="outline"
                             size="sm"
                             className="px-2 h-10"
@@ -1557,183 +1850,198 @@ useEffect(() => {
                             <Plus className="h-4 w-4" />
                             Add
                           </Button> */}
-                        </div>
-                        <div className="overflow-y-auto">
-                          {ledgerGroups.length > 0 ? (
-                            ledgerGroups.map((category) => (
-                              <SelectItem key={category} value={category}>
-                                {category}
-                              </SelectItem>
-                            ))
-                          ) : (
-                            <div className="p-4 max-w-[300px] text-center text-muted-foreground">
-                              <p className="text-md">No matching categories found</p>
-                              <p className="text-sm mt-1">
-                                Click the{" "}
-                                <Plus className="h-3 w-3 inline-block mx-1" /> icon
-                                above to add "{categorySearchTerm}" as a new category
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      </SelectContent>
-                    </Select>
-      
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-2 mt-4">
-                        <Checkbox
-                          id="show-keywords"
-                          checked={showKeywordInput}
-                          onCheckedChange={setShowKeywordInput}
-                        />
-                        <Label htmlFor="show-keywords">
-                          Add keywords for category change
-                        </Label>
-                      </div>
-      
-                      {showKeywordInput && (
-                        <div className="space-y-2">
-                          <Label>
-                            What common keywords in these transactions made you choose
-                            "{selectedBulkCategory}" as their category?
-                          </Label>
-                          <Input
-                            value={reasoning}
-                            onChange={(e) => setReasoning(e.target.value)}
-                            placeholder="Enter Keyword..."
-                          />
-                        </div>
-                      )}
+                </div>
+                <div className="overflow-y-auto">
+                  {ledgerGroups.length > 0 ? (
+                    ledgerGroups.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <div className="p-4 max-w-[300px] text-center text-muted-foreground">
+                      <p className="text-md">No matching categories found</p>
+                      <p className="text-sm mt-1">
+                        Click the <Plus className="h-3 w-3 inline-block mx-1" />{" "}
+                        icon above to add "{categorySearchTerm}" as a new
+                        category
+                      </p>
                     </div>
-                  </div>
-      
-                  <DialogFooter>
-                    <Button
-                      variant="ghost"
-                      onClick={() => setBulkCategoryModalOpen(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      variant="default"
-                      onClick={() => {
-                        setBulkCategoryModalOpen(false);
-                        setConfirmationModalOpen(true);
-                      }}
-                      disabled={!selectedBulkCategory}
-                    >
-                      Update Categories
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+                  )}
+                </div>
+              </SelectContent>
+            </Select>
 
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2 mt-4">
+                <Checkbox
+                  id="show-keywords"
+                  checked={showKeywordInput}
+                  onCheckedChange={setShowKeywordInput}
+                />
+                <Label htmlFor="show-keywords">
+                  Add keywords for category change
+                </Label>
+              </div>
 
-            {/* Classification Modal */}
-                <Dialog
-                  open={showClassificationModal}
-                  onOpenChange={() => setShowClassificationModal(false)}
-                >
-                  <DialogContent className="sm:max-w-[400px]">
-                    <DialogHeader>
-                      <DialogTitle>Classify New Category</DialogTitle>
-                      <DialogDescription>
-                        Please classify "{newCategoryToClassify}" into one of the following types
-                      </DialogDescription>
-                    </DialogHeader>
-        
-                    <RadioGroup
-                      value={selectedType}
-                      onValueChange={setSelectedType}
-                      className="space-y-3"
-                    >
-                      
-                      {(!pendingCategoryChange?.isDebit || bulkCategoryModalOpen) && <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="Income" id="income" />
-                        <Label htmlFor="Income">Income</Label>
-                      </div>}
-                      {(pendingCategoryChange?.isDebit || bulkCategoryModalOpen)&&<div className="flex items-center space-x-2">
-                        <RadioGroupItem value="Important Expenses / Payments" id="important_expenses" />
-                        <Label htmlFor="important_expenses">Important Expenses</Label>
-                      </div>}
-                      {(pendingCategoryChange?.isDebit || bulkCategoryModalOpen)&&<div className="flex items-center space-x-2">
-                        <RadioGroupItem value="Other Expenses / Payments" id="other_expenses" />
-                        <Label htmlFor="other_expenses">Other Expenses</Label>
-                      </div>}
-                    </RadioGroup>
-        
-                    <DialogFooter>
-                      <Button
-                        variant="default"
-                        onClick={handleClassificationSubmit}
-                        disabled={!selectedType}
-                      >
-                        Save Classification
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-        
+              {showKeywordInput && (
+                <div className="space-y-2">
+                  <Label>
+                    What common keywords in these transactions made you choose "
+                    {selectedBulkCategory}" as their category?
+                  </Label>
+                  <Input
+                    value={reasoning}
+                    onChange={(e) => setReasoning(e.target.value)}
+                    placeholder="Enter Keyword..."
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setBulkCategoryModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="default"
+              onClick={() => {
+                setBulkCategoryModalOpen(false);
+                setConfirmationModalOpen(true);
+              }}
+              disabled={!selectedBulkCategory}
+            >
+              Update Categories
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Classification Modal */}
+      <Dialog
+        open={showClassificationModal}
+        onOpenChange={() => setShowClassificationModal(false)}
+      >
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Classify New Category</DialogTitle>
+            <DialogDescription>
+              Please classify "{newCategoryToClassify}" into one of the
+              following types
+            </DialogDescription>
+          </DialogHeader>
+
+          <RadioGroup
+            value={selectedType}
+            onValueChange={setSelectedType}
+            className="space-y-3"
+          >
+            {(!pendingCategoryChange?.isDebit || bulkCategoryModalOpen) && (
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="Income" id="income" />
+                <Label htmlFor="Income">Income</Label>
+              </div>
+            )}
+            {(pendingCategoryChange?.isDebit || bulkCategoryModalOpen) && (
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem
+                  value="Important Expenses / Payments"
+                  id="important_expenses"
+                />
+                <Label htmlFor="important_expenses">Important Expenses</Label>
+              </div>
+            )}
+            {(pendingCategoryChange?.isDebit || bulkCategoryModalOpen) && (
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem
+                  value="Other Expenses / Payments"
+                  id="other_expenses"
+                />
+                <Label htmlFor="other_expenses">Other Expenses</Label>
+              </div>
+            )}
+          </RadioGroup>
+
+          <DialogFooter>
+            <Button
+              variant="default"
+              onClick={handleClassificationSubmit}
+              disabled={!selectedType}
+            >
+              Save Classification
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* share modal dialog */}
       <Dialog open={shareModalOpen} onOpenChange={setShareModalOpen}>
-      <DialogContent className="max-w-md p-6 rounded-lg shadow-lg border dark:border-gray-700 bg-white dark:bg-gray-900">
-        {/* Header with Close Button */}
-        <DialogHeader className="flex justify-between items-center">
-          <DialogTitle className="text-lg font-semibold text-gray-800 dark:text-white">Share This Report</DialogTitle>
-        </DialogHeader>
+        <DialogContent className="max-w-md p-6 rounded-lg shadow-lg border dark:border-gray-700 bg-white dark:bg-gray-900">
+          {/* Header with Close Button */}
+          <DialogHeader className="flex justify-between items-center">
+            <DialogTitle className="text-lg font-semibold text-gray-800 dark:text-white">
+              Share This Report
+            </DialogTitle>
+          </DialogHeader>
 
-        {/* Share Options */}
-        <div className="flex justify-center gap-6 py-4">
-          <TooltipProvider>
-            {/* Mail Button */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="p-4 transition-all rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
-                  onClick={handleMailShare}
-                >
-                  <Mail className="w-6 h-6 text-red-500" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Share via Email</TooltipContent>
-            </Tooltip>
+          {/* Share Options */}
+          <div className="flex justify-center gap-6 py-4">
+            <TooltipProvider>
+              {/* Mail Button */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="p-4 transition-all rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
+                    onClick={handleMailShare}
+                  >
+                    <Mail className="w-6 h-6 text-red-500" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Share via Email</TooltipContent>
+              </Tooltip>
 
-            {/* WhatsApp Button */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="p-4 transition-all rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
-                  onClick={handleWhatsappShare}
-                >
-                  <MessageCircle className="w-6 h-6 text-green-500" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Share via WhatsApp</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
+              {/* WhatsApp Button */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="p-4 transition-all rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
+                    onClick={handleWhatsappShare}
+                  >
+                    <MessageCircle className="w-6 h-6 text-green-500" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Share via WhatsApp</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
 
-        <div className="text-xs text-left">
+          <div className="text-xs text-left">
             <p>
-            <span className="font-bold">Note:</span> Since this software operates entirely offline, the report is first downloaded to your device before sharing, Please remember to attach the downloaded file.
-            </p> 
-        </div>
+              <span className="font-bold">Note:</span> Since this software
+              operates entirely offline, the report is first downloaded to your
+              device before sharing, Please remember to attach the downloaded
+              file.
+            </p>
+          </div>
 
-        {/* Cancel Button */}
-        <div className="flex justify-end">
-          <Button
-            variant="outline"
-            className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-            onClick={() => setShareModalOpen(false)}
-          >
-            Cancel
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+          {/* Cancel Button */}
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+              onClick={() => setShareModalOpen(false)}
+            >
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Loading Overlay */}
       {isLoading && (
@@ -1742,8 +2050,8 @@ useEffect(() => {
         </div>
       )}
 
-       {/* Fixed Bottom Actions Bar */}
-       {(hasChanges || globalSelectedRows.size > 0) && (
+      {/* Fixed Bottom Actions Bar */}
+      {(hasChanges || globalSelectedRows.size > 0) && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-lg flex justify-end gap-2 z-50">
           {globalSelectedRows.size > 0 && (
             <Button
@@ -1770,8 +2078,6 @@ useEffect(() => {
         </div>
       )}
     </Card>
-
-    
   );
 };
 
