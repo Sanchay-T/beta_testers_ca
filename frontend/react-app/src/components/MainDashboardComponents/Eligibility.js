@@ -24,7 +24,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Calculator, PiggyBank } from "lucide-react";
 
 export default function Eligibility() {
   const [opportunityData, setOpportunityData] = useState(null);
@@ -83,7 +83,7 @@ export default function Eligibility() {
             value: item.generalInsurance || 0,
           },
         }));
-
+        
         setOpportunityData(transformedData);
         setLoading(false);
       } catch (err) {
@@ -95,6 +95,22 @@ export default function Eligibility() {
 
     fetchOpportunityData();
   }, []);
+
+  const totals = opportunityData
+    ? opportunityData.reduce(
+        (acc, data) => {
+          acc.eligibility += Object.values(data)
+            .filter((item) => item.type)
+            .reduce((sum, item) => sum + item.amount, 0);
+          acc.commission += Object.values(data)
+            .filter((item) => item.type)
+            .reduce((sum, item) => sum + item.value, 0);
+          return acc;
+        },
+        { eligibility: 0, commission: 0 }
+      )
+    : { eligibility: 0, commission: 0 };
+    
 
   const note = [
     {
@@ -133,6 +149,7 @@ export default function Eligibility() {
         if (includeCommission) {
           formattedItem["Commission %"] = parseFloat(item.rate);
           formattedItem["Commission (₹)"] =
+
             parseInt(item.value);
         }
         return formattedItem;
@@ -221,6 +238,38 @@ export default function Eligibility() {
             </p>
           </div>
         ) : (
+          <>
+            <div className="grid gap-4 md:grid-cols-2 mb-6">
+              <Card className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-2 border-green-100 dark:border-green-800">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-green-50 rounded-lg dark:bg-green-800">
+                  <Calculator className="w-6 h-6 text-green-600 dark:text-green-300" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-green-600 dark:text-green-400">Total Commission</p>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl font-bold text-gray-900 dark:text-white animate-pulse">
+                      ₹{totals.commission.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </Card>
+            <Card className="p-6">
+            {/* <Card className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-2 border-blue-100 dark:border-blue-800 "> */}
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-blue-50 rounded-lg dark:bg-blue-900/20">
+                    <PiggyBank className="w-6 h-6 text-blue-500 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Eligibility</p>
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                      ₹{totals.eligibility.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
+                    </h3>
+                  </div>
+                </div>
+             </Card>
+          </div>
           <Card className="px-6 rounded-lg">
             <Accordion type="single" collapsible className="w-full">
               {opportunityData.map((data, index) => (
@@ -320,7 +369,7 @@ export default function Eligibility() {
                                 </TableCell>
                                 <TableCell className="text-center">
                                   ₹
-                                  {item.amount.toLocaleString(undefined, {
+                                  {item.amount.toLocaleString("en-IN", {
                                     maximumFractionDigits: 2,
                                   })}
                                 </TableCell>
@@ -329,7 +378,7 @@ export default function Eligibility() {
                                 </TableCell>
                                 <TableCell className="text-right font-semibold">
                                   ₹
-                                  {item.value.toLocaleString(undefined, {
+                                  {item.value.toLocaleString("en-IN", {
                                     maximumFractionDigits: 2,
                                   })}
                                 </TableCell>
@@ -343,6 +392,7 @@ export default function Eligibility() {
               ))}
             </Accordion>
           </Card>
+          </>
         )}
         <div className="grid gap-6 md:grid-cols-2">
           <Card className="p-6">

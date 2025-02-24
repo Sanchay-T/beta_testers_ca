@@ -32,6 +32,7 @@ const Debtors = () => {
         parseInt(individualId)
       );
 
+      console.log("hello")
       // Transform data to include only required fields
       const transformedData = result.map((item) => ({
         date: new Date(item.date).toLocaleDateString("en-GB", {
@@ -127,7 +128,7 @@ const Debtors = () => {
   
         {selectedMonths.length === 0 ? (
           <div className="text-center text-gray-600 dark:text-gray-400 my-6">
-            Select months to display the graphs
+            Select months to view data
           </div>
         ) : (
           <>

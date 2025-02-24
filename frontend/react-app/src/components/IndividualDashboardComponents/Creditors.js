@@ -126,7 +126,7 @@ const Creditors = () => {
   
         {selectedMonths.length === 0 ? (
           <div className="text-center text-gray-600 dark:text-gray-400 my-6">
-            Select months to display the graphs
+            Select months to view data
           </div>
         ) : (
           <>
