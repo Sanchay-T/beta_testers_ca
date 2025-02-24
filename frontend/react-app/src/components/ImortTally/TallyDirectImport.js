@@ -22,7 +22,7 @@ import { useReportContext } from "../../contexts/ReportContext";
 import ManualTallyTable from "./ManualTable";
 import * as XLSX from "xlsx";
 import { Info } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import  {Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 const defaultColumns = {
   "Payment Receipt Contra Voucher": [
@@ -42,7 +42,9 @@ const TallyDirectImport = ({ source }) => {
   //   "Payment Receipt Contra Voucher",
   //   "Ledger",
   // ]);
-  const [vouchers, setVouchers] = useState(["Payment Receipt Contra Voucher"]);
+  const [vouchers, setVouchers] = useState([
+    "Payment Receipt Contra Voucher",
+  ]);
   const [selectedVoucher, setSelectedVoucher] = useState(
     "Payment Receipt Contra Voucher"
   );

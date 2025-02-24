@@ -95,7 +95,6 @@ const DataTable = ({
   const [categorySearchTerm, setCategorySearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [existingFilterData, setExistingFilterData] = useState([]);
   const [columnsToIgnore, setColumnsToIgnore] = useState([
     "id",
     "transactionId",
@@ -434,9 +433,6 @@ const DataTable = ({
   const handleSearch = (searchValue) => {
     setSearchTerm(searchValue);
 
-    const dataToFilter =
-      existingFilterData.length > 0 ? existingFilterData : data;
-
     // Reset to original data if search value is empty
     if (searchValue === "") {
       setFilteredData(data);
@@ -447,7 +443,7 @@ const DataTable = ({
 
     // Always filter from the full data set for consistent search results
     const columnsToReplace = ["amount", "balance", "debit", "credit"];
-    const filtered = dataToFilter.filter((row) =>
+    const filtered = data.filter((row) =>
       Object.entries(row).some(([key, value]) => {
         if (columnsToReplace.includes(key)) {
           return String(value)
@@ -461,7 +457,6 @@ const DataTable = ({
     console.log("AQ2");
 
     setFilteredData(filtered);
-    setExistingFilterData(filtered);
     setCurrentPage(1);
 
     // Calculate totals for numeric columns from the new filtered data
@@ -692,25 +687,20 @@ const DataTable = ({
   };
 
   const handleColumnFilter = () => {
-    const dataToFilter =
-      existingFilterData.length > 0 ? existingFilterData : data;
     if (selectedCategories.length === 0) {
       setFilteredData(data);
     } else {
-      const filtered = dataToFilter.filter((row) =>
+      const filtered = data.filter((row) =>
         selectedCategories.includes(String(row[currentFilterColumn]))
       );
       setFilteredData(filtered);
-      setExistingFilterData(filtered);
     }
     setCurrentPage(1);
     setFilterModalOpen(false);
   };
 
   const handleNumericFilter = (columnName, min, max) => {
-    const dataToFilter =
-      existingFilterData.length > 0 ? existingFilterData : data;
-    const filtered = dataToFilter.filter((row) => {
+    const filtered = data.filter((row) => {
       const value = parseFloat(row[columnName]);
       if (isNaN(value)) return false;
       const meetsMin = min === "" || value >= parseFloat(min);
@@ -718,16 +708,12 @@ const DataTable = ({
       return meetsMin && meetsMax;
     });
     setFilteredData(filtered);
-    setExistingFilterData(filtered);
     setCurrentPage(1);
   };
 
   // Improved date handling functions
   const handleDateFilter = (columnName, fromDate, toDate) => {
     console.log("Initial filter params:", { columnName, fromDate, toDate });
-
-    const dataToFilter =
-      existingFilterData.length > 0 ? existingFilterData : data;
 
     const parseDate = (dateStr) => {
       if (!dateStr) return null;
@@ -785,7 +771,7 @@ const DataTable = ({
 
     console.log("Processing with date range:", { from, to });
 
-    const filtered = dataToFilter.filter((row) => {
+    const filtered = data.filter((row) => {
       const rowDateStr = row[columnName];
       const rowDate = parseDate(rowDateStr);
 
@@ -806,7 +792,6 @@ const DataTable = ({
 
     // console.log("Filtered results count:", filtered.length);
     setFilteredData(filtered);
-    setExistingFilterData(filtered);
     setCurrentPage(1);
   };
 
@@ -820,7 +805,6 @@ const DataTable = ({
     setMaxValue("");
     setSelectedCategories([]);
     setCategorySearchTerm("");
-    setExistingFilterData([]);
   };
 
   const getUniqueValues = (columnName) => {
@@ -1340,17 +1324,17 @@ const DataTable = ({
                 </Tooltip>
               </div>
 
-              {hasEntity && (
-                <Button
-                  variant="default"
-                  className="w-full sm:w-auto"
-                  disabled={globalSelectedRows.size === 0}
-                  onClick={() => setBatchModalOpen(true)}
-                >
-                  Bulk Edit Party Name
-                </Button>
-              )}
-            </div>
+            {hasEntity && (
+              <Button
+                variant="default"
+                className="w-full sm:w-auto"
+                disabled={globalSelectedRows.size === 0}
+                onClick={() => setBatchModalOpen(true)}
+              >
+                Bulk Edit Party Name
+              </Button>
+            )}
+          </div>
           </div>
         </div>
       </CardHeader>

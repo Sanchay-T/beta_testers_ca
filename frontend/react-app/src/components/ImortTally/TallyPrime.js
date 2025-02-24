@@ -30,10 +30,7 @@ function ExcelViewer() {
       path: "tallyprime/Receipt_Voucher.xlsm",
     },
     { label: "Purchase Voucher", path: "tallyprime/Purchase_Voucher.xlsm" },
-    {
-      label: "Purchase Multistock items voucher",
-      path: "tallyprime/Purchase_MultiStock_Items_Voucher.xlsm",
-    },
+    { label: "Purchase Multistock items voucher", path: "tallyprime/Purchase_MultiStock_Items_Voucher.xlsm" },
     { label: "Sales Voucher", path: "tallyprime/Sale_Voucher.xlsm" },
     {
       label: "Sales Multistock Items Voucher",
