@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import icon from '../data/assets/icon.png';
+import icon from '../data/assets/logo.png';
 import { cn } from "../lib/utils";
 
 const ElectronIntro = ({ onComplete }) => {
@@ -50,13 +50,7 @@ const ElectronIntro = ({ onComplete }) => {
               className="relative mb-8"
             >
               <motion.div
-                animate={{
-                  boxShadow: [
-                    "0 0 0 -10px rgba(59, 130, 246, 0)",
-                    "0 0 40px -10px rgba(59, 130, 246, 0.3)",
-                    "0 0 0 -10px rgba(59, 130, 246, 0)"
-                  ]
-                }}
+               
                 transition={{
                   duration: 2,
                   repeat: Infinity,
@@ -67,7 +61,7 @@ const ElectronIntro = ({ onComplete }) => {
                 <img 
                   src={icon} 
                   alt="Icon"
-                  className="w-24 h-24 object-contain"
+                  className="object-contain"
                 />
               </motion.div>
             </motion.div>

@@ -40,6 +40,7 @@ const Transactions = () => {
           balance: transaction.balance,
           bank: transaction.bank,
           id:transaction.id,
+          entity: transaction.entity,
           voucher_type: transaction.voucher_type,
         }));
         setTransactionData(formattedData);
@@ -81,6 +82,7 @@ const Transactions = () => {
         balance: transaction.balance,
         category: transaction.category,
         voucher_type: transaction.voucher_type,
+        entity: transaction.entity,
         bank: transaction.bank,
         // entity: transaction.entity,
         type: transaction.type,
@@ -110,9 +112,9 @@ const Transactions = () => {
       balance: transaction.balance,
       category: transaction.category,
       voucher_type: transaction.voucher_type,
+      entity: transaction.entity,
       bank: transaction.bank,
       id:transaction.id,
-      // entity: transaction.entity,
     }));
   };
 

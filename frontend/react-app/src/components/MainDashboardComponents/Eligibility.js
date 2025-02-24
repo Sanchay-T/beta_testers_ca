@@ -128,12 +128,12 @@ export default function Eligibility() {
       .map((item) => {
         const formattedItem = {
           Product: item.type,
-          "Amount (₹)": item.amount.toLocaleString(undefined),
+          "Amount (₹)": parseInt(item.amount),
         };
         if (includeCommission) {
-          formattedItem["Commission %"] = parseInt(item.rate);
+          formattedItem["Commission %"] = parseFloat(item.rate);
           formattedItem["Commission (₹)"] =
-            item.value.toLocaleString(undefined);
+            parseInt(item.value);
         }
         return formattedItem;
       });

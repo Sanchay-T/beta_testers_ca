@@ -169,7 +169,6 @@ const getOrCreateCase = async (caseName) => {
       .where(
         and(
           eq(cases.name, caseName),
-          eq(cases.userId, userId),
           // eq(cases.status, "active")
         )
       )
@@ -851,6 +850,8 @@ function generateReportIpc(tmpdir_path) {
       }
 
       // Step 6: Process summary and earnings
+      // print the parsedData keys
+      log.info("Parsed Data Keys: ", Object.keys(parsedData));
       try {
         await processSummaryData(
           {

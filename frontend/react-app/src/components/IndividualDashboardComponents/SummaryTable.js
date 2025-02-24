@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { Search, Loader2 } from "lucide-react";
+import { Search, Loader2, Turtle } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -70,6 +70,7 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
 
   useEffect(() => {
     const fetchTransactions = async () => {
+      setIsLoading(true);
       try {
         // console.log("Fetching transactions for statementId:", caseId);
         const data = await window.electron.getTransactions(
@@ -344,211 +345,190 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
         </div>
       </CardHeader>
       <CardContent>
-        {columns.length > 0 ? (
-          <div className="relative overflow-x-auto">
-            <div className="flex">
-              {/* Fixed First Column */}
-              <div className="sticky left-0 z-20 min-w-[300px] bg-white dark:bg-slate-950">
-                <Table>
-                  <TableHeader className="border-r-2 border-slate-300">
-                    <TableRow>
-                      <TableHead className="bg-gray-300 dark:bg-slate-800  text-black opacity-80 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                          {columns[0].charAt(0).toUpperCase() +
-                            columns[0].slice(1).toLowerCase()}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                            onClick={() => {
-                              setCurrentFilterColumn(columns[0]);
+  {isLoading ? (
+    <div className="flex items-center justify-center h-[200px]">
+      <Spinner />
+    </div>
+  ) : data.length === 0 ? (
+    <div className="relative overflow-x-auto">
+      <Table>
+        {/* <TableHeader>
+          <TableRow>
+            <TableHead className="text-center">No Data Available</TableHead>
+          </TableRow>
+        </TableHeader> */}
+        <TableBody>
+          <TableRow>
+            <TableCell className="text-center">No data available</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+    </div>
+  ) : (
+    // Render the table as before when there is data
+    <div className="relative overflow-x-auto">
+      <div className="flex">
+        {/* Fixed First Column */}
+        <div className="sticky left-0 z-20 min-w-[300px] bg-white dark:bg-slate-950">
+          <Table>
+            <TableHeader className="border-r-2 border-slate-300">
+              <TableRow>
+                <TableHead className="bg-gray-300 dark:bg-slate-800 text-black opacity-80 whitespace-nowrap">
+                  <div className="flex items-center gap-2">
+                    {columns[0].charAt(0).toUpperCase() +
+                      columns[0].slice(1).toLowerCase()}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => {
+                        setCurrentFilterColumn(columns[0]);
+                        setSelectedCategories([]);
+                        setCategorySearchTerm("");
+                        setFilterModalOpen(true);
+                      }}
+                    >
+                      ▼
+                    </Button>
+                  </div>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {currentData.map((row, index) => (
+                <TableRow
+                  key={index}
+                  className="even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200 cursor-pointer"
+                  onClick={
+                    source === "particulars"
+                      ? undefined
+                      : () => handleRowClick(row)
+                  }
+                >
+                  <TableCell className="max-w-[200px] whitespace-nowrap border-r-2 border-slate-300">
+                    {row[columns[0]]}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Scrollable Middle Columns */}
+        <div className="overflow-x-auto flex-1">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {columns.slice(1, -1).map((column) => (
+                  <TableHead
+                    key={column}
+                    className="bg-gray-300 dark:bg-slate-800 text-black opacity-80 whitespace-nowrap"
+                  >
+                    <div className="flex items-center gap-2">
+                      {column.charAt(0).toUpperCase() +
+                        column.slice(1).toLowerCase()}
+                      {column.toLowerCase() !== "description" && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => {
+                            if (numericColumns.includes(column)) {
+                              setCurrentNumericColumn(column);
+                              setNumericFilterModalOpen(true);
+                            } else {
+                              setCurrentFilterColumn(column);
                               setSelectedCategories([]);
                               setCategorySearchTerm("");
                               setFilterModalOpen(true);
-                            }}
-                          >
-                            ▼
-                          </Button>
-                        </div>
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {currentData.map((row, index) => (
-                      <TableRow
-                        key={index}
-                        className="even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200 cursor-pointer"
-                        onClick={
-                          source === "particulars"
-                            ? undefined
-                            : () => handleRowClick(row)
-                        }
-                      >
-                        <TableCell className="max-w-[200px] whitespace-nowrap border-r-2 border-slate-300">
-                          {row[columns[0]]}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-
-              {/* Scrollable Middle Columns */}
-              <div className="overflow-x-auto flex-1">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      {columns.slice(1, -1).map((column) => (
-                        <TableHead
-                          key={column}
-                          className="bg-gray-300 dark:bg-slate-800 text-black opacity-80 whitespace-nowrap"
+                            }
+                          }}
                         >
-                          <div className="flex items-center gap-2">
-                            {column.charAt(0).toUpperCase() +
-                              column.slice(1).toLowerCase()}
-                            {column.toLowerCase() !== "description" && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0"
-                                onClick={() => {
-                                  if (numericColumns.includes(column)) {
-                                    setCurrentNumericColumn(column);
-                                    setNumericFilterModalOpen(true);
-                                  } else {
-                                    setCurrentFilterColumn(column);
-                                    setSelectedCategories([]);
-                                    setCategorySearchTerm("");
-                                    setFilterModalOpen(true);
-                                  }
-                                }}
-                              >
-                                ▼
-                              </Button>
-                            )}
-                          </div>
-                        </TableHead>
-                      ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {currentData.map((row, index) => (
-                      <TableRow
-                        key={index}
-                        className="even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200 cursor-pointer"
-                        onClick={
-                          source === "particulars"
-                            ? undefined
-                            : () => handleRowClick(row)
-                        }
-                      >
-                        {columns.slice(1, -1).map((column) => (
-                          <TableCell
-                            key={column}
-                            className="max-w-[200px] group relative"
-                          >
-                            <div className="truncate">{row[column]}</div>
-                            {column.toLowerCase() === "description" && (
-                              <div className="absolute left-0 top-10 hidden group-hover:block bg-black text-white text-sm rounded p-2 z-50 whitespace-normal min-w-[200px] max-w-[400px]">
-                                {row[column]}
-                              </div>
-                            )}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-
-              {/* Fixed Last Column */}
-              <div className="sticky right-0 z-20 bg-white dark:bg-slate-950">
-                <Table>
-                  <TableHeader className="border-l-2 border-slate-300">
-                    <TableRow>
-                      <TableHead className="bg-gray-300 dark:bg-slate-800 text-black opacity-80 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                          {columns[columns.length - 1].charAt(0).toUpperCase() +
-                            columns[columns.length - 1].slice(1).toLowerCase()}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                            onClick={() => {
-                              setCurrentNumericColumn(
-                                columns[columns.length - 1]
-                              );
-                              setNumericFilterModalOpen(true);
-                            }}
-                          >
-                            ▼
-                          </Button>
-                        </div>
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {currentData.map((row, index) => (
-                      <TableRow
-                        key={index}
-                        className="even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200 cursor-pointer"
-                        onClick={
-                          source === "particulars"
-                            ? undefined
-                            : () => handleRowClick(row)
-                        }
-                      >
-                        <TableCell className="max-w-[200px] whitespace-nowrap border-l-2 border-slate-300">
-                          {row[columns[columns.length - 1]]}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="flex items-center justify-center h-[200px]">
-            <Spinner />
-          </div>
-        )}
-
-        {/* {showPagination  && totalPages > 1 && (
-          <div className="mt-4 flex justify-center">
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                    disabled={currentPage === 1}
-                  />
-                </PaginationItem>
-                {getPageNumbers().map((pageNum, index) => (
-                  <PaginationItem key={index}>
-                    {pageNum === "ellipsis" ? (
-                      <PaginationEllipsis />
-                    ) : (
-                      <PaginationLink
-                        onClick={() => setCurrentPage(pageNum)}
-                        isActive={currentPage === pageNum}
-                      >
-                        {pageNum}
-                      </PaginationLink>
-                    )}
-                  </PaginationItem>
+                          ▼
+                        </Button>
+                      )}
+                    </div>
+                  </TableHead>
                 ))}
-                <PaginationItem>
-                  <PaginationNext
-                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                    disabled={currentPage === totalPages}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          </div>
-            )} */}
-      </CardContent>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {currentData.map((row, index) => (
+                <TableRow
+                  key={index}
+                  className="even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200 cursor-pointer"
+                  onClick={
+                    source === "particulars"
+                      ? undefined
+                      : () => handleRowClick(row)
+                  }
+                >
+                  {columns.slice(1, -1).map((column) => (
+                    <TableCell
+                      key={column}
+                      className="max-w-[200px] group relative"
+                    >
+                      <div className="truncate">{row[column]}</div>
+                      {column.toLowerCase() === "description" && (
+                        <div className="absolute left-0 top-10 hidden group-hover:block bg-black text-white text-sm rounded p-2 z-50 whitespace-normal min-w-[200px] max-w-[400px]">
+                          {row[column]}
+                        </div>
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Fixed Last Column */}
+        <div className="sticky right-0 z-20 bg-white dark:bg-slate-950">
+          <Table>
+            <TableHeader className="border-l-2 border-slate-300">
+              <TableRow>
+                <TableHead className="bg-gray-300 dark:bg-slate-800 text-black opacity-80 whitespace-nowrap">
+                  <div className="flex items-center gap-2">
+                    {columns[columns.length - 1].charAt(0).toUpperCase() +
+                      columns[columns.length - 1].slice(1).toLowerCase()}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => {
+                        setCurrentNumericColumn(columns[columns.length - 1]);
+                        setNumericFilterModalOpen(true);
+                      }}
+                    >
+                      ▼
+                    </Button>
+                  </div>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {currentData.map((row, index) => (
+                <TableRow
+                  key={index}
+                  className="even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200 cursor-pointer"
+                  onClick={
+                    source === "particulars"
+                      ? undefined
+                      : () => handleRowClick(row)
+                  }
+                >
+                  <TableCell className="max-w-[200px] whitespace-nowrap border-l-2 border-slate-300">
+                    {row[columns[columns.length - 1]]}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+    </div>
+  )}
+</CardContent>
 
       {/* Category Filter Modal - Apple Style */}
       {filterModalOpen && (

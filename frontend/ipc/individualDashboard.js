@@ -55,6 +55,7 @@ function registerIndividualDashboardIpc() {
   ipcMain.handle("get-summary", async (event, caseId,individualId) => {
     log.info({caseId,individualId});
     if(!individualId || individualId=="undefined" || individualId==null || individualId==undefined){
+      log.info("combined Dashboard");
     try {
       const result = await db
         .select()
@@ -67,6 +68,7 @@ function registerIndividualDashboardIpc() {
       throw error;
     }
   }else{
+    log.info("individual Dashboard");
     try {
 
       const allTransactions = await db
