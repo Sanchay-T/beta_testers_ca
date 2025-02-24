@@ -486,11 +486,17 @@ const DataTable = ({
     );
     // remove already selected one
     const similarTransactions = similarTransactions1.filter(
-      (t) => t.id != transaction.id
+      (t) => t.id !== transaction.id
     );
 
     // Set the similar transactions in state
     setSimilarCategoryTransactions(similarTransactions);
+    console.log({
+      transactionId: transaction.id,
+      newCategory,
+      oldCategory,
+      transaction,
+    })
     setPendingCategoryChange({
       transactionId: transaction.id,
       newCategory,
@@ -618,7 +624,7 @@ const DataTable = ({
     });
     console.log({ fromBulkUpdate: newModifiedData });
     setFilteredData(dataOnUi);
-    setModifiedData(newModifiedData);
+    setModifiedData([...modifiedData,...newModifiedData]);
     setHasChanges(true);
     setGlobalSelectedRows(new Set());
     setBulkCategoryModalOpen(false);
