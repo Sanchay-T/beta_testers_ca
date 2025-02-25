@@ -14,43 +14,43 @@ const Transactions = () => {
 
   useEffect(() => {
   }, [individualId]);
+  const fetchTransactions = async () => {
+    try {
 
+      // Add this line to debug the electron call
+      const data = await  window.electron.getTransactions(
+        caseId,
+        parseInt(individualId)
+      );
+
+      // Transform the data to only include required fields
+      const formattedData = data.map((transaction) => ({
+        
+        date: new Date(transaction.date).toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        }),
+        description: transaction.description,
+        amount: transaction.amount,
+        category: transaction.category,
+        type: transaction.type,
+        balance: transaction.balance,
+        bank: transaction.bank,
+        id:transaction.id,
+        entity: transaction.entity,
+        voucher_type: transaction.voucher_type,
+      }));
+      setTransactionData(formattedData);
+    } catch (err) {
+      setError("Failed to fetch transactions");
+      console.error("Error fetching transactions:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   useEffect(() => {
-    const fetchTransactions = async () => {
-      try {
-
-        // Add this line to debug the electron call
-        const data = await  window.electron.getTransactions(
-          caseId,
-          parseInt(individualId)
-        );
-
-        // Transform the data to only include required fields
-        const formattedData = data.map((transaction) => ({
-          
-          date: new Date(transaction.date).toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-          }),
-          description: transaction.description,
-          amount: transaction.amount,
-          category: transaction.category,
-          type: transaction.type,
-          balance: transaction.balance,
-          bank: transaction.bank,
-          id:transaction.id,
-          entity: transaction.entity,
-          voucher_type: transaction.voucher_type,
-        }));
-        setTransactionData(formattedData);
-      } catch (err) {
-        setError("Failed to fetch transactions");
-        console.error("Error fetching transactions:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  
 
     fetchTransactions();
   }, []);
@@ -247,6 +247,7 @@ const Transactions = () => {
                 data={filteredData}
                 title="Transactions"
                 caseId={parseInt(caseId)}
+                refreshFunction={fetchTransactions}
               />
             </>
           )}

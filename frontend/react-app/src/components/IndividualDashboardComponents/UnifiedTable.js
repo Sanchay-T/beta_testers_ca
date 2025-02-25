@@ -439,7 +439,6 @@ const DataTable = ({
       setCurrentPage(1);
       return;
     }
-    console.log("AQ1");
 
     // Always filter from the full data set for consistent search results
     const columnsToReplace = ["amount", "balance", "debit", "credit"];
@@ -454,7 +453,6 @@ const DataTable = ({
         return String(value).toLowerCase().includes(searchValue.toLowerCase());
       })
     );
-    console.log("AQ2");
 
     setFilteredData(filtered);
     setCurrentPage(1);
@@ -481,7 +479,6 @@ const DataTable = ({
     // Find similar transactions
     const similarTransactions1 = processSimilarCategory(
       filteredData,
-      oldCategory,
       transaction.description
     );
     // remove already selected one
@@ -974,6 +971,9 @@ const DataTable = ({
       setGlobalSelectedRows(new Set());
       setBatchEntityValue("");
       setBatchModalOpen(false);
+      setSearchTerm("");
+      if (refreshFunction) refreshFunction();
+
     }
   };
 
@@ -1126,7 +1126,6 @@ const DataTable = ({
   // get transactions with same category and similar description
   const processSimilarCategory = (
     transactions,
-    categoryToMatch,
     descriptionToMatch
   ) => {
     // Helper function to calculate string similarity
@@ -1151,8 +1150,7 @@ const DataTable = ({
       console.log("transaction.description", transaction.description);
       console.log("descriptionToMatch", descriptionToMatch);
 
-      const isSameCategory = transaction.category === categoryToMatch;
-      return descriptionSimilarity >= threshold && isSameCategory;
+      return descriptionSimilarity >= threshold ;
     });
 
     // Sort by similarity score (most similar first)

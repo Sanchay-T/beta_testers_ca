@@ -16,25 +16,25 @@ function ExcelViewer() {
   };
 
   const files = [
-    { label: "Ledgers ERP", path: "tallyprime/Ledgers_Erp.xlsm" },
+    { label: "Ledgers ERP", path: "tallyprime/ledger_erp.xlsm" },
     {
       label: "Ledgers Prime",
-      path: "tallyprime/Ledgers_Prime.xlsm",
+      path: "tallyprime/ledger_prime.xlsm",
     },
     {
       label: "Payment Voucher",
-      path: "tallyprime/Payment_Voucher.xlsm",
+      path: "tallyprime/payment.xlsm",
     },
     {
       label: "Receipt Voucher",
-      path: "tallyprime/Receipt_Voucher.xlsm",
+      path: "tallyprime/receipt.xlsm",
     },
-    { label: "Purchase Voucher", path: "tallyprime/Purchase_Voucher.xlsm" },
-    { label: "Purchase Multistock items voucher", path: "tallyprime/Purchase_MultiStock_Items_Voucher.xlsm" },
-    { label: "Sales Voucher", path: "tallyprime/Sale_Voucher.xlsm" },
+    { label: "Purchase Voucher", path: "tallyprime/purchase.xlsm" },
+    { label: "Purchase Multistock items voucher", path: "tallyprime/purchase_multistock.xlsm" },
+    { label: "Sales Voucher", path: "tallyprime/sales.xlsm" },
     {
       label: "Sales Multistock Items Voucher",
-      path: "tallyprime/Sales_MultiStock_Item.xlsm",
+      path: "tallyprime/sales_multistock.xlsm",
     },
   ];
 
