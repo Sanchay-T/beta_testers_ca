@@ -226,7 +226,7 @@ const Card2 = ({
 
         {/* Stat Boxes - Top Row */}
         <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4">
-          <div className="bg-white/10 p-1 sm:p-2 md:p-3 rounded-xl backdrop-blur-md shadow-lg flex flex-col items-center">
+          <div className="bg-white/10 p-1 sm:p-2 md:p-3 rounded-xl backdrop-blur-md shadow-lg flex flex-col items-center justify-center min-h-[110px]">
             {isLoading ? (
               <Loader />
             ) : (
@@ -241,7 +241,7 @@ const Card2 = ({
             )}
           </div>
 
-          <div className="bg-white/10 p-1 sm:p-2 md:p-3 rounded-xl backdrop-blur-md shadow-lg flex flex-col items-center">
+          <div className="bg-white/10 p-1 sm:p-2 md:p-3 rounded-xl backdrop-blur-md shadow-lg flex flex-col items-center justify-center min-h-[110px]">
             {isLoading ? (
               <Loader />
             ) : (
@@ -258,8 +258,8 @@ const Card2 = ({
         </div>
 
         {/* Stat Boxes - Bottom Row */}
-        <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4">
-          <div className="bg-white/10 p-1 sm:p-2 md:p-3 rounded-xl backdrop-blur-md shadow-lg flex flex-col items-center">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4 ">
+          <div className="bg-white/10 p-1 sm:p-2 md:p-3 rounded-xl backdrop-blur-md shadow-lg flex flex-col items-center justify-center min-h-[110px]">
             {isLoading ? (
               <Loader />
             ) : (
@@ -274,7 +274,7 @@ const Card2 = ({
             )}
           </div>
 
-          <div className="bg-white/10 p-1 sm:p-2 md:p-3 rounded-xl backdrop-blur-md shadow-lg flex flex-col items-center">
+          <div className="bg-white/10 p-1 sm:p-2 md:p-3 rounded-xl backdrop-blur-md shadow-lg flex flex-col items-center justify-center min-h-[110px]">
             {isLoading ? (
               <Loader />
             ) : (

@@ -567,27 +567,49 @@ const DataTable = ({
       "pendingCategoryChange ",
       pendingCategoryChange
     );
-    const updatedFilteredData = filteredData.map((tx) => {
+    // const updatedFilteredData = filteredData.map((tx) => {
+    //   console.log("tx.id", tx.id, "transactionId", transactionId);
+    //   if (parseInt(tx.id) === parseInt(transactionId)) {
+
+    //     let updatedTx = { ...tx, category: pendingCategoryChange.newCategory };
+    //     console.log({updatedTx})
+    //     if (
+    //       pendingCategoryChange.newCategory === "Self transfer" ||
+    //       selectedType === "Contra"
+    //     ) {
+    //       updatedTx = { ...updatedTx, voucher_type: "Contra" };
+    //     }
+    //     console.log({updatedTx})
+        
+    //     return updatedTx;
+    //   }
+    //   return tx;
+    // });
+    let updatedTransaction = null;
+    setFilteredData(prevData=>prevData.map((tx) => {
       console.log("tx.id", tx.id, "transactionId", transactionId);
       if (parseInt(tx.id) === parseInt(transactionId)) {
+
         let updatedTx = { ...tx, category: pendingCategoryChange.newCategory };
+        console.log({updatedTx})
         if (
           pendingCategoryChange.newCategory === "Self transfer" ||
           selectedType === "Contra"
         ) {
           updatedTx = { ...updatedTx, voucher_type: "Contra" };
         }
+        console.log({updatedTx})
+        updatedTransaction=updatedTx;
         return updatedTx;
       }
       return tx;
-    });
-    setFilteredData(updatedFilteredData);
-    const transaction = updatedFilteredData.find(
-      (tx) => tx.id === transactionId
-    );
-    console.log("transaction aiyaz", transaction);
+    }));
+    // const transaction = updatedFilteredData.find(
+    //   (tx) => tx.id === transactionId
+    // );
+    console.log("transaction aiyaz", updatedTransaction);
     let modifiedObject = {
-      ...transaction,
+      ...updatedTransaction,
       oldCategory: pendingCategoryChange.oldCategory,
       keyword: showKeywordInput ? reasoning : "",
     };
@@ -600,8 +622,11 @@ const DataTable = ({
     console.log("modifiedObject", modifiedObject);
     console.log({ selectedCategorySimilarTransactions });
     if (selectedCategorySimilarTransactions.size > 0) {
+      modifiedObject = { ...modifiedObject, is_new: false };
+      setModifiedData(prevData=> [...prevData, modifiedObject]);
       setSelectedBulkCategory();
       handleBulkCategoryChange("similarCategory");
+      
     } else {
       if (selectedType) {
         modifiedObject = {
@@ -613,7 +638,9 @@ const DataTable = ({
         modifiedObject = { ...modifiedObject, is_new: false };
       }
 
-      setModifiedData([...modifiedData, modifiedObject]);
+      console.log({aq:modifiedObject})
+
+      setModifiedData(prevData=>[...prevData, modifiedObject]);
     }
     //   console.log("modifiedObject", modifiedObjects);
     //     // Add selected similar transactions to modified data
@@ -639,7 +666,7 @@ const DataTable = ({
   // --- Bulk Update: Find each row by its id ---
   const handleBulkCategoryChange = (source) => {
     // Create a shallow copy so we don’t mutate state directly.
-    const dataOnUi = filteredData.map((row) => ({ ...row }));
+    // const dataOnUi = filteredData.map((row) => ({ ...row }));
     const newModifiedData = [...modifiedData];
     const ids =
       source === "similarCategory"
@@ -652,30 +679,55 @@ const DataTable = ({
         ? categorySearchTerm
         : selectedBulkCategory;
     console.log({ ids });
-    ids.forEach((id) => {
-      const index = dataOnUi.findIndex((row) => row.id === id);
-      if (index !== -1) {
-        const oldCategory = dataOnUi[index].category;
-        dataOnUi[index].category = newCategory;
-        // If the new category is "Self transfer", update voucher_type
-        if (newCategory === "Self transfer" || selectedType === "Contra") {
-          dataOnUi[index].voucher_type = "Contra";
-        }
+    // ids.forEach((id) => {
+    //   const index = dataOnUi.findIndex((row) => row.id === id);
+    //   if (index !== -1) {
+    //     const oldCategory = dataOnUi[index].category;
+    //     dataOnUi[index].category = newCategory;
+    //     // If the new category is "Self transfer", update voucher_type
+    //     if (newCategory === "Self transfer" || selectedType === "Contra") {
+    //       dataOnUi[index].voucher_type = "Contra";
+    //     }
 
-        if (selectedType) {
-          dataOnUi[index].classification = selectedType;
-          dataOnUi[index].is_new = true;
+    //     if (selectedType) {
+    //       dataOnUi[index].classification = selectedType;
+    //       dataOnUi[index].is_new = true;
+    //     }
+    //     newModifiedData.push({
+    //       ...dataOnUi[index],
+    //       oldCategory,
+    //       reasoning: bulkReasoning,
+    //     });
+    //   }
+    // });
+
+    setFilteredData((prevFilteredData) =>
+      prevFilteredData.map((row) => {
+        if (ids.has(row.id)) {
+          const oldCategory = row.category;
+          let updatedRow = { ...row, category: newCategory };
+          if (newCategory === "Self transfer" || selectedType === "Contra") {
+            updatedRow.voucher_type = "Contra";
+          }
+          if (selectedType) {
+            updatedRow.classification = selectedType;
+            updatedRow.is_new = true;
+          }
+          newModifiedData.push({
+            ...row,
+            category:newCategory,
+            oldCategory,
+            reasoning: bulkReasoning,
+          });
+          return updatedRow;
         }
-        newModifiedData.push({
-          ...dataOnUi[index],
-          oldCategory,
-          reasoning: bulkReasoning,
-        });
-      }
-    });
+        return row;
+      })
+    );
+    
     console.log({ fromBulkUpdate: newModifiedData });
-    setFilteredData(dataOnUi);
-    setModifiedData([...modifiedData, ...newModifiedData]);
+    // setFilteredData(dataOnUi);
+    setModifiedData(prevData=>[...prevData, ...newModifiedData]);
     setHasChanges(true);
     setGlobalSelectedRows(new Set());
     setBulkCategoryModalOpen(false);

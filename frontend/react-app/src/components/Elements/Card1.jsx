@@ -294,7 +294,7 @@ const Card1 = ({
   return (
     <Card
       className={clsx(
-        "relative transition-transform duration-300 rounded-2xl w-full max-w-lg mx-auto h-[530px]"
+        "relative transition-transform duration-300 rounded-2xl w-full max-w-lg mx-auto min-h-[550px]"
         // "hover:scale-105"
       )}
       style={cardStyles}

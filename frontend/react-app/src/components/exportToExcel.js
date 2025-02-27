@@ -54,7 +54,7 @@ const exportToExcel = async (
   if(categoryOptions){
     headers = [Object.keys(finalTransactions[0]),"classification"].flat();
   }else{
-    headers = [Object.keys(finalTransactions[0])];
+    headers = Object.keys(finalTransactions[0]);
   }
 
   sheet.columns = headers.map((header) => {

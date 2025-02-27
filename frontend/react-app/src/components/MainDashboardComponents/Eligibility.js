@@ -49,7 +49,7 @@ export default function Eligibility() {
         }
         console.log("response data", response.data);
 
-        const transformedData = response.data.map((item) => ({
+        const transformedData = response.data.sort((a, b) => new Date(b.caseId) - new Date(a.caseId)).map((item) => ({
           caseName: item.caseName || "Unknown Client",
           statementCustomerName:
             item.statementCustomerName || "No Statement Data",

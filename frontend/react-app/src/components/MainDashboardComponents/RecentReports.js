@@ -1075,6 +1075,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
 
 
   const isHandleDetailsOpenForThisId=(id)=>{
+    if(!id) return null
     if(isHandleDetailsDialogOpen===id){
       console.log("Aiyaz  Handle details open for id ", id)
     }

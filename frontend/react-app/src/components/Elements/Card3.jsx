@@ -8,7 +8,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
-import { useNavigate } from "react-router-dom";
 
 const Loader = () => (
   <div className="flex items-center justify-center h-full">
@@ -26,16 +25,15 @@ const getCardStyles = () => ({
 
 const getBorderStyle = () => "linear-gradient(to right, #1187e9, #0a4a8e)";
 
-const Card3 = ({ title, value1, value2, mainValue1 = 0, mainValue2 = 0 }) => {
+const Card3 = ({ title, value1, value2, mainValue1 = 0, mainValue2 = 0,handleTabChange }) => {
   const cardStyles = getCardStyles();
   const borderGradient = getBorderStyle();
   const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
 
   const contactInfo = {
-    phone: "+1 (555) 123-4567",
+    phone: "+91 9833553348",
     email: "support@cyphersol.com",
-    whatsapp: "+1 (555) 987-6543",
+    whatsapp: "+91 9833553348",
   };
 
   useEffect(() => {
@@ -68,6 +66,10 @@ const Card3 = ({ title, value1, value2, mainValue1 = 0, mainValue2 = 0 }) => {
     window.location.href = `tel:${contactInfo.phone}`;
   };
 
+  const handleNavigateToEligibility = ()=>{
+    handleTabChange("Opportunity to Earn")
+  }
+
   return (
     <Card
       className="relative transition-transform duration-300 rounded-2xl w-full max-w-lg mx-auto min-h-[400px] lg:min-h-[500px]"
@@ -90,7 +92,7 @@ const Card3 = ({ title, value1, value2, mainValue1 = 0, mainValue2 = 0 }) => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-3">
           <div className="flex items-center gap-2 md:gap-3">
             <div className="p-1.5 md:p-2 bg-white/10 rounded-full shadow-lg backdrop-blur-lg transition-all duration-300 hover:shadow-[0_0_10px_2px_rgba(255,255,255,0.5)]">
-              <Clock className="h-4 w-4 md:h-5 md:w-5 text-white transition-transform duration-300 hover:scale-110" />
+              <Clock className="h-4 w-4 md:h-6 md:w-6 text-white transition-transform duration-300 hover:scale-110 " />
             </div>
             <h2 className="text-sm md:text-lg font-extrabold text-white tracking-wider uppercase break-words">
               {title || "Total Eligible Cases"}
@@ -107,7 +109,13 @@ const Card3 = ({ title, value1, value2, mainValue1 = 0, mainValue2 = 0 }) => {
                 {value1 || "Total Eligibility Amount"}
               </span>
               <span className="text-xl md:text-2xl font-bold text-white">
-                ₹{mainValue1.toLocaleString()}
+                ₹{Math.ceil(mainValue1).toLocaleString(
+                  "en-IN",
+                  {
+                    maximumFractionDigits: 0,
+                  }
+
+                )}
               </span>
             </>
           )}
@@ -121,8 +129,10 @@ const Card3 = ({ title, value1, value2, mainValue1 = 0, mainValue2 = 0 }) => {
               <span className="text-xs uppercase tracking-wide text-gray-300 mb-1 text-center">
                 {value2 || "Total Commission Amount"}
               </span>
-              <span className="text-2xl md:text-3xl lg:text-5xl font-bold animate-blink truncate w-full text-center text-white">
-                ₹{mainValue2.toLocaleString()}
+              <span className="text-2xl md:text-3xl lg:text-4xl font-bold animate-blink truncate w-full text-center text-white">
+                ₹{Math.ceil(mainValue2).toLocaleString("en-IN", {
+                          maximumFractionDigits: 0,
+                        })}
               </span>
             </>
           )}
@@ -130,7 +140,7 @@ const Card3 = ({ title, value1, value2, mainValue1 = 0, mainValue2 = 0 }) => {
 
         <Button
           className="w-full bg-white/20 hover:bg-white/30 text-white rounded-lg py-2 md:py-3 mt-1"
-          onClick={() => navigate("/Opportunity to Earn")}
+          onClick={handleNavigateToEligibility}
         >
           More Details
         </Button>
@@ -149,7 +159,7 @@ const Card3 = ({ title, value1, value2, mainValue1 = 0, mainValue2 = 0 }) => {
                 </Button>
               </TooltipTrigger>
               <TooltipContent className="relative z-50">
-                <p>{contactInfo.phone}</p>
+                <p>Call: {contactInfo.phone}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -185,7 +195,7 @@ const Card3 = ({ title, value1, value2, mainValue1 = 0, mainValue2 = 0 }) => {
                 </Button>
               </TooltipTrigger>
               <TooltipContent className="relative z-50">
-                <p>{contactInfo.email}</p>
+                <p>Email: {contactInfo.email}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
