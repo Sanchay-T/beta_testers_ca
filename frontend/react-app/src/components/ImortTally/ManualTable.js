@@ -131,6 +131,11 @@ const ManualTallyTable = ({
   const [selectedBulkCategory, setSelectedBulkCategory] = useState("");
   const [bulkReasoning, setBulkReasoning] = useState("");
 
+  const [dateFilterModalOpen, setDateFilterModalOpen] = useState(false);
+  const [currentDateColumn, setCurrentDateColumn] = useState([]);
+  const [toDate, setToDate] = useState("");
+  const [fromDate, setFromDate] = useState("");
+
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -168,6 +173,9 @@ const ManualTallyTable = ({
   // If the user wants to track "hasChanges" (like TallyTable did for category changes)
   const [hasChanges, setHasChanges] = useState(false);
   const [modifiedData, setModifiedData] = useState([]);
+  const [existingFilterData, setExistingFilterData] = useState([]);
+
+  console.log("initial data", initialData);
 
   // For "Add Row": We create new blank rows
   const handleAddRow = () => {
@@ -195,9 +203,9 @@ const ManualTallyTable = ({
   // For "Remove Row"
   const handleRemoveRow = (rowId) => {
     // Check if row was newly added or from DB, etc.
-    const tempSetAllRows = (prev) => prev.filter((row) => row.id !== rowId) 
+    const tempSetAllRows = (prev) => prev.filter((row) => row.id !== rowId);
     setAllRows(tempSetAllRows);
-    setFilteredData(tempSetAllRows)
+    setFilteredData(tempSetAllRows);
     // Also remove from selection sets
     setGlobalSelectedRows((prev) => {
       const newSet = new Set(prev);
@@ -251,15 +259,18 @@ const ManualTallyTable = ({
       setCurrentPage(1);
       return;
     }
+    const dataToFilter =
+      existingFilterData.length > 0 ? existingFilterData : allRows;
     const lower = term.toLowerCase();
     // Filter any row if it matches any column
-    const filtered = allRows.filter((row) =>
+    const filtered = dataToFilter.filter((row) =>
       Object.entries(row).some(([key, val]) => {
         if (!val) return false;
         return String(val).toLowerCase().includes(lower);
       })
     );
     setFilteredData(filtered);
+    setExistingFilterData(filtered);
     setCurrentPage(1);
   };
 
@@ -272,6 +283,9 @@ const ManualTallyTable = ({
     setMaxValue("");
     setFilteredData(allRows);
     setCurrentPage(1);
+    setFromDate("");
+    setToDate("");
+    setExistingFilterData([]);
   };
 
   // Category filtering
@@ -303,21 +317,112 @@ const ManualTallyTable = ({
     setSelectedCategories(allSelected ? [] : visibleCats);
   };
   const handleColumnFilter = () => {
+    const dataToFilter =
+      existingFilterData.length > 0 ? existingFilterData : allRows;
     if (selectedCategories.length === 0) {
       setFilteredData(allRows);
     } else {
-      const filtered = allRows.filter((row) =>
+      const filtered = dataToFilter.filter((row) =>
         selectedCategories.includes(String(row[currentFilterColumn]))
       );
       setFilteredData(filtered);
+      setExistingFilterData(filtered);
     }
     setFilterModalOpen(false);
     setCurrentPage(1);
   };
 
+  const handleDateFilter = (columnName, fromDate, toDate) => {
+    console.log("Initial filter params:", { columnName, fromDate, toDate });
+    const dataToFilter =
+      existingFilterData.length > 0 ? existingFilterData : initialData;
+
+    const parseDate = (dateStr) => {
+      if (!dateStr) return null;
+      console.log("Parsing date:", dateStr);
+
+      // Handle date input format (yyyy-mm-dd)
+      if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const date = new Date(dateStr);
+        date.setHours(0, 0, 0, 0);
+        console.log("Parsed input date:", date);
+        return date;
+      }
+
+      // Handle data format (dd/mm/yyyy)
+      let day, month, year;
+      if (dateStr.includes("/")) {
+        [day, month, year] = dateStr.split("/");
+      } else if (dateStr.includes("-")) {
+        [day, month, year] = dateStr.split("-");
+      } else {
+        console.warn("Unsupported date format:", dateStr);
+        return null;
+      }
+
+      // Ensure we have all parts
+      if (!day || !month || !year) {
+        console.warn("Invalid date parts:", { day, month, year });
+        return null;
+      }
+
+      // Create date (month - 1 because months are 0-based in JavaScript)
+      const date = new Date(year, parseInt(month) - 1, parseInt(day));
+      date.setHours(0, 0, 0, 0);
+
+      // Validate the date is correct
+      if (isNaN(date.getTime())) {
+        console.warn("Invalid date created:", dateStr);
+        return null;
+      }
+
+      console.log("Parsed data date:", date);
+      return date;
+    };
+
+    const from = parseDate(fromDate);
+    const to = parseDate(toDate);
+
+    if (!from || !to) {
+      console.warn("Invalid date range:", { fromDate, toDate });
+      return;
+    }
+
+    // Set end of day for to date
+    to.setHours(23, 59, 59, 999);
+
+    console.log("Processing with date range:", { from, to });
+
+    const filtered = dataToFilter.filter((row) => {
+      const rowDateStr = row[columnName];
+      const rowDate = parseDate(rowDateStr);
+
+      if (!rowDate) {
+        console.warn("Invalid row date:", rowDateStr);
+        return false;
+      }
+
+      const isInRange = rowDate >= from && rowDate <= to;
+      console.log("Row date check:", {
+        date: rowDate.toISOString(), // Convert to string for better logging
+        isInRange,
+        value: row[columnName],
+      });
+
+      return isInRange;
+    });
+
+    // console.log("Filtered results count:", filtered.length);
+    setFilteredData(filtered);
+    setExistingFilterData(filtered);
+    setCurrentPage(1);
+  };
+
   // Numeric filter
   const handleNumericFilter = (columnName, min, max) => {
-    const filtered = allRows.filter((row) => {
+    const dataToFilter =
+      existingFilterData.length > 0 ? existingFilterData : allRows;
+    const filtered = dataToFilter.filter((row) => {
       const val = parseFloat(row[columnName]);
       if (isNaN(val)) return false;
       const meetsMin = !min || val >= parseFloat(min);
@@ -325,6 +430,7 @@ const ManualTallyTable = ({
       return meetsMin && meetsMax;
     });
     setFilteredData(filtered);
+    setExistingFilterData(filtered);
     setCurrentPage(1);
   };
 
@@ -693,9 +799,7 @@ const ManualTallyTable = ({
   // 6) Render
   // ---------------------------------------------
   return (
-    
     <Card className="min-w-full max-w-[0] pt-6">
-
       <CardContent>
         {/* Controls row: Company name, Bulk ledger, add row, etc. */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
@@ -850,13 +954,19 @@ const ManualTallyTable = ({
                           size="sm"
                           className="h-8 w-8 p-0"
                           onClick={() => {
-                            if (numericColumns.includes(column)) {
+                            if (column.toLowerCase() === "invoice_date") {
+                              setCurrentFilterColumn(column);
+                              setCurrentDateColumn(column);
+                              setDateFilterModalOpen(true);
+                            } else if (column.toLowerCase() === "amount") {
                               setCurrentNumericColumn(column);
                               setNumericFilterModalOpen(true);
+                              setDateFilterModalOpen(false);
                             } else {
                               setCurrentFilterColumn(column);
                               setCategorySearchTerm("");
                               setFilterModalOpen(true);
+                              setDateFilterModalOpen(false);
                             }
                           }}
                         >
@@ -932,28 +1042,52 @@ const ManualTallyTable = ({
                             </div>
                           </TableCell>
                         );
-                      }else if(column.toLowerCase()==="effective_date"){
-                        return <TableCell
-                        key={column}
-                        className="w-[250px] group relative"
-                      > <Input
-                        type="date"
-                        value={row[column] ? row[column].split("T")[0] : ""}
-                        onChange={(e) => handleInputChange(row.id, column, e.target.value) }
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                      />
-                      </TableCell>
-                      }else if(column.toLowerCase()==="invoice_date"){
-                        return <TableCell
-                        key={column}
-                        className="w-[250px] group relative"
-                      > <Input
-                        type="date"
-                        value={row[column] ? row[column].split("T")[0] : ""}
-                        onChange={(e) => handleInputChange(row.id, column, e.target.value) }
-                        className="w-full p-2 border border-gray-300 rounded-md"
-                      />
-                      </TableCell>
+                      } else if (column.toLowerCase() === "effective_date") {
+                        return (
+                          <TableCell
+                            key={column}
+                            className="w-[250px] group relative"
+                          >
+                            {" "}
+                            <Input
+                              type="date"
+                              value={
+                                row[column] ? row[column].split("T")[0] : ""
+                              }
+                              onChange={(e) =>
+                                handleInputChange(
+                                  row.id,
+                                  column,
+                                  e.target.value
+                                )
+                              }
+                              className="w-full p-2 border border-gray-300 rounded-md"
+                            />
+                          </TableCell>
+                        );
+                      } else if (column.toLowerCase() === "invoice_date") {
+                        return (
+                          <TableCell
+                            key={column}
+                            className="w-[250px] group relative"
+                          >
+                            {" "}
+                            <Input
+                              type="date"
+                              value={
+                                row[column] ? row[column].split("T")[0] : ""
+                              }
+                              onChange={(e) =>
+                                handleInputChange(
+                                  row.id,
+                                  column,
+                                  e.target.value
+                                )
+                              }
+                              className="w-full p-2 border border-gray-300 rounded-md"
+                            />
+                          </TableCell>
+                        );
                       }
 
                       if (column.toLowerCase() === "category") {
@@ -1098,27 +1232,29 @@ const ManualTallyTable = ({
 
                       // voucher type
                       if (column.toLowerCase() === "voucher_type") {
-                      return (
-                        <TableCell key={column}>
-                        <Select
-                          value={row[column] || ""}
-                          onValueChange={(value) => handleInputChange(row.id, column, value)}
-                        >
-                          <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select voucher type">
-                            {row[column]}
-                          </SelectValue>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {voucherOptions.map((voucher) => (
-                              <SelectItem key={voucher} value={voucher}>
-                                {voucher}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        </TableCell>
-                      );
+                        return (
+                          <TableCell key={column}>
+                            <Select
+                              value={row[column] || ""}
+                              onValueChange={(value) =>
+                                handleInputChange(row.id, column, value)
+                              }
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Select voucher type">
+                                  {row[column]}
+                                </SelectValue>
+                              </SelectTrigger>
+                              <SelectContent>
+                                {voucherOptions.map((voucher) => (
+                                  <SelectItem key={voucher} value={voucher}>
+                                    {voucher}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                        );
                       }
                       // Default text input
                       return (
@@ -1266,6 +1402,70 @@ const ManualTallyTable = ({
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Date Filter Modal */}
+        {dateFilterModalOpen && (
+          <Dialog
+            open={dateFilterModalOpen}
+            onOpenChange={setDateFilterModalOpen}
+          >
+            <DialogContent className="sm:max-w-[400px]">
+              <DialogHeader>
+                <DialogTitle>Filter {currentDateColumn}</DialogTitle>
+                <p className="text-sm text-gray-600">
+                  Select a start and end date for the filter.
+                </p>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Start Date</Label>
+                  <Input
+                    type="date"
+                    value={fromDate}
+                    onChange={(e) => {
+                      console.log("Start date changed:", e.target.value);
+                      setFromDate(e.target.value);
+                    }}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>End Date</Label>
+                  <Input
+                    type="date"
+                    value={toDate}
+                    onChange={(e) => {
+                      console.log("End date changed:", e.target.value);
+                      setToDate(e.target.value);
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="ghost"
+                  onClick={() => setDateFilterModalOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="default"
+                  className="bg-black hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
+                  onClick={() => {
+                    console.log("Applying filter with:", {
+                      fromDate,
+                      toDate,
+                      currentDateColumn,
+                    });
+                    handleDateFilter(currentDateColumn, fromDate, toDate);
+                    setDateFilterModalOpen(false);
+                  }}
+                >
+                  Apply Filter
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
 
         {/* Numeric Filter Modal */}
         <Dialog

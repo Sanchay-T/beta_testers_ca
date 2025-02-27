@@ -7,6 +7,7 @@ import {
   FileText,
   X,
   Eye,
+  EyeOff,
   Loader2,
 } from "lucide-react";
 import { Button } from "../ui/button";
@@ -51,6 +52,7 @@ const GenerateReportForm = ({
   const [isSearchInputFocused, setIsSearchInputFocused] = useState(false);
   const [bankSearchTerm, setBankSearchTerm] = useState("");
   const [filteredBanks, setFilteredBanks] = useState([]);
+  const [showPassword, setShowPassword] = useState(false);
   //Bank Names
   const bankNames = [
     "Axis Bank",
@@ -942,23 +944,38 @@ const GenerateReportForm = ({
                                 />
                               </div>
 
-                              <div>
+                              <div className="relative">
                                 <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                                   Password
                                 </label>
-                                <input
-                                  type="password"
-                                  value={detail.password || ""}
-                                  onChange={(e) =>
-                                    handleFileDetailChange(
-                                      index,
-                                      "password",
-                                      e.target.value
-                                    )
-                                  }
-                                  placeholder="Enter password"
-                                  className="w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-500 transition-all"
-                                />
+                                <div className="relative">
+                                  <input
+                                    type={showPassword ? "text" : "password"}
+                                    value={detail.password || ""}
+                                    onChange={(e) =>
+                                      handleFileDetailChange(
+                                        index,
+                                        "password",
+                                        e.target.value
+                                      )
+                                    }
+                                    placeholder="Enter password"
+                                    className="w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-500 transition-all pr-10"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setShowPassword(!showPassword)
+                                    }
+                                    className="absolute inset-y-0 right-2 flex items-center text-gray-500 dark:text-gray-400"
+                                  >
+                                    {showPassword ? (
+                                      <EyeOff size={18} />
+                                    ) : (
+                                      <Eye size={18} />
+                                    )}
+                                  </button>
+                                </div>
                               </div>
                             </div>
                           </div>

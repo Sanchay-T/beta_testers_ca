@@ -95,6 +95,8 @@ const DataTable = ({
   const [categorySearchTerm, setCategorySearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [existingFilterData, setExistingFilterData] = useState([]);
+
   const [columnsToIgnore, setColumnsToIgnore] = useState([
     "id",
     "transactionId",
@@ -208,6 +210,7 @@ const DataTable = ({
   const fileInputRef = useRef(null);
   const [uploadedChanges, setUploadedChanges] = useState([]);
   const [categoryUpdateModalOpen, setCategoryUpdateModalOpen] = useState(false);
+  const [pendingCategories, setPendingCategories] = useState([]);
 
   const { reportData, updateReportData } = useReportContext();
 
@@ -433,6 +436,9 @@ const DataTable = ({
   const handleSearch = (searchValue) => {
     setSearchTerm(searchValue);
 
+    const dataToFilter =
+      existingFilterData.length > 0 ? existingFilterData : data;
+
     // Reset to original data if search value is empty
     if (searchValue === "") {
       setFilteredData(data);
@@ -442,7 +448,7 @@ const DataTable = ({
 
     // Always filter from the full data set for consistent search results
     const columnsToReplace = ["amount", "balance", "debit", "credit"];
-    const filtered = data.filter((row) =>
+    const filtered = dataToFilter.filter((row) =>
       Object.entries(row).some(([key, value]) => {
         if (columnsToReplace.includes(key)) {
           return String(value)
@@ -455,6 +461,7 @@ const DataTable = ({
     );
 
     setFilteredData(filtered);
+    setExistingFilterData(filtered);
     setCurrentPage(1);
 
     // Calculate totals for numeric columns from the new filtered data
@@ -476,11 +483,13 @@ const DataTable = ({
   // --- Single Row Update: Use the entire row (which includes its id) ---
   const handleCategoryChange = (transaction, newCategory) => {
     const oldCategory = transaction.category;
+    console.log("filererd data", filteredData);
     // Find similar transactions
     const similarTransactions1 = processSimilarCategory(
       filteredData,
       transaction.description
     );
+    console.log("similarTransactions1", similarTransactions1);
     // remove already selected one
     const similarTransactions = similarTransactions1.filter(
       (t) => t.id !== transaction.id
@@ -493,7 +502,7 @@ const DataTable = ({
       newCategory,
       oldCategory,
       transaction,
-    })
+    });
     setPendingCategoryChange({
       transactionId: transaction.id,
       newCategory,
@@ -621,7 +630,7 @@ const DataTable = ({
     });
     console.log({ fromBulkUpdate: newModifiedData });
     setFilteredData(dataOnUi);
-    setModifiedData([...modifiedData,...newModifiedData]);
+    setModifiedData([...modifiedData, ...newModifiedData]);
     setHasChanges(true);
     setGlobalSelectedRows(new Set());
     setBulkCategoryModalOpen(false);
@@ -684,20 +693,25 @@ const DataTable = ({
   };
 
   const handleColumnFilter = () => {
+    const dataToFilter =
+      existingFilterData.length > 0 ? existingFilterData : data;
     if (selectedCategories.length === 0) {
       setFilteredData(data);
     } else {
-      const filtered = data.filter((row) =>
+      const filtered = dataToFilter.filter((row) =>
         selectedCategories.includes(String(row[currentFilterColumn]))
       );
       setFilteredData(filtered);
+      setExistingFilterData(filtered);
     }
     setCurrentPage(1);
     setFilterModalOpen(false);
   };
 
   const handleNumericFilter = (columnName, min, max) => {
-    const filtered = data.filter((row) => {
+    const dataToFilter =
+      existingFilterData.length > 0 ? existingFilterData : data;
+    const filtered = dataToFilter.filter((row) => {
       const value = parseFloat(row[columnName]);
       if (isNaN(value)) return false;
       const meetsMin = min === "" || value >= parseFloat(min);
@@ -705,12 +719,16 @@ const DataTable = ({
       return meetsMin && meetsMax;
     });
     setFilteredData(filtered);
+    setExistingFilterData(filtered);
     setCurrentPage(1);
   };
 
   // Improved date handling functions
   const handleDateFilter = (columnName, fromDate, toDate) => {
     console.log("Initial filter params:", { columnName, fromDate, toDate });
+
+    const dataToFilter =
+      existingFilterData.length > 0 ? existingFilterData : data;
 
     const parseDate = (dateStr) => {
       if (!dateStr) return null;
@@ -768,7 +786,7 @@ const DataTable = ({
 
     console.log("Processing with date range:", { from, to });
 
-    const filtered = data.filter((row) => {
+    const filtered = dataToFilter.filter((row) => {
       const rowDateStr = row[columnName];
       const rowDate = parseDate(rowDateStr);
 
@@ -789,6 +807,7 @@ const DataTable = ({
 
     // console.log("Filtered results count:", filtered.length);
     setFilteredData(filtered);
+    setExistingFilterData(filtered);
     setCurrentPage(1);
   };
 
@@ -802,6 +821,7 @@ const DataTable = ({
     setMaxValue("");
     setSelectedCategories([]);
     setCategorySearchTerm("");
+    setExistingFilterData([]);
   };
 
   const getUniqueValues = (columnName) => {
@@ -849,12 +869,35 @@ const DataTable = ({
         caseId || reportData.caseId
       );
 
+      console.log({ responseaq: response });
+
       modifiedData.map((row) => {
         if (row.category === "Self transfer") {
-          handleVoucherTypeChange(row, "Contra");
+          console.log("Self transfer");
+          handleVoucherTypeChange(row, "Contra", "Self transfer");
+        }
+        if (row.voucher_type === "Contra") {
+          console.log("Self contra");
+          handleVoucherTypeChange(row, "Contra2", row.category);
         }
       });
 
+      // After successful save, update categoryOptions with pending categories
+      if (pendingCategories.length > 0) {
+        const updatedOptions = [
+          ...categoryOptions,
+          ...pendingCategories,
+        ].sort();
+        setCategoryOptions(updatedOptions);
+        localStorage.setItem("categoryOptions", JSON.stringify(updatedOptions));
+        updateReportData({
+          ...reportData,
+          categoryOptions: updatedOptions,
+        });
+
+        // Clear pending categories
+        setPendingCategories([]);
+      }
       setHasChanges(false);
       toast({
         title: "Changes saved successfully",
@@ -970,10 +1013,10 @@ const DataTable = ({
       // Clear selections and close the modal.
       setGlobalSelectedRows(new Set());
       setBatchEntityValue("");
+      setSearchTerm("");
       setBatchModalOpen(false);
       setSearchTerm("");
       if (refreshFunction) refreshFunction();
-
     }
   };
 
@@ -1012,17 +1055,16 @@ const DataTable = ({
 
   const handleAddCategory = (newCategory, row) => {
     // Check if the new category is non-empty and not already in the options
-    if (newCategory && !categoryOptions.includes(newCategory)) {
+    if (
+      newCategory &&
+      !categoryOptions.includes(newCategory) &&
+      !pendingCategories.includes(newCategory)
+    ) {
       // Set the category that needs classification
       setNewCategoryToClassify(newCategory);
-      // Add the new category to your category options and sort them
-      const updatedOptions = [...categoryOptions, newCategory].sort();
-      setCategoryOptions(updatedOptions);
-      localStorage.setItem("categoryOptions", JSON.stringify(updatedOptions));
-      updateReportData({
-        ...reportData,
-        categoryOptions: updatedOptions,
-      });
+
+      // Add to pending categories list instead of directly to categoryOptions
+      setPendingCategories([...pendingCategories, newCategory]);
 
       if (row) {
         // Single-row update flow: store the pending change using the transaction id.
@@ -1124,10 +1166,7 @@ const DataTable = ({
   };
 
   // get transactions with same category and similar description
-  const processSimilarCategory = (
-    transactions,
-    descriptionToMatch
-  ) => {
+  const processSimilarCategory = (transactions, descriptionToMatch) => {
     // Helper function to calculate string similarity
     const similarity = (str1, str2) => {
       if (!str1 || !str2) return 0;
@@ -1138,7 +1177,7 @@ const DataTable = ({
     };
 
     // Similarity threshold
-    const threshold = 0.85;
+    const threshold = 0.91;
 
     // Filter transactions with similar descriptions and same category
     const similarTransactions = transactions.filter((transaction) => {
@@ -1150,7 +1189,7 @@ const DataTable = ({
       console.log("transaction.description", transaction.description);
       console.log("descriptionToMatch", descriptionToMatch);
 
-      return descriptionSimilarity >= threshold ;
+      return descriptionSimilarity >= threshold;
     });
 
     // Sort by similarity score (most similar first)
@@ -1201,21 +1240,38 @@ const DataTable = ({
     });
   };
 
-  const handleVoucherTypeChange = async (row, value) => {
-    console.log("Voucher Type: ", row, value);
+  const handleVoucherTypeChange = async (row, newVoucher, newCategory) => {
+    console.log("Voucher Type: ", row, newVoucher, newCategory);
+    // if (newVoucher === "Contra") {
+    //   console.log("inside if");
+    //   newCategory = "Self transfer";
+    // }
+    let updatedCategory;
+    let updateVoucher = newVoucher;
+    if (newVoucher === "Contra") {
+      console.log("inside if");
+      updatedCategory = "Self transfer";
+    } else {
+      updatedCategory = newCategory;
+    }
+
+    if (newVoucher === "Contra2") {
+      updateVoucher = "Contra";
+    }
+    console.log("updated category", updatedCategory);
     const updatedData = filteredData.map((tx) => {
       if (tx.id === row.id) {
-        if (value === "Contra") {
-          return { ...tx, voucher_type: value, category: "Self transfer" };
-        } else {
-          return { ...tx, voucher_type: value };
-        }
+        return {
+          ...tx,
+          voucher_type: updateVoucher,
+          category: updatedCategory,
+        };
       }
       return tx;
     });
 
     const response = await window.electron.editVoucherType([
-      { id: row.id, voucher_type: value },
+      { id: row.id, voucher_type: updateVoucher, category: updatedCategory },
     ]);
     console.log("Response: ", response);
     setFilteredData(updatedData);
@@ -1322,17 +1378,17 @@ const DataTable = ({
                 </Tooltip>
               </div>
 
-            {hasEntity && (
-              <Button
-                variant="default"
-                className="w-full sm:w-auto"
-                disabled={globalSelectedRows.size === 0}
-                onClick={() => setBatchModalOpen(true)}
-              >
-                Bulk Edit Party Name
-              </Button>
-            )}
-          </div>
+              {hasEntity && (
+                <Button
+                  variant="default"
+                  className="w-full sm:w-auto"
+                  disabled={globalSelectedRows.size === 0}
+                  onClick={() => setBatchModalOpen(true)}
+                >
+                  Bulk Edit Party Name
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </CardHeader>
@@ -1383,7 +1439,11 @@ const DataTable = ({
                               setCurrentFilterColumn(column);
                               setCurrentDateColumn(column);
                               setDateFilterModalOpen(true);
-                            } else if (numericColumns.includes(column)) {
+                            } else if (
+                              column.toLowerCase() === "credit" ||
+                              column.toLowerCase() === "debit" ||
+                              column.toLowerCase() === "balance"
+                            ) {
                               setCurrentNumericColumn(column);
                               setCurrentDateColumn(column);
                               setNumericFilterModalOpen(true);
@@ -1575,7 +1635,11 @@ const DataTable = ({
                               <Select
                                 value={row[column]}
                                 onValueChange={(value) =>
-                                  handleVoucherTypeChange(row, value)
+                                  handleVoucherTypeChange(
+                                    row,
+                                    value,
+                                    row.category
+                                  )
                                 }
                                 className="w-full"
                                 disabled={globalSelectedRows.has(row.id)}
