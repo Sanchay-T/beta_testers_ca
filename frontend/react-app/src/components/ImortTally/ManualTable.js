@@ -76,6 +76,8 @@ import {
 
 import { useToast } from "../../hooks/use-toast";
 
+const voucherOptions = ["Payment", "Receipt", "Contra"];
+
 const ManualTallyTable = ({
   initialData = [],
   columnsProp = [],
@@ -192,7 +194,6 @@ const ManualTallyTable = ({
 
   // For "Remove Row"
   const handleRemoveRow = (rowId) => {
-    console.log({rowId,allRows})
     // Check if row was newly added or from DB, etc.
     const tempSetAllRows = (prev) => prev.filter((row) => row.id !== rowId) 
     setAllRows(tempSetAllRows);
@@ -692,6 +693,7 @@ const ManualTallyTable = ({
   // 6) Render
   // ---------------------------------------------
   return (
+    
     <Card className="min-w-full max-w-[0] pt-6">
 
       <CardContent>
@@ -1094,6 +1096,30 @@ const ManualTallyTable = ({
                         );
                       }
 
+                      // voucher type
+                      if (column.toLowerCase() === "voucher_type") {
+                      return (
+                        <TableCell key={column}>
+                        <Select
+                          value={row[column] || ""}
+                          onValueChange={(value) => handleInputChange(row.id, column, value)}
+                        >
+                          <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select voucher type">
+                            {row[column]}
+                          </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {voucherOptions.map((voucher) => (
+                              <SelectItem key={voucher} value={voucher}>
+                                {voucher}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        </TableCell>
+                      );
+                      }
                       // Default text input
                       return (
                         <TableCell key={column}>

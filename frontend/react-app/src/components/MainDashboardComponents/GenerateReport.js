@@ -80,6 +80,25 @@ export default function GenerateReport() {
     });
     setToastId(newToastId);
 
+    const newData = {
+      id: null,
+      name: caseName,
+      userId: null,
+      status: "Pending",
+      pages: null,
+      createdAt: new Date().toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      }),
+      statements: null,
+    };
+
+    // const updatedRecentReportData = reportData.recentReportsData(newData);
+    updateReportData({
+      recentReportsData: [newData, ...reportData.recentReportsData],
+    });
+
     progressIntervalRef.current = simulateProgress();
 
     try {
@@ -150,6 +169,24 @@ export default function GenerateReport() {
             return filenameWithoutTimestamp;
           });
           setFailedStatements(failedFiles || []); // Store failed
+
+          const newData = {
+            id: result.data.caseId,
+            name: caseName,
+            userId: null,
+            status: "Failed",
+            pages: null,
+            createdAt: new Date().toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            }),
+            statements: null,
+          };
+
+          updateReportData({
+            recentReportsData: [newData, ...reportData.recentReportsData],
+          });
         }
 
         if (result.data.successfulFiles.length > 0) {
@@ -165,6 +202,25 @@ export default function GenerateReport() {
             }
           );
           setSuccessfulStatements(successfulFiles || []); // Store successful
+
+          const newData = {
+            id: result.data.caseId,
+            name: caseName,
+            userId: null,
+            status: "Success",
+            pages: null,
+            createdAt: new Date().toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            }),
+            // statements: null,
+          };
+          console.log("maxxx", newData);
+  
+          updateReportData({
+            recentReportsData: [newData, ...reportData.recentReportsData],
+          });
         }
 
         if (result.data.totalTransactions) setShowAnalysisButton(true);
@@ -177,7 +233,7 @@ export default function GenerateReport() {
         setFileDetails([]);
 
         // Trigger a page refresh
-        refreshPage();
+        // refreshPage();
       } else {
         const errorMessage = result.error
           ? typeof result.error === "object"
@@ -214,14 +270,18 @@ export default function GenerateReport() {
         variant: "destructive",
         duration: 5000,
       });
-      refreshPage();
+      // refreshPage();
+      const updatedRecentReportData = reportData.recentReportsData;
+      updateReportData({ recentReportsData: updatedRecentReportData });
     } finally {
       setLoading(false);
       localStorage.removeItem("dashboardData");
-      refreshPage();
+      // refreshPage();
       progressIntervalRef.current = null;
     }
   };
+
+  console.log("reportData shubham", reportData);
   const viewAnalysis = () => {
     console.log("View Analysis clicked - ", currentCaseId);
     navigate(`/individual-dashboard/${currentCaseId}/defaultTab`);

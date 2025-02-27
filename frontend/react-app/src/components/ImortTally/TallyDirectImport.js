@@ -591,6 +591,7 @@ const TallyDirectImport = ({ source }) => {
   };
 
   return (
+    <div className="p-8">
     <Card>
       <CardHeader>
         <div className="flex justify-between items-center">
@@ -772,6 +773,7 @@ const TallyDirectImport = ({ source }) => {
         </DialogContent>
       </Dialog>
     </Card>
+    </div>
   );
 };
 

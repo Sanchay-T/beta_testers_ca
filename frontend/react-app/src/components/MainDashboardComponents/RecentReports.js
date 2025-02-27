@@ -95,7 +95,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
   const itemsPerPage = 10;
   const [currentCaseName, setCurrentCaseName] = useState("");
   const [currentCaseId, setCurrentCaseId] = useState("");
-  const [recentReports, setRecentReports] = useState([]);
   const [failedDatasOfCurrentReport, setFailedDatasOfCurrentReport] = useState(
     []
   );
@@ -143,6 +142,30 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
           className: "bg-white text-black opacity-100 shadow-lg",
         });
         setPdfEditLoading(false);
+
+        const updatedRecentReportsData = reportData.recentReportsData.map(
+          (report) => {
+            console.log("makwana:", report); // Print report ID
+            console.log("Report ID:", report.id); // Print report ID
+            console.log("Current Case ID:", result.data.caseId); // Print currentCaseId
+            if (report.id === result.data.caseId) {
+              return {
+                ...report,
+                name: currentCaseName,
+                status: "Success",
+              };
+            }
+            return report;
+          }
+        );
+        console.log("updatedRecentReportsData", updatedRecentReportsData);
+        updateReportData({ 
+          ...reportData, // Preserve other reportData properties
+          recentReportsData: updatedRecentReportsData 
+        });
+        
+        console.log("saas", reportData.recentReportsData);
+
       } else {
         // If the rectification failed, show error message and reasons
         const unrectifiedStatements = failedDatasOfCurrentReport.filter(
@@ -221,7 +244,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
             })),
           }));
 
-        setRecentReports(formattedReports);
+        updateReportData({ recentReportsData: formattedReports });
       } catch (error) {
         toast({
           title: "Error",
@@ -233,11 +256,13 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       }
     };
 
-    fetchReports();
+    if (reportData.recentReportsData.length === 0) {
+      fetchReports();
+    }
   }, []);
 
   // Filter reports based on search query
-  const filteredReports = recentReports.filter(
+  const filteredReports = reportData.recentReportsData.filter(
     (report) =>
       report.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       report.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -315,9 +340,11 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
   const handleDeleteReport = async (reportId) => {
     try {
       await window.electron.deleteReport(reportId);
-      setRecentReports((prev) =>
-        prev.filter((report) => report.id !== reportId)
+
+      const updatedReports = reportData.recentReportsData.filter(
+        (report) => report.id !== reportId
       );
+      updateReportData({ recentReportsData: updatedReports });
 
       toast({
         title: "Success",
@@ -724,7 +751,12 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         setFailedDatasOfCurrentReport([]);
         return;
       }
-
+      if(processedFailedData.length === 0) {
+        console.warn("No valid failed statement data found after processing.");
+        setFailedDatasOfCurrentReport([]);
+        setShowRectifyButton(false);
+        return;
+      }
       // Extract first valid failed statement (assuming one caseId per report)
       const firstFailedEntry = processedFailedData[0];
       console.log({ processedFailedData, firstFailedEntry });
@@ -1083,7 +1115,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         </div>
       </CardHeader>
       <CardContent>
-        {recentReports.length > 0 ? (
+        {reportData.recentReportsData.length > 0 ? (
           <Table>
             <TableHeader>
               <TableRow className="align-">
@@ -1360,7 +1392,8 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                           </p>
                                           {!hasError && (
                                             <div className="flex-1">
-                                              {isDone ? (
+                                              {report.status === "Success" ||
+                                              isDone ? (
                                                 <Button
                                                   size="sm"
                                                   disabled
@@ -1414,21 +1447,25 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                             {failedDatasOfCurrentReport?.length > 0 &&
                               !report.resolved && (
                                 <div className="flex justify-center">
-                                  <Button
-                                    type="submit"
-                                    disabled={pdfEditLoading}
-                                    onClick={handleSubmitEditPdf}
-                                    className="relative inline-flex items-center px-4 py-2"
-                                  >
-                                    {pdfEditLoading ? (
-                                      <>
-                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                        <span>Processing...</span>
-                                      </>
-                                    ) : (
-                                      "Submit"
-                                    )}
-                                  </Button>
+                                  {report.status === "Success" ? (
+                                    ""
+                                  ) : (
+                                    <Button
+                                      type="submit"
+                                      disabled={pdfEditLoading}
+                                      onClick={handleSubmitEditPdf}
+                                      className="relative inline-flex items-center px-4 py-2"
+                                    >
+                                      {pdfEditLoading ? (
+                                        <>
+                                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                          <span>Processing...</span>
+                                        </>
+                                      ) : (
+                                        "Submit"
+                                      )}
+                                    </Button>
+                                  )}
                                 </div>
                               )}
                             <AlertDialogCancel className="px-8 bg-black text-white hover:bg-black/90 hover:text-white dark:bg-white dark:text-black">
@@ -1447,7 +1484,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
           <div className="flex justify-center items-center w-full text-grey-600 opacity-70 font-semibold">
             <Loader2 />
           </div>
-        ) : recentReports.length === 0 ? (
+        ) : reportData.recentReportsData.length === 0 ? (
           <div className="flex justify-center items-center w-full text-grey-600 opacity-70 font-semibold">
             No Reports Found
           </div>
