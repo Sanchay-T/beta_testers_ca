@@ -165,6 +165,7 @@ const DataTable = ({
     selectedCategorySimilarTransactions,
     setSelectedCategorySimilarTransactions,
   ] = useState(new Set());
+  const [categorySelectDropdownOpen, setCategorySelectDropdownOpen] = useState({});
 
   const [hasChanges, setHasChanges] = useState(false);
   const [modifiedData, setModifiedData] = useState([]);
@@ -195,7 +196,6 @@ const DataTable = ({
   const [selectedType, setSelectedType] = useState("");
   const [showClassificationModal, setShowClassificationModal] = useState(false);
   const [newCategoryToClassify, setNewCategoryToClassify] = useState("");
-  const [isSearchInputFocused, setIsSearchInputFocused] = useState(false);
 
   // Reasoning modal state
   const [reasoningModalOpen, setReasoningModalOpen] = useState(false);
@@ -206,6 +206,8 @@ const DataTable = ({
   const [bulkReasoning, setBulkReasoning] = useState("");
 
   const isFirstLoad = useRef(true);
+  const categoryInputRef = useRef(null);
+
   // states for excel download and upload
   const fileInputRef = useRef(null);
   const [uploadedChanges, setUploadedChanges] = useState([]);
@@ -219,6 +221,30 @@ const DataTable = ({
     if (value instanceof Date) return value.toLocaleDateString();
     return value;
   };
+
+  useEffect(() => {
+    let timer ;
+    try{
+
+    timer = setTimeout(() => {
+      if (categoryInputRef.current) {
+        categoryInputRef.current.focus();
+      }
+    }, 0); // delay until after the render cycle
+  }catch(e){
+    console.log({hey:e})
+  }
+
+
+    return () => clearTimeout(timer);
+
+
+  }, [categorySearchTerm]);
+
+  useEffect(()=>{
+    setCategorySearchTerm("");
+
+  },[categorySelectDropdownOpen])
 
   useEffect(() => {
     console.log("Data from unified - ", data);
@@ -322,6 +348,8 @@ const DataTable = ({
           );
           if (!existingTransaction) return null;
           if (existingTransaction.category === row.Category) return null;
+          
+          if(categoryOptions.includes(row.Category)){
 
           return {
             date: row.Date,
@@ -332,6 +360,19 @@ const DataTable = ({
             oldCategory: existingTransaction.category,
             newCategory: row.Category,
           };
+        }else{
+          return {
+            date: row.Date,
+            credit: row.Credit,
+            debit: row.Debit,
+            description: row.Description,
+            id: row.Id,
+            oldCategory: existingTransaction.category,
+            newCategory: row.Category,
+            classification:row.Classification
+          };
+        }
+
         })
         .filter(Boolean); // Remove nulls
 
@@ -369,10 +410,14 @@ const DataTable = ({
         if (updatedTransaction) {
           updatedTransaction.oldCategory = change.oldCategory;
           updatedTransaction.category = change.newCategory;
+          updatedTransaction.classification = change.classification;
           updatedTransaction.reasoning = "";
+          updatedTransaction.is_new = updatedTransaction.classification?true:false;
         }
         return updatedTransaction;
       });
+
+      console.log({ updatedTransactions });
 
       const payload = convertArrayToObject(updatedTransactions);
       console.log("Payload", payload);
@@ -841,11 +886,11 @@ const DataTable = ({
     setEditedEntities((prev) => ({ ...prev, [tid]: newValue }));
   };
 
-  const handleCategorySearch = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setCategorySearchTerm(e.target.value);
-  };
+  // const handleCategorySearch = (e) => {
+  //   e.preventDefault();
+  //   e.stopPropagation();
+  //   setCategorySearchTerm(e.target.value);
+  // };
 
   const convertArrayToObject = (array) => {
     return array.reduce((acc, transaction) => {
@@ -1277,6 +1322,11 @@ const DataTable = ({
     setFilteredData(updatedData);
   };
 
+
+  const handleCategorySelectOpenChange = (id, open) => {
+    setCategorySelectDropdownOpen((prev) => ({ ...prev, [id]: open }));
+  };
+
   return (
     // if source is equal to lifo or fifo then show the table
     <Card className="min-w-full max-w-[0]">
@@ -1539,6 +1589,8 @@ const DataTable = ({
                             >
                               <Select
                                 value={row[column]}
+                                open={categorySelectDropdownOpen[row.id]|| false}
+                                onOpenChange={(open)=>handleCategorySelectOpenChange(row.id,open)}
                                 onValueChange={(value) =>
                                   handleCategoryChange(row, value)
                                 }
@@ -1549,29 +1601,17 @@ const DataTable = ({
                                   <SelectValue>{row[column]}</SelectValue>
                                 </SelectTrigger>
                                 <SelectContent
-                                  onCloseAutoFocus={(e) => {
-                                    e.preventDefault();
-                                  }}
                                 >
                                   <div className="p-2 border-b flex gap-2">
                                     <div className="relative flex-1">
                                       <Input
+                                        ref={categoryInputRef}
                                         placeholder="Search categories..."
                                         value={categorySearchTerm}
                                         onChange={(e) =>
-                                          handleCategorySearch(e)
+                                          setCategorySearchTerm(e.target.value)
                                         }
-                                        onFocus={() =>
-                                          setIsSearchInputFocused(true)
-                                        }
-                                        onBlur={() =>
-                                          setIsSearchInputFocused(false)
-                                        }
-                                        onKeyDown={(e) => e.stopPropagation()}
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                        }}
+                                       
                                       />
                                     </div>
                                     <Button
@@ -1589,6 +1629,8 @@ const DataTable = ({
                                           );
                                           if (added) {
                                             setCategorySearchTerm("");
+                                            handleCategorySelectOpenChange(row.id, false);
+
                                           }
                                         }
                                       }}
@@ -1648,9 +1690,7 @@ const DataTable = ({
                                   <SelectValue>{row[column]}</SelectValue>
                                 </SelectTrigger>
                                 <SelectContent
-                                  onCloseAutoFocus={(e) => {
-                                    e.preventDefault();
-                                  }}
+                               
                                 >
                                   <div className="max-h-[200px] overflow-y-auto">
                                     {voucherOptions.length > 0 ? (
@@ -2001,14 +2041,8 @@ const DataTable = ({
                     <Input
                       placeholder="Search categories..."
                       value={categorySearchTerm}
-                      onChange={(e) => handleCategorySearch(e)}
-                      onFocus={() => setIsSearchInputFocused(true)}
-                      onBlur={() => setIsSearchInputFocused(false)}
-                      onKeyDown={(e) => e.stopPropagation()}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
+                      onChange={(e) => setCategorySearchTerm(e.target.value)}
+                    
                     />
                   </div>
                   <Button
@@ -2478,6 +2512,7 @@ const DataTable = ({
                   <TableHead className="whitespace-nowrap">
                     New Category
                   </TableHead>
+                  <TableHead>Classification</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -2491,6 +2526,10 @@ const DataTable = ({
                     <TableCell className="text-blue-600">
                       {change.newCategory}
                     </TableCell>
+                    {console.log({change})}
+                    {change.classification&&<TableCell className="text-blue-600">
+                      {change.classification}
+                    </TableCell>}
                   </TableRow>
                 ))}
               </TableBody>
@@ -2500,7 +2539,11 @@ const DataTable = ({
           <DialogFooter>
             <Button
               variant="ghost"
-              onClick={() => setCategoryUpdateModalOpen(false)}
+              onClick={() => {
+                setUploadedChanges([])
+                setCategoryUpdateModalOpen(false)
+                fileInputRef.current.value = "";
+              }}
             >
               Cancel
             </Button>

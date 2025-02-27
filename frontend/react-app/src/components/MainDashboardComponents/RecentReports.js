@@ -115,6 +115,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
   const [uploadedChanges, setUploadedChanges] = useState({});
   const [categoryUpdateModalOpen, setCategoryUpdateModalOpen] = useState(false);
   const [isRectifyAlertOpen, setIsRectifyAlertOpen] = useState(false);
+  const [isHandleDetailsDialogOpen,setIsHandleDetailsDialogOpen] = useState(null);
 
   const handleSubmitEditPdf = async () => {
     setPdfEditLoading(true);
@@ -674,11 +675,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
     setIsAddPdfModalOpen(false);
   };
 
-  const handleSaveMarkerData = (data) => {
-    // Handle saving marker data here
-    console.log("recent reports failed pdf handleSave data:", data);
-    setIsMarkerModalOpen(false);
-  };
 
   // Function to handle opening the modal and fetching the failed statements
   const handleDetails = async (reportId, reportName) => {
@@ -793,7 +789,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       );
 
       console.log("Unique failed data for shubh:", uniqueFailedDataOfReport);
-      setIsRectifyAlertOpen(true);
+      setIsHandleDetailsDialogOpen(reportId);
       setFailedDatasOfCurrentReport(uniqueFailedDataOfReport);
     } catch (error) {
       console.error("Error fetching failed statements:", error);
@@ -805,15 +801,22 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       });
     } finally {
       setIsLoading(false);
+      updateReportData({
+        triggerRectify: { caseId: null, caseName: null },
+      });
+
     }
   };
 
   useEffect(() => {
+    console.log({triggeredRectify:reportData})
+    if(reportData.triggerRectify.caseId&&reportData.triggerRectify.caseName){
     handleDetails(
       reportData?.triggerRectify?.caseId,
       reportData?.triggerRectify?.caseName
     );
-  }, [reportData.triggerRectify]);
+  }
+}, [reportData.triggerRectify]);
 
   const handleDownload = async (caseid, status) => {
     if (status === "Pending") {
@@ -1070,15 +1073,25 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
     input.click();
   };
 
-  const handleDialogOpenChange = (open) => {
-    setIsRectifyAlertOpen(open);
-    if (!open) {
-      // Remove focus from the active element so tooltips do not trigger
-      if (document.activeElement instanceof HTMLElement) {
-        document.activeElement.blur();
-      }
+
+  const isHandleDetailsOpenForThisId=(id)=>{
+    if(isHandleDetailsDialogOpen===id){
+      console.log("Aiyaz  Handle details open for id ", id)
     }
-  };
+    return isHandleDetailsDialogOpen===id
+  }
+
+  const handleChangeForHandleDetails = (id)=>{
+    if(isHandleDetailsDialogOpen===id){
+      console.log("Aiyaz  Setting handle details as null")
+      setIsHandleDetailsDialogOpen(null)
+    }else{
+      console.log("Aiyaz Setting handle details as ", id)
+
+      setIsHandleDetailsDialogOpen(id)
+
+    }
+  }
 
   return (
     <Card>
@@ -1305,7 +1318,10 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <AlertDialog>
+                      <AlertDialog open={isHandleDetailsOpenForThisId(report.id)}
+                      onOpenChange={()=>handleChangeForHandleDetails(report.id)}
+                      
+                      >
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <AlertDialogTrigger asChild>
@@ -1468,7 +1484,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                   )}
                                 </div>
                               )}
-                            <AlertDialogCancel className="px-8 bg-black text-white hover:bg-black/90 hover:text-white dark:bg-white dark:text-black">
+                            <AlertDialogCancel onClick={()=>setIsHandleDetailsDialogOpen(null)} className="px-8 bg-black text-white hover:bg-black/90 hover:text-white dark:bg-white dark:text-black">
                               Close
                             </AlertDialogCancel>
                           </AlertDialogFooter>

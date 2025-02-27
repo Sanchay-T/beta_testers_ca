@@ -48,8 +48,15 @@ const exportToExcel = async (
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet("Transactions");
 
+  let headers = [];
+
   // Define headers
-  const headers = Object.keys(finalTransactions[0]);
+  if(categoryOptions){
+    headers = [Object.keys(finalTransactions[0]),"classification"].flat();
+  }else{
+    headers = [Object.keys(finalTransactions[0])];
+  }
+
   sheet.columns = headers.map((header) => {
     const column = {
       header: header.charAt(0).toUpperCase() + header.slice(1),
@@ -62,7 +69,7 @@ const exportToExcel = async (
       column.width = 70; // wider width for description column
     } else if (header === "entity") {
       column.width = 20;
-    } else if (header === "category") {
+    } else if (header === "category"||header==="classification") {
       column.width = 20;
     } else if (header === "debit" || header === "credit" || header === "balance") {
       column.width = 15;
@@ -122,13 +129,26 @@ const exportToExcel = async (
   // ✅ Apply category dropdown if `categoryOptions` is provided
   if (categoryOptions && headers.includes("category")) {
     const categoryColIndex = headers.indexOf("category");
+    const classificationIndex = categoryColIndex+1;
     const categoryColLetter = getExcelColumnLetter(categoryColIndex);
+    const classificationColLetter = getExcelColumnLetter(classificationIndex);
     const numRows = finalTransactions.length;
 
     // Add a "Categories" sheet with category options
     const categorySheet = workbook.addWorksheet("Categories", {
       state: "hidden",
     });
+
+    const classificationSheet = workbook.addWorksheet("Classification", {
+      state: "hidden",
+    });
+
+    const classificationOptions = ["Income", "Important Expenses / Payments", "Other Expenses / Payments", "Contra"];
+
+    classificationOptions.forEach((cat, i) => {
+      classificationSheet.getCell(`A${i + 1}`).value = cat;
+    });
+
     categoryOptions.forEach((cat, i) => {
       categorySheet.getCell(`A${i + 1}`).value = cat;
     });
@@ -141,7 +161,17 @@ const exportToExcel = async (
         formulae: [`'Categories'!$A$1:$A$${categoryOptions.length}`], // Reference to category sheet
       };
     }
+
+    // Apply dropdown validation to the "Classification" column
+    for (let i = 2; i <= numRows + 1; i++) {
+      sheet.getCell(`${classificationColLetter}${i}`).dataValidation = {
+        type: "list",
+        allowBlank: true,
+        formulae: [`'Classification'!$A$1:$A$${classificationOptions.length}`], // Reference to category sheet
+      };
+    }
   }
+
 
   // Save the file
   const buffer = await workbook.xlsx.writeBuffer();
