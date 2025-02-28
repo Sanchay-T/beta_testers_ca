@@ -129,7 +129,7 @@ const Card3 = ({ title, value1, value2, mainValue1 = 0, mainValue2 = 0,handleTab
               <span className="text-xs uppercase tracking-wide text-gray-300 mb-1 text-center">
                 {value2 || "Total Commission Amount"}
               </span>
-              <span className="text-2xl md:text-3xl lg:text-4xl font-bold animate-blink truncate w-full text-center text-white">
+              <span className="text-2xl md:text-3xl lg:text-4xl font-bold  truncate w-full text-center text-white ">
                 ₹{Math.ceil(mainValue2).toLocaleString("en-IN", {
                           maximumFractionDigits: 0,
                         })}

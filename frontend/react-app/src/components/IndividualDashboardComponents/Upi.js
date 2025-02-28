@@ -82,7 +82,7 @@ const Upi = () => {
         return dateA - dateB;
       });
       const uniqueMonthsCr = [
-        ...new Set(transformedUpiDrData.map((item) => item.monthKey)),
+        ...new Set(transformedUpiCrData.map((item) => item.monthKey)),
       ].sort((a, b) => {
         const dateA = getMonthDate(a);
         const dateB = getMonthDate(b);

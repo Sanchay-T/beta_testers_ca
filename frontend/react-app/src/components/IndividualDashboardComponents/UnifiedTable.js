@@ -628,10 +628,14 @@ const DataTable = ({
       handleBulkCategoryChange("similarCategory");
       
     } else {
+      let newClassification = selectedType;
+      if(selectedType === "Contra"){
+        modifiedObject.debit>0?newClassification="Contra Debit":newClassification="Contra Credit";
+      }
       if (selectedType) {
         modifiedObject = {
           ...modifiedObject,
-          classification: selectedType,
+          classification: newClassification,
           is_new: true,
         };
       } else {
@@ -710,7 +714,11 @@ const DataTable = ({
             updatedRow.voucher_type = "Contra";
           }
           if (selectedType) {
-            updatedRow.classification = selectedType;
+            let newClassification = selectedType;
+            if(selectedType === "Contra"){
+              updatedRow.debit>0?newClassification="Contra Debit":newClassification="Contra Credit";
+            }
+            updatedRow.classification = newClassification;
             updatedRow.is_new = true;
           }
           newModifiedData.push({
@@ -1811,7 +1819,7 @@ const DataTable = ({
                 <TableCell>Total</TableCell>
                 {columns.slice(0).map((column) => (
                   <TableCell key={column}>
-                    {["credit", "debit", "balance"].includes(
+                    {["credit", "debit", "balance","amount"].includes(
                       column.toLowerCase()
                     )
                       ? totals[column]

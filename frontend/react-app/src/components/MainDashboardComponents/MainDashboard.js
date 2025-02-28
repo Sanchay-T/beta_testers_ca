@@ -840,7 +840,7 @@ const MainDashboard = ({handleTabChange}) => {
 
           <Card3
             type="Total Eligible Cases"
-            title="Total Eligible reports"
+            title="Earning Opportunity"
             value1="Total Eligibilty"
             value2="Total Commission"
             mainValue1={totalEligibility}
