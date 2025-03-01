@@ -13,6 +13,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { useAuth } from "../contexts/AuthContext";
 import { Alert, AlertDescription } from "./ui/alert";
+import Logo from "../data/assets/logo.png"
 
 export function LoginForm({ className, ...props }) {
   const { login, loading, error, isActivated, signUp } = useAuth();
@@ -73,7 +74,9 @@ export function LoginForm({ className, ...props }) {
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
+
+          <img src={Logo} alt="Logo" className="w-[170px] mx-auto pb-6" />
+          <CardTitle className="text-2xl ">Login</CardTitle>
           <CardDescription>
             {!isActivated
               ? "Please enter your license key and credentials"

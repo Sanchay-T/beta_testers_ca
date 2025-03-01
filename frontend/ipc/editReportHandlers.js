@@ -116,6 +116,8 @@ function registerEditReportHandlers() {
         try {
             const validCaseId = caseId
 
+            log.info("Parsed Summary Data:", Object.keys(parsedData));
+
             // Validate the summary data
             if (
                 !parsedData ||
@@ -123,7 +125,9 @@ function registerEditReportHandlers() {
                 !parsedData["Particulars"] ||
                 !parsedData["Income Receipts"] ||
                 !parsedData["Important Expenses"] ||
-                !parsedData["Other Expenses"]
+                !parsedData["Other Expenses"] ||
+                !parsedData["Contra Debit"] ||
+                !parsedData["Contra Credit"]
             ) {
                 throw new Error("Invalid summary data provided");
             }
@@ -134,6 +138,8 @@ function registerEditReportHandlers() {
                 incomeReceipts: parsedData["Income Receipts"],
                 importantExpenses: parsedData["Important Expenses"],
                 otherExpenses: parsedData["Other Expenses"],
+                contraDebit: parsedData["Contra Debit"],
+                contraCredit: parsedData["Contra Credit"],
             };
 
             // Check if summary data already exists for this case
@@ -400,6 +406,8 @@ function registerEditReportHandlers() {
                         "Income Receipts": parsedData["Income Receipts"] || [],
                         "Important Expenses": parsedData["Important Expenses"] || [],
                         "Other Expenses": parsedData["Other Expenses"] || [],
+                        "Contra Debit": parsedData["Contra Debit"] || [],
+                        "Contra Credit": parsedData["Contra Credit"] || [],
                     },
                     caseId
                 );

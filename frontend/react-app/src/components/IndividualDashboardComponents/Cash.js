@@ -1,16 +1,15 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import BarLineChart from "../charts/BarLineChart";
 import UnifiedTable from "./UnifiedTable";
 import { useParams } from "react-router-dom";
 import ToggleStrip from "./ToggleStrip";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "../ui/tabs";
 
 const Cash = () => {
   const [withdrawalData, setWithdrawalData] = useState([]);
   const [depositData, setDepositData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState("withdrawal");
   const { caseId, individualId } = useParams();
   const [availableMonthsDr, setAvailableMonthsDr] = useState([]);
   const [selectedMonthsDr, setSelectedMonthsDr] = useState([]);
@@ -32,7 +31,7 @@ const Cash = () => {
     return new Date(parseInt(year), monthIndex);
   };
 
-  console.log("in cash", caseId, individualId);
+  // console.log("in cash", caseId, individualId);
   const fetchData = async () => {
     try {
       const withdrawalResponse =
@@ -104,22 +103,19 @@ const Cash = () => {
     fetchData();
   }, []);
 
-  console.log("Withdrawal data:", withdrawalData);
-  console.log("Deposit data:", depositData);
-
   const filteredCrData = depositData.filter((item) =>
     selectedMonthsCr.includes(item.monthKey)
   );
-  
+
   // Transform data for chart to show monthly aggregates
   const getCrChartData = () => {
     const monthlyData = {};
-    
-    filteredCrData.forEach(item => {
+
+    filteredCrData.forEach((item) => {
       if (!monthlyData[item.monthKey]) {
         monthlyData[item.monthKey] = {
           date: item.monthKey, // Using monthKey as date for x-axis
-          credit: 0
+          credit: 0,
         };
       }
       monthlyData[item.monthKey].credit += item.credit;
@@ -136,16 +132,15 @@ const Cash = () => {
     selectedMonthsDr.includes(item.monthKey)
   );
 
-  
   // Transform data for chart to show monthly aggregates
   const getDrChartData = () => {
     const monthlyData = {};
-    
-    filteredDrData.forEach(item => {
+
+    filteredDrData.forEach((item) => {
       if (!monthlyData[item.monthKey]) {
         monthlyData[item.monthKey] = {
           date: item.monthKey, // Using monthKey as date for x-axis
-          debit: 0
+          debit: 0,
         };
       }
       monthlyData[item.monthKey].debit += item.debit;
@@ -174,154 +169,118 @@ const Cash = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-white text-xl font-semibold">Loading Cash Data...</p>
+      <div className="rounded-xl shadow-sm m-8 mt-2 space-y-6">
+        <div className="bg-gray-100 p-4 rounded-md w-full h-[10vh]">
+          <p className="text-gray-800 text-center mt-3 font-medium text-lg">
+            Loading...
+          </p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="bg-red-900 bg-opacity-50 backdrop-filter backdrop-blur-lg p-8 rounded-lg shadow-lg">
-          <p className="text-red-200 text-xl font-semibold">{error}</p>
+      <div className="rounded-xl shadow-sm m-8 mt-2 space-y-6">
+        <div className="bg-red-100 p-4 rounded-md w-full h-[10vh]">
+          <p className="text-red-800 text-center mt-3 font-medium text-lg">
+            {error}
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen text-white p-8">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="max-w-7xl mx-auto"
-      >
-        <div className="mb-5">
-          <div className="flex justify-left space-x-4">
-            <button
-              onClick={() => setActiveTab("withdrawal")}
-              className={`px-6 py-2 rounded-full text-lg font-semibold transition-all duration-300 ${
-                activeTab === "withdrawal"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-800 text-gray-400 hover:bg-gray-700"
-              }`}
-            >
-              Withdrawal
-            </button>
-            <button
-              onClick={() => setActiveTab("deposit")}
-              className={`px-6 py-2 rounded-full text-lg font-semibold transition-all duration-300 ${
-                activeTab === "deposit"
-                  ? "bg-purple-600 text-white"
-                  : "bg-gray-800 text-gray-400 hover:bg-gray-700"
-              }`}
-            >
-              Deposit
-            </button>
-          </div>
-        </div>
+    <div className="rounded-xl m-8 mt-2 space-y-6">
+      <Tabs defaultValue="withdrawal">
+        <TabsList className="grid w-[500px] grid-cols-2 pb-10">
+          <TabsTrigger value="withdrawal">Withdrawal</TabsTrigger>
+          <TabsTrigger value="deposit">Deposit</TabsTrigger>
+        </TabsList>
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            {activeTab === "withdrawal" && (
-              <div className="space-y-8">
-                {filteredDrData.length === 0 ? (
-                  <div className="bg-gray-100 p-4 rounded-md w-full h-[10vh]">
-                    <p className="text-gray-800 text-center mt-3 font-medium text-lg">
-                      No Data Available
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                   <ToggleStrip
-                      columns={availableMonthsDr}
-                      selectedColumns={selectedMonthsDr}
-                      setSelectedColumns={setSelectedMonthsDr}
+        <TabsContent value="withdrawal">
+          {withdrawalData.length === 0 ? (
+            <div className="bg-gray-100 p-4 rounded-md w-full h-[10vh]">
+              <p className="text-gray-800 text-center mt-3 font-medium text-lg">
+                No Data Available
+              </p>
+            </div>
+          ) : (
+            <>
+              <ToggleStrip
+                columns={availableMonthsDr}
+                selectedColumns={selectedMonthsDr}
+                setSelectedColumns={setSelectedMonthsDr}
+              />
+              {selectedMonthsDr.length === 0 ? (
+                <div className="text-center text-gray-600 dark:text-gray-400 my-6">
+                  Select months to view data
+                </div>
+              ) : (
+                <>
+                  <div className="mb-6 w-full h-[60vh]">
+                    <BarLineChart
+                      data={getDrChartData()}
+                      xAxisKey="date"
+                      columnTypes={columnTypes}
+                      config={chartConfig}
                     />
-                    <div className="border border-gray-200 rounded-lg">
-                      <h2 className="text-2xl font-semibold mb-4 p-6 text-black">
-                        Cash Withdrawal
-                      </h2>
-                      <div className="h-[400px]">
-                        <BarLineChart
-                          data={getDrChartData()}
-                          xAxisKey="date"
-                          columnTypes={columnTypes}
-                          config={chartConfig}
-                        />
-                      </div>
-                    </div>
-                    <div className="w-full">
-                      <UnifiedTable
-                        data={filteredDrData}
-                        title="Cash Withdrawal Transactions"
-                      />
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-
-            {activeTab === "deposit" && (
-              <div className="space-y-8">
-                {depositData.length === 0 ? (
-                  <div className="bg-gray-100 p-4 rounded-md w-full h-[10vh]">
-                    <p className="text-gray-800 text-center mt-3 font-medium text-lg">
-                      No Data Available
-                    </p>
                   </div>
-                ) : (
-                  <>
-                    <ToggleStrip
-                      columns={availableMonthsCr}
-                      selectedColumns={selectedMonthsCr}
-                      setSelectedColumns={setSelectedMonthsCr}
+                  <div className="w-full">
+                    <UnifiedTable
+                      data={filteredDrData}
+                      title="Cash Withdrawal Transactions"
                     />
+                  </div>
+                </>
+              )}
+            </>
+          )}
+        </TabsContent>
+        <TabsContent value="deposit">
+          {depositData.length === 0 ? (
+            <div className="bg-gray-100 p-4 rounded-md w-full h-[10vh]">
+              <p className="text-gray-800 text-center mt-3 font-medium text-lg">
+                No Data Available
+              </p>
+            </div>
+          ) : (
+            <>
+              <ToggleStrip
+                columns={availableMonthsCr}
+                selectedColumns={selectedMonthsCr}
+                setSelectedColumns={setSelectedMonthsCr}
+              />
 
-                    {selectedMonthsCr.length === 0 ? (
-                      <div className="text-center text-gray-600 dark:text-gray-400 my-6">
-                        Select months to display the graphs
-                      </div>
-                    ) : (
-                      <>
-                        <div className="border border-gray-200 rounded-lg">
-                          <h2 className="text-2xl font-semibold mb-4 p-6 text-black">
-                            Cash Deposit
-                          </h2>
-                          <div className="h-[400px]">
-                            <BarLineChart
-                              data={getCrChartData()}
-                              xAxisKey="date"
-                              columnTypes={columnTypes}
-                              config={chartConfig}
-                            />
-                          </div>
-                        </div>
-                        <div className="w-full">
-                          <UnifiedTable
-                            data={filteredCrData}
-                            title="Cash Deposit Transactions"
-                            caseId={caseId}
-                            refreshFunction={fetchData}
-                          />
-                        </div>
-                      </>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
-          </motion.div>
-        </AnimatePresence>
-      </motion.div>
+              {selectedMonthsCr.length === 0 ? (
+                <div className="text-center text-gray-600 dark:text-gray-400 my-6">
+                  Select months to view data
+                </div>
+              ) : (
+                <>
+                  <div className="mb-6 w-full h-[60vh]">
+                    <BarLineChart
+                      data={getCrChartData()}
+                      xAxisKey="date"
+                      columnTypes={columnTypes}
+                      config={chartConfig}
+                    />
+                  </div>
+                  <div className="w-full">
+                    <UnifiedTable
+                      data={filteredCrData}
+                      title="Cash Deposit Transactions"
+                      caseId={caseId}
+                      refreshFunction={fetchData}
+                    />
+                  </div>
+                </>
+              )}
+            </>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

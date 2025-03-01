@@ -30,7 +30,6 @@ import { useReportContext } from "../contexts/ReportContext";
 const Dashboard = () => {
   const { breadcrumbs, setMainDashboard } = useBreadcrumb();
   const [activeTab, setActiveTab] = useState("Dashboard");
-  const [pdfColMarkerData, setPdfColMarkerData] = useState([]);
   const { defaultTab } = useParams();
   const { reportData, updateReportData } = useReportContext();
 
@@ -93,6 +92,7 @@ const Dashboard = () => {
   ];
 
   useEffect(() => {
+    console.log({defaultTab})
     if (!defaultTab || defaultTab === "defaultTab")
       setActiveTab(navItems[0].title);
     else setActiveTab(defaultTab);
@@ -120,31 +120,6 @@ const Dashboard = () => {
     }
   };
 
-  const handleFinalSubmitPDFMarker = () => {
-    const data = {
-      bank_names: ["HDFC", "ICICI"],
-      pdf_paths: ["/home/Downloads/ICICI.pdf", "/home/Downloads/HDFC.pdf"],
-      passwords: ["1234", "1234"],
-      start_dates: ["01-01-2021", "01-01-2021"],
-      end_dates: ["31-12-2021", "31-12-2021"],
-      CA_ID: 1,
-      columns: pdfColMarkerData,
-    };
-    console.log(data);
-  };
-
-  useEffect(() => {
-    const data = {
-      bank_names: ["HDFC", "ICICI"],
-      pdf_paths: ["/home/Downloads/ICICI.pdf", "/home/Downloads/HDFC.pdf"],
-      passwords: ["1234", "1234"],
-      start_dates: ["01-01-2021", "01-01-2021"],
-      end_dates: ["31-12-2021", "31-12-2021"],
-      CA_ID: 1,
-      columns: pdfColMarkerData,
-    };
-    console.log(data);
-  }, [pdfColMarkerData]);
 
   return (
     <>
@@ -158,15 +133,12 @@ const Dashboard = () => {
           <BreadcrumbDynamic items={breadcrumbs} />
           <div className="flex-1 flex flex-col overflow-hidden">
             <main className="flex-1">
-              {activeTab === "Dashboard" && <MainDashboard />}
+              {activeTab === "Dashboard" && <MainDashboard handleTabChange={handleTabChange} />}
               {activeTab === "Generate Report" && <ReportGenerator />}
               {activeTab === "Opportunity to Earn" && <Eligibility />}
               {activeTab === "Billing" && <Billing />}
 
               {activeTab === "Analytics" && <Analytics />}
-              {activeTab === "Marker" && (
-                <PdfColumnMarker setPdfColMarkerData={setPdfColMarkerData} />
-              )}
               {activeTab === "Tally Vouchers" && <TallyPrime />}
               {activeTab === "Tally Manual" && (
                 <TallyPrimeDirect source="manual" />

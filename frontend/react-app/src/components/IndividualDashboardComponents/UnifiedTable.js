@@ -4,7 +4,6 @@ import {
   Loader2,
   Check,
   Download,
-  X,
   Save,
   Plus,
   MessageCircle,
@@ -96,6 +95,8 @@ const DataTable = ({
   const [categorySearchTerm, setCategorySearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [existingFilterData, setExistingFilterData] = useState([]);
+
   const [columnsToIgnore, setColumnsToIgnore] = useState([
     "id",
     "transactionId",
@@ -164,6 +165,7 @@ const DataTable = ({
     selectedCategorySimilarTransactions,
     setSelectedCategorySimilarTransactions,
   ] = useState(new Set());
+  const [categorySelectDropdownOpen, setCategorySelectDropdownOpen] = useState({});
 
   const [hasChanges, setHasChanges] = useState(false);
   const [modifiedData, setModifiedData] = useState([]);
@@ -194,7 +196,6 @@ const DataTable = ({
   const [selectedType, setSelectedType] = useState("");
   const [showClassificationModal, setShowClassificationModal] = useState(false);
   const [newCategoryToClassify, setNewCategoryToClassify] = useState("");
-  const [isSearchInputFocused, setIsSearchInputFocused] = useState(false);
 
   // Reasoning modal state
   const [reasoningModalOpen, setReasoningModalOpen] = useState(false);
@@ -205,10 +206,13 @@ const DataTable = ({
   const [bulkReasoning, setBulkReasoning] = useState("");
 
   const isFirstLoad = useRef(true);
+  const categoryInputRef = useRef(null);
+
   // states for excel download and upload
   const fileInputRef = useRef(null);
   const [uploadedChanges, setUploadedChanges] = useState([]);
   const [categoryUpdateModalOpen, setCategoryUpdateModalOpen] = useState(false);
+  const [pendingCategories, setPendingCategories] = useState([]);
 
   const { reportData, updateReportData } = useReportContext();
 
@@ -217,6 +221,30 @@ const DataTable = ({
     if (value instanceof Date) return value.toLocaleDateString();
     return value;
   };
+
+  useEffect(() => {
+    let timer ;
+    try{
+
+    timer = setTimeout(() => {
+      if (categoryInputRef.current) {
+        categoryInputRef.current.focus();
+      }
+    }, 0); // delay until after the render cycle
+  }catch(e){
+    console.log({hey:e})
+  }
+
+
+    return () => clearTimeout(timer);
+
+
+  }, [categorySearchTerm]);
+
+  useEffect(()=>{
+    setCategorySearchTerm("");
+
+  },[categorySelectDropdownOpen])
 
   useEffect(() => {
     console.log("Data from unified - ", data);
@@ -320,6 +348,8 @@ const DataTable = ({
           );
           if (!existingTransaction) return null;
           if (existingTransaction.category === row.Category) return null;
+          
+          if(categoryOptions.includes(row.Category)){
 
           return {
             date: row.Date,
@@ -330,6 +360,19 @@ const DataTable = ({
             oldCategory: existingTransaction.category,
             newCategory: row.Category,
           };
+        }else{
+          return {
+            date: row.Date,
+            credit: row.Credit,
+            debit: row.Debit,
+            description: row.Description,
+            id: row.Id,
+            oldCategory: existingTransaction.category,
+            newCategory: row.Category,
+            classification:row.Classification
+          };
+        }
+
         })
         .filter(Boolean); // Remove nulls
 
@@ -367,10 +410,14 @@ const DataTable = ({
         if (updatedTransaction) {
           updatedTransaction.oldCategory = change.oldCategory;
           updatedTransaction.category = change.newCategory;
+          updatedTransaction.classification = change.classification;
           updatedTransaction.reasoning = "";
+          updatedTransaction.is_new = updatedTransaction.classification?true:false;
         }
         return updatedTransaction;
       });
+
+      console.log({ updatedTransactions });
 
       const payload = convertArrayToObject(updatedTransactions);
       console.log("Payload", payload);
@@ -434,17 +481,19 @@ const DataTable = ({
   const handleSearch = (searchValue) => {
     setSearchTerm(searchValue);
 
+    const dataToFilter =
+      existingFilterData.length > 0 ? existingFilterData : data;
+
     // Reset to original data if search value is empty
     if (searchValue === "") {
       setFilteredData(data);
       setCurrentPage(1);
       return;
     }
-    console.log("AQ1");
 
     // Always filter from the full data set for consistent search results
     const columnsToReplace = ["amount", "balance", "debit", "credit"];
-    const filtered = data.filter((row) =>
+    const filtered = dataToFilter.filter((row) =>
       Object.entries(row).some(([key, value]) => {
         if (columnsToReplace.includes(key)) {
           return String(value)
@@ -455,9 +504,9 @@ const DataTable = ({
         return String(value).toLowerCase().includes(searchValue.toLowerCase());
       })
     );
-    console.log("AQ2");
 
     setFilteredData(filtered);
+    setExistingFilterData(filtered);
     setCurrentPage(1);
 
     // Calculate totals for numeric columns from the new filtered data
@@ -479,19 +528,26 @@ const DataTable = ({
   // --- Single Row Update: Use the entire row (which includes its id) ---
   const handleCategoryChange = (transaction, newCategory) => {
     const oldCategory = transaction.category;
+    console.log("filererd data", filteredData);
     // Find similar transactions
     const similarTransactions1 = processSimilarCategory(
       filteredData,
-      oldCategory,
       transaction.description
     );
+    console.log("similarTransactions1", similarTransactions1);
     // remove already selected one
     const similarTransactions = similarTransactions1.filter(
-      (t) => t.id != transaction.id
+      (t) => t.id !== transaction.id
     );
 
     // Set the similar transactions in state
     setSimilarCategoryTransactions(similarTransactions);
+    console.log({
+      transactionId: transaction.id,
+      newCategory,
+      oldCategory,
+      transaction,
+    });
     setPendingCategoryChange({
       transactionId: transaction.id,
       newCategory,
@@ -511,27 +567,49 @@ const DataTable = ({
       "pendingCategoryChange ",
       pendingCategoryChange
     );
-    const updatedFilteredData = filteredData.map((tx) => {
+    // const updatedFilteredData = filteredData.map((tx) => {
+    //   console.log("tx.id", tx.id, "transactionId", transactionId);
+    //   if (parseInt(tx.id) === parseInt(transactionId)) {
+
+    //     let updatedTx = { ...tx, category: pendingCategoryChange.newCategory };
+    //     console.log({updatedTx})
+    //     if (
+    //       pendingCategoryChange.newCategory === "Self transfer" ||
+    //       selectedType === "Contra"
+    //     ) {
+    //       updatedTx = { ...updatedTx, voucher_type: "Contra" };
+    //     }
+    //     console.log({updatedTx})
+        
+    //     return updatedTx;
+    //   }
+    //   return tx;
+    // });
+    let updatedTransaction = null;
+    setFilteredData(prevData=>prevData.map((tx) => {
       console.log("tx.id", tx.id, "transactionId", transactionId);
       if (parseInt(tx.id) === parseInt(transactionId)) {
+
         let updatedTx = { ...tx, category: pendingCategoryChange.newCategory };
+        console.log({updatedTx})
         if (
           pendingCategoryChange.newCategory === "Self transfer" ||
           selectedType === "Contra"
         ) {
           updatedTx = { ...updatedTx, voucher_type: "Contra" };
         }
+        console.log({updatedTx})
+        updatedTransaction=updatedTx;
         return updatedTx;
       }
       return tx;
-    });
-    setFilteredData(updatedFilteredData);
-    const transaction = updatedFilteredData.find(
-      (tx) => tx.id === transactionId
-    );
-    console.log("transaction aiyaz", transaction);
+    }));
+    // const transaction = updatedFilteredData.find(
+    //   (tx) => tx.id === transactionId
+    // );
+    console.log("transaction aiyaz", updatedTransaction);
     let modifiedObject = {
-      ...transaction,
+      ...updatedTransaction,
       oldCategory: pendingCategoryChange.oldCategory,
       keyword: showKeywordInput ? reasoning : "",
     };
@@ -544,20 +622,29 @@ const DataTable = ({
     console.log("modifiedObject", modifiedObject);
     console.log({ selectedCategorySimilarTransactions });
     if (selectedCategorySimilarTransactions.size > 0) {
+      modifiedObject = { ...modifiedObject, is_new: false };
+      setModifiedData(prevData=> [...prevData, modifiedObject]);
       setSelectedBulkCategory();
       handleBulkCategoryChange("similarCategory");
+      
     } else {
+      let newClassification = selectedType;
+      if(selectedType === "Contra"){
+        modifiedObject.debit>0?newClassification="Contra Debit":newClassification="Contra Credit";
+      }
       if (selectedType) {
         modifiedObject = {
           ...modifiedObject,
-          classification: selectedType,
+          classification: newClassification,
           is_new: true,
         };
       } else {
         modifiedObject = { ...modifiedObject, is_new: false };
       }
 
-      setModifiedData([...modifiedData, modifiedObject]);
+      console.log({aq:modifiedObject})
+
+      setModifiedData(prevData=>[...prevData, modifiedObject]);
     }
     //   console.log("modifiedObject", modifiedObjects);
     //     // Add selected similar transactions to modified data
@@ -583,7 +670,7 @@ const DataTable = ({
   // --- Bulk Update: Find each row by its id ---
   const handleBulkCategoryChange = (source) => {
     // Create a shallow copy so we don’t mutate state directly.
-    const dataOnUi = filteredData.map((row) => ({ ...row }));
+    // const dataOnUi = filteredData.map((row) => ({ ...row }));
     const newModifiedData = [...modifiedData];
     const ids =
       source === "similarCategory"
@@ -596,30 +683,59 @@ const DataTable = ({
         ? categorySearchTerm
         : selectedBulkCategory;
     console.log({ ids });
-    ids.forEach((id) => {
-      const index = dataOnUi.findIndex((row) => row.id === id);
-      if (index !== -1) {
-        const oldCategory = dataOnUi[index].category;
-        dataOnUi[index].category = newCategory;
-        // If the new category is "Self transfer", update voucher_type
-        if (newCategory === "Self transfer" || selectedType === "Contra") {
-          dataOnUi[index].voucher_type = "Contra";
-        }
+    // ids.forEach((id) => {
+    //   const index = dataOnUi.findIndex((row) => row.id === id);
+    //   if (index !== -1) {
+    //     const oldCategory = dataOnUi[index].category;
+    //     dataOnUi[index].category = newCategory;
+    //     // If the new category is "Self transfer", update voucher_type
+    //     if (newCategory === "Self transfer" || selectedType === "Contra") {
+    //       dataOnUi[index].voucher_type = "Contra";
+    //     }
 
-        if (selectedType) {
-          dataOnUi[index].classification = selectedType;
-          dataOnUi[index].is_new = true;
+    //     if (selectedType) {
+    //       dataOnUi[index].classification = selectedType;
+    //       dataOnUi[index].is_new = true;
+    //     }
+    //     newModifiedData.push({
+    //       ...dataOnUi[index],
+    //       oldCategory,
+    //       reasoning: bulkReasoning,
+    //     });
+    //   }
+    // });
+
+    setFilteredData((prevFilteredData) =>
+      prevFilteredData.map((row) => {
+        if (ids.has(row.id)) {
+          const oldCategory = row.category;
+          let updatedRow = { ...row, category: newCategory };
+          if (newCategory === "Self transfer" || selectedType === "Contra") {
+            updatedRow.voucher_type = "Contra";
+          }
+          if (selectedType) {
+            let newClassification = selectedType;
+            if(selectedType === "Contra"){
+              updatedRow.debit>0?newClassification="Contra Debit":newClassification="Contra Credit";
+            }
+            updatedRow.classification = newClassification;
+            updatedRow.is_new = true;
+          }
+          newModifiedData.push({
+            ...row,
+            category:newCategory,
+            oldCategory,
+            reasoning: bulkReasoning,
+          });
+          return updatedRow;
         }
-        newModifiedData.push({
-          ...dataOnUi[index],
-          oldCategory,
-          reasoning: bulkReasoning,
-        });
-      }
-    });
+        return row;
+      })
+    );
+    
     console.log({ fromBulkUpdate: newModifiedData });
-    setFilteredData(dataOnUi);
-    setModifiedData(newModifiedData);
+    // setFilteredData(dataOnUi);
+    setModifiedData(prevData=>[...prevData, ...newModifiedData]);
     setHasChanges(true);
     setGlobalSelectedRows(new Set());
     setBulkCategoryModalOpen(false);
@@ -682,20 +798,25 @@ const DataTable = ({
   };
 
   const handleColumnFilter = () => {
+    const dataToFilter =
+      existingFilterData.length > 0 ? existingFilterData : data;
     if (selectedCategories.length === 0) {
       setFilteredData(data);
     } else {
-      const filtered = data.filter((row) =>
+      const filtered = dataToFilter.filter((row) =>
         selectedCategories.includes(String(row[currentFilterColumn]))
       );
       setFilteredData(filtered);
+      setExistingFilterData(filtered);
     }
     setCurrentPage(1);
     setFilterModalOpen(false);
   };
 
   const handleNumericFilter = (columnName, min, max) => {
-    const filtered = data.filter((row) => {
+    const dataToFilter =
+      existingFilterData.length > 0 ? existingFilterData : data;
+    const filtered = dataToFilter.filter((row) => {
       const value = parseFloat(row[columnName]);
       if (isNaN(value)) return false;
       const meetsMin = min === "" || value >= parseFloat(min);
@@ -703,12 +824,16 @@ const DataTable = ({
       return meetsMin && meetsMax;
     });
     setFilteredData(filtered);
+    setExistingFilterData(filtered);
     setCurrentPage(1);
   };
 
   // Improved date handling functions
   const handleDateFilter = (columnName, fromDate, toDate) => {
     console.log("Initial filter params:", { columnName, fromDate, toDate });
+
+    const dataToFilter =
+      existingFilterData.length > 0 ? existingFilterData : data;
 
     const parseDate = (dateStr) => {
       if (!dateStr) return null;
@@ -766,7 +891,7 @@ const DataTable = ({
 
     console.log("Processing with date range:", { from, to });
 
-    const filtered = data.filter((row) => {
+    const filtered = dataToFilter.filter((row) => {
       const rowDateStr = row[columnName];
       const rowDate = parseDate(rowDateStr);
 
@@ -787,6 +912,7 @@ const DataTable = ({
 
     // console.log("Filtered results count:", filtered.length);
     setFilteredData(filtered);
+    setExistingFilterData(filtered);
     setCurrentPage(1);
   };
 
@@ -800,6 +926,7 @@ const DataTable = ({
     setMaxValue("");
     setSelectedCategories([]);
     setCategorySearchTerm("");
+    setExistingFilterData([]);
   };
 
   const getUniqueValues = (columnName) => {
@@ -819,11 +946,11 @@ const DataTable = ({
     setEditedEntities((prev) => ({ ...prev, [tid]: newValue }));
   };
 
-  const handleCategorySearch = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setCategorySearchTerm(e.target.value);
-  };
+  // const handleCategorySearch = (e) => {
+  //   e.preventDefault();
+  //   e.stopPropagation();
+  //   setCategorySearchTerm(e.target.value);
+  // };
 
   const convertArrayToObject = (array) => {
     return array.reduce((acc, transaction) => {
@@ -847,12 +974,35 @@ const DataTable = ({
         caseId || reportData.caseId
       );
 
+      console.log({ responseaq: response });
+
       modifiedData.map((row) => {
         if (row.category === "Self transfer") {
-          handleVoucherTypeChange(row, "Contra");
+          console.log("Self transfer");
+          handleVoucherTypeChange(row, "Contra", "Self transfer");
+        }
+        if (row.voucher_type === "Contra") {
+          console.log("Self contra");
+          handleVoucherTypeChange(row, "Contra2", row.category);
         }
       });
 
+      // After successful save, update categoryOptions with pending categories
+      if (pendingCategories.length > 0) {
+        const updatedOptions = [
+          ...categoryOptions,
+          ...pendingCategories,
+        ].sort();
+        setCategoryOptions(updatedOptions);
+        localStorage.setItem("categoryOptions", JSON.stringify(updatedOptions));
+        updateReportData({
+          ...reportData,
+          categoryOptions: updatedOptions,
+        });
+
+        // Clear pending categories
+        setPendingCategories([]);
+      }
       setHasChanges(false);
       toast({
         title: "Changes saved successfully",
@@ -968,7 +1118,10 @@ const DataTable = ({
       // Clear selections and close the modal.
       setGlobalSelectedRows(new Set());
       setBatchEntityValue("");
+      setSearchTerm("");
       setBatchModalOpen(false);
+      setSearchTerm("");
+      if (refreshFunction) refreshFunction();
     }
   };
 
@@ -1007,17 +1160,16 @@ const DataTable = ({
 
   const handleAddCategory = (newCategory, row) => {
     // Check if the new category is non-empty and not already in the options
-    if (newCategory && !categoryOptions.includes(newCategory)) {
+    if (
+      newCategory &&
+      !categoryOptions.includes(newCategory) &&
+      !pendingCategories.includes(newCategory)
+    ) {
       // Set the category that needs classification
       setNewCategoryToClassify(newCategory);
-      // Add the new category to your category options and sort them
-      const updatedOptions = [...categoryOptions, newCategory].sort();
-      setCategoryOptions(updatedOptions);
-      localStorage.setItem("categoryOptions", JSON.stringify(updatedOptions));
-      updateReportData({
-        ...reportData,
-        categoryOptions: updatedOptions,
-      });
+
+      // Add to pending categories list instead of directly to categoryOptions
+      setPendingCategories([...pendingCategories, newCategory]);
 
       if (row) {
         // Single-row update flow: store the pending change using the transaction id.
@@ -1119,11 +1271,7 @@ const DataTable = ({
   };
 
   // get transactions with same category and similar description
-  const processSimilarCategory = (
-    transactions,
-    categoryToMatch,
-    descriptionToMatch
-  ) => {
+  const processSimilarCategory = (transactions, descriptionToMatch) => {
     // Helper function to calculate string similarity
     const similarity = (str1, str2) => {
       if (!str1 || !str2) return 0;
@@ -1134,7 +1282,7 @@ const DataTable = ({
     };
 
     // Similarity threshold
-    const threshold = 0.85;
+    const threshold = 0.91;
 
     // Filter transactions with similar descriptions and same category
     const similarTransactions = transactions.filter((transaction) => {
@@ -1146,8 +1294,7 @@ const DataTable = ({
       console.log("transaction.description", transaction.description);
       console.log("descriptionToMatch", descriptionToMatch);
 
-      const isSameCategory = transaction.category === categoryToMatch;
-      return descriptionSimilarity >= threshold && isSameCategory;
+      return descriptionSimilarity >= threshold;
     });
 
     // Sort by similarity score (most similar first)
@@ -1198,24 +1345,46 @@ const DataTable = ({
     });
   };
 
-  const handleVoucherTypeChange = async (row, value) => {
-    console.log("Voucher Type: ", row, value);
+  const handleVoucherTypeChange = async (row, newVoucher, newCategory) => {
+    console.log("Voucher Type: ", row, newVoucher, newCategory);
+    // if (newVoucher === "Contra") {
+    //   console.log("inside if");
+    //   newCategory = "Self transfer";
+    // }
+    let updatedCategory;
+    let updateVoucher = newVoucher;
+    if (newVoucher === "Contra") {
+      console.log("inside if");
+      updatedCategory = "Self transfer";
+    } else {
+      updatedCategory = newCategory;
+    }
+
+    if (newVoucher === "Contra2") {
+      updateVoucher = "Contra";
+    }
+    console.log("updated category", updatedCategory);
     const updatedData = filteredData.map((tx) => {
       if (tx.id === row.id) {
-        if (value === "Contra") {
-          return { ...tx, voucher_type: value, category: "Self transfer" };
-        } else {
-          return { ...tx, voucher_type: value };
-        }
+        return {
+          ...tx,
+          voucher_type: updateVoucher,
+          category: updatedCategory,
+        };
       }
       return tx;
     });
 
     const response = await window.electron.editVoucherType([
-      { id: row.id, voucher_type: value },
+      { id: row.id, voucher_type: updateVoucher, category: updatedCategory },
     ]);
     console.log("Response: ", response);
     setFilteredData(updatedData);
+  };
+
+
+  const handleCategorySelectOpenChange = (id, open) => {
+    setCategorySelectDropdownOpen((prev) => ({ ...prev, [id]: open }));
   };
 
   return (
@@ -1319,17 +1488,17 @@ const DataTable = ({
                 </Tooltip>
               </div>
 
-            {hasEntity && (
-              <Button
-                variant="default"
-                className="w-full sm:w-auto"
-                disabled={globalSelectedRows.size === 0}
-                onClick={() => setBatchModalOpen(true)}
-              >
-                Bulk Edit Party Name
-              </Button>
-            )}
-          </div>
+              {hasEntity && (
+                <Button
+                  variant="default"
+                  className="w-full sm:w-auto"
+                  disabled={globalSelectedRows.size === 0}
+                  onClick={() => setBatchModalOpen(true)}
+                >
+                  Bulk Edit Party Name
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </CardHeader>
@@ -1380,7 +1549,11 @@ const DataTable = ({
                               setCurrentFilterColumn(column);
                               setCurrentDateColumn(column);
                               setDateFilterModalOpen(true);
-                            } else if (numericColumns.includes(column)) {
+                            } else if (
+                              column.toLowerCase() === "credit" ||
+                              column.toLowerCase() === "debit" ||
+                              column.toLowerCase() === "balance"
+                            ) {
                               setCurrentNumericColumn(column);
                               setCurrentDateColumn(column);
                               setNumericFilterModalOpen(true);
@@ -1476,6 +1649,8 @@ const DataTable = ({
                             >
                               <Select
                                 value={row[column]}
+                                open={categorySelectDropdownOpen[row.id]|| false}
+                                onOpenChange={(open)=>handleCategorySelectOpenChange(row.id,open)}
                                 onValueChange={(value) =>
                                   handleCategoryChange(row, value)
                                 }
@@ -1486,29 +1661,17 @@ const DataTable = ({
                                   <SelectValue>{row[column]}</SelectValue>
                                 </SelectTrigger>
                                 <SelectContent
-                                  onCloseAutoFocus={(e) => {
-                                    e.preventDefault();
-                                  }}
                                 >
                                   <div className="p-2 border-b flex gap-2">
                                     <div className="relative flex-1">
                                       <Input
+                                        ref={categoryInputRef}
                                         placeholder="Search categories..."
                                         value={categorySearchTerm}
                                         onChange={(e) =>
-                                          handleCategorySearch(e)
+                                          setCategorySearchTerm(e.target.value)
                                         }
-                                        onFocus={() =>
-                                          setIsSearchInputFocused(true)
-                                        }
-                                        onBlur={() =>
-                                          setIsSearchInputFocused(false)
-                                        }
-                                        onKeyDown={(e) => e.stopPropagation()}
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                        }}
+                                       
                                       />
                                     </div>
                                     <Button
@@ -1526,6 +1689,8 @@ const DataTable = ({
                                           );
                                           if (added) {
                                             setCategorySearchTerm("");
+                                            handleCategorySelectOpenChange(row.id, false);
+
                                           }
                                         }
                                       }}
@@ -1572,7 +1737,11 @@ const DataTable = ({
                               <Select
                                 value={row[column]}
                                 onValueChange={(value) =>
-                                  handleVoucherTypeChange(row, value)
+                                  handleVoucherTypeChange(
+                                    row,
+                                    value,
+                                    row.category
+                                  )
                                 }
                                 className="w-full"
                                 disabled={globalSelectedRows.has(row.id)}
@@ -1581,9 +1750,7 @@ const DataTable = ({
                                   <SelectValue>{row[column]}</SelectValue>
                                 </SelectTrigger>
                                 <SelectContent
-                                  onCloseAutoFocus={(e) => {
-                                    e.preventDefault();
-                                  }}
+                               
                                 >
                                   <div className="max-h-[200px] overflow-y-auto">
                                     {voucherOptions.length > 0 ? (
@@ -1652,7 +1819,7 @@ const DataTable = ({
                 <TableCell>Total</TableCell>
                 {columns.slice(0).map((column) => (
                   <TableCell key={column}>
-                    {["credit", "debit", "balance"].includes(
+                    {["credit", "debit", "balance","amount"].includes(
                       column.toLowerCase()
                     )
                       ? totals[column]
@@ -1934,14 +2101,8 @@ const DataTable = ({
                     <Input
                       placeholder="Search categories..."
                       value={categorySearchTerm}
-                      onChange={(e) => handleCategorySearch(e)}
-                      onFocus={() => setIsSearchInputFocused(true)}
-                      onBlur={() => setIsSearchInputFocused(false)}
-                      onKeyDown={(e) => e.stopPropagation()}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
+                      onChange={(e) => setCategorySearchTerm(e.target.value)}
+                    
                     />
                   </div>
                   <Button
@@ -2411,6 +2572,7 @@ const DataTable = ({
                   <TableHead className="whitespace-nowrap">
                     New Category
                   </TableHead>
+                  <TableHead>Classification</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -2424,6 +2586,10 @@ const DataTable = ({
                     <TableCell className="text-blue-600">
                       {change.newCategory}
                     </TableCell>
+                    {console.log({change})}
+                    {change.classification&&<TableCell className="text-blue-600">
+                      {change.classification}
+                    </TableCell>}
                   </TableRow>
                 ))}
               </TableBody>
@@ -2433,7 +2599,11 @@ const DataTable = ({
           <DialogFooter>
             <Button
               variant="ghost"
-              onClick={() => setCategoryUpdateModalOpen(false)}
+              onClick={() => {
+                setUploadedChanges([])
+                setCategoryUpdateModalOpen(false)
+                fileInputRef.current.value = "";
+              }}
             >
               Cancel
             </Button>

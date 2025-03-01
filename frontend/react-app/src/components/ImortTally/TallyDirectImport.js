@@ -22,7 +22,7 @@ import { useReportContext } from "../../contexts/ReportContext";
 import ManualTallyTable from "./ManualTable";
 import * as XLSX from "xlsx";
 import { Info } from "lucide-react";
-import  {Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 const defaultColumns = {
   "Payment Receipt Contra Voucher": [
@@ -42,9 +42,7 @@ const TallyDirectImport = ({ source }) => {
   //   "Payment Receipt Contra Voucher",
   //   "Ledger",
   // ]);
-  const [vouchers, setVouchers] = useState([
-    "Payment Receipt Contra Voucher",
-  ]);
+  const [vouchers, setVouchers] = useState(["Payment Receipt Contra Voucher"]);
   const [selectedVoucher, setSelectedVoucher] = useState(
     "Payment Receipt Contra Voucher"
   );
@@ -504,7 +502,6 @@ const TallyDirectImport = ({ source }) => {
             "Dr Ledger *",
             "Cr Ledger *",
             "Amount *",
-            "Voucher",
             "Narration",
             "Status",
           ],
@@ -514,6 +511,7 @@ const TallyDirectImport = ({ source }) => {
         // Example in your mapping logic:
 
         const newTransactions = newParsedData.map((row, idx) => {
+          console.log({row})
           let invoiceDateVal = row["Date *"];
           let effectiveDateVal = row["Effective Date"];
 
@@ -591,6 +589,7 @@ const TallyDirectImport = ({ source }) => {
   };
 
   return (
+    <div className="p-8">
     <Card>
       <CardHeader>
         <div className="flex justify-between items-center">
@@ -772,6 +771,7 @@ const TallyDirectImport = ({ source }) => {
         </DialogContent>
       </Dialog>
     </Card>
+    </div>
   );
 };
 

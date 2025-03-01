@@ -8,6 +8,7 @@ const ReportContext = createContext();
 export const ReportProvider = ({ children }) => {
   // Define an initial state for the report
   const [reportData, setReportData] = useState({
+    recentReportsData: [],
     reportName: "",
     caseId: null,
     individualId: null,
