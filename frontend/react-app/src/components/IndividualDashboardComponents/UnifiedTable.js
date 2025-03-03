@@ -10,6 +10,7 @@ import {
   MessageCircle,
   Mail,
   Share2,
+  Eye, X
 } from "lucide-react";
 import {
   Card,
@@ -97,7 +98,8 @@ const DataTable = ({
   const [isLoading, setIsLoading] = useState(false);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [existingFilterData, setExistingFilterData] = useState([]);
-
+  const [pdfBlob, setPdfBlob] = useState(null)
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
   const [columnsToIgnore, setColumnsToIgnore] = useState([
     "id",
     "transactionId",
@@ -166,7 +168,9 @@ const DataTable = ({
     selectedCategorySimilarTransactions,
     setSelectedCategorySimilarTransactions,
   ] = useState(new Set());
-  const [categorySelectDropdownOpen, setCategorySelectDropdownOpen] = useState({});
+  const [categorySelectDropdownOpen, setCategorySelectDropdownOpen] = useState(
+    {}
+  );
 
   const [hasChanges, setHasChanges] = useState(false);
   const [modifiedData, setModifiedData] = useState([]);
@@ -224,28 +228,23 @@ const DataTable = ({
   };
 
   useEffect(() => {
-    let timer ;
-    try{
-
-    timer = setTimeout(() => {
-      if (categoryInputRef.current) {
-        categoryInputRef.current.focus();
-      }
-    }, 0); // delay until after the render cycle
-  }catch(e){
-    console.log({hey:e})
-  }
-
+    let timer;
+    try {
+      timer = setTimeout(() => {
+        if (categoryInputRef.current) {
+          categoryInputRef.current.focus();
+        }
+      }, 0); // delay until after the render cycle
+    } catch (e) {
+      console.log({ hey: e });
+    }
 
     return () => clearTimeout(timer);
-
-
   }, [categorySearchTerm]);
 
-  useEffect(()=>{
+  useEffect(() => {
     setCategorySearchTerm("");
-
-  },[categorySelectDropdownOpen])
+  }, [categorySelectDropdownOpen]);
 
   useEffect(() => {
     console.log("Data from unified - ", data);
@@ -349,31 +348,29 @@ const DataTable = ({
           );
           if (!existingTransaction) return null;
           if (existingTransaction.category === row.Category) return null;
-          
-          if(categoryOptions.includes(row.Category)){
 
-          return {
-            date: row.Date,
-            credit: row.Credit,
-            debit: row.Debit,
-            description: row.Description,
-            id: row.Id,
-            oldCategory: existingTransaction.category,
-            newCategory: row.Category,
-          };
-        }else{
-          return {
-            date: row.Date,
-            credit: row.Credit,
-            debit: row.Debit,
-            description: row.Description,
-            id: row.Id,
-            oldCategory: existingTransaction.category,
-            newCategory: row.Category,
-            classification:row.Classification
-          };
-        }
-
+          if (categoryOptions.includes(row.Category)) {
+            return {
+              date: row.Date,
+              credit: row.Credit,
+              debit: row.Debit,
+              description: row.Description,
+              id: row.Id,
+              oldCategory: existingTransaction.category,
+              newCategory: row.Category,
+            };
+          } else {
+            return {
+              date: row.Date,
+              credit: row.Credit,
+              debit: row.Debit,
+              description: row.Description,
+              id: row.Id,
+              oldCategory: existingTransaction.category,
+              newCategory: row.Category,
+              classification: row.Classification,
+            };
+          }
         })
         .filter(Boolean); // Remove nulls
 
@@ -413,7 +410,9 @@ const DataTable = ({
           updatedTransaction.category = change.newCategory;
           updatedTransaction.classification = change.classification;
           updatedTransaction.reasoning = "";
-          updatedTransaction.is_new = updatedTransaction.classification?true:false;
+          updatedTransaction.is_new = updatedTransaction.classification
+            ? true
+            : false;
         }
         return updatedTransaction;
       });
@@ -581,30 +580,34 @@ const DataTable = ({
     //       updatedTx = { ...updatedTx, voucher_type: "Contra" };
     //     }
     //     console.log({updatedTx})
-        
+
     //     return updatedTx;
     //   }
     //   return tx;
     // });
     let updatedTransaction = null;
-    setFilteredData(prevData=>prevData.map((tx) => {
-      console.log("tx.id", tx.id, "transactionId", transactionId);
-      if (parseInt(tx.id) === parseInt(transactionId)) {
-
-        let updatedTx = { ...tx, category: pendingCategoryChange.newCategory };
-        console.log({updatedTx})
-        if (
-          pendingCategoryChange.newCategory === "Self transfer" ||
-          selectedType === "Contra"
-        ) {
-          updatedTx = { ...updatedTx, voucher_type: "Contra" };
+    setFilteredData((prevData) =>
+      prevData.map((tx) => {
+        console.log("tx.id", tx.id, "transactionId", transactionId);
+        if (parseInt(tx.id) === parseInt(transactionId)) {
+          let updatedTx = {
+            ...tx,
+            category: pendingCategoryChange.newCategory,
+          };
+          console.log({ updatedTx });
+          if (
+            pendingCategoryChange.newCategory === "Self transfer" ||
+            selectedType === "Contra"
+          ) {
+            updatedTx = { ...updatedTx, voucher_type: "Contra" };
+          }
+          console.log({ updatedTx });
+          updatedTransaction = updatedTx;
+          return updatedTx;
         }
-        console.log({updatedTx})
-        updatedTransaction=updatedTx;
-        return updatedTx;
-      }
-      return tx;
-    }));
+        return tx;
+      })
+    );
     // const transaction = updatedFilteredData.find(
     //   (tx) => tx.id === transactionId
     // );
@@ -624,14 +627,15 @@ const DataTable = ({
     console.log({ selectedCategorySimilarTransactions });
     if (selectedCategorySimilarTransactions.size > 0) {
       modifiedObject = { ...modifiedObject, is_new: false };
-      setModifiedData(prevData=> [...prevData, modifiedObject]);
+      setModifiedData((prevData) => [...prevData, modifiedObject]);
       setSelectedBulkCategory();
       handleBulkCategoryChange("similarCategory");
-      
     } else {
       let newClassification = selectedType;
-      if(selectedType === "Contra"){
-        modifiedObject.debit>0?newClassification="Contra Debit":newClassification="Contra Credit";
+      if (selectedType === "Contra") {
+        modifiedObject.debit > 0
+          ? (newClassification = "Contra Debit")
+          : (newClassification = "Contra Credit");
       }
       if (selectedType) {
         modifiedObject = {
@@ -643,9 +647,9 @@ const DataTable = ({
         modifiedObject = { ...modifiedObject, is_new: false };
       }
 
-      console.log({aq:modifiedObject})
+      console.log({ aq: modifiedObject });
 
-      setModifiedData(prevData=>[...prevData, modifiedObject]);
+      setModifiedData((prevData) => [...prevData, modifiedObject]);
     }
     //   console.log("modifiedObject", modifiedObjects);
     //     // Add selected similar transactions to modified data
@@ -716,15 +720,17 @@ const DataTable = ({
           }
           if (selectedType) {
             let newClassification = selectedType;
-            if(selectedType === "Contra"){
-              updatedRow.debit>0?newClassification="Contra Debit":newClassification="Contra Credit";
+            if (selectedType === "Contra") {
+              updatedRow.debit > 0
+                ? (newClassification = "Contra Debit")
+                : (newClassification = "Contra Credit");
             }
             updatedRow.classification = newClassification;
             updatedRow.is_new = true;
           }
           newModifiedData.push({
             ...row,
-            category:newCategory,
+            category: newCategory,
             oldCategory,
             reasoning: bulkReasoning,
           });
@@ -733,10 +739,10 @@ const DataTable = ({
         return row;
       })
     );
-    
+
     console.log({ fromBulkUpdate: newModifiedData });
     // setFilteredData(dataOnUi);
-    setModifiedData(prevData=>[...prevData, ...newModifiedData]);
+    setModifiedData((prevData) => [...prevData, ...newModifiedData]);
     setHasChanges(true);
     setGlobalSelectedRows(new Set());
     setBulkCategoryModalOpen(false);
@@ -1383,10 +1389,43 @@ const DataTable = ({
     setFilteredData(updatedData);
   };
 
-
   const handleCategorySelectOpenChange = (id, open) => {
     setCategorySelectDropdownOpen((prev) => ({ ...prev, [id]: open }));
   };
+
+  const handlePreviewFile = (previewUrl) => {
+    try {
+      if (!previewUrl) {
+        console.error("Error: No file path provided");
+        return;
+      }
+      window.electron.fetchPdfContent(previewUrl)
+      .then(base64 => {
+        const blob = base64StringToBlob(base64, 'application/pdf');
+        const objectUrl = URL.createObjectURL(blob);
+        setPdfBlob(objectUrl);
+        setIsPdfModalOpen(true); // Set state to open a modal
+        setIsLoading(false);
+      })
+    } catch (error) {
+      console.error("Error opening PDF file:", error);
+      setIsLoading(false);
+      // Fallback to default browser behavior if electron API fails
+      window.open(previewUrl);
+    }
+  };
+
+  const base64StringToBlob = (base64, type) => {
+    const binaryString = window.atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return new Blob([bytes], { type: type });
+  };
+
+  console.log("helllll", reportData);
 
   return (
     // if source is equal to lifo or fifo then show the table
@@ -1435,6 +1474,30 @@ const DataTable = ({
               >
                 Clear Filters
               </Button>
+
+              {source === "transactions" && reportData?.individualId &&(
+              <>
+                <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
+                              transition-all shadow-sm hover:shadow-md"
+                    onClick={() =>
+                      handlePreviewFile(
+                        reportData.filePath
+                      )
+                    }
+                  >
+                    <Eye className="w-4 h-4 text-blue-500" />
+                  </Button>
+                </TooltipTrigger>
+                  <TooltipContent>Preview Statement</TooltipContent>
+                </Tooltip>
+              </>
+              )}
+
               {["suspense", "upi-dr", "upi-cr"].includes(source) && (
                 <>
                   <Button
@@ -1596,6 +1659,9 @@ const DataTable = ({
                 </TableRow>
               ) : (
                 currentData.map((row) => {
+                  const isBalance =
+                    row.description === "openingbalance" ||
+                    row.description === "closingbalance";
                   return (
                     <TableRow
                       key={row.id}
@@ -1648,85 +1714,95 @@ const DataTable = ({
                               key={column}
                               className="min-w-[280px] group relative"
                             >
-                              <Select
-                                value={row[column]}
-                                open={categorySelectDropdownOpen[row.id]|| false}
-                                onOpenChange={(open)=>handleCategorySelectOpenChange(row.id,open)}
-                                onValueChange={(value) =>
-                                  handleCategoryChange(row, value)
-                                }
-                                className="w-full"
-                                disabled={globalSelectedRows.has(row.id)}
-                              >
-                                <SelectTrigger className="w-full">
-                                  <SelectValue>{row[column]}</SelectValue>
-                                </SelectTrigger>
-                                <SelectContent
+                              {isBalance ? (
+                                <div className="truncate"></div>
+                              ) : (
+                                <Select
+                                  value={row[column]}
+                                  open={
+                                    categorySelectDropdownOpen[row.id] || false
+                                  }
+                                  onOpenChange={(open) =>
+                                    handleCategorySelectOpenChange(row.id, open)
+                                  }
+                                  onValueChange={(value) =>
+                                    handleCategoryChange(row, value)
+                                  }
+                                  className="w-full"
+                                  disabled={globalSelectedRows.has(row.id)}
                                 >
-                                  <div className="p-2 border-b flex gap-2">
-                                    <div className="relative flex-1">
-                                      <Input
-                                        ref={categoryInputRef}
-                                        placeholder="Search categories..."
-                                        value={categorySearchTerm}
-                                        onChange={(e) =>
-                                          setCategorySearchTerm(e.target.value)
-                                        }
-                                       
-                                      />
-                                    </div>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="px-2 h-10"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        if (categorySearchTerm.trim()) {
-                                          // Pass the whole row for a single update
-                                          const added = handleAddCategory(
-                                            categorySearchTerm.trim(),
-                                            row
-                                          );
-                                          if (added) {
-                                            setCategorySearchTerm("");
-                                            handleCategorySelectOpenChange(row.id, false);
-
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue>{row[column]}</SelectValue>
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <div className="p-2 border-b flex gap-2">
+                                      <div className="relative flex-1">
+                                        <Input
+                                          ref={categoryInputRef}
+                                          placeholder="Search categories..."
+                                          value={categorySearchTerm}
+                                          onChange={(e) =>
+                                            setCategorySearchTerm(
+                                              e.target.value
+                                            )
                                           }
-                                        }
-                                      }}
-                                    >
-                                      <Plus className="h-4 w-4" />
-                                      Add
-                                    </Button>
-                                  </div>
-                                  <div className="max-h-[200px] overflow-y-auto">
-                                    {filteredCategories.length > 0 ? (
-                                      filteredCategories.map((category) => (
-                                        <SelectItem
-                                          key={category}
-                                          value={category}
-                                        >
-                                          {category}
-                                        </SelectItem>
-                                      ))
-                                    ) : (
-                                      <div className="p-4 max-w-[300px] text-center text-muted-foreground">
-                                        <p className="text-md">
-                                          No matching categories found
-                                        </p>
-                                        <p className="text-sm mt-1">
-                                          Click the{" "}
-                                          <Plus className="h-3 w-3 inline-block mx-1" />{" "}
-                                          icon above to add "
-                                          {categorySearchTerm}" as a new
-                                          category
-                                        </p>
+                                        />
                                       </div>
-                                    )}
-                                  </div>
-                                </SelectContent>
-                              </Select>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="px-2 h-10"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          if (categorySearchTerm.trim()) {
+                                            // Pass the whole row for a single update
+                                            const added = handleAddCategory(
+                                              categorySearchTerm.trim(),
+                                              row
+                                            );
+                                            if (added) {
+                                              setCategorySearchTerm("");
+                                              handleCategorySelectOpenChange(
+                                                row.id,
+                                                false
+                                              );
+                                            }
+                                          }
+                                        }}
+                                      >
+                                        <Plus className="h-4 w-4" />
+                                        Add
+                                      </Button>
+                                    </div>
+                                    <div className="max-h-[200px] overflow-y-auto">
+                                      {filteredCategories.length > 0 ? (
+                                        filteredCategories.map((category) => (
+                                          <SelectItem
+                                            key={category}
+                                            value={category}
+                                          >
+                                            {category}
+                                          </SelectItem>
+                                        ))
+                                      ) : (
+                                        <div className="p-4 max-w-[300px] text-center text-muted-foreground">
+                                          <p className="text-md">
+                                            No matching categories found
+                                          </p>
+                                          <p className="text-sm mt-1">
+                                            Click the{" "}
+                                            <Plus className="h-3 w-3 inline-block mx-1" />{" "}
+                                            icon above to add "
+                                            {categorySearchTerm}" as a new
+                                            category
+                                          </p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </SelectContent>
+                                </Select>
+                              )}
                             </TableCell>
                           );
                         } else if (column.toLowerCase() === "voucher_type") {
@@ -1735,51 +1811,53 @@ const DataTable = ({
                               key={column}
                               className="max-w-[200px] group relative"
                             >
-                              <Select
-                                value={row[column]}
-                                onValueChange={(value) =>
-                                  handleVoucherTypeChange(
-                                    row,
-                                    value,
-                                    row.category
-                                  )
-                                }
-                                className="w-full"
-                                disabled={globalSelectedRows.has(row.id)}
-                              >
-                                <SelectTrigger className="w-full">
-                                  <SelectValue>{row[column]}</SelectValue>
-                                </SelectTrigger>
-                                <SelectContent
-                               
+                              {isBalance ? (
+                                <div className="truncate"></div>
+                              ) : (
+                                <Select
+                                  value={row[column]}
+                                  onValueChange={(value) =>
+                                    handleVoucherTypeChange(
+                                      row,
+                                      value,
+                                      row.category
+                                    )
+                                  }
+                                  className="w-full"
+                                  disabled={globalSelectedRows.has(row.id)}
                                 >
-                                  <div className="max-h-[200px] overflow-y-auto">
-                                    {voucherOptions.length > 0 ? (
-                                      voucherOptions.map((voucher) => (
-                                        <SelectItem
-                                          key={voucher}
-                                          value={voucher}
-                                        >
-                                          {voucher}
-                                        </SelectItem>
-                                      ))
-                                    ) : (
-                                      <div className="p-4 max-w-[300px] text-center text-muted-foreground">
-                                        <p className="text-md">
-                                          No matching categories found
-                                        </p>
-                                        <p className="text-sm mt-1">
-                                          Click the{" "}
-                                          <Plus className="h-3 w-3 inline-block mx-1" />{" "}
-                                          icon above to add "
-                                          {categorySearchTerm}" as a new
-                                          category
-                                        </p>
-                                      </div>
-                                    )}
-                                  </div>
-                                </SelectContent>
-                              </Select>
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue>{row[column]}</SelectValue>
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <div className="max-h-[200px] overflow-y-auto">
+                                      {voucherOptions.length > 0 ? (
+                                        voucherOptions.map((voucher) => (
+                                          <SelectItem
+                                            key={voucher}
+                                            value={voucher}
+                                          >
+                                            {voucher}
+                                          </SelectItem>
+                                        ))
+                                      ) : (
+                                        <div className="p-4 max-w-[300px] text-center text-muted-foreground">
+                                          <p className="text-md">
+                                            No matching categories found
+                                          </p>
+                                          <p className="text-sm mt-1">
+                                            Click the{" "}
+                                            <Plus className="h-3 w-3 inline-block mx-1" />{" "}
+                                            icon above to add "
+                                            {categorySearchTerm}" as a new
+                                            category
+                                          </p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </SelectContent>
+                                </Select>
+                              )}
                             </TableCell>
                           );
                         } else if (column.toLowerCase() === "description") {
@@ -1820,7 +1898,7 @@ const DataTable = ({
                 <TableCell>Total</TableCell>
                 {columns.slice(0).map((column) => (
                   <TableCell key={column}>
-                    {["credit", "debit", "balance","amount"].includes(
+                    {["credit", "debit", "balance", "amount"].includes(
                       column.toLowerCase()
                     )
                       ? totals[column]
@@ -2074,6 +2152,34 @@ const DataTable = ({
         </Dialog>
       )}
 
+      {/* Modal for Preview Pdf*/}
+      {isPdfModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 w-4/5 h-4/5 flex flex-col">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">PDF Preview</h3>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => {
+                  setIsPdfModalOpen(false);
+                  URL.revokeObjectURL(pdfBlob); // Clean up the object URL
+                }}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <iframe 
+                src={pdfBlob} 
+                className="w-full h-full border-0" 
+                // title="PDF Preview"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Bulk Category Update Modal */}
       <Dialog
         open={bulkCategoryModalOpen}
@@ -2103,7 +2209,6 @@ const DataTable = ({
                       placeholder="Search categories..."
                       value={categorySearchTerm}
                       onChange={(e) => setCategorySearchTerm(e.target.value)}
-                    
                     />
                   </div>
                   <Button
@@ -2587,10 +2692,12 @@ const DataTable = ({
                     <TableCell className="text-blue-600">
                       {change.newCategory}
                     </TableCell>
-                    {console.log({change})}
-                    {change.classification&&<TableCell className="text-blue-600">
-                      {change.classification}
-                    </TableCell>}
+                    {console.log({ change })}
+                    {change.classification && (
+                      <TableCell className="text-blue-600">
+                        {change.classification}
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
@@ -2601,8 +2708,8 @@ const DataTable = ({
             <Button
               variant="ghost"
               onClick={() => {
-                setUploadedChanges([])
-                setCategoryUpdateModalOpen(false)
+                setUploadedChanges([]);
+                setCategoryUpdateModalOpen(false);
                 fileInputRef.current.value = "";
               }}
             >

@@ -232,12 +232,28 @@ class LicenseManager {
             }
 
         } catch (error) {
-            console.error(
-                "License validation error: ",
-                error.status,
-                error.response.data
-            );
+            // console.error(
+            //     "License validation error: ",
+            //     error.status,
+            //     error.response.data
+            // );
             // Handle different error cases based on API response
+            log.info(error.code, "||", error.message)
+
+            // Check Node.js specific error codes
+            if (error.code === "ENOTFOUND" ||
+                error.code === "ECONNREFUSED" ||
+                error.code === "ECONNRESET" ||
+                error.code === "ETIMEDOUT" ||
+                error.code === "EHOSTUNREACH" ||
+                error.code === "EAI_AGAIN" ||
+                error.code === "EPIPE" ||
+                (error.message && error.message.includes("Network Error"))
+            ) {
+                log.info("Network Error : ", error.code, "||", error.message);
+                throw new Error("We're having trouble connecting to our server. Please check your internet connection and try again. If the problem persists, contact our support team.");
+            }
+
             if (error.response) {
                 // The API returned an error response
                 return {
@@ -246,10 +262,8 @@ class LicenseManager {
                 };
             } else if (error.request) {
                 // No response received (possible network error)
-                return {
-                    success: false,
-                    error: "No response from the license validation server",
-                };
+                log.info("Network Error : ", error.code, "||", error.message);
+                throw new Error("We're having trouble connecting to our server. Please check your internet connection and try again. If the problem persists, contact our support team.");
             } else {
                 // Some other error (e.g., misconfiguration or unexpected error)
                 return { success: false, error: error.message };

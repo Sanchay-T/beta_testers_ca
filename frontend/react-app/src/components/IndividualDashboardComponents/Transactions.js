@@ -248,6 +248,7 @@ const Transactions = () => {
                 title="Transactions"
                 caseId={parseInt(caseId)}
                 refreshFunction={fetchTransactions}
+                source= "transactions"
               />
             </>
           )}

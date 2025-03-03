@@ -269,6 +269,7 @@ const Card2 = ({
                 </span>
                 <span className="text-base sm:text-xl md:text-2xl font-bold text-white">
                   {mainValue3.toLocaleString()}
+                  <span className="text-sm pl-1">mins</span>
                 </span>
               </>
             )}

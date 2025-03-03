@@ -25,7 +25,14 @@ const getCardStyles = () => ({
 
 const getBorderStyle = () => "linear-gradient(to right, #1187e9, #0a4a8e)";
 
-const Card3 = ({ title, value1, value2, mainValue1 = 0, mainValue2 = 0,handleTabChange }) => {
+const Card3 = ({
+  title,
+  value1,
+  value2,
+  mainValue1 = 0,
+  mainValue2 = 0,
+  handleTabChange,
+}) => {
   const cardStyles = getCardStyles();
   const borderGradient = getBorderStyle();
   const [isLoading, setIsLoading] = useState(true);
@@ -66,9 +73,9 @@ const Card3 = ({ title, value1, value2, mainValue1 = 0, mainValue2 = 0,handleTab
     window.location.href = `tel:${contactInfo.phone}`;
   };
 
-  const handleNavigateToEligibility = ()=>{
-    handleTabChange("Opportunity to Earn")
-  }
+  const handleNavigateToEligibility = () => {
+    handleTabChange("Opportunity to Earn");
+  };
 
   return (
     <Card
@@ -109,13 +116,10 @@ const Card3 = ({ title, value1, value2, mainValue1 = 0, mainValue2 = 0,handleTab
                 {value1 || "Total Eligibility Amount"}
               </span>
               <span className="text-xl md:text-2xl font-bold text-white">
-                ₹{Math.ceil(mainValue1).toLocaleString(
-                  "en-IN",
-                  {
-                    maximumFractionDigits: 0,
-                  }
-
-                )}
+                ₹
+                {Math.ceil(mainValue1).toLocaleString("en-IN", {
+                  maximumFractionDigits: 0,
+                })}
               </span>
             </>
           )}
@@ -130,9 +134,10 @@ const Card3 = ({ title, value1, value2, mainValue1 = 0, mainValue2 = 0,handleTab
                 {value2 || "Total Commission Amount"}
               </span>
               <span className="text-2xl md:text-3xl lg:text-4xl font-bold  truncate w-full text-center text-white ">
-                ₹{Math.ceil(mainValue2).toLocaleString("en-IN", {
-                          maximumFractionDigits: 0,
-                        })}
+                ₹
+                {Math.ceil(mainValue2).toLocaleString("en-IN", {
+                  maximumFractionDigits: 0,
+                })}
               </span>
             </>
           )}

@@ -7,6 +7,7 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
+  SidebarTrigger,
   useSidebar,
 } from "./ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -24,17 +25,12 @@ import { useAuth } from "../contexts/AuthContext";
 import { useReportContext } from "../contexts/ReportContext";
 import { useParams } from "react-router-dom";
 
-
-const SidebarDynamic = ({
-  navItems,
-  activeTab,
-  setActiveTab,
-}) => {
+const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
   const { logout, setError, user } = useAuth();
   const navigate = useNavigate();
-  const { isCollapsed } = useSidebar();
+  const { open, toggleSidebar } = useSidebar();
   const { reportData, updateReportData } = useReportContext();
-  const {caseId,individualId} = useParams();
+  const { caseId, individualId } = useParams();
 
   // Get initials for avatar fallback
   const getInitials = (name) => {
@@ -49,18 +45,18 @@ const SidebarDynamic = ({
 
   const tabs = navItems.map((item) => item.title);
 
-
-  // const isIndividualDashboard =false;
-  // const isCaseDashboard = false;
-
   const isIndividualDashboard = tabs.includes("Summary");
   const isCaseDashboard = tabs.includes("Reports");
-  let isCombinedInvidualDashboard = tabs.includes("Summary") && (reportData.individualId===null || reportData.individualId===undefined || reportData.individualId==='undefined'|| reportData.individualId==='combined') 
+  let isCombinedInvidualDashboard =
+    tabs.includes("Summary") &&
+    (reportData.individualId === null ||
+      reportData.individualId === undefined ||
+      reportData.individualId === "undefined" ||
+      reportData.individualId === "combined");
 
-
-  useEffect(()=>{
-    let fetchedCustomerName = reportData.customerName
-    let fetchedReportName = reportData.reportName
+  useEffect(() => {
+    let fetchedCustomerName = reportData.customerName;
+    let fetchedReportName = reportData.reportName;
 
     const fetchCustomerName = async () => {
       console.log("Fetching customer name for individual ID:", individualId);
@@ -70,15 +66,15 @@ const SidebarDynamic = ({
         );
         if (customerNametemp) {
           console.log("Customer name fetched successfully:", customerNametemp);
-       
+
           updateReportData({
             ...reportData,
-            customerName:customerNametemp,
+            customerName: customerNametemp,
             caseId,
             individualId,
-            reportName:fetchedReportName
-          })
-          fetchedCustomerName=customerNametemp
+            reportName: fetchedReportName,
+          });
+          fetchedCustomerName = customerNametemp;
         }
       } catch (error) {
         console.error("Error fetching customer name:", error);
@@ -88,41 +84,31 @@ const SidebarDynamic = ({
     const fetchReportName = async () => {
       try {
         const reportName = await window.electron.getReportName(caseId);
-      
+
         updateReportData({
           ...reportData,
           reportName,
           caseId,
           individualId,
-          customerName:fetchedCustomerName
-        })
-        
-        fetchedReportName=reportName
+          customerName: fetchedCustomerName,
+        });
 
+        fetchedReportName = reportName;
       } catch (error) {
         console.error("Error fetching report name:", error);
       }
     };
-    if( individualId === undefined ||
+    if (
+      individualId === undefined ||
       individualId === null ||
-      individualId === "undefined"||
-      individualId === "combined"){
-      if(!fetchedReportName)
-        fetchReportName();
+      individualId === "undefined" ||
+      individualId === "combined"
+    ) {
+      if (!fetchedReportName) fetchReportName();
+    } else {
+      if (!fetchedCustomerName) fetchCustomerName();
     }
-    else{
-      if(!fetchedCustomerName)
-        fetchCustomerName();
-    }
-    
-   
-  },[caseId,individualId])
-  
-  console.log({navItems,individualId,caseId,reportData})
-
-  useEffect(() => {
-    console.log({ isCollapsed });
-  }, [isCollapsed]);
+  }, [caseId, individualId]);
 
   const handleLogout = async () => {
     try {
@@ -140,6 +126,8 @@ const SidebarDynamic = ({
 
   const MenuItem = ({ item, level = 0 }) => {
     const hasSubmenu = item.items?.length > 0;
+    const { open: isOpen } = useSidebar();
+    const isCollapsed = !isOpen;
 
     return (
       <div className="w-full">
@@ -171,12 +159,15 @@ const SidebarDynamic = ({
   };
 
   const DashboardInfo = () => {
+    const { open: isOpen } = useSidebar();
+    const isCollapsed = !isOpen;
+
     if (isCollapsed || (!isIndividualDashboard && !isCaseDashboard))
       return null;
 
     return (
       <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm">
-        {(isIndividualDashboard && !isCombinedInvidualDashboard) && (
+        {isIndividualDashboard && !isCombinedInvidualDashboard && (
           <div className="space-y-1">
             <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
               Account Name :{" "}
@@ -200,9 +191,6 @@ const SidebarDynamic = ({
             )}
           </div>
         )}
-
-
-        
       </div>
     );
   };
@@ -215,83 +203,101 @@ const SidebarDynamic = ({
     </div>
   );
 
-  const UserMenu = () => (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button className="flex items-center w-full p-2 hover:bg-gray-100 rounded-md transition-all duration-200">
-          <Avatar className="h-8 w-8 rounded-lg">
-            <AvatarImage src={user?.avatar} alt={user?.name || "User"} />
-            <AvatarFallback className="rounded-lg">
-              {getInitials(user?.name)}
-            </AvatarFallback>
-          </Avatar>
-          {!isCollapsed && (
-            <div className="ml-3 flex-1 text-left">
-              <p className="text-sm font-medium hover:text-black">
-                {user?.name || "User"}
-              </p>
-              {/* <p className="text-xs text-gray-500">
-                {user?.email || "No email"}
-              </p> */}
-            </div>
-          )}
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" side="top" align="end">
-        <DropdownMenuLabel>
-          <div className="flex items-center gap-2">
+  const UserMenu = () => {
+    const { open: isOpen } = useSidebar();
+    const isCollapsed = !isOpen;
+
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className="flex items-center w-full p-2 hover:bg-gray-100 rounded-md transition-all duration-200">
             <Avatar className="h-8 w-8 rounded-lg">
               <AvatarImage src={user?.avatar} alt={user?.name || "User"} />
-              <AvatarFallback>{getInitials(user?.name)}</AvatarFallback>
+              <AvatarFallback className="rounded-lg">
+                {getInitials(user?.name)}
+              </AvatarFallback>
             </Avatar>
-            <div>
-              <p className="text-sm font-medium">{user?.name || "User"}</p>
-              {/* <p className="text-xs text-gray-500">
-                {user?.email || "No email"}
-              </p> */}
+            {!isCollapsed && (
+              <div className="ml-3 flex-1 text-left">
+                <p className="text-sm font-medium hover:text-black">
+                  {user?.name || "User"}
+                </p>
+              </div>
+            )}
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-56" side="top" align="end">
+          <DropdownMenuLabel>
+            <div className="flex items-center gap-2">
+              <Avatar className="h-8 w-8 rounded-lg">
+                <AvatarImage src={user?.avatar} alt={user?.name || "User"} />
+                <AvatarFallback>{getInitials(user?.name)}</AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="text-sm font-medium">{user?.name || "User"}</p>
+              </div>
             </div>
-          </div>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem>
-            <Sparkles className="mr-2 h-4 w-4" />
-            <span>Refer and Earn</span>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
+            <DropdownMenuItem>
+              <Sparkles className="mr-2 h-4 w-4" />
+              <span>Refer and Earn</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <BadgeCheck className="mr-2 h-4 w-4" />
+              <span>Account</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <CreditCard className="mr-2 h-4 w-4" />
+              <span>Billing</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Bell className="mr-2 h-4 w-4" />
+              <span>Notifications</span>
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleLogout}>
+            <LogOut className="mr-2 h-4 w-4" />
+            <span>Log out</span>
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            <BadgeCheck className="mr-2 h-4 w-4" />
-            <span>Account</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <CreditCard className="mr-2 h-4 w-4" />
-            <span>Billing</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Bell className="mr-2 h-4 w-4" />
-            <span>Notifications</span>
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout}>
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  };
+
+  // Custom toggle button component
+  const SidebarToggle = () => {
+    const { open: isOpen, toggleSidebar } = useSidebar();
+
+    return (
+      <div className="relative h-screen">
+        <SidebarTrigger
+          className="absolute -bottom-52 rounded-full left-2 bg-white hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 shadow-sm"
+          onClick={toggleSidebar}
+        />
+      </div>
+    );
+  };
 
   return (
-    <Sidebar className="transition-all duration-300 ease-in-out">
+    <Sidebar
+      className="transition-all duration-300 ease-in-out"
+      collapsible="icon"
+      {...{ navItems, activeTab, setActiveTab }}
+    >
       <SidebarHeader>
-        <div className="h-16 flex items-center px-4 border-b">
+        <div className="h-16 flex items-center px-4 border-b relative">
           <img
             src={logo}
             alt="Logo"
             className={`h-12 cursor-pointer transition-all duration-300 ${
-              isCollapsed ? "w-8" : "w-auto"
+              !open ? "w-8" : "w-auto"
             }`}
             onClick={() => navigate("/")}
           />
+          <SidebarToggle />
         </div>
         <DashboardInfo />
       </SidebarHeader>
@@ -301,7 +307,8 @@ const SidebarDynamic = ({
       <SidebarFooter className="border-t p-3">
         <UserMenu />
       </SidebarFooter>
-      <SidebarRail />
+      {/* We're still including SidebarRail but will disable its functionality */}
+      <SidebarRail className="pointer-events-none" />
     </Sidebar>
   );
 };
