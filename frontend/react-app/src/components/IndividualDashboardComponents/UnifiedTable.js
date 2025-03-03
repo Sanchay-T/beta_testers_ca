@@ -10,7 +10,7 @@ import {
   MessageCircle,
   Mail,
   Share2,
-  Eye, X
+  Eye,
 } from "lucide-react";
 import {
   Card,
