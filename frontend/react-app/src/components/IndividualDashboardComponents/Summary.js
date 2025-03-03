@@ -8,7 +8,6 @@ import DataTable from "./UnifiedTable";
 import { useParams } from "react-router-dom";
 import { useReportContext } from "../../contexts/ReportContext";
 
-
 const formatDecimal = (value) => {
   return Number(parseFloat(value || 0).toFixed(2));
 };
@@ -51,7 +50,7 @@ const MaximizableChart = ({ children, title, isMaximized, setIsMaximized }) => {
 };
 
 const Summary = () => {
-const { reportData, updateReportData } = useReportContext();
+  const { reportData, updateReportData } = useReportContext();
 
   // const [activeTable, setActiveTable] = useState("Income Receipts");
   const [summaryData, setSummaryData] = useState({
@@ -80,7 +79,7 @@ const { reportData, updateReportData } = useReportContext();
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [filteredTransactions, setFilteredTransactions] = useState([]);
   const [transactionData, setTransactionData] = useState([]);
-  const {individualId,caseId } = useParams();
+  const { individualId, caseId } = useParams();
 
   useEffect(() => {
     const fetchSummaryData = async () => {
@@ -91,10 +90,14 @@ const { reportData, updateReportData } = useReportContext();
         let result = null;
         let parsedData = {};
         let tempTransactions = [];
-        let isCombinedDashboard = individualId===undefined || individualId==="undefined" || individualId===null || individualId==="combined";
+        let isCombinedDashboard =
+          individualId === undefined ||
+          individualId === "undefined" ||
+          individualId === null ||
+          individualId === "combined";
 
-        if(isCombinedDashboard){
-          result = await window.electron.getSummary(caseId,null);
+        if (isCombinedDashboard) {
+          result = await window.electron.getSummary(caseId, null);
           console.log("result", result);
           parsedData = result.length > 0 ? JSON.parse(result[0].data) : {};
           console.log("parsedData", parsedData);
@@ -102,8 +105,8 @@ const { reportData, updateReportData } = useReportContext();
             caseId,
             null
           );
-        }else{
-          result = await window.electron.getSummary(caseId,individualId);
+        } else {
+          result = await window.electron.getSummary(caseId, individualId);
           console.log("result", result);
           parsedData = result.length > 0 ? JSON.parse(result[0].data) : {};
           console.log("parsedData", parsedData);
@@ -112,7 +115,7 @@ const { reportData, updateReportData } = useReportContext();
             parseInt(individualId)
           );
         }
-      
+
         console.log("transactions", tempTransactions.length);
 
         const formatData = (data) => {
@@ -126,27 +129,30 @@ const { reportData, updateReportData } = useReportContext();
             return formattedItem;
           });
         };
-        
-        if(isCombinedDashboard ){
-         
+
+        if (isCombinedDashboard) {
           setSummaryData({
             Particulars: formatData(parsedData.particulars || []),
             "Income Receipts": formatData(parsedData.incomeReceipts || []),
-            "Important Expenses": formatData(parsedData.importantExpenses || []),
+            "Important Expenses": formatData(
+              parsedData.importantExpenses || []
+            ),
             "Other Expenses": formatData(parsedData.otherExpenses || []),
             "Contra Debit": formatData(parsedData.contraDebit || []),
             "Contra Credit": formatData(parsedData.contraCredit || []),
           });
-        }else{
+        } else {
           setSummaryData({
             Particulars: formatData(parsedData.Particulars || []),
             "Income Receipts": formatData(parsedData["Income Receipts"] || []),
-            "Important Expenses": formatData(parsedData["Important Expenses"] || []),
+            "Important Expenses": formatData(
+              parsedData["Important Expenses"] || []
+            ),
             "Other Expenses": formatData(parsedData["Other Expenses"] || []),
-            "Contra Debit": formatData(parsedData["Contra Debit"] || []), 
-            "Contra Credit": formatData(parsedData["Contra Credit"] || []), 
+            "Contra Debit": formatData(parsedData["Contra Debit"] || []),
+            "Contra Credit": formatData(parsedData["Contra Credit"] || []),
           });
-      }
+        }
 
         setTransactionData(tempTransactions);
       } catch (error) {
@@ -157,8 +163,8 @@ const { reportData, updateReportData } = useReportContext();
           "Income Receipts": [],
           "Important Expenses": [],
           "Other Expenses": [],
-          "Contra Credit":[],
-          "Contra Debit":[]
+          "Contra Credit": [],
+          "Contra Debit": [],
         });
         setTransactionData([]);
       } finally {
@@ -187,30 +193,42 @@ const { reportData, updateReportData } = useReportContext();
   const [selectedMonths, setSelectedMonths] = useState([]);
   const months = useMemo(() => {
     const allMonths = new Set();
-    [particulars, incomeReceipts, importantExpenses, otherExpenses,contraDebit,contraCredit].forEach(
-      (category) => {
-        category.forEach((item) => {
-          Object.keys(item).forEach((key) => {
-            if (
-              ![
-                "Total",
-                "Particulars",
-                "Income / Receipts",
-                "Important Expenses / Payments",
-                "Other Expenses / Payments",
-              ].includes(key)
-            ) {
-              allMonths.add(key);
-            }
-          });
+    [
+      particulars,
+      incomeReceipts,
+      importantExpenses,
+      otherExpenses,
+      contraDebit,
+      contraCredit,
+    ].forEach((category) => {
+      category.forEach((item) => {
+        Object.keys(item).forEach((key) => {
+          if (
+            ![
+              "Total",
+              "Particulars",
+              "Income / Receipts",
+              "Important Expenses / Payments",
+              "Other Expenses / Payments",
+            ].includes(key)
+          ) {
+            allMonths.add(key);
+          }
         });
-      }
-    );
+      });
+    });
 
     return Array.from(allMonths).sort(
       (a, b) => monthOrder.indexOf(a) - monthOrder.indexOf(b)
     );
-  }, [incomeReceipts, importantExpenses, otherExpenses,particulars,contraCredit,contraDebit]);
+  }, [
+    incomeReceipts,
+    importantExpenses,
+    otherExpenses,
+    particulars,
+    contraCredit,
+    contraDebit,
+  ]);
 
   useEffect(() => {
     if (months.length > 0) {
@@ -271,46 +289,59 @@ const { reportData, updateReportData } = useReportContext();
 
   const handlePieClick = (data) => {
     const categoryName = data.name.trim().toLowerCase();
-    const matchingTransactions = transactionData.filter(transaction => {
+    const matchingTransactions = transactionData.filter((transaction) => {
       if (!transaction || !transaction.category) return false;
       const transactionCategory = transaction.category.trim().toLowerCase();
       const amount = parseFloat(transaction.amount || 0);
 
-      const isIncome = summaryData["Income Receipts"].some(item => item["Income / Receipts"]?.trim().toLowerCase() === categoryName);
-      const isImportantExpense = summaryData["Important Expenses"].some(item => item["Important Expenses / Payments"]?.trim().toLowerCase() === categoryName);
-      const isOtherExpense = summaryData["Other Expenses"].some(item => item["Other Expenses / Payments"]?.trim().toLowerCase() === categoryName);
+      const isIncome = summaryData["Income Receipts"].some(
+        (item) =>
+          item["Income / Receipts"]?.trim().toLowerCase() === categoryName
+      );
+      const isImportantExpense = summaryData["Important Expenses"].some(
+        (item) =>
+          item["Important Expenses / Payments"]?.trim().toLowerCase() ===
+          categoryName
+      );
+      const isOtherExpense = summaryData["Other Expenses"].some(
+        (item) =>
+          item["Other Expenses / Payments"]?.trim().toLowerCase() ===
+          categoryName
+      );
 
       if (isIncome) return transactionCategory === categoryName && amount > 0;
-      if (isImportantExpense || isOtherExpense) return transactionCategory === categoryName && amount > 0;
-      
+      if (isImportantExpense || isOtherExpense)
+        return transactionCategory === categoryName && amount > 0;
+
       return false;
     });
 
-    const formattedTransactions = matchingTransactions.map(transaction => ({
-      date: transaction.date ? new Date(transaction.date).toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-      }) : '',
-      description: transaction.description || '',
+    const formattedTransactions = matchingTransactions.map((transaction) => ({
+      date: transaction.date
+        ? new Date(transaction.date).toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          })
+        : "",
+      description: transaction.description || "",
       amount: Math.abs(parseFloat(transaction.amount || 0)),
-      category: transaction.category || '',
+      category: transaction.category || "",
       balance: parseFloat(transaction.balance || 0),
-      bank: transaction.bank || '',
-      entity: transaction.entity || 'unknown'
+      bank: transaction.bank || "",
+      entity: transaction.entity || "unknown",
     }));
 
     setSelectedCategory(categoryName);
     setFilteredTransactions(formattedTransactions);
   };
-  
+
   const renderChart = (data, title, isMaximized, setIsMaximized) => {
     return (
       <MaximizableChart
         title={title}
         isMaximized={isMaximized}
         setIsMaximized={setIsMaximized}
-        
       >
         <div className="w-full p-4">
           {data.length > 0 ? (
@@ -347,7 +378,7 @@ const { reportData, updateReportData } = useReportContext();
   };
 
   return (
-    <div className="bg-white rounded-lg space-y-6 m-8 mt-2 dark:bg-slate-950 w-[80vw]">
+    <div className="bg-white rounded-lg space-y-6 m-8 pr-16 mt-2 min-w-full max-w-[0] dark:bg-slate-950">
       {/* <ToggleStrip
         columns={mon</div>ths}
         selectedColumns={selectedMonths}
@@ -434,17 +465,16 @@ const { reportData, updateReportData } = useReportContext();
           title="Other Expenses"
           categoryKey="Other Expenses / Payments"
         />
-          <SummaryTable
+        <SummaryTable
           data={contraCredit}
           title="Contra Credit"
           categoryKey="Contra Credit"
         />
-          <SummaryTable
+        <SummaryTable
           data={contraDebit}
           title="Contra Debit"
           categoryKey="Contra Debit"
         />
-        
       </div>
     </div>
   );

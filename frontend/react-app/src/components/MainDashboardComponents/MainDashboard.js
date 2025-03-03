@@ -18,7 +18,7 @@ import Card2 from "../Elements/Card2";
 import Card3 from "../Elements/Card3";
 import { ResponsiveContainer } from "recharts";
 
-const MainDashboard = ({handleTabChange}) => {
+const MainDashboard = ({ handleTabChange }) => {
   const { theme, setTheme } = useTheme();
   const [allData, setAllData] = useState([]);
   const [pagesData, setPagesData] = useState([]);
