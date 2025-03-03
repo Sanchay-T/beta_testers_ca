@@ -50,6 +50,9 @@ const IndividualTable = () => {
       const result = await window.electron.getStatements(caseId);
       console.log({ result });
       setStatements(result);
+
+      // Update the report data with the file path of statements
+      updateReportData({ filePath: result[0]?.filePath });
     } catch (error) {
       console.error("Error fetching statements:", error);
     } finally {

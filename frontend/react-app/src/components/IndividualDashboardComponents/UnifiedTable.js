@@ -9,6 +9,7 @@ import {
   MessageCircle,
   Mail,
   Share2,
+  Eye, X
 } from "lucide-react";
 import {
   Card,
@@ -96,7 +97,8 @@ const DataTable = ({
   const [isLoading, setIsLoading] = useState(false);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [existingFilterData, setExistingFilterData] = useState([]);
-
+  const [pdfBlob, setPdfBlob] = useState(null)
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
   const [columnsToIgnore, setColumnsToIgnore] = useState([
     "id",
     "transactionId",
@@ -1390,6 +1392,40 @@ const DataTable = ({
     setCategorySelectDropdownOpen((prev) => ({ ...prev, [id]: open }));
   };
 
+  const handlePreviewFile = (previewUrl) => {
+    try {
+      if (!previewUrl) {
+        console.error("Error: No file path provided");
+        return;
+      }
+      window.electron.fetchPdfContent(previewUrl)
+      .then(base64 => {
+        const blob = base64StringToBlob(base64, 'application/pdf');
+        const objectUrl = URL.createObjectURL(blob);
+        setPdfBlob(objectUrl);
+        setIsPdfModalOpen(true); // Set state to open a modal
+        setIsLoading(false);
+      })
+    } catch (error) {
+      console.error("Error opening PDF file:", error);
+      setIsLoading(false);
+      // Fallback to default browser behavior if electron API fails
+      window.open(previewUrl);
+    }
+  };
+
+  const base64StringToBlob = (base64, type) => {
+    const binaryString = window.atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return new Blob([bytes], { type: type });
+  };
+
+  console.log("helllll", reportData);
+
   return (
     // if source is equal to lifo or fifo then show the table
     <Card className="min-w-full max-w-[0]">
@@ -1437,6 +1473,30 @@ const DataTable = ({
               >
                 Clear Filters
               </Button>
+
+              {source === "transactions" && reportData?.individualId &&(
+              <>
+                <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
+                              transition-all shadow-sm hover:shadow-md"
+                    onClick={() =>
+                      handlePreviewFile(
+                        reportData.filePath
+                      )
+                    }
+                  >
+                    <Eye className="w-4 h-4 text-blue-500" />
+                  </Button>
+                </TooltipTrigger>
+                  <TooltipContent>Preview Statement</TooltipContent>
+                </Tooltip>
+              </>
+              )}
+
               {source === "suspense" && (
                 <>
                   <Button
@@ -2089,6 +2149,34 @@ const DataTable = ({
             </div>
           </DialogContent>
         </Dialog>
+      )}
+
+      {/* Modal for Preview Pdf*/}
+      {isPdfModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 w-4/5 h-4/5 flex flex-col">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">PDF Preview</h3>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => {
+                  setIsPdfModalOpen(false);
+                  URL.revokeObjectURL(pdfBlob); // Clean up the object URL
+                }}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <iframe 
+                src={pdfBlob} 
+                className="w-full h-full border-0" 
+                // title="PDF Preview"
+              />
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Bulk Category Update Modal */}
