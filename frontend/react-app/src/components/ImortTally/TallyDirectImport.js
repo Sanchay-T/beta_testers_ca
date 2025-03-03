@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import {
@@ -58,6 +59,7 @@ const TallyDirectImport = ({ source }) => {
   const fileInputRef = useRef(null);
   const [uniqueLedgers, setUniqueLedgers] = useState([]);
   const [dataToRender, setDataToRender] = useState([]);
+  const [excelHeaders, setExcelHeaders] = useState([]);
 
   // If you have a caseId in the ReportContext:
   const { reportData } = useReportContext();
@@ -69,7 +71,6 @@ const TallyDirectImport = ({ source }) => {
   const handleInputChange = (e) => {
     setPort(e.target.value);
   };
-
 
   // ----------------------------------
   // 1) FETCHING VOUCHERS/TRANSACTIONS
@@ -272,7 +273,9 @@ const TallyDirectImport = ({ source }) => {
 
         return {
           companyName: companyName,
-          invoiceDate: formatDateForTally(transaction.date||transaction.invoice_date || ""),
+          invoiceDate: formatDateForTally(
+            transaction.date || transaction.invoice_date || ""
+          ),
           effectiveDate: formatDateForTally(transaction.effective_date || ""),
           // effectiveDate: 20240401,
           referenceNumber: transaction.reference_number || null,
@@ -326,7 +329,10 @@ const TallyDirectImport = ({ source }) => {
     setLoading2(true);
     try {
       if (selectedVoucher === "Payment Receipt Contra Voucher") {
-        const response = await window.electron.uploadToTally(tallyUploadData, port);
+        const response = await window.electron.uploadToTally(
+          tallyUploadData,
+          port
+        );
 
         const { failedTransactions = [], successIds = [] } = response;
 
@@ -479,81 +485,153 @@ const TallyDirectImport = ({ source }) => {
     const day = ("0" + date.getDate()).slice(-2);
     const month = ("0" + (date.getMonth() + 1)).slice(-2);
     const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+    return `${day}-${month}-${year}`;
   }
   // Example: parse Excel with an IPC call or local library
+  // Updated handleExcelUpload function
   const handleExcelUpload = async (e) => {
-    console.log({ hey: "hey", e });
     const file = e.target.files?.[0];
-    console.log({ file });
     if (!file) return;
+
     try {
       const reader = new FileReader();
-      console.log({ reader });
       reader.onload = async (e) => {
         const data = new Uint8Array(e.target.result);
-        console.log({ data });
         const workbook = XLSX.read(data, { type: "array" });
-        console.log({ workbook });
         const sheetName = workbook.SheetNames[0];
-        console.log({ sheetName });
         const sheet = workbook.Sheets[sheetName];
-        console.log({ sheet });
-        // const parsedData = XLSX.utils.sheet_to_json(sheet);
-        // We assume the second row is your actual data row, so we skip the first row with range: 0 or 1
+
+        // Parse with headers from the first row
         const parsedData = XLSX.utils.sheet_to_json(sheet, {
-          header: [
-            "Company name *",
-            "Date *",
-            "Effective Date",
-            "Bill Refrence *",
-            "Dr Ledger *",
-            "Cr Ledger *",
-            "Amount *",
-            "Narration",
-            "Status",
-          ],
+          header: "A", // Use A,B,C as keys initially
+          range: 0,
         });
-        const newParsedData = parsedData.slice(2);
+        console.log("Parsed Excel Data:", parsedData);
 
-        // Example in your mapping logic:
+        if (parsedData.length === 0) return;
 
-        const newTransactions = newParsedData.map((row, idx) => {
-          console.log({row})
-          let invoiceDateVal = row["Date *"];
-          let effectiveDateVal = row["Effective Date"];
+        // Extract header row (first row)
+        const headerRow = parsedData[1];
+        console.log("Excel Headers row:", headerRow);
 
-          // Convert numeric date serials to JS date strings in dd-mm-yyyy format
-          if (typeof invoiceDateVal === "number") {
-            const date = excelSerialToJSDate(invoiceDateVal);
-            invoiceDateVal = date ? formatDateToDDMMYYYY(date) : "";
-          } else if (invoiceDateVal instanceof Date) {
-            invoiceDateVal = formatDateToDDMMYYYY(invoiceDateVal);
-          }
+        // Create a mapping of column indices to actual header names
+        const headers = Object.keys(headerRow).map((key) => headerRow[key]);
+        console.log("Excel Headers:", headers);
 
-          if (typeof effectiveDateVal === "number") {
-            const date = excelSerialToJSDate(effectiveDateVal);
-            effectiveDateVal = date ? formatDateToDDMMYYYY(date) : "";
-          } else if (effectiveDateVal instanceof Date) {
-            effectiveDateVal = formatDateToDDMMYYYY(effectiveDateVal);
-          }
+        // Check if a company name column exists
+        const companyNameIndex = headers.findIndex(
+          (header) =>
+            header &&
+            typeof header === "string" &&
+            header.toLowerCase().includes("company name")
+        );
+        console.log("Company Name Index:", companyNameIndex);
 
-          return {
+        // If company name exists in the headers, set it
+        // if (companyNameIndex !== -1) {
+        //   // Look for company name in the second row (data row)
+        //   if (parsedData.length > 1) {
+        //     const firstDataRow = parsedData[1];
+        //     const columnLetter = String.fromCharCode(65 + companyNameIndex); // A, B, C, etc.
+        //     const companyNameValue = firstDataRow[columnLetter];
+        //     if (companyNameValue) {
+        //       // setCompanyName(companyNameValue.toString());
+        //     }
+        //   }
+        // }
+
+        // Filter out company name from headers if it exists
+        const filteredHeaders = headers.filter(
+          (header, index) => index !== companyNameIndex && header
+        );
+
+        // Process data rows (skip header row)
+        const newTransactions = parsedData.slice(2).map((row, idx) => {
+          const transaction = {
             id: `excel-${idx}`,
-            invoice_date: invoiceDateVal,
-            effective_date: effectiveDateVal,
-            reference_number: row["Bill Refrence *"] || "",
-            dr_ledger: row["Dr Ledger *"] || "",
-            cr_ledger: row["Cr Ledger *"] || "",
-            amount: row["Amount *"] || 0,
-            narration: row["Narration"] || "",
-            voucher_type: row["Voucher"] || "Payment Voucher",
             imported: false,
             failed_reason: "",
+            voucher_type: "Payment Voucher", // Default value
           };
+
+          // Map each column to the corresponding field
+          filteredHeaders.forEach((header, index) => {
+            const columnLetter = String.fromCharCode(
+              65 +
+                (index >= companyNameIndex && companyNameIndex !== -1
+                  ? index + 1
+                  : index)
+            );
+            let value = row[columnLetter];
+
+            // Convert only "date" and "effective date" fields
+            if (
+              value !== undefined &&
+              typeof header === "string" &&
+              (header.toLowerCase() === "date *" ||
+                header.toLowerCase() === "effective date")
+            ) {
+              if (typeof value === "number") {
+                const date = excelSerialToJSDate(value);
+                value = date ? formatDateToDDMMYYYY(date) : "";
+              } else if (value instanceof Date) {
+                value = formatDateToDDMMYYYY(value);
+              }
+            }
+            // Convert header to snake_case for field name
+            let fieldName = "";
+            if (typeof header === "string") {
+              fieldName = header
+                .toLowerCase()
+                .replace(/\s+/g, "_")
+                .replace(/[^a-z0-9_]/g, "")
+                .replace(/_+/g, "_");
+            } else if (header !== undefined && header !== null) {
+              // If header is not a string but has a value, convert to string
+              fieldName = String(header)
+                .toLowerCase()
+                .replace(/\s+/g, "_")
+                .replace(/[^a-z0-9_]/g, "")
+                .replace(/_+/g, "_");
+            } else {
+              // For undefined or null headers, use a generic column name
+              fieldName = `column_${index}`;
+            }
+
+            // console.log({ fieldName, value });
+            console.log({ header, value });
+
+            // Store with original header name as key
+            transaction[fieldName] = value || "";
+          });
+
+          return transaction;
         });
 
-        console.log({ newTransactions });
+        console.log("Excel Headers:", filteredHeaders);
+        console.log("Processed Transactions:", newTransactions);
+
+        // Set filtered headers for the table to use
+        setExcelHeaders(
+          filteredHeaders.map((header) => ({
+            original: header,
+            field:
+              typeof header === "string"
+                ? header
+                    .toLowerCase()
+                    .replace(/\s+/g, "_")
+                    .replace(/[^a-z0-9_]/g, "")
+                    .replace(/_+/g, "_")
+                : header !== undefined && header !== null
+                ? String(header)
+                    .toLowerCase()
+                    .replace(/\s+/g, "_")
+                    .replace(/[^a-z0-9_]/g, "")
+                    .replace(/_+/g, "_")
+                : `column_${Math.random().toString(36).substring(2, 8)}`,
+          }))
+        );
+
         // Add them to our table
         setTransactions(newTransactions);
         setDataToRender(newTransactions);
@@ -598,180 +676,183 @@ const TallyDirectImport = ({ source }) => {
 
   return (
     <div className="p-8">
-    <Card>
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-lg font-semibold">
-            {source === "manual"
-              ? "Manual Tally Import"
-              : `Tally ${selectedVoucher} Transactions`}
-          </CardTitle>
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-lg font-semibold">
+              {source === "manual"
+                ? "Manual Tally Import"
+                : `Tally ${selectedVoucher} Transactions`}
+            </CardTitle>
 
-          {source !== "manual" && (
-            <div className="flex gap-4">
-              <Select
-                onValueChange={handleVoucherChange}
-                value={selectedVoucher}
-              >
-                <SelectTrigger className="w-98">
-                  <SelectValue placeholder="Select a Voucher" />
-                </SelectTrigger>
-                <SelectContent>
-                  {vouchers.map((voucher) => (
-                    <SelectItem key={voucher} value={voucher}>
-                      {voucher}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-        </div>
-        <div className="text-sm text-gray-800 max-w-xl flex gap-x-4 items-center">
-          <label className="whitespace-nowrap">Please Enter Port Number:</label>
-          <Input
-            type="number"
-            value={port}
-            onChange={handleInputChange}
-            placeholder="Enter Port Number"
-          />
-
-        </div>
-        {/* input  */}
-      </CardHeader>
-
-      <CardContent>
-        {loading ? (
-          <div className="flex justify-center py-10">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+            {source !== "manual" && (
+              <div className="flex gap-4">
+                <Select
+                  onValueChange={handleVoucherChange}
+                  value={selectedVoucher}
+                >
+                  <SelectTrigger className="w-98">
+                    <SelectValue placeholder="Select a Voucher" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {vouchers.map((voucher) => (
+                      <SelectItem key={voucher} value={voucher}>
+                        {voucher}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
-        ) : (
-          <>
-            {/* If we are in manual mode and have no transactions, show “ManualEntryTable” + an Excel upload button */}
-            {source === "manual" ? (
-              <div className="space-y-4 ">
-                <div className="flex items-center gap-4">
-                  <label
-                    htmlFor="excelUpload"
-                    // onClick={() => fileInputRef.current.click()}
-                    className="flex-shrink-0 py-2 px-4 bg-gray-800 text-white rounded-md cursor-pointer"
-                  >
-                    Upload Excel
-                  </label>
-                  <input
-                    id="excelUpload"
-                    type="file"
-                    accept=".xlsx, .csv, .xlsm"
-                    className="hidden"
-                    ref={fileInputRef}
-                    onChange={handleExcelUpload}
+          <div className="text-sm text-gray-800 max-w-xl flex gap-x-4 items-center">
+            <label className="whitespace-nowrap">
+              Please Enter Port Number:
+            </label>
+            <Input
+              type="number"
+              value={port}
+              onChange={handleInputChange}
+              placeholder="Enter Port Number"
+            />
+          </div>
+          {/* input  */}
+        </CardHeader>
+
+        <CardContent>
+          {loading ? (
+            <div className="flex justify-center py-10">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+            </div>
+          ) : (
+            <>
+              {/* If we are in manual mode and have no transactions, show “ManualEntryTable” + an Excel upload button */}
+              {source === "manual" ? (
+                <div className="space-y-4 ">
+                  <div className="flex items-center gap-4">
+                    <label
+                      htmlFor="excelUpload"
+                      // onClick={() => fileInputRef.current.click()}
+                      className="flex-shrink-0 py-2 px-4 bg-gray-800 text-white rounded-md cursor-pointer"
+                    >
+                      Upload Excel
+                    </label>
+                    <input
+                      id="excelUpload"
+                      type="file"
+                      accept=".xlsx, .csv, .xlsm"
+                      className="hidden"
+                      ref={fileInputRef}
+                      onChange={handleExcelUpload}
+                    />
+                    <Button variant="outline" onClick={handleClear}>
+                      Clear
+                    </Button>
+
+                    <p className="text-sm text-gray-500">
+                      or manually add rows below
+                    </p>
+                  </div>
+
+                  {/* Show ManualEntryTable (simple table where user can add row by row) */}
+                  <ManualTallyTable
+                    initialData={dataToRender}
+                    columnsProp={defaultColumns[selectedVoucher]}
+                    handleUpload={handleManualEntriesSubmit}
+                    setCompanyName={setCompanyName}
+                    companyName={companyName}
                   />
-                  <Button variant="outline" onClick={handleClear}>
-                    Clear
-                  </Button>
-
-                  <p className="text-sm text-gray-500">
-                    or manually add rows below
-                  </p>
-
                 </div>
-
-                {/* Show ManualEntryTable (simple table where user can add row by row) */}
-                <ManualTallyTable
-                  initialData={dataToRender}
-                  columnsProp={defaultColumns[selectedVoucher]}
-                  handleUpload={handleManualEntriesSubmit}
+              ) : transactions.length > 0 ? (
+                // Otherwise, show the TallyTable with the “transactions” we have
+                <TallyTable
+                  data={dataToRender}
+                  title={
+                    source === "manual"
+                      ? "Manual Transactions"
+                      : "Tally Transactions"
+                  }
+                  subtitle=""
+                  handleUpload={handleUploadClick}
                   setCompanyName={setCompanyName}
                   companyName={companyName}
+                  selectedVoucher={selectedVoucher}
                 />
-              </div>
-            ) : transactions.length > 0 ? (
-              // Otherwise, show the TallyTable with the “transactions” we have
-              <TallyTable
-                data={dataToRender}
-                title={
-                  source === "manual"
-                    ? "Manual Transactions"
-                    : "Tally Transactions"
-                }
-                subtitle=""
-                handleUpload={handleUploadClick}
-                setCompanyName={setCompanyName}
-                companyName={companyName}
-                selectedVoucher={selectedVoucher}
-              />
-            ) : (
-              // Fallback if not manual and no data
-              source !== "manual" && (
-                <div className="text-center py-6 text-gray-500">
-                  No transactions available
-                </div>
-              )
-            )}
-          </>
-        )}
-      </CardContent>
-
-      {/* Confirmation Modal */}
-      <Dialog open={confirmationModal} onOpenChange={setConfirmationModal}>
-        <DialogContent className="min-w-[500px] max-w-[40%]">
-          <DialogHeader>
-            <DialogTitle>Confirm Tally Import</DialogTitle>
-            <DialogDescription>
-              <p className="mt-4 text-lg">
-                You are about to import {tallyUploadData.length} transactions to
-                Tally. Are you sure you want to proceed?
-              </p>
-              <p className="my-4 text-sm text-gray-500">
-                Note: Already uploaded transactions will not be uploaded again.
-              </p>
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setConfirmationModal(false)}>
-              Cancel
-            </Button>
-            <Button
-              disabled={loading2}
-              variant="default"
-              onClick={handleUploadAfterConfirmation}
-            >
-              {loading2 ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  <span>Processing...</span>
-                </>
               ) : (
-                "Confirm"
+                // Fallback if not manual and no data
+                source !== "manual" && (
+                  <div className="text-center py-6 text-gray-500">
+                    No transactions available
+                  </div>
+                )
               )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </>
+          )}
+        </CardContent>
 
-      {/* Show summary of Tally upload if there are any failed transactions */}
-      <Dialog
-        open={failedTransactions.length > 0 || successIds.length > 0}
-        onOpenChange={setFailedTransactions}
-      >
-        <DialogContent className="min-w-[500px] max-w-[40%] max-h-[90%] overflow-y-auto">
-          <DialogHeader />
-          <DialogDescription>{tallyUploadResponseStats()}</DialogDescription>
-          <DialogFooter className="sticky bottom-0">
-            <Button
-              variant="default"
-              onClick={() => {
-                setFailedTransactions([]);
-                setSuccessIds([]);
-              }}
-            >
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </Card>
+        {/* Confirmation Modal */}
+        <Dialog open={confirmationModal} onOpenChange={setConfirmationModal}>
+          <DialogContent className="min-w-[500px] max-w-[40%]">
+            <DialogHeader>
+              <DialogTitle>Confirm Tally Import</DialogTitle>
+              <DialogDescription>
+                <p className="mt-4 text-lg">
+                  You are about to import {tallyUploadData.length} transactions
+                  to Tally. Are you sure you want to proceed?
+                </p>
+                <p className="my-4 text-sm text-gray-500">
+                  Note: Already uploaded transactions will not be uploaded
+                  again.
+                </p>
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="ghost"
+                onClick={() => setConfirmationModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                disabled={loading2}
+                variant="default"
+                onClick={handleUploadAfterConfirmation}
+              >
+                {loading2 ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <span>Processing...</span>
+                  </>
+                ) : (
+                  "Confirm"
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Show summary of Tally upload if there are any failed transactions */}
+        <Dialog
+          open={failedTransactions.length > 0 || successIds.length > 0}
+          onOpenChange={setFailedTransactions}
+        >
+          <DialogContent className="min-w-[500px] max-w-[40%] max-h-[90%] overflow-y-auto">
+            <DialogHeader />
+            <DialogDescription>{tallyUploadResponseStats()}</DialogDescription>
+            <DialogFooter className="sticky bottom-0">
+              <Button
+                variant="default"
+                onClick={() => {
+                  setFailedTransactions([]);
+                  setSuccessIds([]);
+                }}
+              >
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </Card>
     </div>
   );
 };
