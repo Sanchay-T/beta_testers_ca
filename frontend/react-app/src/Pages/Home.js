@@ -15,7 +15,6 @@ import Sidebar from "../components/Sidebar";
 import MainDashboard from "../components/MainDashboardComponents/MainDashboard";
 import Eligibility from "../components/MainDashboardComponents/Eligibility";
 import Billing from "../components/MainDashboardComponents/Billing";
-import { Toaster } from "../components/ui/toaster";
 import Analytics from "../components/MainDashboardComponents/Analytics";
 import ExcelViewer from "../components/ImortTally/TallyPrime";
 import ExcelERP from "../components/ImortTally/TallyERP";
@@ -147,7 +146,6 @@ const Dashboard = () => {
             </main>
           </div>
         </ScrollArea>
-        <Toaster />
       </div>
     </>
   );

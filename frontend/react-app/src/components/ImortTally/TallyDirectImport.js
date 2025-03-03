@@ -30,7 +30,7 @@ const defaultColumns = {
   "Payment Receipt Contra Voucher": [
     "invoice_date",
     "effective_date",
-    "reference_number",
+    // "reference_number",
     "dr_ledger",
     "cr_ledger",
     "amount",
@@ -102,7 +102,7 @@ const TallyDirectImport = ({ source }) => {
               year: "numeric",
             }),
             effective_date: "",
-            reference_number: "",
+            // reference_number: "",
             bill_reference: "",
             dr_ledger:
               transaction.type === "debit"
@@ -278,7 +278,7 @@ const TallyDirectImport = ({ source }) => {
           ),
           effectiveDate: formatDateForTally(transaction.effective_date || ""),
           // effectiveDate: 20240401,
-          referenceNumber: transaction.reference_number || null,
+          // referenceNumber: transaction.reference_number || null,
           DrLedger: transaction.dr_ledger || null,
           CrLedger: transaction.cr_ledger || null,
           amount: parseInt(transaction.amount),

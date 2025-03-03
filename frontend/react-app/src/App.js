@@ -15,6 +15,7 @@ import Login from "./components/Authentication/Login";
 import UpdateNotification from "./components/UpdateNotification";
 import { useLoading } from "./contexts/LoadingContext";
 import { useToast } from "./hooks/use-toast";
+import { Toaster } from "./components/ui/toaster";
 
 function App() {
   const [showIntro, setShowIntro] = useState(true);
@@ -120,6 +121,7 @@ function App() {
                 }
               />
             </Routes>
+              <Toaster />
             </ReportProvider>
           </BreadcrumbProvider>
         </HashRouter>

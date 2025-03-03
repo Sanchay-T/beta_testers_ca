@@ -11,6 +11,7 @@ import {
   Mail,
   Share2,
   UploadCloud,
+  Copy
 } from "lucide-react";
 import { Card, CardContent, CardHeader } from "../ui/card";
 import {
@@ -61,6 +62,7 @@ import {
 } from "../ui/select";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { useReportContext } from "../../contexts/ReportContext";
+import { AiFillFileExcel } from "react-icons/ai"; // Install react-icons using npm install react-icons
 
 const ledgerGroups = [
   "Branch / Divisions",
@@ -979,6 +981,48 @@ const DataTable = ({
     );
   };
 
+  const handleCopyToClipboard = () => {
+    // Use the same "columns" array (filtered to ignore unwanted keys)
+    // const headerRow = columns.join('\t');
+    // Map over the filteredData (or data you want to copy) and join each row's values with a tab.
+    const rows = filteredData.map((row) => {
+      const rowValues = columns.map((col) => {
+        if (col === 'bill_reference') {
+          return row[col] ? row[col] : '-';
+        }
+        return row[col];
+      });
+      return [companyName, ...rowValues].join('\t');
+    });
+
+
+    // const textToCopy = [headerRow, ...rows].join('\n');
+    const textToCopy = [...rows].join('\n');
+  
+    navigator.clipboard.writeText(textToCopy)
+      .then(() => {
+        toast({
+          title: "Copied to Clipboard",
+          description: "You can now paste the data directly into Excel.",
+        });
+      })
+      .catch((err) => {
+        console.error("Error copying text: ", err);
+      });
+  };
+  const handleOpenFile = async (filePath) => {
+    console.log("filePath", filePath);
+    try {
+      const response = await window.electron.openFile(filePath);
+      if (response.error) {
+        throw new Error(response.error); // If there's an error, throw it
+      }
+      console.log("File opened successfully:", response);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
     <Card className="min-w-full max-w-[0]">
       <div className="flex justify-between items-center px-4 pt-2">
@@ -1023,13 +1067,20 @@ const DataTable = ({
 
       <CardHeader>
         <div className="flex justify-between items-center">
-          <div className="space-y-2">
+          <div className="space- flex gap-x-2">
             <Button
               onClick={handleUploadToTally}
               className="px-6 py-3 text-base font-medium text-white bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 hover:bg-gray-700 transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
             >
               <UploadCloud className="w-5 h-5 text-white" />
               Upload to Tally
+            </Button>
+            <Button
+              onClick={() => handleOpenFile("tallyprime/payment.xlsm")}
+              className="px-6 py-3 text-base font-medium text-white  transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
+            >
+              <AiFillFileExcel className="w-5 h-5 text-white" />
+              Open Voucher
             </Button>
             {/* <CardTitle className="dark:text-slate-300">{title || "Data Table"}</CardTitle> */}
             {/* <CardDescription>{subtitle || "View and manage your data"}</CardDescription> */}
@@ -1100,6 +1151,13 @@ const DataTable = ({
                   </TooltipTrigger>
                   <TooltipContent>Share</TooltipContent>
                 </Tooltip>
+
+                <Button variant="ghost" className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
+                                transition-all shadow-sm hover:shadow-md" onClick={handleCopyToClipboard}>
+                  {/* You can use an icon like Copy from lucide-react */}
+                  <Copy className="w-4 h-4" />
+                  Copy Data
+                </Button>
               </div>
 
               {hasEntity && (
