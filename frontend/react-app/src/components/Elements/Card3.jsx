@@ -31,9 +31,9 @@ const Card3 = ({ title, value1, value2, mainValue1 = 0, mainValue2 = 0,handleTab
   const [isLoading, setIsLoading] = useState(true);
 
   const contactInfo = {
-    phone: "+91 9833553348",
+    phone: "+91 8108108800",
     email: "support@cyphersol.com",
-    whatsapp: "+91 9833553348",
+    whatsapp: "+91 8108108800",
   };
 
   useEffect(() => {

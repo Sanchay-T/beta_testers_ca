@@ -60,60 +60,45 @@ import {
   SelectValue,
 } from "../ui/select";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
+import { useReportContext } from "../../contexts/ReportContext";
 
-const categoryOptionsfixed = [
-  "Bank Charges",
-  "Bank Interest Received",
-  "Bonus Paid",
-  "Bonus Received",
-  "Bounce",
-  "Cash Deposits",
-  "Cash Reversal",
-  "Cash Withdrawal",
-  "Closing Balance",
-  "Credit Card Payment",
-  "Debtor List",
-  "Departmental Stores",
-  "Donation",
-  "Food Expense/Hotel",
-  "General Insurance",
-  "Gold Loan",
-  "GST Paid",
-  "Income Tax Paid",
-  "Income Tax Refund",
-  "Indirect tax",
-  "Interest Debit",
-  "Interest Received",
-  "Investment",
-  "Life insurance",
-  "Loan",
-  "Loan given",
-  "Local Cheque Collection",
-  "Online Shopping",
-  "Opening Balance",
-  "Other Expenses",
-  "POS-Cr",
-  "POS-Dr",
-  "Probable Claim Settlement",
-  "Property Tax",
-  "Provident Fund",
-  "Redemption, Dividend & Interest",
-  "Refund/Reversal",
-  "Rent Paid",
-  "Rent Received",
-  "Salary Paid",
-  "Salary Received",
-  "Subscription / Entertainment",
-  "TDS Deducted",
-  "Total Income Tax Paid",
-  "Travelling Expense",
-  "UPI-Cr",
-  "UPI-Dr",
-  "Utility Bills",
-  "Loan taken",
-  "Loan Given",
-  "Self transfer",
+const ledgerGroups = [
+  "Branch / Divisions",
+  "Capital Account",
+  "Current Assets",
+  "Current Liabilities",
+  "Direct Expenses",
+  "Direct Incomes",
+  "Fixed Assets",
+  "Indirect Expenses",
+  "Indirect Incomes",
+  "Investments",
+  "Loans (Liability)",
+  "Misc. Expenses (ASSET)",
+  "Purchase Accounts",
+  "Sales Accounts",
+  "Suspense A/c",
+  "Bank Accounts",
+  "Bank OD A/c",
+  "Cash-in-Hand",
+  "Deposits (Asset)",
+  "Duties &amp; Taxes", // <--- &amp; is preserved
+  "Loans &amp; Advances (Asset)", // <--- &amp; is preserved
+  "Provisions",
+  "Reserves &amp; Surplus", // <--- &amp; is preserved
+  "Secured Loans",
+  "Stock-in-Hand",
+  "Sundry Creditors",
+  "Sundry Debtors",
+  "Unsecured Loans",
+  "Profit &amp; Loss A/c", // <--- &amp; is preserved
+  "Bank OCC A/c",
 ];
+
+function decodeHtmlEntities(str) {
+  // Replace any &amp; with &
+  return str.replace(/&amp;/g, "&");
+}
 
 const DataTable = ({
   data = [],
@@ -124,6 +109,7 @@ const DataTable = ({
   handleUpload,
   companyName,
   setCompanyName,
+  selectedVoucher,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [transactions, setTransactions] = useState([]);
@@ -143,7 +129,11 @@ const DataTable = ({
     "id",
     "transactionId",
   ]);
-  const [categoryOptions, setCategoryOptions] = useState(categoryOptionsfixed);
+  const [categoryOptions, setCategoryOptions] = useState([]);
+  const [dateFilterModalOpen, setDateFilterModalOpen] = useState(false);
+  const [currentDateColumn, setCurrentDateColumn] = useState([]);
+  const [toDate, setToDate] = useState("");
+  const [fromDate, setFromDate] = useState("");
 
   // Category states
   const [hasChanges, setHasChanges] = useState(false);
@@ -184,6 +174,22 @@ const DataTable = ({
   const [selectedTransactions, setSelectedTransactions] = useState([]);
   const [bulkLedgerValue, setBulkLedgerValue] = useState("");
   const [ledgerField, setLedgerField] = useState("dr_ledger"); // "dr_ledger" or "cr_ledger"
+
+  // Get report data from context
+  const { reportData, updateReportData } = useReportContext();
+  const [numbericInput, setNumbericInput] = useState([
+    "pincode",
+    "opening_balance",
+  ]);
+  const [dateInput, setDateInput] = useState([""]);
+  const [textAreaInput, setTextAreaInput] = useState([
+    "address",
+    "state",
+    "city",
+    "country",
+    "gst_number",
+  ]);
+  const [existingFilterData, setExistingFilterData] = useState([]);
 
   const isFirstLoad = useRef(true);
 
@@ -234,12 +240,14 @@ const DataTable = ({
   const hasEntity = columns.some((column) => column.toLowerCase() === "entity");
 
   // Determine which columns are numeric
-  const numericColumns = columns.filter((column) =>
+  const numericColumnstemp = columns.filter((column) =>
     data.some((row) => {
       const value = String(row[column]);
       return !isNaN(parseFloat(value)) && !value.includes("-");
     })
   );
+
+  const numericColumns = [...numericColumnstemp, ...numbericInput];
 
   const handleCategoryClassification = (category, classificationType) => {
     console.log(`Category: ${category}, Type: ${classificationType}`);
@@ -434,7 +442,7 @@ const DataTable = ({
     );
   };
 
-  const filteredCategories = categoryOptions.filter((category) =>
+  const filteredCategories = ledgerGroups.filter((category) =>
     category.toLowerCase().includes(categorySearchTerm.toLowerCase())
   );
 
@@ -447,20 +455,25 @@ const DataTable = ({
   };
 
   const handleColumnFilter = () => {
+    const dataToFilter =
+      existingFilterData.length > 0 ? existingFilterData : data;
     if (selectedCategories.length === 0) {
       setFilteredData(data);
     } else {
-      const filtered = data.filter((row) =>
+      const filtered = dataToFilter.filter((row) =>
         selectedCategories.includes(String(row[currentFilterColumn]))
       );
       setFilteredData(filtered);
+      setExistingFilterData(filtered);
     }
     setCurrentPage(1);
     setFilterModalOpen(false);
   };
 
   const handleNumericFilter = (columnName, min, max) => {
-    const filtered = data.filter((row) => {
+    const dataToFilter =
+      existingFilterData.length > 0 ? existingFilterData : data;
+    const filtered = dataToFilter.filter((row) => {
       const value = parseFloat(row[columnName]);
       if (isNaN(value)) return false;
       const meetsMin = min === "" || value >= parseFloat(min);
@@ -468,6 +481,94 @@ const DataTable = ({
       return meetsMin && meetsMax;
     });
     setFilteredData(filtered);
+    setExistingFilterData(filtered);
+    setCurrentPage(1);
+  };
+
+  const handleDateFilter = (columnName, fromDate, toDate) => {
+    console.log("Initial filter params:", { columnName, fromDate, toDate });
+
+    const dataToFilter =
+      existingFilterData.length > 0 ? existingFilterData : data;
+
+    const parseDate = (dateStr) => {
+      if (!dateStr) return null;
+      console.log("Parsing date:", dateStr);
+
+      // Handle date input format (yyyy-mm-dd)
+      if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const date = new Date(dateStr);
+        date.setHours(0, 0, 0, 0);
+        console.log("Parsed input date:", date);
+        return date;
+      }
+
+      // Handle data format (dd/mm/yyyy)
+      let day, month, year;
+      if (dateStr.includes("/")) {
+        [day, month, year] = dateStr.split("/");
+      } else if (dateStr.includes("-")) {
+        [day, month, year] = dateStr.split("-");
+      } else {
+        console.warn("Unsupported date format:", dateStr);
+        return null;
+      }
+
+      // Ensure we have all parts
+      if (!day || !month || !year) {
+        console.warn("Invalid date parts:", { day, month, year });
+        return null;
+      }
+
+      // Create date (month - 1 because months are 0-based in JavaScript)
+      const date = new Date(year, parseInt(month) - 1, parseInt(day));
+      date.setHours(0, 0, 0, 0);
+
+      // Validate the date is correct
+      if (isNaN(date.getTime())) {
+        console.warn("Invalid date created:", dateStr);
+        return null;
+      }
+
+      console.log("Parsed data date:", date);
+      return date;
+    };
+
+    const from = parseDate(fromDate);
+    const to = parseDate(toDate);
+
+    if (!from || !to) {
+      console.warn("Invalid date range:", { fromDate, toDate });
+      return;
+    }
+
+    // Set end of day for to date
+    to.setHours(23, 59, 59, 999);
+
+    console.log("Processing with date range:", { from, to });
+
+    const filtered = dataToFilter.filter((row) => {
+      const rowDateStr = row[columnName];
+      const rowDate = parseDate(rowDateStr);
+
+      if (!rowDate) {
+        console.warn("Invalid row date:", rowDateStr);
+        return false;
+      }
+
+      const isInRange = rowDate >= from && rowDate <= to;
+      console.log("Row date check:", {
+        date: rowDate.toISOString(), // Convert to string for better logging
+        isInRange,
+        value: row[columnName],
+      });
+
+      return isInRange;
+    });
+
+    // console.log("Filtered results count:", filtered.length);
+    setFilteredData(filtered);
+    setExistingFilterData(filtered);
     setCurrentPage(1);
   };
 
@@ -479,6 +580,9 @@ const DataTable = ({
     setMaxValue("");
     setSelectedCategories([]);
     setCategorySearchTerm("");
+    setFromDate("");
+    setToDate("");
+    setExistingFilterData([]);
   };
 
   const getUniqueValues = (columnName) => {
@@ -672,35 +776,6 @@ const DataTable = ({
     return pageNumbers;
   };
 
-  const handleAddCategory = (newCategory, row) => {
-    // Check if the new category is non-empty and not already in the options
-    if (newCategory && !categoryOptions.includes(newCategory)) {
-      // Set the category that needs classification
-      setNewCategoryToClassify(newCategory);
-      // Add the new category to your category options and sort them
-      const updatedOptions = [...categoryOptions, newCategory].sort();
-      setCategoryOptions(updatedOptions);
-      localStorage.setItem("categoryOptions", JSON.stringify(updatedOptions));
-
-      if (row) {
-        // Single-row update flow: store the pending change using the transaction id.
-        setPendingCategoryChange({
-          transactionId: row.id,
-          newCategory,
-          oldCategory: row.category,
-          transaction: row,
-          isDebit: row.credit === 0,
-        });
-        setShowClassificationModal(true);
-      } else {
-        // Bulk update flow: simply show the classification modal.
-        setShowClassificationModal(true);
-      }
-      return true;
-    }
-    return false;
-  };
-
   // Calculate totals for numeric columns
   const totals = numericColumns.reduce((acc, column) => {
     const total = filteredData.reduce((sum, row) => {
@@ -714,12 +789,27 @@ const DataTable = ({
     setShareModalOpen(true);
   };
 
+  // const handleDownload = ()=>{
+  //   exportToExcel(data,title);
+  // }
+
   const handleDownload = () => {
-    exportToExcel(data, title);
+    let newTitle = title;
+
+    const tmpName = reportData.reportName;
+    newTitle = `${tmpName} ${newTitle}`;
+
+    exportToExcel(data, (title = newTitle));
   };
 
   const handleMailShare = async () => {
-    const fileName = await exportToExcel(data, `${title}.xlsx`, true);
+    let newTitle = title;
+    const tmpName = reportData.customerName
+      ? reportData.customerName
+      : reportData.reportName;
+    newTitle = `${tmpName} ${title}`;
+
+    const fileName = await exportToExcel(data, `${newTitle}.xlsx`, true);
     if (!fileName) return alert("File saving was canceled.");
 
     // Generate mailto link (without attachment, since it's not possible)
@@ -734,7 +824,13 @@ const DataTable = ({
   };
 
   const handleWhatsappShare = async () => {
-    const fileName = await exportToExcel(data, `${title}.xlsx`, true);
+    let newTitle = title;
+    const tmpName = reportData.customerName
+      ? reportData.customerName
+      : reportData.reportName;
+    newTitle = `${tmpName} ${title}`;
+
+    const fileName = await exportToExcel(data, `${newTitle}.xlsx`, true);
     if (!fileName) return alert("File saving was canceled.");
 
     // Generate WhatsApp sharing link (without attachment, since it's not possible)
@@ -766,8 +862,26 @@ const DataTable = ({
   };
 
   const handleUploadToTally = async () => {
-    console.log("Upload to Tally transaction", transactions);
-    handleUpload(transactions);
+    let data = transactions;
+    // Check if any rows are selected
+    if (globalSelectedRows.length > 0) {
+      data = transactions.filter((tx) => globalSelectedRows.includes(tx.id));
+    }
+    // if(selectedVoucher==="Ledger"){
+    //   // If no rows selected, show a warning (optional)
+    //   if (globalSelectedRows.length === 0) {
+    //     alert("Please select at least one row to upload.");
+    //     return;
+    //   }
+
+    //   // 2) Grab only those transactions whose IDs are in `selectedTransactions`
+    //   const selectedRows = data.filter((tx) =>
+    //     globalSelectedRows.includes(tx.id)
+    //   );
+    //   data=selectedRows
+    // }
+    console.log("Uploading data:", data);
+    handleUpload(data);
   };
 
   const handleLedgerChange = (transactionId, field, value) => {
@@ -824,8 +938,49 @@ const DataTable = ({
     setBulkLedgerValue("");
   };
 
+  const renderCell = (row, column) => {
+    const value = row[column];
+
+    // If we're in editing mode and an input type is defined,
+    // render an input field based on the inputType.
+    let typeProp = null;
+
+    if (numbericInput.includes(column)) {
+      typeProp = "number";
+    }
+    if (dateInput.includes(column)) {
+      typeProp = "date";
+    }
+    if (textAreaInput.includes(column)) {
+      typeProp = "text";
+    }
+
+    if (typeProp) {
+      return (
+        <Input
+          type={typeProp}
+          value={value || ""}
+          onChange={(e) => handleInputChange(row.id, column, e.target.value)}
+          className="w-full p-2 border rounded-md"
+        />
+      );
+    }
+
+    // Otherwise, simply render the value.
+    return <div>{value}</div>;
+  };
+
+  const handleLedgerGroupChange = (row, value) => {
+    setFilteredData((prevData) =>
+      prevData.map((transaction) =>
+        transaction.id === row.id
+          ? { ...transaction, ledger_group: value }
+          : transaction
+      )
+    );
+  };
+
   return (
-    // if source is equal to lifo or fifo then show the table
     <Card className="min-w-full max-w-[0]">
       <div className="flex justify-between items-center px-4 pt-2">
         <div className="flex items-center gap-4">
@@ -968,15 +1123,6 @@ const DataTable = ({
           <Table className="w-full">
             <TableHeader className="bg-gray-200 dark:bg-gray-900">
               <TableRow>
-                {/* {(columns.includes("category") || columns.includes("entity") )&&  <TableHead className="w-10">
-                    <Checkbox
-                        checked={
-                        currentData.length > 0 &&
-                        currentData.every((row) => globalSelectedRows.has(row.id))
-                        }
-                        onCheckedChange={toggleSelectAll}
-                    />
-                  </TableHead>} */}
                 <TableHead className="w-10">
                   <Checkbox
                     checked={
@@ -988,12 +1134,11 @@ const DataTable = ({
                 {columns.map((column) => (
                   <TableHead
                     key={column}
-                    className={`whitespace-nowrap ${
-                      ["bill_reference", "dr_ledger", "cr_ledger"].includes(
-                        column
-                      ) && "min-w-[180px]"
-                    } ${column === "narration" && "min-w-[300px]"}`}
-                    // className={source === "summary" ? "bg-gray-900 dark:bg-slate-800 text-white" : ""}
+                    className={`whitespace-nowrap ${["bill_reference", "dr_ledger", "cr_ledger"].includes(
+                      column
+                    ) && "min-w-[180px]"
+                      } ${column === "narration" && "min-w-[300px]"}`}
+                  // className={source === "summary" ? "bg-gray-900 dark:bg-slate-800 text-white" : ""}
                   >
                     <div className="flex items-center gap-2">
                       {["dr_ledger", "cr_ledger"].includes(column) && (
@@ -1016,25 +1161,31 @@ const DataTable = ({
                         "effective_date",
                         "reference_number",
                       ].includes(column.toLowerCase()) === false && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0"
-                          onClick={() => {
-                            if (numericColumns.includes(column)) {
-                              setCurrentNumericColumn(column);
-                              setNumericFilterModalOpen(true);
-                            } else {
-                              setCurrentFilterColumn(column);
-                              setSelectedCategories([]);
-                              setCategorySearchTerm("");
-                              setFilterModalOpen(true);
-                            }
-                          }}
-                        >
-                          ▼
-                        </Button>
-                      )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={() => {
+                              if (column.toLowerCase() === "date") {
+                                setCurrentFilterColumn(column);
+                                setCurrentDateColumn(column);
+                                setDateFilterModalOpen(true);
+                              } else if (column.toLowerCase() === "amount") {
+                                setCurrentNumericColumn(column);
+                                setNumericFilterModalOpen(true);
+                                setDateFilterModalOpen(false);
+                              } else {
+                                setCurrentFilterColumn(column);
+                                setSelectedCategories([]);
+                                setCategorySearchTerm("");
+                                setFilterModalOpen(true);
+                                setDateFilterModalOpen(false);
+                              }
+                            }}
+                          >
+                            ▼
+                          </Button>
+                        )}
                     </div>
                   </TableHead>
                 ))}
@@ -1056,12 +1207,11 @@ const DataTable = ({
                   return (
                     <TableRow
                       key={row.id}
-                      className={`${
-                        row.imported
-                          ? "bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800"
-                          : "hover:bg-gray-100 dark:hover:bg-gray-800"
-                      }`}
-                      // className={source === "summary" ? "even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200" : ""}
+                      className={`${row.imported
+                        ? "bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800"
+                        : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                        }`}
+                    // className={source === "summary" ? "even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200" : ""}
                     >
                       <TableCell>
                         <Checkbox
@@ -1103,16 +1253,16 @@ const DataTable = ({
                               </div>
                             </TableCell>
                           );
-                        } else if (column.toLowerCase() === "category") {
+                        } else if (column.toLowerCase() === "ledger_group") {
                           return (
                             <TableCell
                               key={column}
-                              className="max-w-[200px] group relative"
+                              className="min-w-[250px] group relative"
                             >
                               <Select
                                 value={row[column]}
                                 onValueChange={(value) =>
-                                  handleCategoryChange(row, value)
+                                  handleLedgerGroupChange(row, value)
                                 }
                                 className="w-full"
                                 disabled={globalSelectedRows.has(row.id)}
@@ -1128,7 +1278,7 @@ const DataTable = ({
                                   <div className="p-2 border-b flex gap-2">
                                     <div className="relative flex-1">
                                       <Input
-                                        placeholder="Search categories..."
+                                        placeholder="Search Group..."
                                         value={categorySearchTerm}
                                         onChange={(e) =>
                                           handleCategorySearch(e)
@@ -1146,37 +1296,37 @@ const DataTable = ({
                                         }}
                                       />
                                     </div>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="px-2 h-10"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        if (categorySearchTerm.trim()) {
-                                          // Pass the whole row for a single update
-                                          const added = handleAddCategory(
-                                            categorySearchTerm.trim(),
-                                            row
-                                          );
-                                          if (added) {
-                                            setCategorySearchTerm("");
-                                          }
-                                        }
-                                      }}
-                                    >
-                                      <Plus className="h-4 w-4" />
-                                      Add
-                                    </Button>
+                                    {/* <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="px-2 h-10"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    if (categorySearchTerm.trim()) {
+                                      // Pass the whole row for a single update
+                                      const added = handleAddCategory(
+                                        categorySearchTerm.trim(),
+                                        row
+                                      );
+                                      if (added) {
+                                        setCategorySearchTerm("");
+                                      }
+                                    }
+                                  }}
+                                >
+                                  <Plus className="h-4 w-4" />
+                                  Add
+                                </Button> */}
                                   </div>
                                   <div className="max-h-[200px] overflow-y-auto">
                                     {filteredCategories.length > 0 ? (
-                                      filteredCategories.map((category) => (
+                                      filteredCategories.map((ledgerGroup) => (
                                         <SelectItem
-                                          key={category}
-                                          value={category}
+                                          key={ledgerGroup}
+                                          value={ledgerGroup}
                                         >
-                                          {category}
+                                          {decodeHtmlEntities(ledgerGroup)}
                                         </SelectItem>
                                       ))
                                     ) : (
@@ -1296,8 +1446,8 @@ const DataTable = ({
                                 {row[column] === true
                                   ? "Success"
                                   : row.failed_reason === ""
-                                  ? "Not Uploaded Yet"
-                                  : "Failed"}
+                                    ? "Not Uploaded Yet"
+                                    : "Failed"}
                               </div>
                             </TableCell>
                           );
@@ -1370,7 +1520,7 @@ const DataTable = ({
                         } else {
                           return (
                             <TableCell key={column} className="max-w-[200px]">
-                              <div>{row[column]}</div>
+                              {renderCell(row, column)}
                             </TableCell>
                           );
                         }
@@ -1436,7 +1586,7 @@ const DataTable = ({
                     className={cn(
                       "cursor-pointer",
                       currentPage === totalPages &&
-                        "pointer-events-none opacity-50"
+                      "pointer-events-none opacity-50"
                     )}
                   />
                 </PaginationItem>
@@ -1580,6 +1730,70 @@ const DataTable = ({
         </Dialog>
       )}
 
+      {/* Date Filter Modal */}
+      {dateFilterModalOpen && (
+        <Dialog
+          open={dateFilterModalOpen}
+          onOpenChange={setDateFilterModalOpen}
+        >
+          <DialogContent className="sm:max-w-[400px]">
+            <DialogHeader>
+              <DialogTitle>Filter {currentDateColumn}</DialogTitle>
+              <p className="text-sm text-gray-600">
+                Select a start and end date for the filter.
+              </p>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Start Date</Label>
+                <Input
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => {
+                    console.log("Start date changed:", e.target.value);
+                    setFromDate(e.target.value);
+                  }}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>End Date</Label>
+                <Input
+                  type="date"
+                  value={toDate}
+                  onChange={(e) => {
+                    console.log("End date changed:", e.target.value);
+                    setToDate(e.target.value);
+                  }}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="ghost"
+                onClick={() => setDateFilterModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="default"
+                className="bg-black hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
+                onClick={() => {
+                  console.log("Applying filter with:", {
+                    fromDate,
+                    toDate,
+                    currentDateColumn,
+                  });
+                  handleDateFilter(currentDateColumn, fromDate, toDate);
+                  setDateFilterModalOpen(false);
+                }}
+              >
+                Apply Filter
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
       {/* Bulk Category Update Modal */}
       <Dialog
         open={bulkCategoryModalOpen}
@@ -1618,31 +1832,31 @@ const DataTable = ({
                       }}
                     />
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="px-2 h-10"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      if (categorySearchTerm.trim()) {
-                        // In bulk mode we do not pass a row
-                        const added = handleAddCategory(
-                          categorySearchTerm.trim()
-                        );
-                        if (added) {
-                          setCategorySearchTerm("");
-                        }
-                      }
-                    }}
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add
-                  </Button>
+                  {/* <Button
+                            variant="outline"
+                            size="sm"
+                            className="px-2 h-10"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              if (categorySearchTerm.trim()) {
+                                // In bulk mode we do not pass a row
+                                const added = handleAddCategory(
+                                  categorySearchTerm.trim()
+                                );
+                                if (added) {
+                                  setCategorySearchTerm("");
+                                }
+                              }
+                            }}
+                          >
+                            <Plus className="h-4 w-4" />
+                            Add
+                          </Button> */}
                 </div>
                 <div className="overflow-y-auto">
-                  {filteredCategories.length > 0 ? (
-                    filteredCategories.map((category) => (
+                  {ledgerGroups.length > 0 ? (
+                    ledgerGroups.map((category) => (
                       <SelectItem key={category} value={category}>
                         {category}
                       </SelectItem>
@@ -1710,34 +1924,6 @@ const DataTable = ({
         </DialogContent>
       </Dialog>
 
-      {/* Confirmation Modal */}
-      <Dialog
-        open={confirmationModalOpen}
-        onOpenChange={setConfirmationModalOpen}
-      >
-        <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle>Confirm Category Update</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to update the category to "
-              {selectedBulkCategory}" for {globalSelectedRows.size}{" "}
-              transactions?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="ghost"
-              onClick={() => setConfirmationModalOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button variant="default" onClick={handleBulkCategoryChange}>
-              Confirm Update
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {/* Classification Modal */}
       <Dialog
         open={showClassificationModal}
@@ -1795,82 +1981,6 @@ const DataTable = ({
         </DialogContent>
       </Dialog>
 
-      {/* Reasoning Modal for Single Category Change */}
-      <Dialog open={reasoningModalOpen} onOpenChange={setReasoningModalOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle className="mb-2">
-              Category Change Reasoning
-            </DialogTitle>
-            <DialogDescription>
-              Transaction Details:
-              {currentTransaction && (
-                <div className="mt-2 p-3 bg-muted rounded-md">
-                  <p>
-                    <strong>Description:</strong>{" "}
-                    {currentTransaction.Description}
-                  </p>
-                  <p>
-                    <strong>Category Change:</strong>{" "}
-                    {pendingCategoryChange?.oldCategory} →{" "}
-                    {pendingCategoryChange?.newCategory}
-                  </p>
-                </div>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="show-keywords"
-                checked={showKeywordInput}
-                onCheckedChange={setShowKeywordInput}
-              />
-              <Label htmlFor="show-keywords">
-                Add keywords for category change
-              </Label>
-            </div>
-
-            {showKeywordInput && (
-              <div className="space-y-2">
-                <Label>
-                  What keywords from the description made you change the
-                  category from "{pendingCategoryChange?.oldCategory}" to "
-                  {pendingCategoryChange?.newCategory}"?
-                </Label>
-                <Input
-                  value={reasoning}
-                  onChange={(e) => setReasoning(e.target.value)}
-                  placeholder="Enter Keyword..."
-                />
-              </div>
-            )}
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="ghost"
-              onClick={() => {
-                setReasoningModalOpen(false);
-                setPendingCategoryChange(null);
-                setReasoning("");
-                setShowKeywordInput(false);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="default"
-              onClick={confirmCategoryChange}
-              disabled={showKeywordInput && !reasoning}
-            >
-              Confirm Change
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {/* share modal dialog */}
       <Dialog open={shareModalOpen} onOpenChange={setShareModalOpen}>
         <DialogContent className="max-w-md p-6 rounded-lg shadow-lg border dark:border-gray-700 bg-white dark:bg-gray-900">
@@ -1912,6 +2022,15 @@ const DataTable = ({
                 <TooltipContent>Share via WhatsApp</TooltipContent>
               </Tooltip>
             </TooltipProvider>
+          </div>
+
+          <div className="text-xs text-left">
+            <p>
+              <span className="font-bold">Note:</span> Since this software
+              operates entirely offline, the report is first downloaded to your
+              device before sharing, Please remember to attach the downloaded
+              file.
+            </p>
           </div>
 
           {/* Cancel Button */}

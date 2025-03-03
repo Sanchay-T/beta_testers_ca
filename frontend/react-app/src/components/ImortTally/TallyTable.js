@@ -863,6 +863,10 @@ const DataTable = ({
 
   const handleUploadToTally = async () => {
     let data = transactions;
+    // Check if any rows are selected
+    if (globalSelectedRows.length > 0) {
+      data = transactions.filter((tx) => globalSelectedRows.includes(tx.id));
+    }
     // if(selectedVoucher==="Ledger"){
     //   // If no rows selected, show a warning (optional)
     //   if (globalSelectedRows.length === 0) {

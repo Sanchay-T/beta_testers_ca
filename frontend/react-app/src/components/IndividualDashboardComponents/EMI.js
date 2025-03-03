@@ -3,6 +3,16 @@ import BarLineChart from "../charts/BarLineChart";
 import UnifiedTable from "./UnifiedTable";
 import ToggleStrip from "./ToggleStrip";
 import { useParams } from "react-router-dom";
+import EmiTransactionDialog from "./EmiTransactionDialog";
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '../ui/table';
 
 const EMI = () => {
   const [data, setData] = useState([]);
@@ -11,6 +21,8 @@ const EMI = () => {
   const { caseId, individualId } = useParams();
   const [availableMonths, setAvailableMonths] = useState([]);
   const [selectedMonths, setSelectedMonths] = useState([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedEmi, setSelectedEmi] = useState(null);
   
     // Helper function to get month key
     const getMonthKey = (dateString) => {
@@ -135,6 +147,11 @@ const EMI = () => {
     });
   };
 
+  const handleEmiRowClick = (emi) => {
+    setSelectedEmi(emi);
+    setDialogOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="bg-gray-100 p-4 rounded-md w-full h-[10vh]">
@@ -176,17 +193,60 @@ const EMI = () => {
                 title="Probable EMI"
               />
             </div>
-            <div>
+              {/* <div>
             <UnifiedTable data={emiSummary} title="Emi Summary" 
                     caseId={caseId}
                     />
+              </div> */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Emi Summary</CardTitle>
+                  <p className="text-sm text-gray-500">View and manage your data</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Description</TableHead>
+                          <TableHead>Amount</TableHead>
+                          <TableHead>Frequency</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {emiSummary.map((emi, index) => (
+                          <TableRow
+                            key={index}
+                            className="cursor-pointer hover:bg-gray-50"
+                            onClick={() => handleEmiRowClick(emi)}
+                          >
+                            <TableCell>{emi.description}</TableCell>
+                            <TableCell>{emi.amount}</TableCell>
+                            <TableCell>{emi.frequency}</TableCell>
+                          </TableRow>
+                        ))}
+                        <TableRow className="bg-gray-50 font-medium">
+                          <TableCell>Total</TableCell>
+                          <TableCell>{emiSummary.reduce((sum, item) => sum + item.amount, 0)}</TableCell>
+                          <TableCell>{emiSummary.reduce((sum, item) => sum + item.frequency, 0)}</TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
           </div>
+                </CardContent>
+              </Card>
             <div className="w-full">
               <UnifiedTable data={filteredData} title="Emi Transactions" 
                     caseId={caseId}
                     refreshFunction={fetchData}
                     />
             </div>
+              <EmiTransactionDialog
+                isOpen={dialogOpen}
+                onClose={() => setDialogOpen(false)}
+                selectedEmi={selectedEmi}
+                transactions={filteredData}
+              />
           </>
         )}
         </>

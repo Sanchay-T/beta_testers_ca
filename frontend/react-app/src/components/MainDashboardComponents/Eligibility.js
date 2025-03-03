@@ -244,7 +244,7 @@ export default function Eligibility() {
                       Total Commission
                     </p>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-bold text-gray-900 dark:text-white animate-pulse">
+                      <span className="text-3xl font-bold text-gray-900 dark:text-white ">
                         ₹
                         {totals.commission.toLocaleString("en-IN", {
                           maximumFractionDigits: 0,

@@ -71,7 +71,7 @@ const Upi = () => {
         category: item.category || "-",
         monthKey: getMonthKey(item.date),
         entity: item.entity || "-",
-        transactionId: item.id,
+        id: item.id,
       }));
 
       const uniqueMonthsDr = [
@@ -236,6 +236,8 @@ const Upi = () => {
                     <UnifiedTable
                       data={filteredUpiCrData}
                       title="UPI Credit Transactions"
+                      source="upi-cr"
+                      refreshFunction={fetchData}
                     />
                   </div>
                 </>
@@ -276,6 +278,8 @@ const Upi = () => {
                     <UnifiedTable
                       data={filteredUpiDrData}
                       title="UPI Debit Transactions"
+                      source="upi-dr"
+                      refreshFunction={fetchData}
                     />
                   </div>
                 </>

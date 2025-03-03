@@ -801,115 +801,121 @@ const ManualTallyTable = ({
   return (
     <Card className="min-w-full max-w-[0] pt-6">
       <CardContent>
-        {/* Controls row: Company name, Bulk ledger, add row, etc. */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
-          <div className="flex items-center gap-4">
-            <label htmlFor="companyName" className="font-medium">
-              Company Name:
-            </label>
-            <input
-              id="companyName"
-              type="text"
-              placeholder="Enter Company Name"
-              value={companyName}
-              onChange={(e) => setCompanyName(e.target.value)}
-              className="border rounded-md p-2 w-64 dark:bg-gray-800 dark:text-white"
-            />
-          </div>
+     
 
-          <div className="flex flex-wrap gap-4">
-            {/* "Add Row" button for manual creation */}
-            <Button onClick={handleAddRow} variant="default">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Row
-            </Button>
+{/* Top Controls: Company Name & Action Buttons */}
+<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
+  {/* Left Side: Company Name */}
+  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+    <label htmlFor="companyName" className="font-medium">
+      Company Name:
+    </label>
+    <input
+      id="companyName"
+      type="text"
+      placeholder="Enter Company Name"
+      value={companyName}
+      onChange={(e) => setCompanyName(e.target.value)}
+      className="border rounded-md p-2 w-full sm:w-64 dark:bg-gray-800 dark:text-white"
+    />
+  </div>
 
-            {/* Bulk Ledger */}
-            <div className="flex items-center gap-2">
-              <select
-                onChange={(e) => setLedgerField(e.target.value)}
-                className="border rounded-md p-2"
-              >
-                <option value="dr_ledger">Dr Ledger</option>
-                <option value="cr_ledger">Cr Ledger</option>
-              </select>
-              <input
-                type="text"
-                placeholder={`Enter ${ledgerField}`}
-                value={bulkLedgerValue}
-                onChange={(e) => setBulkLedgerValue(e.target.value)}
-                className="border rounded-md p-2 w-32 dark:bg-gray-800 dark:text-white"
-              />
-              <Button
-                onClick={handleBulkLedgerUpdate}
-                disabled={selectedTransactions.length === 0}
-              >
-                Set Ledger
-              </Button>
-            </div>
+  {/* Right Side: Add Row, Bulk Ledger, Upload to Tally */}
+  <div className="flex flex-wrap items-center gap-4">
+    <Button onClick={handleAddRow} variant="default">
+      <Plus className="w-4 h-4 mr-2" />
+      Add Row
+    </Button>
 
-            <Button onClick={handleUploadToTally} variant="default">
-              <Share2 className="w-4 h-4 mr-2" />
-              Upload to Tally
-            </Button>
-          </div>
-        </div>
+    {/* Bulk Ledger */}
+    <div className="flex items-center gap-2">
+      <select
+        onChange={(e) => setLedgerField(e.target.value)}
+        className="border rounded-md p-2"
+      >
+        <option value="dr_ledger">Dr Ledger</option>
+        <option value="cr_ledger">Cr Ledger</option>
+      </select>
+      <input
+        type="text"
+        placeholder={`Enter ${ledgerField}`}
+        value={bulkLedgerValue}
+        onChange={(e) => setBulkLedgerValue(e.target.value)}
+        className="border rounded-md p-2 w-full sm:w-32 dark:bg-gray-800 dark:text-white"
+      />
+      <Button
+        onClick={handleBulkLedgerUpdate}
+        disabled={selectedTransactions.length === 0}
+      >
+        Set Ledger
+      </Button>
+    </div>
 
-        {/* Search & pagination controls */}
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search..."
-              className="pl-10 w-48"
-              value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
-            />
-          </div>
+    <Button onClick={handleUploadToTally} variant="default">
+      <Share2 className="w-4 h-4 mr-2" />
+      Upload to Tally
+    </Button>
+  </div>
+</div>
 
-          <div className="flex items-center gap-2">
-            <select
-              className="p-2 border rounded-md text-sm dark:bg-slate-800 dark:border-slate-700"
-              value={rowsPerPage}
-              onChange={(e) => {
-                setRowsPerPage(Number(e.target.value));
-                setCurrentPage(1);
-              }}
-            >
-              <option value="10">10 rows</option>
-              <option value="20">20 rows</option>
-              <option value="50">50 rows</option>
-            </select>
+{/* Search & Pagination Controls */}
+<div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+  <div className="relative">
+    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+    <Input
+      placeholder="Search..."
+      className="pl-10 w-full sm:w-48"
+      value={searchTerm}
+      onChange={(e) => handleSearch(e.target.value)}
+    />
+  </div>
 
-            <Button variant="outline" onClick={clearFilters}>
-              Clear Filters
-            </Button>
+  <div className="flex flex-wrap items-center gap-2">
+    <select
+      className="p-2 border rounded-md text-sm dark:bg-slate-800 dark:border-slate-700"
+      value={rowsPerPage}
+      onChange={(e) => {
+        setRowsPerPage(Number(e.target.value));
+        setCurrentPage(1);
+      }}
+    >
+      <option value="10">10 rows</option>
+      <option value="20">20 rows</option>
+      <option value="50">50 rows</option>
+    </select>
 
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" onClick={handleDownload}>
-                    <Download className="w-4 h-4 text-blue-500" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Download</TooltipContent>
-              </Tooltip>
+    <Button variant="outline" onClick={clearFilters}>
+      Clear Filters
+    </Button>
 
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setShareModalOpen(true)}
-                  >
-                    <Share2 className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Share</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-        </div>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button variant="ghost" size="icon" onClick={handleDownload}>
+            <Download className="w-4 h-4 text-blue-500" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Download</TooltipContent>
+      </Tooltip>
+
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShareModalOpen(true)}
+          >
+            <Share2 className="w-4 h-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Share</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  </div>
+</div>
+
+
+
 
         {/* Data Table */}
         <div className="overflow-x-auto max-w-full">

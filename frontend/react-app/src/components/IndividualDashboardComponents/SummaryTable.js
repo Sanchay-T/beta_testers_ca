@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { Search, Loader2, Turtle } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import {
   Card,
   CardContent,

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import UnifiedTable from "../IndividualDashboardComponents/UnifiedTable";
 
-const CategoryEditModal = ({ open, onOpenChange, caseId }) => {
+const CategoryEditModal = ({ open, onOpenChange, caseId,caseName }) => {
   const [transactionData, setTransactionData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -59,7 +59,7 @@ const CategoryEditModal = ({ open, onOpenChange, caseId }) => {
           
           <UnifiedTable
             data={transactionData}
-            title="Transactions"
+            title={`${caseName} Transactions`}
             caseId={parseInt(caseId)}
           />
         </div>

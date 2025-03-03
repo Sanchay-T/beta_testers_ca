@@ -3,14 +3,28 @@ import BarLineChart from "../charts/BarLineChart";
 import UnifiedTable from "./UnifiedTable";
 import ToggleStrip from "./ToggleStrip";
 import { useParams } from "react-router-dom";
+import InvestmentTransactionDialog from "./InvestmentTransactionDialog";
 // import investementData from "../../data/investment.json";
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '../ui/table';
 
 const Investment = () => {
   const [data, setData] = useState([]);
+  const [investmentSummary, setInvestmentSummary] = useState([]);
   const [loading, setLoading] = useState(true);
   const { caseId, individualId } = useParams();
     const [availableMonths, setAvailableMonths] = useState([]);
     const [selectedMonths, setSelectedMonths] = useState([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedInvestment, setSelectedInvestment] = useState(null);
+
       // Helper function to get month key
       const getMonthKey = (dateString) => {
         const date = new Date(dateString);
@@ -47,6 +61,10 @@ const Investment = () => {
             monthKey: getMonthKey(item.date),
             id: item.id,
           }));
+
+      const groupedInvestment = processInvestmentSummary(transformedData);
+      setInvestmentSummary(groupedInvestment);
+
           const uniqueMonths = [...new Set(transformedData.map(item => item.monthKey))]
             .sort((a, b) => {
               const dateA = getMonthDate(a);
@@ -71,6 +89,40 @@ const Investment = () => {
 
     fetchData();
   }, []);
+
+  const processInvestmentSummary = (transactions) => {
+    const grouped = [];
+    const threshold = 0.7;
+
+    transactions.forEach((transaction) => {
+      const existing = grouped.find(
+        (item) =>
+          item.amount === transaction.debit &&
+          similarity(item.description, transaction.description) >= threshold
+      );
+
+      if (existing) {
+        existing.frequency++;
+      } else {
+        grouped.push({
+          description: transaction.description,
+          amount: transaction.debit,
+          frequency: 1,
+        });
+      }
+    });
+
+    // Return grouped without filtering, as unique entries should have frequency 1
+    return grouped;
+  };
+
+  const similarity = (str1, str2) => {
+    const s1 = str1.toLowerCase();
+    const s2 = str2.toLowerCase();
+    const match = [...s1].filter((char) => s2.includes(char)).length;
+    return match / Math.max(s1.length, s2.length);
+  };
+
   const filteredData = data.filter(item => 
     selectedMonths.includes(item.monthKey)
   );
@@ -94,6 +146,12 @@ const Investment = () => {
       const dateB = getMonthDate(b.date);
       return dateA - dateB;
     });
+  };
+
+
+  const handleInvestmentRowClick = (investment) => {
+    setSelectedInvestment(investment);
+    setDialogOpen(true);
   };
 
 
@@ -138,12 +196,60 @@ const Investment = () => {
               yAxisKey="debit"
               />
             </div>
+              <div>
+                {/* <UnifiedTable data={investmentSummary} title="Investment Summary"
+                  caseId={caseId}
+                /> */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Investment Summary</CardTitle>
+                    <p className="text-sm text-gray-500">View and manage your data</p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Description</TableHead>
+                            <TableHead>Amount</TableHead>
+                            <TableHead>Frequency</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {investmentSummary.map((investment, index) => (
+                            <TableRow
+                              key={index}
+                              className="cursor-pointer hover:bg-gray-50"
+                              onClick={() => handleInvestmentRowClick(investment)}
+                            >
+                              <TableCell>{investment.description}</TableCell>
+                              <TableCell>{investment.amount}</TableCell>
+                              <TableCell>{investment.frequency}</TableCell>
+                            </TableRow>
+                          ))}
+                          <TableRow className="bg-gray-50 font-medium">
+                            <TableCell>Total</TableCell>
+                            <TableCell>{investmentSummary.reduce((sum, item) => sum + item.amount, 0)}</TableCell>
+                            <TableCell>{investmentSummary.reduce((sum, item) => sum + item.frequency, 0)}</TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             <div>
               <UnifiedTable data={filteredData} title="Investment Transactions" 
                     caseId={caseId}
                     refreshFunction={fetchData}
                     />
             </div>
+              <InvestmentTransactionDialog
+                isOpen={dialogOpen}
+                onClose={() => setDialogOpen(false)}
+                selectedInvestment={selectedInvestment}
+                transactions={filteredData}
+              />
           </>
         )}
         </>

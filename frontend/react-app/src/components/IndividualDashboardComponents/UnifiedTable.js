@@ -4,6 +4,7 @@ import {
   Loader2,
   Check,
   Download,
+  X,
   Save,
   Plus,
   MessageCircle,
@@ -1215,7 +1216,7 @@ const DataTable = ({
       data,
       (title = newTitle),
       false,
-      source === "suspense" ? categoryOptions : null
+      ["suspense", "upi-dr", "upi-cr"].includes(source) ? categoryOptions : null
     );
   };
 
@@ -1230,7 +1231,7 @@ const DataTable = ({
       data,
       `${newTitle}.xlsx`,
       true,
-      source === "suspense" ? categoryOptions : null
+      ["suspense", "upi-dr", "upi-cr"].includes(source) ? categoryOptions : null
     );
     if (!fileName) return alert("File saving was canceled.");
 
@@ -1256,7 +1257,7 @@ const DataTable = ({
       data,
       `${newTitle}.xlsx`,
       true,
-      source === "suspense" ? categoryOptions : null
+      ["suspense", "upi-dr", "upi-cr"].includes(source) ? categoryOptions : null
     );
     if (!fileName) return alert("File saving was canceled.");
 
@@ -1282,7 +1283,7 @@ const DataTable = ({
     };
 
     // Similarity threshold
-    const threshold = 0.91;
+    const threshold = 0.85;
 
     // Filter transactions with similar descriptions and same category
     const similarTransactions = transactions.filter((transaction) => {
@@ -1434,7 +1435,7 @@ const DataTable = ({
               >
                 Clear Filters
               </Button>
-              {source === "suspense" && (
+              {["suspense", "upi-dr", "upi-cr"].includes(source) && (
                 <>
                   <Button
                     onClick={() => fileInputRef.current.click()}

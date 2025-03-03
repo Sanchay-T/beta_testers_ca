@@ -661,9 +661,10 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       localStorage.removeItem("dashboardData");
     }
   };
-  const toggleEdit = (id) => {
+  const toggleEdit = (id,caseName) => {
     setIsCategoryEditOpen(!isCategoryEditOpen);
     setCurrentCaseId(id);
+    setCurrentCaseName(caseName);
   };
   const handleAddReport = (caseName, caseID) => {
     setCurrentCaseName(caseName);
@@ -1107,6 +1108,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         open={isCategoryEditOpen}
         onOpenChange={toggleEdit}
         caseId={currentCaseId}
+        caseName={currentCaseName}
       />
 
       <CardHeader>
@@ -1189,7 +1191,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                             <Button
                               variant="outline"
                               size="icon"
-                              onClick={() => toggleEdit(report.id)}
+                              onClick={() => toggleEdit(report.id,report.name)}
                               className="h-8 w-8"
                             >
                               <Edit2 className="h-4 w-4" />

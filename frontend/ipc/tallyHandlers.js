@@ -80,7 +80,7 @@ function registerTallyIpc() {
     }
   });
 
-  ipcMain.handle("tally-upload", async (event, tallyUploadData) => {
+  ipcMain.handle("tally-upload", async (event, tallyUploadData, port) => {
     const successIds = [];
     const failedTransactions = [];
     const parser = new XMLParser(); // XML Parser for response
@@ -104,7 +104,7 @@ function registerTallyIpc() {
       
       
       try {
-        const response = await axios.post("http://localhost:9000", xmlContent, {
+        const response = await axios.post(`http://localhost:${port}`, xmlContent, {
           headers: { "Content-Type": "application/xml" },
         });
         const xmlResponse = response.data;
