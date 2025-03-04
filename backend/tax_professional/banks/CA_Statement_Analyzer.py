@@ -69,8 +69,8 @@ def save_to_excel(df, name_n_num_df, account_number):
     refund_df = refund_reversal(df)
     suspense_credit_df = suspense_credit(df)
     suspense_debit_df = suspense_debit(df)
-    payment_df = payment(df)
-    receipt_df = receipt(df)
+    # payment_df = payment(df)
+    # receipt_df = receipt(df)
     pay_n_receipt_df = process_transactions(df)
 
     bank_avg_balance_df = calculate_fixed_day_average(eod_sheet_df)
@@ -158,8 +158,8 @@ def save_to_excel(df, name_n_num_df, account_number):
     suspense_credit_df.to_excel(writer, sheet_name='Suspense Credit', index=False)
     suspense_debit_df.to_excel(writer, sheet_name='Suspense Debit', index=False)
     pay_n_receipt_df.to_excel(writer, sheet_name='Payment & Receipt Voucher', index=False)
-    payment_df.to_excel(writer, sheet_name='Payment Voucher', index=False)
-    receipt_df.to_excel(writer, sheet_name='Receipt Voucher', index=False)
+    # payment_df.to_excel(writer, sheet_name='Payment Voucher', index=False)
+    # receipt_df.to_excel(writer, sheet_name='Receipt Voucher', index=False)
     writer.close()
 
     # added color formatting nd filter functionalities

@@ -339,7 +339,7 @@ def get_table_column_coordinates(pdf_path):
         table_settings = {
             "vertical_strategy": "lines",
             "horizontal_strategy": "lines",
-            "edge_min_length": 20,
+            # "edge_min_length": 20,
         }
 
         # Get table structure exactly like debug_tablefinder()
@@ -388,7 +388,7 @@ def get_table_column_coordinates_by_text(pdf_path):
         table_settings = {
             "vertical_strategy": "text",
             "horizontal_strategy": "lines",
-            "edge_min_length": 20,
+            "edge_min_length": 10,
         }
 
         # Get table structure exactly like debug_tablefinder()
@@ -1404,22 +1404,28 @@ def run_test_output_on_whole_pdf(list_a, pdf_in_saved_pdf, bank_name, timestamp,
         df = pd.DataFrame()
         return df, explicit_lines
 
+import random
 
 def is_pdf_encoded(pdf_path):
     try:
         reader = PdfReader(pdf_path)
-        if not reader.pages:
-            raise Exception("PDF has no pages.")
+        total_pages = len(reader.pages)
+        if total_pages == 0:
+            return "PDF has no pages."
 
-        for page_number, page in enumerate(reader.pages):
+        # Select up to 3 unique random page numbers
+        random_pages = random.sample(range(total_pages), min(3, total_pages))
+
+        for page_number in random_pages:
+            page = reader.pages[page_number]
             text = page.extract_text()
-            if not text or sum(char.isprintable() for char in text) / len(text) < 0.5:
-                raise Exception(f"PDF appears encoded or obfuscated.")
-
-        return "PDF text is readable and not encoded."
+            if text:
+                printable_chars = sum(char.isprintable() for char in text)
+                if printable_chars / len(text) >= 0.5:
+                    return "PDF text is readable and not encoded."
+        return "PDF appears encoded or obfuscated."
     except Exception as e:
-        raise Exception(f"Error: {e}")
-
+        return f"An unexpected error occurred: {e}"
 
 # Main function to run test cases with optimizations
 def extract_with_test_cases(bank_name, pdf_path, pdf_password, CA_ID):
