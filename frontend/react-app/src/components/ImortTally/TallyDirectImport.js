@@ -238,7 +238,8 @@ const TallyDirectImport = ({ source }) => {
     return dateString;
   };
 
-  const handleTallyUpload = async (txData = transactions) => {
+  const handleTallyUpload = async (txData) => {
+    console.log(txData)
     // “txData” is optional—ManualEntryTable might pass it.
     if (!companyName.trim()) {
       alert("Please enter a company name before uploading.");
@@ -248,7 +249,8 @@ const TallyDirectImport = ({ source }) => {
     // Check if any non-imported transaction is missing DrLedger or CrLedger
     const incompleteTransactions = txData.filter((transaction) => {
       if (transaction.imported) return false;
-      return !transaction.dr_ledger || !transaction.cr_ledger;
+      // check if transaction contains a key as cr_ledger
+      return !transaction.dr_ledger || !transaction.cr_ledger 
     });
     if (incompleteTransactions.length > 0) {
       alert(
@@ -489,6 +491,17 @@ const TallyDirectImport = ({ source }) => {
   }
   // Example: parse Excel with an IPC call or local library
   // Updated handleExcelUpload function
+
+  // Define a helper function
+const toSnakeCase = (str) =>
+  str
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/[^a-z0-9_]/g, "")
+    .replace(/_+/g, "_")
+    .replace(/_+$/, ""); // Remove trailing underscores
+
+
   const handleExcelUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -579,25 +592,9 @@ const TallyDirectImport = ({ source }) => {
               }
             }
             // Convert header to snake_case for field name
-            let fieldName = "";
-            if (typeof header === "string") {
-              fieldName = header
-                .toLowerCase()
-                .replace(/\s+/g, "_")
-                .replace(/[^a-z0-9_]/g, "")
-                .replace(/_+/g, "_");
-            } else if (header !== undefined && header !== null) {
-              // If header is not a string but has a value, convert to string
-              fieldName = String(header)
-                .toLowerCase()
-                .replace(/\s+/g, "_")
-                .replace(/[^a-z0-9_]/g, "")
-                .replace(/_+/g, "_");
-            } else {
-              // For undefined or null headers, use a generic column name
-              fieldName = `column_${index}`;
-            }
-
+            const fieldName =
+            typeof header === "string" ? toSnakeCase(header) : toSnakeCase(String(header));
+          
             // console.log({ fieldName, value });
             console.log({ header, value });
 
@@ -616,19 +613,9 @@ const TallyDirectImport = ({ source }) => {
           filteredHeaders.map((header) => ({
             original: header,
             field:
-              typeof header === "string"
-                ? header
-                    .toLowerCase()
-                    .replace(/\s+/g, "_")
-                    .replace(/[^a-z0-9_]/g, "")
-                    .replace(/_+/g, "_")
-                : header !== undefined && header !== null
-                ? String(header)
-                    .toLowerCase()
-                    .replace(/\s+/g, "_")
-                    .replace(/[^a-z0-9_]/g, "")
-                    .replace(/_+/g, "_")
-                : `column_${Math.random().toString(36).substring(2, 8)}`,
+            typeof header === "string"
+            ? toSnakeCase(header)
+            : toSnakeCase(String(header)),
           }))
         );
 
@@ -757,7 +744,12 @@ const TallyDirectImport = ({ source }) => {
                   {/* Show ManualEntryTable (simple table where user can add row by row) */}
                   <ManualTallyTable
                     initialData={dataToRender}
-                    columnsProp={defaultColumns[selectedVoucher]}
+                    columnsProp={
+                      source === "manual" && excelHeaders.length > 0
+                        ? excelHeaders.map((h) => h.field)
+                        : defaultColumns[selectedVoucher]
+                    }
+                    originalHeaders={excelHeaders}
                     handleUpload={handleManualEntriesSubmit}
                     setCompanyName={setCompanyName}
                     companyName={companyName}

@@ -866,10 +866,8 @@ const DataTable = ({
   const handleUploadToTally = async () => {
     let data = transactions;
     // Check if any rows are selected
-    console.log({globalSelectedRows,selectedTransactions})
-    if (globalSelectedRows.length > 0) {
-      data = transactions.filter((tx) => globalSelectedRows.includes(tx.id));
-      console.log({globalSelectedRows})
+    if (selectedTransactions.length > 0) {
+      data = transactions.filter((tx) => selectedTransactions.includes(tx.id));
     }
     // if(selectedVoucher==="Ledger"){
     //   // If no rows selected, show a warning (optional)

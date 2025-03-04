@@ -811,8 +811,26 @@ const ManualTallyTable = ({
 
   // For Tally direct upload
   const handleUploadToTally = () => {
-    if (!handleUpload) return;
-    handleUpload(allRows);
+    let data = allRows;
+    // Check if any rows are selected
+    if (selectedTransactions.length > 0) {
+      data = allRows.filter((tx) => selectedTransactions.includes(tx.id));
+    }
+    // if(selectedVoucher==="Ledger"){
+    //   // If no rows selected, show a warning (optional)
+    //   if (globalSelectedRows.length === 0) {
+    //     alert("Please select at least one row to upload.");
+    //     return;
+    //   }
+
+    //   // 2) Grab only those transactions whose IDs are in `selectedTransactions`
+    //   const selectedRows = data.filter((tx) =>
+    //     globalSelectedRows.includes(tx.id)
+    //   );
+    //   data=selectedRows
+    // }
+    console.log({data})
+    handleUpload(data);
   };
 
   // ---------------------------------------------
