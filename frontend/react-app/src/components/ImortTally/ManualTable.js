@@ -13,7 +13,8 @@ import {
   Trash2,
   Info,
 } from "lucide-react";
-
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import {
   Card,
   CardContent,
@@ -176,11 +177,17 @@ const ManualTallyTable = ({
   const [existingFilterData, setExistingFilterData] = useState([]);
 
   console.log("initial data", initialData);
-
+  function convertToIsoDate(originalString) {
+    // If your original data is "DD-MM-YYYY", parse it to "YYYY-MM-DD"
+    const [dd, mm, yyyy] = originalString.split("-");
+    return `${yyyy}-${mm}-${dd}`; // e.g. "2025-03-04"
+  }
+  
   // For "Add Row": We create new blank rows
   const handleAddRow = () => {
     // Create a new row object. We'll assume each column is blank or a default
     const newRow = {};
+    console.log({columns})
     columns.forEach((col) => {
       newRow[col] = "";
     });
@@ -232,10 +239,23 @@ const ManualTallyTable = ({
   // ---------------------------------------------
   // 2) Effects: searching, filtering, pagination
   // ---------------------------------------------
-
+  const parseCustomDate = (dateStr) => {
+    if (!dateStr) return null;
+    // Check if the string matches the DD-MM-YYYY pattern
+    const regex = /^(\d{2})-(\d{2})-(\d{4})$/;
+    const match = dateStr.match(regex);
+    if (match) {
+      const [, day, month, year] = match;
+      // Create a date string in the format YYYY-MM-DD
+      return new Date(`${year}-${month}-${day}`);
+    }
+    // Fallback: attempt to create a Date with the original string
+    return new Date(dateStr);
+  };
+  
   // Whenever allRows changes, we reset filteredData
   useEffect(() => {
-    console.log({ allRows });
+    console.log({ allRows,initialData });
     setAllRows(initialData);
     setFilteredData(initialData);
   }, [initialData]);
@@ -919,7 +939,7 @@ const ManualTallyTable = ({
 
         {/* Data Table */}
         <div className="overflow-x-auto max-w-full">
-          <Table className="min-w-full table-auto">
+          <Table className="min-w-full min-h-[300px]">
             <TableHeader className="bg-gray-200 dark:bg-gray-900">
               <TableRow>
                 <TableHead className="w-10">
@@ -941,6 +961,9 @@ const ManualTallyTable = ({
                     )}
                   >
                     <div className="flex items-center gap-2">
+                    {["dr_ledger","cr_ledger"].includes(column) && <p className="text-lg text-gray-500 dark:text-gray-400">
+                        *
+                      </p>}
                       {column
                         .split("_")
                         .map(
@@ -988,7 +1011,7 @@ const ManualTallyTable = ({
               </TableRow>
             </TableHeader>
 
-            <TableBody>
+            <TableBody >
               {currentData.length === 0 ? (
                 <TableRow>
                   <TableCell
@@ -1048,53 +1071,49 @@ const ManualTallyTable = ({
                             </div>
                           </TableCell>
                         );
-                      } else if (column.toLowerCase() === "effective_date") {
+
+                      } else if (column.toLowerCase() === "effective_date" || column.toLowerCase() === "invoice_date") {
                         return (
-                          <TableCell
-                            key={column}
-                            className="w-[250px] group relative"
-                          >
-                            {" "}
-                            <Input
-                              type="date"
-                              value={
-                                row[column] ? row[column].split("T")[0] : ""
-                              }
-                              onChange={(e) =>
-                                handleInputChange(
-                                  row.id,
-                                  column,
-                                  e.target.value
-                                )
-                              }
-                              className="w-full p-2 border border-gray-300 rounded-md"
-                            />
-                          </TableCell>
+                          <TableCell key={column} className="w-[250px] group relative">
+                          <DatePicker
+                                selected={row[column] ? parseCustomDate(row[column]) : null}
+                                onChange={(date) =>
+                                  handleInputChange(
+                                    row.id,
+                                    column,
+                                    date ? date.toISOString().split("T")[0] : ""
+                                  )
+                                }
+                                dateFormat="yyyy-MM-dd"      // Displays date as 2025-03-04
+                                placeholderText="YYYY-MM-DD" // Clear placeholder format
+                                className="w-full p-2 border border-gray-300 rounded-md"
+                              />
+                        </TableCell>
                         );
-                      } else if (column.toLowerCase() === "invoice_date") {
-                        return (
-                          <TableCell
-                            key={column}
-                            className="w-[250px] group relative"
-                          >
-                            {" "}
-                            <Input
-                              type="date"
-                              value={
-                                row[column] ? row[column].split("T")[0] : ""
-                              }
-                              onChange={(e) =>
-                                handleInputChange(
-                                  row.id,
-                                  column,
-                                  e.target.value
-                                )
-                              }
-                              className="w-full p-2 border border-gray-300 rounded-md"
-                            />
-                          </TableCell>
-                        );
-                      }
+                      } 
+                      // else if (column.toLowerCase() === "invoice_date") {
+                      //   return (
+                      //     <TableCell
+                      //       key={column}
+                      //       className="w-[250px] group relative"
+                      //     >
+                      //       <Input
+                      //         type="date"
+                      //         value={
+                      //           row[column] ? row[column].split("T")[0] : ""
+                      //         }
+                      //         onChange={(e) =>
+                      //           handleInputChange(
+                      //             row.id,
+                      //             column,
+                      //             e.target.value
+                      //           )
+                      //         }
+                      //         className="w-full p-2 border border-gray-300 rounded-md"
+                      //       />
+                      //     </TableCell>
+                      //   );
+                      // }
 
                       if (column.toLowerCase() === "category") {
                         return (
