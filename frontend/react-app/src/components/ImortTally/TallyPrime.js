@@ -22,13 +22,13 @@ function ExcelViewer() {
       path: "tallyprime/ledger_prime.xlsm",
     },
     {
-      label: "Payment Voucher",
-      path: "tallyprime/payment.xlsm",
+      label: "Payment Receipt Contra Voucher",
+      path: "tallyprime/pay_receipt_contra.xlsm",
     },
-    {
-      label: "Receipt Voucher",
-      path: "tallyprime/receipt.xlsm",
-    },
+    // {
+    //   label: "Receipt Voucher",
+    //   path: "tallyprime/receipt.xlsm",
+    // },
     { label: "Purchase Voucher", path: "tallyprime/purchase.xlsm" },
     {
       label: "Purchase Multistock items voucher",

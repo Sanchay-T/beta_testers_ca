@@ -132,6 +132,8 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
     return (
       <div className="w-full">
         <button
+          title={isCollapsed ? item.title : undefined} // Show tooltip only when collapsed
+
           className={`w-full flex items-center justify-start p-2 rounded-md transition-all duration-200 ease-in-out ${
             level > 0 ? "ml-4" : ""
           } ${
@@ -210,7 +212,7 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="flex items-center w-full p-2 hover:bg-gray-100 rounded-md transition-all duration-200">
+          <button className={`flex items-center w-full ${open?"p-2":"p-1"} hover:bg-gray-100 rounded-md transition-all duration-200`}>
             <Avatar className="h-8 w-8 rounded-lg">
               <AvatarImage src={user?.avatar} alt={user?.name || "User"} />
               <AvatarFallback className="rounded-lg">
@@ -274,7 +276,7 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
     return (
       <div className="relative h-screen">
         <SidebarTrigger
-          className="absolute -bottom-52 rounded-full left-2 bg-white hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 shadow-sm"
+          className="absolute -bottom-52 rounded-full left-2 bg-white hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 shadow-sm focus:outline-none "
           onClick={toggleSidebar}
         />
       </div>
@@ -304,7 +306,7 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
       <SidebarContent className="p-3 overflow-x-hidden">
         <NavMain />
       </SidebarContent>
-      <SidebarFooter className="border-t p-3">
+      <SidebarFooter className={`border-t ${open?"p-3":"p-1"}`}>
         <UserMenu />
       </SidebarFooter>
       {/* We're still including SidebarRail but will disable its functionality */}

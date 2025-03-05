@@ -5,9 +5,7 @@ import { cva } from "class-variance-authority";
 import {
   ChevronLeft,
   ChevronRight,
-  CircleChevronLeft,
-  CircleChevronRight,
-  PanelLeft,
+
 } from "lucide-react";
 
 import { useIsMobile } from "../../hooks/use-mobile";

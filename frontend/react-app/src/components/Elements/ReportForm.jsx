@@ -349,7 +349,17 @@ const GenerateReportForm = ({
   //   });
   // };
   const handlePreviewFile = (previewUrl, fileType) => {
-    window.open(previewUrl, "_blank");
+    if(fileType.includes("application/pdf")){
+      window.open(previewUrl, "_blank");
+    }else{
+
+      toast({
+        title: "Alert",
+        description: "File not supported for preview",
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
   };
 
   const handleAddUnit = () => {
