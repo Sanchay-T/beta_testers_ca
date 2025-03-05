@@ -35,7 +35,12 @@ const Suspense = () => {
   };
 
   const processData = (transactions) => {
-    return transactions.map((transaction) => ({
+    return transactions.map((transaction) => {
+      if(transaction.description.toLowerCase().includes("openingbal")||transaction.description.toLowerCase().includes("closingbal")){
+        return null;
+      
+      }else{
+      return {
       date: new Date(transaction.date).toLocaleDateString("en-GB", {
         day: "2-digit",
         month: "2-digit",
@@ -50,7 +55,9 @@ const Suspense = () => {
       category: transaction.category,
       id: transaction.id,
       monthKey: getMonthKey(transaction.date),
-    }));
+    }
+  }
+  });
   };
 
   const fetchData = async () => {
@@ -63,7 +70,11 @@ const Suspense = () => {
 
       console.log("suspenseTransactionaAll", suspenseTransactionaAll);
 
-      const transformedSuspenseData = processData(suspenseTransactionaAll);
+      let transformedSuspenseData = processData(suspenseTransactionaAll);
+
+      // ṛemove null values
+      transformedSuspenseData = transformedSuspenseData.filter((item) => item);
+
 
       console.log("transformedSuspenseData", transformedSuspenseData);
 
