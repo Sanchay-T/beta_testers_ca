@@ -23,7 +23,7 @@ function ExcelViewer() {
     },
     {
       label: "Payment Receipt Contra Voucher",
-      path: "tallyprime/pay_receipt_contra.xlsm",
+      path: "tallyprime/payment_receipt_contra.xlsm",
     },
     // {
     //   label: "Receipt Voucher",

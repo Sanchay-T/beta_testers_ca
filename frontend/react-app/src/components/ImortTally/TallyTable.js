@@ -1083,6 +1083,20 @@ const DataTable = ({
               <AiFillFileExcel className="w-5 h-5 text-white" />
               Open Voucher
             </Button>
+            <Button
+              onClick={() => handleOpenFile("tallyprime/ledger_prime.xlsm")}
+              className="px-6 py-3 text-base font-medium text-white  transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
+            >
+              <AiFillFileExcel className="w-5 h-5 text-white" />
+              Ledger Prime
+            </Button>
+            <Button
+              onClick={() => handleOpenFile("tallyprime/ledger_erp.xlsm")}
+              className="px-6 py-3 text-base font-medium text-white  transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
+            >
+              <AiFillFileExcel className="w-5 h-5 text-white" />
+              Ledger ERP
+            </Button>
             {/* <CardTitle className="dark:text-slate-300">{title || "Data Table"}</CardTitle> */}
             {/* <CardDescription>{subtitle || "View and manage your data"}</CardDescription> */}
           </div>
