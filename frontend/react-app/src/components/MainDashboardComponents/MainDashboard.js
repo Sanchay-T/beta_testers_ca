@@ -17,6 +17,8 @@ import Card1 from "../Elements/Card1";
 import Card2 from "../Elements/Card2";
 import Card3 from "../Elements/Card3";
 import { ResponsiveContainer } from "recharts";
+import { useAuth } from "../../contexts/AuthContext";
+import MSME_Card3 from "../Elements/MSME_Card3";
 
 const MainDashboard = ({ handleTabChange }) => {
   const { theme, setTheme } = useTheme();
@@ -24,6 +26,11 @@ const MainDashboard = ({ handleTabChange }) => {
   const [pagesData, setPagesData] = useState([]);
   const [totalEligibility, setTotalEligibility] = useState(0);
   const [totalCommission, setTotalCommission] = useState(0);
+  const [latestEligibiltyData, setLatestEligibiltyData] = useState({
+    homeLoanValue: 0,
+    loanAgainstProperty: 0,
+    businessLoan: 0,
+  });
 
   // Separate states for each metric card
   const [reportsMetrics, setReportsMetrics] = useState({
@@ -42,6 +49,7 @@ const MainDashboard = ({ handleTabChange }) => {
     chartData: [],
     duration: "all",
   });
+  const { user } = useAuth();
 
   // const [timeMetrics, setTimeMetrics] = useState({
   //   totalTimeSaved: 0,
@@ -568,6 +576,13 @@ const MainDashboard = ({ handleTabChange }) => {
           setPagesMetrics(parsedData.pagesMetrics);
           setTotalEligibility(parsedData.totalEligibility || 0);
           setTotalCommission(parsedData.totalCommission || 0);
+          setLatestEligibiltyData(
+            parsedData.latestEligibiltyData || {
+              homeLoanValue: 0,
+              loanAgainstProperty: 0,
+              businessLoan: 0,
+            }
+          );
           // setTimeMetrics(parsedData.timeMetrics);
           return; // Exit the function if cache exists
         }
@@ -580,9 +595,47 @@ const MainDashboard = ({ handleTabChange }) => {
         const transactions = await window.electron.getTransactionsProcessed();
         const pages = await window.electron.getPages();
         const opportunityToEarn = await window.electron.getOpportunityToEarn();
+        console.log("Opportunity to Earn12:", opportunityToEarn);
         let totalEligibility1 = 0;
 
         let totalCommission1 = 0;
+        let latestEligibilty = {
+          homeLoanValue: 0,
+          loanAgainstProperty: 0,
+          businessLoan: 0,
+        };
+
+        if (
+          opportunityToEarn.success &&
+          Array.isArray(opportunityToEarn.data) &&
+          opportunityToEarn.data.length > 0
+        ) {
+          const latestItem =
+            opportunityToEarn.data[opportunityToEarn.data.length - 1];
+          console.log("Latest item:", latestItem);
+
+          // Add proper validation for each property
+          latestEligibilty = {
+            homeLoanValue:
+              typeof latestItem.homeLoanValue === "number"
+                ? latestItem.homeLoanValue
+                : 0,
+            loanAgainstProperty:
+              typeof latestItem.loanAgainstProperty === "number"
+                ? latestItem.loanAgainstProperty
+                : 0,
+            businessLoan:
+              typeof latestItem.businessLoan === "number"
+                ? latestItem.businessLoan
+                : 0,
+          };
+
+          // Log the values we're about to set
+          console.log("Setting latestEligibiltyData to:", latestEligibilty);
+          setLatestEligibiltyData(latestEligibilty);
+        }
+
+        // console.log("latestEligibiltyData", latestEligibiltyData);
 
         if (
           opportunityToEarn.success &&
@@ -704,13 +757,13 @@ const MainDashboard = ({ handleTabChange }) => {
         localStorage.setItem(
           "dashboardData",
           JSON.stringify({
-            allData: mergedData, // Store mergedData instead of aggregatedArray
+            allData: mergedData,
             pagesData: pages,
             reportsMetrics: reportsMetricsData,
             pagesMetrics: pagesMetricsData,
             totalEligibility: totalEligibility1,
             totalCommission: totalCommission1,
-            // timeMetrics: timeMetricsData,
+            latestEligibiltyData: latestEligibilty,
           })
         );
 
@@ -838,15 +891,31 @@ const MainDashboard = ({ handleTabChange }) => {
             initialDuration={pagesMetrics.duration}
           />
 
-          <Card3
-            type="Total Eligible Cases"
-            title="Earning Opportunity"
-            value1="Total Eligibilty"
-            value2="Total Commission"
-            mainValue1={totalEligibility}
-            mainValue2={totalCommission}
-            handleTabChange={handleTabChange}
-          />
+          {user.role === "MSME" ? (
+            <MSME_Card3
+              type="Total Eligible Cases"
+              title="Loan Eligibility"
+              value1="Total Eligibilty"
+              value2="Home Loan"
+              value3="Loan Against Property"
+              value4="Business Loan"
+              mainValue1={totalEligibility}
+              mainValue2={latestEligibiltyData.homeLoanValue}
+              mainValue3={latestEligibiltyData.loanAgainstProperty}
+              mainValue4={latestEligibiltyData.businessLoan}
+              handleTabChange={handleTabChange}
+            />
+          ) : (
+            <Card3
+              type="Total Eligible Cases"
+              title="Earning Opportunity"
+              value1="Total Eligibilty"
+              value2="Total Commission"
+              mainValue1={totalEligibility}
+              mainValue2={totalCommission}
+              handleTabChange={handleTabChange}
+            />
+          )}
         </ResponsiveContainer>
 
         <RecentReports />

@@ -11,7 +11,7 @@ import {
   Mail,
   Share2,
   UploadCloud,
-  Copy
+  Copy,
 } from "lucide-react";
 import { Card, CardContent, CardHeader } from "../ui/card";
 import {
@@ -192,6 +192,7 @@ const DataTable = ({
     "gst_number",
   ]);
   const [existingFilterData, setExistingFilterData] = useState([]);
+  const [showPopup, setShowPopup] = useState(false);
 
   const isFirstLoad = useRef(true);
 
@@ -882,7 +883,7 @@ const DataTable = ({
     //   );
     //   data=selectedRows
     // }
-    console.log({data})
+    console.log({ data });
     handleUpload(data);
   };
 
@@ -988,19 +989,19 @@ const DataTable = ({
     // Map over the filteredData (or data you want to copy) and join each row's values with a tab.
     const rows = filteredData.map((row) => {
       const rowValues = columns.map((col) => {
-        if (col === 'bill_reference') {
-          return row[col] ? row[col] : '-';
+        if (col === "bill_reference") {
+          return row[col] ? row[col] : "-";
         }
         return row[col];
       });
-      return [companyName, ...rowValues].join('\t');
+      return [companyName, ...rowValues].join("\t");
     });
 
-
     // const textToCopy = [headerRow, ...rows].join('\n');
-    const textToCopy = [...rows].join('\n');
-  
-    navigator.clipboard.writeText(textToCopy)
+    const textToCopy = [...rows].join("\n");
+
+    navigator.clipboard
+      .writeText(textToCopy)
       .then(() => {
         toast({
           title: "Copied to Clipboard",
@@ -1019,6 +1020,7 @@ const DataTable = ({
         throw new Error(response.error); // If there's an error, throw it
       }
       console.log("File opened successfully:", response);
+      setShowPopup(false);
     } catch (error) {
       console.error(error);
     }
@@ -1071,32 +1073,67 @@ const DataTable = ({
           <div className="space- flex gap-x-2">
             <Button
               onClick={handleUploadToTally}
-              className="px-6 py-3 text-base font-medium text-white bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 hover:bg-gray-700 transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
+              className="px-3 py-3 text-base font-medium text-white bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 hover:bg-gray-700 transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
             >
               <UploadCloud className="w-5 h-5 text-white" />
               Upload to Tally
             </Button>
             <Button
               onClick={() => handleOpenFile("tallyprime/payment.xlsm")}
-              className="px-6 py-3 text-base font-medium text-white  transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
+              className="px-3 py-3 text-base font-medium text-white  transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
             >
               <AiFillFileExcel className="w-5 h-5 text-white" />
               Open Voucher
             </Button>
             <Button
-              onClick={() => handleOpenFile("tallyprime/ledger_prime.xlsm")}
-              className="px-6 py-3 text-base font-medium text-white  transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
+              onClick={() => setShowPopup(true)}
+              className="px-3 py-3 text-base mr-2 font-medium text-white transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
             >
               <AiFillFileExcel className="w-5 h-5 text-white" />
-              Ledger Prime
+              Open Ledger Voucher
             </Button>
-            <Button
-              onClick={() => handleOpenFile("tallyprime/ledger_erp.xlsm")}
-              className="px-6 py-3 text-base font-medium text-white  transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
-            >
-              <AiFillFileExcel className="w-5 h-5 text-white" />
-              Ledger ERP
-            </Button>
+
+            {/* Popup Dialog */}
+            {showPopup && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                <div className="bg-white rounded-2xl p-6 shadow-2xl max-w-sm w-full relative">
+                  <h3 className="text-xl font-semibold text-gray-800 mb-5 text-center">
+                    Select Ledger Type
+                  </h3>
+
+                  <div className="flex flex-col gap-4">
+                    <Button
+                      onClick={() =>
+                        handleOpenFile("tallyprime/ledger_prime.xlsm")
+                      }
+                      className="px-3 py-3 text-base font-medium text-white  transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
+                    >
+                      <AiFillFileExcel className="w-5 h-5 text-white" />
+                      Ledger Prime
+                    </Button>
+
+                    <Button
+                      onClick={() =>
+                        handleOpenFile("tallyprime/ledger_erp.xlsm")
+                      }
+                      className="px-3 py-3 text-base font-medium text-white  transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
+                    >
+                      <AiFillFileExcel className="w-5 h-5 text-white" />
+                      Ledger ERP
+                    </Button>
+                  </div>
+
+                  <div className="flex justify-center mt-5">
+                    <button
+                      onClick={() => setShowPopup(false)}
+                      className="px-5 py-2 text-sm font-medium text-gray-600 bg-gray-200 rounded-lg hover:bg-gray-300 transition-all"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
             {/* <CardTitle className="dark:text-slate-300">{title || "Data Table"}</CardTitle> */}
             {/* <CardDescription>{subtitle || "View and manage your data"}</CardDescription> */}
           </div>
@@ -1167,12 +1204,20 @@ const DataTable = ({
                   <TooltipContent>Share</TooltipContent>
                 </Tooltip>
 
-                <Button variant="ghost" className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
-                                transition-all shadow-sm hover:shadow-md" onClick={handleCopyToClipboard}>
-                  {/* You can use an icon like Copy from lucide-react */}
-                  <Copy className="w-4 h-4" />
-                  Copy Data
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="p-3 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
+                                transition-all shadow-sm hover:shadow-md"
+                      onClick={handleCopyToClipboard}
+                    >
+                      {/* You can use an icon like Copy from lucide-react */}
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Copy Data</TooltipContent>
+                </Tooltip>
               </div>
 
               {hasEntity && (

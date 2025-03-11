@@ -25,12 +25,15 @@ import PdfColumnMarker from "../components/MainDashboardComponents/PdfMarker";
 import TallyPrimeDirect from "../components/ImortTally/TallyDirectImport";
 import TallyPrime from "../components/ImortTally/TallyPrime";
 import { useReportContext } from "../contexts/ReportContext";
+import { useAuth } from "../contexts/AuthContext";
 
 const Dashboard = () => {
   const { breadcrumbs, setMainDashboard } = useBreadcrumb();
   const [activeTab, setActiveTab] = useState("Dashboard");
   const { defaultTab } = useParams();
   const { reportData, updateReportData } = useReportContext();
+  const { user } = useAuth();
+  console.log("user from home", user);
 
   const navItems = [
     {
@@ -73,7 +76,7 @@ const Dashboard = () => {
       alwaysOpen: true, // Ensures the section remains open
     },
     {
-      title: "Opportunity to Earn",
+      title: user.role === "MSME" ? "Loan Eligibility" : "Opportunity to Earn",
       url: "#",
       icon: IndianRupee,
     },
@@ -91,7 +94,7 @@ const Dashboard = () => {
   ];
 
   useEffect(() => {
-    console.log({defaultTab})
+    console.log({ defaultTab });
     if (!defaultTab || defaultTab === "defaultTab")
       setActiveTab(navItems[0].title);
     else setActiveTab(defaultTab);
@@ -119,7 +122,6 @@ const Dashboard = () => {
     }
   };
 
-
   return (
     <>
       <div className={cn("h-full w-full flex h-screen bg-background")}>
@@ -132,9 +134,14 @@ const Dashboard = () => {
           <BreadcrumbDynamic items={breadcrumbs} />
           <div className="flex-1 flex flex-col overflow-hidden">
             <main className="flex-1">
-              {activeTab === "Dashboard" && <MainDashboard handleTabChange={handleTabChange} />}
+              {activeTab === "Dashboard" && (
+                <MainDashboard handleTabChange={handleTabChange} />
+              )}
               {activeTab === "Generate Report" && <ReportGenerator />}
-              {activeTab === "Opportunity to Earn" && <Eligibility />}
+              {activeTab ===
+                (user.role === "MSME"
+                  ? "Loan Eligibility"
+                  : "Opportunity to Earn") && <Eligibility />}
               {activeTab === "Billing" && <Billing />}
 
               {activeTab === "Analytics" && <Analytics />}

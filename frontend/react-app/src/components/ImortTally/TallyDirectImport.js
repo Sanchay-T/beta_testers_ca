@@ -24,7 +24,6 @@ import ManualTallyTable from "./ManualTable";
 import * as XLSX from "xlsx";
 import { Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
-import { Input } from "../ui/input";
 
 const defaultColumns = {
   "Payment Receipt Contra Voucher": [
@@ -65,12 +64,6 @@ const TallyDirectImport = ({ source }) => {
   const { reportData } = useReportContext();
   const { caseId } = reportData;
   const [ledgerCreationTableData, setLedgerCreationTableData] = useState([]);
-
-  const [port, setPort] = useState("9000");
-
-  const handleInputChange = (e) => {
-    setPort(e.target.value);
-  };
 
   // ----------------------------------
   // 1) FETCHING VOUCHERS/TRANSACTIONS
@@ -331,10 +324,7 @@ const TallyDirectImport = ({ source }) => {
     setLoading2(true);
     try {
       if (selectedVoucher === "Payment Receipt Contra Voucher") {
-        const response = await window.electron.uploadToTally(
-          tallyUploadData,
-          port
-        );
+        const response = await window.electron.uploadToTally(tallyUploadData);
 
         const { failedTransactions = [], successIds = [] } = response;
 
@@ -487,7 +477,7 @@ const TallyDirectImport = ({ source }) => {
     const day = ("0" + date.getDate()).slice(-2);
     const month = ("0" + (date.getMonth() + 1)).slice(-2);
     const year = date.getFullYear();
-    return `${day}-${month}-${year}`;
+    return `${day}/${month}/${year}`;
   }
   // Example: parse Excel with an IPC call or local library
   // Updated handleExcelUpload function
@@ -689,21 +679,20 @@ const toSnakeCase = (str) =>
                     ))}
                   </SelectContent>
                 </Select>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline">
+                      <Info className="w-5 h-5 text-black" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    Ensure that Tally is running on port 9000 for the Upload to
+                    work.
+                  </TooltipContent>
+                </Tooltip>
               </div>
             )}
           </div>
-          <div className="text-sm text-gray-800 max-w-xl flex gap-x-4 items-center">
-            <label className="whitespace-nowrap">
-              Please Enter Port Number:
-            </label>
-            <Input
-              type="number"
-              value={port}
-              onChange={handleInputChange}
-              placeholder="Enter Port Number"
-            />
-          </div>
-          {/* input  */}
         </CardHeader>
 
         <CardContent>
@@ -739,6 +728,15 @@ const toSnakeCase = (str) =>
                     <p className="text-sm text-gray-500">
                       or manually add rows below
                     </p>
+                    <div className=" ml-auto bg-blue-100 border border-blue-200 p-3 rounded-md text-sm text-gray-800 max-w-xl">
+                      <div className="flex items-center space-x-4">
+                        <Info className="w-5 h-5 text-black" />
+                        <h1>
+                          Ensure that Tally is running on port 9000 for the
+                          Upload to work.
+                        </h1>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Show ManualEntryTable (simple table where user can add row by row) */}

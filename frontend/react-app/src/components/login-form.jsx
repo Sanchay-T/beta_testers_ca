@@ -13,7 +13,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { useAuth } from "../contexts/AuthContext";
 import { Alert, AlertDescription } from "./ui/alert";
-import Logo from "../data/assets/logo.png"
+import Logo from "../data/assets/logo.png";
 
 export function LoginForm({ className, ...props }) {
   const { login, loading, error, isActivated, signUp } = useAuth();
@@ -24,6 +24,7 @@ export function LoginForm({ className, ...props }) {
     email: "",
     password: "",
     licenseKey: "",
+    role: "CA",
   });
 
   // useEffect(() => {
@@ -41,17 +42,17 @@ export function LoginForm({ className, ...props }) {
     let success = false;
     if (!isActivated) {
       // First handle license activation
-      console.log("Inside Signup..")
+      console.log("Inside Signup..");
       success = await signUp(credentials);
       if (!success) {
         return;
       }
-    }
-    else {
-      console.log("Inside Login")
+    } else {
+      console.log("Inside Login");
       success = await login({
         email: credentials.email,
         password: credentials.password,
+        role: credentials.role,
       });
     }
 
@@ -69,12 +70,12 @@ export function LoginForm({ className, ...props }) {
       [id]: value,
     }));
   };
+  console.log("inputCredentials", credentials);
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-
           <img src={Logo} alt="Logo" className="w-[170px] mx-auto pb-6" />
           <CardTitle className="text-2xl ">Login</CardTitle>
           <CardDescription>
@@ -94,19 +95,34 @@ export function LoginForm({ className, ...props }) {
 
               {/* Show license key field only if needed */}
               {!isActivated && (
-                <div className="grid gap-2">
-                  <Label htmlFor="licenseKey">License Key</Label>
-                  <Input
-                    id="licenseKey"
-                    type="text"
-                    placeholder="XXXX-XXXX-XXXX-XXXX"
-                    required
-                    value={credentials.licenseKey}
-                    onChange={handleInputChange}
-                  // pattern="^[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}$"
-                  // title="Please enter a valid license key in the format: XXXX-XXXX-XXXX-XXXX"
-                  />
-                </div>
+                <>
+                  <div className="grid gap-2">
+                    <Label htmlFor="licenseKey">License Key</Label>
+                    <Input
+                      id="licenseKey"
+                      type="text"
+                      placeholder="XXXX-XXXX-XXXX-XXXX"
+                      required
+                      value={credentials.licenseKey}
+                      onChange={handleInputChange}
+                      // pattern="^[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}$"
+                      // title="Please enter a valid license key in the format: XXXX-XXXX-XXXX-XXXX"
+                    />
+                  </div>
+                  {/* Role Selection Dropdown */}
+                  <div className="grid gap-2">
+                    <Label htmlFor="role">Select Role</Label>
+                    <select
+                      id="role"
+                      value={credentials.role}
+                      onChange={handleInputChange}
+                      className="border p-2 rounded-md"
+                    >
+                      <option value="CA">CA</option>
+                      <option value="MSME">MSME</option>
+                    </select>
+                  </div>
+                </>
               )}
 
               <div className="grid gap-2">
