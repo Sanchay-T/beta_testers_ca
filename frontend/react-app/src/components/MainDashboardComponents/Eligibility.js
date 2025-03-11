@@ -25,11 +25,13 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { ChevronDown, Calculator, PiggyBank } from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
 
 export default function Eligibility() {
   const [opportunityData, setOpportunityData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { user } = useAuth();
 
   // const commissionMap = {
   //   "Business Loan": 1.0,
@@ -186,6 +188,7 @@ export default function Eligibility() {
 
     exportToExcel(allFormattedData, "All Clients Eligibility Report");
   };
+  
 
   return (
     <ScrollArea className="h-full">
@@ -193,7 +196,7 @@ export default function Eligibility() {
         <div className="flex justify-between items-center">
           <div className="text-left">
             <h2 className="text-3xl font-extrabold to-blue-400 dark:text-slate-300">
-              Opportunity to Earn
+              {user.role==="MSME"?"Loan Eligibility":"Opportunity to Earn"}
             </h2>
             <p className="text-gray-600 mt-2 dark:text-[#7F8EA3]">
               Discover the products you're eligible for and the associated
@@ -201,7 +204,13 @@ export default function Eligibility() {
             </p>
           </div>
           {opportunityData && (
-            <DropdownMenu>
+            <div>
+          {user.role==="MSME"?<DropdownMenu>
+                <Button variant="default" className="flex items-center gap-2" onClick={() => handleDownloadAll(false)}>
+                  <Download className="w-5 h-5" /> Download All
+                </Button>
+         
+            </DropdownMenu>:  <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="default" className="flex items-center gap-2">
                   <Download className="w-5 h-5" /> Download All
@@ -222,7 +231,8 @@ export default function Eligibility() {
                   Download All without Commission
                 </DropdownMenuItem>
               </DropdownMenuContent>
-            </DropdownMenu>
+            </DropdownMenu>}
+            </div>
           )}
         </div>
         {!opportunityData || opportunityData.length === 0 ? (
@@ -234,7 +244,7 @@ export default function Eligibility() {
         ) : (
           <>
             <div className="grid gap-4 md:grid-cols-2 mb-6">
-              <Card className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-2 border-green-100 dark:border-green-800">
+             {user.role==="CA"&& <Card className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-2 border-green-100 dark:border-green-800">
                 <div className="flex items-center gap-4">
                   <div className="p-3 bg-green-50 rounded-lg dark:bg-green-800">
                     <Calculator className="w-6 h-6 text-green-600 dark:text-green-300" />
@@ -253,7 +263,7 @@ export default function Eligibility() {
                     </div>
                   </div>
                 </div>
-              </Card>
+              </Card>}
               <Card className="p-6">
                 {/* <Card className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-2 border-blue-100 dark:border-blue-800 "> */}
                 <div className="flex items-center gap-4">
@@ -293,7 +303,19 @@ export default function Eligibility() {
                             </span>
                           </div>
                         </div>
-                        <DropdownMenu>
+                       {user.role==="MSME"?
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => handleDownload(e, data, `${data.statementCustomerName} Eligibility Report`, false)}
+                              className="w-fit px-4 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 transition-all shadow-sm hover:shadow-md"
+                            >
+                              <Download className="w-4 h-4 text-gray-800" />
+                              Download
+                              {/* <ChevronDown className="w-4 h-4 text-blue-500" /> */}
+                            </Button>
+                     
+                      : <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button
                               variant="ghost"
@@ -333,7 +355,7 @@ export default function Eligibility() {
                               Download without Commission
                             </DropdownMenuItem>
                           </DropdownMenuContent>
-                        </DropdownMenu>
+                        </DropdownMenu>}
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className=" py-4">
@@ -347,12 +369,12 @@ export default function Eligibility() {
                               <TableHead className="text-center font-semibold">
                                 Amount
                               </TableHead>
-                              <TableHead className="text-center font-semibold">
+                             {user.role==="CA"&& <TableHead className="text-center font-semibold">
                                 Commission %
-                              </TableHead>
-                              <TableHead className="text-right font-semibold">
+                              </TableHead>}
+                             {user.role==="CA"&& <TableHead className="text-right font-semibold">
                                 Commission (₹)
-                              </TableHead>
+                              </TableHead>}
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -378,15 +400,15 @@ export default function Eligibility() {
                                       maximumFractionDigits: 2,
                                     })}
                                   </TableCell>
-                                  <TableCell className="text-center">
+                                 {user.role==="CA"&& <TableCell className="text-center">
                                     {item.rate}
-                                  </TableCell>
-                                  <TableCell className="text-right font-semibold">
+                                  </TableCell>}
+                                  {user.role==="CA"&&<TableCell className="text-right font-semibold">
                                     ₹
                                     {item.value.toLocaleString("en-IN", {
                                       maximumFractionDigits: 2,
                                     })}
-                                  </TableCell>
+                                  </TableCell>}
                                 </TableRow>
                               ))}
                           </TableBody>

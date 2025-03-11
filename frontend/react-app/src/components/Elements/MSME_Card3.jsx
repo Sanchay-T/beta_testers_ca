@@ -78,7 +78,7 @@ const MSME_Card3 = ({
   };
 
   const handleNavigateToEligibility = () => {
-    handleTabChange("Opportunity to Earn");
+    handleTabChange("Loan Eligibility");
   };
 
   return (
@@ -179,11 +179,16 @@ const MSME_Card3 = ({
 
         <div className="w-full bg-white/10 text-white rounded-lg px-4 py-2 md:py-3 mt-3">
           Upload 12 month's bank statements from all your accounts to get an
-          accurate loan eligibility calculation based on your average bank
-          balance
+          accurate loan eligibility
         </div>
-
-        <div className="flex justify-around mt-4 bg-white/10 rounded-xl p-2 backdrop-blur-md">
+        
+        <Button
+          className="w-full bg-white/20 hover:bg-white/30 text-white rounded-lg py-2 md:py-3 mt-1"
+          onClick={handleNavigateToEligibility}
+        >
+          More Details
+        </Button>
+        <div className="flex justify-around mt-2 bg-white/10 rounded-xl p-2 backdrop-blur-md">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
