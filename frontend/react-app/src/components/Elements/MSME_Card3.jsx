@@ -120,7 +120,7 @@ const MSME_Card3 = ({
                 <span className="text-xs uppercase tracking-wide text-gray-300 mb-1 text-center">
                   {value1 || "Total Eligibility Amount"}
                 </span>
-                <span className="text-xl md:text-2xl font-bold text-white">
+                <span className="text-xl md:text-lg font-bold text-white">
                   ₹
                   {Math.ceil(mainValue1).toLocaleString("en-IN", {
                     maximumFractionDigits: 0,

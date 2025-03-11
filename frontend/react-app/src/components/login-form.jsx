@@ -44,6 +44,9 @@ export function LoginForm({ className, ...props }) {
       // First handle license activation
       console.log("Inside Signup..");
       success = await signUp(credentials);
+      // set localstorage for role selection
+      localStorage
+        .setItem("role", credentials.role)
       if (!success) {
         return;
       }
@@ -52,7 +55,7 @@ export function LoginForm({ className, ...props }) {
       success = await login({
         email: credentials.email,
         password: credentials.password,
-        role: credentials.role,
+        role: localStorage.getItem("role") || credentials.role,
       });
     }
 
