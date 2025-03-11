@@ -329,7 +329,7 @@ const Card1 = ({
 
         {/* Stat Boxes */}
         <div className="flex gap-4 h-28">
-          <div className="flex-1 bg-white/10 py-4 rounded-xl backdrop-blur-md shadow-lg flex flex-col items-center">
+          <div className="flex-1 bg-white/10 py-4 rounded-xl backdrop-blur-md shadow-lg flex flex-col items-center justify-around">
             {isLoading ? (
               <Loader />
             ) : (
@@ -344,7 +344,7 @@ const Card1 = ({
             )}
           </div>
 
-          <div className="flex-1 bg-white/10 py-4 rounded-xl backdrop-blur-md shadow-lg flex flex-col items-center">
+          <div className="flex-1 bg-white/10 py-4 rounded-xl backdrop-blur-md shadow-lg flex flex-col items-center justify-around">
             {isLoading ? (
               <Loader />
             ) : (
