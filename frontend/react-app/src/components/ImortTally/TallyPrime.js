@@ -23,7 +23,7 @@ function ExcelViewer() {
     },
     {
       label: "Payment Receipt Contra Voucher",
-      path: "tallyprime/payment_receipt_contra.xlsm",
+      path: "tallyprime/pay_receipt_contra.xlsm",
     },
     // {
     //   label: "Receipt Voucher",
@@ -51,14 +51,14 @@ function ExcelViewer() {
         minHeight: "100vh",
       }}
     >
-      <h1
+      {/* <h1
         style={{
           marginBottom: "30px",
           color: "#1E3A8A",
           fontSize: "2.5rem",
           fontWeight: "700",
         }}
-      ></h1>
+      ></h1> */}
       <div
         style={{
           display: "grid",
@@ -83,6 +83,7 @@ function ExcelViewer() {
               flexDirection: "column",
               alignItems: "center",
             }}
+            className="justify-around"
             onMouseOver={(e) => {
               e.currentTarget.style.transform = "translateY(-5px)";
               e.currentTarget.style.boxShadow =
