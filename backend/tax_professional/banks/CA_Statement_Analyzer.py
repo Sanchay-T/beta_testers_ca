@@ -8,6 +8,8 @@ import sys
 import json
 import pandas as pd
 import regex as re
+import fitz
+import os
 
 
 bold_font = Font(bold=True)
@@ -663,6 +665,22 @@ def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_
         # Check if the extracted dataframe is empty
         if dfs[bank].empty:
             pdf_paths_not_extracted["bank_names"].append(re.sub(r"\d+", "", bank))
+
+            pdf_document = fitz.open(pdf_path)
+            if pdf_document.is_encrypted:
+                if not pdf_document.authenticate(pdf_password):
+                    raise ValueError("Incorrect password. Unable to unlock the PDF.")
+
+                # Save the unlocked PDF in the same location, replacing the original file
+                temp_path = pdf_path + ".unlocked.pdf"
+                pdf_document.save(temp_path)
+                pdf_document.close()
+
+                # Replace original file
+                shutil.move(temp_path, pdf_path)
+
+                print("PDF unlocked and saved successfully in the same path")
+
             pdf_paths_not_extracted["paths"].append(pdf_path)
             pdf_paths_not_extracted["passwords"].append(pdf_password)
             pdf_paths_not_extracted["start_dates"].append(start_date)
@@ -743,10 +761,10 @@ def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_
         return {"sheets_in_json": json_lists_of_df, 'pdf_paths_not_extracted': pdf_paths_not_extracted,
                 'success_page_number': time_saved_pages, 'missing_months_list': missing_months_list}
 
-# #
-# bank_names = ["AXIS"]
-# pdf_paths = ["April-Aug24 Bank Statement.pdf"]
-# passwords = [""]
+# # #
+# bank_names = ["ICICI"]
+# pdf_paths = ["F.Y. 2021-2022.pdf"]
+# passwords = ["059501501877"]
 # start_dates = ["01-09-2020"]
 # end_dates = ["03-03-2025"]
 # CA_ID = "CA_ID_4321"
