@@ -121,8 +121,8 @@ export function LoginForm({ className, ...props }) {
                       onChange={handleInputChange}
                       className="border p-2 rounded-md"
                     >
-                      <option value="CA">CA</option>
-                      <option value="MSME">MSME</option>
+                      <option value="CA">Tax Professionals</option>
+                      <option value="MSME">Accounting for Businesses</option>
                     </select>
                   </div>
                 </>
@@ -133,7 +133,7 @@ export function LoginForm({ className, ...props }) {
                 <Input
                   id="email"
                   type="text"
-                  placeholder="m@example.com"
+                  placeholder="johndoe@example.com"
                   required
                   value={credentials.email}
                   onChange={handleInputChange}
