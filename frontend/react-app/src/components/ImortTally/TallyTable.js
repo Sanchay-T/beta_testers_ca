@@ -923,19 +923,19 @@ const DataTable = ({
   const handleBulkLedgerUpdate = () => {
     console.log(ledgerField, bulkLedgerValue, selectedTransactions);
     setTransactions((prevTransactions) =>
-      prevTransactions.map((transaction) =>
-        selectedTransactions.includes(transaction.id)
+      prevTransactions.map((transaction) =>{
+        return transaction[ledgerField].length === 0
           ? { ...transaction, [ledgerField]: bulkLedgerValue }
-          : transaction
+          : transaction}
       )
     );
 
     setFilteredData((prevData) =>
-      prevData.map((transaction) =>
-        selectedTransactions.includes(transaction.id)
-          ? { ...transaction, [ledgerField]: bulkLedgerValue }
-          : transaction
-      )
+      prevData.map((transaction) =>{
+          return transaction[ledgerField].length === 0
+            ? { ...transaction, [ledgerField]: bulkLedgerValue }
+            : transaction}
+        )
     );
     setSelectedTransactions([]);
     setBulkLedgerValue("");
@@ -1066,9 +1066,9 @@ const DataTable = ({
       />
       <Button
         onClick={handleBulkLedgerUpdate}
-        disabled={selectedTransactions.length === 0}
+        // disabled={selectedTransactions.length === 0}
       >
-        Set for Selected
+        Set for Empty
       </Button>
     </div>
     <div className="flex items-center gap-2">
@@ -1192,12 +1192,6 @@ const DataTable = ({
     </div>
   </div>
 
-  {/* Bottom Row: Data Controls */}
-  <div className="flex flex-wrap justify-between items-center gap-4">
-
-    {/* Data Management Controls */}
-    
-  </div>
 
   {/* Popup Dialog for ledger selection - kept intact */}
   {showPopup && (
