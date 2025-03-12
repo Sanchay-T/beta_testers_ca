@@ -32,6 +32,7 @@ import {
 } from "../ui/alert-dialog";
 
 import { useReportContext } from "../../contexts/ReportContext";
+import { useToast } from "../../hooks/use-toast";
 
 
 const AccountNumNameManager = () => {
@@ -46,6 +47,7 @@ const AccountNumNameManager = () => {
   const { reportData, updateReportData } = useReportContext();
   const { caseId } = reportData;
 
+  const { toast } = useToast();
 
   // Fetch statements when component mounts
   useEffect(() => {
@@ -91,7 +93,14 @@ const AccountNumNameManager = () => {
 
   const handleSaveChanges = async () => {
     if (modifiedStatements.size === 0) {
-      alert("No changes to save");
+      // alert("No changes to save");
+      toast({
+        title: "No changes to save",
+        type: "info",
+        variant:"subtle",
+        duration: 5000,
+        isClosable: true,
+      })
       return;
     }
 
@@ -120,13 +129,30 @@ const AccountNumNameManager = () => {
 
       // Show summary alert
       if (successCount > 0) {
-        alert(
-          `Successfully updated ${successCount} statement${
+        // alert(
+        //   `Successfully updated ${successCount} statement${
+        //     successCount !== 1 ? "s" : ""
+        //   }${failCount > 0 ? `. Failed to update ${failCount}.` : ""}`
+        // );
+
+        toast({
+          title: `Successfully updated ${successCount} statement${
             successCount !== 1 ? "s" : ""
-          }${failCount > 0 ? `. Failed to update ${failCount}.` : ""}`
-        );
+          }${failCount > 0 ? `. Failed to update ${failCount}.` : ""}`,
+          type: "success",
+          variant:"destructive",
+          duration: 5000,
+          isClosable: true,
+        })
       } else if (failCount > 0) {
-        alert("Failed to save changes. Please try again.");
+        // alert("Failed to save changes. Please try again.");
+        toast({
+          title: "Failed to save changes. Please try again.",
+          type: "error",
+          variant:"solid",
+          duration: 5000,
+          isClosable: true,
+        })
       }
 
       // Refresh the statements after saving
@@ -134,7 +160,15 @@ const AccountNumNameManager = () => {
     } catch (err) {
       setError("Failed to save changes");
       console.error("Error saving changes:", err);
-      alert("Failed to save changes. Please try again.");
+      // alert("Failed to save changes. Please try again.");
+      toast({
+        title: "Failed to save changes. Please try again.",
+        type: "error",
+        variant:"solid",
+        duration: 5000,
+        isClosable: true,
+      })
+      
     } finally {
       setIsSaving(false);
     }

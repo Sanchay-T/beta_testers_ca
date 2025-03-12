@@ -24,6 +24,7 @@ import ManualTallyTable from "./ManualTable";
 import * as XLSX from "xlsx";
 import { Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { useToast } from "../../hooks/use-toast";
 
 const defaultColumns = {
   "Payment Receipt Contra Voucher": [
@@ -64,6 +65,7 @@ const TallyDirectImport = ({ source }) => {
   const { reportData } = useReportContext();
   const { caseId } = reportData;
   const [ledgerCreationTableData, setLedgerCreationTableData] = useState([]);
+  const { toast } = useToast();
 
   // ----------------------------------
   // 1) FETCHING VOUCHERS/TRANSACTIONS
@@ -235,7 +237,16 @@ const TallyDirectImport = ({ source }) => {
     console.log(txData)
     // “txData” is optional—ManualEntryTable might pass it.
     if (!companyName.trim()) {
-      alert("Please enter a company name before uploading.");
+      // alert("Please enter a company name before uploading.");
+      toast({
+        title: "Error",
+        description: "Please enter a company name before uploading.",
+        status: "error",
+        duration: 5000,
+        variant: "destructive",
+        type: "error",
+        
+      })
       return;
     }
 
@@ -246,9 +257,18 @@ const TallyDirectImport = ({ source }) => {
       return !transaction.dr_ledger || !transaction.cr_ledger 
     });
     if (incompleteTransactions.length > 0) {
-      alert(
-        "Some transactions are missing DrLedger or CrLedger. Please fill them before uploading."
-      );
+      // alert(
+      //   "Some transactions are missing DrLedger or CrLedger. Please fill them before uploading."
+      // );
+      toast({
+        title: "Error",
+        description: "Some transactions are missing DrLedger or CrLedger. Please fill them before uploading.",
+        status: "error",
+        duration: 5000,   
+        variant: "destructive",
+        type: "error",
+
+      })
       return;
     }
 
@@ -293,7 +313,17 @@ const TallyDirectImport = ({ source }) => {
 
     // “txData” is optional—ManualEntryTable might pass it.
     if (!companyName.trim()) {
-      alert("Please enter a company name before uploading.");
+      // alert("Please enter a company name before uploading.");
+      toast({
+        title: "Error",
+        description: "Please enter a company name before uploading.",
+        status: "error",
+        duration: 5000,
+        variant: "destructive",
+        type: "error",
+        
+      })
+
       return;
     }
     // Prepare data for Tally

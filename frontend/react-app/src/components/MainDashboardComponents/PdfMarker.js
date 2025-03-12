@@ -15,6 +15,7 @@ import {
 import { pdfjs, Document, Page } from "react-pdf"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs"
+import { useToast } from "../../hooks/use-toast";
 
 // pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString()
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -69,6 +70,7 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath, initialConfig = init
   const [pdfBlob, setPdfBlob] = useState(null)
 
   const pdfContainerRef = useRef(null)
+  const { toast } = useToast();
 
 
   useEffect(() => {
@@ -316,7 +318,14 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath, initialConfig = init
     const selectedTypes = columnLabels.map((label) => label.type)
 
     if (!requiredTypes.every((type) => selectedTypes.includes(type))) {
-      alert("Please select Balance, Date, and Description columns before submitting.")
+      // alert("Please select Balance, Date, and Description columns before submitting.")
+      toast({
+        title: "Please select Balance, Date, and Description columns before submitting.",
+        type: "error",
+        variant:"solid",
+        duration: 5000,
+        isClosable: true,
+      })
       return
     }
 

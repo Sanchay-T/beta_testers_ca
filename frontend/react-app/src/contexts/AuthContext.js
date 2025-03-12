@@ -69,6 +69,7 @@ export const AuthProvider = ({ children }) => {
         // setIsActivated(false);
         setUser(credentials); // Use returned user data if available
         console.log("User signed up:", result);
+        localStorage.removeItem("dashboardData");
         return true;
       } else {
         setError(result.error || "License activation failed");
@@ -98,6 +99,7 @@ export const AuthProvider = ({ children }) => {
         const userData = await window.electron.auth.getUser();
         setUser({...userData,role:credentials.role});
         console.log("User logged in:", userData);
+        localStorage.removeItem("dashboardData");
         return true;
       } else {
         throw new Error(result.error || "Login failed");
