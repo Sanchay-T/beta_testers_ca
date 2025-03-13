@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import {
@@ -25,6 +24,7 @@ import * as XLSX from "xlsx";
 import { Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { useToast } from "../../hooks/use-toast";
+import { Input } from "../ui/input";
 
 const defaultColumns = {
   "Payment Receipt Contra Voucher": [
@@ -66,6 +66,11 @@ const TallyDirectImport = ({ source }) => {
   const { caseId } = reportData;
   const [ledgerCreationTableData, setLedgerCreationTableData] = useState([]);
   const { toast } = useToast();
+  const [port, setPort] = useState("9000");
+
+  const handleInputChange = (e) => {
+    setPort(e.target.value);
+  };
 
   // ----------------------------------
   // 1) FETCHING VOUCHERS/TRANSACTIONS
@@ -234,7 +239,7 @@ const TallyDirectImport = ({ source }) => {
   };
 
   const handleTallyUpload = async (txData) => {
-    console.log(txData)
+    console.log(txData);
     // “txData” is optional—ManualEntryTable might pass it.
     if (!companyName.trim()) {
       // alert("Please enter a company name before uploading.");
@@ -245,8 +250,7 @@ const TallyDirectImport = ({ source }) => {
         duration: 5000,
         variant: "destructive",
         type: "error",
-        
-      })
+      });
       return;
     }
 
@@ -254,7 +258,7 @@ const TallyDirectImport = ({ source }) => {
     const incompleteTransactions = txData.filter((transaction) => {
       if (transaction.imported) return false;
       // check if transaction contains a key as cr_ledger
-      return !transaction.dr_ledger || !transaction.cr_ledger 
+      return !transaction.dr_ledger || !transaction.cr_ledger;
     });
     if (incompleteTransactions.length > 0) {
       // alert(
@@ -262,13 +266,13 @@ const TallyDirectImport = ({ source }) => {
       // );
       toast({
         title: "Error",
-        description: "Some transactions are missing DrLedger or CrLedger. Please fill them before uploading.",
+        description:
+          "Some transactions are missing DrLedger or CrLedger. Please fill them before uploading.",
         status: "error",
-        duration: 5000,   
+        duration: 5000,
         variant: "destructive",
         type: "error",
-
-      })
+      });
       return;
     }
 
@@ -321,8 +325,7 @@ const TallyDirectImport = ({ source }) => {
         duration: 5000,
         variant: "destructive",
         type: "error",
-        
-      })
+      });
 
       return;
     }
@@ -354,7 +357,10 @@ const TallyDirectImport = ({ source }) => {
     setLoading2(true);
     try {
       if (selectedVoucher === "Payment Receipt Contra Voucher") {
-        const response = await window.electron.uploadToTally(tallyUploadData);
+        const response = await window.electron.uploadToTally(
+          tallyUploadData,
+          port
+        );
 
         const { failedTransactions = [], successIds = [] } = response;
 
@@ -513,14 +519,13 @@ const TallyDirectImport = ({ source }) => {
   // Updated handleExcelUpload function
 
   // Define a helper function
-const toSnakeCase = (str) =>
-  str
-    .toLowerCase()
-    .replace(/\s+/g, "_")
-    .replace(/[^a-z0-9_]/g, "")
-    .replace(/_+/g, "_")
-    .replace(/_+$/, ""); // Remove trailing underscores
-
+  const toSnakeCase = (str) =>
+    str
+      .toLowerCase()
+      .replace(/\s+/g, "_")
+      .replace(/[^a-z0-9_]/g, "")
+      .replace(/_+/g, "_")
+      .replace(/_+$/, ""); // Remove trailing underscores
 
   const handleExcelUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -613,8 +618,10 @@ const toSnakeCase = (str) =>
             }
             // Convert header to snake_case for field name
             const fieldName =
-            typeof header === "string" ? toSnakeCase(header) : toSnakeCase(String(header));
-          
+              typeof header === "string"
+                ? toSnakeCase(header)
+                : toSnakeCase(String(header));
+
             // console.log({ fieldName, value });
             console.log({ header, value });
 
@@ -633,9 +640,9 @@ const toSnakeCase = (str) =>
           filteredHeaders.map((header) => ({
             original: header,
             field:
-            typeof header === "string"
-            ? toSnakeCase(header)
-            : toSnakeCase(String(header)),
+              typeof header === "string"
+                ? toSnakeCase(header)
+                : toSnakeCase(String(header)),
           }))
         );
 
@@ -709,19 +716,19 @@ const toSnakeCase = (str) =>
                     ))}
                   </SelectContent>
                 </Select>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="outline">
-                      <Info className="w-5 h-5 text-black" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    Ensure that Tally is running on port 9000 for the Upload to
-                    work.
-                  </TooltipContent>
-                </Tooltip>
               </div>
             )}
+          </div>
+          <div className="text-sm text-gray-800 max-w-xl flex gap-x-4 items-center">
+            <label className="whitespace-nowrap">
+              Please Enter Port Number:
+            </label>
+            <Input
+              type="number"
+              value={port}
+              onChange={handleInputChange}
+              placeholder="Enter Port Number"
+            />
           </div>
         </CardHeader>
 
@@ -758,15 +765,6 @@ const toSnakeCase = (str) =>
                     <p className="text-sm text-gray-500">
                       or manually add rows below
                     </p>
-                    <div className=" ml-auto bg-blue-100 border border-blue-200 p-3 rounded-md text-sm text-gray-800 max-w-xl">
-                      <div className="flex items-center space-x-4">
-                        <Info className="w-5 h-5 text-black" />
-                        <h1>
-                          Ensure that Tally is running on port 9000 for the
-                          Upload to work.
-                        </h1>
-                      </div>
-                    </div>
                   </div>
 
                   {/* Show ManualEntryTable (simple table where user can add row by row) */}

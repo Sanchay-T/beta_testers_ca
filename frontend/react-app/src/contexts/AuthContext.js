@@ -97,7 +97,7 @@ export const AuthProvider = ({ children }) => {
       if (result.success) {
         // After successful login, explicitly fetch the complete user data
         const userData = await window.electron.auth.getUser();
-        setUser({...userData,role:credentials.role});
+        setUser({ ...userData, role: credentials.role });
         console.log("User logged in:", userData);
         localStorage.removeItem("dashboardData");
         return true;
