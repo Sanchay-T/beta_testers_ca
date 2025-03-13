@@ -45,8 +45,7 @@ export function LoginForm({ className, ...props }) {
       console.log("Inside Signup..");
       success = await signUp(credentials);
       // set localstorage for role selection
-      localStorage
-        .setItem("role", credentials.role)
+      localStorage.setItem("role", credentials.role);
       if (!success) {
         return;
       }

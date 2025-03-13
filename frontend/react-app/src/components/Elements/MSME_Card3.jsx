@@ -140,7 +140,7 @@ const MSME_Card3 = ({
                   {value2}
                 </span>
                 <span className="text-base sm:text-xl md:text-xl font-bold text-white">
-                ₹{mainValue2.toLocaleString()}*
+                  ₹{mainValue2.toLocaleString()}*
                 </span>
               </>
             )}
@@ -155,7 +155,7 @@ const MSME_Card3 = ({
                   {value3}
                 </span>
                 <span className="text-base sm:text-xl md:text-xl font-bold text-white">
-                ₹{mainValue3.toLocaleString()}*
+                  ₹{mainValue3.toLocaleString()}*
                 </span>
               </>
             )}
@@ -170,7 +170,7 @@ const MSME_Card3 = ({
                   {value4}
                 </span>
                 <span className="text-base sm:text-xl md:text-xl font-bold text-white">
-                ₹{mainValue4.toLocaleString()}*
+                  ₹{mainValue4.toLocaleString()}*
                 </span>
               </>
             )}
@@ -181,7 +181,7 @@ const MSME_Card3 = ({
           Upload 12 month's bank statements from all your accounts to get an
           accurate loan eligibility
         </div>
-        
+
         <Button
           className="w-full bg-white/20 hover:bg-white/30 text-white rounded-lg py-2 md:py-3 mt-1"
           onClick={handleNavigateToEligibility}
