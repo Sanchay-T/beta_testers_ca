@@ -115,6 +115,7 @@ contextBridge.exposeInMainWorld("electron", {
 
   updateTransactionStatus: (transactionIds) =>
     ipcRenderer.invoke("update-transaction-status", transactionIds),
+  deleteStatement:(statementId)=> ipcRenderer.invoke("delete-statement",statementId),
 
   editVoucherType: (data) => ipcRenderer.invoke("update-voucher", data),
   uploadLedgerToTally: (data) => ipcRenderer.invoke("ledger-create", data),
@@ -156,7 +157,7 @@ contextBridge.exposeInMainWorld("electron", {
   editEntity: (payload) => ipcRenderer.invoke("edit-entity", payload),
   uploadToTally: (data, port) => ipcRenderer.invoke("tally-upload", data, port),
   getProgressed: () => ipcRenderer.invoke("get-user-progress"),
-
+  
 
   // Add auto-update related methods
   updates: {

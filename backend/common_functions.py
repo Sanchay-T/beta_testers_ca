@@ -368,7 +368,7 @@ def extraction_process_explicit_lines(bank, pdf_path, pdf_password, start_date, 
         df = extract_dataframe_from_pdf(pdf_path, table_settings={
             "vertical_strategy": "explicit",
             "explicit_vertical_lines": explicit_lines,
-            "horizontal_strategy": "text",
+            "horizontal_strategy": "lines",
             "intersection_x_tolerance": 120,
         })
 

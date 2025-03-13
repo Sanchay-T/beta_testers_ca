@@ -22,9 +22,10 @@ const PDFMarkerModal = ({
   const { reportName } = reportData;
 
   const handleSubmitEditPdf = async (modifiedSelectedFailedFile) => {
+    // THis function is only for rerun from individual table
     // Set loading state
     setPdfEditLoading(true);
-
+    console.log({modifiedSelectedFailedFile})
     try {
       // Call the API to update the statements
       const result = await window.electron.editPdf(
@@ -35,6 +36,9 @@ const PDFMarkerModal = ({
       console.log("result11", result);
       if (result.success) {
         console.log("result success", result.success);
+        // delete the existing statement as new one is added
+        const response  =await window.electron.deleteStatement(modifiedSelectedFailedFile.id)
+        console.log({deleteResponse:response})
         toast({
           title: "Success",
           description: "All statements have been rectified.",
@@ -46,6 +50,8 @@ const PDFMarkerModal = ({
         if (typeof onProcessingComplete === "function") {
           onProcessingComplete();
         }
+
+
       } else {
         // If the rectification failed, show error message and reasons
         const unrectifiedStatements = failedDatasOfCurrentReport.filter(

@@ -1387,7 +1387,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                     const hasError = Boolean(
                                       statement.respectiveReasonsForError
                                     );
-
+                                    console.log({isDone,hasError,report})
                                     return (
                                       <div
                                         key={`statement-${
@@ -1409,7 +1409,8 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                                 )
                                               : ""}
                                           </p>
-                                          {!hasError && (
+                                          {/* {!hasError && ( */}
+                                          { (
                                             <div className="flex-1">
                                               {report.status === "Success" ||
                                               isDone ? (

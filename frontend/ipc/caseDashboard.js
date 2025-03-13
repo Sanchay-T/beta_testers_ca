@@ -76,6 +76,29 @@ function registerCaseDashboardIpc() {
       throw error;
     }
   });
+
+  ipcMain.handle("delete-statement", async (event, statementId) => {
+    try {
+      if (!statementId) {
+        throw new Error("Statement ID is required");
+      }
+
+      await db.transaction(async (trx) => {
+        // Step 1: Delete all related transactions
+        await trx.delete(transactions).where(eq(transactions.statementId, statementId));
+
+        // Step 2: Delete the statement itself
+        await trx.delete(statements).where(eq(statements.id, statementId));
+      });
+
+      console.log(`Statement ${statementId} and its related transactions deleted successfully`);
+      return { success: true, message: "Statement deleted successfully" };
+    } catch (error) {
+      log.error("Error deleting statement:", error);
+      throw error;
+    }
+  });
+
 }
 
 module.exports = { registerCaseDashboardIpc };

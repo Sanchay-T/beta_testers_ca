@@ -104,6 +104,7 @@ const IndividualTable = () => {
       const selectedFile = statements.find(
         (stmt) => stmt.filePath === filePath
       );
+      console.log({selectedFile})
       if (!selectedFile) {
         console.error("File not found in statements list:", filePath);
         // Reset processing state if file not found

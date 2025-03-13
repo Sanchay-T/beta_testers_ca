@@ -30,7 +30,7 @@ const sanitizeJSONString = (jsonString) => {
 };
 
 const validateAndTransformTransaction = (transaction, statementId) => {
-  log.info({ BeforeTransformation: transaction })
+  // log.info({ BeforeTransformation: transaction })
   if (!transaction["Value Date"] || !transaction.Description) {
     log.info("Missing required transaction fields")
     throw new Error("Missing required transaction fields");
