@@ -424,6 +424,7 @@ const TallyDirectImport = ({ source }) => {
     // Aggregate error types if needed
     const errorCounts = failedTransactions.reduce((acc, transaction) => {
       const errorMessage = transaction.error.toLowerCase();
+      console.log({errorMessage})
       let errorCategory = "Other Errors";
 
       if (
@@ -433,7 +434,8 @@ const TallyDirectImport = ({ source }) => {
         errorCategory = "Ledger Not Found";
       } else if (errorMessage.includes("out of range")) {
         errorCategory = "Date Range Error";
-      }
+      }else if (errorMessage.includes("port number")) {
+        errorCategory = "Port Number Error";}
       // more conditions here if needed
 
       acc[errorCategory] = (acc[errorCategory] || 0) + 1;
@@ -699,7 +701,7 @@ const TallyDirectImport = ({ source }) => {
                 : `Tally ${selectedVoucher} Transactions`}
             </CardTitle>
 
-            {source !== "manual" && (
+            {/* {source !== "manual" && (
               <div className="flex gap-4">
                 <Select
                   onValueChange={handleVoucherChange}
@@ -717,9 +719,8 @@ const TallyDirectImport = ({ source }) => {
                   </SelectContent>
                 </Select>
               </div>
-            )}
-          </div>
-          <div className="text-sm text-gray-800 max-w-xl flex gap-x-4 items-center">
+            )} */}
+                <div className="text-sm text-gray-800 max-w-xl flex gap-x-4 items-center">
             <label className="whitespace-nowrap">
               Please Enter Port Number:
             </label>
@@ -730,6 +731,8 @@ const TallyDirectImport = ({ source }) => {
               placeholder="Enter Port Number"
             />
           </div>
+          </div>
+      
         </CardHeader>
 
         <CardContent>

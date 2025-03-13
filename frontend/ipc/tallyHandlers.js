@@ -85,9 +85,10 @@ function registerTallyIpc() {
     const failedTransactions = [];
     const parser = new XMLParser(); // XML Parser for response
 
-    log.info({tallyUploadData})
+    log.info({tallyUploadData,port})
     const end = tallyUploadData.length;
-  
+    const tallyPath = `http://localhost:${port}`
+    log.info({tallyPath})
     // const end = 2;
     for (let i = 0; i <end; i++) {
     
@@ -102,13 +103,14 @@ function registerTallyIpc() {
         xmlContent = buildTallyXmlContra(row);
       }
       
-      
+  
       try {
-        const response = await axios.post(`http://localhost:${port}`, xmlContent, {
+        const response = await axios.post(tallyPath, xmlContent, {
           headers: { "Content-Type": "application/xml" },
         });
         const xmlResponse = response.data;
         const parsedResponse = parser.parse(xmlResponse);
+        log.info({parsedResponse})
         const lineError = parsedResponse.RESPONSE?.LINEERROR || null;
 
         if (lineError) {
@@ -121,7 +123,13 @@ function registerTallyIpc() {
 
         } catch (error) {
           console.error(`Transaction ${row.id} Failed (Server Error): ${error.message}`);
-          failedTransactions.push({ id: row.id, error: error.message });
+          if(error.message==""){
+          failedTransactions.push({ id: row.id, error: "Please check Port number and Company name" });
+
+          }else{
+
+            failedTransactions.push({ id: row.id, error: error.message });
+          }
       }
     }
 
