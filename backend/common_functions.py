@@ -2969,8 +2969,7 @@ def Upi(df):
     df['Entity'] = df.apply(apply_regex_to_categories_nkgsb, axis=1)
     df['Entity'] = df.apply(apply_regex_to_categories_surat, axis=1)
     df['Entity'] = df.apply(apply_regex_to_categories_idfc, axis=1)
-    df['Entity'] = df.apply(apply_regex_to_categories_jsbl, axis=1)
-    df['Entity'] = df.apply(apply_regex_to_empty_entities_axis, axis=1)
+    df['Entity'] = df.apply(apply_regex_to_categories_jsbl, axis=1)   
     df['Entity'] = df.apply(apply_regex_to_categories_hdfc, axis=1)
     df['Entity'] = df.apply(apply_regex_to_empty_entities_sbi, axis=1)
     df['Entity'] = df.apply(apply_regex_to_empty_entities_kotak, axis=1)
@@ -2980,6 +2979,7 @@ def Upi(df):
     df['Entity'] = df.apply(extract_name_upiab, axis=1)
     df['Entity'] = df.apply(extract_name_mpay, axis=1)
     df['Entity'] = df.apply(apply_regex_to_categories_dcb, axis=1)
+    df['Entity'] = df.apply(apply_regex_to_empty_entities_axis, axis=1)
 
     # print(df)
     return df

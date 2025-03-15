@@ -57,11 +57,11 @@ const Dashboard = () => {
       url: "#",
       icon: Import,
       items: [
-        {
-          title: "Tally Manual",
-          url: "#",
-          icon: null,
-        },
+        // {
+        //   title: "Tally Manual",
+        //   url: "#",
+        //   icon: null,
+        // },
         {
           title: "Tally Vouchers",
           url: "#",

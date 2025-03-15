@@ -1148,13 +1148,13 @@ const DataTable = ({
               <AiFillFileExcel className="w-5 h-5 text-white" />
               Ledger Voucher
             </Button>
-            <Button
+            {/* <Button
               onClick={handleUploadToTally}
               className="px-3 py-2 text-base font-medium text-white bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 hover:bg-gray-700 transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
             >
               <UploadCloud className="w-5 h-5 text-white" />
               Upload to Tally
-            </Button>
+            </Button> */}
           </div>
 
           {/* Search and Filter Controls */}
