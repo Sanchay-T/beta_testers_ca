@@ -702,18 +702,18 @@ const ManualTallyTable = ({
   const handleBulkLedgerUpdate = () => {
     if (!bulkLedgerValue) return;
     setAllRows((prev) =>
-      prev.map((row) =>
-        selectedTransactions.includes(row.id)
+      prev.map((row) =>{
+        return row[ledgerField].length === 0
           ? { ...row, [ledgerField]: bulkLedgerValue }
-          : row
-      )
+          : row;
+      })
     );
-    setFilteredData((prev) =>
-      prev.map((row) =>
-        selectedTransactions.includes(row.id)
-          ? { ...row, [ledgerField]: bulkLedgerValue }
-          : row
-      )
+    setFilteredData((prevData) =>
+      prevData.map((transaction) => {
+        return transaction[ledgerField].length === 0
+          ? { ...transaction, [ledgerField]: bulkLedgerValue }
+          : transaction;
+      })
     );
     setSelectedTransactions([]);
     setBulkLedgerValue("");
@@ -883,9 +883,9 @@ const ManualTallyTable = ({
       />
       <Button
         onClick={handleBulkLedgerUpdate}
-        disabled={selectedTransactions.length === 0}
+        // disabled={selectedTransactions.length === 0}
       >
-        Set Ledger
+        Set for Empty
       </Button>
     </div>
 

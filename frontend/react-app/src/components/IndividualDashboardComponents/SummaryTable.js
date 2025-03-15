@@ -139,6 +139,7 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
           balance: transaction.balance,
           bank: transaction.bank,
           entity: transaction.entity,
+          id: transaction.id,
         };
       });
   };
