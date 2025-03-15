@@ -435,7 +435,7 @@ def parse_date(date_string):
         "%d-%m-%Y",
         "%d %b %Y",
         "%Y-%m-%d",
-        "%y-%m-%d",
+        # "%y-%m-%d",
         "%d %B %Y",
         "%d/%m/%Y",
         "%d-%b-%Y",
@@ -513,7 +513,7 @@ def find_desc_column(df, date_cols):
                 desc.append(column_number)
                 break  # Move to the next row after finding a match
 
-    return list(set(desc))
+    return list(desc)
 
 def find_debit_column(df, desc_col, date_col, bal_column):
     # Convert all entries in the DataFrame to lowercase strings
@@ -592,7 +592,7 @@ def cleaning(new_df):
             "%d-%m-%Y",
             "%d %b %Y",
             "%Y-%m-%d",
-            "%y-%m-%d",
+            # "%y-%m-%d",
             "%d %B %Y",
             "%d/%m/%Y",
             "%d-%b-%Y",

@@ -86,7 +86,8 @@ def add_start_n_end_date( df, start_date, end_date, bank):
         print("The period falls within the start and end dates.")
     else:
         raise Exception(
-            f"Error: The period for Bank: {bank} does not fall within the start and end dates."
+            f"Error: The period for Bank: {bank} ({period_start} to {period_end}), "
+            f"does not fall within the start and end dates ({start_date_sd} to {end_date_ed}), provided by the user."
         )
 
     # add opening and closing balance
@@ -389,8 +390,30 @@ def extraction_process_explicit_lines(bank, pdf_path, pdf_password, start_date, 
         name_n_num = extract_account_details(extract_text_from_pdf(pdf_path))
 
         # Add start and end date
-        if not idf.empty:
-            idf = add_start_n_end_date(idf, start_date, end_date, bank)
+        if idf.empty:
+            df = extract_dataframe_from_pdf(pdf_path, table_settings={
+                "vertical_strategy": "explicit",
+                "explicit_vertical_lines": explicit_lines,
+                "horizontal_strategy": "text",
+            })
+
+            all_null = all(label[1] == "null" for label in labels)
+
+            if not all_null:
+                new_row = [None] * len(df.columns)  # Create a blank row with the same number of columns
+                for index, label_type in labels:
+                    if index < len(new_row):
+                        new_row[index] = label_type
+
+                # Insert the new row at the top of the DataFrame
+                df.loc[-1] = new_row  # Add the new row with a negative index to place it at the top
+                df.index = df.index + 1  # Shift all indices by 1
+                df.sort_index(inplace=True)  # Reorder the DataFrame to update the row positions
+
+            idf, _ = model_for_pdf(df)
+            name_n_num = extract_account_details(extract_text_from_pdf(pdf_path))
+
+        idf = add_start_n_end_date(idf, start_date, end_date, bank)
 
         return idf, name_n_num, a
 
