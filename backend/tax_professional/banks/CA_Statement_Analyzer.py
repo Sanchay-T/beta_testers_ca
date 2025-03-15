@@ -573,6 +573,7 @@ def refresh_category_all_sheets(df,eod_sheet_df, new_categories):
 
     return json_output
 
+
 def individual_summary(transactions_df):
     
     transactions_df.rename(columns={
@@ -757,6 +758,10 @@ def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_
         except Exception as e:
             print(f"Failed to remove '{folder_path}': {e}")
         # print(name_n_num_df)
+
+        print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+        print(pdf_paths_not_extracted)
+        print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
 
         return {"sheets_in_json": json_lists_of_df, 'pdf_paths_not_extracted': pdf_paths_not_extracted,
                 'success_page_number': time_saved_pages, 'missing_months_list': missing_months_list}
