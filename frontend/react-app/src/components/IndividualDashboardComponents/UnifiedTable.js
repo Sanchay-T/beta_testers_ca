@@ -98,7 +98,7 @@ const DataTable = ({
   const [isLoading, setIsLoading] = useState(false);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [existingFilterData, setExistingFilterData] = useState([]);
-  const [pdfBlob, setPdfBlob] = useState(null)
+  const [pdfBlob, setPdfBlob] = useState(null);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
   const [columnsToIgnore, setColumnsToIgnore] = useState([
     "id",
@@ -454,7 +454,7 @@ const DataTable = ({
 
   // When classification is complete, update either the bulk field or a single row change.
   const handleClassificationSubmit = () => {
-    handleCategoryClassification(newCategoryToClassify, selectedType);
+    // handleCategoryClassification(newCategoryToClassify, selectedType);
     console.log({ selectedType });
     setShowClassificationModal(false);
     if (bulkCategoryModalOpen) {
@@ -1399,14 +1399,13 @@ const DataTable = ({
         console.error("Error: No file path provided");
         return;
       }
-      window.electron.fetchPdfContent(previewUrl)
-      .then(base64 => {
-        const blob = base64StringToBlob(base64, 'application/pdf');
+      window.electron.fetchPdfContent(previewUrl).then((base64) => {
+        const blob = base64StringToBlob(base64, "application/pdf");
         const objectUrl = URL.createObjectURL(blob);
         setPdfBlob(objectUrl);
         setIsPdfModalOpen(true); // Set state to open a modal
         setIsLoading(false);
-      })
+      });
     } catch (error) {
       console.error("Error opening PDF file:", error);
       setIsLoading(false);
@@ -1475,27 +1474,23 @@ const DataTable = ({
                 Clear Filters
               </Button>
 
-              {source === "transactions" && reportData?.individualId &&(
-              <>
-                <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
+              {source === "transactions" && reportData?.individualId && (
+                <>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
                               transition-all shadow-sm hover:shadow-md"
-                    onClick={() =>
-                      handlePreviewFile(
-                        reportData.filePath
-                      )
-                    }
-                  >
-                    <Eye className="w-4 h-4 text-blue-500" />
-                  </Button>
-                </TooltipTrigger>
-                  <TooltipContent>Preview Statement</TooltipContent>
-                </Tooltip>
-              </>
+                        onClick={() => handlePreviewFile(reportData.filePath)}
+                      >
+                        <Eye className="w-4 h-4 text-blue-500" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Preview Statement</TooltipContent>
+                  </Tooltip>
+                </>
               )}
 
               {["suspense", "upi-dr", "upi-cr"].includes(source) && (
@@ -2158,9 +2153,9 @@ const DataTable = ({
           <div className="bg-white dark:bg-gray-800 rounded-lg p-4 w-4/5 h-4/5 flex flex-col">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-medium">PDF Preview</h3>
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => {
                   setIsPdfModalOpen(false);
                   URL.revokeObjectURL(pdfBlob); // Clean up the object URL
@@ -2170,9 +2165,9 @@ const DataTable = ({
               </Button>
             </div>
             <div className="flex-1 overflow-hidden">
-              <iframe 
-                src={pdfBlob} 
-                className="w-full h-full border-0" 
+              <iframe
+                src={pdfBlob}
+                className="w-full h-full border-0"
                 // title="PDF Preview"
               />
             </div>
