@@ -2,11 +2,14 @@ import React, { useState, useMemo, useEffect } from "react";
 import PieCharts from "../charts/PieCharts";
 import { Card, CardHeader, CardTitle } from "../ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
-import { Maximize2, Minimize2 } from "lucide-react";
+import { Download, Maximize2, Minimize2 } from "lucide-react";
 import SummaryTable from "./SummaryTable";
 import DataTable from "./UnifiedTable";
 import { useParams } from "react-router-dom";
 import { useReportContext } from "../../contexts/ReportContext";
+import { useToast } from "../../hooks/use-toast";
+import { generateFinancialReport } from "../ReportExcel";
+import { Button } from "../ui/button";
 
 const formatDecimal = (value) => {
   return Number(parseFloat(value || 0).toFixed(2));
@@ -80,6 +83,7 @@ const Summary = () => {
   const [filteredTransactions, setFilteredTransactions] = useState([]);
   const [transactionData, setTransactionData] = useState([]);
   const { individualId, caseId } = useParams();
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchSummaryData = async () => {
@@ -319,10 +323,10 @@ const Summary = () => {
     const formattedTransactions = matchingTransactions.map((transaction) => ({
       date: transaction.date
         ? new Date(transaction.date).toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-          })
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        })
         : "",
       description: transaction.description || "",
       amount: Math.abs(parseFloat(transaction.amount || 0)),
@@ -378,6 +382,46 @@ const Summary = () => {
     );
   };
 
+  const handleDownload = async (caseid, status) => {
+    if (status === "Pending") {
+      toast({
+        title: "Cannot Download",
+        description: "Report is still being processed. Please wait until it's complete.",
+        variant: "warning",
+        duration: 3000,
+      });
+      return;
+    }
+
+    try {
+      console.log("Downloading summary report for case:", caseid);
+      const success = await generateFinancialReport(caseid, true); // Pass true for summaryOnly
+
+      if (success) {
+        console.log("Summary report downloaded successfully.");
+        toast({
+          title: "Success",
+          description: "Summary Excel file downloaded successfully",
+        });
+      } else {
+        console.error("Failed to generate the summary report.");
+        toast({
+          title: "Error",
+          description: "Failed to download Summary Excel file.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error in handleDownloadSummary:", error);
+      toast({
+        title: "Error",
+        description: `Failed to initiate summary download: ${error.message}`,
+        variant: "destructive",
+      });
+    }
+  };
+
+
   return (
     <div className="bg-white rounded-lg space-y-6 m-8 pr-16 mt-2 min-w-full max-w-[0] dark:bg-slate-950">
       {/* <ToggleStrip
@@ -391,6 +435,15 @@ const Summary = () => {
         </div>
       ) : (
         <> */}
+      <div className="flex justify-between">
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">
+          Summary
+        </h1>
+        <Button onClick={() => handleDownload(caseId)} variant="default">
+          <Download className="w-4 h-4 mr-2" />
+          Download Summary
+        </Button>
+      </div>
       <div className="flex flex-wrap -mx-2">
         {renderChart(
           incomeData,

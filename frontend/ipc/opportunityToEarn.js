@@ -50,6 +50,7 @@ function registerOpportunityToEarnIpc() {
       return { success: false, message: error.message };
     }
   });
+
   ipcMain.handle("getOpportunityToEarnForExcel", async (event, caseId) => {
     try {
       const data = await db
@@ -90,6 +91,7 @@ function registerOpportunityToEarnIpc() {
       return { success: false, message: error.message };
     }
   });
+
 }
 
 module.exports = { registerOpportunityToEarnIpc };

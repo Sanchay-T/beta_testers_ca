@@ -68,6 +68,9 @@ contextBridge.exposeInMainWorld("electron", {
       individualId
     ),
 
+  getOpportunityToEarnForExcel: (case_id) =>
+    ipcRenderer.invoke("getOpportunityToEarnForExcel", case_id),
+
   getTransactionsByEmi: (caseId, individualId) =>
     ipcRenderer.invoke("get-transactions-by-emi", caseId, individualId),
   getTransactionsByInvestment: (caseId, individualId) =>
@@ -165,7 +168,7 @@ contextBridge.exposeInMainWorld("electron", {
 
   // Add auto-update related methods
   updates: {
-    checkForUpdates: () => ipcRenderer.invoke("check-for-updates", () => {}),
+    checkForUpdates: () => ipcRenderer.invoke("check-for-updates", () => { }),
     // downloadUpdate: () => ipcRenderer.invoke('download-update'),
     // installUpdate: () => ipcRenderer.invoke('install-update'),
     onUpdateStatus: (callback) =>

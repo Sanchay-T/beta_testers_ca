@@ -69,6 +69,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import * as XLSX from "xlsx";
 import { useReportContext } from "../../contexts/ReportContext";
+import SliderDemo from "../ui/slider";
 
 const voucherOptions = ["Payment", "Receipt", "Contra"];
 
@@ -216,6 +217,7 @@ const DataTable = ({
   const [pendingCategories, setPendingCategories] = useState([]);
 
   const { reportData, updateReportData } = useReportContext();
+  const [sliderValue, setSliderValue] = useState(85);
 
   // Helper: Format dates
   const formatValue = (value) => {
@@ -268,10 +270,10 @@ const DataTable = ({
         );
         return modifiedRow
           ? {
-              ...newRow,
-              category: modifiedRow.category,
-              entity: modifiedRow.entity,
-            }
+            ...newRow,
+            category: modifiedRow.category,
+            entity: modifiedRow.entity,
+          }
           : newRow;
       });
     });
@@ -681,8 +683,8 @@ const DataTable = ({
       source === "similarCategory"
         ? pendingCategoryChange.newCategory
         : selectedBulkCategory === ""
-        ? categorySearchTerm
-        : selectedBulkCategory;
+          ? categorySearchTerm
+          : selectedBulkCategory;
     console.log({ ids });
     // ids.forEach((id) => {
     //   const index = dataOnUi.findIndex((row) => row.id === id);
@@ -1274,8 +1276,44 @@ const DataTable = ({
   };
 
   // get transactions with same category and similar description
-  const processSimilarCategory = (transactions, descriptionToMatch) => {
-    // Helper function to calculate string similarity
+  // const processSimilarCategory = (transactions, descriptionToMatch) => {
+  //   // Helper function to calculate string similarity
+  //   const similarity = (str1, str2) => {
+  //     if (!str1 || !str2) return 0;
+  //     const s1 = str1.toLowerCase();
+  //     const s2 = str2.toLowerCase();
+  //     const match = [...s1].filter((char) => s2.includes(char)).length;
+  //     return match / Math.max(s1.length, s2.length);
+  //   };
+
+  //   // Similarity threshold
+  //   const threshold = 0.85;
+
+  //   // Filter transactions with similar descriptions and same category
+  //   const similarTransactions = transactions.filter((transaction) => {
+  //     const descriptionSimilarity = similarity(
+  //       transaction.description,
+  //       descriptionToMatch
+  //     );
+
+  //     console.log("transaction.description", transaction.description);
+  //     console.log("descriptionToMatch", descriptionToMatch);
+
+  //     return descriptionSimilarity >= threshold;
+  //   });
+
+  //   // Sort by similarity score (most similar first)
+  //   return similarTransactions.sort((a, b) => {
+  //     const similarityA = similarity(a.description, descriptionToMatch);
+  //     const similarityB = similarity(b.description, descriptionToMatch);
+  //     return similarityB - similarityA;
+  //   });
+  // };
+
+
+
+  const processSimilarCategory = (transactions, descriptionToMatch, threshold) => {
+    console.log("Processing similar category with threshold:", threshold); // Log threshold
     const similarity = (str1, str2) => {
       if (!str1 || !str2) return 0;
       const s1 = str1.toLowerCase();
@@ -1284,29 +1322,28 @@ const DataTable = ({
       return match / Math.max(s1.length, s2.length);
     };
 
-    // Similarity threshold
-    const threshold = 0.85;
+    const thresholdDecimal = threshold / 100;
 
-    // Filter transactions with similar descriptions and same category
-    const similarTransactions = transactions.filter((transaction) => {
-      const descriptionSimilarity = similarity(
-        transaction.description,
-        descriptionToMatch
-      );
-
-      console.log("transaction.description", transaction.description);
-      console.log("descriptionToMatch", descriptionToMatch);
-
-      return descriptionSimilarity >= threshold;
-    });
-
-    // Sort by similarity score (most similar first)
-    return similarTransactions.sort((a, b) => {
-      const similarityA = similarity(a.description, descriptionToMatch);
-      const similarityB = similarity(b.description, descriptionToMatch);
-      return similarityB - similarityA;
-    });
+    return transactions
+      .filter((transaction) => similarity(transaction.description, descriptionToMatch) >= thresholdDecimal)
+      .sort((a, b) => similarity(b.description, descriptionToMatch) - similarity(a.description, descriptionToMatch));
   };
+
+  useEffect(() => {
+    if (currentTransaction) {
+      setIsLoading(true);
+      console.log("Current Transaction:", currentTransaction);
+
+      setTimeout(() => { // Simulate delay
+        const similarTransactions = processSimilarCategory(filteredData, currentTransaction.description, sliderValue);
+        console.log("Updated Similar Transactions:", similarTransactions);
+        setSimilarCategoryTransactions(similarTransactions);
+        setIsLoading(false);
+      }, 500);
+    }
+  }, [sliderValue, currentTransaction]);
+
+
 
   // get transactions with same entity and similar description
   const processSimilarEntity = (
@@ -1395,6 +1432,7 @@ const DataTable = ({
         console.error("Error: No file path provided");
         return;
       }
+
       window.electron.fetchPdfContent(previewUrl).then((base64) => {
         const blob = base64StringToBlob(base64, "application/pdf");
         const objectUrl = URL.createObjectURL(blob);
@@ -1425,9 +1463,10 @@ const DataTable = ({
   return (
     // if source is equal to lifo or fifo then show the table
     <Card className="min-w-full max-w-[0]">
-      <CardHeader>
-        <div className="flex  lg:flex-col xl:flex-row lg:gap-8 xl:justify-between">
-          <div className="space-y-2">
+      <CardHeader className="w-full">
+        <div className="flex flex-col md:flex-row justify-between gap-4">
+          {/* Title and description */}
+          <div className="space-y-2 whitespace-nowrap">
             <CardTitle className="dark:text-slate-300">
               {title || "Data Table"}
             </CardTitle>
@@ -1435,165 +1474,171 @@ const DataTable = ({
               {subtitle || "View and manage your data"}
             </CardDescription>
           </div>
-          <div className="flex items-center gap-2 ">
-            <div className="relative flex items-center gap-2">
+
+          {/* Controls section */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Search input */}
+            <div className="relative min-w-[200px] md:w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search..."
-                className="pl-10 w-[300px] "
+                className="pl-10 w-full"
                 value={searchTerm}
                 onChange={(e) => handleSearch(e.target.value)}
               />
-              <select
-                className="p-2 border rounded-md text-sm dark:bg-slate-800 dark:border-slate-700 w-[120px]"
-                value={rowsPerPage}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setRowsPerPage(Number(value));
-                  setCurrentPage(1);
-                }}
-              >
-                {/* <option value="5">5 rows</option> */}
-                <option value="10">10 rows</option>
-                <option value="20">20 rows</option>
-                <option value="50">50 rows</option>
-                {/* <option value="100">100 rows</option> */}
-                {/* <option value="all">Show all</option> */}
-              </select>
-              <Button
-                variant="outline"
-                className="px-3 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-600 
-                          bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
-                          transition-all rounded-md shadow-sm hover:shadow-md"
-                onClick={clearFilters}
-              >
-                Clear Filters
-              </Button>
-
-              {source === "transactions" && reportData?.individualId && (
-                <>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
-                              transition-all shadow-sm hover:shadow-md"
-                        onClick={() => handlePreviewFile(reportData.filePath)}
-                      >
-                        <Eye className="w-4 h-4 text-blue-500" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Preview Statement</TooltipContent>
-                  </Tooltip>
-                </>
-              )}
-
-              {["suspense", "upi-dr", "upi-cr"].includes(source) && (
-                <>
-                  <Button
-                    onClick={() => fileInputRef.current.click()}
-                    variant="outline"
-                    className="px-3 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-600 
-                          bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
-                          transition-all rounded-md shadow-sm hover:shadow-md"
-                  >
-                    Upload Modified Excel
-                  </Button>
-                  <input
-                    type="file"
-                    accept=".xlsx, .xls"
-                    ref={fileInputRef}
-                    onChange={handleExcelFileUpload}
-                    className="hidden"
-                  />
-                </>
-              )}
-              <div className="flex gap-2">
-                {/* Download Button */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
-                                transition-all shadow-sm hover:shadow-md"
-                      onClick={handleDownload}
-                    >
-                      <Download className="w-4 h-4 text-blue-500" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Download</TooltipContent>
-                </Tooltip>
-
-                {/* Share Button */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
-                                transition-all shadow-sm hover:shadow-md"
-                      onClick={handleShare}
-                    >
-                      <Share2 className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Share</TooltipContent>
-                </Tooltip>
-              </div>
-
-              {hasEntity && (
-                <Button
-                  variant="default"
-                  className="w-full sm:w-auto"
-                  disabled={globalSelectedRows.size === 0}
-                  onClick={() => setBatchModalOpen(true)}
-                >
-                  Bulk Edit Party Name
-                </Button>
-              )}
             </div>
+
+            {/* Rows per page */}
+            <select
+              className="p-2 border rounded-md text-sm dark:bg-slate-800 dark:border-slate-700 w-[120px]"
+              value={rowsPerPage}
+              onChange={(e) => {
+                const value = e.target.value;
+                setRowsPerPage(Number(value));
+                setCurrentPage(1);
+              }}
+            >
+              <option value="10">10 rows</option>
+              <option value="20">20 rows</option>
+              <option value="50">50 rows</option>
+            </select>
+
+            {/* Clear filters button */}
+            <Button
+              variant="outline"
+              className="px-3 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-600 
+                  bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
+                  transition-all rounded-md shadow-sm hover:shadow-md"
+              onClick={clearFilters}
+            >
+              Clear Filters
+            </Button>
+
+            {/* Conditional preview button */}
+            {source === "transactions" && reportData?.individualId && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
+                      transition-all shadow-sm hover:shadow-md"
+                    onClick={() => handlePreviewFile(reportData.filePath)}
+                  >
+                    <Eye className="w-4 h-4 text-blue-500" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Preview Statement</TooltipContent>
+              </Tooltip>
+            )}
+
+            {/* Conditional upload button */}
+            {["suspense", "upi-dr", "upi-cr"].includes(source) && (
+              <>
+                <Button
+                  onClick={() => fileInputRef.current.click()}
+                  variant="outline"
+                  className="px-3 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-600 
+                  bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
+                  transition-all rounded-md shadow-sm hover:shadow-md"
+                >
+                  Upload Modified Excel
+                </Button>
+                <input
+                  type="file"
+                  accept=".xlsx, .xls"
+                  ref={fileInputRef}
+                  onChange={handleExcelFileUpload}
+                  className="hidden"
+                />
+              </>
+            )}
+
+
+            {/* Download and share buttons */}
+            <div className="flex gap-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
+                        transition-all shadow-sm hover:shadow-md"
+                    onClick={handleDownload}
+                  >
+                    <Download className="w-4 h-4 text-blue-500" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Download</TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
+                        transition-all shadow-sm hover:shadow-md"
+                    onClick={handleShare}
+                  >
+                    <Share2 className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Share</TooltipContent>
+              </Tooltip>
+            </div>
+
+            {/* Bulk edit button */}
+            {hasEntity && (
+              <Button
+                variant="default"
+                className="min-w-[150px]"
+                disabled={globalSelectedRows.size === 0}
+                onClick={() => setBatchModalOpen(true)}
+              >
+                Bulk Edit Party Name
+              </Button>
+            )}
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="relative">
-          <Table>
+        <div className="w-full overflow-x-auto">
+          <Table className="w-full min-w-[800px]">
             <TableHeader>
               <TableRow>
                 {(columns.includes("category") ||
                   columns.includes("entity")) && (
-                  <TableHead className="w-10 ">
-                    <Checkbox
-                      checked={
-                        currentData.length > 0 &&
-                        currentData.every((row) =>
-                          globalSelectedRows.has(row.id)
-                        )
-                      }
-                      onCheckedChange={toggleSelectAll}
-                    />
-                  </TableHead>
-                )}
+                    <TableHead className="w-10 ">
+                      <Checkbox
+                        checked={
+                          currentData.length > 0 &&
+                          currentData.every((row) =>
+                            globalSelectedRows.has(row.id)
+                          )
+                        }
+                        onCheckedChange={toggleSelectAll}
+                      />
+                    </TableHead>
+                  )}
 
                 {columns.map((column) => (
                   <TableHead
                     key={column}
                     className="whitespace-nowrap"
-                    // className={source === "summary" ? "bg-gray-900 dark:bg-slate-800 text-white" : ""}
+                  // className={source === "summary" ? "bg-gray-900 dark:bg-slate-800 text-white" : ""}
                   >
                     <div className="flex items-center gap-2 ">
                       {column.toLowerCase() === "entity"
                         ? "Party Name"
                         : column
-                            .split("_") // Split by underscore
-                            .map(
-                              (word) =>
-                                word.charAt(0).toUpperCase() +
-                                word.slice(1).toLowerCase()
-                            ) // Capitalize
-                            .join(" ")}
+                          .split("_") // Split by underscore
+                          .map(
+                            (word) =>
+                              word.charAt(0).toUpperCase() +
+                              word.slice(1).toLowerCase()
+                          ) // Capitalize
+                          .join(" ")}
                       {column.toLowerCase() !== "description" && (
                         <Button
                           variant="ghost"
@@ -1656,17 +1701,17 @@ const DataTable = ({
                   return (
                     <TableRow
                       key={row.id}
-                      // className={source === "summary" ? "even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200" : ""}
+                    // className={source === "summary" ? "even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200" : ""}
                     >
                       {(columns.includes("category") ||
                         columns.includes("entity")) && (
-                        <TableCell className="w-10">
-                          <Checkbox
-                            checked={globalSelectedRows.has(row.id)}
-                            onCheckedChange={() => toggleRowSelection(row.id)}
-                          />
-                        </TableCell>
-                      )}
+                          <TableCell className="w-10">
+                            <Checkbox
+                              checked={globalSelectedRows.has(row.id)}
+                              onCheckedChange={() => toggleRowSelection(row.id)}
+                            />
+                          </TableCell>
+                        )}
                       {columns.map((column) => {
                         if (column.toLowerCase() === "entity") {
                           return (
@@ -1940,7 +1985,7 @@ const DataTable = ({
                     className={cn(
                       "cursor-pointer",
                       currentPage === totalPages &&
-                        "pointer-events-none opacity-50"
+                      "pointer-events-none opacity-50"
                     )}
                   />
                 </PaginationItem>
@@ -2164,7 +2209,7 @@ const DataTable = ({
               <iframe
                 src={pdfBlob}
                 className="w-full h-full border-0"
-                // title="PDF Preview"
+
               />
             </div>
           </div>
@@ -2437,117 +2482,139 @@ const DataTable = ({
           </div>
           {similarCategoryTransactions.length > 0 && (
             <div className="mt-6 p-4 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900">
-              {/* Header Section */}
-              <div className="mb-4">
-                <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-                  📌 Similar Transactions Detected
-                </h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  The following transactions have similar descriptions and
-                  categories. Select the ones you'd like to update alongside the
-                  manually changed transaction.
-                </p>
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                    📌 Similar Transactions Detected
+                  </h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    The following transactions have similar descriptions and categories.<br /> Select
+                    the ones you'd like to update alongside the manually changed transaction.
+                  </p>
+                </div>
+                <div className="flex flex-col ml-4">
+                  <label className="text-sm font-medium text-gray-700">
+                    Similarity Threshold: {sliderValue}%
+                  </label>
+                  <SliderDemo defaultValue={[85]}
+                    max={100}
+                    step={1}
+                    onChange={(value) => setSliderValue(value[0])}
+                  />
+                </div>
               </div>
 
               {/* Transactions Table */}
               <div className="overflow-x-auto">
-                <Table className="w-full border border-gray-300 dark:border-gray-700 rounded-md">
-                  <TableHeader className="bg-gray-100 dark:bg-gray-800">
-                    <TableRow>
-                      <TableHead className="w-10 p-3">
-                        <Checkbox
-                          checked={
-                            similarCategoryTransactions.length > 0 &&
-                            similarCategoryTransactions.every((t) =>
-                              selectedCategorySimilarTransactions.has(t.id)
-                            )
-                          }
-                          onCheckedChange={() => {
-                            const newSet = new Set(
-                              selectedCategorySimilarTransactions
-                            );
-                            if (
-                              similarCategoryTransactions.every((t) =>
-                                newSet.has(t.id)
-                              )
-                            ) {
-                              similarCategoryTransactions.forEach((t) =>
-                                newSet.delete(t.id)
-                              );
-                            } else {
-                              similarCategoryTransactions.forEach((t) =>
-                                newSet.add(t.id)
-                              );
-                            }
-                            setSelectedCategorySimilarTransactions(newSet);
-                          }}
-                        />
-                      </TableHead>
-                      <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                        Date
-                      </TableHead>
-                      <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                        Description
-                      </TableHead>
-                      <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                        Credit
-                      </TableHead>
-                      <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                        Debit
-                      </TableHead>
-                      <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                        Category
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
 
-                  <TableBody>
-                    {similarCategoryTransactions.map((transaction, index) => (
-                      <TableRow
-                        key={transaction.id}
-                        className={`transition-all ${
-                          index % 2 === 0
-                            ? "bg-white dark:bg-gray-900"
-                            : "bg-gray-50 dark:bg-gray-800"
-                        } hover:bg-gray-200 dark:hover:bg-gray-700`}
-                      >
-                        <TableCell className="p-3">
+                {isLoading ? (
+                  <div className="flex items-center justify-center h-40">
+                    <Loader2 className="animate-spin" />
+                  </div>
+
+                ) : similarCategoryTransactions.length > 0 ? (
+
+                  <Table className="w-full border border-gray-300 dark:border-gray-700 rounded-md">
+                    <TableHeader className="bg-gray-100 dark:bg-gray-800">
+                      <TableRow>
+                        <TableHead className="w-10 p-3">
                           <Checkbox
-                            checked={selectedCategorySimilarTransactions.has(
-                              transaction.id
-                            )}
+                            checked={
+                              similarCategoryTransactions.length > 0 &&
+                              similarCategoryTransactions.every((t) =>
+                                selectedCategorySimilarTransactions.has(t.id)
+                              )
+                            }
                             onCheckedChange={() => {
                               const newSet = new Set(
                                 selectedCategorySimilarTransactions
                               );
-                              if (newSet.has(transaction.id)) {
-                                newSet.delete(transaction.id);
+                              if (
+                                similarCategoryTransactions.every((t) =>
+                                  newSet.has(t.id)
+                                )
+                              ) {
+                                similarCategoryTransactions.forEach((t) =>
+                                  newSet.delete(t.id)
+                                );
                               } else {
-                                newSet.add(transaction.id);
+                                similarCategoryTransactions.forEach((t) =>
+                                  newSet.add(t.id)
+                                );
                               }
                               setSelectedCategorySimilarTransactions(newSet);
                             }}
                           />
-                        </TableCell>
-                        <TableCell className="p-3">
-                          {transaction.date}
-                        </TableCell>
-                        <TableCell className="p-3 max-w-[400px] overflow-hidden">
-                          {transaction.description}
-                        </TableCell>
-                        <TableCell className="p-3">
-                          {transaction.credit}
-                        </TableCell>
-                        <TableCell className="p-3">
-                          {transaction.debit}
-                        </TableCell>
-                        <TableCell className="p-3">
-                          {transaction.category}
-                        </TableCell>
+                        </TableHead>
+                        <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                          Date
+                        </TableHead>
+                        <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                          Description
+                        </TableHead>
+                        <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                          Credit
+                        </TableHead>
+                        <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                          Debit
+                        </TableHead>
+                        <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                          Category
+                        </TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+
+                    <TableBody>
+                      {similarCategoryTransactions.map((transaction, index) => (
+                        <TableRow
+                          key={transaction.id}
+                          className={`transition-all ${index % 2 === 0
+                            ? "bg-white dark:bg-gray-900"
+                            : "bg-gray-50 dark:bg-gray-800"
+                            } hover:bg-gray-200 dark:hover:bg-gray-700`}
+                        >
+                          <TableCell className="p-3">
+                            <Checkbox
+                              checked={selectedCategorySimilarTransactions.has(
+                                transaction.id
+                              )}
+                              onCheckedChange={() => {
+                                const newSet = new Set(
+                                  selectedCategorySimilarTransactions
+                                );
+                                if (newSet.has(transaction.id)) {
+                                  newSet.delete(transaction.id);
+                                } else {
+                                  newSet.add(transaction.id);
+                                }
+                                setSelectedCategorySimilarTransactions(newSet);
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell className="p-3">
+                            {transaction.date}
+                          </TableCell>
+                          <TableCell className="p-3 max-w-[400px] overflow-hidden">
+                            {transaction.description}
+                          </TableCell>
+                          <TableCell className="p-3">
+                            {transaction.credit}
+                          </TableCell>
+                          <TableCell className="p-3">
+                            {transaction.debit}
+                          </TableCell>
+                          <TableCell className="p-3">
+                            {transaction.category}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+
+                ) : (
+                  <p className="text-gray-500 text-center mt-4">No similar transactions found.</p>
+                )}
+
               </div>
             </div>
           )}
