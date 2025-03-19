@@ -180,9 +180,17 @@ function formatVoucherTransaction(data) {
   }
 }
 
-const generateFinancialReport = async (caseid, caseName) => {
+const generateFinancialReport = async (
+  caseid,
+  caseName,
+  summaryOnly = false
+) => {
   try {
-    console.log("Generating financial report for case:", caseid);
+    // console.log("Generating financial report for case:", caseid);
+    console.log(
+      `Generating ${summaryOnly ? "summary" : "financial"} report for case:`,
+      caseid
+    );
     const workbook = new ExcelJS.Workbook();
 
     // Fetch all required data
@@ -203,6 +211,7 @@ const generateFinancialReport = async (caseid, caseName) => {
       bankName,
       summaryObject
     );
+
     const opportunityToEarnData =
       await window.electron.getOpportunityToEarnForExcel(caseid);
     const EodData = await window.electron.getEodBalance(caseid);
@@ -253,35 +262,45 @@ const generateFinancialReport = async (caseid, caseName) => {
 
     // Add each sheet with the same pattern but different data
     addSummarySheet(workbook, mappedData);
-    addOpportunityToEarnSheet(workbook, opportunityToEarnData.data);
-    addEodSheet(workbook, formattedEodData);
-    addTransactionsSheet(workbook, transactionsData);
-    addInvestmentSheet(workbook, investmentData);
-    addCreditorsSheet(workbook, creditorsData);
-    addDebtorsSheet(workbook, debtorsData);
-    addUpiCrSheet(workbook, upiCrData);
-    addUpiDrSheet(workbook, upiDrData);
-    addCashWithdrawalSheet(workbook, cashWithdrawalData);
-    addCashDepositSheet(workbook, cashDepositData);
-    addProbableEmiSheet(workbook, ProbableEmiData);
-    addReversalSheet(workbook, reversalData);
-    addSuspenseCreditSheet(workbook, transformCreditData);
-    addSuspenseDebitSheet(workbook, transformDebitData);
-    addRedemptionSheet(workbook, redemptionData);
-    addVoucherTransactionSheet(workbook, formatVoucherData);
-
+    if (!summaryOnly) {
+      addOpportunityToEarnSheet(workbook, opportunityToEarnData.data);
+      addEodSheet(workbook, formattedEodData);
+      addTransactionsSheet(workbook, transactionsData);
+      addInvestmentSheet(workbook, investmentData);
+      addCreditorsSheet(workbook, creditorsData);
+      addDebtorsSheet(workbook, debtorsData);
+      addUpiCrSheet(workbook, upiCrData);
+      addUpiDrSheet(workbook, upiDrData);
+      addCashWithdrawalSheet(workbook, cashWithdrawalData);
+      addCashDepositSheet(workbook, cashDepositData);
+      addProbableEmiSheet(workbook, ProbableEmiData);
+      addReversalSheet(workbook, reversalData);
+      addSuspenseCreditSheet(workbook, transformCreditData);
+      addSuspenseDebitSheet(workbook, transformDebitData);
+      addRedemptionSheet(workbook, redemptionData);
+      addVoucherTransactionSheet(workbook, formatVoucherData);
+    }
     // Generate and save the file
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
-    // saveAs(blob, `Financial_Report_${caseid}.xlsx`);
-    saveAs(blob, `${caseName} Report.xlsx`);
 
-    console.log("Excel generation completed successfully");
+    const fileName = summaryOnly
+      ? `${caseName} Summary Report.xlsx`
+      : `${caseName} Report.xlsx`;
+
+    saveAs(blob, fileName);
+
+    console.log(
+      `${summaryOnly ? "Summary" : "Excel"} generation completed successfully`
+    );
     return true;
   } catch (error) {
-    console.error("Error generating Excel report:", error);
+    console.error(
+      `Error generating ${summaryOnly ? "summary" : "Excel"} report:`,
+      error
+    );
     return false;
   }
 };
