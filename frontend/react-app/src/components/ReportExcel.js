@@ -180,7 +180,7 @@ function formatVoucherTransaction(data) {
   }
 }
 
-const generateFinancialReport = async (caseid) => {
+const generateFinancialReport = async (caseid, caseName) => {
   try {
     console.log("Generating financial report for case:", caseid);
     const workbook = new ExcelJS.Workbook();
@@ -275,7 +275,8 @@ const generateFinancialReport = async (caseid) => {
     const blob = new Blob([buffer], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
-    saveAs(blob, `Financial_Report_${caseid}.xlsx`);
+    // saveAs(blob, `Financial_Report_${caseid}.xlsx`);
+    saveAs(blob, `${caseName} Report.xlsx`);
 
     console.log("Excel generation completed successfully");
     return true;

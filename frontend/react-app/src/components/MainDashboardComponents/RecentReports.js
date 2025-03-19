@@ -83,18 +83,7 @@ import {
 } from "../ui/dropdown-menu";
 import { exportToExcel } from "../exportToExcel";
 import * as XLSX from "xlsx";
-import {
-  CashDepositExcel,
-  CashWithdrawalExcel,
-  EodBalanceExcel,
-  generateFinancialReport,
-  OpportunityToEarnExcel,
-  ProbableEmiExcel,
-  ReversalExcel,
-  SummaryExcel,
-  SuspenseCreditExcel,
-  SuspenseDebitExcel,
-} from "../ReportExcel";
+import { generateFinancialReport } from "../ReportExcel";
 
 const RecentReportsComp = ({ key, onReportGenerated }) => {
   const { toast } = useToast();
@@ -127,7 +116,8 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
   const [uploadedChanges, setUploadedChanges] = useState({});
   const [categoryUpdateModalOpen, setCategoryUpdateModalOpen] = useState(false);
   const [isRectifyAlertOpen, setIsRectifyAlertOpen] = useState(false);
-  const [isHandleDetailsDialogOpen,setIsHandleDetailsDialogOpen] = useState(null);
+  const [isHandleDetailsDialogOpen, setIsHandleDetailsDialogOpen] =
+    useState(null);
 
   const handleSubmitEditPdf = async () => {
     setPdfEditLoading(true);
@@ -172,13 +162,12 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
           }
         );
         console.log("updatedRecentReportsData", updatedRecentReportsData);
-        updateReportData({ 
+        updateReportData({
           ...reportData, // Preserve other reportData properties
-          recentReportsData: updatedRecentReportsData 
+          recentReportsData: updatedRecentReportsData,
         });
-        
-        console.log("saas", reportData.recentReportsData);
 
+        console.log("saas", reportData.recentReportsData);
       } else {
         // If the rectification failed, show error message and reasons
         const unrectifiedStatements = failedDatasOfCurrentReport.filter(
@@ -673,7 +662,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       localStorage.removeItem("dashboardData");
     }
   };
-  const toggleEdit = (id,caseName) => {
+  const toggleEdit = (id, caseName) => {
     setIsCategoryEditOpen(!isCategoryEditOpen);
     setCurrentCaseId(id);
     setCurrentCaseName(caseName);
@@ -687,7 +676,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
   const closeModal = () => {
     setIsAddPdfModalOpen(false);
   };
-
 
   // Function to handle opening the modal and fetching the failed statements
   const handleDetails = async (reportId, reportName) => {
@@ -760,7 +748,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         setFailedDatasOfCurrentReport([]);
         return;
       }
-      if(processedFailedData.length === 0) {
+      if (processedFailedData.length === 0) {
         console.warn("No valid failed statement data found after processing.");
         setFailedDatasOfCurrentReport([]);
         setShowRectifyButton(false);
@@ -817,19 +805,21 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       updateReportData({
         triggerRectify: { caseId: null, caseName: null },
       });
-
     }
   };
 
   useEffect(() => {
-    console.log({triggeredRectify:reportData})
-    if(reportData.triggerRectify.caseId&&reportData.triggerRectify.caseName){
-    handleDetails(
-      reportData?.triggerRectify?.caseId,
-      reportData?.triggerRectify?.caseName
-    );
-  }
-}, [reportData.triggerRectify]);
+    console.log({ triggeredRectify: reportData });
+    if (
+      reportData.triggerRectify.caseId &&
+      reportData.triggerRectify.caseName
+    ) {
+      handleDetails(
+        reportData?.triggerRectify?.caseId,
+        reportData?.triggerRectify?.caseName
+      );
+    }
+  }, [reportData.triggerRectify]);
 
   const EodformatData = (data) => {
     try {
@@ -917,7 +907,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
     };
   }
 
-  const handleDownload = async (caseid, status) => {
+  const handleDownload = async (caseid, status,caseName) => {
     if (status === "Pending") {
       toast({
         title: "Cannot Download",
@@ -931,7 +921,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
 
     try {
       console.log("Downloading financial report for case:", caseid);
-      const success = await generateFinancialReport(caseid);
+      const success = await generateFinancialReport(caseid,caseName);
 
       if (success) {
         console.log("Financial report downloaded successfully.");
@@ -1252,26 +1242,24 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
     input.click();
   };
 
-
-  const isHandleDetailsOpenForThisId=(id)=>{
-    if(!id) return null
-    if(isHandleDetailsDialogOpen===id){
-      console.log("Aiyaz  Handle details open for id ", id)
+  const isHandleDetailsOpenForThisId = (id) => {
+    if (!id) return null;
+    if (isHandleDetailsDialogOpen === id) {
+      console.log("Aiyaz  Handle details open for id ", id);
     }
-    return isHandleDetailsDialogOpen===id
-  }
+    return isHandleDetailsDialogOpen === id;
+  };
 
-  const handleChangeForHandleDetails = (id)=>{
-    if(isHandleDetailsDialogOpen===id){
-      console.log("Aiyaz  Setting handle details as null")
-      setIsHandleDetailsDialogOpen(null)
-    }else{
-      console.log("Aiyaz Setting handle details as ", id)
+  const handleChangeForHandleDetails = (id) => {
+    if (isHandleDetailsDialogOpen === id) {
+      console.log("Aiyaz  Setting handle details as null");
+      setIsHandleDetailsDialogOpen(null);
+    } else {
+      console.log("Aiyaz Setting handle details as ", id);
 
-      setIsHandleDetailsDialogOpen(id)
-
+      setIsHandleDetailsDialogOpen(id);
     }
-  }
+  };
 
   return (
     <Card>
@@ -1369,7 +1357,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                             <Button
                               variant="outline"
                               size="icon"
-                              onClick={() => toggleEdit(report.id,report.name)}
+                              onClick={() => toggleEdit(report.id, report.name)}
                               className="h-8 w-8"
                             >
                               <Edit2 className="h-4 w-4" />
@@ -1453,7 +1441,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                             <DropdownMenuItem
                               className="cursor-pointer"
                               onClick={() =>
-                                handleDownload(report.id, report.status)
+                                handleDownload(report.id, report.status,report.name)
                               }
                             >
                               Download Report
@@ -1499,9 +1487,11 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <AlertDialog open={isHandleDetailsOpenForThisId(report.id)}
-                      onOpenChange={()=>handleChangeForHandleDetails(report.id)}
-                      
+                      <AlertDialog
+                        open={isHandleDetailsOpenForThisId(report.id)}
+                        onOpenChange={() =>
+                          handleChangeForHandleDetails(report.id)
+                        }
                       >
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -1565,7 +1555,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                     const hasError = Boolean(
                                       statement.respectiveReasonsForError
                                     );
-                                    console.log({isDone,hasError,report})
+                                    console.log({ isDone, hasError, report });
                                     return (
                                       <div
                                         key={`statement-${
@@ -1588,7 +1578,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                               : ""}
                                           </p>
                                           {/* {!hasError && ( */}
-                                          { (
+                                          {
                                             <div className="flex-1">
                                               {report.status === "Success" ||
                                               isDone ? (
@@ -1616,7 +1606,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                                 </Button>
                                               )}
                                             </div>
-                                          )}
+                                          }
                                         </div>
                                         {hasError && (
                                           <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
@@ -1666,7 +1656,10 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                   )}
                                 </div>
                               )}
-                            <AlertDialogCancel onClick={()=>setIsHandleDetailsDialogOpen(null)} className="px-8 bg-black text-white hover:bg-black/90 hover:text-white dark:bg-white dark:text-black">
+                            <AlertDialogCancel
+                              onClick={() => setIsHandleDetailsDialogOpen(null)}
+                              className="px-8 bg-black text-white hover:bg-black/90 hover:text-white dark:bg-white dark:text-black"
+                            >
                               Close
                             </AlertDialogCancel>
                           </AlertDialogFooter>
