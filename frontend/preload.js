@@ -78,6 +78,8 @@ contextBridge.exposeInMainWorld("electron", {
     ipcRenderer.invoke("get-transactions-by-insurance", caseId, individualId),
   getTransactionsByContra: (caseId, individualId) =>
     ipcRenderer.invoke("get-transactions-by-contra", caseId, individualId),
+  getTransactionsByRedemption: (caseId, individualId) =>
+    ipcRenderer.invoke("get-transactions-by-redemption", caseId, individualId),
 
   getStatements: (case_id) => ipcRenderer.invoke("get-statements", case_id),
 
@@ -94,6 +96,8 @@ contextBridge.exposeInMainWorld("electron", {
     ipcRenderer.invoke("generate-report", result, reportName, source),
 
   getOpportunityToEarn: () => ipcRenderer.invoke("getOpportunityToEarn"),
+  getOpportunityToEarnForExcel: (case_id) =>
+    ipcRenderer.invoke("getOpportunityToEarnForExcel", case_id),
 
   addPdfIpc: (data, caseId) => ipcRenderer.invoke("add-pdf", data, caseId),
 

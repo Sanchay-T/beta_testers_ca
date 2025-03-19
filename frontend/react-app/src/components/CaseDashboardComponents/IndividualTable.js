@@ -104,7 +104,7 @@ const IndividualTable = () => {
       const selectedFile = statements.find(
         (stmt) => stmt.filePath === filePath
       );
-      console.log({selectedFile})
+      console.log({ selectedFile });
       if (!selectedFile) {
         console.error("File not found in statements list:", filePath);
         // Reset processing state if file not found
@@ -190,6 +190,22 @@ const IndividualTable = () => {
     }
   };
 
+  const handleDelete = async (statementId) => {
+    try {
+      await window.electron.deleteStatement(statementId);
+
+      // Remove the deleted statement from the state
+      setStatements((prevStatements) =>
+        prevStatements.filter((statement) => statement.id !== statementId)
+      );
+
+      toast({ title: "Statement deleted successfully", variant: "success" });
+    } catch (error) {
+      console.error("Error deleting statement:", error);
+      toast({ title: "Failed to delete statement", variant: "destructive" });
+    }
+  };
+
   return (
     <div className="p-8 space-y-8">
       <Card>
@@ -270,7 +286,7 @@ const IndividualTable = () => {
                       </TableCell>
                       <TableCell>{item.customerName}</TableCell>
                       <TableCell>{item.accountNumber}</TableCell>
-                      <TableCell>
+                      <TableCell className="flex gap-2">
                         <Button
                           onClick={(e) => {
                             e.stopPropagation(); // Prevent row click
@@ -286,6 +302,14 @@ const IndividualTable = () => {
                           ) : (
                             "Re-run"
                           )}
+                        </Button>
+                        <Button
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent row click
+                            handleDelete(item.id);
+                          }}
+                        >
+                          Delete
                         </Button>
                       </TableCell>
                     </TableRow>

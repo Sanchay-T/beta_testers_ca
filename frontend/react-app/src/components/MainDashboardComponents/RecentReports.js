@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import {
   Card,
   CardContent,
@@ -83,6 +83,18 @@ import {
 } from "../ui/dropdown-menu";
 import { exportToExcel } from "../exportToExcel";
 import * as XLSX from "xlsx";
+import {
+  CashDepositExcel,
+  CashWithdrawalExcel,
+  EodBalanceExcel,
+  generateFinancialReport,
+  OpportunityToEarnExcel,
+  ProbableEmiExcel,
+  ReversalExcel,
+  SummaryExcel,
+  SuspenseCreditExcel,
+  SuspenseDebitExcel,
+} from "../ReportExcel";
 
 const RecentReportsComp = ({ key, onReportGenerated }) => {
   const { toast } = useToast();
@@ -819,6 +831,92 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
   }
 }, [reportData.triggerRectify]);
 
+  const EodformatData = (data) => {
+    try {
+      // Parse JSON if it's a string
+      if (typeof data === "string") {
+        data = JSON.parse(data);
+      }
+
+      // Ensure data is an object and contains the expected array
+      const extractedData = data;
+      if (!Array.isArray(extractedData)) {
+        console.error("Error: Data is not an array", extractedData);
+        return [];
+      }
+
+      return extractedData.map((entry) => {
+        let formattedEntry = { ...entry };
+
+        // Format all numeric values except the "Day" column
+        Object.keys(formattedEntry).forEach((key) => {
+          if (key !== "Day" && typeof formattedEntry[key] === "string") {
+            // Convert string numbers to actual numbers for Excel formatting
+            formattedEntry[key] = parseFloat(formattedEntry[key]);
+          }
+        });
+
+        return formattedEntry;
+      });
+    } catch (error) {
+      console.error("Error parsing JSON:", error);
+      return [];
+    }
+  };
+
+  function mapDataForExcelGenerator(
+    accountNumber,
+    customerName,
+    bankName,
+    summaryObject
+  ) {
+    // Helper function to convert the format of each table
+    const reformatTable = (tableData) => {
+      if (!tableData || !Array.isArray(tableData)) return [];
+
+      return tableData.map((item) => {
+        const newItem = {
+          Particulars:
+            item[
+              Object.keys(item).find(
+                (key) =>
+                  key.includes("Payments") ||
+                  key.includes("Particulars") ||
+                  key.includes("Receipts") ||
+                  key.includes("Credit") ||
+                  key.includes("Debit")
+              )
+            ],
+        };
+
+        // Add all month data and Total column
+        Object.keys(item).forEach((key) => {
+          if (key.includes("-202") || key === "Total") {
+            // Ensures "Total" is also included
+            newItem[key] = item[key];
+          }
+        });
+
+        return newItem;
+      });
+    };
+    console.log("particulars", reformatTable(summaryObject.particulars || []));
+
+    return {
+      accountNumber,
+      customerName,
+      bankName,
+      summaryObject: {
+        particulars: reformatTable(summaryObject.particulars || []),
+        incomeReceipts: reformatTable(summaryObject.incomeReceipts || []),
+        importantExpenses: reformatTable(summaryObject.importantExpenses || []),
+        otherExpenses: reformatTable(summaryObject.otherExpenses || []),
+        contraCredit: reformatTable(summaryObject.contraCredit || []),
+        contraDebit: reformatTable(summaryObject.contraDebit || []),
+      },
+    };
+  }
+
   const handleDownload = async (caseid, status) => {
     if (status === "Pending") {
       toast({
@@ -831,77 +929,157 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       return;
     }
 
-    let file_cretaed = false;
     try {
-      console.log("setting setisexcel true");
-      setIsExcelLoading(true); // Start loading
+      console.log("Downloading financial report for case:", caseid);
+      const success = await generateFinancialReport(caseid);
 
-      // Start the download process in the main process
-      window.electron.download.excelReportDownload(caseid);
-
-      let downloadedChunks = [];
-      // let totalFileSize = 0;
-      let downloadProgress = 0;
-
-      // Listen for file chunks from the main process
-      window.electron.download.onExcelDownloadChunk((chunk) => {
-        downloadedChunks.push(chunk);
-        downloadProgress += chunk.length;
-        console.log(`Downloaded ${downloadProgress} bytes`);
-
-        // Update progress if needed (could add a progress bar)
-        // const progressPercentage = (downloadProgress / totalFileSize) * 100;
-        // setProgress(progressPercentage);
-      });
-
-      // Listen for download completion
-      window.electron.download.onExcelDownloadComplete((res) => {
-        if (!file_cretaed) {
-          file_cretaed = true;
-          const { message, fileName } = res;
-          console.log("Download completed:", message);
-          setIsExcelLoading(false); // End loading state
-
-          const fileBlob = new Blob(downloadedChunks, {
-            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-          });
-          const url = window.URL.createObjectURL(fileBlob);
-
-          // Trigger file download
-          const link = document.createElement("a");
-          link.href = url;
-          link.download = fileName;
-          link.click();
-
-          // Clean up URL
-          window.URL.revokeObjectURL(url);
-
-          toast({
-            title: "Success",
-            description: res.message || "Excel file downloaded successfully",
-          });
-        }
-      });
-
-      // Handle download error
-      window.electron.download.onExcelDownloadError((error) => {
-        console.log("Error downloading file:", error);
-        setIsExcelLoading(false);
-
-        toast({
-          title: "Error",
-          description: `Failed to download Excel file: ${error}`,
-          variant: "destructive",
-        });
-      });
+      if (success) {
+        console.log("Financial report downloaded successfully.");
+      } else {
+        console.error("Failed to generate the financial report.");
+      }
     } catch (error) {
-      setIsExcelLoading(false);
-      toast({
-        title: "Error",
-        description: `Failed to initiate download: ${error.message}`,
-        variant: "destructive",
-      });
+      console.error("Error in handleDownload:", error);
     }
+
+    // const SummaryData = await window.electron.getSummary(caseid);
+    // const summaryObject = JSON.parse(SummaryData[0].data);
+    // const getStatements = await window.electron.getStatements(caseid);
+    // const accountNumber = getStatements[0].accountNumber;
+    // const customerName = getStatements[0].customerName;
+    // const bankName = getStatements[0].bankName;
+    // console.log("nasfklnkd", accountNumber, customerName, bankName);
+    // console.log("AccNameBankData", getStatements);
+    // console.log("SummaryData", summaryObject);
+
+    // // Map the data to the required format
+    // const mappedData = mapDataForExcelGenerator(
+    //   accountNumber,
+    //   customerName,
+    //   bankName,
+    //   summaryObject
+    // );
+    // SummaryExcel(mappedData);
+
+    // const opportunityToEarnData =
+    //   await window.electron.getOpportunityToEarnForExcel(caseid);
+    // console.log("opportunityToEarnData", opportunityToEarnData.data);
+    // OpportunityToEarnExcel(opportunityToEarnData.data);
+
+    // const EodData = await window.electron.getEodBalance(caseid);
+    // console.log("type of data ", typeof EodData[0].data);
+    // console.log("Is Array:", Array.isArray(EodData[0].data));
+    // const formattedEodData = EodformatData(EodData[0].data);
+    // console.log("EodData", formattedEodData);
+    // EodBalanceExcel(formattedEodData);
+
+    // console.log("EodData", formattedEodData);
+    // EodBalanceExcel(formattedEodData);
+
+    // const cashwithdrawal =
+    //   await window.electron.getTransactionsByCashWithdrawal(caseid);
+    // console.log("cashwithdrawal", typeof cashwithdrawal);
+    // CashWithdrawalExcel(cashwithdrawal);
+
+    // const cashdeposit = await window.electron.getTransactionsByCashDeposit(
+    //   caseid
+    // );
+    // console.log("cashdeposit", cashdeposit);
+    // CashDepositExcel(cashdeposit);
+
+    // const ProbableEmi = await window.electron.getTransactionsByEmi(caseid);
+    // console.log("ProbableEmi", ProbableEmi);
+    // ProbableEmiExcel(ProbableEmi);
+
+    // const reversal = await window.electron.getTransactionsByReversal(caseid);
+    // console.log("reversal", reversal);
+    // ReversalExcel(reversal);
+
+    // const suspensecredit =
+    //   await window.electron.getTransactionsBySuspenseCredit(caseid);
+    // console.log("suspensecredit", suspensecredit[0]);
+    // const transformData = processSuspenseData(suspensecredit);
+    // console.log("transformData", transformData);
+    // SuspenseCreditExcel(transformData);
+
+    // const suspensedebit = await window.electron.getTransactionsBySuspenseDebit(
+    //   caseid
+    // );
+    // const transformData = processSuspenseData(suspensedebit);
+    // console.log("suspensedebit", transformData);
+    // SuspenseDebitExcel(transformData);
+
+    // let file_cretaed = false;
+    // try {
+    //   console.log("setting setisexcel true");
+    //   setIsExcelLoading(true); // Start loading
+
+    //   // Start the download process in the main process
+    //   window.electron.download.excelReportDownload(caseid);
+
+    //   let downloadedChunks = [];
+    //   // let totalFileSize = 0;
+    //   let downloadProgress = 0;
+
+    //   // Listen for file chunks from the main process
+    //   window.electron.download.onExcelDownloadChunk((chunk) => {
+    //     downloadedChunks.push(chunk);
+    //     downloadProgress += chunk.length;
+    //     console.log(`Downloaded ${downloadProgress} bytes`);
+
+    //     // Update progress if needed (could add a progress bar)
+    //     // const progressPercentage = (downloadProgress / totalFileSize) * 100;
+    //     // setProgress(progressPercentage);
+    //   });
+
+    //   // Listen for download completion
+    //   window.electron.download.onExcelDownloadComplete((res) => {
+    //     if (!file_cretaed) {
+    //       file_cretaed = true;
+    //       const { message, fileName } = res;
+    //       console.log("Download completed:", message);
+    //       setIsExcelLoading(false); // End loading state
+
+    //       const fileBlob = new Blob(downloadedChunks, {
+    //         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    //       });
+    //       const url = window.URL.createObjectURL(fileBlob);
+
+    //       // Trigger file download
+    //       const link = document.createElement("a");
+    //       link.href = url;
+    //       link.download = fileName;
+    //       link.click();
+
+    //       // Clean up URL
+    //       window.URL.revokeObjectURL(url);
+
+    //       toast({
+    //         title: "Success",
+    //         description: res.message || "Excel file downloaded successfully",
+    //       });
+    //     }
+    //   });
+
+    //   // Handle download error
+    //   window.electron.download.onExcelDownloadError((error) => {
+    //     console.log("Error downloading file:", error);
+    //     setIsExcelLoading(false);
+
+    //     toast({
+    //       title: "Error",
+    //       description: `Failed to download Excel file: ${error}`,
+    //       variant: "destructive",
+    //     });
+    //   });
+    // } catch (error) {
+    //   setIsExcelLoading(false);
+    //   toast({
+    //     title: "Error",
+    //     description: `Failed to initiate download: ${error.message}`,
+    //     variant: "destructive",
+    //   });
+    // }
   };
 
   const processSuspenseData = (transactions) => {

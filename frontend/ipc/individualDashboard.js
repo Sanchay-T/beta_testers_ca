@@ -1,6 +1,6 @@
 const { ipcMain } = require("electron");
 const log = require("electron-log");
-const databaseManager = require('../db/db');
+const databaseManager = require("../db/db");
 const { statements } = require("../db/schema/Statement");
 const { transactions } = require("../db/schema/Transactions");
 const { eod } = require("../db/schema/EodSchema");
@@ -10,8 +10,8 @@ const axios = require("axios");
 
 const formatDate = (dateString) => {
   const date = new Date(dateString); // Parse the date string
-  const day = String(date.getDate()).padStart(2, '0'); // Get day and pad with zero
-  const month = String(date.getMonth() + 1).padStart(2, '0'); // Get month (0-based) and pad with zero
+  const day = String(date.getDate()).padStart(2, "0"); // Get day and pad with zero
+  const month = String(date.getMonth() + 1).padStart(2, "0"); // Get month (0-based) and pad with zero
   const year = date.getFullYear(); // Get full year
 
   return `${day}-${month}-${year}`; // Format as dd-mm-yyyy
@@ -52,76 +52,83 @@ function registerIndividualDashboardIpc() {
   });
 
   // Handler for getting summary data
-  ipcMain.handle("get-summary", async (event, caseId,individualId) => {
-    log.info({caseId,individualId});
-    if(!individualId || individualId=="undefined" || individualId==null || individualId==undefined){
+  ipcMain.handle("get-summary", async (event, caseId, individualId) => {
+    log.info({ caseId, individualId });
+    if (
+      !individualId ||
+      individualId == "undefined" ||
+      individualId == null ||
+      individualId == undefined
+    ) {
       log.info("combined Dashboard");
-    try {
-      const result = await db
-        .select()
-        .from(summary)
-        .where(eq(summary.caseId, caseId));
-      // log.info("Summary data fetched successfully:", result);
-      return result;
-    } catch (error) {
-      log.error("Error fetching summary data:", error);
-      throw error;
+      try {
+        const result = await db
+          .select()
+          .from(summary)
+          .where(eq(summary.caseId, caseId));
+        // log.info("Summary data fetched successfully:", result);
+        return result;
+      } catch (error) {
+        log.error("Error fetching summary data:", error);
+        throw error;
+      }
+    } else {
+      log.info("individual Dashboard");
+      try {
+        const allTransactions = await db
+          .select({
+            id: transactions.id,
+            ...transactions,
+          })
+          .from(transactions)
+          .where(and(eq(transactions.statementId, individualId.toString())));
+
+        const updatedTransactions = allTransactions.map(
+          (transaction, index) => {
+            const { id, date, amount, type, balance, bank, ...requiredFields } =
+              transaction;
+            return {
+              "Value Date": formatDate(date),
+              ...requiredFields,
+              Debit: type === "debit" ? amount : 0,
+              Credit: type === "credit" ? amount : 0,
+              Balance: balance,
+              Bank: bank,
+            };
+          }
+        );
+
+        log.info({ allTransactions: updatedTransactions.length });
+        // make a fastapi call to /individual-summary
+
+        log.info({ exampleTransaction: allTransactions[8] });
+        log.info({ exampleupdatedTransactions: updatedTransactions[8] });
+        const response = await axios.post(
+          "http://localhost:7500/individual-summary/",
+          {
+            transactions_data: updatedTransactions,
+          },
+          {
+            headers: { "Content-Type": "application/json" },
+            // timeout: 300000,
+            validateStatus: (status) => status === 200,
+          }
+        );
+
+        log.info({ aiyaz: response.data });
+
+        // const parsedData = JSON.parse(sanitizeJSONString(response.data));
+
+        // const summaryData = { ...parsedData };
+        log.info({ summaryData: response.data });
+        return [{ data: response.data }];
+
+        // return response.data;
+      } catch (error) {
+        log.error("Error fetching summary data:", error);
+        throw error;
+      }
     }
-  }else{
-    log.info("individual Dashboard");
-    try {
-
-      const allTransactions = await db
-      .select({
-        id: transactions.id,
-        ...transactions
-      })
-      .from(transactions)
-      .where(and(eq(transactions.statementId, individualId.toString())));
-
-      const updatedTransactions = allTransactions.map((transaction, index) => {
-                  const { id, date, amount, type,balance,bank ,...requiredFields } = transaction;
-                  return {
-                      "Value Date": formatDate(date),
-                      ...requiredFields,
-                      Debit: type === "debit" ? amount : 0,
-                      Credit: type === "credit" ? amount : 0,
-                      Balance:balance,
-                      Bank:bank
-                  };
-              });
-
-      log.info({ allTransactions: updatedTransactions.length })
-      // make a fastapi call to /individual-summary
-
-      log.info({exampleTransaction:allTransactions[8]})
-      log.info({exampleupdatedTransactions:updatedTransactions[8]})
-      const response = await axios.post("http://localhost:7500/individual-summary/", {
-        transactions_data: updatedTransactions
-      },
-      {
-        headers: { "Content-Type": "application/json" },
-        // timeout: 300000,
-        validateStatus: (status) => status === 200,
-      });
-
-      
-
-      log.info({aiyaz: response.data});
-
-      // const parsedData = JSON.parse(sanitizeJSONString(response.data));
-
-      // const summaryData = { ...parsedData };
-      log.info({summaryData:response.data});
-      return [{data:response.data}];
-     
-      // return response.data;
-    } catch (error) {
-      log.error("Error fetching summary data:", error);
-      throw error;
-    }
-  }
-
   });
 
   // Handler for getting all transactions
@@ -133,12 +140,12 @@ function registerIndividualDashboardIpc() {
         const allTransactions = await db
           .select({
             id: transactions.id,
-            ...transactions
+            ...transactions,
           })
           .from(transactions)
           .where(and(eq(transactions.statementId, individualId.toString())));
 
-        log.info({ allTransactions: allTransactions.length })
+        log.info({ allTransactions: allTransactions.length });
         return allTransactions;
       } else {
         const allStatements = await db
@@ -155,7 +162,7 @@ function registerIndividualDashboardIpc() {
         const allTransactions = await db
           .select({
             id: transactions.id,
-            ...transactions
+            ...transactions,
           })
           .from(transactions)
           .where(
@@ -224,7 +231,7 @@ function registerIndividualDashboardIpc() {
           const result = await db
             .select({
               id: transactions.id,
-              ...transactions
+              ...transactions,
             })
             .from(transactions)
             .where(
@@ -245,7 +252,7 @@ function registerIndividualDashboardIpc() {
           const result = await db
             .select({
               id: transactions.id,
-              ...transactions
+              ...transactions,
             })
             .from(transactions)
             .where(
@@ -272,7 +279,7 @@ function registerIndividualDashboardIpc() {
           const result = await db
             .select({
               id: transactions.id,
-              ...transactions
+              ...transactions,
             })
             .from(transactions)
             .where(
@@ -293,7 +300,7 @@ function registerIndividualDashboardIpc() {
           const result = await db
             .select({
               id: transactions.id,
-              ...transactions
+              ...transactions,
             })
             .from(transactions)
             .where(
@@ -412,7 +419,7 @@ function registerIndividualDashboardIpc() {
           const result = await db
             .select({
               id: transactions.id,
-              ...transactions
+              ...transactions,
             })
             .from(transactions)
             .where(
@@ -433,7 +440,7 @@ function registerIndividualDashboardIpc() {
           const result = await db
             .select({
               id: transactions.id,
-              ...transactions
+              ...transactions,
             })
             .from(transactions)
             .where(
@@ -460,7 +467,7 @@ function registerIndividualDashboardIpc() {
           const result = await db
             .select({
               id: transactions.id,
-              ...transactions
+              ...transactions,
             })
             .from(transactions)
             .where(
@@ -481,7 +488,7 @@ function registerIndividualDashboardIpc() {
           const result = await db
             .select({
               id: transactions.id,
-              ...transactions
+              ...transactions,
             })
             .from(transactions)
             .where(
@@ -555,7 +562,7 @@ function registerIndividualDashboardIpc() {
             .where(
               and(
                 eq(transactions.statementId, individualId.toString()),
-                eq(transactions.category, "Suspense"),
+                eq(transactions.category, "Suspense")
               )
             );
           return result;
@@ -573,7 +580,7 @@ function registerIndividualDashboardIpc() {
             .where(
               and(
                 inArray(transactions.statementId, statementIds),
-                eq(transactions.category, "Suspense"),
+                eq(transactions.category, "Suspense")
               )
             );
           return result;
@@ -768,13 +775,18 @@ function registerIndividualDashboardIpc() {
   // Handler for getting Insurance transactions
   ipcMain.handle(
     "get-transactions-by-insurance",
-    async (event, caseId, individualId, categories = ["General Insurance", "Life insurance"]) => {
+    async (
+      event,
+      caseId,
+      individualId,
+      categories = ["General Insurance", "Life insurance"]
+    ) => {
       try {
         // Validate categories input
         if (!Array.isArray(categories) || categories.length === 0) {
           throw new Error("Categories must be a non-empty array");
         }
-  
+
         if (individualId) {
           // Query for specific individual
           const result = await db
@@ -793,14 +805,14 @@ function registerIndividualDashboardIpc() {
             .select()
             .from(statements)
             .where(eq(statements.caseId, caseId));
-          
+
           const statementIds = allStatements.map((stmt) => stmt.id.toString());
-          
+
           // Return empty array if no statements found
           if (statementIds.length === 0) {
             return [];
           }
-  
+
           const result = await db
             .select()
             .from(transactions)
@@ -813,10 +825,7 @@ function registerIndividualDashboardIpc() {
           return result;
         }
       } catch (error) {
-        log.error(
-          "Error fetching insurance transactions:",
-          error
-        );
+        log.error("Error fetching insurance transactions:", error);
         throw error;
       }
     }
@@ -840,16 +849,16 @@ function registerIndividualDashboardIpc() {
                 )
               )
             );
-            log.info("Contra transactions fetched successfully:", result);
+          log.info("Contra transactions fetched successfully:", result);
           return result;
         } else {
           const allStatements = await db
             .select()
             .from(statements)
             .where(eq(statements.caseId, caseId));
-  
+
           const statementIds = allStatements.map((stmt) => stmt.id.toString());
-  
+
           const result = await db
             .select()
             .from(transactions)
@@ -862,12 +871,56 @@ function registerIndividualDashboardIpc() {
                 )
               )
             );
-            log.info("Contra transactions fetched successfully:", result);
+          log.info("Contra transactions fetched successfully:", result);
 
           return result;
         }
       } catch (error) {
         log.error("Error fetching transactions:", error);
+        throw error;
+      }
+    }
+  );
+
+  ipcMain.handle(
+    "get-transactions-by-redemption",
+    async (event, caseId, individualId) => {
+      try {
+        if (individualId) {
+          const result = await db
+            .select()
+            .from(transactions)
+            .where(
+              and(
+                eq(transactions.statementId, individualId.toString()),
+                eq(transactions.category, "Redemption, Dividend & Interest")
+              )
+            );
+          return result;
+        } else {
+          const allStatements = await db
+            .select()
+            .from(statements)
+            .where(eq(statements.caseId, caseId));
+
+          const statementIds = allStatements.map((stmt) => stmt.id.toString());
+
+          const result = await db
+            .select()
+            .from(transactions)
+            .where(
+              and(
+                inArray(transactions.statementId, statementIds),
+                eq(transactions.category, "Redemption, Dividend & Interest")
+              )
+            );
+          return result;
+        }
+      } catch (error) {
+        log.error(
+          "Error fetching transactions with category 'Redemption':",
+          error
+        );
         throw error;
       }
     }
