@@ -834,11 +834,14 @@ const addCreditorsSheet = (workbook, transactionData) => {
     width: header.width,
   }));
 
+  // Add data rows
+  addStandardRowsWithMonthDay(worksheet, transactionData, "Creditor");
   const descriptionText =
     "*The entries in this table likely pertain to payments from the parties during the period mentioned." +
     "In case of payments through online portals, we have mentioned the portal names as reflected in the narration of the bank statement. We would like to highlight that in case of contra entries, the name of the client ";
 
   const lastRow = worksheet.lastRow.number + 2; // Leave some space after the table
+  console.log("last row", lastRow);
 
   // First merge the cells
   worksheet.mergeCells(lastRow, 1, lastRow, worksheet.columnCount);
@@ -854,9 +857,6 @@ const addCreditorsSheet = (workbook, transactionData) => {
 
   // Set row height to accommodate the text
   worksheet.getRow(lastRow).height = 90;
-
-  // Add data rows
-  addStandardRowsWithMonthDay(worksheet, transactionData, "Creditor");
   applyHeaderStyling(worksheet);
 };
 

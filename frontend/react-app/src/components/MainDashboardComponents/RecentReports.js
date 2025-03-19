@@ -907,7 +907,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
     };
   }
 
-  const handleDownload = async (caseid, status,caseName) => {
+  const handleDownload = async (caseid, status, caseName) => {
     if (status === "Pending") {
       toast({
         title: "Cannot Download",
@@ -921,7 +921,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
 
     try {
       console.log("Downloading financial report for case:", caseid);
-      const success = await generateFinancialReport(caseid,caseName);
+      const success = await generateFinancialReport(caseid, caseName);
 
       if (success) {
         console.log("Financial report downloaded successfully.");
@@ -1441,7 +1441,11 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                             <DropdownMenuItem
                               className="cursor-pointer"
                               onClick={() =>
-                                handleDownload(report.id, report.status,report.name)
+                                handleDownload(
+                                  report.id,
+                                  report.status,
+                                  report.name
+                                )
                               }
                             >
                               Download Report

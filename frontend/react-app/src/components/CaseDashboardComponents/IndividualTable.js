@@ -22,6 +22,15 @@ import { Button } from "../ui/button";
 import PDFMarkerModal from "../MainDashboardComponents/PdfMarkerModal";
 import { toast } from "../../hooks/use-toast";
 import { useReportContext } from "../../contexts/ReportContext";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+} from "../ui/alert-dialog";
+import { Checkbox } from "../ui/checkbox";
 
 const IndividualTable = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -43,6 +52,9 @@ const IndividualTable = () => {
   const navigate = useNavigate();
   const { reportData, updateReportData } = useReportContext();
   const { caseId, reportName } = reportData;
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isChecked, setIsChecked] = useState(false);
+  const [selectedStatementId, setSelectedStatementId] = useState(null);
 
   const fetchStatements = async () => {
     setIsLoading(true);
@@ -190,19 +202,35 @@ const IndividualTable = () => {
     }
   };
 
-  const handleDelete = async (statementId) => {
-    try {
-      await window.electron.deleteStatement(statementId);
+  const confirmDelete = (statementId) => {
+    console.log("Deleting statement ID:", statementId); // Debugging
+    setSelectedStatementId(statementId);
+    setIsDialogOpen(true);
+  };
 
-      // Remove the deleted statement from the state
-      setStatements((prevStatements) =>
-        prevStatements.filter((statement) => statement.id !== statementId)
+  const handleDeleteConfirmed = async () => {
+    if (!selectedStatementId) {
+      console.error("Error: No statement ID selected for deletion.");
+      return;
+    }
+
+    try {
+      console.log("Deleting statement ID:", selectedStatementId); // Debugging
+      const result = await window.electron.deleteStatement(selectedStatementId);
+
+      // Remove from UI after successful deletion
+      setStatements((prev) =>
+        prev.filter((statement) => statement.id !== selectedStatementId)
       );
 
       toast({ title: "Statement deleted successfully", variant: "success" });
     } catch (error) {
-      console.error("Error deleting statement:", error);
+      console.error("Error deleting statement:", error); // Log error
       toast({ title: "Failed to delete statement", variant: "destructive" });
+    } finally {
+      setIsDialogOpen(false);
+      setIsChecked(false);
+      setSelectedStatementId(null);
     }
   };
 
@@ -305,8 +333,8 @@ const IndividualTable = () => {
                         </Button>
                         <Button
                           onClick={(e) => {
-                            e.stopPropagation(); // Prevent row click
-                            handleDelete(item.id);
+                            e.stopPropagation();
+                            confirmDelete(item.id);
                           }}
                         >
                           Delete
@@ -321,6 +349,34 @@ const IndividualTable = () => {
           {/* Removed Pagination Component */}
         </CardContent>
       </Card>
+
+      <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Statement</AlertDialogTitle>
+          </AlertDialogHeader>
+          <div className="flex items-center space-x-2 mt-4">
+            <Checkbox
+              id="confirm-delete"
+              checked={isChecked}
+              onCheckedChange={setIsChecked}
+              className="mb-5"
+            />
+            <label htmlFor="confirm-delete" className="text-sm">
+              Are you sure you want to delete this report? This action cannot be
+              undone.
+            </label>
+          </div>
+          <AlertDialogFooter>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleDeleteConfirmed} disabled={!isChecked}>
+              Delete
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <PDFMarkerModal
         isOpen={isMarkerModalOpen}
