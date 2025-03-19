@@ -1028,12 +1028,12 @@ const DataTable = ({
 
   return (
     <Card className="min-w-full max-w-[0]">
-      <CardHeader className="flex flex-col gap-4 p-4">
+      <CardHeader className="flex flex-col gap-4 p-4 w-full overflow-auto">
         {/* Top Row: Company Info and Ledger Selection */}
-        <div className="flex flex-wrap justify-between items-center gap-4">
+        <div className="flex flex-wrap justify-between items-center gap-4 w-full">
           {/* Company Name Section */}
-          <div className="flex items-center gap-4">
-            <label htmlFor="companyName" className="font-medium">
+          <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto">
+            <label htmlFor="companyName" className="font-medium whitespace-nowrap">
               Company Name:
             </label>
             <input
@@ -1043,16 +1043,16 @@ const DataTable = ({
               value={companyName}
               tabIndex="0"
               onChange={(e) => setCompanyName(e.target.value)}
-              className="border rounded-md p-2 w-64 dark:bg-gray-800 dark:text-white"
+              className="border rounded-md p-2 w-full sm:w-64 dark:bg-gray-800 dark:text-white min-w-0"
               onFocus={(e) => e.target.select()}
             />
           </div>
 
           {/* Ledger Selection Controls */}
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto">
             <select
               onChange={(e) => setLedgerField(e.target.value)}
-              className="border rounded-md p-2 dark:bg-gray-800 dark:text-white"
+              className="border rounded-md p-2 dark:bg-gray-800 dark:text-white w-full sm:w-auto"
             >
               <option value="dr_ledger">Dr Ledger</option>
               <option value="cr_ledger">Cr Ledger</option>
@@ -1062,13 +1062,13 @@ const DataTable = ({
               placeholder={`Enter ${ledgerField}`}
               value={bulkLedgerValue}
               onChange={(e) => setBulkLedgerValue(e.target.value)}
-              className="border rounded-md p-2 w-64 dark:bg-gray-800 dark:text-white"
+              className="border rounded-md p-2 w-full sm:w-64 dark:bg-gray-800 dark:text-white min-w-0"
             />
             <Button
               onClick={handleBulkLedgerUpdate}
-              // disabled={selectedTransactions.length === 0}
+              disabled={selectedTransactions.length === 0}
             >
-              Set for Empty
+              Set for Selected
             </Button>
           </div>
           <div className="flex items-center gap-2">
@@ -1076,343 +1076,391 @@ const DataTable = ({
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
+
                   className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
+      <CardHeader className="flex flex-col gap-4 p-4">
+                {/* Top Row: Company Info and Ledger Selection */}
+                <div className="flex flex-wrap justify-between items-center gap-4">
+                  {/* Company Name Section */}
+                  <div className="flex items-center gap-4">
+                    <label htmlFor="companyName" className="font-medium">
+                      Company Name:
+                    </label>
+                    <input
+                      id="companyName"
+                      type="text"
+                      placeholder="Enter Company Name"
+                      value={companyName}
+                      tabIndex="0"
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      className="border rounded-md p-2 w-64 dark:bg-gray-800 dark:text-white"
+                      onFocus={(e) => e.target.select()}
+                    />
+                  </div>
+
+                  {/* Ledger Selection Controls */}
+                  <div className="flex items-center gap-4">
+                    <select
+                      onChange={(e) => setLedgerField(e.target.value)}
+                      className="border rounded-md p-2 dark:bg-gray-800 dark:text-white"
+                    >
+                      <option value="dr_ledger">Dr Ledger</option>
+                      <option value="cr_ledger">Cr Ledger</option>
+                    </select>
+                    <input
+                      type="text"
+                      placeholder={`Enter ${ledgerField}`}
+                      value={bulkLedgerValue}
+                      onChange={(e) => setBulkLedgerValue(e.target.value)}
+                      className="border rounded-md p-2 w-64 dark:bg-gray-800 dark:text-white"
+                    />
+                    <Button
+                      onClick={handleBulkLedgerUpdate}
+                    // disabled={selectedTransactions.length === 0}
+                    >
+                      Set for Empty
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
                       transition-all shadow-sm hover:shadow-md flex items-center gap-2"
-                  onClick={handleCopyToClipboard}
-                >
-                  <Copy className="w-4 h-4" />
-                  {/* <span>Copy Data</span> */}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Copy Data</TooltipContent>
-            </Tooltip>
+                          onClick={handleCopyToClipboard}
+                        >
+                          <Copy className="w-4 h-4" />
+                          {/* <span>Copy Data</span> */}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Copy Data</TooltipContent>
+                    </Tooltip>
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
                       transition-all shadow-sm hover:shadow-md"
-                  onClick={handleDownload}
-                >
-                  <Download className="w-4 h-4 text-blue-500" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Download</TooltipContent>
-            </Tooltip>
+                          onClick={handleDownload}
+                        >
+                          <Download className="w-4 h-4 text-blue-500" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Download</TooltipContent>
+                    </Tooltip>
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
                       transition-all shadow-sm hover:shadow-md"
-                  onClick={handleShare}
-                >
-                  <Share2 className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Share</TooltipContent>
-            </Tooltip>
+                          onClick={handleShare}
+                        >
+                          <Share2 className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Share</TooltipContent>
+                    </Tooltip>
 
-            {hasEntity && (
-              <Button
-                variant="default"
-                className="ml-2"
-                disabled={globalSelectedRows.size === 0}
-                onClick={() => setBatchModalOpen(true)}
-              >
-                Batch Edit Entities
-              </Button>
-            )}
-          </div>
-        </div>
+                    {hasEntity && (
+                      <Button
+                        variant="default"
+                        className="ml-2"
+                        disabled={globalSelectedRows.size === 0}
+                        onClick={() => setBatchModalOpen(true)}
+                      >
+                        Batch Edit Entities
+                      </Button>
+                    )}
+                  </div>
+                </div>
 
-        {/* Middle Row: Action Buttons and Search */}
-        <div className="flex flex-wrap justify-between items-center gap-4">
-          {/* Action Buttons Group */}
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={() =>
-                handleOpenFile("tallyprime/payment_receipt_contra.xlsm")
-              }
-              className="px-3 py-2 text-base font-medium text-white transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
-            >
-              <AiFillFileExcel className="w-5 h-5 text-white" />
-              Open Voucher
-            </Button>
-            <Button
-              onClick={() => setShowPopup(true)}
-              className="px-3 py-2 text-base font-medium text-white transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
-            >
-              <AiFillFileExcel className="w-5 h-5 text-white" />
-              Ledger Voucher
-            </Button>
-            {/* <Button
+                {/* Middle Row: Action Buttons and Search */}
+                <div className="flex flex-wrap justify-between items-center gap-4">
+                  {/* Action Buttons Group */}
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={() =>
+                        handleOpenFile("tallyprime/payment_receipt_contra.xlsm")
+                      }
+                      className="px-3 py-2 text-base font-medium text-white transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
+                    >
+                      <AiFillFileExcel className="w-5 h-5 text-white" />
+                      Open Voucher
+                    </Button>
+                    <Button
+                      onClick={() => setShowPopup(true)}
+                      className="px-3 py-2 text-base font-medium text-white transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
+                    >
+                      <AiFillFileExcel className="w-5 h-5 text-white" />
+                      Ledger Voucher
+                    </Button>
+                    {/* <Button
               onClick={handleUploadToTally}
               className="px-3 py-2 text-base font-medium text-white bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 hover:bg-gray-700 transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
             >
               <UploadCloud className="w-5 h-5 text-white" />
               Upload to Tally
             </Button> */}
-          </div>
+                  </div>
 
-          {/* Search and Filter Controls */}
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search..."
-                className="pl-10 w-[300px]"
-                value={searchTerm}
-                onChange={(e) => handleSearch(e.target.value)}
-              />
-            </div>
-            <select
-              className="p-2 border rounded-md text-sm dark:bg-slate-800 dark:border-slate-700 w-[120px]"
-              value={rowsPerPage}
-              onChange={(e) => {
-                const value = e.target.value;
-                setRowsPerPage(Number(value));
-                setCurrentPage(1);
-              }}
-            >
-              <option value="10">10 rows</option>
-              <option value="20">20 rows</option>
-              <option value="50">50 rows</option>
-            </select>
-            <Button
-              variant="outline"
-              className="px-3 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-600 
+                  {/* Search and Filter Controls */}
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search..."
+                        className="pl-10 w-[300px]"
+                        value={searchTerm}
+                        onChange={(e) => handleSearch(e.target.value)}
+                      />
+                    </div>
+                    <select
+                      className="p-2 border rounded-md text-sm dark:bg-slate-800 dark:border-slate-700 w-[120px]"
+                      value={rowsPerPage}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setRowsPerPage(Number(value));
+                        setCurrentPage(1);
+                      }}
+                    >
+                      <option value="10">10 rows</option>
+                      <option value="20">20 rows</option>
+                      <option value="50">50 rows</option>
+                    </select>
+                    <Button
+                      variant="outline"
+                      className="px-3 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-600 
                 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
                 transition-all rounded-md shadow-sm hover:shadow-md"
-              onClick={clearFilters}
-            >
-              Clear Filters
-            </Button>
-          </div>
-        </div>
-
-        {/* Popup Dialog for ledger selection - kept intact */}
-        {showPopup && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white rounded-2xl p-6 shadow-2xl max-w-sm w-full relative">
-              <h3 className="text-xl font-semibold text-gray-800 mb-5 text-center">
-                Select Ledger Type
-              </h3>
-
-              <div className="flex flex-col gap-4">
-                <Button
-                  onClick={() => handleOpenFile("tallyprime/ledger_prime.xlsm")}
-                  className="px-3 py-3 text-base font-medium text-white transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
-                >
-                  <AiFillFileExcel className="w-5 h-5 text-white" />
-                  Ledger Prime
-                </Button>
-
-                <Button
-                  onClick={() => handleOpenFile("tallyprime/ledger_erp.xlsm")}
-                  className="px-3 py-3 text-base font-medium text-white transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
-                >
-                  <AiFillFileExcel className="w-5 h-5 text-white" />
-                  Ledger ERP
-                </Button>
-              </div>
-
-              <div className="flex justify-center mt-5">
-                <button
-                  onClick={() => setShowPopup(false)}
-                  className="px-5 py-2 text-sm font-medium text-gray-600 bg-gray-200 rounded-lg hover:bg-gray-300 transition-all"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </CardHeader>
-
-      <CardContent>
-        <div className="relative  overflow-x-auto">
-          <Table className="w-full">
-            <TableHeader className="bg-gray-200 dark:bg-gray-900">
-              <TableRow>
-                <TableHead className="w-10">
-                  <Checkbox
-                    checked={
-                      selectedTransactions.length === filteredData.length
-                    }
-                    onCheckedChange={toggleSelectAll}
-                  />
-                </TableHead>
-                {columns.map((column) => (
-                  <TableHead
-                    key={column}
-                    className={`whitespace-nowrap ${
-                      ["bill_reference", "dr_ledger", "cr_ledger"].includes(
-                        column
-                      ) && "min-w-[180px]"
-                    } ${column === "narration" && "min-w-[300px]"}`}
-                    // className={source === "summary" ? "bg-gray-900 dark:bg-slate-800 text-white" : ""}
-                  >
-                    <div className="flex items-center gap-2">
-                      {["dr_ledger", "cr_ledger"].includes(column) && (
-                        <p className="text-lg text-gray-500 dark:text-gray-400">
-                          *
-                        </p>
-                      )}
-                      {column
-                        .split("_") // Split by underscore
-                        .map(
-                          (word) =>
-                            word.charAt(0).toUpperCase() +
-                            word.slice(1).toLowerCase()
-                        ) // Capitalize
-                        .join(" ")}
-
-                      {[
-                        "narration",
-                        "bill_reference",
-                        "effective_date",
-                        "reference_number",
-                      ].includes(column.toLowerCase()) === false && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0"
-                          onClick={() => {
-                            if (column.toLowerCase() === "date") {
-                              setCurrentFilterColumn(column);
-                              setCurrentDateColumn(column);
-                              setDateFilterModalOpen(true);
-                            } else if (column.toLowerCase() === "amount") {
-                              setCurrentNumericColumn(column);
-                              setNumericFilterModalOpen(true);
-                              setDateFilterModalOpen(false);
-                            } else {
-                              setCurrentFilterColumn(column);
-                              setSelectedCategories([]);
-                              setCategorySearchTerm("");
-                              setFilterModalOpen(true);
-                              setDateFilterModalOpen(false);
-                            }
-                          }}
-                        >
-                          ▼
-                        </Button>
-                      )}
-                    </div>
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-
-            <TableBody>
-              {currentData.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={hasEntity ? columns.length + 1 : columns.length}
-                    className="text-center"
-                  >
-                    No matching results found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                currentData.map((row) => {
-                  return (
-                    <TableRow
-                      key={row.id}
-                      className={`${
-                        row.imported
-                          ? "bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800"
-                          : "hover:bg-gray-100 dark:hover:bg-gray-800"
-                      }`}
-                      // className={source === "summary" ? "even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200" : ""}
+                      onClick={clearFilters}
                     >
-                      <TableCell>
-                        <Checkbox
-                          checked={selectedTransactions.includes(row.id)}
-                          onCheckedChange={() =>
-                            toggleTransactionSelection(row.id)
-                          }
-                        />
-                      </TableCell>
-                      {columns.map((column) => {
-                        if (column.toLowerCase() === "entity") {
-                          return (
-                            <TableCell
-                              key={column}
-                              className="max-w-[00px] relative"
-                            >
-                              <div className="flex items-center">
-                                <Input
-                                  type="text"
-                                  value={
-                                    editedEntities[row.id] !== undefined
-                                      ? editedEntities[row.id]
-                                      : row[column]
-                                  }
-                                  onChange={(e) =>
-                                    handleEntityChange(row.id, e.target.value)
-                                  }
-                                  className="w-full"
-                                />
-                                {editedEntities[row.id] !== undefined &&
-                                  editedEntities[row.id] !== row[column] && (
-                                    <Check
-                                      className="ml-2 cursor-pointer text-green-500"
-                                      onClick={() =>
-                                        handleEntityUpdateConfirm(row)
+                      Clear Filters
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Popup Dialog for ledger selection - kept intact */}
+                {showPopup && (
+                  <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                    <div className="bg-white rounded-2xl p-6 shadow-2xl max-w-sm w-full relative">
+                      <h3 className="text-xl font-semibold text-gray-800 mb-5 text-center">
+                        Select Ledger Type
+                      </h3>
+
+                      <div className="flex flex-col gap-4">
+                        <Button
+                          onClick={() => handleOpenFile("tallyprime/ledger_prime.xlsm")}
+                          className="px-3 py-3 text-base font-medium text-white transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
+                        >
+                          <AiFillFileExcel className="w-5 h-5 text-white" />
+                          Ledger Prime
+                        </Button>
+
+                        <Button
+                          onClick={() => handleOpenFile("tallyprime/ledger_erp.xlsm")}
+                          className="px-3 py-3 text-base font-medium text-white transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
+                        >
+                          <AiFillFileExcel className="w-5 h-5 text-white" />
+                          Ledger ERP
+                        </Button>
+                      </div>
+
+                      <div className="flex justify-center mt-5">
+                        <button
+                          onClick={() => setShowPopup(false)}
+                          className="px-5 py-2 text-sm font-medium text-gray-600 bg-gray-200 rounded-lg hover:bg-gray-300 transition-all"
+                        >
+                          Close
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardHeader>
+
+              <CardContent>
+                <div className="relative  overflow-x-auto">
+                  <Table className="w-full">
+                    <TableHeader className="bg-gray-200 dark:bg-gray-900">
+                      <TableRow>
+                        <TableHead className="w-10">
+                          <Checkbox
+                            checked={
+                              selectedTransactions.length === filteredData.length
+                            }
+                            onCheckedChange={toggleSelectAll}
+                          />
+                        </TableHead>
+                        {columns.map((column) => (
+                          <TableHead
+                            key={column}
+                            className={`whitespace-nowrap ${["bill_reference", "dr_ledger", "cr_ledger"].includes(
+                              column
+                            ) && "min-w-[180px]"
+                              } ${column === "narration" && "min-w-[300px]"}`}
+                          // className={source === "summary" ? "bg-gray-900 dark:bg-slate-800 text-white" : ""}
+                          >
+                            <div className="flex items-center gap-2">
+                              {["dr_ledger", "cr_ledger"].includes(column) && (
+                                <p className="text-lg text-gray-500 dark:text-gray-400">
+                                  *
+                                </p>
+                              )}
+                              {column
+                                .split("_") // Split by underscore
+                                .map(
+                                  (word) =>
+                                    word.charAt(0).toUpperCase() +
+                                    word.slice(1).toLowerCase()
+                                ) // Capitalize
+                                .join(" ")}
+
+                              {[
+                                "narration",
+                                "bill_reference",
+                                "effective_date",
+                                "reference_number",
+                              ].includes(column.toLowerCase()) === false && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0"
+                                    onClick={() => {
+                                      if (column.toLowerCase() === "date") {
+                                        setCurrentFilterColumn(column);
+                                        setCurrentDateColumn(column);
+                                        setDateFilterModalOpen(true);
+                                      } else if (column.toLowerCase() === "amount") {
+                                        setCurrentNumericColumn(column);
+                                        setNumericFilterModalOpen(true);
+                                        setDateFilterModalOpen(false);
+                                      } else {
+                                        setCurrentFilterColumn(column);
+                                        setSelectedCategories([]);
+                                        setCategorySearchTerm("");
+                                        setFilterModalOpen(true);
+                                        setDateFilterModalOpen(false);
                                       }
-                                    />
-                                  )}
-                              </div>
-                            </TableCell>
-                          );
-                        } else if (column.toLowerCase() === "ledger_group") {
+                                    }}
+                                  >
+                                    ▼
+                                  </Button>
+                                )}
+                            </div>
+                          </TableHead>
+                        ))}
+                      </TableRow>
+                    </TableHeader>
+
+                    <TableBody>
+                      {currentData.length === 0 ? (
+                        <TableRow>
+                          <TableCell
+                            colSpan={hasEntity ? columns.length + 1 : columns.length}
+                            className="text-center"
+                          >
+                            No matching results found
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        currentData.map((row) => {
                           return (
-                            <TableCell
-                              key={column}
-                              className="min-w-[250px] group relative"
+                            <TableRow
+                              key={row.id}
+                              className={`${row.imported
+                                  ? "bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800"
+                                  : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                                }`}
+                            // className={source === "summary" ? "even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200" : ""}
                             >
-                              <Select
-                                value={row[column]}
-                                onValueChange={(value) =>
-                                  handleLedgerGroupChange(row, value)
-                                }
-                                className="w-full"
-                                disabled={globalSelectedRows.has(row.id)}
-                              >
-                                <SelectTrigger className="w-full">
-                                  <SelectValue>{row[column]}</SelectValue>
-                                </SelectTrigger>
-                                <SelectContent
-                                  onCloseAutoFocus={(e) => {
-                                    e.preventDefault();
-                                  }}
-                                >
-                                  <div className="p-2 border-b flex gap-2">
-                                    <div className="relative flex-1">
-                                      <Input
-                                        placeholder="Search Group..."
-                                        value={categorySearchTerm}
-                                        onChange={(e) =>
-                                          handleCategorySearch(e)
+                              <TableCell>
+                                <Checkbox
+                                  checked={selectedTransactions.includes(row.id)}
+                                  onCheckedChange={() =>
+                                    toggleTransactionSelection(row.id)
+                                  }
+                                />
+                              </TableCell>
+                              {columns.map((column) => {
+                                if (column.toLowerCase() === "entity") {
+                                  return (
+                                    <TableCell
+                                      key={column}
+                                      className="max-w-[00px] relative"
+                                    >
+                                      <div className="flex items-center">
+                                        <Input
+                                          type="text"
+                                          value={
+                                            editedEntities[row.id] !== undefined
+                                              ? editedEntities[row.id]
+                                              : row[column]
+                                          }
+                                          onChange={(e) =>
+                                            handleEntityChange(row.id, e.target.value)
+                                          }
+                                          className="w-full"
+                                        />
+                                        {editedEntities[row.id] !== undefined &&
+                                          editedEntities[row.id] !== row[column] && (
+                                            <Check
+                                              className="ml-2 cursor-pointer text-green-500"
+                                              onClick={() =>
+                                                handleEntityUpdateConfirm(row)
+                                              }
+                                            />
+                                          )}
+                                      </div>
+                                    </TableCell>
+                                  );
+                                } else if (column.toLowerCase() === "ledger_group") {
+                                  return (
+                                    <TableCell
+                                      key={column}
+                                      className="min-w-[250px] group relative"
+                                    >
+                                      <Select
+                                        value={row[column]}
+                                        onValueChange={(value) =>
+                                          handleLedgerGroupChange(row, value)
                                         }
-                                        onFocus={() =>
-                                          setIsSearchInputFocused(true)
-                                        }
-                                        onBlur={() =>
-                                          setIsSearchInputFocused(false)
-                                        }
-                                        onKeyDown={(e) => e.stopPropagation()}
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                        }}
-                                      />
-                                    </div>
-                                    {/* <Button
+                                        className="w-full"
+                                        disabled={globalSelectedRows.has(row.id)}
+                                      >
+                                        <SelectTrigger className="w-full">
+                                          <SelectValue>{row[column]}</SelectValue>
+                                        </SelectTrigger>
+                                        <SelectContent
+                                          onCloseAutoFocus={(e) => {
+                                            e.preventDefault();
+                                          }}
+                                        >
+                                          <div className="p-2 border-b flex gap-2">
+                                            <div className="relative flex-1">
+                                              <Input
+                                                placeholder="Search Group..."
+                                                value={categorySearchTerm}
+                                                onChange={(e) =>
+                                                  handleCategorySearch(e)
+                                                }
+                                                onFocus={() =>
+                                                  setIsSearchInputFocused(true)
+                                                }
+                                                onBlur={() =>
+                                                  setIsSearchInputFocused(false)
+                                                }
+                                                onKeyDown={(e) => e.stopPropagation()}
+                                                onClick={(e) => {
+                                                  e.preventDefault();
+                                                  e.stopPropagation();
+                                                }}
+                                              />
+                                            </div>
+                                            {/* <Button
                                   variant="outline"
                                   size="sm"
                                   className="px-2 h-10"
@@ -1434,521 +1482,529 @@ const DataTable = ({
                                   <Plus className="h-4 w-4" />
                                   Add
                                 </Button> */}
-                                  </div>
-                                  <div className="max-h-[200px] overflow-y-auto">
-                                    {filteredCategories.length > 0 ? (
-                                      filteredCategories.map((ledgerGroup) => (
-                                        <SelectItem
-                                          key={ledgerGroup}
-                                          value={ledgerGroup}
-                                        >
-                                          {decodeHtmlEntities(ledgerGroup)}
-                                        </SelectItem>
-                                      ))
-                                    ) : (
-                                      <div className="p-4 max-w-[300px] text-center text-muted-foreground">
-                                        <p className="text-md">
-                                          No matching categories found
-                                        </p>
-                                        <p className="text-sm mt-1">
-                                          Click the{" "}
-                                          <Plus className="h-3 w-3 inline-block mx-1" />{" "}
-                                          icon above to add "
-                                          {categorySearchTerm}" as a new
-                                          category
-                                        </p>
+                                          </div>
+                                          <div className="max-h-[200px] overflow-y-auto">
+                                            {filteredCategories.length > 0 ? (
+                                              filteredCategories.map((ledgerGroup) => (
+                                                <SelectItem
+                                                  key={ledgerGroup}
+                                                  value={ledgerGroup}
+                                                >
+                                                  {decodeHtmlEntities(ledgerGroup)}
+                                                </SelectItem>
+                                              ))
+                                            ) : (
+                                              <div className="p-4 max-w-[300px] text-center text-muted-foreground">
+                                                <p className="text-md">
+                                                  No matching categories found
+                                                </p>
+                                                <p className="text-sm mt-1">
+                                                  Click the{" "}
+                                                  <Plus className="h-3 w-3 inline-block mx-1" />{" "}
+                                                  icon above to add "
+                                                  {categorySearchTerm}" as a new
+                                                  category
+                                                </p>
+                                              </div>
+                                            )}
+                                          </div>
+                                        </SelectContent>
+                                      </Select>
+                                    </TableCell>
+                                  );
+                                } else if (column.toLowerCase() === "narration") {
+                                  return (
+                                    <TableCell
+                                      key={column}
+                                      className="max-w-[500px] group relative"
+                                    >
+                                      <Input
+                                        type="text"
+                                        value={row[column] || ""}
+                                        onChange={(e) =>
+                                          handleInputChange(
+                                            row.id,
+                                            column,
+                                            e.target.value
+                                          )
+                                        }
+                                        placeholder="Enter Narration"
+                                        className="w-full p-2 border border-gray-300  truncate rounded-md"
+                                      />
+                                      <div className="absolute right-24 top-12 hidden group-hover:block bg-black text-white text-sm rounded p-2 z-50 whitespace-normal min-w-[200px] ">
+                                        {row[column]}
                                       </div>
-                                    )}
-                                  </div>
-                                </SelectContent>
-                              </Select>
-                            </TableCell>
-                          );
-                        } else if (column.toLowerCase() === "narration") {
-                          return (
-                            <TableCell
-                              key={column}
-                              className="max-w-[500px] group relative"
-                            >
-                              <Input
-                                type="text"
-                                value={row[column] || ""}
-                                onChange={(e) =>
-                                  handleInputChange(
-                                    row.id,
-                                    column,
-                                    e.target.value
-                                  )
-                                }
-                                placeholder="Enter Narration"
-                                className="w-full p-2 border border-gray-300  truncate rounded-md"
-                              />
-                              <div className="absolute right-24 top-12 hidden group-hover:block bg-black text-white text-sm rounded p-2 z-50 whitespace-normal min-w-[200px] ">
-                                {row[column]}
-                              </div>
-                            </TableCell>
-                          );
-                        } else if (column.toLowerCase() === "effective_date") {
-                          return (
-                            <TableCell
-                              key={column}
-                              className="w-[250px] group relative"
-                            >
-                              {" "}
-                              <Input
-                                type="date"
-                                value={
-                                  row[column] ? row[column].split("T")[0] : ""
-                                }
-                                onChange={(e) =>
-                                  handleInputChange(
-                                    row.id,
-                                    column,
-                                    e.target.value
-                                  )
-                                }
-                                className="w-full p-2 border border-gray-300 rounded-md"
-                              />
-                            </TableCell>
-                          );
-                        } else if (column.toLowerCase() === "bill_reference") {
-                          return (
-                            <TableCell
-                              key={column}
-                              className="w-[250px] group relative"
-                            >
-                              <Input
-                                type="text"
-                                value={row[column] || ""}
-                                onChange={(e) =>
-                                  handleInputChange(
-                                    row.id,
-                                    column,
-                                    e.target.value
-                                  )
-                                }
-                                placeholder="Enter Bill Reference"
-                                className="w-full p-2 border border-gray-300 rounded-md"
-                              />
-                            </TableCell>
-                          );
-                        } else if (
-                          column.toLowerCase() === "reference_number"
-                        ) {
-                          return (
-                            <TableCell
-                              key={column}
-                              className="w-[250px] group relative"
-                            >
-                              <Input
-                                type="text"
-                                value={row[column] || ""}
-                                onChange={(e) =>
-                                  handleInputChange(
-                                    row.id,
-                                    column,
-                                    e.target.value
-                                  )
-                                }
-                                placeholder="Enter Reference Number"
-                                className="w-full p-2 border border-gray-300 rounded-md"
-                              />
-                            </TableCell>
-                          );
-                        } else if (column.toLowerCase() === "imported") {
-                          return (
-                            <TableCell key={column} className="max-w-[200px]">
-                              <div>
-                                {row[column] === true
-                                  ? "Success"
-                                  : row.failed_reason === ""
-                                  ? "Not Uploaded Yet"
-                                  : "Failed"}
-                              </div>
-                            </TableCell>
-                          );
-                        } else if (column.toLowerCase() === "dr_ledger") {
-                          return (
-                            <TableCell>
-                              <input
-                                type="text"
-                                placeholder="Enter Dr-Ledger"
-                                value={row[column] || ""}
-                                onChange={(e) => {
-                                  // Update individual row
-                                  handleLedgerChange(
-                                    row.id,
-                                    "dr_ledger",
-                                    e.target.value
+                                    </TableCell>
                                   );
-
-                                  // If this row is selected, update all selected rows
-                                  if (selectedTransactions.includes(row.id)) {
-                                    selectedTransactions.forEach((id) => {
-                                      if (id !== row.id) {
-                                        // Skip current row since already updated
-                                        handleLedgerChange(
-                                          id,
-                                          "dr_ledger",
-                                          e.target.value
-                                        );
-                                      }
-                                    });
-                                  }
-                                }}
-                                className="border rounded-md p-2 w-full dark:bg-gray-800 dark:text-white"
-                              />
-                            </TableCell>
-                          );
-                        } else if (column.toLowerCase() === "cr_ledger") {
-                          return (
-                            <TableCell>
-                              <input
-                                type="text"
-                                placeholder="Enter Cr-Ledger"
-                                value={row[column] || ""}
-                                onChange={(e) => {
-                                  // Update individual row
-                                  handleLedgerChange(
-                                    row.id,
-                                    "cr_ledger",
-                                    e.target.value
+                                } else if (column.toLowerCase() === "effective_date") {
+                                  return (
+                                    <TableCell
+                                      key={column}
+                                      className="w-[250px] group relative"
+                                    >
+                                      {" "}
+                                      <Input
+                                        type="date"
+                                        value={
+                                          row[column] ? row[column].split("T")[0] : ""
+                                        }
+                                        onChange={(e) =>
+                                          handleInputChange(
+                                            row.id,
+                                            column,
+                                            e.target.value
+                                          )
+                                        }
+                                        className="w-full p-2 border border-gray-300 rounded-md"
+                                      />
+                                    </TableCell>
                                   );
+                                } else if (column.toLowerCase() === "bill_reference") {
+                                  return (
+                                    <TableCell
+                                      key={column}
+                                      className="w-[250px] group relative"
+                                    >
+                                      <Input
+                                        type="text"
+                                        value={row[column] || ""}
+                                        onChange={(e) =>
+                                          handleInputChange(
+                                            row.id,
+                                            column,
+                                            e.target.value
+                                          )
+                                        }
+                                        placeholder="Enter Bill Reference"
+                                        className="w-full p-2 border border-gray-300 rounded-md"
+                                      />
+                                    </TableCell>
+                                  );
+                                } else if (
+                                  column.toLowerCase() === "reference_number"
+                                ) {
+                                  return (
+                                    <TableCell
+                                      key={column}
+                                      className="w-[250px] group relative"
+                                    >
+                                      <Input
+                                        type="text"
+                                        value={row[column] || ""}
+                                        onChange={(e) =>
+                                          handleInputChange(
+                                            row.id,
+                                            column,
+                                            e.target.value
+                                          )
+                                        }
+                                        placeholder="Enter Reference Number"
+                                        className="w-full p-2 border border-gray-300 rounded-md"
+                                      />
+                                    </TableCell>
+                                  );
+                                } else if (column.toLowerCase() === "imported") {
+                                  return (
+                                    <TableCell key={column} className="max-w-[200px]">
+                                      <div>
+                                        {row[column] === true
+                                          ? "Success"
+                                          : row.failed_reason === ""
+                                            ? "Not Uploaded Yet"
+                                            : "Failed"}
+                                      </div>
+                                    </TableCell>
+                                  );
+                                } else if (column.toLowerCase() === "dr_ledger") {
+                                  return (
+                                    <TableCell>
+                                      <input
+                                        type="text"
+                                        placeholder="Enter Dr-Ledger"
+                                        value={row[column] || ""}
+                                        onChange={(e) => {
+                                          // Update individual row
+                                          handleLedgerChange(
+                                            row.id,
+                                            "dr_ledger",
+                                            e.target.value
+                                          );
 
-                                  // If this row is selected, update all selected rows
-                                  if (selectedTransactions.includes(row.id)) {
-                                    selectedTransactions.forEach((id) => {
-                                      if (id !== row.id) {
-                                        // Skip current row since already updated
-                                        handleLedgerChange(
-                                          id,
-                                          "cr_ledger",
-                                          e.target.value
-                                        );
-                                      }
-                                    });
-                                  }
-                                }}
-                                className="border rounded-md p-2 w-full dark:bg-gray-800 dark:text-white"
-                              />
-                            </TableCell>
+                                          // If this row is selected, update all selected rows
+                                          if (selectedTransactions.includes(row.id)) {
+                                            selectedTransactions.forEach((id) => {
+                                              if (id !== row.id) {
+                                                // Skip current row since already updated
+                                                handleLedgerChange(
+                                                  id,
+                                                  "dr_ledger",
+                                                  e.target.value
+                                                );
+                                              }
+                                            });
+                                          }
+                                        }}
+                                        className="border rounded-md p-2 w-full dark:bg-gray-800 dark:text-white"
+                                      />
+                                    </TableCell>
+                                  );
+                                } else if (column.toLowerCase() === "cr_ledger") {
+                                  return (
+                                    <TableCell>
+                                      <input
+                                        type="text"
+                                        placeholder="Enter Cr-Ledger"
+                                        value={row[column] || ""}
+                                        onChange={(e) => {
+                                          // Update individual row
+                                          handleLedgerChange(
+                                            row.id,
+                                            "cr_ledger",
+                                            e.target.value
+                                          );
+
+                                          // If this row is selected, update all selected rows
+                                          if (selectedTransactions.includes(row.id)) {
+                                            selectedTransactions.forEach((id) => {
+                                              if (id !== row.id) {
+                                                // Skip current row since already updated
+                                                handleLedgerChange(
+                                                  id,
+                                                  "cr_ledger",
+                                                  e.target.value
+                                                );
+                                              }
+                                            });
+                                          }
+                                        }}
+                                        className="border rounded-md p-2 w-full dark:bg-gray-800 dark:text-white"
+                                      />
+                                    </TableCell>
+                                  );
+                                } else {
+                                  return (
+                                    <TableCell key={column} className="max-w-[200px]">
+                                      {renderCell(row, column)}
+                                    </TableCell>
+                                  );
+                                }
+                              })}
+                            </TableRow>
                           );
-                        } else {
-                          return (
-                            <TableCell key={column} className="max-w-[200px]">
-                              {renderCell(row, column)}
-                            </TableCell>
-                          );
-                        }
-                      })}
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-            <TableFooter>
-              <TableRow>
-                <TableCell>Total</TableCell>
-                {columns.slice(0).map((column) => (
-                  <TableCell key={column}>
-                    {["credit", "debit", "balance", "amount"].includes(
-                      column.toLowerCase()
-                    )
-                      ? totals[column]
-                      : ""}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableFooter>
-          </Table>
-        </div>
+                        })
+                      )}
+                    </TableBody>
+                    <TableFooter>
+                      <TableRow>
+                        <TableCell>Total</TableCell>
+                        {columns.slice(0).map((column) => (
+                          <TableCell key={column}>
+                            {["credit", "debit", "balance", "amount"].includes(
+                              column.toLowerCase()
+                            )
+                              ? totals[column]
+                              : ""}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    </TableFooter>
+                  </Table>
+                </div>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="mt-6">
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.max(prev - 1, 1))
-                    }
-                    className={cn(
-                      "cursor-pointer",
-                      currentPage === 1 && "pointer-events-none opacity-50"
-                    )}
-                  />
-                </PaginationItem>
-                {getPageNumbers().map((pageNumber, index) => (
-                  <PaginationItem key={index}>
-                    {pageNumber === "ellipsis" ? (
-                      <PaginationEllipsis />
-                    ) : (
-                      <PaginationLink
-                        onClick={() => setCurrentPage(pageNumber)}
-                        isActive={currentPage === pageNumber}
-                        className="cursor-pointer"
-                      >
-                        {pageNumber}
-                      </PaginationLink>
-                    )}
-                  </PaginationItem>
-                ))}
-                <PaginationItem>
-                  <PaginationNext
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                    }
-                    className={cn(
-                      "cursor-pointer",
-                      currentPage === totalPages &&
-                        "pointer-events-none opacity-50"
-                    )}
-                  />
-                </PaginationItem>
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="mt-6">
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            onClick={() =>
+                              setCurrentPage((prev) => Math.max(prev - 1, 1))
+                            }
+                            className={cn(
+                              "cursor-pointer",
+                              currentPage === 1 && "pointer-events-none opacity-50"
+                            )}
+                          />
+                        </PaginationItem>
+                        {getPageNumbers().map((pageNumber, index) => (
+                          <PaginationItem key={index}>
+                            {pageNumber === "ellipsis" ? (
+                              <PaginationEllipsis />
+                            ) : (
+                              <PaginationLink
+                                onClick={() => setCurrentPage(pageNumber)}
+                                isActive={currentPage === pageNumber}
+                                className="cursor-pointer"
+                              >
+                                {pageNumber}
+                              </PaginationLink>
+                            )}
+                          </PaginationItem>
+                        ))}
+                        <PaginationItem>
+                          <PaginationNext
+                            onClick={() =>
+                              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                            }
+                            className={cn(
+                              "cursor-pointer",
+                              currentPage === totalPages &&
+                              "pointer-events-none opacity-50"
+                            )}
+                          />
+                        </PaginationItem>
 
-                {/* <div>
+                        {/* <div>
               <p className="text:lg font-bold">Total : {filteredData.length}</p>
             </div> */}
-              </PaginationContent>
-            </Pagination>
-          </div>
-        )}
-      </CardContent>
-
-      {/* Batch Edit Modal */}
-      {batchModalOpen && (
-        <Dialog open={batchModalOpen} onOpenChange={setBatchModalOpen}>
-          <DialogContent className="sm:max-w-[400px]">
-            <DialogHeader>
-              <DialogTitle>Batch Update Entities</DialogTitle>
-              <p className="text-sm text-gray-600">
-                Enter new Entity value for selected transactions:
-              </p>
-            </DialogHeader>
-            <Input
-              type="text"
-              placeholder="New Entity value"
-              value={batchEntityValue}
-              onChange={(e) => setBatchEntityValue(e.target.value)}
-              className="mb-4"
-            />
-            <div className="flex justify-end gap-2">
-              <Button variant="ghost" onClick={() => setBatchModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button variant="default" onClick={handleBatchUpdate}>
-                Confirm
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* Category Filter Modal - Apple Style */}
-      {filterModalOpen && (
-        <Dialog open={filterModalOpen} onOpenChange={setFilterModalOpen}>
-          <DialogContent className="sm:max-w-[400px]">
-            <DialogHeader>
-              <DialogTitle className="dark:text-slate-300">
-                Filter {currentFilterColumn}
-              </DialogTitle>
-              <p className="text-sm text-gray-600">
-                Make changes to your filter here. Click save when you're done.
-              </p>
-            </DialogHeader>
-            <Input
-              type="text"
-              placeholder="Search categories..."
-              value={categorySearchTerm}
-              onChange={(e) => setCategorySearchTerm(e.target.value)}
-              className="mb-4"
-            />
-            <div className="max-h-60 overflow-y-auto space-y-[1px] mb-4">
-              {getFilteredUniqueValues(currentFilterColumn).map((value) => (
-                <label
-                  key={value}
-                  className="flex items-center gap-1 p-2 hover:bg-gray-50 rounded-md cursor-pointer dark:hover:bg-gray-700"
-                >
-                  <Checkbox
-                    checked={selectedCategories.includes(value)}
-                    onCheckedChange={() => handleCategorySelect(value)}
-                  />
-                  <span className="text-gray-700 dark:text-white">{value}</span>
-                </label>
-              ))}
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="ghost" onClick={handleSelectAll}>
-                Select All
-              </Button>
-              <Button
-                variant="default"
-                className="bg-black hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
-                onClick={handleColumnFilter}
-              >
-                Save changes
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {numericFilterModalOpen && (
-        <Dialog
-          open={numericFilterModalOpen}
-          onOpenChange={setNumericFilterModalOpen}
-        >
-          <DialogContent className="sm:max-w-[400px]">
-            <DialogHeader>
-              <DialogTitle>Filter {currentNumericColumn}</DialogTitle>
-              <p className="text-sm text-gray-600">
-                Set the minimum and maximum values for the filter.
-              </p>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Minimum Value</Label>
-                <Input
-                  type="number"
-                  value={minValue}
-                  onChange={(e) => setMinValue(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Maximum Value</Label>
-                <Input
-                  type="number"
-                  value={maxValue}
-                  onChange={(e) => setMaxValue(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="ghost"
-                onClick={() => setNumericFilterModalOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="default"
-                className="bg-black hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
-                onClick={() => {
-                  handleNumericFilter(currentNumericColumn, minValue, maxValue);
-                  setNumericFilterModalOpen(false);
-                }}
-              >
-                Save changes
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* Date Filter Modal */}
-      {dateFilterModalOpen && (
-        <Dialog
-          open={dateFilterModalOpen}
-          onOpenChange={setDateFilterModalOpen}
-        >
-          <DialogContent className="sm:max-w-[400px]">
-            <DialogHeader>
-              <DialogTitle>Filter {currentDateColumn}</DialogTitle>
-              <p className="text-sm text-gray-600">
-                Select a start and end date for the filter.
-              </p>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Start Date</Label>
-                <Input
-                  type="date"
-                  value={fromDate}
-                  onChange={(e) => {
-                    console.log("Start date changed:", e.target.value);
-                    setFromDate(e.target.value);
-                  }}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>End Date</Label>
-                <Input
-                  type="date"
-                  value={toDate}
-                  onChange={(e) => {
-                    console.log("End date changed:", e.target.value);
-                    setToDate(e.target.value);
-                  }}
-                />
-              </div>
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="ghost"
-                onClick={() => setDateFilterModalOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="default"
-                className="bg-black hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
-                onClick={() => {
-                  console.log("Applying filter with:", {
-                    fromDate,
-                    toDate,
-                    currentDateColumn,
-                  });
-                  handleDateFilter(currentDateColumn, fromDate, toDate);
-                  setDateFilterModalOpen(false);
-                }}
-              >
-                Apply Filter
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* Bulk Category Update Modal */}
-      <Dialog
-        open={bulkCategoryModalOpen}
-        onOpenChange={setBulkCategoryModalOpen}
-      >
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Update Multiple Categories</DialogTitle>
-            <DialogDescription>
-              Select a new category for the {globalSelectedRows.size} selected
-              transactions
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <Select
-              value={selectedBulkCategory}
-              onValueChange={setSelectedBulkCategory}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select new category" />
-              </SelectTrigger>
-              <SelectContent>
-                <div className="p-2 border-b flex gap-2">
-                  <div className="relative flex-1">
-                    <Input
-                      placeholder="Search categories..."
-                      value={categorySearchTerm}
-                      onChange={(e) => handleCategorySearch(e)}
-                      onFocus={() => setIsSearchInputFocused(true)}
-                      onBlur={() => setIsSearchInputFocused(false)}
-                      onKeyDown={(e) => e.stopPropagation()}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                    />
+                      </PaginationContent>
+                    </Pagination>
                   </div>
-                  {/* <Button
+                )}
+              </CardContent>
+
+              {/* Batch Edit Modal */}
+              {
+                batchModalOpen && (
+                  <Dialog open={batchModalOpen} onOpenChange={setBatchModalOpen}>
+                    <DialogContent className="sm:max-w-[400px]">
+                      <DialogHeader>
+                        <DialogTitle>Batch Update Entities</DialogTitle>
+                        <p className="text-sm text-gray-600">
+                          Enter new Entity value for selected transactions:
+                        </p>
+                      </DialogHeader>
+                      <Input
+                        type="text"
+                        placeholder="New Entity value"
+                        value={batchEntityValue}
+                        onChange={(e) => setBatchEntityValue(e.target.value)}
+                        className="mb-4"
+                      />
+                      <div className="flex justify-end gap-2">
+                        <Button variant="ghost" onClick={() => setBatchModalOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button variant="default" onClick={handleBatchUpdate}>
+                          Confirm
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                )
+              }
+
+              {/* Category Filter Modal - Apple Style */}
+              {
+                filterModalOpen && (
+                  <Dialog open={filterModalOpen} onOpenChange={setFilterModalOpen}>
+                    <DialogContent className="sm:max-w-[400px]">
+                      <DialogHeader>
+                        <DialogTitle className="dark:text-slate-300">
+                          Filter {currentFilterColumn}
+                        </DialogTitle>
+                        <p className="text-sm text-gray-600">
+                          Make changes to your filter here. Click save when you're done.
+                        </p>
+                      </DialogHeader>
+                      <Input
+                        type="text"
+                        placeholder="Search categories..."
+                        value={categorySearchTerm}
+                        onChange={(e) => setCategorySearchTerm(e.target.value)}
+                        className="mb-4"
+                      />
+                      <div className="max-h-60 overflow-y-auto space-y-[1px] mb-4">
+                        {getFilteredUniqueValues(currentFilterColumn).map((value) => (
+                          <label
+                            key={value}
+                            className="flex items-center gap-1 p-2 hover:bg-gray-50 rounded-md cursor-pointer dark:hover:bg-gray-700"
+                          >
+                            <Checkbox
+                              checked={selectedCategories.includes(value)}
+                              onCheckedChange={() => handleCategorySelect(value)}
+                            />
+                            <span className="text-gray-700 dark:text-white">{value}</span>
+                          </label>
+                        ))}
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <Button variant="ghost" onClick={handleSelectAll}>
+                          Select All
+                        </Button>
+                        <Button
+                          variant="default"
+                          className="bg-black hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
+                          onClick={handleColumnFilter}
+                        >
+                          Save changes
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                )
+              }
+
+              {
+                numericFilterModalOpen && (
+                  <Dialog
+                    open={numericFilterModalOpen}
+                    onOpenChange={setNumericFilterModalOpen}
+                  >
+                    <DialogContent className="sm:max-w-[400px]">
+                      <DialogHeader>
+                        <DialogTitle>Filter {currentNumericColumn}</DialogTitle>
+                        <p className="text-sm text-gray-600">
+                          Set the minimum and maximum values for the filter.
+                        </p>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label>Minimum Value</Label>
+                          <Input
+                            type="number"
+                            value={minValue}
+                            onChange={(e) => setMinValue(e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Maximum Value</Label>
+                          <Input
+                            type="number"
+                            value={maxValue}
+                            onChange={(e) => setMaxValue(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          onClick={() => setNumericFilterModalOpen(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          variant="default"
+                          className="bg-black hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
+                          onClick={() => {
+                            handleNumericFilter(currentNumericColumn, minValue, maxValue);
+                            setNumericFilterModalOpen(false);
+                          }}
+                        >
+                          Save changes
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                )
+              }
+
+              {/* Date Filter Modal */}
+              {
+                dateFilterModalOpen && (
+                  <Dialog
+                    open={dateFilterModalOpen}
+                    onOpenChange={setDateFilterModalOpen}
+                  >
+                    <DialogContent className="sm:max-w-[400px]">
+                      <DialogHeader>
+                        <DialogTitle>Filter {currentDateColumn}</DialogTitle>
+                        <p className="text-sm text-gray-600">
+                          Select a start and end date for the filter.
+                        </p>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label>Start Date</Label>
+                          <Input
+                            type="date"
+                            value={fromDate}
+                            onChange={(e) => {
+                              console.log("Start date changed:", e.target.value);
+                              setFromDate(e.target.value);
+                            }}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>End Date</Label>
+                          <Input
+                            type="date"
+                            value={toDate}
+                            onChange={(e) => {
+                              console.log("End date changed:", e.target.value);
+                              setToDate(e.target.value);
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          onClick={() => setDateFilterModalOpen(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          variant="default"
+                          className="bg-black hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
+                          onClick={() => {
+                            console.log("Applying filter with:", {
+                              fromDate,
+                              toDate,
+                              currentDateColumn,
+                            });
+                            handleDateFilter(currentDateColumn, fromDate, toDate);
+                            setDateFilterModalOpen(false);
+                          }}
+                        >
+                          Apply Filter
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                )
+              }
+
+              {/* Bulk Category Update Modal */}
+              <Dialog
+                open={bulkCategoryModalOpen}
+                onOpenChange={setBulkCategoryModalOpen}
+              >
+                <DialogContent className="sm:max-w-[600px]">
+                  <DialogHeader>
+                    <DialogTitle>Update Multiple Categories</DialogTitle>
+                    <DialogDescription>
+                      Select a new category for the {globalSelectedRows.size} selected
+                      transactions
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <div className="space-y-4">
+                    <Select
+                      value={selectedBulkCategory}
+                      onValueChange={setSelectedBulkCategory}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select new category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <div className="p-2 border-b flex gap-2">
+                          <div className="relative flex-1">
+                            <Input
+                              placeholder="Search categories..."
+                              value={categorySearchTerm}
+                              onChange={(e) => handleCategorySearch(e)}
+                              onFocus={() => setIsSearchInputFocused(true)}
+                              onBlur={() => setIsSearchInputFocused(false)}
+                              onKeyDown={(e) => e.stopPropagation()}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                              }}
+                            />
+                          </div>
+                          {/* <Button
                             variant="outline"
                             size="sm"
                             className="px-2 h-10"
@@ -1969,235 +2025,239 @@ const DataTable = ({
                             <Plus className="h-4 w-4" />
                             Add
                           </Button> */}
-                </div>
-                <div className="overflow-y-auto">
-                  {ledgerGroups.length > 0 ? (
-                    ledgerGroups.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <div className="p-4 max-w-[300px] text-center text-muted-foreground">
-                      <p className="text-md">No matching categories found</p>
-                      <p className="text-sm mt-1">
-                        Click the <Plus className="h-3 w-3 inline-block mx-1" />{" "}
-                        icon above to add "{categorySearchTerm}" as a new
-                        category
-                      </p>
+                        </div>
+                        <div className="overflow-y-auto">
+                          {ledgerGroups.length > 0 ? (
+                            ledgerGroups.map((category) => (
+                              <SelectItem key={category} value={category}>
+                                {category}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <div className="p-4 max-w-[300px] text-center text-muted-foreground">
+                              <p className="text-md">No matching categories found</p>
+                              <p className="text-sm mt-1">
+                                Click the <Plus className="h-3 w-3 inline-block mx-1" />{" "}
+                                icon above to add "{categorySearchTerm}" as a new
+                                category
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </SelectContent>
+                    </Select>
+
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-2 mt-4">
+                        <Checkbox
+                          id="show-keywords"
+                          checked={showKeywordInput}
+                          onCheckedChange={setShowKeywordInput}
+                        />
+                        <Label htmlFor="show-keywords">
+                          Add keywords for category change
+                        </Label>
+                      </div>
+
+                      {showKeywordInput && (
+                        <div className="space-y-2">
+                          <Label>
+                            What common keywords in these transactions made you choose "
+                            {selectedBulkCategory}" as their category?
+                          </Label>
+                          <Input
+                            value={reasoning}
+                            onChange={(e) => setReasoning(e.target.value)}
+                            placeholder="Enter Keyword..."
+                          />
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              </SelectContent>
-            </Select>
+                  </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2 mt-4">
-                <Checkbox
-                  id="show-keywords"
-                  checked={showKeywordInput}
-                  onCheckedChange={setShowKeywordInput}
-                />
-                <Label htmlFor="show-keywords">
-                  Add keywords for category change
-                </Label>
-              </div>
+                  <DialogFooter>
+                    <Button
+                      variant="ghost"
+                      onClick={() => setBulkCategoryModalOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="default"
+                      onClick={() => {
+                        setBulkCategoryModalOpen(false);
+                        setConfirmationModalOpen(true);
+                      }}
+                      disabled={!selectedBulkCategory}
+                    >
+                      Update Categories
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
 
-              {showKeywordInput && (
-                <div className="space-y-2">
-                  <Label>
-                    What common keywords in these transactions made you choose "
-                    {selectedBulkCategory}" as their category?
-                  </Label>
-                  <Input
-                    value={reasoning}
-                    onChange={(e) => setReasoning(e.target.value)}
-                    placeholder="Enter Keyword..."
-                  />
-                </div>
-              )}
-            </div>
-          </div>
+              {/* Classification Modal */}
+              <Dialog
+                open={showClassificationModal}
+                onOpenChange={() => setShowClassificationModal(false)}
+              >
+                <DialogContent className="sm:max-w-[400px]">
+                  <DialogHeader>
+                    <DialogTitle>Classify New Category</DialogTitle>
+                    <DialogDescription>
+                      Please classify "{newCategoryToClassify}" into one of the
+                      following types
+                    </DialogDescription>
+                  </DialogHeader>
 
-          <DialogFooter>
-            <Button
-              variant="ghost"
-              onClick={() => setBulkCategoryModalOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="default"
-              onClick={() => {
-                setBulkCategoryModalOpen(false);
-                setConfirmationModalOpen(true);
-              }}
-              disabled={!selectedBulkCategory}
-            >
-              Update Categories
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Classification Modal */}
-      <Dialog
-        open={showClassificationModal}
-        onOpenChange={() => setShowClassificationModal(false)}
-      >
-        <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle>Classify New Category</DialogTitle>
-            <DialogDescription>
-              Please classify "{newCategoryToClassify}" into one of the
-              following types
-            </DialogDescription>
-          </DialogHeader>
-
-          <RadioGroup
-            value={selectedType}
-            onValueChange={setSelectedType}
-            className="space-y-3"
-          >
-            {(!pendingCategoryChange?.isDebit || bulkCategoryModalOpen) && (
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Income" id="income" />
-                <Label htmlFor="Income">Income</Label>
-              </div>
-            )}
-            {(pendingCategoryChange?.isDebit || bulkCategoryModalOpen) && (
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem
-                  value="Important Expenses / Payments"
-                  id="important_expenses"
-                />
-                <Label htmlFor="important_expenses">Important Expenses</Label>
-              </div>
-            )}
-            {(pendingCategoryChange?.isDebit || bulkCategoryModalOpen) && (
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem
-                  value="Other Expenses / Payments"
-                  id="other_expenses"
-                />
-                <Label htmlFor="other_expenses">Other Expenses</Label>
-              </div>
-            )}
-          </RadioGroup>
-
-          <DialogFooter>
-            <Button
-              variant="default"
-              onClick={handleClassificationSubmit}
-              disabled={!selectedType}
-            >
-              Save Classification
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* share modal dialog */}
-      <Dialog open={shareModalOpen} onOpenChange={setShareModalOpen}>
-        <DialogContent className="max-w-md p-6 rounded-lg shadow-lg border dark:border-gray-700 bg-white dark:bg-gray-900">
-          {/* Header with Close Button */}
-          <DialogHeader className="flex justify-between items-center">
-            <DialogTitle className="text-lg font-semibold text-gray-800 dark:text-white">
-              Share This Report
-            </DialogTitle>
-          </DialogHeader>
-
-          {/* Share Options */}
-          <div className="flex justify-center gap-6 py-4">
-            <TooltipProvider>
-              {/* Mail Button */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="p-4 transition-all rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
-                    onClick={handleMailShare}
+                  <RadioGroup
+                    value={selectedType}
+                    onValueChange={setSelectedType}
+                    className="space-y-3"
                   >
-                    <Mail className="w-6 h-6 text-red-500" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Share via Email</TooltipContent>
-              </Tooltip>
+                    {(!pendingCategoryChange?.isDebit || bulkCategoryModalOpen) && (
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Income" id="income" />
+                        <Label htmlFor="Income">Income</Label>
+                      </div>
+                    )}
+                    {(pendingCategoryChange?.isDebit || bulkCategoryModalOpen) && (
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem
+                          value="Important Expenses / Payments"
+                          id="important_expenses"
+                        />
+                        <Label htmlFor="important_expenses">Important Expenses</Label>
+                      </div>
+                    )}
+                    {(pendingCategoryChange?.isDebit || bulkCategoryModalOpen) && (
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem
+                          value="Other Expenses / Payments"
+                          id="other_expenses"
+                        />
+                        <Label htmlFor="other_expenses">Other Expenses</Label>
+                      </div>
+                    )}
+                  </RadioGroup>
 
-              {/* WhatsApp Button */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="p-4 transition-all rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
-                    onClick={handleWhatsappShare}
-                  >
-                    <MessageCircle className="w-6 h-6 text-green-500" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Share via WhatsApp</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
+                  <DialogFooter>
+                    <Button
+                      variant="default"
+                      onClick={handleClassificationSubmit}
+                      disabled={!selectedType}
+                    >
+                      Save Classification
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
 
-          <div className="text-xs text-left">
-            <p>
-              <span className="font-bold">Note:</span> Since this software
-              operates entirely offline, the report is first downloaded to your
-              device before sharing, Please remember to attach the downloaded
-              file.
-            </p>
-          </div>
+              {/* share modal dialog */}
+              <Dialog open={shareModalOpen} onOpenChange={setShareModalOpen}>
+                <DialogContent className="max-w-md p-6 rounded-lg shadow-lg border dark:border-gray-700 bg-white dark:bg-gray-900">
+                  {/* Header with Close Button */}
+                  <DialogHeader className="flex justify-between items-center">
+                    <DialogTitle className="text-lg font-semibold text-gray-800 dark:text-white">
+                      Share This Report
+                    </DialogTitle>
+                  </DialogHeader>
 
-          {/* Cancel Button */}
-          <div className="flex justify-end">
-            <Button
-              variant="outline"
-              className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-              onClick={() => setShareModalOpen(false)}
-            >
-              Cancel
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+                  {/* Share Options */}
+                  <div className="flex justify-center gap-6 py-4">
+                    <TooltipProvider>
+                      {/* Mail Button */}
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className="p-4 transition-all rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
+                            onClick={handleMailShare}
+                          >
+                            <Mail className="w-6 h-6 text-red-500" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Share via Email</TooltipContent>
+                      </Tooltip>
 
-      {/* Loading Overlay */}
-      {isLoading && (
-        <div className="fixed inset-0 bg-white bg-opacity-80 backdrop-blur-sm flex items-center justify-center">
-          <Loader2 className="animate-spin h-8 w-8 text-[#3498db]" />
-        </div>
-      )}
+                      {/* WhatsApp Button */}
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className="p-4 transition-all rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
+                            onClick={handleWhatsappShare}
+                          >
+                            <MessageCircle className="w-6 h-6 text-green-500" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Share via WhatsApp</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
 
-      {/* Fixed Bottom Actions Bar */}
-      {(hasChanges || globalSelectedRows.size > 0) && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-lg flex justify-end gap-2 z-50">
-          {globalSelectedRows.size > 0 && (
-            <Button
-              variant="secondary"
-              onClick={() => setBulkCategoryModalOpen(true)}
-            >
-              Update Selected ({globalSelectedRows.size})
-            </Button>
-          )}
-          {hasChanges && (
-            <Button
-              onClick={handleSaveChanges}
-              disabled={isLoading}
-              className="flex items-center gap-2"
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4" />
-              )}
-              Save Changes
-            </Button>
-          )}
-        </div>
-      )}
-    </Card>
-  );
+                  <div className="text-xs text-left">
+                    <p>
+                      <span className="font-bold">Note:</span> Since this software
+                      operates entirely offline, the report is first downloaded to your
+                      device before sharing, Please remember to attach the downloaded
+                      file.
+                    </p>
+                  </div>
+
+                  {/* Cancel Button */}
+                  <div className="flex justify-end">
+                    <Button
+                      variant="outline"
+                      className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                      onClick={() => setShareModalOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              {/* Loading Overlay */}
+              {
+                isLoading && (
+                  <div className="fixed inset-0 bg-white bg-opacity-80 backdrop-blur-sm flex items-center justify-center">
+                    <Loader2 className="animate-spin h-8 w-8 text-[#3498db]" />
+                  </div>
+                )
+              }
+
+              {/* Fixed Bottom Actions Bar */}
+              {
+                (hasChanges || globalSelectedRows.size > 0) && (
+                  <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-lg flex justify-end gap-2 z-50">
+                    {globalSelectedRows.size > 0 && (
+                      <Button
+                        variant="secondary"
+                        onClick={() => setBulkCategoryModalOpen(true)}
+                      >
+                        Update Selected ({globalSelectedRows.size})
+                      </Button>
+                    )}
+                    {hasChanges && (
+                      <Button
+                        onClick={handleSaveChanges}
+                        disabled={isLoading}
+                        className="flex items-center gap-2"
+                      >
+                        {isLoading ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Save className="h-4 w-4" />
+                        )}
+                        Save Changes
+                      </Button>
+                    )}
+                  </div>
+                )
+              }
+            </Card >
+            );
 };
 
-export default DataTable;
+            export default DataTable;

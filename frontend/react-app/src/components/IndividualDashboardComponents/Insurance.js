@@ -10,20 +10,20 @@ const Insurance = () => {
   const [insuranceSummary, setInsuranceSummary] = useState([]);
   const [loading, setLoading] = useState(true);
   const { caseId, individualId } = useParams();
-    const [availableMonths, setAvailableMonths] = useState([]);
-    const [selectedMonths, setSelectedMonths] = useState([]);
-      // Helper function to get month key
-      const getMonthKey = (dateString) => {
-        const date = new Date(dateString);
-        return `${date.toLocaleString("en-GB", { month: "short" })}-${date.getFullYear()}`;
-      };
-    
-      // Helper function to parse month string to Date
-      const getMonthDate = (monthStr) => {
-        const [month, year] = monthStr.split("-");
-        const monthIndex = new Date(Date.parse(month + " 1, 2000")).getMonth();
-        return new Date(parseInt(year), monthIndex);
-      };
+  const [availableMonths, setAvailableMonths] = useState([]);
+  const [selectedMonths, setSelectedMonths] = useState([]);
+  // Helper function to get month key
+  const getMonthKey = (dateString) => {
+    const date = new Date(dateString);
+    return `${date.toLocaleString("en-GB", { month: "short" })}-${date.getFullYear()}`;
+  };
+
+  // Helper function to parse month string to Date
+  const getMonthDate = (monthStr) => {
+    const [month, year] = monthStr.split("-");
+    const monthIndex = new Date(Date.parse(month + " 1, 2000")).getMonth();
+    return new Date(parseInt(year), monthIndex);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -58,7 +58,7 @@ const Insurance = () => {
           });
         setData(transformedData);
         setAvailableMonths(uniqueMonths);
-        
+
         // Initially select all months
         setSelectedMonths(uniqueMonths);
       } catch (error) {
@@ -74,14 +74,14 @@ const Insurance = () => {
   const processInsuranceSummary = (transactions) => {
     const grouped = [];
     const threshold = 0.85;
-  
+
     transactions.forEach((transaction) => {
       const existing = grouped.find(
         (item) =>
           item.amount === transaction.debit &&
           similarity(item.description, transaction.description) >= threshold
       );
-  
+
       if (existing) {
         existing.frequency++;
       } else {
@@ -92,11 +92,11 @@ const Insurance = () => {
         });
       }
     });
-  
+
     // Return grouped without filtering, as unique entries should have frequency 1
     return grouped;
   };
-  
+
 
   const similarity = (str1, str2) => {
     const s1 = str1.toLowerCase();
@@ -104,14 +104,14 @@ const Insurance = () => {
     const match = [...s1].filter((char) => s2.includes(char)).length;
     return match / Math.max(s1.length, s2.length);
   };
-  const filteredData = data.filter(item => 
+  const filteredData = data.filter(item =>
     selectedMonths.includes(item.monthKey)
   );
 
   // Transform data for chart to show monthly aggregates
   const getChartData = () => {
     const monthlyData = {};
-    
+
     filteredData.forEach(item => {
       if (!monthlyData[item.monthKey]) {
         monthlyData[item.monthKey] = {
@@ -140,7 +140,7 @@ const Insurance = () => {
   }
 
   return (
-    <div className="rounded-lg m-8 mt-2 space-y-6">
+    <div className="bg-white rounded-lg space-y-6 m-8 pr-16 mt-2 min-w-full max-w-[0] dark:bg-slate-950">
       {data.length === 0 ? (
         <div className="bg-gray-100 p-4 rounded-md w-full h-[10vh]">
           <p className="text-gray-800 text-center mt-3 font-medium text-lg">
@@ -149,34 +149,34 @@ const Insurance = () => {
         </div>
       ) : (
         <>
-        <ToggleStrip
-          columns={availableMonths}
-          selectedColumns={selectedMonths}
-          setSelectedColumns={setSelectedMonths}
-        />
-  
-        {selectedMonths.length === 0 ? (
-          <div className="text-center text-gray-600 dark:text-gray-400 my-6">
-            Select months to view data
-          </div>
-        ) : (
-          <>
-            <div className="w-full h-[60vh]">
-              <BarLineChart
-              data={getChartData()}
-              title="Insurance"
-              xAxisKey="date"
-              yAxisKey="debit"
-              />
+          <ToggleStrip
+            columns={availableMonths}
+            selectedColumns={selectedMonths}
+            setSelectedColumns={setSelectedMonths}
+          />
+
+          {selectedMonths.length === 0 ? (
+            <div className="text-center text-gray-600 dark:text-gray-400 my-6">
+              Select months to view data
             </div>
-            <div>
-            <UnifiedTable data={insuranceSummary} title="Insurance Summary" />
-          </div>
-            <div>
-              <UnifiedTable data={filteredData} title="Insurance Transactions" />
-            </div>
-          </>
-        )}
+          ) : (
+            <>
+              <div className="w-full h-[60vh]">
+                <BarLineChart
+                  data={getChartData()}
+                  title="Insurance"
+                  xAxisKey="date"
+                  yAxisKey="debit"
+                />
+              </div>
+              <div>
+                <UnifiedTable data={insuranceSummary} title="Insurance Summary" />
+              </div>
+              <div>
+                <UnifiedTable data={filteredData} title="Insurance Transactions" />
+              </div>
+            </>
+          )}
         </>
       )}
     </div>

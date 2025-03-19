@@ -59,7 +59,7 @@ const Debtors = () => {
 
       setData(transformedData);
       setAvailableMonths(uniqueMonths);
-      
+
       // Initially select all months
       setSelectedMonths(uniqueMonths);
     } catch (error) {
@@ -74,14 +74,14 @@ const Debtors = () => {
   }, [caseId]);
 
   // Filter data based on selected months
-  const filteredData = data.filter(item => 
+  const filteredData = data.filter(item =>
     selectedMonths.includes(item.monthKey)
   );
 
   // Transform data for chart to show monthly aggregates
   const getChartData = () => {
     const monthlyData = {};
-    
+
     filteredData.forEach(item => {
       if (!monthlyData[item.monthKey]) {
         monthlyData[item.monthKey] = {
@@ -110,7 +110,7 @@ const Debtors = () => {
   }
 
   return (
-    <div className="rounded-lg m-8 mt-2 space-y-6">
+    <div className="bg-white rounded-lg space-y-6 m-8 pr-16 mt-2 min-w-full max-w-[0] dark:bg-slate-950">
 
       {data.length === 0 ? (
         <div className="bg-gray-100 p-4 rounded-md w-full h-[10vh]">
@@ -120,33 +120,33 @@ const Debtors = () => {
         </div>
       ) : (
         <>
-        <ToggleStrip
-          columns={availableMonths}
-          selectedColumns={selectedMonths}
-          setSelectedColumns={setSelectedMonths}
-        />
-  
-        {selectedMonths.length === 0 ? (
-          <div className="text-center text-gray-600 dark:text-gray-400 my-6">
-            Select months to view data
-          </div>
-        ) : (
-          <>
-            <div className="w-full h-[60vh]">
-              <BarLineChart
-                xAxisKey="date"
-                yAxisKey="credit"
-                data={getChartData()}
-                title="Debtors"
-              />
+          <ToggleStrip
+            columns={availableMonths}
+            selectedColumns={selectedMonths}
+            setSelectedColumns={setSelectedMonths}
+          />
+
+          {selectedMonths.length === 0 ? (
+            <div className="text-center text-gray-600 dark:text-gray-400 my-6">
+              Select months to view data
             </div>
-            <div className="w-full">
-              <UnifiedTable data={filteredData} title="Debtors Transactions"
-                    caseId={caseId} refreshFunction={fetchData}
-                    />
-            </div>
-          </>
-        )}
+          ) : (
+            <>
+              <div className="w-full h-[60vh]">
+                <BarLineChart
+                  xAxisKey="date"
+                  yAxisKey="credit"
+                  data={getChartData()}
+                  title="Debtors"
+                />
+              </div>
+              <div className="w-full">
+                <UnifiedTable data={filteredData} title="Debtors Transactions"
+                  caseId={caseId} refreshFunction={fetchData}
+                />
+              </div>
+            </>
+          )}
         </>
       )}
     </div>
