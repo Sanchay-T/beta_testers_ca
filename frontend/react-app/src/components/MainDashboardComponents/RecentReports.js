@@ -866,14 +866,14 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         const newItem = {
           Particulars:
             item[
-              Object.keys(item).find(
-                (key) =>
-                  key.includes("Payments") ||
-                  key.includes("Particulars") ||
-                  key.includes("Receipts") ||
-                  key.includes("Credit") ||
-                  key.includes("Debit")
-              )
+            Object.keys(item).find(
+              (key) =>
+                key.includes("Payments") ||
+                key.includes("Particulars") ||
+                key.includes("Receipts") ||
+                key.includes("Credit") ||
+                key.includes("Debit")
+            )
             ],
         };
 
@@ -1121,48 +1121,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
 
     console.log({ suspenseData });
   };
-
-
-  const handleSummaryDownload = async (caseid, status, caseName) => {
-    if (status === "Pending") {
-      toast({
-        title: "Cannot Download",
-        description:
-          "Report is still being processed. Please wait until it's complete.",
-        variant: "warning",
-        duration: 3000,
-      });
-      return;
-    }
-
-    try {
-      console.log("Downloading summary report for case:", caseid);
-
-      const success = await generateFinancialReport(caseid, caseName, true); // Pass true for summaryOnly
-
-      if (success) {
-        console.log("Summary report downloaded successfully.");
-        toast({
-          title: "Success",
-          description: "Summary Excel file downloaded successfully",
-        });
-      } else {
-        console.error("Failed to generate the summary report.");
-        toast({
-          title: "Error",
-          description: "Failed to download Summary Excel file.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error("Error in handleDownloadSummary:", error);
-      toast({
-        title: "Error",
-        description: `Failed to initiate summary download: ${error.message}`,
-        variant: "destructive",
-      });
-    }
-  };
+  const handleSummaryDownload = () => { };
 
   const handleExcelFileUpload = async (event, caseId) => {
     const file = event.target.files[0];
