@@ -152,6 +152,12 @@ class LicenseManager {
         return crypto.createHash('sha256').update(uuid + salt).digest('hex');
     }
 
+    async getHashedUUIDTest(uuid) {
+        const salt = process.env.UUID_SALT || 'default-salt'; // Use env variable!
+        log.info("UUID Salt:", salt);
+        return crypto.createHash('sha256').update(uuid + salt).digest('hex');
+    }
+
     async isValidUUIDHash(storedHash) {
         const computedHash = await this.getHashedUUID();
         log.info("Stoede UUID Hash:", storedHash);

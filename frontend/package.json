@@ -14,7 +14,8 @@
     "build:react": "cd react-app && npm run build",
     "build:electron": "electron-builder",
     "deploy": "electron-builder --publish always",
-    "release": "npm run build && npm run deploy"
+    "release": "npm run build && npm run deploy",
+    "test": "npx mocha test/**/*.test.js"
   },
   "keywords": [],
   "author": "",
@@ -23,10 +24,12 @@
     "dmg-license": "^1.0.11"
   },
   "devDependencies": {
+    "chai": "^5.2.0",
     "concurrently": "^8.2.2",
     "cross-env": "^7.0.3",
     "electron": "^33.3.1",
     "electron-builder": "^24.13.3",
+    "mocha": "^11.1.0",
     "rimraf": "^5.0.5",
     "wait-on": "^7.2.0"
   },
