@@ -12,6 +12,7 @@ import { BreadcrumbProvider } from "./contexts/BreadcrumbContext";
 import { ReportProvider } from "./contexts/ReportContext";
 import { PrivateRoute } from "./components/PrivateRoute";
 import Login from "./components/Authentication/Login";
+import ForgotPassword from "./components/Authentication/ForgotPassword";
 import UpdateNotification from "./components/UpdateNotification";
 import { useLoading } from "./contexts/LoadingContext";
 import { useToast } from "./hooks/use-toast";
@@ -22,10 +23,10 @@ function App() {
   const { isExcelLoading, isReportLoading } = useLoading();
   const { toast } = useToast();
 
-   // Toast for Excel Download
-   useEffect(() => {
+  // Toast for Excel Download
+  useEffect(() => {
     let toastId;
-    
+
     if (isExcelLoading) {
       toastId = toast({
         title: "Downloading Excel",
@@ -48,7 +49,7 @@ function App() {
   }, [isExcelLoading, toast]);
 
 
-  
+
   return (
     <ThemeProvider defaultTheme="system" storageKey="app-theme">
       {showIntro && <ElectronIntro onComplete={() => setShowIntro(false)} />}
@@ -58,7 +59,7 @@ function App() {
           <BreadcrumbProvider>
             <ReportProvider>
 
-            {/* <Routes>
+              {/* <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/:defaultTab" element={<Dashboard />} />
               <Route
@@ -75,52 +76,54 @@ function App() {
               />
             </Routes> */}
 
-            <Routes>
-              {/* Public route */}
-              <Route path="/login" element={<Login />} />
+              <Routes>
+                {/* Public route */}
+                <Route path="/login" element={<Login />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
 
-              {/* Protected routes */}
-              <Route
-                path="/"
-                element={
-                  <PrivateRoute>
-                    <Dashboard />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/:defaultTab"
-                element={
-                  <PrivateRoute>
-                    <Dashboard />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/case-dashboard/:caseId/:defaultTab"
-                element={
-                  <PrivateRoute>
-                    <CaseDashboard />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/individual-dashboard/:caseId/:individualId/:defaultTab"
-                element={
-                  <PrivateRoute>
-                    <IndividualDashboard />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/individual-dashboard/:caseId/:defaultTab"
-                element={
-                  <PrivateRoute>
-                    <IndividualDashboard />
-                  </PrivateRoute>
-                }
-              />
-            </Routes>
+
+                {/* Protected routes */}
+                <Route
+                  path="/"
+                  element={
+                    <PrivateRoute>
+                      <Dashboard />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/:defaultTab"
+                  element={
+                    <PrivateRoute>
+                      <Dashboard />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/case-dashboard/:caseId/:defaultTab"
+                  element={
+                    <PrivateRoute>
+                      <CaseDashboard />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/individual-dashboard/:caseId/:individualId/:defaultTab"
+                  element={
+                    <PrivateRoute>
+                      <IndividualDashboard />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/individual-dashboard/:caseId/:defaultTab"
+                  element={
+                    <PrivateRoute>
+                      <IndividualDashboard />
+                    </PrivateRoute>
+                  }
+                />
+              </Routes>
               <Toaster />
             </ReportProvider>
           </BreadcrumbProvider>
