@@ -23,67 +23,67 @@ const EMI = () => {
   const [selectedMonths, setSelectedMonths] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedEmi, setSelectedEmi] = useState(null);
-  
-    // Helper function to get month key
-    const getMonthKey = (dateString) => {
-      const date = new Date(dateString);
-      return `${date.toLocaleString("en-GB", { month: "short" })}-${date.getFullYear()}`;
-    };
-  
-    // Helper function to parse month string to Date
-    const getMonthDate = (monthStr) => {
-      const [month, year] = monthStr.split("-");
-      const monthIndex = new Date(Date.parse(month + " 1, 2000")).getMonth();
-      return new Date(parseInt(year), monthIndex);
-    };
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        // Fetch transactions filtered by "debtor"
-        const result = await window.electron.getTransactionsByEmi(
-          caseId,
-          parseInt(individualId)
-        );
 
-        const transformedData = result.map((item) => ({
-          date: new Date(item.date).toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-          }),
-          description: item.description,
-          debit: item.amount,
-          balance: item.balance,
-          category: item.category,
-          monthKey: getMonthKey(item.date),
-          id: item.id,
-        }));
+  // Helper function to get month key
+  const getMonthKey = (dateString) => {
+    const date = new Date(dateString);
+    return `${date.toLocaleString("en-GB", { month: "short" })}-${date.getFullYear()}`;
+  };
+
+  // Helper function to parse month string to Date
+  const getMonthDate = (monthStr) => {
+    const [month, year] = monthStr.split("-");
+    const monthIndex = new Date(Date.parse(month + " 1, 2000")).getMonth();
+    return new Date(parseInt(year), monthIndex);
+  };
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      // Fetch transactions filtered by "debtor"
+      const result = await window.electron.getTransactionsByEmi(
+        caseId,
+        parseInt(individualId)
+      );
+
+      const transformedData = result.map((item) => ({
+        date: new Date(item.date).toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        }),
+        description: item.description,
+        debit: item.amount,
+        balance: item.balance,
+        category: item.category,
+        monthKey: getMonthKey(item.date),
+        id: item.id,
+      }));
 
 
-        // Process EMI Summary
-        const groupedEmi = processEmiSummary(transformedData);
-        setEmiSummary(groupedEmi);
-        
-        const uniqueMonths = [...new Set(transformedData.map(item => item.monthKey))]
-          .sort((a, b) => {
-            const dateA = getMonthDate(a);
-            const dateB = getMonthDate(b);
-            return dateA - dateB;
-          });
-        setData(transformedData);
-        setAvailableMonths(uniqueMonths);
-        
-        // Initially select all months
-        setSelectedMonths(uniqueMonths);
-      } catch (error) {
-        console.error("Error fetching emi transactions:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+      // Process EMI Summary
+      const groupedEmi = processEmiSummary(transformedData);
+      setEmiSummary(groupedEmi);
+
+      const uniqueMonths = [...new Set(transformedData.map(item => item.monthKey))]
+        .sort((a, b) => {
+          const dateA = getMonthDate(a);
+          const dateB = getMonthDate(b);
+          return dateA - dateB;
+        });
+      setData(transformedData);
+      setAvailableMonths(uniqueMonths);
+
+      // Initially select all months
+      setSelectedMonths(uniqueMonths);
+    } catch (error) {
+      console.error("Error fetching emi transactions:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    
+
 
     fetchData();
   }, []);
@@ -91,14 +91,14 @@ const EMI = () => {
   const processEmiSummary = (transactions) => {
     const grouped = [];
     const threshold = 0.85;
-  
+
     transactions.forEach((transaction) => {
       const existing = grouped.find(
         (item) =>
           item.amount === transaction.debit &&
           similarity(item.description, transaction.description) >= threshold
       );
-  
+
       if (existing) {
         existing.frequency++;
       } else {
@@ -109,11 +109,11 @@ const EMI = () => {
         });
       }
     });
-  
+
     // Return grouped without filtering, as unique entries should have frequency 1
     return grouped;
   };
-  
+
 
   const similarity = (str1, str2) => {
     const s1 = str1.toLowerCase();
@@ -122,14 +122,14 @@ const EMI = () => {
     return match / Math.max(s1.length, s2.length);
   };
 
-  const filteredData = data.filter(item => 
+  const filteredData = data.filter(item =>
     selectedMonths.includes(item.monthKey)
   );
 
   // Transform data for chart to show monthly aggregates
   const getChartData = () => {
     const monthlyData = {};
-    
+
     filteredData.forEach(item => {
       if (!monthlyData[item.monthKey]) {
         monthlyData[item.monthKey] = {
@@ -163,7 +163,7 @@ const EMI = () => {
   }
 
   return (
-    <div className="rounded-lg m-8 mt-2 space-y-6">
+    <div className="bg-white rounded-lg space-y-6 m-8 pr-16 mt-2 min-w-full max-w-[0] dark:bg-slate-950">
       {data.length === 0 ? (
         <div className="bg-gray-100 p-4 rounded-md w-full h-[10vh]">
           <p className="text-gray-800 text-center mt-3 font-medium text-lg">
@@ -172,27 +172,27 @@ const EMI = () => {
         </div>
       ) : (
 
-<>
-        <ToggleStrip
-          columns={availableMonths}
-          selectedColumns={selectedMonths}
-          setSelectedColumns={setSelectedMonths}
-        />
-  
-        {selectedMonths.length === 0 ? (
-          <div className="text-center text-gray-600 dark:text-gray-400 my-6">
-            Select months to view data
-          </div>
-        ) : (
-          <>
-            <div className="w-full h-[60vh]">
-              <BarLineChart
-                xAxisKey="date"
-                yAxisKey="debit"
-                data={getChartData()}
-                title="Probable EMI"
-              />
+        <>
+          <ToggleStrip
+            columns={availableMonths}
+            selectedColumns={selectedMonths}
+            setSelectedColumns={setSelectedMonths}
+          />
+
+          {selectedMonths.length === 0 ? (
+            <div className="text-center text-gray-600 dark:text-gray-400 my-6">
+              Select months to view data
             </div>
+          ) : (
+            <>
+              <div className="w-full h-[60vh]">
+                <BarLineChart
+                  xAxisKey="date"
+                  yAxisKey="debit"
+                  data={getChartData()}
+                  title="Probable EMI"
+                />
+              </div>
               {/* <div>
             <UnifiedTable data={emiSummary} title="Emi Summary" 
                     caseId={caseId}
@@ -232,23 +232,23 @@ const EMI = () => {
                         </TableRow>
                       </TableBody>
                     </Table>
-          </div>
+                  </div>
                 </CardContent>
               </Card>
-            <div className="w-full">
-              <UnifiedTable data={filteredData} title="Emi Transactions" 
-                    caseId={caseId}
-                    refreshFunction={fetchData}
-                    />
-            </div>
+              <div className="w-full">
+                <UnifiedTable data={filteredData} title="Emi Transactions"
+                  caseId={caseId}
+                  refreshFunction={fetchData}
+                />
+              </div>
               <EmiTransactionDialog
                 isOpen={dialogOpen}
                 onClose={() => setDialogOpen(false)}
                 selectedEmi={selectedEmi}
                 transactions={filteredData}
               />
-          </>
-        )}
+            </>
+          )}
         </>
       )}
     </div>

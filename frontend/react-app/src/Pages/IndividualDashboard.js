@@ -148,8 +148,7 @@ const IndividualDashboard = () => {
   useEffect(() => {
     setIndividualDashboard(
       activeTab,
-      `/individual-dashboard/${caseId}/${
-        individualId || "combined"
+      `/individual-dashboard/${caseId}/${individualId || "combined"
       }/${activeTab}`
     );
   }, [activeTab, caseId, individualId, setIndividualDashboard]);
@@ -167,6 +166,7 @@ const IndividualDashboard = () => {
       });
       if (!navItems.find((item) => item.title === "EOD")) {
         // show eod for where individual id is not present, first check if it is already present
+        // show eod for where individual id is not present, first check if it is already present
 
         setNavItems((prev) => {
           return [
@@ -179,6 +179,10 @@ const IndividualDashboard = () => {
         });
       }
     } else {
+      // hide eod for individual
+      setNavItems((prev) => {
+        return prev.filter((item) => item.title !== "EOD");
+      });
       // hide eod for individual
       setNavItems((prev) => {
         return prev.filter((item) => item.title !== "EOD");

@@ -323,10 +323,10 @@ const Summary = () => {
     const formattedTransactions = matchingTransactions.map((transaction) => ({
       date: transaction.date
         ? new Date(transaction.date).toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-          })
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        })
         : "",
       description: transaction.description || "",
       amount: Math.abs(parseFloat(transaction.amount || 0)),
@@ -386,8 +386,7 @@ const Summary = () => {
     if (status === "Pending") {
       toast({
         title: "Cannot Download",
-        description:
-          "Report is still being processed. Please wait until it's complete.",
+        description: "Report is still being processed. Please wait until it's complete.",
         variant: "warning",
         duration: 3000,
       });
@@ -396,6 +395,7 @@ const Summary = () => {
 
     try {
       console.log("Downloading summary report for case:", caseid);
+
       const fileName = reportData.customerName || reportData.reportName;
       const success = await generateFinancialReport(caseid, fileName, true); // Pass true for summaryOnly
 
@@ -422,6 +422,7 @@ const Summary = () => {
       });
     }
   };
+
 
   return (
     <div className="bg-white rounded-lg space-y-6 m-8 pr-16 mt-2 min-w-full max-w-[0] dark:bg-slate-950">

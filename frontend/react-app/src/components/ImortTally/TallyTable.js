@@ -639,19 +639,19 @@ const TallyTable = ({
   const handleBulkLedgerUpdate = () => {
     console.log(ledgerField, bulkLedgerValue, selectedTransactions);
     setTransactions((prevTransactions) =>
-      prevTransactions.map((transaction) => {
-        return transaction[ledgerField].length === 0
+      prevTransactions.map((transaction) =>
+        selectedTransactions.includes(transaction.id)
           ? { ...transaction, [ledgerField]: bulkLedgerValue }
-          : transaction;
-      })
+          : transaction
+      )
     );
 
     setFilteredData((prevData) =>
-      prevData.map((transaction) => {
-        return transaction[ledgerField].length === 0
+      prevData.map((transaction) =>
+        selectedTransactions.includes(transaction.id)
           ? { ...transaction, [ledgerField]: bulkLedgerValue }
-          : transaction;
-      })
+          : transaction
+      )
     );
     setSelectedTransactions([]);
     setBulkLedgerValue("");
@@ -765,12 +765,15 @@ const TallyTable = ({
 
   return (
     <Card className="min-w-full max-w-[0]">
-      <CardHeader className="flex flex-col gap-4 p-4">
+      <CardHeader className="flex flex-col gap-4 p-4 w-full overflow-auto">
         {/* Top Row: Company Info and Ledger Selection */}
-        <div className="flex flex-wrap justify-between items-center gap-4">
+        <div className="flex flex-wrap justify-between items-center gap-4 w-full">
           {/* Company Name Section */}
-          <div className="flex items-center gap-4">
-            <label htmlFor="companyName" className="font-medium">
+          <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto">
+            <label
+              htmlFor="companyName"
+              className="font-medium whitespace-nowrap"
+            >
               Company Name:
             </label>
             <input
@@ -780,7 +783,7 @@ const TallyTable = ({
               value={companyName}
               tabIndex="0"
               onChange={(e) => setCompanyName(e.target.value)}
-              className="border rounded-md p-2 w-64 dark:bg-gray-800 dark:text-white"
+              className="border rounded-md p-2 w-full sm:w-64 dark:bg-gray-800 dark:text-white min-w-0"
               onFocus={(e) => e.target.select()}
             />
           </div>
@@ -874,10 +877,7 @@ const TallyTable = ({
               <AiFillFileExcel className="w-5 h-5 text-white" />
               Open Voucher
             </Button>
-            <Button
-              onClick={() => setShowPopup(true)}
-              className="px-3 py-2 text-base font-medium text-white transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
-            >
+            <Button onClick={() => setShowPopup(true)}>
               <AiFillFileExcel className="w-5 h-5 text-white" />
               Ledger Voucher
             </Button> */}
@@ -898,18 +898,18 @@ const TallyTable = ({
           </div>
 
           {/* Search and Filter Controls */}
-          <div className="flex items-center gap-3">
-            <div className="relative">
+          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+            <div className="relative w-full sm:w-auto">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search..."
-                className="pl-10 w-[300px]"
+                className="pl-10 w-full sm:w-[300px]"
                 value={searchTerm}
                 onChange={(e) => handleSearch(e.target.value)}
               />
             </div>
             <select
-              className="p-2 border rounded-md text-sm dark:bg-slate-800 dark:border-slate-700 w-[120px]"
+              className="p-2 border rounded-md text-sm dark:bg-slate-800 dark:border-slate-700 w-full sm:w-[120px]"
               value={rowsPerPage}
               onChange={(e) => {
                 const value = e.target.value;
@@ -921,55 +921,9 @@ const TallyTable = ({
               <option value="20">20 rows</option>
               <option value="50">50 rows</option>
             </select>
-            <Button
-              variant="outline"
-              className="px-3 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-600 
-                bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
-                transition-all rounded-md shadow-sm hover:shadow-md"
-              onClick={clearFilters}
-            >
-              Clear Filters
-            </Button>
+            <Button onClick={clearFilters}>Clear Filters</Button>
           </div>
         </div>
-
-        {/* Popup Dialog for ledger selection - kept intact */}
-        {showPopup && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white rounded-2xl p-6 shadow-2xl max-w-sm w-full relative">
-              <h3 className="text-xl font-semibold text-gray-800 mb-5 text-center">
-                Select Ledger Type
-              </h3>
-
-              <div className="flex flex-col gap-4">
-                <Button
-                  onClick={() => handleOpenFile("tallyprime/ledger_prime.xlsm")}
-                  className="px-3 py-3 text-base font-medium text-white transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
-                >
-                  <AiFillFileExcel className="w-5 h-5 text-white" />
-                  Ledger Prime
-                </Button>
-
-                <Button
-                  onClick={() => handleOpenFile("tallyprime/ledger_erp.xlsm")}
-                  className="px-3 py-3 text-base font-medium text-white transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
-                >
-                  <AiFillFileExcel className="w-5 h-5 text-white" />
-                  Ledger ERP
-                </Button>
-              </div>
-
-              <div className="flex justify-center mt-5">
-                <button
-                  onClick={() => setShowPopup(false)}
-                  className="px-5 py-2 text-sm font-medium text-gray-600 bg-gray-200 rounded-lg hover:bg-gray-300 transition-all"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </CardHeader>
 
       <CardContent>

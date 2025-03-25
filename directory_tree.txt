@@ -1,8 +1,41 @@
-ca-offline-suite
+CA-Offline
 ├── backend
-│   ├── local_model
-│   │   ├── config.json
-│   │   └── model.safetensors
+│   ├── models
+│   │   ├── local_model
+│   │   │   ├── config.json
+│   │   │   └── model.safetensors
+│   │   └── trained_model_lg_v2_final
+│   │       ├── attribute_ruler
+│   │       │   └── patterns
+│   │       ├── lemmatizer
+│   │       │   └── lookups
+│   │       │       └── lookups.bin
+│   │       ├── ner
+│   │       │   ├── cfg
+│   │       │   ├── model
+│   │       │   └── moves
+│   │       ├── parser
+│   │       │   ├── cfg
+│   │       │   ├── model
+│   │       │   └── moves
+│   │       ├── senter
+│   │       │   ├── cfg
+│   │       │   └── model
+│   │       ├── tagger
+│   │       │   ├── cfg
+│   │       │   └── model
+│   │       ├── tok2vec
+│   │       │   ├── cfg
+│   │       │   └── model
+│   │       ├── vocab
+│   │       │   ├── key2row
+│   │       │   ├── lookups.bin
+│   │       │   ├── strings.json
+│   │       │   ├── vectors
+│   │       │   └── vectors.cfg
+│   │       ├── config.cfg
+│   │       ├── meta.json
+│   │       └── tokenizer
 │   ├── tax_professional
 │   │   ├── banks
 │   │   │   ├── __init__.py
@@ -11,11 +44,13 @@ ca-offline-suite
 │   ├── main.py
 │   ├── requirements.txt
 │   ├── __init__.py
+│   ├── account_number_ifsc_extraction.py
 │   ├── code_for_extraction.py
 │   ├── common_functions.py
 │   ├── Final_Category.xlsx
 │   ├── gather_info.py
 │   ├── old_bank_extractions.py
+│   ├── pdf_to_name.py
 │   ├── readme.md
 │   ├── test_endpoint.py
 │   ├── tree.py
@@ -24,16 +59,17 @@ ca-offline-suite
 │   └── api-design.md
 ├── frontend
 │   ├── assets
+│   │   ├── cyphersol-icon.ico
 │   │   ├── cyphersol-icon.png
 │   │   ├── cyphersol-logo-dark.png
-│   │   └── cyphersol-logo.png
+│   │   └── cyphersol-logo-old.png
 │   ├── config
 │   │   └── dbConfig.js
 │   ├── db
 │   │   ├── schema
 │   │   │   ├── Cases.js
 │   │   │   ├── Category.js
-│   │   │   ├── EOD.js
+│   │   │   ├── EodSchema.js
 │   │   │   ├── FailedStatements.js
 │   │   │   ├── Finance_Vouchers.js
 │   │   │   ├── OpportunityToEarn.js
@@ -58,7 +94,9 @@ ca-offline-suite
 │   │   │   ├── 0010_snapshot.json
 │   │   │   ├── 0011_snapshot.json
 │   │   │   ├── 0012_snapshot.json
-│   │   │   └── _journal.json
+│   │   │   ├── 0013_snapshot.json
+│   │   │   ├── 0014_snapshot.json
+│   │   │   └── ...
 │   │   ├── 0000_bitter_liz_osborn.sql
 │   │   ├── 0001_ambitious_reavers.sql
 │   │   ├── 0002_red_valkyrie.sql
@@ -71,18 +109,26 @@ ca-offline-suite
 │   │   ├── 0009_awesome_umar.sql
 │   │   ├── 0010_first_azazel.sql
 │   │   ├── 0011_swift_bruce_banner.sql
-│   │   └── 0012_sad_quentin_quire.sql
+│   │   ├── 0012_sad_quentin_quire.sql
+│   │   ├── 0013_windy_mindworm.sql
+│   │   ├── 0014_overconfident_gambit.sql
+│   │   └── ...
 │   ├── ipc
 │   │   ├── authHandlers.js
+│   │   ├── buildTallyXml.js
 │   │   ├── caseDashboard.js
-│   │   ├── editCategory.js
+│   │   ├── del.js
+│   │   ├── editReportHandlers.js
+│   │   ├── excelDownloadHandler.js
 │   │   ├── fileHandler.js
 │   │   ├── generateReport.js
 │   │   ├── getData.js
 │   │   ├── individualDashboard.js
 │   │   ├── mainDashboard.js
 │   │   ├── opportunityToEarn.js
-│   │   └── reportHandlers.js
+│   │   ├── reportHandlers.js
+│   │   ├── tallyHandlers.js
+│   │   └── VoucherHandlers.js
 │   ├── media
 │   │   └── vouchers
 │   │       ├── tallyerp
@@ -92,11 +138,13 @@ ca-offline-suite
 │   │       │   ├── Receipt Voucher ERP.xlsm
 │   │       │   └── Sale Voucher final.xlsm
 │   │       └── tallyprime
-│   │           ├── Ledgers Voucher Final.xlsm
-│   │           ├── Payment Voucher Final.xlsm
-│   │           ├── Purchase Voucher Final.xlsm
-│   │           ├── Receipt Voucher Final.xlsm
-│   │           └── Sale Voucher final.xlsm
+│   │           ├── ledger_erp.xlsm
+│   │           ├── ledger_prime.xlsm
+│   │           ├── payment_receipt_contra.xlsm
+│   │           ├── purchase.xlsm
+│   │           ├── purchase_multistock.xlsm
+│   │           ├── sales.xlsm
+│   │           └── sales_multistock.xlsm
 │   ├── react-app
 │   │   ├── hooks
 │   │   │   └── use-toast.js
@@ -121,7 +169,8 @@ ca-offline-suite
 │   │   │   │   ├── CaseDashboardComponents
 │   │   │   │   │   ├── AccountNumNameManager.js
 │   │   │   │   │   ├── CombinedTable.js
-│   │   │   │   │   └── IndividualTable.js
+│   │   │   │   │   ├── IndividualTable.js
+│   │   │   │   │   └── NameManager.js
 │   │   │   │   ├── charts
 │   │   │   │   │   ├── BarChart.js
 │   │   │   │   │   ├── BarLineChart.js
@@ -130,29 +179,40 @@ ca-offline-suite
 │   │   │   │   │   ├── PieCharts.js
 │   │   │   │   │   └── SuspensePieChart.js
 │   │   │   │   ├── Elements
+│   │   │   │   │   ├── Card1.jsx
+│   │   │   │   │   ├── Card2.jsx
+│   │   │   │   │   ├── Card3.jsx
 │   │   │   │   │   ├── chartComponent.jsx
 │   │   │   │   │   ├── Loader.jsx
+│   │   │   │   │   ├── MSME_Card3.jsx
 │   │   │   │   │   ├── RecentReportsTable.jsx
 │   │   │   │   │   ├── ReportForm.jsx
 │   │   │   │   │   ├── StatsCard.jsx
 │   │   │   │   │   └── timecard.jsx
 │   │   │   │   ├── ImortTally
+│   │   │   │   │   ├── ManualTable.js
+│   │   │   │   │   ├── TallyDirectImport.js
 │   │   │   │   │   ├── TallyERP.js
-│   │   │   │   │   └── TallyPrime.js
+│   │   │   │   │   ├── TallyPrime.js
+│   │   │   │   │   ├── TallyTable.js
+│   │   │   │   │   └── TallyUploadScript.js
 │   │   │   │   ├── IndividualDashboardComponents
 │   │   │   │   │   ├── Cash.js
+│   │   │   │   │   ├── Contra.js
 │   │   │   │   │   ├── Creditors.js
+│   │   │   │   │   ├── DashboardDropdown.js
 │   │   │   │   │   ├── Debtors.js
+│   │   │   │   │   ├── del.js
+│   │   │   │   │   ├── del2.py
+│   │   │   │   │   ├── del3.py
 │   │   │   │   │   ├── EMI.js
+│   │   │   │   │   ├── EmiTransactionDialog.js
 │   │   │   │   │   ├── EodBalance.js
 │   │   │   │   │   ├── ForeignTransactions.js
+│   │   │   │   │   ├── Insurance.js
 │   │   │   │   │   ├── Investment.js
-│   │   │   │   │   ├── Reversal.js
-│   │   │   │   │   ├── Summary.js
-│   │   │   │   │   ├── Suspense.js
-│   │   │   │   │   ├── TableData.js
-│   │   │   │   │   ├── ToggleStrip.js
-│   │   │   │   │   └── Transactions.js
+│   │   │   │   │   ├── InvestmentTransactionDialog.js
+│   │   │   │   │   └── ...
 │   │   │   │   ├── MainDashboardComponents
 │   │   │   │   │   ├── Analytics.js
 │   │   │   │   │   ├── Billing.js
@@ -188,23 +248,28 @@ ca-offline-suite
 │   │   │   │   ├── app-sidebar.jsx
 │   │   │   │   ├── BreadCrumb.js
 │   │   │   │   ├── ElectronIntro.jsx
+│   │   │   │   ├── exportToExcel.js
 │   │   │   │   ├── Header.js
 │   │   │   │   ├── login-form.jsx
 │   │   │   │   ├── nav-main.jsx
 │   │   │   │   ├── nav-projects.jsx
 │   │   │   │   ├── nav-user.jsx
 │   │   │   │   ├── PrivateRoute.js
+│   │   │   │   ├── ReportExcel.js
 │   │   │   │   ├── Sidebar.js
 │   │   │   │   ├── team-switcher.jsx
 │   │   │   │   ├── theme-provider.jsx
 │   │   │   │   └── UpdateNotification.js
 │   │   │   ├── contexts
 │   │   │   │   ├── AuthContext.js
-│   │   │   │   └── BreadcrumbContext.js
+│   │   │   │   ├── BreadcrumbContext.js
+│   │   │   │   ├── LoadingContext.js
+│   │   │   │   └── ReportContext.js
 │   │   │   ├── data
 │   │   │   │   ├── assets
 │   │   │   │   │   ├── cyphersol-logo-dark.png
 │   │   │   │   │   ├── icon.png
+│   │   │   │   │   ├── logo-old.png
 │   │   │   │   │   └── logo.png
 │   │   │   │   ├── ats_file.json
 │   │   │   │   ├── cases.json
@@ -246,24 +311,54 @@ ca-offline-suite
 │   │   ├── jsconfig.json
 │   │   ├── package-lock.json
 │   │   └── tailwind.config.js
+│   ├── test
+│   │   └── uuidTest.test.js
 │   ├── tmp
+│   │   └── failed_pdfs
+│   │       ├── ddtrstrdr
+│   │       │   └── 1739183799248-Axis bank AC statement.pdf
+│   │       ├── dgsagfs
+│   │       │   └── 1739348096577-Axis bank AC statement.pdf
+│   │       ├── DGSgSdg
+│   │       │   └── 1739348478485-Axis bank AC statement.pdf
+│   │       ├── fhtwyty
+│   │       │   └── 1739348248826-Axis bank AC statement.pdf
+│   │       ├── ftugr
+│   │       │   └── 1739941481178-Axis bank AC statement.pdf
+│   │       ├── gfdgfag
+│   │       │   └── 1739346309504-Axis bank AC statement.pdf
+│   │       ├── gfgfdhdgh
+│   │       │   └── 1739348442432-Axis bank AC statement.pdf
+│   │       ├── retrtwr
+│   │       │   └── 1739941624231-Axis bank AC statement.pdf
+│   │       ├── rsrd
+│   │       │   └── 1739941980747-Axis bank AC statement (1).pdf
+│   │       ├── sd
+│   │       │   └── 1739942158571-Axis bank AC statement (1).pdf
+│   │       └── twtwtwtrrt
+│   │           └── 1739183848945-RAJ-SINGH-Resume (1).pdf
+│   ├── utils
+│   │   └── getSystemUUID.js
 │   ├── main.js
 │   ├── package.json
 │   ├── README.md
 │   ├── db.sqlite3
 │   ├── drizzle.config.js
+│   ├── LICENSE.txt
 │   ├── LicenseManager.js
 │   ├── package-lock.json
 │   ├── preload.js
 │   ├── renderer.js
 │   └── SessionManager.js
+├── hooks
 ├── local_model
-│   ├── config.json
-│   └── model.safetensors
+│   └── config.json
 ├── README.md
+├── celery.spec
+├── directory_tree.txt
 ├── main.spec
-├── narpat.pdf
 ├── new_output.json
 ├── postbuild.py
 ├── test.js
-└── tree.py
+├── tree.py
+└── uvicorn.spec

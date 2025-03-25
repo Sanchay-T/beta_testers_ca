@@ -116,8 +116,8 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
   const [uploadedChanges, setUploadedChanges] = useState({});
   const [categoryUpdateModalOpen, setCategoryUpdateModalOpen] = useState(false);
   const [isRectifyAlertOpen, setIsRectifyAlertOpen] = useState(false);
-  const [isHandleDetailsDialogOpen, setIsHandleDetailsDialogOpen] =
-    useState(null);
+  const [isHandleDetailsDialogOpen, setIsHandleDetailsDialogOpen] = useState(null);
+
 
   const handleSubmitEditPdf = async () => {
     setPdfEditLoading(true);
@@ -360,9 +360,8 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       console.error("Error deleting report:", error);
       toast({
         title: "Error",
-        description: `Failed to delete the report: ${
-          error.message || "Unknown error"
-        }`,
+        description: `Failed to delete the report: ${error.message || "Unknown error"
+          }`,
         variant: "destructive",
       });
     } finally {
@@ -810,11 +809,9 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
   };
 
   useEffect(() => {
-    console.log({ triggeredRectify: reportData });
-    if (
-      reportData.triggerRectify.caseId &&
-      reportData.triggerRectify.caseName
-    ) {
+    console.log({ triggeredRectify: reportData })
+    if (reportData.triggerRectify.caseId && reportData.triggerRectify.caseName) {
+
       handleDetails(
         reportData?.triggerRectify?.caseId,
         reportData?.triggerRectify?.caseName
@@ -869,14 +866,14 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         const newItem = {
           Particulars:
             item[
-              Object.keys(item).find(
-                (key) =>
-                  key.includes("Payments") ||
-                  key.includes("Particulars") ||
-                  key.includes("Receipts") ||
-                  key.includes("Credit") ||
-                  key.includes("Debit")
-              )
+            Object.keys(item).find(
+              (key) =>
+                key.includes("Payments") ||
+                key.includes("Particulars") ||
+                key.includes("Receipts") ||
+                key.includes("Credit") ||
+                key.includes("Debit")
+            )
             ],
         };
 
@@ -919,6 +916,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       });
       return;
     }
+
 
     try {
       console.log("Downloading financial report for case:", caseid);
@@ -1123,46 +1121,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
 
     console.log({ suspenseData });
   };
-
-  const handleSummaryDownload = async (caseid, status, caseName) => {
-    if (status === "Pending") {
-      toast({
-        title: "Cannot Download",
-        description:
-          "Report is still being processed. Please wait until it's complete.",
-        variant: "warning",
-        duration: 3000,
-      });
-      return;
-    }
-
-    try {
-      console.log("Downloading summary report for case:", caseid);
-      const success = await generateFinancialReport(caseid, caseName, true); // Pass true for summaryOnly
-
-      if (success) {
-        console.log("Summary report downloaded successfully.");
-        toast({
-          title: "Success",
-          description: "Summary Excel file downloaded successfully",
-        });
-      } else {
-        console.error("Failed to generate the summary report.");
-        toast({
-          title: "Error",
-          description: "Failed to download Summary Excel file.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error("Error in handleDownloadSummary:", error);
-      toast({
-        title: "Error",
-        description: `Failed to initiate summary download: ${error.message}`,
-        variant: "destructive",
-      });
-    }
-  };
+  const handleSummaryDownload = () => { };
 
   const handleExcelFileUpload = async (event, caseId) => {
     const file = event.target.files[0];
@@ -1463,7 +1422,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                   className={cn(
                                     "h-8 w-8",
                                     report.status === "In Progress" &&
-                                      "opacity-50 cursor-not-allowed"
+                                    "opacity-50 cursor-not-allowed"
                                   )}
                                   disabled={report.status === "In Progress"}
                                 >
@@ -1500,6 +1459,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               className="cursor-pointer"
+
                               onClick={() =>
                                 handleSummaryDownload(
                                   report.id,
@@ -1523,7 +1483,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                               className={cn(
                                 "h-8 w-8",
                                 report.status === "In Progress" &&
-                                  "opacity-50 cursor-not-allowed"
+                                "opacity-50 cursor-not-allowed"
                               )}
                               disabled={report.status === "In Progress"}
                             >
@@ -1537,11 +1497,10 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <AlertDialog
-                        open={isHandleDetailsOpenForThisId(report.id)}
-                        onOpenChange={() =>
-                          handleChangeForHandleDetails(report.id)
-                        }
+                      <AlertDialog open={isHandleDetailsOpenForThisId(report.id)}
+                        onOpenChange={() => handleChangeForHandleDetails(report.id)}
+
+
                       >
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -1597,8 +1556,8 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                     return aHasError === bHasError
                                       ? 0
                                       : aHasError
-                                      ? 1
-                                      : -1;
+                                        ? 1
+                                        : -1;
                                   })
                                   .map((statement, index) => {
                                     const isDone = statement.resolved;
@@ -1608,9 +1567,8 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                     console.log({ isDone, hasError, report });
                                     return (
                                       <div
-                                        key={`statement-${
-                                          statement.id || index
-                                        }`}
+                                        key={`statement-${statement.id || index
+                                          }`}
                                         className="mb-4 border-b pb-4 last:border-b-0"
                                       >
                                         <h3 className="font-semibold mb-2">
@@ -1621,17 +1579,17 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                             <strong>File Name:</strong>{" "}
                                             {statement.pdfName
                                               ? statement.pdfName.substring(
-                                                  statement.pdfName.indexOf(
-                                                    "-"
-                                                  ) + 1
-                                                )
+                                                statement.pdfName.indexOf(
+                                                  "-"
+                                                ) + 1
+                                              )
                                               : ""}
                                           </p>
                                           {/* {!hasError && ( */}
                                           {
                                             <div className="flex-1">
                                               {report.status === "Success" ||
-                                              isDone ? (
+                                                isDone ? (
                                                 <Button
                                                   size="sm"
                                                   disabled
@@ -1706,10 +1664,8 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                   )}
                                 </div>
                               )}
-                            <AlertDialogCancel
-                              onClick={() => setIsHandleDetailsDialogOpen(null)}
-                              className="px-8 bg-black text-white hover:bg-black/90 hover:text-white dark:bg-white dark:text-black"
-                            >
+                            <AlertDialogCancel onClick={() => setIsHandleDetailsDialogOpen(null)} className="px-8 bg-black text-white hover:bg-black/90 hover:text-white dark:bg-white dark:text-black">
+
                               Close
                             </AlertDialogCancel>
                           </AlertDialogFooter>
@@ -1766,7 +1722,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                     className={cn(
                       "cursor-pointer",
                       currentPage === totalPages &&
-                        "pointer-events-none opacity-50"
+                      "pointer-events-none opacity-50"
                     )}
                   />
                 </PaginationItem>

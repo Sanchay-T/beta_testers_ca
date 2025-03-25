@@ -192,7 +192,7 @@ const Cash = () => {
   }
 
   return (
-    <div className="rounded-xl m-8 mt-2 space-y-6">
+    <div className="bg-white rounded-lg space-y-6 m-8 pr-16 mt-2 min-w-full max-w-[0] dark:bg-slate-950">
       <Tabs defaultValue="withdrawal">
         <TabsList className="grid w-[500px] grid-cols-2 pb-10">
           <TabsTrigger value="withdrawal">Withdrawal</TabsTrigger>
