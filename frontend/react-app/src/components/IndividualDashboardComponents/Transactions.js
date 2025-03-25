@@ -3,8 +3,6 @@ import ToggleStrip from "./ToggleStrip";
 import { useParams } from "react-router-dom";
 import UnifiedTable from "../IndividualDashboardComponents/UnifiedTable";
 
-
-
 const Transactions = () => {
   const [transactionData, setTransactionData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -12,20 +10,17 @@ const Transactions = () => {
   const [availableMonths, setAvailableMonths] = useState([]);
   const { caseId, individualId } = useParams();
 
-  useEffect(() => {
-  }, [individualId]);
+  useEffect(() => {}, [individualId]);
   const fetchTransactions = async () => {
     try {
-
       // Add this line to debug the electron call
-      const data = await  window.electron.getTransactions(
+      const data = await window.electron.getTransactions(
         caseId,
         parseInt(individualId)
       );
 
       // Transform the data to only include required fields
       const formattedData = data.map((transaction) => ({
-        
         date: new Date(transaction.date).toLocaleDateString("en-GB", {
           day: "2-digit",
           month: "2-digit",
@@ -37,10 +32,15 @@ const Transactions = () => {
         type: transaction.type,
         balance: transaction.balance,
         bank: transaction.bank,
-        id:transaction.id,
-        entity: transaction.entity,
+        id: transaction.id,
+        // entity: transaction.entity,
+        ledger:
+          transaction.entity === "unknown"
+            ? transaction.category
+            : transaction.entity,
         voucher_type: transaction.voucher_type,
       }));
+      console.log({ formattedData });
       setTransactionData(formattedData);
     } catch (err) {
       setError("Failed to fetch transactions");
@@ -50,8 +50,6 @@ const Transactions = () => {
     }
   };
   useEffect(() => {
-  
-
     fetchTransactions();
   }, []);
 
@@ -62,14 +60,11 @@ const Transactions = () => {
       if (isNaN(date.getTime())) {
         console.warn("Invalid date detected:", transaction.date);
         return acc; // Skip invalid dates
-    }
-
-
+      }
 
       const monthKey = `${date.toLocaleString("en-GB", {
         month: "short",
       })}-${date.getFullYear()}`;
-
 
       if (!acc[monthKey]) {
         acc[monthKey] = [];
@@ -81,14 +76,15 @@ const Transactions = () => {
         amount: transaction.amount,
         balance: transaction.balance,
         category: transaction.category,
+        // entity: transaction.entity,
+        ledger: transaction.ledger,
         voucher_type: transaction.voucher_type,
-        entity: transaction.entity,
+
         bank: transaction.bank,
         // entity: transaction.entity,
         type: transaction.type,
-        id:transaction.id,
+        id: transaction.id,
       };
-
 
       acc[monthKey].push(standardizedTransaction);
       return acc;
@@ -111,16 +107,15 @@ const Transactions = () => {
         transaction.type.toLowerCase() === "debit" ? transaction.amount : 0,
       balance: transaction.balance,
       category: transaction.category,
+      // entity: transaction.entity,
+      ledger: transaction.ledger,
       voucher_type: transaction.voucher_type,
-      entity: transaction.entity,
       bank: transaction.bank,
-      id:transaction.id,
+      id: transaction.id,
     }));
   };
 
   // print the processed data
-
-  
 
   const [selectedMonths, setSelectedMonths] = useState(availableMonths);
   useEffect(() => {
@@ -136,10 +131,7 @@ const Transactions = () => {
     if (selectedMonths.length === 0) {
       setSelectedMonths(availableMonthstemp);
     }
-
   }, [monthsData]);
-
-
 
   const filteredData = selectedMonths
     .flatMap((month) => {
@@ -148,9 +140,9 @@ const Transactions = () => {
     })
     .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    useEffect(() => {
-      console.log({filteredData})
-    }, [filteredData]);
+  useEffect(() => {
+    console.log({ filteredData });
+  }, [filteredData]);
   return (
     <div className="rounded-lg space-y-6 m-8 mt-2">
       {isLoading ? (
@@ -248,7 +240,7 @@ const Transactions = () => {
                 title="Transactions"
                 caseId={parseInt(caseId)}
                 refreshFunction={fetchTransactions}
-                source= "transactions"
+                source="transactions"
               />
             </>
           )}

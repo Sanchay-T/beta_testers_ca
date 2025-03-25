@@ -24,6 +24,7 @@ import logo from "../data/assets/logo.png";
 import { useAuth } from "../contexts/AuthContext";
 import { useReportContext } from "../contexts/ReportContext";
 import { useParams } from "react-router-dom";
+import { ScrollArea } from "../components/ui/scroll-area";
 
 const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
   const { logout, setError, user } = useAuth();
@@ -133,7 +134,6 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
       <div className="w-full">
         <button
           title={isCollapsed ? item.title : undefined} // Show tooltip only when collapsed
-
           className={`w-full flex items-center justify-start p-2 rounded-md transition-all duration-200 ease-in-out ${
             level > 0 ? "ml-4" : ""
           } ${
@@ -212,7 +212,11 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={`flex items-center w-full ${open?"p-2":"p-1"} hover:bg-gray-100 rounded-md transition-all duration-200`}>
+          <button
+            className={`flex items-center w-full ${
+              open ? "p-2" : "p-1"
+            } hover:bg-gray-100 rounded-md transition-all duration-200`}
+          >
             <Avatar className="h-8 w-8 rounded-lg">
               <AvatarImage src={user?.avatar} alt={user?.name || "User"} />
               <AvatarFallback className="rounded-lg">
@@ -274,9 +278,9 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
     const { open: isOpen, toggleSidebar } = useSidebar();
 
     return (
-      <div className="relative h-screen">
+      <div className="relative h-screen z-10">
         <SidebarTrigger
-          className="absolute -bottom-52 rounded-full left-2 bg-white hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 shadow-sm focus:outline-none "
+          className="absolute -bottom-52 rounded-full left-2 bg-white hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 shadow-sm focus:outline-none shadow-sm"
           onClick={toggleSidebar}
         />
       </div>
@@ -303,10 +307,12 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
         </div>
         <DashboardInfo />
       </SidebarHeader>
-      <SidebarContent className="p-3 overflow-x-hidden">
-        <NavMain />
+      <SidebarContent className="p-2 overflow-x-hidden">
+        <ScrollArea>
+          <NavMain />
+        </ScrollArea>
       </SidebarContent>
-      <SidebarFooter className={`border-t ${open?"p-3":"p-1"}`}>
+      <SidebarFooter className={`border-t ${open ? "p-3" : "p-1"}`}>
         <UserMenu />
       </SidebarFooter>
       {/* We're still including SidebarRail but will disable its functionality */}

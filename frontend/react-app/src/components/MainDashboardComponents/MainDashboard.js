@@ -59,24 +59,24 @@ const MainDashboard = ({ handleTabChange }) => {
   // });
 
   const notifications = [
-    {
-      id: 1,
-      title: "New Message",
-      message: "You have a new message from the team.",
-      time: "5m ago",
-    },
-    {
-      id: 2,
-      title: "Report Ready",
-      message: "Your report is ready to download.",
-      time: "10m ago",
-    },
-    {
-      id: 3,
-      title: "Update Available",
-      message: "A new version is available.",
-      time: "1h ago",
-    },
+    // {
+    //   id: 1,
+    //   title: "New Message",
+    //   message: "You have a new message from the team.",
+    //   time: "5m ago",
+    // },
+    // {
+    //   id: 2,
+    //   title: "Report Ready",
+    //   message: "Your report is ready to download.",
+    //   time: "10m ago",
+    // },
+    // {
+    //   id: 3,
+    //   title: "Update Available",
+    //   message: "A new version is available.",
+    //   time: "1h ago",
+    // },
   ];
 
   const filterPagesDataByDuration = (pagesData, duration) => {

@@ -122,10 +122,12 @@ contextBridge.exposeInMainWorld("electron", {
 
   updateTransactionStatus: (transactionIds) =>
     ipcRenderer.invoke("update-transaction-status", transactionIds),
-  deleteStatement:(statementId)=> ipcRenderer.invoke("delete-statement",statementId),
+  deleteStatement: (statementId) =>
+    ipcRenderer.invoke("delete-statement", statementId),
 
   editVoucherType: (data) => ipcRenderer.invoke("update-voucher", data),
-  uploadLedgerToTally: (data) => ipcRenderer.invoke("ledger-create", data),
+  uploadLedgerToTally: (data, port, tallyVersion) =>
+    ipcRenderer.invoke("ledger-create", data, port, tallyVersion),
   user: {
     getData: (userId) => ipcRenderer.invoke("user:get-data", userId),
     updateData: (userData) => ipcRenderer.send("user:update-data", userData),
@@ -164,11 +166,10 @@ contextBridge.exposeInMainWorld("electron", {
   editEntity: (payload) => ipcRenderer.invoke("edit-entity", payload),
   uploadToTally: (data, port) => ipcRenderer.invoke("tally-upload", data, port),
   getProgressed: () => ipcRenderer.invoke("get-user-progress"),
-  
 
   // Add auto-update related methods
   updates: {
-    checkForUpdates: () => ipcRenderer.invoke("check-for-updates", () => { }),
+    checkForUpdates: () => ipcRenderer.invoke("check-for-updates", () => {}),
     // downloadUpdate: () => ipcRenderer.invoke('download-update'),
     // installUpdate: () => ipcRenderer.invoke('install-update'),
     onUpdateStatus: (callback) =>

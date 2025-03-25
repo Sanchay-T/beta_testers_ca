@@ -32,9 +32,14 @@ import {
   ScanLine,
   Undo2,
   ShieldPlus,
+  Upload,
+  Plus,
+  Grid2X2,
+  Import,
 } from "lucide-react";
 import { useReportContext } from "../contexts/ReportContext";
 import DashboardDropdown from "../components/IndividualDashboardComponents/DashboardDropdown";
+import TallyDirectImport from "../components/ImortTally/TallyDirectImport";
 
 const IndividualDashboard = () => {
   const [activeTab, setActiveTab] = useState("Summary");
@@ -89,6 +94,39 @@ const IndividualDashboard = () => {
       icon: FileQuestion,
     },
     {
+      title: "Tally",
+      url: "#",
+      icon: Grid2X2,
+      items: [
+        // {
+        //   title: "Tally Manual",
+        //   url: "#",
+        //   icon: null,
+        // },
+        {
+          title: "Ledgers",
+          url: "#",
+          icon: Plus,
+        },
+        // {
+        //   title: "Import Ledgers",
+        //   url: "#",
+        //   icon: Import,
+        // },
+        {
+          title: "Upload to Tally",
+          url: "#",
+          icon: Upload,
+        },
+        // {
+        //   title: "TallyERP Vouchers",
+        //   url: "#",
+        //   icon: null,
+        // },
+      ],
+      alwaysOpen: true, // Ensures the section remains open
+    },
+    {
       title: "EOD",
       icon: History,
     },
@@ -100,6 +138,11 @@ const IndividualDashboard = () => {
       title: "Contra",
       icon: IndianRupee,
     },
+    // {
+    //   title: "Upload to Tally",
+    //   url: "#",
+    //   icon: Upload,
+    // },
   ]);
 
   useEffect(() => {
@@ -123,7 +166,7 @@ const IndividualDashboard = () => {
         customerName: null,
       });
       if (!navItems.find((item) => item.title === "EOD")) {
-      // show eod for where individual id is not present, first check if it is already present
+        // show eod for where individual id is not present, first check if it is already present
 
         setNavItems((prev) => {
           return [
@@ -135,12 +178,11 @@ const IndividualDashboard = () => {
           ];
         });
       }
-     
     } else {
-    // hide eod for individual
-    setNavItems((prev) => {
-      return prev.filter((item) => item.title !== "EOD");
-    });
+      // hide eod for individual
+      setNavItems((prev) => {
+        return prev.filter((item) => item.title !== "EOD");
+      });
     }
   }, []);
 
@@ -189,6 +231,15 @@ const IndividualDashboard = () => {
               {activeTab === "Reversal" && <Reversal />}
               {activeTab === "Insurance" && <Insurance />}
               {activeTab === "Contra" && <Contra />}
+              {activeTab === "Upload to Tally" && (
+                <TallyDirectImport defaultVoucher={"Payment Receipt Contra"} />
+              )}
+              {activeTab === "Ledgers" && (
+                <TallyDirectImport defaultVoucher={"Ledgers"} />
+              )}
+              {activeTab === "Import Ledgers" && (
+                <TallyDirectImport defaultVoucher={"Import Ledgers"} />
+              )}
             </main>
           </div>
         </ScrollArea>

@@ -8,7 +8,7 @@ import CombinedTable from "../components/CaseDashboardComponents/CombinedTable";
 import { useNavigate, useParams } from "react-router-dom";
 import { useBreadcrumb } from "../contexts/BreadcrumbContext";
 import { BreadcrumbDynamic } from "../components/BreadCrumb";
-import { User, UserPen,Import } from "lucide-react";
+import { User, UserPen, Import } from "lucide-react";
 import TallyDirectImport from "../components/ImortTally/TallyDirectImport";
 import { useReportContext } from "../contexts/ReportContext";
 
@@ -19,24 +19,19 @@ const CaseDashboard = () => {
   const { caseId, defaultTab } = useParams();
   const { reportData, updateReportData } = useReportContext();
 
-
-
-
   // console.log("Report Name : ", reportNameFromDb);
 
   useEffect(() => {
     setCaseDashboard(activeTab, `/case-dashboard/${caseId}/${activeTab}`);
-
   }, [activeTab]);
 
-  useEffect(()=>{
-
+  useEffect(() => {
     updateReportData({
       ...reportData,
-      customerName:null,
-      individualId:null
-    })
-  },[caseId])
+      customerName: null,
+      individualId: null,
+    });
+  }, [caseId]);
 
   const navItems = [
     {
@@ -44,19 +39,17 @@ const CaseDashboard = () => {
       url: "#",
       icon: User,
       isActive: true,
-
     },
     {
       title: "Account Information",
       url: "#",
       icon: UserPen,
     },
-    {
-      title: "Import to Tally",
-      url: "#",
-      icon: Import,
-    },
-    
+    // {
+    //   title: "Upload to Tally",
+    //   url: "#",
+    //   icon: Import,
+    // },
   ];
 
   useEffect(() => {
@@ -85,12 +78,10 @@ const CaseDashboard = () => {
         <BreadcrumbDynamic items={breadcrumbs} />
         <div className="flex-1 flex flex-col overflow-hidden">
           <main className="flex-1">
-            {activeTab === "Account Information" && (
-              <AccountNumNameManager />
-            )}
+            {activeTab === "Account Information" && <AccountNumNameManager />}
             {activeTab === "Reports" && <IndividualTable />}
             {activeTab === "Combined Table" && <CombinedTable />}
-            {activeTab === "Import to Tally" && <TallyDirectImport />}
+            {activeTab === "Upload to Tally" && <TallyDirectImport />}
           </main>
         </div>
       </ScrollArea>

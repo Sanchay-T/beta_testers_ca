@@ -270,10 +270,12 @@ const DataTable = ({
         );
         return modifiedRow
           ? {
-            ...newRow,
-            category: modifiedRow.category,
-            entity: modifiedRow.entity,
-          }
+              ...newRow,
+              category: modifiedRow.category,
+              // entity: modifiedRow.entity,
+              ledger: modifiedRow.ledger,
+              entity: modifiedRow.entity,
+            }
           : newRow;
       });
     });
@@ -305,7 +307,10 @@ const DataTable = ({
   let columns = data.length > 0 ? Object.keys(data[0]) : [];
   columns = columns.filter((column) => !columnsToIgnore.includes(column));
 
-  const hasEntity = columns.some((column) => column.toLowerCase() === "entity");
+  const hasEntity = columns.some(
+    (column) =>
+      column.toLowerCase() === "entity" || column.toLowerCase() === "ledger"
+  );
 
   // Determine which columns are numeric
   const numericColumns = columns.filter((column) =>
@@ -683,8 +688,8 @@ const DataTable = ({
       source === "similarCategory"
         ? pendingCategoryChange.newCategory
         : selectedBulkCategory === ""
-          ? categorySearchTerm
-          : selectedBulkCategory;
+        ? categorySearchTerm
+        : selectedBulkCategory;
     console.log({ ids });
     // ids.forEach((id) => {
     //   const index = dataOnUi.findIndex((row) => row.id === id);
@@ -1038,8 +1043,8 @@ const DataTable = ({
         // Show a success toast
         toast({
           id: "entity-update-success",
-          title: "Entity Update",
-          description: "Entities updated successfully",
+          title: "Ledger Update",
+          description: "Ledger updated successfully",
           type: "success",
           duration: 3000,
         });
@@ -1047,12 +1052,12 @@ const DataTable = ({
         // Show an error toast
         toast({
           id: "entity-update-error",
-          title: "Entity Update",
-          description: "Entity update failed",
+          title: "Ledger Update",
+          description: "Ledger update failed",
           type: "error",
           duration: 3000,
         });
-        console.log("Entity update failed");
+        console.log("Ledger update failed");
       }
     } catch (err) {
       console.log(err);
@@ -1062,72 +1067,75 @@ const DataTable = ({
   const handleEntityUpdateConfirm = (row) => {
     const id = row.id;
     const newValue = editedEntities[id];
-    if (
-      window.confirm(
-        "Are you sure you want to update the Entity for this transaction?"
-      )
-    ) {
-      const payload = [{ entity: newValue, transactionId: row.id }];
-      entityUpdateIpc(payload);
+    // if (
+    //   window.confirm(
+    //     "Are you sure you want to update the Entity for this transaction?"
+    //   )
+    // ) {
+    const payload = [{ entity: newValue, transactionId: row.id }];
+    entityUpdateIpc(payload);
 
-      // Update the local state so the UI immediately reflects the new value.
-      setFilteredData((prevData) => {
-        const updatedData = [...prevData];
-        // Determine the correct key (e.g., "Entity" or "entity")
-        const index = updatedData.findIndex((row) => row.id === id);
+    // Update the local state so the UI immediately reflects the new value.
+    setFilteredData((prevData) => {
+      const updatedData = [...prevData];
+      // Determine the correct key (e.g., "Entity" or "entity")
+      const index = updatedData.findIndex((row) => row.id === id);
+      console.log({ hey: updatedData[index] });
+      updatedData[index] = {
+        ...updatedData[index],
+        entity: newValue,
+        ledger: newValue,
+      };
+      console.log({ hey2: updatedData[index] });
 
-        updatedData[index] = {
-          ...updatedData[index],
-          entity: newValue,
-        };
-        return updatedData;
-      });
+      return updatedData;
+    });
 
-      // Clear the edit state for this row.
-      setEditedEntities((prev) => {
-        const newState = { ...prev };
-        delete newState[id];
-        return newState;
-      });
-    }
+    // Clear the edit state for this row.
+    setEditedEntities((prev) => {
+      const newState = { ...prev };
+      delete newState[id];
+      return newState;
+    });
+    // }
   };
 
   // Called when the user confirms a batch update from the modal.
   const handleBatchUpdate = () => {
     if (!batchEntityValue) return;
-    if (
-      window.confirm(
-        "Are you sure you want to update the Entity for the selected transactions?"
-      )
-    ) {
-      const dataOnUi = filteredData.map((row) => ({ ...row }));
-      // For each selected row, find the row in filteredData (using its global index)
-      const payload = Array.from(globalSelectedRows).map((id) => {
-        const index = dataOnUi.findIndex((row) => row.id === id);
-        if (index !== -1) {
-          dataOnUi[index] = { ...dataOnUi[index], entity: batchEntityValue };
-          // Update the local state so the UI immediately reflects the new value.
-          setFilteredData(dataOnUi);
-          // Replace this console.log with your backend call.
-          return {
-            entity: batchEntityValue,
-            transactionId: dataOnUi[index].id,
-          };
-        } else {
-          return null;
-        }
-      });
-      console.log("Payload aq", payload);
-      entityUpdateIpc(payload);
 
-      // Clear selections and close the modal.
-      setGlobalSelectedRows(new Set());
-      setBatchEntityValue("");
-      setSearchTerm("");
-      setBatchModalOpen(false);
-      setSearchTerm("");
-      if (refreshFunction) refreshFunction();
-    }
+    const dataOnUi = filteredData.map((row) => ({ ...row }));
+    // For each selected row, find the row in filteredData (using its global index)
+    const payload = Array.from(globalSelectedRows).map((id) => {
+      const index = dataOnUi.findIndex((row) => row.id === id);
+      if (index !== -1) {
+        dataOnUi[index] = {
+          ...dataOnUi[index],
+          ledger: batchEntityValue,
+          entity: batchEntityValue,
+        };
+        // Update the local state so the UI immediately reflects the new value.
+        setFilteredData(dataOnUi);
+        // Replace this console.log with your backend call.
+        return {
+          // entity: batchEntityValue,
+          entity: batchEntityValue,
+          transactionId: dataOnUi[index].id,
+        };
+      } else {
+        return null;
+      }
+    });
+    console.log("Payload aq", payload);
+    entityUpdateIpc(payload);
+
+    // Clear selections and close the modal.
+    setGlobalSelectedRows(new Set());
+    setBatchEntityValue("");
+    setSearchTerm("");
+    setBatchModalOpen(false);
+    setSearchTerm("");
+    if (refreshFunction) refreshFunction();
   };
 
   useEffect(() => {
@@ -1310,9 +1318,11 @@ const DataTable = ({
   //   });
   // };
 
-
-
-  const processSimilarCategory = (transactions, descriptionToMatch, threshold) => {
+  const processSimilarCategory = (
+    transactions,
+    descriptionToMatch,
+    threshold
+  ) => {
     console.log("Processing similar category with threshold:", threshold); // Log threshold
     const similarity = (str1, str2) => {
       if (!str1 || !str2) return 0;
@@ -1325,8 +1335,16 @@ const DataTable = ({
     const thresholdDecimal = threshold / 100;
 
     return transactions
-      .filter((transaction) => similarity(transaction.description, descriptionToMatch) >= thresholdDecimal)
-      .sort((a, b) => similarity(b.description, descriptionToMatch) - similarity(a.description, descriptionToMatch));
+      .filter(
+        (transaction) =>
+          similarity(transaction.description, descriptionToMatch) >=
+          thresholdDecimal
+      )
+      .sort(
+        (a, b) =>
+          similarity(b.description, descriptionToMatch) -
+          similarity(a.description, descriptionToMatch)
+      );
   };
 
   useEffect(() => {
@@ -1334,16 +1352,19 @@ const DataTable = ({
       setIsLoading(true);
       console.log("Current Transaction:", currentTransaction);
 
-      setTimeout(() => { // Simulate delay
-        const similarTransactions = processSimilarCategory(filteredData, currentTransaction.description, sliderValue);
+      setTimeout(() => {
+        // Simulate delay
+        const similarTransactions = processSimilarCategory(
+          filteredData,
+          currentTransaction.description,
+          sliderValue
+        );
         console.log("Updated Similar Transactions:", similarTransactions);
         setSimilarCategoryTransactions(similarTransactions);
         setIsLoading(false);
       }, 500);
     }
   }, [sliderValue, currentTransaction]);
-
-
 
   // get transactions with same entity and similar description
   const processSimilarEntity = (
@@ -1373,7 +1394,10 @@ const DataTable = ({
       console.log("transaction.description", transaction.description);
       console.log("descriptionToMatch", descriptionToMatch);
 
-      const isSameCategory = transaction.entity === entityToMatch;
+      // const isSameCategory = transaction.entity === entityToMatch;
+      const isSameCategory =
+        transaction.ledger === entityToMatch ||
+        transaction.entity === entityToMatch;
       return descriptionSimilarity >= threshold && isSameCategory;
     });
 
@@ -1554,7 +1578,6 @@ const DataTable = ({
               </>
             )}
 
-
             {/* Download and share buttons */}
             <div className="flex gap-2">
               <Tooltip>
@@ -1596,7 +1619,7 @@ const DataTable = ({
                 disabled={globalSelectedRows.size === 0}
                 onClick={() => setBatchModalOpen(true)}
               >
-                Bulk Edit Party Name
+                Bulk Edit Ledger Name
               </Button>
             )}
           </div>
@@ -1609,36 +1632,36 @@ const DataTable = ({
               <TableRow>
                 {(columns.includes("category") ||
                   columns.includes("entity")) && (
-                    <TableHead className="w-10 ">
-                      <Checkbox
-                        checked={
-                          currentData.length > 0 &&
-                          currentData.every((row) =>
-                            globalSelectedRows.has(row.id)
-                          )
-                        }
-                        onCheckedChange={toggleSelectAll}
-                      />
-                    </TableHead>
-                  )}
+                  <TableHead className="w-10 sticky left-0 bg-white z-10">
+                    <Checkbox
+                      checked={
+                        currentData.length > 0 &&
+                        currentData.every((row) =>
+                          globalSelectedRows.has(row.id)
+                        )
+                      }
+                      onCheckedChange={toggleSelectAll}
+                    />
+                  </TableHead>
+                )}
 
                 {columns.map((column) => (
                   <TableHead
                     key={column}
                     className="whitespace-nowrap"
-                  // className={source === "summary" ? "bg-gray-900 dark:bg-slate-800 text-white" : ""}
+                    // className={source === "summary" ? "bg-gray-900 dark:bg-slate-800 text-white" : ""}
                   >
                     <div className="flex items-center gap-2 ">
-                      {column.toLowerCase() === "entity"
-                        ? "Party Name"
+                      {["ledger", "entity"].includes(column)
+                        ? "Ledger / Party Name "
                         : column
-                          .split("_") // Split by underscore
-                          .map(
-                            (word) =>
-                              word.charAt(0).toUpperCase() +
-                              word.slice(1).toLowerCase()
-                          ) // Capitalize
-                          .join(" ")}
+                            .split("_") // Split by underscore
+                            .map(
+                              (word) =>
+                                word.charAt(0).toUpperCase() +
+                                word.slice(1).toLowerCase()
+                            ) // Capitalize
+                            .join(" ")}
                       {column.toLowerCase() !== "description" && (
                         <Button
                           variant="ghost"
@@ -1701,19 +1724,19 @@ const DataTable = ({
                   return (
                     <TableRow
                       key={row.id}
-                    // className={source === "summary" ? "even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200" : ""}
+                      // className={source === "summary" ? "even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200" : ""}
                     >
                       {(columns.includes("category") ||
-                        columns.includes("entity")) && (
-                          <TableCell className="w-10">
-                            <Checkbox
-                              checked={globalSelectedRows.has(row.id)}
-                              onCheckedChange={() => toggleRowSelection(row.id)}
-                            />
-                          </TableCell>
-                        )}
+                        columns.includes("entity", "ledger")) && (
+                        <TableCell className="w-10 sticky left-0 bg-white z-10">
+                          <Checkbox
+                            checked={globalSelectedRows.has(row.id)}
+                            onCheckedChange={() => toggleRowSelection(row.id)}
+                          />
+                        </TableCell>
+                      )}
                       {columns.map((column) => {
-                        if (column.toLowerCase() === "entity") {
+                        if (["ledger", "entity"].includes(column)) {
                           return (
                             <TableCell
                               key={column}
@@ -1985,7 +2008,7 @@ const DataTable = ({
                     className={cn(
                       "cursor-pointer",
                       currentPage === totalPages &&
-                      "pointer-events-none opacity-50"
+                        "pointer-events-none opacity-50"
                     )}
                   />
                 </PaginationItem>
@@ -2000,7 +2023,7 @@ const DataTable = ({
         <Dialog open={batchModalOpen} onOpenChange={setBatchModalOpen}>
           <DialogContent className="sm:max-w-[400px]">
             <DialogHeader>
-              <DialogTitle>Batch Update Entities</DialogTitle>
+              <DialogTitle>Batch Update ledgers</DialogTitle>
               <p className="text-sm text-gray-600">
                 Enter new Entity value for selected transactions:
               </p>
@@ -2206,11 +2229,7 @@ const DataTable = ({
               </Button>
             </div>
             <div className="flex-1 overflow-hidden">
-              <iframe
-                src={pdfBlob}
-                className="w-full h-full border-0"
-
-              />
+              <iframe src={pdfBlob} className="w-full h-full border-0" />
             </div>
           </div>
         </div>
@@ -2488,15 +2507,18 @@ const DataTable = ({
                     📌 Similar Transactions Detected
                   </h2>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    The following transactions have similar descriptions and categories.<br /> Select
-                    the ones you'd like to update alongside the manually changed transaction.
+                    The following transactions have similar descriptions and
+                    categories.
+                    <br /> Select the ones you'd like to update alongside the
+                    manually changed transaction.
                   </p>
                 </div>
                 <div className="flex flex-col ml-4">
                   <label className="text-sm font-medium text-gray-700">
                     Similarity Threshold: {sliderValue}%
                   </label>
-                  <SliderDemo defaultValue={[85]}
+                  <SliderDemo
+                    defaultValue={[85]}
                     max={100}
                     step={1}
                     onChange={(value) => setSliderValue(value[0])}
@@ -2506,18 +2528,15 @@ const DataTable = ({
 
               {/* Transactions Table */}
               <div className="overflow-x-auto">
-
                 {isLoading ? (
                   <div className="flex items-center justify-center h-40">
                     <Loader2 className="animate-spin" />
                   </div>
-
                 ) : similarCategoryTransactions.length > 0 ? (
-
                   <Table className="w-full border border-gray-300 dark:border-gray-700 rounded-md">
                     <TableHeader className="bg-gray-100 dark:bg-gray-800">
                       <TableRow>
-                        <TableHead className="w-10 p-3">
+                        <TableHead className="w-10 p-3 ">
                           <Checkbox
                             checked={
                               similarCategoryTransactions.length > 0 &&
@@ -2568,12 +2587,13 @@ const DataTable = ({
                       {similarCategoryTransactions.map((transaction, index) => (
                         <TableRow
                           key={transaction.id}
-                          className={`transition-all ${index % 2 === 0
-                            ? "bg-white dark:bg-gray-900"
-                            : "bg-gray-50 dark:bg-gray-800"
-                            } hover:bg-gray-200 dark:hover:bg-gray-700`}
+                          className={`transition-all ${
+                            index % 2 === 0
+                              ? "bg-white dark:bg-gray-900"
+                              : "bg-gray-50 dark:bg-gray-800"
+                          } hover:bg-gray-200 dark:hover:bg-gray-700`}
                         >
-                          <TableCell className="p-3">
+                          <TableCell className="p-3 ">
                             <Checkbox
                               checked={selectedCategorySimilarTransactions.has(
                                 transaction.id
@@ -2610,11 +2630,11 @@ const DataTable = ({
                       ))}
                     </TableBody>
                   </Table>
-
                 ) : (
-                  <p className="text-gray-500 text-center mt-4">No similar transactions found.</p>
+                  <p className="text-gray-500 text-center mt-4">
+                    No similar transactions found.
+                  </p>
                 )}
-
               </div>
             </div>
           )}
@@ -2795,7 +2815,7 @@ const DataTable = ({
               variant="secondary"
               onClick={() => setBulkCategoryModalOpen(true)}
             >
-              Update Selected ({globalSelectedRows.size})
+              Update Selected Categories ({globalSelectedRows.size})
             </Button>
           )}
           {hasChanges && (

@@ -217,7 +217,7 @@ export default function GenerateReport() {
             // statements: null,
           };
           console.log("maxxx", newData);
-  
+
           updateReportData({
             recentReportsData: [newData, ...reportData.recentReportsData],
           });
@@ -299,8 +299,8 @@ export default function GenerateReport() {
 
   const notifications = [
     { id: 1, message: "You have a new message." },
-    { id: 2, message: "Your report is ready to download." },
-    { id: 3, message: "New comment on your post." },
+    // { id: 2, message: "Your report is ready to download." },
+    // { id: 3, message: "New comment on your post." },
   ];
 
   // Function to trigger refresh
