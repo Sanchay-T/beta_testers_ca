@@ -14,6 +14,7 @@ import { Label } from "./ui/label";
 import { useAuth } from "../contexts/AuthContext";
 import { Alert, AlertDescription } from "./ui/alert";
 import Logo from "../data/assets/logo.png";
+import { Eye, EyeOff } from "lucide-react";
 
 export function LoginForm({ className, ...props }) {
   const { login, loading, error, isActivated, signUp } = useAuth();
@@ -26,6 +27,7 @@ export function LoginForm({ className, ...props }) {
     licenseKey: "",
     role: "CA",
   });
+  const [showPassword, setShowPassword] = useState(false);
 
   // useEffect(() => {
   //   const checkLicenseStatus = async () => {
@@ -140,22 +142,31 @@ export function LoginForm({ className, ...props }) {
               </div>
 
               <div className="grid gap-2">
-                <div className="flex items-center">
+                <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
                   <Link
-                    to="/forgot-password" // Replace '#' with your desired route
-                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
+                    to="/forgot-password"
+                    className="text-sm underline-offset-4 hover:underline"
                   >
                     Forgot your password?
                   </Link>
                 </div>
-                <Input
-                  id="password"
-                  type="password"
-                  required
-                  value={credentials.password}
-                  onChange={handleInputChange}
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={credentials.password}
+                    onChange={handleInputChange}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
 
               <Button type="submit" className="w-full" disabled={loading}>

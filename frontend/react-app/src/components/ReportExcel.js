@@ -214,6 +214,7 @@ const generateFinancialReport = async (
 
     const opportunityToEarnData =
       await window.electron.getOpportunityToEarnForExcel(caseid);
+    console.log("opportunityToEarnData", opportunityToEarnData.data);
     const EodData = await window.electron.getEodBalance(caseid);
     console.log("type of data ", typeof EodData[0].data);
     console.log("Is Array:", Array.isArray(EodData[0].data));
@@ -551,7 +552,7 @@ const addSummarySheet = (workbook, data) => {
 
 // Function to add the Opportunity to Earn sheet
 const addOpportunityToEarnSheet = (workbook, transformData) => {
-  console.log("transformData", transformData);
+  console.log("transformData opportunity", transformData);
   const worksheet = workbook.addWorksheet("Opportunity to Earn");
 
   // Set tab color
@@ -578,43 +579,42 @@ const addOpportunityToEarnSheet = (workbook, transformData) => {
     termPlan: "1%-30%",
     generalInsurance: "upto 10%",
   };
+  console.log("commissionRates", commissionRates);
+  const firstData = transformData[0] || {};
 
   const tableData = [
     {
       product: "Home Loan / Balance Transfer",
-      amount: transformData[0].homeLoanValue
-        ? transformData[0].homeLoanValue.toLocaleString()
+      amount: firstData.homeLoanValue
+        ? firstData.homeLoanValue.toLocaleString()
         : "",
       commissionPercentage: "0.45%",
-      commissionRs: transformData[0].homeLoanValue
-        ? (transformData[0].homeLoanValue * commissionRates.homeLoanValue)
+      commissionRs: firstData.homeLoanValue
+        ? (firstData.homeLoanValue * commissionRates.homeLoanValue)
             .toFixed(2)
             .toLocaleString()
         : "",
     },
     {
       product: "Loan Against Property / Balance Transfer",
-      amount: transformData[0].loanAgainstProperty
-        ? transformData[0].loanAgainstProperty.toLocaleString()
+      amount: firstData.loanAgainstProperty
+        ? firstData.loanAgainstProperty.toLocaleString()
         : "",
       commissionPercentage: "0.65%",
-      commissionRs: transformData[0].loanAgainstProperty
-        ? (
-            transformData[0].loanAgainstProperty *
-            commissionRates.loanAgainstProperty
-          )
+      commissionRs: firstData.loanAgainstProperty
+        ? (firstData.loanAgainstProperty * commissionRates.loanAgainstProperty)
             .toFixed(2)
             .toLocaleString()
         : "",
     },
     {
       product: "Business Loan",
-      amount: transformData[0].businessLoan
-        ? transformData[0].businessLoan.toLocaleString()
+      amount: firstData.businessLoan
+        ? firstData.businessLoan.toLocaleString()
         : "",
       commissionPercentage: "1.00%",
-      commissionRs: transformData[0].businessLoan
-        ? (transformData[0].businessLoan * commissionRates.businessLoan)
+      commissionRs: firstData.businessLoan
+        ? (firstData.businessLoan * commissionRates.businessLoan)
             .toFixed(2)
             .toLocaleString()
         : "",
@@ -632,6 +632,7 @@ const addOpportunityToEarnSheet = (workbook, transformData) => {
       commissionRs: "",
     },
   ];
+  console.log("tableData", tableData);
 
   // Add rows and apply formatting
   tableData.forEach((row, index) => {
@@ -689,17 +690,27 @@ const addTransactionsSheet = (workbook, transactionData) => {
     width: header.width,
   }));
 
-  // Add data rows
-  if (Array.isArray(transactionData)) {
-    transactionData.forEach((row, index) => {
-      let debitValue = 0;
-      let creditValue = 0;
+  // Ensure transactionData is an array
+  if (!Array.isArray(transactionData) || transactionData.length === 0) {
+    console.warn("No transaction data available, adding placeholder row.");
 
-      if (row.type === "debit") {
-        debitValue = row.amount || 0;
-      } else if (row.type === "credit") {
-        creditValue = row.amount || 0;
-      }
+    // Add a placeholder row if no transactions exist
+    worksheet.addRow({
+      date: "N/A",
+      description: "No transactions available",
+      debit: "",
+      credit: "",
+      balance: "",
+      category: "",
+      entity: "",
+      bank: "",
+      voucher_type: "",
+    });
+  } else {
+    // Add data rows
+    transactionData.forEach((row, index) => {
+      let debitValue = row.type === "debit" ? row.amount || 0 : "";
+      let creditValue = row.type === "credit" ? row.amount || 0 : "";
 
       const newRow = worksheet.addRow({
         date: row.date
@@ -729,28 +740,36 @@ const addEodSheet = (workbook, data) => {
   worksheet.properties.tabColor = { argb: "a3e635" };
   console.log("eodData", data);
 
-  // Extract column headers from the first data item
-  if (!data || data.length === 0) {
-    console.error("No data provided");
-    return null;
+  // Check if data is valid
+  if (!Array.isArray(data) || data.length === 0) {
+    console.warn("No EOD data available, adding placeholder message.");
+
+    // Define a placeholder row
+    worksheet.addRow(["No data available for EOD report"]).font = {
+      bold: true,
+      italic: true,
+      color: { argb: "FF0000" }, // Red text to indicate no data
+    };
+
+    return;
   }
 
+  // Extract column headers from the first data item
   const firstItem = data[0];
   const headers = Object.keys(firstItem);
 
-  // Define columns
-  const columns = headers.map((header) => {
-    return {
-      header: header,
-      key: header,
-      width: header === "Day" ? 10 : 15,
-    };
-  });
+  // Define columns dynamically based on data keys
+  worksheet.columns = headers.map((header) => ({
+    header: header,
+    key: header,
+    width: header === "Day" ? 10 : 15,
+  }));
 
-  worksheet.columns = columns;
-
+  // Add data rows
   data.forEach((row, index) => {
     const newRow = worksheet.addRow(row);
+
+    // Apply alternating row colors
     if (index % 2 !== 0) {
       newRow.fill = {
         type: "pattern",
@@ -760,6 +779,7 @@ const addEodSheet = (workbook, data) => {
     }
   });
 
+  // Format header row
   worksheet.getRow(1).eachCell((cell) => {
     cell.font = { bold: true, color: { argb: "FFFFFF" } };
     cell.fill = {
