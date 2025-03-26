@@ -94,7 +94,6 @@ const IndividualDashboard = () => {
         { title: "EMI", icon: MessageSquareText },
         { title: "Investment", icon: ChartNoAxesCombined },
         { title: "Reversal", icon: Undo2 },
-        { title: "EOD", icon: History },
         { title: "Insurance", icon: ShieldPlus },
         { title: "Contra", icon: IndianRupee },
       ],
@@ -116,29 +115,34 @@ const IndividualDashboard = () => {
       individualId === null ||
       individualId === "undefined"
     ) {
-      updateReportData({
-        ...reportData,
-        individualId: null,
-        customerName: null,
-      });
-      if (!navItems.find((item) => item.title === "EOD")) {
-        // show eod for where individual id is not present, first check if it is already present
-
-        setNavItems((prev) => {
-          return [
-            ...prev,
-            {
-              title: "EOD",
-              icon: History,
-            },
-          ];
-        });
-      }
+      // If the condition is met, add EOD to the "Other" group if it’s not already present.
+      setNavItems((prevNavItems) =>
+        prevNavItems.map((item) => {
+          if (item.title === "Other") {
+            const hasEOD = item.items.some((sub) => sub.title === "EOD");
+            if (!hasEOD) {
+              return {
+                ...item,
+                items: [...item.items, { title: "EOD", icon: History }],
+              };
+            }
+          }
+          return item;
+        })
+      );
     } else {
-      // hide eod for individual
-      setNavItems((prev) => {
-        return prev.filter((item) => item.title !== "EOD");
-      });
+      // Otherwise, remove EOD from the "Other" group if it exists.
+      setNavItems((prevNavItems) =>
+        prevNavItems.map((item) => {
+          if (item.title === "Other") {
+            return {
+              ...item,
+              items: item.items.filter((sub) => sub.title !== "EOD"),
+            };
+          }
+          return item;
+        })
+      );
     }
   }, []);
 

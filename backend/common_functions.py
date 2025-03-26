@@ -2483,7 +2483,7 @@ def make_summary_great_again(df1, opening_closing_balance, df2):
             if row['Total'] == 0:
                 print("FOUND a")
                 category = row.iloc[0]  # Extract Category from first column
-                preference = df2.loc[df2['Category'] == category, 'Preference'].values
+                preference = df2.loc[df2['Category'] == category, 'Preferences'].values
 
                 if len(preference) > 0 and 'non_default' in preference:
                     print("FOUND z")

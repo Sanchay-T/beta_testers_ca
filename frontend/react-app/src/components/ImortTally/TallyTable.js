@@ -172,7 +172,12 @@ const TallyTable = ({
   };
   // Merge function that takes savedData and incomingData
   const mergeData = (savedData, incomingData) => {
-    const columnsToUpdate = ["imported", "failed_reasons", "ledger_name"];
+    const columnsToUpdate = [
+      "imported",
+      "failed_reasons",
+      "ledger_name",
+      "ledger",
+    ];
 
     // Create a lookup map for incomingData by id
     const incomingMap = new Map(incomingData.map((row) => [row.id, row]));
@@ -195,6 +200,10 @@ const TallyTable = ({
           if (incomingRow.ledger_name !== savedRow.ledger_name) {
             savedRow.ledger_name = incomingRow.ledger_name;
           }
+
+          if (incomingRow.ledger !== savedRow.ledger) {
+            savedRow.ledger = incomingRow.ledger;
+          }
         });
       } else {
         // delete from savedData
@@ -203,8 +212,10 @@ const TallyTable = ({
 
       return savedRow;
     });
+    // remove null values
+    const newSavedDataFiltered = newSavedData.filter((row) => row !== null);
 
-    return sortByImportedStatus(newSavedData);
+    return sortByImportedStatus(newSavedDataFiltered);
   };
 
   const cacheData = (dataToCache = transactions) => {
@@ -257,9 +268,16 @@ const TallyTable = ({
   // Save transactions state to localForage whenever it changes (debounced)
   useEffect(() => {
     // Use a simple timeout to debounce saves by 1 second
-    const timer = setTimeout(() => {
-      cacheData();
-    }, 500); // Save every 1 minute
+    let timer;
+    if (selectedVoucher === "Ledgers") {
+      timer = setTimeout(() => {
+        cacheData();
+      }, 500); // Save every half second
+    } else {
+      timer = setTimeout(() => {
+        cacheData();
+      }, 1000 * 60); // Save every 1 minute
+    }
 
     return () => clearTimeout(timer);
   }, [transactions, caseId, selectedVoucher]);
@@ -552,10 +570,17 @@ const TallyTable = ({
 
   // Calculate totals for numeric columns
   const totals = numericColumns.reduce((acc, column) => {
-    const total = filteredData.reduce((sum, row) => {
-      const value = parseFloat(row[column]);
-      return !isNaN(value) ? sum + value : sum;
-    }, 0);
+    let total;
+    console.log({ aqfilteredData: filteredData });
+    if (filteredData.length > 0) {
+      total = filteredData.reduce((sum, row) => {
+        const value = parseFloat(row[column]);
+        return !isNaN(value) ? sum + value : sum;
+      }, 0);
+    } else {
+      total = 0;
+    }
+
     return { ...acc, [column]: total.toFixed(2) };
   }, {});
 
@@ -807,6 +832,10 @@ const TallyTable = ({
           type: "success",
           duration: 3000,
         });
+
+        // clear the ledger table stored in cache and force user to go to that page and make sure to create all ledgers
+        localForage.removeItem(`tallyTableData_Ledgers_${caseId}`);
+        setIsLedgersCreated(false);
       } else {
         // Show an error toast
         toast({
@@ -910,17 +939,11 @@ const TallyTable = ({
   };
 
   const getLedgerCreationStatus = async () => {
-    const numberId = Number(caseId);
-
-    const ledgerCreationStatusHistory = await localForage.getItem(
-      "ledgerCreationStatusHistory"
+    const savedData = await localForage.getItem(
+      `tallyTableData_Ledgers_${caseId}`
     );
-    console.log({ ledgerCreationStatusHistory, numberId });
-    console.log(ledgerCreationStatusHistory);
-    if (!ledgerCreationStatusHistory) return false;
-    console.log("hey1");
-    console.log("AQ", ledgerCreationStatusHistory[numberId], numberId);
-    return ledgerCreationStatusHistory[numberId];
+    console.log("Saved data", savedData);
+    return savedData.length === 0;
   };
 
   return (
@@ -1085,6 +1108,7 @@ const TallyTable = ({
                 }
                 className="px-3 py-2 text-base font-medium text-white bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 hover:bg-gray-700 transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
               >
+                {console.log({ aq: isLedgersCreated })}
                 <UploadCloud className="w-5 h-5 text-white" />
                 Upload to Tally
               </Button>
@@ -1208,6 +1232,7 @@ const TallyTable = ({
             <TableBody>
               {currentData.length === 0 ? (
                 <TableRow>
+                  <TableCell></TableCell>
                   <TableCell colSpan={columns.length} className="text-center">
                     No matching results found
                   </TableCell>
@@ -1600,7 +1625,9 @@ const TallyTable = ({
             </TableBody>
             <TableFooter>
               <TableRow>
-                <TableCell>Total</TableCell>
+                {/* <TableCell></TableCell> */}
+
+                {filteredData.length > 0 ? <TableCell>Total</TableCell>: <TableCell></TableCell>}
                 {columns.slice(0).map((column) => (
                   <TableCell key={column}>
                     {["credit", "debit", "balance", "amount"].includes(

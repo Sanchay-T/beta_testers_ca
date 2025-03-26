@@ -34,7 +34,7 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
   const { reportData, updateReportData } = useReportContext();
   const { caseId, individualId } = useParams();
   const [expandedGroups, setExpandedGroups] = useState({
-    Other: true, // "Other" remains expanded by default if desired
+    Other: false, // "Other" remains expanded by default if desired
     Tally: true, // Tally is open by default
   });
 
@@ -186,7 +186,7 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
       </div>
     );
   };
-  
+
   const DashboardInfo = () => {
     const { open: isOpen } = useSidebar();
     const isCollapsed = !isOpen;

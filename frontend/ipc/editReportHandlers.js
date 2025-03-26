@@ -345,15 +345,19 @@ function registerEditReportHandlers() {
     log.info("Updated transactions:", updatedTransactions[aiyaz]);
     log.info({ frontendData });
     const newCategories = Object.values(frontendData).reduce((acc, item) => {
-      // if (item.is_new) {
       log.info({ item });
-      acc.push({
+      const accItem = {
         Description: item.keyword || "Unknown",
         "Debit / Credit": item.type == "debit" ? "Debit" : "Credit",
         Category: item.category || "Uncategorized",
         Particulars: item.classification || "Others",
-      });
-      // }
+      };
+
+      if (item.is_new) {
+        accItem["Preferences"] = "non_default";
+      }
+      acc.push(accItem);
+
       return acc;
     }, []);
 

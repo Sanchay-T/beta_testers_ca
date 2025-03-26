@@ -255,7 +255,19 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
       });
       return;
     }
-
+    console.log({ selectedBankLedger, selectedVoucher });
+    if (selectedVoucher === "Payment Receipt Contra" && !selectedBankLedger) {
+      // alert("Please enter a company name before uploading.");
+      toast({
+        title: "Error",
+        description: "Please select a Bank Ledger before uploading.",
+        status: "error",
+        duration: 5000,
+        variant: "destructive",
+        type: "error",
+      });
+      return;
+    }
     // // Check if any non-imported transaction is missing DrLedger or CrLedger
     // const incompleteTransactions = txData.filter((transaction) => {
     //   if (transaction.imported) return false;
@@ -425,21 +437,6 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
         (a, b) => a.imported - b.imported
       );
 
-      if (selectedVoucher === "Ledgers") {
-        const isAllCreated = tempDataToRender.every(
-          (ledger) => ledger.imported
-        );
-
-        const notImportedOnes = tempDataToRender.filter(
-          (ledger) => !ledger.imported
-        );
-        console.log({ notImportedOnes });
-        console.log({ isAllCreated });
-        if (isAllCreated) {
-          updateLedgerCreationStatus(caseId, true);
-        }
-      }
-
       setDataToRender(tempDataToRender);
 
       // Show summary
@@ -515,7 +512,7 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
     }
     toast({
       title: "Success",
-      description: `Import Ledgers and removed already existing ones from above list.`,
+      description: `Imported Ledgers and removed already existing ones from above list.`,
       duration: 3000,
       variant: "success",
     });
