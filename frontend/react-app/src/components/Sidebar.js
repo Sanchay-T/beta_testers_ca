@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { BadgeCheck, Bell, CreditCard, LogOut, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -25,6 +25,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useReportContext } from "../contexts/ReportContext";
 import { useParams } from "react-router-dom";
 import { ScrollArea } from "../components/ui/scroll-area";
+import { ChevronDown, ChevronRight } from "lucide-react";
 
 const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
   const { logout, setError, user } = useAuth();
@@ -32,6 +33,10 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
   const { open, toggleSidebar } = useSidebar();
   const { reportData, updateReportData } = useReportContext();
   const { caseId, individualId } = useParams();
+  const [expandedGroups, setExpandedGroups] = useState({
+    Other: true, // "Other" remains expanded by default if desired
+    Tally: true, // Tally is open by default
+  });
 
   // Get initials for avatar fallback
   const getInitials = (name) => {
@@ -130,10 +135,24 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
     const { open: isOpen } = useSidebar();
     const isCollapsed = !isOpen;
 
+    const expanded = hasSubmenu ? expandedGroups[item.title] ?? false : false;
+
+    const handleClick = () => {
+      if (hasSubmenu) {
+        // Toggle group expansion
+        setExpandedGroups((prev) => ({
+          ...prev,
+          [item.title]: !expanded,
+        }));
+      } else {
+        // For non-group items, update the active tab
+        setActiveTab(item.title);
+      }
+    };
     return (
       <div className="w-full">
         <button
-          title={isCollapsed ? item.title : undefined} // Show tooltip only when collapsed
+          title={isCollapsed ? item.title : undefined}
           className={`w-full flex items-center justify-start p-2 rounded-md transition-all duration-200 ease-in-out ${
             level > 0 ? "ml-4" : ""
           } ${
@@ -141,16 +160,24 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
               ? "bg-gray-300 text-black font-semibold dark:bg-slate-300"
               : "text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white"
           } ${isCollapsed ? "justify-center" : ""}`}
-          onClick={() => !hasSubmenu && setActiveTab(item.title)}
+          onClick={handleClick}
         >
           <div className="flex items-center gap-3">
             {item.icon && <item.icon className="h-5 w-5 flex-shrink-0" />}
             {!isCollapsed && <span className="text-sm">{item.title}</span>}
           </div>
+          {hasSubmenu && !isCollapsed && (
+            <div className="ml-auto">
+              {expanded ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
+            </div>
+          )}
         </button>
-
-        {hasSubmenu && (
-          <div className={`ml-4 mt-1 space-y-1 ${isCollapsed ? "hidden" : ""}`}>
+        {hasSubmenu && expanded && !isCollapsed && (
+          <div className="ml-4 mt-1 space-y-1">
             {item.items.map((subItem) => (
               <MenuItem key={subItem.title} item={subItem} level={level + 1} />
             ))}
@@ -159,7 +186,7 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
       </div>
     );
   };
-
+  
   const DashboardInfo = () => {
     const { open: isOpen } = useSidebar();
     const isCollapsed = !isOpen;

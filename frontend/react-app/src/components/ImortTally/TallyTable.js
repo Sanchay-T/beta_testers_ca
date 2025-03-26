@@ -157,6 +157,7 @@ const TallyTable = ({
   const [isLedgersCreated, setIsLedgersCreated] = useState(false);
 
   const isFirstLoad = useRef(true);
+
   useEffect(() => {
     const filterBankLedgers = reportData.importedLedgers.filter(
       (l) => l.ledgerGroup === "Bank Accounts"
@@ -242,6 +243,9 @@ const TallyTable = ({
         const ledgerCreated = await getLedgerCreationStatus();
         console.log({ ledgerCreated, caseId });
         setIsLedgersCreated(ledgerCreated);
+
+        // // Import ledgers on start itself
+        // handleLedgerImport();
       } catch (error) {
         console.error("Error loading saved data:", error);
       }
@@ -779,6 +783,13 @@ const TallyTable = ({
   const handleEntityChange = (tid, newValue) => {
     setEditedEntities((prev) => ({ ...prev, [tid]: newValue }));
   };
+  const handleEntityChangeFormSubmit = (e, row) => {
+    e.preventDefault();
+    console.log("Hey", e.target.ledger.value);
+    const newValue = e.target.ledger.value;
+    setEditedEntities((prev) => ({ ...prev, [row.id]: newValue }));
+    handleEntityUpdateConfirm(row);
+  };
   const entityUpdateIpc = async (payload) => {
     // TODO- call ipc here and show error success toast
     console.log(payload);
@@ -791,7 +802,7 @@ const TallyTable = ({
         // Show a success toast
         toast({
           id: "entity-update-success",
-          title: "Ledger Update",
+          title: "Ledger Updated",
           description: "Ledger updated successfully",
           type: "success",
           duration: 3000,
@@ -800,7 +811,7 @@ const TallyTable = ({
         // Show an error toast
         toast({
           id: "entity-update-error",
-          title: "Ledger Update",
+          title: "Error",
           description: "Ledger update failed",
           type: "error",
           duration: 3000,
@@ -1028,7 +1039,7 @@ const TallyTable = ({
               </TooltipTrigger>
               <TooltipContent>Share</TooltipContent>
             </Tooltip>
-            {selectedVoucher === "Payment Receipt Contra " && (
+            {selectedVoucher === "Payment Receipt Contra" && (
               <Button
                 variant="default"
                 className="min-w-[150px]"
@@ -1070,7 +1081,7 @@ const TallyTable = ({
                 onClick={handleUploadToTally}
                 disabled={
                   selectedVoucher === "Payment Receipt Contra" &&
-                  isLedgersCreated === false
+                  !isLedgersCreated
                 }
                 className="px-3 py-2 text-base font-medium text-white bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 hover:bg-gray-700 transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
               >
@@ -1239,11 +1250,7 @@ const TallyTable = ({
                                   if (selectedTransactions.includes(row.id)) {
                                     selectedTransactions.forEach((id) => {
                                       if (id !== row.id) {
-                                        handleInputChange(
-                                          id,
-                                          "ledger_group",
-                                          value
-                                        );
+                                        handleInputChange(id, column, value);
                                       }
                                     });
                                   }
@@ -1385,29 +1392,36 @@ const TallyTable = ({
                               key={column}
                               className="max-w-[200px] relative"
                             >
-                              <div className="flex items-center">
-                                <Input
-                                  type="text"
-                                  value={
-                                    editedEntities[row.id] !== undefined
-                                      ? editedEntities[row.id]
-                                      : row[column]
-                                  }
-                                  onChange={(e) =>
-                                    handleEntityChange(row.id, e.target.value)
-                                  }
-                                  className="w-full"
-                                />
-                                {editedEntities[row.id] !== undefined &&
-                                  editedEntities[row.id] !== row[column] && (
-                                    <Check
-                                      className="ml-2 cursor-pointer text-green-500"
-                                      onClick={() =>
-                                        handleEntityUpdateConfirm(row)
-                                      }
-                                    />
-                                  )}
-                              </div>
+                              <form
+                                onSubmit={(e) =>
+                                  handleEntityChangeFormSubmit(e, row)
+                                }
+                              >
+                                <div className="flex items-center">
+                                  <Input
+                                    type="text"
+                                    name="ledger"
+                                    value={
+                                      editedEntities[row.id] !== undefined
+                                        ? editedEntities[row.id]
+                                        : row[column]
+                                    }
+                                    onChange={(e) =>
+                                      handleEntityChange(row.id, e.target.value)
+                                    }
+                                    className="w-full"
+                                  />
+                                  {editedEntities[row.id] !== undefined &&
+                                    editedEntities[row.id] !== row[column] && (
+                                      <Check
+                                        className="ml-2 cursor-pointer text-green-500"
+                                        onClick={() =>
+                                          handleEntityUpdateConfirm(row)
+                                        }
+                                      />
+                                    )}
+                                </div>
+                              </form>
                             </TableCell>
                           );
                         } else if (column.toLowerCase() === "imported") {

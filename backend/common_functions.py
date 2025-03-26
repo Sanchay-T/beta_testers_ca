@@ -1102,6 +1102,7 @@ def category_add_ca(df):
             df[col] = df[col].str.lower()
     df["Description"] = df["Description"].str.replace(" ", "")
     excel_file_path = os.path.join(BASE_DIR, "Final_Category.xlsx")
+    print("excel_file_path -",excel_file_path)
     df2 = pd.read_excel(excel_file_path)
 
     # Initialize the 'Category' column with "Suspense" for all rows
@@ -2463,12 +2464,14 @@ def summary_sheet(idf, open_bal, close_bal, new_tran_df, new_categories = None):
     opening_closing_balance = {month: [open_bal[month], close_bal[month]] for month in open_bal}
 
     excel_file_path = os.path.join(BASE_DIR, "Final_Category.xlsx")
+    print("excel_file_path_bruh -",excel_file_path)
 
     df2 = pd.read_excel(excel_file_path)
     
     df_new = pd.DataFrame()
     
     if new_categories:
+        print("new_categories -",new_categories)
         df_new = pd.DataFrame(new_categories)
         new_excel_file_path = append_to_excel(excel_file_path, new_categories)
 

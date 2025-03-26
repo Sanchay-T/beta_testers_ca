@@ -132,7 +132,7 @@ contextBridge.exposeInMainWorld("electron", {
     ipcRenderer.invoke("ledger-create", data, port, tallyVersion),
   importLedgers: (companyName, port) =>
     ipcRenderer.invoke("import-ledgers", companyName, port),
-
+  checkTallyRunning: (port) => ipcRenderer.invoke("check-tally-running", port),
   user: {
     getData: (userId) => ipcRenderer.invoke("user:get-data", userId),
     updateData: (userData) => ipcRenderer.send("user:update-data", userData),

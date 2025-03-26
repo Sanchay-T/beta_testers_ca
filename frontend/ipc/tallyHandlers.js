@@ -254,6 +254,20 @@ function registerTallyIpc() {
       return { success: false, error: error.message };
     }
   });
+
+  // check-tally-running
+  ipcMain.handle("check-tally-running", async (event, port) => {
+    log.info({ port });
+
+    try {
+      const response = await axios.get(`http://localhost:${port}`);
+      log.info({ response });
+      return { success: true };
+    } catch (error) {
+      log.error({ error });
+      return { success: false };
+    }
+  });
 }
 
 module.exports = { registerTallyIpc };

@@ -36,6 +36,7 @@ import {
   Plus,
   Grid2X2,
   Import,
+  MoreHorizontal,
 } from "lucide-react";
 import { useReportContext } from "../contexts/ReportContext";
 import DashboardDropdown from "../components/IndividualDashboardComponents/DashboardDropdown";
@@ -59,96 +60,52 @@ const IndividualDashboard = () => {
       icon: ArrowRightLeft,
     },
     {
-      title: "Debtors",
-      url: "#",
-      icon: ArrowUpNarrowWide,
-    },
-    {
-      title: "Creditors",
-      icon: ArrowDownWideNarrow,
-    },
-    {
-      title: "UPI",
-      icon: ScanLine,
-    },
-    {
-      title: "Cash",
-      icon: IndianRupee,
-    },
-    {
-      title: "EMI",
-      icon: MessageSquareText,
-    },
-    {
-      title: "Investment",
-      url: "#",
-      icon: ChartNoAxesCombined,
-    },
-    {
-      title: "Reversal",
-      url: "#",
-      icon: Undo2,
-    },
-    {
       title: "Suspense",
       icon: FileQuestion,
     },
+
     {
       title: "Tally",
-      url: "#",
       icon: Grid2X2,
+      // This group will be open by default
       items: [
-        // {
-        //   title: "Tally Manual",
-        //   url: "#",
-        //   icon: null,
-        // },
         {
           title: "Ledgers",
           url: "#",
           icon: Plus,
         },
-        // {
-        //   title: "Import Ledgers",
-        //   url: "#",
-        //   icon: Import,
-        // },
         {
           title: "Upload to Tally",
           url: "#",
           icon: Upload,
         },
-        // {
-        //   title: "TallyERP Vouchers",
-        //   url: "#",
-        //   icon: null,
-        // },
       ],
-      alwaysOpen: true, // Ensures the section remains open
+      alwaysOpen: true,
     },
     {
-      title: "EOD",
-      icon: History,
+      title: "Other",
+      icon: MoreHorizontal,
+      // This group will be collapsed by default
+      items: [
+        { title: "Debtors", icon: ArrowUpNarrowWide },
+        { title: "Creditors", icon: ArrowDownWideNarrow },
+        { title: "UPI", icon: ScanLine },
+        { title: "Cash", icon: IndianRupee },
+        { title: "EMI", icon: MessageSquareText },
+        { title: "Investment", icon: ChartNoAxesCombined },
+        { title: "Reversal", icon: Undo2 },
+        { title: "EOD", icon: History },
+        { title: "Insurance", icon: ShieldPlus },
+        { title: "Contra", icon: IndianRupee },
+      ],
     },
-    {
-      title: "Insurance",
-      icon: ShieldPlus,
-    },
-    {
-      title: "Contra",
-      icon: IndianRupee,
-    },
-    // {
-    //   title: "Upload to Tally",
-    //   url: "#",
-    //   icon: Upload,
-    // },
   ]);
 
   useEffect(() => {
     setIndividualDashboard(
       activeTab,
-      `/individual-dashboard/${caseId}/${individualId || "combined"
+      `/individual-dashboard/${caseId}/${
+        individualId || "combined"
       }/${activeTab}`
     );
   }, [activeTab, caseId, individualId, setIndividualDashboard]);
@@ -166,7 +123,6 @@ const IndividualDashboard = () => {
       });
       if (!navItems.find((item) => item.title === "EOD")) {
         // show eod for where individual id is not present, first check if it is already present
-        // show eod for where individual id is not present, first check if it is already present
 
         setNavItems((prev) => {
           return [
@@ -179,10 +135,6 @@ const IndividualDashboard = () => {
         });
       }
     } else {
-      // hide eod for individual
-      setNavItems((prev) => {
-        return prev.filter((item) => item.title !== "EOD");
-      });
       // hide eod for individual
       setNavItems((prev) => {
         return prev.filter((item) => item.title !== "EOD");

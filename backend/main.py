@@ -354,6 +354,7 @@ async def edit_category(request: EditCategoryRequest):
         eod_df = pd.DataFrame(eod_data)
         print("Transactions : ", transaction_df.head())
         # print(eod_df.head())
+        print("new categories : ", new_categories)
 
         data = refresh_category_all_sheets(transaction_df, eod_df, new_categories)
         print(data)

@@ -24,6 +24,18 @@ import * as XLSX from "xlsx";
 import { useToast } from "../../hooks/use-toast";
 import { Input } from "../ui/input";
 import localForage from "localforage";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "../ui/alert-dialog";
+import { Checkbox } from "../ui/checkbox";
 
 const defaultColumns = {
   "Payment Receipt Contra": [
@@ -64,6 +76,23 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
   const [tallyVersion, setTallyVersion] = useState("TallyPrime");
   const [importedLedgers, setImportedLedgers] = useState([]);
   const [selectedBankLedger, setSelectedBankLedger] = useState();
+  const [showTallyWarning, setShowTallyWarning] = useState(false);
+  const [isEmptyLedgersSelected, setIsEmptyLedgersSelected] = useState(false);
+
+  useEffect(() => {
+    const checkIsTallyStatus = async () => {
+      // check if tally is running or not
+      const response = await window.electron.checkTallyRunning(port);
+      const isTallyRunning = response.success;
+      console.log({ isTallyRunning });
+
+      if (!isTallyRunning) {
+        setShowTallyWarning(true);
+      }
+    };
+
+    checkIsTallyStatus();
+  }, []);
 
   const handleInputChange = (e) => {
     setPort(e.target.value);
@@ -263,6 +292,15 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
             ? "Receipt"
             : transaction.voucher_type || "Payment"; // fallback
 
+        const dr_ledger =
+          transaction.type === "debit"
+            ? transaction.ledger
+            : selectedBankLedger;
+
+        const cr_ledger =
+          transaction.type === "credit"
+            ? transaction.ledger
+            : selectedBankLedger;
         return {
           companyName: companyName,
           invoiceDate: formatDateForTally(
@@ -271,14 +309,8 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
           effectiveDate: formatDateForTally(transaction.effective_date || ""),
           // effectiveDate: 20240401,
           // referenceNumber: transaction.reference_number || null,
-          DrLedger:
-            transaction.type === "debit"
-              ? transaction.ledger
-              : selectedBankLedger,
-          CrLedger:
-            transaction.type === "credit"
-              ? transaction.ledger
-              : selectedBankLedger,
+          DrLedger: isEmptyLedgersSelected ? "Suspense" : dr_ledger,
+          CrLedger: isEmptyLedgersSelected ? "Suspense" : cr_ledger,
           amount: parseInt(transaction.amount),
           narration: transaction.narration,
           voucherName: tempVoucherType,
@@ -310,6 +342,25 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
 
       return;
     }
+
+    // Check if any non-imported transaction is missing DrLedger or CrLedger
+    const incompleteTransactions = data.filter((transaction) => {
+      if (transaction.imported) return false;
+      return !transaction.ledger_group;
+    });
+    if (incompleteTransactions.length > 0) {
+      toast({
+        title: "Error",
+        description:
+          "Some transactions are missing Ledger Group. Please fill them before uploading.",
+        status: "error",
+        duration: 5000,
+        variant: "destructive",
+        type: "error",
+      });
+      return;
+    }
+
     // Prepare data for Tally
     const tallyData = data
       .map((transaction) => {
@@ -333,7 +384,6 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
     setTallyUploadData(tallyData);
     setConfirmationModal(true);
     // updateReportData({ ledgerCreated: true });
-    updateLedgerCreationStatus(caseId, true);
   };
 
   const handleUploadAfterConfirmation = async () => {
@@ -374,6 +424,21 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
       const tempDataToRender = newDataToRender.sort(
         (a, b) => a.imported - b.imported
       );
+
+      if (selectedVoucher === "Ledgers") {
+        const isAllCreated = tempDataToRender.every(
+          (ledger) => ledger.imported
+        );
+
+        const notImportedOnes = tempDataToRender.filter(
+          (ledger) => !ledger.imported
+        );
+        console.log({ notImportedOnes });
+        console.log({ isAllCreated });
+        if (isAllCreated) {
+          updateLedgerCreationStatus(caseId, true);
+        }
+      }
 
       setDataToRender(tempDataToRender);
 
@@ -768,6 +833,24 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
     }
   };
 
+  const recheckTallystatus = async () => {
+    const response = await window.electron.checkTallyRunning(port);
+    const isTallyRunning = response.success;
+    console.log({ isTallyRunning });
+
+    if (isTallyRunning) setShowTallyWarning(false);
+    else {
+      toast({
+        title: "Error",
+        description: "Please Make sure tally is running on Port " + port,
+        status: "error",
+        duration: 5000,
+        variant: "destructive",
+        type: "error",
+      });
+    }
+  };
+
   return (
     <div className="p-8">
       <Card>
@@ -799,6 +882,20 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
                 </Select>
               </div>
             )} */}
+
+            {selectedVoucher === "Payment Receipt Contra" && (
+              <div className="text-sm text-gray-800 max-w-xl flex gap-x-4 items-center">
+                <Checkbox
+                  id="confirm-delete"
+                  checked={isEmptyLedgersSelected}
+                  onCheckedChange={setIsEmptyLedgersSelected}
+                  className=""
+                />
+                <label className="whitespace-nowrap">
+                  Upload Empty Ledgers
+                </label>
+              </div>
+            )}
             <div className="text-sm text-gray-800 max-w-xl flex gap-x-4 items-center">
               <label className="whitespace-nowrap">
                 Please Enter Port Number:
@@ -869,7 +966,7 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
                   title={
                     source === "manual"
                       ? "Manual Transactions"
-                      : "Tally Transactions"
+                      : `Tally ${selectedVoucher} Voucher`
                   }
                   subtitle=""
                   handleUpload={handleUploadClick}
@@ -976,6 +1073,36 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* A warning dialog to let user know that tally is closed so please start it */}
+
+        <AlertDialog open={showTallyWarning}>
+          {/* <AlertDialogTrigger>Open</AlertDialogTrigger> */}
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Alert</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tally is not running, please start tally to continue.
+                {/*  */}
+                <div className="mt-4 max-w-xl flex gap-x-4 items-center">
+                  <label className="whitespace-nowrap">Port Number:</label>
+                  <Input
+                    type="number"
+                    value={port}
+                    onChange={handleInputChange}
+                    placeholder="Enter Port Number"
+                  />
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              {/* <AlertDialogCancel>Cancel</AlertDialogCancel> */}
+              <AlertDialogAction onClick={recheckTallystatus}>
+                Retry
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </Card>
     </div>
   );
