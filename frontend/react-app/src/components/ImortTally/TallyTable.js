@@ -238,16 +238,16 @@ const TallyTable = ({
           setFilteredData(sortedData);
           cacheData(sortedData);
         }
+
+        const ledgerCreated = await getLedgerCreationStatus();
+        console.log({ ledgerCreated, caseId });
+        setIsLedgersCreated(ledgerCreated);
       } catch (error) {
         console.error("Error loading saved data:", error);
       }
     };
 
     loadData();
-
-    const ledgerCreated = getLedgerCreationStatus(caseId);
-    console.log({ ledgerCreated });
-    setIsLedgersCreated(ledgerCreated);
   }, [caseId, data]);
 
   // Save transactions state to localForage whenever it changes (debounced)
@@ -511,12 +511,6 @@ const TallyTable = ({
     return uniqueValues.filter((value) =>
       value.toLowerCase().includes(categorySearchTerm.toLowerCase())
     );
-  };
-
-  const handleCategorySearch = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setCategorySearchTerm(e.target.value);
   };
 
   useEffect(() => {
@@ -904,13 +898,18 @@ const TallyTable = ({
     // clearFilters();
   };
 
-  const getLedgerCreationStatus = async (id) => {
+  const getLedgerCreationStatus = async () => {
+    const numberId = Number(caseId);
+
     const ledgerCreationStatusHistory = await localForage.getItem(
       "ledgerCreationStatusHistory"
     );
-    console.log({ ledgerCreationStatusHistory });
+    console.log({ ledgerCreationStatusHistory, numberId });
+    console.log(ledgerCreationStatusHistory);
     if (!ledgerCreationStatusHistory) return false;
-    return await ledgerCreationStatusHistory[id];
+    console.log("hey1");
+    console.log("AQ", ledgerCreationStatusHistory[numberId], numberId);
+    return ledgerCreationStatusHistory[numberId];
   };
 
   return (
@@ -1029,7 +1028,7 @@ const TallyTable = ({
               </TooltipTrigger>
               <TooltipContent>Share</TooltipContent>
             </Tooltip>
-            {selectedVoucher == "Payment Receipt Contra " && (
+            {selectedVoucher === "Payment Receipt Contra " && (
               <Button
                 variant="default"
                 className="min-w-[150px]"

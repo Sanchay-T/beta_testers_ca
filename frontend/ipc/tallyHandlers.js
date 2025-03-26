@@ -235,7 +235,7 @@ function registerTallyIpc() {
     log.info({ companyName, port });
 
     try {
-      const response = await fetchLedgerData();
+      const response = await fetchLedgerData(companyName);
       // const response = await axios.post(
       //   `http://localhost:${[port]}`,
       //   xmlContent,

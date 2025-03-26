@@ -425,18 +425,18 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
   };
 
   const handleLedgerImport = async () => {
-    // if (!companyName.trim()) {
-    //   // alert("Please enter a company name before uploading.");
-    //   toast({
-    //     title: "Error",
-    //     description: "Please enter a company name before uploading.",
-    //     status: "error",
-    //     duration: 5000,
-    //     variant: "destructive",
-    //     type: "error",
-    //   });
-    //   return;
-    // }
+    if (!companyName.trim()) {
+      // alert("Please enter a company name before uploading.");
+      toast({
+        title: "Error",
+        description: "Please enter a company name before uploading.",
+        status: "error",
+        duration: 5000,
+        variant: "destructive",
+        type: "error",
+      });
+      return;
+    }
 
     const response = await window.electron.importLedgers(companyName, port);
     console.log({ response });
@@ -758,7 +758,7 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
         ledgerCreationStatusHistory
       );
     } else {
-      ledgerCreationStatusHistory = [{ [id]: status }];
+      ledgerCreationStatusHistory = { [id]: status };
       console.log("setting 2", ledgerCreationStatusHistory);
 
       await localForage.setItem(

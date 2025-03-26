@@ -439,12 +439,16 @@ function buildTallyXmlGetAllLedgers({ companyName }) {
   `.trim();
 }
 
-async function fetchLedgerData() {
+async function fetchLedgerData(companyName) {
   // Define the XML request payload
   const xmlInput = `
 <ENVELOPE>
   <HEADER>
     <TALLYREQUEST>Export Data</TALLYREQUEST>
+     <STATICVARIABLES>
+          <SVCURRENTCOMPANY>${companyName}</SVCURRENTCOMPANY>
+          <SVEXPORTFORMAT>$$SysName:XML</SVEXPORTFORMAT>
+        </STATICVARIABLES>
   </HEADER>
   <BODY>
     <EXPORTDATA>
