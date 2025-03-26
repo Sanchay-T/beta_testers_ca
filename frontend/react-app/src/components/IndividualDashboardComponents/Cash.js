@@ -75,7 +75,7 @@ const Cash = () => {
         id: item.id,
       }));
 
-      console.log("deposit data", transformedDepositData);
+      // console.log("deposit data", transformedDepositData);
 
       const uniqueMonthsCr = [
         ...new Set(transformedDepositData.map((item) => item.monthKey)),

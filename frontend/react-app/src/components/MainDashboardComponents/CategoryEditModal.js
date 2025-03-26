@@ -11,12 +11,9 @@ const CategoryEditModal = ({ open, onOpenChange, caseId,caseName }) => {
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
-        console.log("Fetching transactions for statementId:", caseId);
 
         // Add this line to debug the electron call
-        console.log("Before electron call");
         const data = await window.electron.getTransactions(caseId);
-        console.log("After electron call, received data:", data);
 
         // Transform the data to only include required fields
         const formattedData = data.map((transaction) => ({

@@ -200,13 +200,13 @@ const DataTable = ({ data = [], source, title, subtitle}) => {
 
   const entityUpdateIpc = async (payload) => {
     // TODO- call ipc here and show error success toast
-    console.log(payload);
+    // console.log(payload);
 
     try {
       const response = await window.electron.editEntity(payload);
-      console.log({entityUpdateIpc:response});
+      // console.log({entityUpdateIpc:response});
       if(response.success) {
-        console.log("Entity updated successfully");
+        // console.log("Entity updated successfully");
         // Show a success toast
         toast({
           id: "entity-update-success",
@@ -225,11 +225,11 @@ const DataTable = ({ data = [], source, title, subtitle}) => {
           duration:3000
           
         });
-        console.log("Entity update failed");
+        // console.log("Entity update failed");
       }
     }
     catch (err) {
-      console.log(err);
+      // console.log(err);
     }
   }
 
@@ -281,16 +281,16 @@ const DataTable = ({ data = [], source, title, subtitle}) => {
 
   // Toggle select–all for the rows in the current page.
   const handleSelectAllRows = () => {
-    console.log("Triggering select all");
+    // console.log("Triggering select all");
     const currentGlobalIndices = filteredData.map((row, i) =>
       showAllRows ? i : startIndex + i
     );
-    console.log({ currentGlobalIndices });
+    // console.log({ currentGlobalIndices });
 
     const allSelected = currentGlobalIndices.every((index) =>
       selectedRows.includes(index)
     );
-    console.log({ allSelected });
+    // console.log({ allSelected });
 
     if (allSelected) {
       // Deselect all current page rows.
@@ -317,7 +317,7 @@ const DataTable = ({ data = [], source, title, subtitle}) => {
       // For each selected row, find the row in filteredData (using its global index)
       const payload = selectedRows.map((globalIndex) => {
         const row = filteredData[globalIndex];
-        console.log(row)
+        // console.log(row)
         // Replace this console.log with your backend call.
         return { entity: batchEntityValue, transactionId: row.id }
       });

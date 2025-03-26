@@ -46,7 +46,7 @@ const Investment = () => {
         caseId,
         parseInt(individualId)
       );
-      console.log("Investment transactions:", result);
+      // console.log("Investment transactions:", result);
       // Transform data to include only required fields
       const transformedData = result.map((item) => ({
         date: new Date(item.date).toLocaleDateString("en-GB", {

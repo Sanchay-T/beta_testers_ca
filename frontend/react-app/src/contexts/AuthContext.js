@@ -16,12 +16,12 @@ export const AuthProvider = ({ children }) => {
     try {
       const result = await window.electron.auth.checkLicense();
       const activated = result.success;
-      console.log("Check license key isActivated:", result);
+      // console.log("Check license key isActivated:", result);
       setIsActivated(activated);
       if (activated) {
-        console.log("License key is activated");
+        // console.log("License key is activated");
         const userData = await window.electron.auth.getUser();
-        console.log("User data:", userData);
+        // console.log("User data:", userData);
         if (userData) setUser(userData);
       }
     } catch (err) {
@@ -45,7 +45,7 @@ export const AuthProvider = ({ children }) => {
     // Listen for the 'navigateToLogin' event from the main process via preload.js
     window.electron.onLicenseExpired(() => {
       // Navigate to the login page using React Router's history
-      console.log("License expired React");
+      // console.log("License expired React");
       setUser((prev) => {
         setError("License key has expired"); // Call setError before setting user
         return null; // Update user state after setting the error
@@ -68,7 +68,7 @@ export const AuthProvider = ({ children }) => {
       if (result.success) {
         // setIsActivated(false);
         setUser(credentials); // Use returned user data if available
-        console.log("User signed up:", result);
+        // console.log("User signed up:", result);
         localStorage.removeItem("dashboardData");
         return true;
       } else {
@@ -98,7 +98,7 @@ export const AuthProvider = ({ children }) => {
         // After successful login, explicitly fetch the complete user data
         const userData = await window.electron.auth.getUser();
         setUser({ ...userData, role: credentials.role });
-        console.log("User logged in:", userData);
+        // console.log("User logged in:", userData);
         localStorage.removeItem("dashboardData");
         return true;
       } else {

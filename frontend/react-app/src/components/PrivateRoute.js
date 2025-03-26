@@ -25,12 +25,12 @@ export const PrivateRoute = ({ children }) => {
     }
 
     if (!user) {
-        console.log("Redirecting to login page");
+        // console.log("Redirecting to login page");
         // Save the attempted location for redirect after login
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
-    console.log("User is authenticated");
+    // console.log("User is authenticated");
 
     return children;
 };

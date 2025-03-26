@@ -188,7 +188,6 @@ const TallyTable = ({
         // For each column that should be updated, check if the values differ
         columnsToUpdate.forEach((col) => {
           if (incomingRow[col] !== savedRow[col]) {
-            console.log({ incomingRow, savedRow });
             // Update the value with the latest from incoming data
             // savedRow[col] = incomingRow[col];
           }
@@ -224,7 +223,6 @@ const TallyTable = ({
         `tallyTableData_${selectedVoucher}_${caseId}`,
         dataToCache
       );
-      console.log("Data saved for report:", dataToCache);
     } catch (error) {
       console.error("Error saving data:", error);
     }
@@ -252,7 +250,7 @@ const TallyTable = ({
         }
 
         const ledgerCreated = await getLedgerCreationStatus();
-        console.log({ ledgerCreated, caseId });
+        // console.log({ ledgerCreated, caseId });
         setIsLedgersCreated(ledgerCreated);
 
         // // Import ledgers on start itself
@@ -305,7 +303,7 @@ const TallyTable = ({
   };
 
   useEffect(() => {
-    console.log("Data from tally table - ", data);
+    // console.log("Data from tally table - ", data);
     const formattedData = data.map((row) => {
       const newRow = { ...row };
       Object.keys(row).forEach((key) => {
@@ -493,16 +491,10 @@ const TallyTable = ({
       }
 
       const isInRange = rowDate >= from && rowDate <= to;
-      console.log("Row date check:", {
-        date: rowDate.toISOString(), // Convert to string for better logging
-        isInRange,
-        value: row[columnName],
-      });
 
       return isInRange;
     });
 
-    // console.log("Filtered results count:", filtered.length);
     setFilteredData(filtered);
     setExistingFilterData(filtered);
     setCurrentPage(1);
@@ -571,7 +563,6 @@ const TallyTable = ({
   // Calculate totals for numeric columns
   const totals = numericColumns.reduce((acc, column) => {
     let total;
-    console.log({ aqfilteredData: filteredData });
     if (filteredData.length > 0) {
       total = filteredData.reduce((sum, row) => {
         const value = parseFloat(row[column]);
@@ -691,7 +682,6 @@ const TallyTable = ({
   };
 
   const handleBulkLedgerUpdate = () => {
-    console.log(ledgerField, bulkLedgerValue, selectedTransactions);
     setTransactions((prevTransactions) =>
       prevTransactions.map((transaction) =>
         selectedTransactions.includes(transaction.id)
@@ -810,20 +800,17 @@ const TallyTable = ({
   };
   const handleEntityChangeFormSubmit = (e, row) => {
     e.preventDefault();
-    console.log("Hey", e.target.ledger.value);
     const newValue = e.target.ledger.value;
     setEditedEntities((prev) => ({ ...prev, [row.id]: newValue }));
     handleEntityUpdateConfirm(row);
   };
   const entityUpdateIpc = async (payload) => {
     // TODO- call ipc here and show error success toast
-    console.log(payload);
 
     try {
       const response = await window.electron.editEntity(payload);
-      console.log({ entityUpdateIpc: response });
       if (response.success) {
-        console.log("Entity updated successfully");
+        // console.log("Entity updated successfully");
         // Show a success toast
         toast({
           id: "entity-update-success",
@@ -845,10 +832,10 @@ const TallyTable = ({
           type: "error",
           duration: 3000,
         });
-        console.log("Ledger update failed");
+        // console.log("Ledger update failed");
       }
     } catch (err) {
-      console.log(err);
+      // console.log(err);
     }
   };
 
@@ -927,7 +914,7 @@ const TallyTable = ({
         return null;
       }
     });
-    console.log("Payload aq", payload);
+    // console.log("Payload aq", payload);
     entityUpdateIpc(payload);
 
     // Clear selections and close the modal.
@@ -942,7 +929,6 @@ const TallyTable = ({
     const savedData = await localForage.getItem(
       `tallyTableData_Ledgers_${caseId}`
     );
-    console.log("Saved data", savedData);
     return savedData.length === 0;
   };
 
@@ -1108,7 +1094,6 @@ const TallyTable = ({
                 }
                 className="px-3 py-2 text-base font-medium text-white bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 hover:bg-gray-700 transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
               >
-                {console.log({ aq: isLedgersCreated })}
                 <UploadCloud className="w-5 h-5 text-white" />
                 Upload to Tally
               </Button>
@@ -1627,7 +1612,11 @@ const TallyTable = ({
               <TableRow>
                 {/* <TableCell></TableCell> */}
 
-                {filteredData.length > 0 ? <TableCell>Total</TableCell>: <TableCell></TableCell>}
+                {filteredData.length > 0 ? (
+                  <TableCell>Total</TableCell>
+                ) : (
+                  <TableCell></TableCell>
+                )}
                 {columns.slice(0).map((column) => (
                   <TableCell key={column}>
                     {["credit", "debit", "balance", "amount"].includes(
@@ -1845,7 +1834,6 @@ const TallyTable = ({
                   type="date"
                   value={fromDate}
                   onChange={(e) => {
-                    console.log("Start date changed:", e.target.value);
                     setFromDate(e.target.value);
                   }}
                 />
@@ -1856,7 +1844,6 @@ const TallyTable = ({
                   type="date"
                   value={toDate}
                   onChange={(e) => {
-                    console.log("End date changed:", e.target.value);
                     setToDate(e.target.value);
                   }}
                 />
@@ -1873,11 +1860,6 @@ const TallyTable = ({
                 variant="default"
                 className="bg-black hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
                 onClick={() => {
-                  console.log("Applying filter with:", {
-                    fromDate,
-                    toDate,
-                    currentDateColumn,
-                  });
                   handleDateFilter(currentDateColumn, fromDate, toDate);
                   setDateFilterModalOpen(false);
                 }}

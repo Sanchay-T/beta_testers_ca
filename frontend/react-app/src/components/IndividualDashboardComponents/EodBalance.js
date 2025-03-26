@@ -13,9 +13,9 @@ const EodBalance = () => {
   useEffect(() => {
     const fetchEodData = async () => {
       try {
-        console.log("Fetching EOD data for caseId:", reportData.caseId);
+        // console.log("Fetching EOD data for caseId:", reportData.caseId);
         const fetchData = await window.electron.getEodBalance(reportData.caseId);
-        console.log("data", fetchData);
+        // console.log("data", fetchData);
         if(fetchData.length < 0){
           throw error;
         }
@@ -28,7 +28,7 @@ const EodBalance = () => {
         const dataArray = Array.isArray(parsedData) ? parsedData : [];
         
         setEodData(dataArray);
-        console.log("Fetched EOD data:", dataArray);
+        // console.log("Fetched EOD data:", dataArray);
 
         // Set numeric columns if we have data
         if (dataArray.length > 0) {
@@ -45,7 +45,7 @@ const EodBalance = () => {
           setSelectedColumns(numeric);
         }
       } catch (err) {
-        console.log("hj",err)
+        // console.log("hj",err)
         setEodData([])
         // setError("Failed to fetch EOD data");
         console.error("Error fetching EOD data:", err);

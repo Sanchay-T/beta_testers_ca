@@ -39,7 +39,6 @@ function mapDataForExcelGenerator(
       return newItem;
     });
   };
-  console.log("particulars", reformatTable(summaryObject.particulars || []));
 
   return {
     accountNumber,
@@ -112,7 +111,6 @@ function formatVoucherTransaction(data) {
     //   newVoucher || selectedVoucher
     // );
     // Sort, map, etc. as you did before
-    console.log("inside formatvouchertransaction");
     const sortedData = data.sort((a, b) => a.imported - b.imported);
 
     const storedReasons = JSON.parse(
@@ -186,11 +184,6 @@ const generateFinancialReport = async (
   summaryOnly = false
 ) => {
   try {
-    // console.log("Generating financial report for case:", caseid);
-    console.log(
-      `Generating ${summaryOnly ? "summary" : "financial"} report for case:`,
-      caseid
-    );
     const workbook = new ExcelJS.Workbook();
 
     // Fetch all required data
@@ -200,9 +193,6 @@ const generateFinancialReport = async (
     const accountNumber = getStatements[0].accountNumber;
     const customerName = getStatements[0].customerName;
     const bankName = getStatements[0].bankName;
-    console.log("nasfklnkd", accountNumber, customerName, bankName);
-    console.log("AccNameBankData", getStatements);
-    console.log("SummaryData", summaryObject);
 
     // Map the data to the required format
     const mappedData = mapDataForExcelGenerator(
@@ -214,12 +204,8 @@ const generateFinancialReport = async (
 
     const opportunityToEarnData =
       await window.electron.getOpportunityToEarnForExcel(caseid);
-    console.log("opportunityToEarnData", opportunityToEarnData.data);
     const EodData = await window.electron.getEodBalance(caseid);
-    console.log("type of data ", typeof EodData[0].data);
-    console.log("Is Array:", Array.isArray(EodData[0].data));
     const formattedEodData = EodformatData(EodData[0].data);
-    console.log("EodData", formattedEodData);
     const transactionsData = await window.electron.getTransactions(caseid);
     const investmentData = await window.electron.getTransactionsByInvestment(
       caseid
@@ -227,7 +213,6 @@ const generateFinancialReport = async (
     const creditorsData = await window.electron.getTransactionsByCreditor(
       caseid
     );
-    console.log("creditorsData", creditorsData);
     const debtorsData = await window.electron.getTransactionsByDebtor(caseid);
     const upiCrData = await window.electron.getTransactionsByUpiCr(caseid);
     const upiDrData = await window.electron.getTransactionsByUpiDr(caseid);
@@ -243,23 +228,17 @@ const generateFinancialReport = async (
 
     const suspensecredit =
       await window.electron.getTransactionsBySuspenseCredit(caseid);
-    console.log("suspensecredit", suspensecredit[0]);
     const transformCreditData = processSuspenseData(suspensecredit);
-    console.log("transformData", transformCreditData);
 
     const suspensedebit = await window.electron.getTransactionsBySuspenseDebit(
       caseid
     );
     const transformDebitData = processSuspenseData(suspensedebit);
-    console.log("suspensedebit", transformDebitData);
     const redemptionData = await window.electron.getTransactionsByRedemption(
       caseid
     );
-    console.log("redemptiom", redemptionData);
     const voucherTransaction = await window.electron.getTransactions(caseid);
-    console.log("voucherTransaction", voucherTransaction);
     const formatVoucherData = formatVoucherTransaction(voucherTransaction);
-    console.log("formatVoucherData", formatVoucherData);
 
     // Add each sheet with the same pattern but different data
     addSummarySheet(workbook, mappedData);
@@ -293,9 +272,6 @@ const generateFinancialReport = async (
 
     saveAs(blob, fileName);
 
-    console.log(
-      `${summaryOnly ? "Summary" : "Excel"} generation completed successfully`
-    );
     return true;
   } catch (error) {
     console.error(
@@ -309,7 +285,6 @@ const generateFinancialReport = async (
 // Function to add the Summary sheet
 const addSummarySheet = (workbook, data) => {
   const worksheet = workbook.addWorksheet("Summary");
-  console.log("Data in Summary Sheet", data);
 
   // Set tab color
   worksheet.properties.tabColor = { argb: "D9E1F2" };
@@ -552,7 +527,6 @@ const addSummarySheet = (workbook, data) => {
 
 // Function to add the Opportunity to Earn sheet
 const addOpportunityToEarnSheet = (workbook, transformData) => {
-  console.log("transformData opportunity", transformData);
   const worksheet = workbook.addWorksheet("Opportunity to Earn");
 
   // Set tab color
@@ -579,7 +553,6 @@ const addOpportunityToEarnSheet = (workbook, transformData) => {
     termPlan: "1%-30%",
     generalInsurance: "upto 10%",
   };
-  console.log("commissionRates", commissionRates);
   const firstData = transformData[0] || {};
 
   const tableData = [
@@ -632,7 +605,6 @@ const addOpportunityToEarnSheet = (workbook, transformData) => {
       commissionRs: "",
     },
   ];
-  console.log("tableData", tableData);
 
   // Add rows and apply formatting
   tableData.forEach((row, index) => {
@@ -738,7 +710,6 @@ const addEodSheet = (workbook, data) => {
 
   // Set tab color
   worksheet.properties.tabColor = { argb: "a3e635" };
-  console.log("eodData", data);
 
   // Check if data is valid
   if (!Array.isArray(data) || data.length === 0) {
@@ -880,7 +851,6 @@ const addCreditorsSheet = (workbook, transactionData) => {
     "In case of payments through online portals, we have mentioned the portal names as reflected in the narration of the bank statement. We would like to highlight that in case of contra entries, the name of the client ";
 
   const lastRow = worksheet.lastRow.number + 2; // Leave some space after the table
-  console.log("last row", lastRow);
 
   // First merge the cells
   worksheet.mergeCells(lastRow, 1, lastRow, worksheet.columnCount);
@@ -1088,7 +1058,6 @@ const addCashWithdrawalSheet = (workbook, transactionData) => {
 };
 
 const addCashDepositSheet = (workbook, data) => {
-  console.log("data", data);
   const worksheet = workbook.addWorksheet("Cash Deposit");
 
   // Set tab color
@@ -1184,7 +1153,6 @@ const addCashDepositSheet = (workbook, data) => {
 };
 
 const addProbableEmiSheet = (workbook, data) => {
-  console.log("data", data);
   const worksheet = workbook.addWorksheet("ProbableEmi");
 
   // Set tab color
@@ -1293,7 +1261,6 @@ const addProbableEmiSheet = (workbook, data) => {
 };
 
 const addReversalSheet = (workbook, data) => {
-  console.log("data", data);
   const worksheet = workbook.addWorksheet("Refund-Reversal");
 
   // Set tab color
@@ -1389,7 +1356,6 @@ const addReversalSheet = (workbook, data) => {
 };
 
 const addSuspenseCreditSheet = (workbook, data) => {
-  console.log("data", data);
   const worksheet = workbook.addWorksheet("Suspense Credit");
 
   // Set tab color
@@ -1478,7 +1444,6 @@ const addSuspenseCreditSheet = (workbook, data) => {
 };
 
 const addSuspenseDebitSheet = (workbook, data) => {
-  console.log("data", data);
   const worksheet = workbook.addWorksheet("Suspense Debit");
 
   // Set tab color
@@ -1619,7 +1584,6 @@ const addVoucherTransactionSheet = (workbook, transactionData) => {
   const worksheet = workbook.addWorksheet(
     "Tally Payment Receipt Contra Voucher Transactions"
   );
-  console.log("inside addVoucherTransactionSheet");
 
   // Set tab color
   worksheet.properties.tabColor = { argb: "#62e65a" }; // Orange-Yellow

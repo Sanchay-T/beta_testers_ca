@@ -144,7 +144,7 @@ const CategoryEditTable = ({
   );
 
   const handleCategoryClassification = (category, classificationType) => {
-    console.log(`Category: ${category}, Type: ${classificationType}`);
+    // console.log(`Category: ${category}, Type: ${classificationType}`);
     toast({
       title: "Category Classified",
       description: `${category} has been classified as ${classificationType.replace(
@@ -157,7 +157,7 @@ const CategoryEditTable = ({
   // When classification is complete, update either the bulk field or a single row change.
   const handleClassificationSubmit = () => {
     handleCategoryClassification(newCategoryToClassify, selectedType);
-    console.log({ selectedType })
+    // console.log({ selectedType })
     setShowClassificationModal(false);
     if (bulkCategoryModalOpen) {
       setSelectedBulkCategory(newCategoryToClassify);
@@ -218,24 +218,24 @@ const CategoryEditTable = ({
   const confirmCategoryChange = () => {
     if (!pendingCategoryChange) return;
     const transactionId = pendingCategoryChange.transactionId;
-    console.log("transactionId", transactionId, "pendingCategoryChange ", pendingCategoryChange);
+    // console.log("transactionId", transactionId, "pendingCategoryChange ", pendingCategoryChange);
     const updatedFilteredData = filteredData.map((tx) => {
-      console.log("tx.id", tx.id, "transactionId", transactionId);
+      // console.log("tx.id", tx.id, "transactionId", transactionId);
       if (parseInt(tx.id) === parseInt(transactionId)) {
-        console.log("Transaction found")
+        // console.log("Transaction found")
         return { ...tx, category: pendingCategoryChange.newCategory };
       }
       return tx;
     });
     setFilteredData(updatedFilteredData);
     const transaction = updatedFilteredData.find((tx) => tx.id === transactionId);
-    console.log("transaction aiyaz", transaction);
+    // console.log("transaction aiyaz", transaction);
     let modifiedObject = {
       ...transaction,
       oldCategory: pendingCategoryChange.oldCategory,
       keyword: showKeywordInput ? reasoning : "",
     };
-    console.log("modifiedObject", modifiedObject);
+    // console.log("modifiedObject", modifiedObject);
     if (selectedType) {
       modifiedObject = {
         ...modifiedObject,

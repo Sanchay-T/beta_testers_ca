@@ -233,7 +233,7 @@ const DataTable = ({
         }
       }, 0); // delay until after the render cycle
     } catch (e) {
-      console.log({ hey: e });
+      // console.log({ hey: e });
     }
 
     return () => clearTimeout(timer);
@@ -244,7 +244,7 @@ const DataTable = ({
   }, [categorySelectDropdownOpen]);
 
   useEffect(() => {
-    console.log("Data from unified - ", data);
+    // console.log("Data from unified - ", data);
     const formattedData = data.map((row) => {
       const newRow = { ...row };
       Object.keys(row).forEach((key) => {
@@ -255,7 +255,6 @@ const DataTable = ({
 
     // If it's the first load, set the transactions
     if (isFirstLoad.current) {
-      // console.log({isFirstLoad})
       setTransactions(formattedData);
       setFilteredData(formattedData);
       isFirstLoad.current = false;
@@ -340,8 +339,6 @@ const DataTable = ({
       const sheet = workbook.Sheets[sheetName];
       const parsedData = XLSX.utils.sheet_to_json(sheet);
 
-      console.log("Uploaded Suspense Data: ", parsedData);
-
       // Extract modified categories and compare with existing data
       const updates = parsedData
         .map((row) => {
@@ -387,8 +384,6 @@ const DataTable = ({
   const applyUploadedCategoryChanges = async () => {
     // Suspense excel upload handle
     try {
-      console.log("Applying category updates:", uploadedChanges);
-
       // Call API or Electron IPC to update database
       // await window.electron.updateSuspenseCategories(uploadedChanges);
 
@@ -419,10 +414,8 @@ const DataTable = ({
         return updatedTransaction;
       });
 
-      console.log({ updatedTransactions });
-
       const payload = convertArrayToObject(updatedTransactions);
-      console.log("Payload", payload);
+      // console.log("Payload", payload);
       const response = await window.electron.editCategory(
         payload,
         caseId || reportData.caseId
@@ -443,21 +436,9 @@ const DataTable = ({
     }
   };
 
-  const handleCategoryClassification = (category, classificationType) => {
-    console.log(`Category: ${category}, Type: ${classificationType}`);
-    toast({
-      title: "Category Classified",
-      description: `${category} has been classified as ${classificationType.replace(
-        "_",
-        " "
-      )}`,
-    });
-  };
-
   // When classification is complete, update either the bulk field or a single row change.
   const handleClassificationSubmit = () => {
     // handleCategoryClassification(newCategoryToClassify, selectedType);
-    console.log({ selectedType });
     setShowClassificationModal(false);
     if (bulkCategoryModalOpen) {
       setSelectedBulkCategory(newCategoryToClassify);
@@ -530,13 +511,11 @@ const DataTable = ({
   // --- Single Row Update: Use the entire row (which includes its id) ---
   const handleCategoryChange = (transaction, newCategory) => {
     const oldCategory = transaction.category;
-    console.log("filererd data", filteredData);
     // Find similar transactions
     const similarTransactions1 = processSimilarCategory(
       filteredData,
       transaction.description
     );
-    console.log("similarTransactions1", similarTransactions1);
     // remove already selected one
     const similarTransactions = similarTransactions1.filter(
       (t) => t.id !== transaction.id
@@ -544,12 +523,7 @@ const DataTable = ({
 
     // Set the similar transactions in state
     setSimilarCategoryTransactions(similarTransactions);
-    console.log({
-      transactionId: transaction.id,
-      newCategory,
-      oldCategory,
-      transaction,
-    });
+
     setPendingCategoryChange({
       transactionId: transaction.id,
       newCategory,
@@ -563,25 +537,17 @@ const DataTable = ({
   const confirmCategoryChange = () => {
     if (!pendingCategoryChange) return;
     const transactionId = pendingCategoryChange.transactionId;
-    console.log(
-      "transactionId",
-      transactionId,
-      "pendingCategoryChange ",
-      pendingCategoryChange
-    );
+
     // const updatedFilteredData = filteredData.map((tx) => {
-    //   console.log("tx.id", tx.id, "transactionId", transactionId);
     //   if (parseInt(tx.id) === parseInt(transactionId)) {
 
     //     let updatedTx = { ...tx, category: pendingCategoryChange.newCategory };
-    //     console.log({updatedTx})
     //     if (
     //       pendingCategoryChange.newCategory === "Self transfer" ||
     //       selectedType === "Contra"
     //     ) {
     //       updatedTx = { ...updatedTx, voucher_type: "Contra" };
     //     }
-    //     console.log({updatedTx})
 
     //     return updatedTx;
     //   }
@@ -590,20 +556,17 @@ const DataTable = ({
     let updatedTransaction = null;
     setFilteredData((prevData) =>
       prevData.map((tx) => {
-        console.log("tx.id", tx.id, "transactionId", transactionId);
         if (parseInt(tx.id) === parseInt(transactionId)) {
           let updatedTx = {
             ...tx,
             category: pendingCategoryChange.newCategory,
           };
-          console.log({ updatedTx });
           if (
             pendingCategoryChange.newCategory === "Self transfer" ||
             selectedType === "Contra"
           ) {
             updatedTx = { ...updatedTx, voucher_type: "Contra" };
           }
-          console.log({ updatedTx });
           updatedTransaction = updatedTx;
           return updatedTx;
         }
@@ -613,7 +576,6 @@ const DataTable = ({
     // const transaction = updatedFilteredData.find(
     //   (tx) => tx.id === transactionId
     // );
-    console.log("transaction aiyaz", updatedTransaction);
     let modifiedObject = {
       ...updatedTransaction,
       oldCategory: pendingCategoryChange.oldCategory,
@@ -625,8 +587,6 @@ const DataTable = ({
     ) {
       modifiedObject = { ...modifiedObject, voucher_type: "Contra" };
     }
-    console.log("modifiedObject", modifiedObject);
-    console.log({ selectedCategorySimilarTransactions });
     if (selectedCategorySimilarTransactions.size > 0) {
       modifiedObject = { ...modifiedObject, is_new: false };
       setModifiedData((prevData) => [...prevData, modifiedObject]);
@@ -649,11 +609,8 @@ const DataTable = ({
         modifiedObject = { ...modifiedObject, is_new: false };
       }
 
-      console.log({ aq: modifiedObject });
-
       setModifiedData((prevData) => [...prevData, modifiedObject]);
     }
-    //   console.log("modifiedObject", modifiedObjects);
     //     // Add selected similar transactions to modified data
     //     selectedCategorySimilarTransactions.forEach((id) => {
     //       const transaction = filteredData.find((tx) => tx.id === id);
@@ -689,7 +646,6 @@ const DataTable = ({
         : selectedBulkCategory === ""
         ? categorySearchTerm
         : selectedBulkCategory;
-    console.log({ ids });
     // ids.forEach((id) => {
     //   const index = dataOnUi.findIndex((row) => row.id === id);
     //   if (index !== -1) {
@@ -742,7 +698,6 @@ const DataTable = ({
       })
     );
 
-    console.log({ fromBulkUpdate: newModifiedData });
     // setFilteredData(dataOnUi);
     setModifiedData((prevData) => [...prevData, ...newModifiedData]);
     setHasChanges(true);
@@ -793,7 +748,6 @@ const DataTable = ({
     );
   };
 
-  console.log({ categoryOptions });
   const filteredCategories = categoryOptions.filter((category) => {
     return category.toLowerCase().includes(categorySearchTerm.toLowerCase());
   });
@@ -839,20 +793,16 @@ const DataTable = ({
 
   // Improved date handling functions
   const handleDateFilter = (columnName, fromDate, toDate) => {
-    console.log("Initial filter params:", { columnName, fromDate, toDate });
-
     const dataToFilter =
       existingFilterData.length > 0 ? existingFilterData : data;
 
     const parseDate = (dateStr) => {
       if (!dateStr) return null;
-      console.log("Parsing date:", dateStr);
 
       // Handle date input format (yyyy-mm-dd)
       if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
         const date = new Date(dateStr);
         date.setHours(0, 0, 0, 0);
-        console.log("Parsed input date:", date);
         return date;
       }
 
@@ -883,7 +833,6 @@ const DataTable = ({
         return null;
       }
 
-      console.log("Parsed data date:", date);
       return date;
     };
 
@@ -898,8 +847,6 @@ const DataTable = ({
     // Set end of day for to date
     to.setHours(23, 59, 59, 999);
 
-    console.log("Processing with date range:", { from, to });
-
     const filtered = dataToFilter.filter((row) => {
       const rowDateStr = row[columnName];
       const rowDate = parseDate(rowDateStr);
@@ -910,11 +857,6 @@ const DataTable = ({
       }
 
       const isInRange = rowDate >= from && rowDate <= to;
-      console.log("Row date check:", {
-        date: rowDate.toISOString(), // Convert to string for better logging
-        isInRange,
-        value: row[columnName],
-      });
 
       return isInRange;
     });
@@ -974,24 +916,18 @@ const DataTable = ({
   const handleSaveChanges = async () => {
     try {
       setIsLoading(true);
-      console.log("Modified Data", modifiedData);
 
       const payload = convertArrayToObject(modifiedData);
-      console.log("Payload", payload);
       const response = await window.electron.editCategory(
         payload,
         caseId || reportData.caseId
       );
 
-      console.log({ responseaq: response });
-
       modifiedData.map((row) => {
         if (row.category === "Self transfer") {
-          console.log("Self transfer");
           handleVoucherTypeChange(row, "Contra", "Self transfer");
         }
         if (row.voucher_type === "Contra") {
-          console.log("Self contra");
           handleVoucherTypeChange(row, "Contra2", row.category);
         }
       });
@@ -1032,13 +968,13 @@ const DataTable = ({
 
   const entityUpdateIpc = async (payload) => {
     // TODO- call ipc here and show error success toast
-    console.log(payload);
+    // console.log(payload);
 
     try {
       const response = await window.electron.editEntity(payload);
-      console.log({ entityUpdateIpc: response });
+      // console.log({ entityUpdateIpc: response });
       if (response.success) {
-        console.log("Entity updated successfully");
+        // console.log("Entity updated successfully");
         // Show a success toast
         toast({
           id: "entity-update-success",
@@ -1056,10 +992,10 @@ const DataTable = ({
           type: "error",
           duration: 3000,
         });
-        console.log("Ledger update failed");
+        // console.log("Ledger update failed");
       }
     } catch (err) {
-      console.log(err);
+      // console.log(err);
     }
   };
 
@@ -1079,13 +1015,11 @@ const DataTable = ({
       const updatedData = [...prevData];
       // Determine the correct key (e.g., "Entity" or "entity")
       const index = updatedData.findIndex((row) => row.id === id);
-      console.log({ hey: updatedData[index] });
       updatedData[index] = {
         ...updatedData[index],
         entity: newValue,
         ledger: newValue,
       };
-      console.log({ hey2: updatedData[index] });
 
       return updatedData;
     });
@@ -1115,7 +1049,6 @@ const DataTable = ({
         };
         // Update the local state so the UI immediately reflects the new value.
         setFilteredData(dataOnUi);
-        // Replace this console.log with your backend call.
         return {
           // entity: batchEntityValue,
           entity: batchEntityValue,
@@ -1125,7 +1058,7 @@ const DataTable = ({
         return null;
       }
     });
-    console.log("Payload aq", payload);
+    // console.log("Payload aq", payload);
     entityUpdateIpc(payload);
 
     // Clear selections and close the modal.
@@ -1303,9 +1236,6 @@ const DataTable = ({
   //       descriptionToMatch
   //     );
 
-  //     console.log("transaction.description", transaction.description);
-  //     console.log("descriptionToMatch", descriptionToMatch);
-
   //     return descriptionSimilarity >= threshold;
   //   });
 
@@ -1322,7 +1252,6 @@ const DataTable = ({
     descriptionToMatch,
     threshold
   ) => {
-    console.log("Processing similar category with threshold:", threshold); // Log threshold
     const similarity = (str1, str2) => {
       if (!str1 || !str2) return 0;
       const s1 = str1.toLowerCase();
@@ -1349,7 +1278,6 @@ const DataTable = ({
   useEffect(() => {
     if (currentTransaction) {
       setIsLoading(true);
-      console.log("Current Transaction:", currentTransaction);
 
       setTimeout(() => {
         // Simulate delay
@@ -1358,7 +1286,6 @@ const DataTable = ({
           currentTransaction.description,
           sliderValue
         );
-        console.log("Updated Similar Transactions:", similarTransactions);
         setSimilarCategoryTransactions(similarTransactions);
         setIsLoading(false);
       }, 500);
@@ -1390,9 +1317,6 @@ const DataTable = ({
         descriptionToMatch
       );
 
-      console.log("transaction.description", transaction.description);
-      console.log("descriptionToMatch", descriptionToMatch);
-
       // const isSameCategory = transaction.entity === entityToMatch;
       const isSameCategory =
         transaction.ledger === entityToMatch ||
@@ -1409,15 +1333,12 @@ const DataTable = ({
   };
 
   const handleVoucherTypeChange = async (row, newVoucher, newCategory) => {
-    console.log("Voucher Type: ", row, newVoucher, newCategory);
     // if (newVoucher === "Contra") {
-    //   console.log("inside if");
     //   newCategory = "Self transfer";
     // }
     let updatedCategory;
     let updateVoucher = newVoucher;
     if (newVoucher === "Contra") {
-      console.log("inside if");
       updatedCategory = "Self transfer";
     } else {
       updatedCategory = newCategory;
@@ -1426,7 +1347,6 @@ const DataTable = ({
     if (newVoucher === "Contra2") {
       updateVoucher = "Contra";
     }
-    console.log("updated category", updatedCategory);
     const updatedData = filteredData.map((tx) => {
       if (tx.id === row.id) {
         return {
@@ -1441,7 +1361,6 @@ const DataTable = ({
     const response = await window.electron.editVoucherType([
       { id: row.id, voucher_type: updateVoucher, category: updatedCategory },
     ]);
-    console.log("Response: ", response);
     setFilteredData(updatedData);
   };
 
@@ -1480,8 +1399,6 @@ const DataTable = ({
     }
     return new Blob([bytes], { type: type });
   };
-
-  console.log("helllll", reportData);
 
   return (
     // if source is equal to lifo or fifo then show the table
@@ -2166,7 +2083,6 @@ const DataTable = ({
                   type="date"
                   value={fromDate}
                   onChange={(e) => {
-                    console.log("Start date changed:", e.target.value);
                     setFromDate(e.target.value);
                   }}
                 />
@@ -2177,7 +2093,6 @@ const DataTable = ({
                   type="date"
                   value={toDate}
                   onChange={(e) => {
-                    console.log("End date changed:", e.target.value);
                     setToDate(e.target.value);
                   }}
                 />
@@ -2194,11 +2109,6 @@ const DataTable = ({
                 variant="default"
                 className="bg-black hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
                 onClick={() => {
-                  console.log("Applying filter with:", {
-                    fromDate,
-                    toDate,
-                    currentDateColumn,
-                  });
                   handleDateFilter(currentDateColumn, fromDate, toDate);
                   setDateFilterModalOpen(false);
                 }}
@@ -2769,7 +2679,6 @@ const DataTable = ({
                     <TableCell className="text-blue-600">
                       {change.newCategory}
                     </TableCell>
-                    {console.log({ change })}
                     {change.classification && (
                       <TableCell className="text-blue-600">
                         {change.classification}

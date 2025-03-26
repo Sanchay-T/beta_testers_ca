@@ -132,7 +132,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         failedDatasOfCurrentReport,
         currentCaseName
       );
-      console.log("result", result);
 
       if (
         result.success &&
@@ -148,9 +147,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
 
         const updatedRecentReportsData = reportData.recentReportsData.map(
           (report) => {
-            console.log("makwana:", report); // Print report ID
-            console.log("Report ID:", report.id); // Print report ID
-            console.log("Current Case ID:", result.data.caseId); // Print currentCaseId
             if (report.id === result.data.caseId) {
               return {
                 ...report,
@@ -161,14 +157,11 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
             return report;
           }
         );
-        console.log("updatedRecentReportsData", updatedRecentReportsData);
         updateReportData({
           ...reportData, // Preserve other reportData properties
 
           recentReportsData: updatedRecentReportsData,
         });
-
-        console.log("saas", reportData.recentReportsData);
       } else {
         // If the rectification failed, show error message and reasons
         const unrectifiedStatements = failedDatasOfCurrentReport.filter(
@@ -211,11 +204,9 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
 
   const handleRectify = () => {
     setDialogOpen(false);
-    console.log("Rectify clicked ", currentCaseId, currentCaseName);
   };
 
   const viewAnalysis = () => {
-    console.log("View Analysis clicked - ", currentCaseId);
     navigate(`/case-dashboard/${currentCaseId}/defaultTab`);
   };
 
@@ -224,7 +215,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       setIsLoading(true);
       try {
         const result = await window.electron.getRecentReports();
-        console.log({ recentReports: result });
         const formattedReports = result
           .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
           .map((report) => ({
@@ -336,10 +326,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
     );
   };
 
-  // const handleAddReport = () => {
-  //     console.log('Clicked on add report');
-  // };
-
   const handleDeleteReport = async (reportId) => {
     try {
       await window.electron.deleteReport(reportId);
@@ -371,7 +357,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
   };
 
   const handleView = (caseId) => {
-    console.log("clicked handle view for caseId - ", caseId);
     setIsLoading(true);
     navigate(`/case-dashboard/${caseId}/defaultTab`);
     setIsLoading(false);
@@ -573,10 +558,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         })
       );
 
-      console.log({ caseName, filesWithContent });
-
-      console.log({ caseName, filesWithContent });
-
       const result = await window.electron.generateReportIpc(
         {
           files: filesWithContent,
@@ -585,7 +566,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         "add-pdf"
       );
 
-      console.log("Report generation result:", result.data);
       setCurrentCaseId(result.data.caseId); // Store caseId
 
       if (result.success) {
@@ -599,7 +579,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
           variant: "success",
         });
 
-        console.log("Report generation result:", result.data);
         if (result.data.failedFiles.length > 0) {
           setShowRectifyButton(true);
           const failedFiles = result.data.failedFiles.map((file_path) => {
@@ -628,8 +607,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         throw new Error(errorMessage);
       }
     } catch (error) {
-      console.log("Report generation failed:", { error: error.stack });
-
       if (typeof error === "object" && error !== null) {
         console.error("Detailed error:", JSON.stringify(error, null, 2));
       }
@@ -683,17 +660,13 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
     setIsLoading(true);
     setCurrentCaseName(reportName);
 
-    console.log("Opening rectify modal for caseId:", reportId, reportName);
-
     try {
       const failedStatements = await window.electron.getFailedStatements(
         reportId
       );
 
-      console.log("Raw failedStatements from DB:", failedStatements);
-
       if (!Array.isArray(failedStatements) || failedStatements.length === 0) {
-        console.warn("No failed statements found for this report.");
+        // console.warn("No failed statements found for this report.");
         setFailedDatasOfCurrentReport([]); // Ensure UI doesn't break
         return;
       }
@@ -708,7 +681,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
 
           try {
             const parsedData = JSON.parse(item.data);
-            // console.log("Parsed failed statement data:", parsedData);
             if (parsedData.paths.length === 0) return null;
 
             return {
@@ -757,7 +729,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       }
       // Extract first valid failed statement (assuming one caseId per report)
       const firstFailedEntry = processedFailedData[0];
-      console.log({ processedFailedData, firstFailedEntry });
       if (!firstFailedEntry?.parsedContent?.paths?.length) {
         console.warn("No valid failed PDF paths found.");
         setFailedDatasOfCurrentReport([]);
@@ -782,15 +753,12 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         })
       );
 
-      console.log("Processed failed data for UI:", tempFailedDataOfReport);
-
       // Remove duplicate entries using pdfName
       const uniqueFailedDataOfReport = tempFailedDataOfReport.filter(
         (item, index, self) =>
           index === self.findIndex((t) => t.pdfName === item.pdfName)
       );
 
-      console.log("Unique failed data for shubh:", uniqueFailedDataOfReport);
       setIsHandleDetailsDialogOpen(reportId);
       setFailedDatasOfCurrentReport(uniqueFailedDataOfReport);
     } catch (error) {
@@ -810,7 +778,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
   };
 
   useEffect(() => {
-    console.log({ triggeredRectify: reportData });
     if (
       reportData.triggerRectify.caseId &&
       reportData.triggerRectify.caseName
@@ -821,92 +788,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       );
     }
   }, [reportData.triggerRectify]);
-
-  const EodformatData = (data) => {
-    try {
-      // Parse JSON if it's a string
-      if (typeof data === "string") {
-        data = JSON.parse(data);
-      }
-
-      // Ensure data is an object and contains the expected array
-      const extractedData = data;
-      if (!Array.isArray(extractedData)) {
-        console.error("Error: Data is not an array", extractedData);
-        return [];
-      }
-
-      return extractedData.map((entry) => {
-        let formattedEntry = { ...entry };
-
-        // Format all numeric values except the "Day" column
-        Object.keys(formattedEntry).forEach((key) => {
-          if (key !== "Day" && typeof formattedEntry[key] === "string") {
-            // Convert string numbers to actual numbers for Excel formatting
-            formattedEntry[key] = parseFloat(formattedEntry[key]);
-          }
-        });
-
-        return formattedEntry;
-      });
-    } catch (error) {
-      console.error("Error parsing JSON:", error);
-      return [];
-    }
-  };
-
-  function mapDataForExcelGenerator(
-    accountNumber,
-    customerName,
-    bankName,
-    summaryObject
-  ) {
-    // Helper function to convert the format of each table
-    const reformatTable = (tableData) => {
-      if (!tableData || !Array.isArray(tableData)) return [];
-
-      return tableData.map((item) => {
-        const newItem = {
-          Particulars:
-            item[
-              Object.keys(item).find(
-                (key) =>
-                  key.includes("Payments") ||
-                  key.includes("Particulars") ||
-                  key.includes("Receipts") ||
-                  key.includes("Credit") ||
-                  key.includes("Debit")
-              )
-            ],
-        };
-
-        // Add all month data and Total column
-        Object.keys(item).forEach((key) => {
-          if (key.includes("-202") || key === "Total") {
-            // Ensures "Total" is also included
-            newItem[key] = item[key];
-          }
-        });
-
-        return newItem;
-      });
-    };
-    console.log("particulars", reformatTable(summaryObject.particulars || []));
-
-    return {
-      accountNumber,
-      customerName,
-      bankName,
-      summaryObject: {
-        particulars: reformatTable(summaryObject.particulars || []),
-        incomeReceipts: reformatTable(summaryObject.incomeReceipts || []),
-        importantExpenses: reformatTable(summaryObject.importantExpenses || []),
-        otherExpenses: reformatTable(summaryObject.otherExpenses || []),
-        contraCredit: reformatTable(summaryObject.contraCredit || []),
-        contraDebit: reformatTable(summaryObject.contraDebit || []),
-      },
-    };
-  }
 
   const handleDownload = async (caseid, status, caseName) => {
     if (status === "Pending") {
@@ -921,11 +802,9 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
     }
 
     try {
-      console.log("Downloading financial report for case:", caseid);
       const success = await generateFinancialReport(caseid, caseName, false);
 
       if (success) {
-        console.log("Financial report downloaded successfully.");
       } else {
         console.error("Failed to generate the financial report.");
       }
@@ -939,9 +818,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
     // const accountNumber = getStatements[0].accountNumber;
     // const customerName = getStatements[0].customerName;
     // const bankName = getStatements[0].bankName;
-    // console.log("nasfklnkd", accountNumber, customerName, bankName);
-    // console.log("AccNameBankData", getStatements);
-    // console.log("SummaryData", summaryObject);
 
     // // Map the data to the required format
     // const mappedData = mapDataForExcelGenerator(
@@ -954,55 +830,42 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
 
     // const opportunityToEarnData =
     //   await window.electron.getOpportunityToEarnForExcel(caseid);
-    // console.log("opportunityToEarnData", opportunityToEarnData.data);
     // OpportunityToEarnExcel(opportunityToEarnData.data);
 
     // const EodData = await window.electron.getEodBalance(caseid);
-    // console.log("type of data ", typeof EodData[0].data);
-    // console.log("Is Array:", Array.isArray(EodData[0].data));
     // const formattedEodData = EodformatData(EodData[0].data);
-    // console.log("EodData", formattedEodData);
     // EodBalanceExcel(formattedEodData);
 
-    // console.log("EodData", formattedEodData);
     // EodBalanceExcel(formattedEodData);
 
     // const cashwithdrawal =
     //   await window.electron.getTransactionsByCashWithdrawal(caseid);
-    // console.log("cashwithdrawal", typeof cashwithdrawal);
     // CashWithdrawalExcel(cashwithdrawal);
 
     // const cashdeposit = await window.electron.getTransactionsByCashDeposit(
     //   caseid
     // );
-    // console.log("cashdeposit", cashdeposit);
     // CashDepositExcel(cashdeposit);
 
     // const ProbableEmi = await window.electron.getTransactionsByEmi(caseid);
-    // console.log("ProbableEmi", ProbableEmi);
     // ProbableEmiExcel(ProbableEmi);
 
     // const reversal = await window.electron.getTransactionsByReversal(caseid);
-    // console.log("reversal", reversal);
     // ReversalExcel(reversal);
 
     // const suspensecredit =
     //   await window.electron.getTransactionsBySuspenseCredit(caseid);
-    // console.log("suspensecredit", suspensecredit[0]);
     // const transformData = processSuspenseData(suspensecredit);
-    // console.log("transformData", transformData);
     // SuspenseCreditExcel(transformData);
 
     // const suspensedebit = await window.electron.getTransactionsBySuspenseDebit(
     //   caseid
     // );
     // const transformData = processSuspenseData(suspensedebit);
-    // console.log("suspensedebit", transformData);
     // SuspenseDebitExcel(transformData);
 
     // let file_cretaed = false;
     // try {
-    //   console.log("setting setisexcel true");
     //   setIsExcelLoading(true); // Start loading
 
     //   // Start the download process in the main process
@@ -1016,7 +879,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
     //   window.electron.download.onExcelDownloadChunk((chunk) => {
     //     downloadedChunks.push(chunk);
     //     downloadProgress += chunk.length;
-    //     console.log(`Downloaded ${downloadProgress} bytes`);
 
     //     // Update progress if needed (could add a progress bar)
     //     // const progressPercentage = (downloadProgress / totalFileSize) * 100;
@@ -1028,7 +890,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
     //     if (!file_cretaed) {
     //       file_cretaed = true;
     //       const { message, fileName } = res;
-    //       console.log("Download completed:", message);
     //       setIsExcelLoading(false); // End loading state
 
     //       const fileBlob = new Blob(downloadedChunks, {
@@ -1054,7 +915,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
 
     //   // Handle download error
     //   window.electron.download.onExcelDownloadError((error) => {
-    //     console.log("Error downloading file:", error);
     //     setIsExcelLoading(false);
 
     //     toast({
@@ -1096,13 +956,9 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       const suspenseTransactionaAll =
         await window.electron.getTransactionsBySuspense(caseId, null);
 
-      console.log("suspenseTransactionaAll", suspenseTransactionaAll);
-
       const transformedSuspenseData = processSuspenseData(
         suspenseTransactionaAll
       );
-
-      console.log("transformedSuspenseData", transformedSuspenseData);
 
       return transformedSuspenseData;
 
@@ -1120,8 +976,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
     let newTitle = `${caseName} Suspense Transactions.xlsx`;
 
     exportToExcel(suspenseData, newTitle, false, reportData.categoryOptions);
-
-    console.log({ suspenseData });
   };
   const handleSummaryDownload = () => {};
 
@@ -1129,11 +983,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
     const file = event.target.files[0];
     if (!file) return;
 
-    console.log({ caseId, event });
-
     const suspenseData = await fetchSuspenseData(caseId);
-
-    console.log("Suspense Data: ", suspenseData);
 
     const reader = new FileReader();
     reader.onload = async (e) => {
@@ -1142,8 +992,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
       const parsedData = XLSX.utils.sheet_to_json(sheet);
-
-      console.log("Uploaded Suspense Data: ", parsedData);
 
       // Extract modified categories and compare with existing data
       const updates = parsedData
@@ -1166,7 +1014,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         })
         .filter(Boolean); // Remove nulls
 
-      console.log({ updates });
       // Store updates and show confirmation modal
       setUploadedChanges({ updates, suspenseData, caseId });
       setCategoryUpdateModalOpen(true);
@@ -1188,7 +1035,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
   const applyUploadedCategoryChanges = async () => {
     // Suspense excel upload handle
     try {
-      console.log("Applying category updates:", uploadedChanges);
       const suspenseTransactions = uploadedChanges.suspenseData;
       const uploadedData = uploadedChanges.updates;
 
@@ -1209,15 +1055,12 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         return updatedTransaction;
       });
 
-      console.log("Updated Transactions", updatedTransactions);
-
       const payload = convertArrayToObject(updatedTransactions);
-      console.log("Payload", payload);
       const response = await window.electron.editCategory(
         payload,
         uploadedChanges.caseId
       );
-      console.log({ response });
+      // console.log({ response });
       setCategoryUpdateModalOpen(false);
       setUploadedChanges({});
       toast({
@@ -1245,19 +1088,14 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
 
   const isHandleDetailsOpenForThisId = (id) => {
     if (!id) return null;
-    if (isHandleDetailsDialogOpen === id) {
-      console.log("Aiyaz  Handle details open for id ", id);
-    }
+
     return isHandleDetailsDialogOpen === id;
   };
 
   const handleChangeForHandleDetails = (id) => {
     if (isHandleDetailsDialogOpen === id) {
-      console.log("Aiyaz  Setting handle details as null");
       setIsHandleDetailsDialogOpen(null);
     } else {
-      console.log("Aiyaz Setting handle details as ", id);
-
       setIsHandleDetailsDialogOpen(id);
     }
   };
@@ -1572,7 +1410,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                     const hasError = Boolean(
                                       statement.respectiveReasonsForError
                                     );
-                                    console.log({ isDone, hasError, report });
                                     return (
                                       <div
                                         key={`statement-${
@@ -1772,10 +1609,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
           <DialogHeader>
             <DialogTitle>Report Generated Successfully!</DialogTitle>
             <DialogDescription className="flex items-end gap-x-4 pt-4 ">
-              {console.log(
-                "failedStatements from alert box ",
-                failedStatements
-              )}
               {failedStatements.length === 0 ? (
                 <div className="flex items-center gap-x-4">
                   <CheckCircle className="text-green-500 w-6 h-6 mt-2" />

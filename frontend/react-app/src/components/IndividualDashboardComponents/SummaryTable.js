@@ -97,9 +97,9 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
 
     // Get the category value from the summary row
     const categoryColumn = Object.keys(row)[0];
-    console.log("Category column:", categoryColumn);
+    // console.log("Category column:", categoryColumn);
     const categoryValue = row[categoryColumn];
-    console.log("Category value:", categoryValue);
+    // console.log("Category value:", categoryValue);
 
     return transactionData
       .filter((transaction) =>
@@ -115,7 +115,7 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
               .includes(categoryValue.toLowerCase())
       )
       .map((transaction) => {
-        console.log({ transaction });
+        // console.log({ transaction });
         // Create a formatted date string from the date object
         let formattedDate;
         try {
@@ -164,7 +164,7 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
   }, [data]);
 
   const handleRowClick = (row) => {
-    console.log({ clicked: row });
+    // console.log({ clicked: row });
     setSelectedRow(row);
     const filtered = filterTransactionsByCategory(row);
 

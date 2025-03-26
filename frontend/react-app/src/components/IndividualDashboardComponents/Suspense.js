@@ -68,7 +68,7 @@ const Suspense = () => {
           parseInt(individualId)
         );
 
-      console.log("suspenseTransactionaAll", suspenseTransactionaAll);
+      // console.log("suspenseTransactionaAll", suspenseTransactionaAll);
 
       let transformedSuspenseData = processData(suspenseTransactionaAll);
 
@@ -76,7 +76,7 @@ const Suspense = () => {
       transformedSuspenseData = transformedSuspenseData.filter((item) => item);
 
 
-      console.log("transformedSuspenseData", transformedSuspenseData);
+      // console.log("transformedSuspenseData", transformedSuspenseData);
 
       const uniqueMonths = [
         ...new Set(transformedSuspenseData.map((item) => item.monthKey)),

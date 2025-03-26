@@ -40,7 +40,7 @@ const Transactions = () => {
             : transaction.entity,
         voucher_type: transaction.voucher_type,
       }));
-      console.log({ formattedData });
+      // console.log({ formattedData });
       setTransactionData(formattedData);
     } catch (err) {
       setError("Failed to fetch transactions");
@@ -140,9 +140,9 @@ const Transactions = () => {
     })
     .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-  useEffect(() => {
-    console.log({ filteredData });
-  }, [filteredData]);
+  // useEffect(() => {
+  //   console.log({ filteredData });
+  // }, [filteredData]);
   return (
     <div className="rounded-lg space-y-6 m-8 mt-2">
       {isLoading ? (

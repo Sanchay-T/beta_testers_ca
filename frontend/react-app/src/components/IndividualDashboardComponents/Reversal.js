@@ -35,7 +35,7 @@ const Reversal = () => {
         caseId,
         parseInt(individualId)
       );
-      console.log("refund transactions:", result);
+      // console.log("refund transactions:", result);
       // Transform data to include only required fields
       const transformedData = result.map((item) => ({
         date: new Date(item.date).toLocaleDateString("en-GB", {

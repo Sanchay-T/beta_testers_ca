@@ -33,7 +33,6 @@ const Dashboard = () => {
   const { defaultTab } = useParams();
   const { reportData, updateReportData } = useReportContext();
   const { user } = useAuth();
-  console.log("user from home", user);
 
   const navItems = [
     {
@@ -94,7 +93,6 @@ const Dashboard = () => {
   ];
 
   useEffect(() => {
-    console.log({ defaultTab });
     if (!defaultTab || defaultTab === "defaultTab")
       setActiveTab(navItems[0].title);
     else setActiveTab(defaultTab);

@@ -538,10 +538,10 @@ const processOpportunityToEarnData = async (
 ) => {
   log.info("Processing opportunity to earn data for case:", caseName);
   try {
-    console.log(
-      "Full Opportunity to Earn Data:",
-      JSON.stringify(opportunityToEarnData)
-    );
+    // console.log(
+    //   "Full Opportunity to Earn Data:",
+    //   JSON.stringify(opportunityToEarnData)
+    // );
 
     // Extract the array from the object
     const opportunityToEarnArray = Array.isArray(opportunityToEarnData)

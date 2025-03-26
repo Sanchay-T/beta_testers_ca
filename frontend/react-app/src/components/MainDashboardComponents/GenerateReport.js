@@ -125,10 +125,6 @@ export default function GenerateReport() {
         })
       );
 
-      console.log({ caseName, filesWithContent });
-
-      console.log({ caseName, filesWithContent });
-
       const result = await window.electron.generateReportIpc(
         {
           files: filesWithContent,
@@ -137,7 +133,6 @@ export default function GenerateReport() {
         "generate-report"
       );
 
-      // console.log("months", result.data.missingMonthsList);
       if (
         result.data.missingMonthsList &&
         result.data.missingMonthsList.length > 0
@@ -145,7 +140,6 @@ export default function GenerateReport() {
         setMissingMonthsList(result.data.missingMonthsList);
       }
 
-      console.log("Report generation result:", result.data);
       setCurrentCaseId(result.data.caseId); // Store caseId
 
       if (result.success) {
@@ -216,7 +210,6 @@ export default function GenerateReport() {
             }),
             // statements: null,
           };
-          console.log("maxxx", newData);
 
           updateReportData({
             recentReportsData: [newData, ...reportData.recentReportsData],
@@ -244,8 +237,6 @@ export default function GenerateReport() {
         throw new Error(errorMessage);
       }
     } catch (error) {
-      console.log("Report generation failed:", { error: error.stack });
-
       if (typeof error === "object" && error !== null) {
         console.error("Detailed error:", JSON.stringify(error, null, 2));
       }
@@ -281,9 +272,7 @@ export default function GenerateReport() {
     }
   };
 
-  console.log("reportData shubham", reportData);
   const viewAnalysis = () => {
-    console.log("View Analysis clicked - ", currentCaseId);
     navigate(`/individual-dashboard/${currentCaseId}/defaultTab`);
   };
 
@@ -294,7 +283,6 @@ export default function GenerateReport() {
       ...reportData,
       triggerRectify: { caseId: currentCaseId, caseName: currentCaseName },
     });
-    console.log("Rectify clicked ", currentCaseId, currentCaseName);
   };
 
   const notifications = [
@@ -411,10 +399,6 @@ export default function GenerateReport() {
               </DialogTitle>
             )}
             <DialogDescription className="flex items-end gap-x-4 pt-4 ">
-              {console.log(
-                "failedStatements from alert box ",
-                failedStatements
-              )}
               {/* {failedStatements.length === 0 && (
                 <div className="flex items-center gap-x-4">
                   <CheckCircle className="text-green-500 w-6 h-6 mt-2" />

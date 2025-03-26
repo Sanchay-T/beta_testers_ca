@@ -46,7 +46,7 @@ const exportToExcel = async (
   const columnsToIgnore = ["monthKey"];
   const colsToHide = ["id"];
 
-  console.log({ transactions, fileName, forShare, categoryOptions });
+  // console.log({ transactions, fileName, forShare, categoryOptions });
 
   if (!transactions.length) return null;
 
@@ -63,13 +63,13 @@ const exportToExcel = async (
     ...row,
   }));
 
-  console.log({
-    transactionsLength: transactions.length,
-    fileName,
-    forShare,
-    categoryOptions,
-    exampleTransaction: transactions[0],
-  });
+  // console.log({
+  //   transactionsLength: transactions.length,
+  //   fileName,
+  //   forShare,
+  //   categoryOptions,
+  //   exampleTransaction: transactions[0],
+  // });
 
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet("Transactions");

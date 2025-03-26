@@ -82,7 +82,7 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath, initialConfig = init
           id: Date.now() + Math.random(),
           x: line.x,
         })).sort((a, b) => a.x - b.x)
-        console.log({ sortedInitialLines })
+        // console.log({ sortedInitialLines })
         setColumnLines(sortedInitialLines)
       }
 
@@ -102,13 +102,13 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath, initialConfig = init
   }, [initialConfig, pdfBlob])
 
   useEffect(() => {
-    console.log({ OpeningPDf: pdfPath })
+    // console.log({ OpeningPDf: pdfPath })
     window.electron.fetchPdfContent(pdfPath)
       .then(base64 => {
         const blob = base64StringToBlob(base64, 'application/pdf');
-        console.log("Blob : ", { blob })
+        // console.log("Blob : ", { blob })
         setPdfBlob(URL.createObjectURL(blob));
-        console.log('Fetched PDF:', blob);
+        // console.log('Fetched PDF:', blob);
       })
       .catch(err => console.error('Failed to fetch PDF:', err));
   }, []);
@@ -314,7 +314,7 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath, initialConfig = init
 
   const handleSubmit = () => {
     const requiredTypes = ["balance", "date", "description"]
-    console.log({columnLabels})
+    // console.log({columnLabels})
     const selectedTypes = columnLabels.map((label) => label.type)
 
     if (!requiredTypes.every((type) => selectedTypes.includes(type))) {
@@ -352,7 +352,7 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath, initialConfig = init
       columns,
     }
 
-    console.log({ pdfPath, config })
+    // console.log({ pdfPath, config })
     addColsToStatementData(pdfPath, config.columns)
   }
 

@@ -55,7 +55,7 @@ const Contra = () => {
             return dateA - dateB;
           });
 
-          console.log({transformedData})
+          // console.log({transformedData})
         setData(transformedData)
         setAvailableMonths(uniqueMonths);
         

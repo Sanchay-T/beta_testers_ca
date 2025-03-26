@@ -44,7 +44,7 @@ export function LoginForm({ className, ...props }) {
     let success = false;
     if (!isActivated) {
       // First handle license activation
-      console.log("Inside Signup..");
+      // console.log("Inside Signup..");
       success = await signUp(credentials);
       // set localstorage for role selection
       localStorage.setItem("role", credentials.role);
@@ -52,7 +52,7 @@ export function LoginForm({ className, ...props }) {
         return;
       }
     } else {
-      console.log("Inside Login");
+      // console.log("Inside Login");
       success = await login({
         email: credentials.email,
         password: credentials.password,
@@ -60,7 +60,7 @@ export function LoginForm({ className, ...props }) {
       });
     }
 
-    console.log("License activation result:", success);
+    // console.log("License activation result:", success);
     if (success) {
       const from = location.state?.from?.pathname || "/";
       navigate(from, { replace: true });
@@ -74,7 +74,7 @@ export function LoginForm({ className, ...props }) {
       [id]: value,
     }));
   };
-  console.log("inputCredentials", credentials);
+  // console.log("inputCredentials", credentials);
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>

@@ -60,7 +60,6 @@ const IndividualTable = () => {
     setIsLoading(true);
     try {
       const result = await window.electron.getStatements(caseId);
-      console.log({ result });
       setStatements(result);
 
       // Update the report data with the file path of statements
@@ -91,12 +90,6 @@ const IndividualTable = () => {
 
   const currentData = filteredData;
 
-  const handleSaveMarkerData = (data) => {
-    // Handle saving marker data here
-    console.log("recent reports failed pdf handleSave data:", data);
-    setIsMarkerModalOpen(false);
-  };
-
   const handleRowClick = async (name, accountNumber, individualId) => {
     setIsLoading(true);
     try {
@@ -110,13 +103,13 @@ const IndividualTable = () => {
     // Update processing state for this specific file path
     setProcessingState((prev) => ({ ...prev, [filePath]: true }));
     processingFilePathRef.current = filePath;
-    console.log("filePath", processingFilePathRef.current);
+    // console.log("filePath", processingFilePathRef.current);
 
     try {
       const selectedFile = statements.find(
         (stmt) => stmt.filePath === filePath
       );
-      console.log({ selectedFile });
+      // console.log({ selectedFile });
       if (!selectedFile) {
         console.error("File not found in statements list:", filePath);
         // Reset processing state if file not found
@@ -174,7 +167,7 @@ const IndividualTable = () => {
       }));
       processingFilePathRef.current = null;
     }
-    console.log("processingFilePathRef.current", processingFilePathRef.current);
+    // console.log("processingFilePathRef.current", processingFilePathRef.current);
   };
   // Add this new function to handle completion
   const handleProcessingComplete = () => {
@@ -189,7 +182,7 @@ const IndividualTable = () => {
       }));
       processingFilePathRef.current = null;
     }
-    console.log("handle", processingFilePathRef.current);
+    // console.log("handle", processingFilePathRef.current);
     setProcessingState(false);
   };
 
@@ -203,7 +196,7 @@ const IndividualTable = () => {
   };
 
   const confirmDelete = (statementId) => {
-    console.log("Deleting statement ID:", statementId); // Debugging
+    // console.log("Deleting statement ID:", statementId); // Debugging
     setSelectedStatementId(statementId);
     setIsDialogOpen(true);
   };
@@ -215,7 +208,7 @@ const IndividualTable = () => {
     }
 
     try {
-      console.log("Deleting statement ID:", selectedStatementId); // Debugging
+      // console.log("Deleting statement ID:", selectedStatementId); // Debugging
       const result = await window.electron.deleteStatement(selectedStatementId);
 
       // Remove from UI after successful deletion
@@ -289,7 +282,6 @@ const IndividualTable = () => {
 
                   // Check if this specific row is processing
                   const isProcessing = processingState[filePath];
-                  console.log("is Processing", isProcessing);
 
                   return (
                     <TableRow

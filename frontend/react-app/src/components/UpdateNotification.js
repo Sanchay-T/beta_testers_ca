@@ -9,7 +9,7 @@ const UpdateNotification = () => {
   useEffect(() => {
     // Set up update event listeners with detailed logging
     updates.onUpdateStatus((status, info) => {
-      console.log('Update status:', status, info);
+      // console.log('Update status:', status, info);
       setUpdateStatus(status);
       if (status === 'available') {
         toast({
@@ -38,7 +38,7 @@ const UpdateNotification = () => {
       }
     });
     updates.onUpdateDownloaded((info) => {
-      console.log('Update downloaded:', info);
+      // console.log('Update downloaded:', info);
       setUpdateStatus('ready');
       toast({
         title: "Update Ready",

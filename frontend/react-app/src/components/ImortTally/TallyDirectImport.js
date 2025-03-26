@@ -84,7 +84,6 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
       // check if tally is running or not
       const response = await window.electron.checkTallyRunning(port);
       const isTallyRunning = response.success;
-      console.log({ isTallyRunning });
 
       if (!isTallyRunning) {
         setShowTallyWarning(true);
@@ -109,7 +108,6 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
       setLoading(true);
 
       // fetchVouchersTransactions();
-      console.log({ selectedVoucher });
       handleVoucherChange(selectedVoucher);
     }
   }, [source, defaultVoucher]);
@@ -241,7 +239,6 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
   };
 
   const handleTallyUpload = async (txData) => {
-    console.log(txData);
     // “txData” is optional—ManualEntryTable might pass it.
     if (!companyName.trim()) {
       // alert("Please enter a company name before uploading.");
@@ -255,7 +252,6 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
       });
       return;
     }
-    console.log({ selectedBankLedger, selectedVoucher });
     if (selectedVoucher === "Payment Receipt Contra" && !selectedBankLedger) {
       // alert("Please enter a company name before uploading.");
       toast({
@@ -331,15 +327,11 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
       })
       .filter(Boolean);
 
-    console.log({ tallyData });
-
     setTallyUploadData(tallyData);
     setConfirmationModal(true);
   };
 
   const handleLedgerCreation = async (data) => {
-    console.log({ LedgerCreation: data });
-
     // “txData” is optional—ManualEntryTable might pass it.
     if (!companyName.trim()) {
       // alert("Please enter a company name before uploading.");
@@ -392,7 +384,6 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
       })
       .filter(Boolean);
 
-    console.log({ tallyData });
     setTallyUploadData(tallyData);
     setConfirmationModal(true);
     // updateReportData({ ledgerCreated: true });
@@ -443,7 +434,7 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
       setFailedTransactions(failedTransactions);
       setSuccessIds(successIds);
 
-      console.log({ response });
+      console.log({ afterCreation: response });
 
       // // Store failed reasons in localStorage
       // const storedReasons = JSON.parse(
@@ -501,7 +492,6 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
     }
 
     const response = await window.electron.importLedgers(companyName, port);
-    console.log({ response });
     if (response.success) {
       const ledgerData = response.ledgerData;
       setImportedLedgers(ledgerData);
@@ -519,12 +509,10 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
   };
 
   const removeDuplicateLedgers = (resLedgers = importedLedgers) => {
-    console.log({ dataToRender });
     const ledgers = resLedgers.map((ledger) => ledger.ledgerName);
     const uniqueLedgersData = dataToRender.filter(
       (d) => !ledgers.includes(d.ledger_name)
     );
-    console.log({ uniqueLedgersData });
     setDataToRender(uniqueLedgersData);
   };
 
@@ -539,7 +527,6 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
       failedTransactions &&
       failedTransactions.reduce((acc, transaction) => {
         const errorMessage = transaction.error.toLowerCase();
-        console.log({ errorMessage });
         let errorCategory = "Other Errors";
 
         if (
@@ -662,17 +649,14 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
           header: "A", // Use A,B,C as keys initially
           range: 0,
         });
-        console.log("Parsed Excel Data:", parsedData);
 
         if (parsedData.length === 0) return;
 
         // Extract header row (first row)
         const headerRow = parsedData[1];
-        console.log("Excel Headers row:", headerRow);
 
         // Create a mapping of column indices to actual header names
         const headers = Object.keys(headerRow).map((key) => headerRow[key]);
-        console.log("Excel Headers:", headers);
 
         // Check if a company name column exists
         const companyNameIndex = headers.findIndex(
@@ -681,7 +665,6 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
             typeof header === "string" &&
             header.toLowerCase().includes("company name")
         );
-        console.log("Company Name Index:", companyNameIndex);
 
         // If company name exists in the headers, set it
         // if (companyNameIndex !== -1) {
@@ -740,18 +723,12 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
                 ? toSnakeCase(header)
                 : toSnakeCase(String(header));
 
-            // console.log({ fieldName, value });
-            console.log({ header, value });
-
             // Store with original header name as key
             transaction[fieldName] = value || "";
           });
 
           return transaction;
         });
-
-        console.log("Excel Headers:", filteredHeaders);
-        console.log("Processed Transactions:", newTransactions);
 
         // Set filtered headers for the table to use
         setExcelHeaders(
@@ -778,7 +755,6 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
 
   // If the user manually enters rows, “ManualEntryTable” might call this:
   const handleManualEntriesSubmit = (rows) => {
-    console.log({ rows });
     // rows is an array from ManualEntryTable
     // setTransactions(rows);
     handleTallyUpload(rows);
@@ -796,44 +772,16 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
   };
 
   const handleUploadClick = (transactions = null) => {
-    console.log("Inside handleUploadClick ", transactions, { selectedVoucher });
     if (selectedVoucher === "Payment Receipt Contra") {
-      console.log("Payment reciept submit triggered");
       handleTallyUpload(transactions);
     } else if (selectedVoucher === "Ledgers") {
-      console.log("Ledger creation triggered");
       handleLedgerCreation(transactions);
-    }
-  };
-
-  const updateLedgerCreationStatus = async (id, status) => {
-    console.log("updateLedgerCreationStatus", { id, status });
-    let ledgerCreationStatusHistory = await localForage.getItem(
-      "ledgerCreationStatusHistory"
-    );
-    console.log({ got: ledgerCreationStatusHistory });
-    if (ledgerCreationStatusHistory) {
-      ledgerCreationStatusHistory[id] = status;
-      console.log("setting 1", ledgerCreationStatusHistory);
-      await localForage.setItem(
-        "ledgerCreationStatusHistory",
-        ledgerCreationStatusHistory
-      );
-    } else {
-      ledgerCreationStatusHistory = { [id]: status };
-      console.log("setting 2", ledgerCreationStatusHistory);
-
-      await localForage.setItem(
-        "ledgerCreationStatusHistory",
-        ledgerCreationStatusHistory
-      );
     }
   };
 
   const recheckTallystatus = async () => {
     const response = await window.electron.checkTallyRunning(port);
     const isTallyRunning = response.success;
-    console.log({ isTallyRunning });
 
     if (isTallyRunning) setShowTallyWarning(false);
     else {

@@ -442,7 +442,7 @@ function registerIndividualDashboardIpc() {
                 eq(transactions.category, "UPI-Cr")
               )
             );
-          log.info("UPI-Cr transactions fetched successfully:", result);
+          // log.info("UPI-Cr transactions fetched successfully:", result);
           return result;
         }
       } catch (error) {
@@ -490,7 +490,7 @@ function registerIndividualDashboardIpc() {
                 eq(transactions.category, "UPI-Dr")
               )
             );
-          log.info("UPI-Dr transactions fetched successfully:", result);
+          // log.info("UPI-Dr transactions fetched successfully:", result);
           return result;
         }
       } catch (error) {
@@ -842,7 +842,7 @@ function registerIndividualDashboardIpc() {
                 )
               )
             );
-          log.info("Contra transactions fetched successfully:", result);
+          // log.info("Contra transactions fetched successfully:", result);
           return result;
         } else {
           const allStatements = await db
@@ -864,7 +864,7 @@ function registerIndividualDashboardIpc() {
                 )
               )
             );
-          log.info("Contra transactions fetched successfully:", result);
+          // log.info("Contra transactions fetched successfully:", result);
 
           return result;
         }

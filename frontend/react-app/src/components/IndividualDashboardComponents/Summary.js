@@ -102,25 +102,25 @@ const Summary = () => {
 
         if (isCombinedDashboard) {
           result = await window.electron.getSummary(caseId, null);
-          console.log("result", result);
+          // console.log("result", result);
           parsedData = result.length > 0 ? JSON.parse(result[0].data) : {};
-          console.log("parsedData", parsedData);
+          // console.log("parsedData", parsedData);
           tempTransactions = await window.electron.getTransactions(
             caseId,
             null
           );
         } else {
           result = await window.electron.getSummary(caseId, individualId);
-          console.log("result", result);
+          // console.log("result", result);
           parsedData = result.length > 0 ? JSON.parse(result[0].data) : {};
-          console.log("parsedData", parsedData);
+          // console.log("parsedData", parsedData);
           tempTransactions = await window.electron.getTransactions(
             caseId,
             parseInt(individualId)
           );
         }
 
-        console.log("transactions", tempTransactions.length);
+        // console.log("transactions", tempTransactions.length);
 
         const formatData = (data) => {
           return data.map((item) => {
@@ -394,13 +394,13 @@ const Summary = () => {
     }
 
     try {
-      console.log("Downloading summary report for case:", caseid);
+      // console.log("Downloading summary report for case:", caseid);
 
       const fileName = reportData.customerName || reportData.reportName;
       const success = await generateFinancialReport(caseid, fileName, true); // Pass true for summaryOnly
 
       if (success) {
-        console.log("Summary report downloaded successfully.");
+        // console.log("Summary report downloaded successfully.");
         toast({
           title: "Success",
           description: "Summary Excel file downloaded successfully",

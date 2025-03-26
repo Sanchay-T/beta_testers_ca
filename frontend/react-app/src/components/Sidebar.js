@@ -65,13 +65,13 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
     let fetchedReportName = reportData.reportName;
 
     const fetchCustomerName = async () => {
-      console.log("Fetching customer name for individual ID:", individualId);
+      // console.log("Fetching customer name for individual ID:", individualId);
       try {
         const customerNametemp = await window.electron.getCustomerName(
           individualId
         );
         if (customerNametemp) {
-          console.log("Customer name fetched successfully:", customerNametemp);
+          // console.log("Customer name fetched successfully:", customerNametemp);
 
           updateReportData({
             ...reportData,

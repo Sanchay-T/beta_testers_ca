@@ -18,10 +18,10 @@ function registerEditReportHandlers() {
 
   async function processOpportunityToEarnData(opportunityToEarnData, caseId) {
     try {
-      log.info(
-        "Full Opportunity to Earn Data:",
-        JSON.stringify(opportunityToEarnData)
-      );
+      // log.info(
+      //   "Full Opportunity to Earn Data:",
+      //   JSON.stringify(opportunityToEarnData)
+      // );
 
       // Check if the data is an array with at least one element
       const opportunityToEarnArray = Array.isArray(opportunityToEarnData)

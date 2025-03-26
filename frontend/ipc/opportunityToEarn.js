@@ -42,7 +42,7 @@ function registerOpportunityToEarnIpc() {
           )
         );
 
-      log.info("Opportunity to earn data:", data);
+      // log.info("Opportunity to earn data:", data);
 
       return { success: true, data };
     } catch (error) {

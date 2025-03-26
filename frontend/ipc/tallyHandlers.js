@@ -46,7 +46,6 @@ function registerTallyIpc() {
         } else {
           voucherTypesFilter = [voucherType.replace(" Voucher", "")];
         }
-        console.log({ voucherTypesFilter });
 
         // Combine the conditions using the and() helper so both are applied
         const allTransactions = await db
@@ -100,7 +99,6 @@ function registerTallyIpc() {
     for (let i = 0; i < end; i++) {
       const row = tallyUploadData[i];
       const voucherName = row.voucherName;
-      console.log({ voucherName });
       // const isContra = voucherName === "Contra";
       let xmlContent = null;
       tallyUploadData[i].invoiceDate = "20240401"; // Hardcoded date for now
@@ -246,7 +244,6 @@ function registerTallyIpc() {
       // const xmlResponse = response.data;
 
       // const dummyLedgers = ["ledger1", "ledger2", "ledger3"];
-      console.log({ response });
       const ledgers = response;
       return { success: true, ledgerData: ledgers };
     } catch (error) {

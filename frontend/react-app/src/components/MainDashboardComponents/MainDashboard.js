@@ -177,10 +177,7 @@ const MainDashboard = ({ handleTabChange }) => {
   };
 
   const handlePagesDurationChange = (duration) => {
-    console.log("Duration changed to ", duration, pagesData);
-
     const filteredResults = filterPagesDataByDuration(pagesData, duration);
-    console.log("filtered results", filteredResults);
 
     setPagesMetrics({
       ...filteredResults,
@@ -229,7 +226,6 @@ const MainDashboard = ({ handleTabChange }) => {
   // };
 
   const filterDataByDuration = (data, duration) => {
-    console.log("Aiyaz", { data, duration });
     const endDate = new Date();
     const startDate = new Date();
 
@@ -251,22 +247,15 @@ const MainDashboard = ({ handleTabChange }) => {
         startDate.setFullYear(endDate.getFullYear() - 1);
         break;
       case "all":
-        console.log("all data", data);
-        console.log("all data", data);
         return filterDataForAll(data);
       default:
         return filterDataForAll(data);
     }
 
-    // console.log("start date", startDate);
-    // console.log("end date", endDate);
-
     const filteredData = data.filter((item) => {
       const itemDate = new Date(item.date);
-      // console.log("item date", itemDate);
       return itemDate >= startDate && itemDate <= endDate;
     });
-    // console.log("filtered data", filteredData);
 
     const aggregatedData = filteredData.reduce((acc, item) => {
       const itemDate = new Date(item.date);
@@ -352,10 +341,6 @@ const MainDashboard = ({ handleTabChange }) => {
   // };
 
   const filterDataForAll = (data) => {
-    console.log("hello");
-    console.log("data1", data);
-    console.log("hello");
-    console.log("data1", data);
     const reportTotal = data.reduce(
       (sum, item) => sum + (item.reports || 0),
       0
@@ -379,21 +364,17 @@ const MainDashboard = ({ handleTabChange }) => {
 
   // const filterDataForToday = (data) => {
   //   const today = new Date();
-  //   // console.log("today", today);
   //   const todayString = today.toLocaleDateString("en-US", {
   //     month: "short",
   //     day: "2-digit",
   //     year: "numeric",
   //   });
-  //   // console.log("today date", todayString);
 
-  //   // console.log("data1", data);
   //   // Find the entry for the current month/year
   //   const todayData = data.find((item) => {
   //     const itemDate = item.month; // Already in "MMM YYYY" format
   //     return itemDate === todayString;
   //   });
-  //   // console.log("today data", todayData);
 
   //   if (!todayData) {
   //     return {
@@ -495,10 +476,8 @@ const MainDashboard = ({ handleTabChange }) => {
   };
 
   // const handleStatementsDurationChange = (duration) => {
-  //   // console.log("alldata", allData);
 
   //   const filteredResults = filterDataByDuration(allData, duration);
-  //   // console.log("transaction", filteredResults.transactionTotal);
 
   //   // setStatementsMetrics({
   //   //   totalStatements: filteredResults.statementTotal,
@@ -567,7 +546,6 @@ const MainDashboard = ({ handleTabChange }) => {
         const cachedData = localStorage.getItem("dashboardData");
 
         if (cachedData) {
-          console.log("Loading data from cache...");
           const parsedData = JSON.parse(cachedData);
 
           setAllData(parsedData.allData);
@@ -587,15 +565,12 @@ const MainDashboard = ({ handleTabChange }) => {
           return; // Exit the function if cache exists
         }
 
-        console.log("Fetching fresh data...");
-
         // Fetch fresh data
         const reports = await window.electron.getReportsProcessed();
         const statements = await window.electron.getStatementsProcessed();
         const transactions = await window.electron.getTransactionsProcessed();
         const pages = await window.electron.getPages();
         const opportunityToEarn = await window.electron.getOpportunityToEarn();
-        console.log("Opportunity to Earn12:", opportunityToEarn);
         let totalEligibility1 = 0;
 
         let totalCommission1 = 0;
@@ -612,7 +587,6 @@ const MainDashboard = ({ handleTabChange }) => {
         ) {
           const latestItem =
             opportunityToEarn.data[opportunityToEarn.data.length - 1];
-          console.log("Latest item:", latestItem);
 
           // Add proper validation for each property
           latestEligibilty = {
@@ -631,11 +605,8 @@ const MainDashboard = ({ handleTabChange }) => {
           };
 
           // Log the values we're about to set
-          console.log("Setting latestEligibiltyData to:", latestEligibilty);
           setLatestEligibiltyData(latestEligibilty);
         }
-
-        // console.log("latestEligibiltyData", latestEligibiltyData);
 
         if (
           opportunityToEarn.success &&
@@ -662,17 +633,12 @@ const MainDashboard = ({ handleTabChange }) => {
               (item.generalInsurance || 0)
             );
           }, 0);
-
-          console.log("Total Eligibility Amount:", totalEligibility1);
-          console.log("Total Commission Amount:", totalCommission1);
         } else {
           console.log("Invalid data structure");
         }
 
         setTotalEligibility(totalEligibility1);
         setTotalCommission(totalCommission1);
-        console.log("total eligibility", totalEligibility);
-        console.log("total commission", totalCommission);
         setPagesData(pages);
         const mergedData = processData(reports, statements, transactions);
         setAllData(mergedData);
@@ -702,7 +668,6 @@ const MainDashboard = ({ handleTabChange }) => {
         }, {});
 
         const aggregatedArray = Object.values(aggregatedData);
-        console.log("Aggregated Data:", aggregatedArray);
 
         // Calculate Metrics
         const totalPages = pages.reduce((sum, item) => sum + item.pages, 0);
@@ -766,8 +731,6 @@ const MainDashboard = ({ handleTabChange }) => {
             latestEligibiltyData: latestEligibilty,
           })
         );
-
-        console.log("Dashboard data cached successfully.");
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       }
@@ -798,8 +761,6 @@ const MainDashboard = ({ handleTabChange }) => {
   const gridClasses = isSmallScreen
     ? "grid gap-6 grid-cols-1 h-[300px]"
     : "grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 h-[300px]";
-
-  console.log("pagesss", pagesMetrics);
 
   return (
     <ScrollArea className="h-full">

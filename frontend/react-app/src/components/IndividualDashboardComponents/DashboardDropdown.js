@@ -41,7 +41,7 @@ const DashboardDropdown = () => {
   );
 
   const handleSelect = (value) => {
-    console.log("Selected value:", value);
+    // console.log("Selected value:", value);
     if (value === "combined") {
       navigate(`/individual-dashboard/${caseId}/defaultTab`);
     } else {
@@ -50,7 +50,7 @@ const DashboardDropdown = () => {
       const record = statements.find(
         (item) => item.customerName === value
       );
-      console.log({record})
+      // console.log({record})
       if (record) {
         navigate(`/individual-dashboard/${caseId}/${record.id}/defaultTab`);
       }
