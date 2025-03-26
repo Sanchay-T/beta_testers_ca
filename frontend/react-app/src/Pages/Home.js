@@ -6,6 +6,7 @@ import {
   ChartNoAxesCombined,
   IndianRupee,
   ReceiptText,
+  Grid2X2,
 } from "lucide-react";
 import ReportGenerator from "../components/MainDashboardComponents/GenerateReport";
 import { cn } from "../lib/utils";
@@ -52,28 +53,33 @@ const Dashboard = () => {
     //   icon: ChartNoAxesCombined,
     // },
     {
-      title: "Import to Tally",
+      title: "Tally Vouchers",
       url: "#",
-      icon: Import,
-      items: [
-        // {
-        //   title: "Tally Manual",
-        //   url: "#",
-        //   icon: null,
-        // },
-        {
-          title: "Tally Vouchers",
-          url: "#",
-          icon: null,
-        },
-        // {
-        //   title: "TallyERP Vouchers",
-        //   url: "#",
-        //   icon: null,
-        // },
-      ],
-      alwaysOpen: true, // Ensures the section remains open
+      icon: Grid2X2,
     },
+    // {
+    //   title: "Import to Tally",
+    //   url: "#",
+    //   icon: Import,
+    //   items: [
+    //     // {
+    //     //   title: "Tally Manual",
+    //     //   url: "#",
+    //     //   icon: null,
+    //     // },
+    //     {
+    //       title: "Tally Vouchers",
+    //       url: "#",
+    //       icon: null,
+    //     },
+    //     // {
+    //     //   title: "TallyERP Vouchers",
+    //     //   url: "#",
+    //     //   icon: null,
+    //     // },
+    //   ],
+    //   alwaysOpen: true, // Ensures the section remains open
+    // },
     {
       title: user.role === "MSME" ? "Loan Eligibility" : "Opportunity to Earn",
       url: "#",
