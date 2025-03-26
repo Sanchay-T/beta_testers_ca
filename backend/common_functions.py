@@ -389,8 +389,30 @@ def extraction_process_explicit_lines(bank, pdf_path, pdf_password, start_date, 
         name_n_num = extract_account_details(extract_text_from_pdf(pdf_path))
 
         # Add start and end date
-        if not idf.empty:
-            idf = add_start_n_end_date(idf, start_date, end_date, bank)
+        if idf.empty:
+            df = extract_dataframe_from_pdf(pdf_path, table_settings={
+                "vertical_strategy": "explicit",
+                "explicit_vertical_lines": explicit_lines,
+                "horizontal_strategy": "text",
+            })
+
+            all_null = all(label[1] == "null" for label in labels)
+
+            if not all_null:
+                new_row = [None] * len(df.columns)  # Create a blank row with the same number of columns
+                for index, label_type in labels:
+                    if index < len(new_row):
+                        new_row[index] = label_type
+
+                # Insert the new row at the top of the DataFrame
+                df.loc[-1] = new_row  # Add the new row with a negative index to place it at the top
+                df.index = df.index + 1  # Shift all indices by 1
+                df.sort_index(inplace=True)  # Reorder the DataFrame to update the row positions
+
+            idf, _ = model_for_pdf(df)
+            name_n_num = extract_account_details(extract_text_from_pdf(pdf_path))
+
+        idf = add_start_n_end_date(idf, start_date, end_date, bank)
 
         return idf, name_n_num, a
 
@@ -2454,6 +2476,27 @@ def make_summary_great_again(df1, opening_closing_balance, df2):
     contra_debit_summary = generate_summary(contra_debit_table, "Debit", "Contra Debit")
 
     missing_months_list = get_missing_months(opening_closing_balance, new_opening_closing_balance)
+
+    def filter_non_defaulters(df1, df2):
+        for row_number, row in df1.iterrows():
+            if row['Total'] == 0:
+                print("FOUND a")
+                category = row.iloc[0]  # Extract Category from first column
+                preference = df2.loc[df2['Category'] == category, 'Preference'].values
+
+                if len(preference) > 0 and 'non_default' in preference:
+                    print("FOUND z")
+                    df1.drop(index=row_number, inplace=True)
+
+        df1.reset_index(drop=True, inplace=True)
+        return df1
+
+    income_summary = filter_non_defaulters(income_summary, df2)
+    important_summary = filter_non_defaulters(important_summary, df2)
+    other_summary = filter_non_defaulters(other_summary, df2)
+    contra_credit_summary = filter_non_defaulters(contra_credit_summary, df2)
+    contra_debit_summary = filter_non_defaulters(contra_debit_summary, df2)
+
 
     return particulars_table, income_summary, important_summary, other_summary, contra_credit_summary, contra_debit_summary, missing_months_list
 
