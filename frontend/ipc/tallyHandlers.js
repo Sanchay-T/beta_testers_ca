@@ -11,6 +11,7 @@ const {
   buildTallyXmlContra,
   buildTallyPrimeLedgerXml,
   buildTallyERPLedgerXml,
+  fetchLedgerData,
 } = require("./buildTallyXml");
 const { XMLParser } = require("fast-xml-parser");
 
@@ -197,7 +198,7 @@ function registerTallyIpc() {
 
           if (lineError) {
             console.error(`Transaction ${row.id} Failed: ${lineError}`);
-            failedTransactions.push({ id: row.id, error: lineError });
+            failedTransactions.push({ [row.id]: lineError });
           } else {
             console.log(`Transaction ${row.id} Successful`);
             successIds.push(row.id);
@@ -229,6 +230,30 @@ function registerTallyIpc() {
       return { success: true, successIds, failedTransactions };
     }
   );
+
+  ipcMain.handle("import-ledgers", async (event, companyName, port) => {
+    log.info({ companyName, port });
+
+    try {
+      const response = await fetchLedgerData();
+      // const response = await axios.post(
+      //   `http://localhost:${[port]}`,
+      //   xmlContent,
+      //   {
+      //     headers: { "Content-Type": "application/xml" },
+      //   }
+      // );
+      // const xmlResponse = response.data;
+
+      // const dummyLedgers = ["ledger1", "ledger2", "ledger3"];
+      console.log({ response });
+      const ledgers = response;
+      return { success: true, ledgerData: ledgers };
+    } catch (error) {
+      console.error(`Ledger Import Failed (Server Error): ${error.message}`);
+      return { success: false, error: error.message };
+    }
+  });
 }
 
 module.exports = { registerTallyIpc };

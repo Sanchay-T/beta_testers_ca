@@ -122,13 +122,17 @@ contextBridge.exposeInMainWorld("electron", {
 
   updateTransactionStatus: (transactionIds) =>
     ipcRenderer.invoke("update-transaction-status", transactionIds),
-  deleteStatement: (statementId) => ipcRenderer.invoke("delete-statement", statementId),
+  deleteStatement: (statementId) =>
+    ipcRenderer.invoke("delete-statement", statementId),
   deleteStatement: (statementId) =>
     ipcRenderer.invoke("delete-statement", statementId),
 
   editVoucherType: (data) => ipcRenderer.invoke("update-voucher", data),
   uploadLedgerToTally: (data, port, tallyVersion) =>
     ipcRenderer.invoke("ledger-create", data, port, tallyVersion),
+  importLedgers: (companyName, port) =>
+    ipcRenderer.invoke("import-ledgers", companyName, port),
+
   user: {
     getData: (userId) => ipcRenderer.invoke("user:get-data", userId),
     updateData: (userData) => ipcRenderer.send("user:update-data", userData),

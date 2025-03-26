@@ -180,7 +180,6 @@ const DataTable = ({
     []
   );
   const [editedEntities, setEditedEntities] = useState({});
-  const [similarEntityModal, setSimilarEntityModal] = useState(false);
   const [batchModalOpen, setBatchModalOpen] = useState(false);
   const [batchEntityValue, setBatchEntityValue] = useState("");
   const { toast } = useToast();
@@ -2639,7 +2638,7 @@ const DataTable = ({
             </div>
           )}
 
-          <DialogFooter className="sticky bg-white bottom-0 p-4">
+          <DialogFooter className="sticky bg-white  bottom-0 p-4">
             <Button
               variant="ghost"
               onClick={() => {

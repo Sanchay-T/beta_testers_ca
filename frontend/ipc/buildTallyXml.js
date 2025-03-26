@@ -1,3 +1,5 @@
+const { DOMParser } = require("xmldom");
+
 function buildTallyXmlPayment(row) {
   const {
     companyName,
@@ -437,6 +439,89 @@ function buildTallyXmlGetAllLedgers({ companyName }) {
   `.trim();
 }
 
+async function fetchLedgerData() {
+  // Define the XML request payload
+  const xmlInput = `
+<ENVELOPE>
+  <HEADER>
+    <TALLYREQUEST>Export Data</TALLYREQUEST>
+  </HEADER>
+  <BODY>
+    <EXPORTDATA>
+      <REQUESTDESC>
+        <REPORTNAME>List of Accounts</REPORTNAME>
+        <STATICVARIABLES>
+          <SVEXPORTFORMAT>$$SysName:XML</SVEXPORTFORMAT>
+          <SVFROMDATE>01-Apr-2023</SVFROMDATE>
+          <SVTODATE>31-Mar-2024</SVTODATE>
+        </STATICVARIABLES>
+      </REQUESTDESC>
+    </EXPORTDATA>
+  </BODY>
+</ENVELOPE>
+`;
+
+  try {
+    // Send the POST request to the Tally server
+    const response = await fetch("http://localhost:9000", {
+      method: "POST",
+      headers: { "Content-Type": "text/xml" },
+      body: xmlInput,
+    });
+
+    // Get the XML response as text
+    const xmlOutput = await response.text();
+
+    // Parse the XML response using DOMParser
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlOutput, "text/xml");
+
+    // Array to hold the ledger data
+    const ledgerData = [];
+
+    // Get all TALLYMESSAGE elements
+    const tallyMessages = xmlDoc.getElementsByTagName("TALLYMESSAGE");
+    for (let i = 0; i < tallyMessages.length; i++) {
+      const tallyMessage = tallyMessages[i];
+
+      // Check if this TALLYMESSAGE contains a LEDGER node
+      const ledgerNodes = tallyMessage.getElementsByTagName("LEDGER");
+      if (ledgerNodes.length > 0) {
+        const ledger = ledgerNodes[0];
+
+        // Helper function to get text content from a given tag
+        const getText = (tagName) => {
+          const node = ledger.getElementsByTagName(tagName)[0];
+          return node ? node.textContent : "";
+        };
+
+        // Extract ledger details and replace encoded ampersands if needed
+        let ledgerName = getText("NAME").replace(/&amp;/g, "&");
+        let ledgerGroup = getText("PARENT").replace(/&amp;/g, "&");
+        let GSTNumber = getText("GSTIN");
+        let state = getText("PLACEOFSUPPLY");
+        let country = getText("COUNTRYOFRESIDENCE");
+        let openingBalance = getText("OPENINGBALANCE");
+
+        // Store the ledger details
+        ledgerData.push({
+          ledgerName,
+          ledgerGroup,
+          GSTNumber,
+          state,
+          country,
+          openingBalance,
+        });
+      }
+    }
+
+    // Output the ledger data (you can process or write to a file as needed)
+    return ledgerData;
+  } catch (error) {
+    console.error("Error fetching ledger data:", error);
+  }
+}
+
 module.exports = {
   buildTallyXmlPayment,
   buildTallyXmlReceipt,
@@ -444,4 +529,5 @@ module.exports = {
   buildTallyPrimeLedgerXml,
   buildTallyERPLedgerXml,
   buildTallyXmlGetAllLedgers,
+  fetchLedgerData,
 };

@@ -9,6 +9,7 @@ import {
   UploadCloud,
   Copy,
   Trash2,
+  Check,
 } from "lucide-react";
 import { Card, CardContent, CardHeader } from "../ui/card";
 import {
@@ -53,7 +54,7 @@ import {
 import { useReportContext } from "../../contexts/ReportContext";
 import { AiFillFileExcel } from "react-icons/ai"; // Install react-icons using npm install react-icons
 import { debounce } from "lodash"; // or write a small debounce of your own
-import localForage from "localforage";
+import localForage, { clear } from "localforage";
 
 const ledgerGroups = [
   "Branch / Divisions",
@@ -101,6 +102,9 @@ const TallyTable = ({
   setCompanyName,
   selectedVoucher,
   caseId,
+  handleLedgerImport,
+  selectedBankLedger,
+  setSelectedBankLedger,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [transactions, setTransactions] = useState([]);
@@ -115,7 +119,7 @@ const TallyTable = ({
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [categorySearchTerm, setCategorySearchTerm] = useState("");
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const columnsToIgnore = ["id", "transactionId"];
+  const columnsToIgnore = ["id", "transactionId", "type"];
   const [dateFilterModalOpen, setDateFilterModalOpen] = useState(false);
   const [currentDateColumn, setCurrentDateColumn] = useState([]);
   const [toDate, setToDate] = useState("");
@@ -140,19 +144,79 @@ const TallyTable = ({
   const numbericInput = ["pincode", "opening_balance"];
   const dateInput = [""];
 
-  const textAreaInput = [
-    "address",
-    "state",
-    "city",
-    "country",
-    "gst_number",
-    "ledger_name",
-  ];
+  const textAreaInput = ["address", "state", "city", "country", "gst_number"];
   const [existingFilterData, setExistingFilterData] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
   const [pendingValues, setPendingValues] = useState({});
 
+  // Entity / ledger states
+  const [editedEntities, setEditedEntities] = useState({});
+  const [batchModalOpen, setBatchModalOpen] = useState(false);
+  const [batchEntityValue, setBatchEntityValue] = useState("");
+  const [bankLedgers, setBankLedgers] = useState([]);
+  const [isLedgersCreated, setIsLedgersCreated] = useState(false);
+
   const isFirstLoad = useRef(true);
+  useEffect(() => {
+    const filterBankLedgers = reportData.importedLedgers.filter(
+      (l) => l.ledgerGroup === "Bank Accounts"
+    );
+
+    const filteredLedgerNames = filterBankLedgers.map((l) => l.ledgerName);
+    setBankLedgers(filteredLedgerNames);
+  }, [reportData.importedLedgers]);
+
+  const sortByImportedStatus = (data) => {
+    return data.sort((a, b) => a.imported - b.imported);
+  };
+  // Merge function that takes savedData and incomingData
+  const mergeData = (savedData, incomingData) => {
+    const columnsToUpdate = ["imported", "failed_reasons", "ledger_name"];
+
+    // Create a lookup map for incomingData by id
+    const incomingMap = new Map(incomingData.map((row) => [row.id, row]));
+
+    const newSavedData = savedData.map((savedRow) => {
+      const incomingRow = incomingMap.get(savedRow.id);
+      if (incomingRow) {
+        // For each column that should be updated, check if the values differ
+        columnsToUpdate.forEach((col) => {
+          if (incomingRow[col] !== savedRow[col]) {
+            console.log({ incomingRow, savedRow });
+            // Update the value with the latest from incoming data
+            // savedRow[col] = incomingRow[col];
+          }
+          if (incomingRow.imported === true && savedRow.imported === false) {
+            savedRow.imported = true;
+            savedRow.failed_reason = "";
+          }
+
+          if (incomingRow.ledger_name !== savedRow.ledger_name) {
+            savedRow.ledger_name = incomingRow.ledger_name;
+          }
+        });
+      } else {
+        // delete from savedData
+        return null;
+      }
+
+      return savedRow;
+    });
+
+    return sortByImportedStatus(newSavedData);
+  };
+
+  const cacheData = (dataToCache = transactions) => {
+    try {
+      localForage.setItem(
+        `tallyTableData_${selectedVoucher}_${caseId}`,
+        dataToCache
+      );
+      console.log("Data saved for report:", dataToCache);
+    } catch (error) {
+      console.error("Error saving data:", error);
+    }
+  };
 
   // Load data for this report when component mounts
   useEffect(() => {
@@ -161,13 +225,18 @@ const TallyTable = ({
         const savedData = await localForage.getItem(
           `tallyTableData_${selectedVoucher}_${caseId}`
         );
+
         if (savedData) {
-          setTransactions(savedData);
-          setFilteredData(savedData);
+          const mergedData = mergeData(savedData, data);
+
+          setTransactions(mergedData);
+          setFilteredData(mergedData);
         } else {
           // Only initialize with provided data if no saved data exists.
-          setTransactions(data);
-          setFilteredData(data);
+          const sortedData = sortByImportedStatus(data);
+          setTransactions(sortedData);
+          setFilteredData(sortedData);
+          cacheData(sortedData);
         }
       } catch (error) {
         console.error("Error loading saved data:", error);
@@ -175,26 +244,18 @@ const TallyTable = ({
     };
 
     loadData();
-  }, [caseId]);
+
+    const ledgerCreated = getLedgerCreationStatus(caseId);
+    console.log({ ledgerCreated });
+    setIsLedgersCreated(ledgerCreated);
+  }, [caseId, data]);
 
   // Save transactions state to localForage whenever it changes (debounced)
   useEffect(() => {
-    const saveData = () => {
-      try {
-        localForage.setItem(
-          `tallyTableData_${selectedVoucher}_${caseId}`,
-          transactions
-        );
-        console.log("Data saved for report:", transactions);
-      } catch (error) {
-        console.error("Error saving data:", error);
-      }
-    };
-
     // Use a simple timeout to debounce saves by 1 second
     const timer = setTimeout(() => {
-      saveData();
-    }, 5000);
+      cacheData();
+    }, 500); // Save every 1 minute
 
     return () => clearTimeout(timer);
   }, [transactions, caseId, selectedVoucher]);
@@ -243,8 +304,6 @@ const TallyTable = ({
   // Get dynamic columns from first data item
   let columns = data.length > 0 ? Object.keys(data[0]) : [];
   columns = columns.filter((column) => !columnsToIgnore.includes(column));
-
-  const hasEntity = columns.some((column) => column.toLowerCase() === "entity");
 
   // Determine which columns are numeric
   const numericColumnstemp = columns.filter((column) =>
@@ -350,20 +409,16 @@ const TallyTable = ({
   };
 
   const handleDateFilter = (columnName, fromDate, toDate) => {
-    console.log("Initial filter params:", { columnName, fromDate, toDate });
-
     const dataToFilter =
       existingFilterData.length > 0 ? existingFilterData : data;
 
     const parseDate = (dateStr) => {
       if (!dateStr) return null;
-      console.log("Parsing date:", dateStr);
 
       // Handle date input format (yyyy-mm-dd)
       if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
         const date = new Date(dateStr);
         date.setHours(0, 0, 0, 0);
-        console.log("Parsed input date:", date);
         return date;
       }
 
@@ -374,13 +429,11 @@ const TallyTable = ({
       } else if (dateStr.includes("-")) {
         [day, month, year] = dateStr.split("-");
       } else {
-        console.warn("Unsupported date format:", dateStr);
         return null;
       }
 
       // Ensure we have all parts
       if (!day || !month || !year) {
-        console.warn("Invalid date parts:", { day, month, year });
         return null;
       }
 
@@ -394,7 +447,6 @@ const TallyTable = ({
         return null;
       }
 
-      console.log("Parsed data date:", date);
       return date;
     };
 
@@ -408,8 +460,6 @@ const TallyTable = ({
 
     // Set end of day for to date
     to.setHours(23, 59, 59, 999);
-
-    console.log("Processing with date range:", { from, to });
 
     const filtered = dataToFilter.filter((row) => {
       const rowDateStr = row[columnName];
@@ -599,26 +649,7 @@ const TallyTable = ({
     if (selectedTransactions.length > 0) {
       data = transactions.filter((tx) => selectedTransactions.includes(tx.id));
     }
-    if (selectedVoucher === "Ledger") {
-      // If no rows selected, show a warning (optional)
-      if (selectedTransactions.length === 0) {
-        // alert("Please select at least one row to upload.");
-        toast({
-          title: "Alert",
-          variant: "destructive",
-          duration: 3000,
-          type: "error",
-          description: "Please select at least one row to upload.",
-        });
-        return;
-      }
-      // 2) Grab only those transactions whose IDs are in `selectedTransactions`
-      const selectedRows = data.filter((tx) =>
-        selectedTransactions.includes(tx.id)
-      );
-      data = selectedRows;
-    }
-    console.log({ data });
+
     handleUpload(data);
   };
 
@@ -718,19 +749,6 @@ const TallyTable = ({
         console.error("Error copying text: ", err);
       });
   };
-  const handleOpenFile = async (filePath) => {
-    console.log("filePath", filePath);
-    try {
-      const response = await window.electron.openFile(filePath);
-      if (response.error) {
-        throw new Error(response.error); // If there's an error, throw it
-      }
-      console.log("File opened successfully:", response);
-      setShowPopup(false);
-    } catch (error) {
-      console.error(error);
-    }
-  };
 
   const makeReadable = (column) => {
     return column
@@ -761,6 +779,138 @@ const TallyTable = ({
 
   const handleDeleteRow = (rowId) => {
     setFilteredData((prevData) => prevData.filter((row) => row.id !== rowId));
+  };
+
+  // ===== Helper functions for inline & batch "Entity" editing =====
+  const handleEntityChange = (tid, newValue) => {
+    setEditedEntities((prev) => ({ ...prev, [tid]: newValue }));
+  };
+  const entityUpdateIpc = async (payload) => {
+    // TODO- call ipc here and show error success toast
+    console.log(payload);
+
+    try {
+      const response = await window.electron.editEntity(payload);
+      console.log({ entityUpdateIpc: response });
+      if (response.success) {
+        console.log("Entity updated successfully");
+        // Show a success toast
+        toast({
+          id: "entity-update-success",
+          title: "Ledger Update",
+          description: "Ledger updated successfully",
+          type: "success",
+          duration: 3000,
+        });
+      } else {
+        // Show an error toast
+        toast({
+          id: "entity-update-error",
+          title: "Ledger Update",
+          description: "Ledger update failed",
+          type: "error",
+          duration: 3000,
+        });
+        console.log("Ledger update failed");
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const handleEntityUpdateConfirm = (row) => {
+    const id = row.id;
+    const newValue = editedEntities[id];
+    // if (
+    //   window.confirm(
+    //     "Are you sure you want to update the Entity for this transaction?"
+    //   )
+    // ) {
+    const payload = [{ entity: newValue, transactionId: row.id }];
+    entityUpdateIpc(payload);
+
+    // Update the local state so the UI immediately reflects the new value.
+    setFilteredData((prevData) => {
+      const updatedData = [...prevData];
+      // Determine the correct key (e.g., "Entity" or "entity")
+      const index = updatedData.findIndex((row) => row.id === id);
+      updatedData[index] = {
+        ...updatedData[index],
+        entity: newValue,
+        ledger: newValue,
+      };
+
+      return updatedData;
+    });
+
+    // Update the local state so the UI immediately reflects the new value.
+    setTransactions((prevData) => {
+      const updatedData = [...prevData];
+      // Determine the correct key (e.g., "Entity" or "entity")
+      const index = updatedData.findIndex((row) => row.id === id);
+      updatedData[index] = {
+        ...updatedData[index],
+        entity: newValue,
+        ledger: newValue,
+      };
+
+      return updatedData;
+    });
+
+    // Clear the edit state for this row.
+    setEditedEntities((prev) => {
+      const newState = { ...prev };
+      delete newState[id];
+      return newState;
+    });
+    // }
+  };
+
+  // Called when the user confirms a batch update from the modal.
+  const handleBatchUpdate = () => {
+    if (!batchEntityValue) return;
+
+    const dataOnUi = filteredData.map((row) => ({ ...row }));
+    // For each selected row, find the row in filteredData (using its global index)
+    const payload = Array.from(selectedTransactions).map((id) => {
+      const index = dataOnUi.findIndex((row) => row.id === id);
+      if (index !== -1) {
+        dataOnUi[index] = {
+          ...dataOnUi[index],
+          ledger: batchEntityValue,
+          entity: batchEntityValue,
+        };
+        // Update the local state so the UI immediately reflects the new value.
+        setFilteredData(dataOnUi);
+        setTransactions(dataOnUi);
+        // Replace this console.log with your backend call.
+        return {
+          // entity: batchEntityValue,
+          entity: batchEntityValue,
+          transactionId: dataOnUi[index].id,
+        };
+      } else {
+        return null;
+      }
+    });
+    console.log("Payload aq", payload);
+    entityUpdateIpc(payload);
+
+    // Clear selections and close the modal.
+    setBatchEntityValue("");
+    // setSearchTerm("");
+    setBatchModalOpen(false);
+    // setSearchTerm("");
+    // clearFilters();
+  };
+
+  const getLedgerCreationStatus = async (id) => {
+    const ledgerCreationStatusHistory = await localForage.getItem(
+      "ledgerCreationStatusHistory"
+    );
+    console.log({ ledgerCreationStatusHistory });
+    if (!ledgerCreationStatusHistory) return false;
+    return await ledgerCreationStatusHistory[id];
   };
 
   return (
@@ -819,6 +969,24 @@ const TallyTable = ({
             </Button>
           )}
           <div className="flex items-center gap-2">
+            {/* Show a dropdown to select Bank ledger */}
+            {selectedVoucher === "Payment Receipt Contra" && (
+              <select
+                onChange={(e) => setSelectedBankLedger(e.target.value)}
+                className="border rounded-md p-2 dark:bg-gray-800 dark:text-white"
+              >
+                <option value="">Select Bank Ledger</option>
+                {bankLedgers.length > 0 &&
+                  bankLedgers.map((ledger, key) => {
+                    return (
+                      <option key={key} value={ledger}>
+                        {ledger}
+                      </option>
+                    );
+                  })}
+              </select>
+            )}
+
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -861,13 +1029,23 @@ const TallyTable = ({
               </TooltipTrigger>
               <TooltipContent>Share</TooltipContent>
             </Tooltip>
+            {selectedVoucher == "Payment Receipt Contra " && (
+              <Button
+                variant="default"
+                className="min-w-[150px]"
+                disabled={selectedTransactions.size === 0}
+                onClick={() => setBatchModalOpen(true)}
+              >
+                Bulk Edit Ledger Name
+              </Button>
+            )}
           </div>
         </div>
 
         {/* Middle Row: Action Buttons and Search */}
         <div className="flex flex-wrap justify-between items-center gap-4">
           {/* Action Buttons Group */}
-          <div className="flex items-center gap-2">
+          <div className="">
             {/* <Button
               onClick={() =>
                 handleOpenFile("tallyprime/payment_receipt_contra.xlsm")
@@ -881,20 +1059,33 @@ const TallyTable = ({
               <AiFillFileExcel className="w-5 h-5 text-white" />
               Ledger Voucher
             </Button> */}
-            <Button
-              onClick={handleUploadToTally}
-              className="px-3 py-2 text-base font-medium text-white bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 hover:bg-gray-700 transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
-            >
-              <UploadCloud className="w-5 h-5 text-white" />
-              Upload to Tally
-            </Button>
-            <Button
-              onClick={handleUploadToTally}
-              className="px-3 py-2 text-base font-medium text-white bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 hover:bg-gray-700 transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
-            >
-              <UploadCloud className="w-5 h-5 text-white" />
-              Import Ledgers
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={handleLedgerImport}
+                className="px-3 py-2 text-base font-medium text-white bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 hover:bg-gray-700 transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
+              >
+                <UploadCloud className="w-5 h-5 text-white" />
+                Import Ledgers
+              </Button>
+              <Button
+                onClick={handleUploadToTally}
+                disabled={
+                  selectedVoucher === "Payment Receipt Contra" &&
+                  isLedgersCreated === false
+                }
+                className="px-3 py-2 text-base font-medium text-white bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 hover:bg-gray-700 transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
+              >
+                <UploadCloud className="w-5 h-5 text-white" />
+                Upload to Tally
+              </Button>
+            </div>
+
+            {selectedVoucher === "Payment Receipt Contra" &&
+              !isLedgersCreated && (
+                <p className="mt-2 text-sm text-red-500 ml-2">
+                  First create ledgers in order to upload to tally.
+                </p>
+              )}
           </div>
 
           {/* Search and Filter Controls */}
@@ -952,7 +1143,14 @@ const TallyTable = ({
                     // className={source === "summary" ? "bg-gray-900 dark:bg-slate-800 text-white" : ""}
                   >
                     <div className="flex items-center gap-2">
-                      {["dr_ledger", "cr_ledger"].includes(column) && (
+                      {[
+                        "dr_ledger",
+                        "cr_ledger",
+                        "ledger_group",
+                        "ledger_name",
+                        "date",
+                        "ledger",
+                      ].includes(column) && (
                         <p className="text-lg text-gray-500 dark:text-gray-400">
                           *
                         </p>
@@ -1000,10 +1198,7 @@ const TallyTable = ({
             <TableBody>
               {currentData.length === 0 ? (
                 <TableRow>
-                  <TableCell
-                    colSpan={hasEntity ? columns.length + 1 : columns.length}
-                    className="text-center"
-                  >
+                  <TableCell colSpan={columns.length} className="text-center">
                     No matching results found
                   </TableCell>
                 </TableRow>
@@ -1036,17 +1231,15 @@ const TallyTable = ({
                             >
                               <Select
                                 value={
-                                  pendingValues[row.id]?.[column] ??
-                                  row[column] ??
-                                  ""
+                                  pendingValues[row.id]?.[column] ||
+                                  row[column] ||
+                                  undefined
                                 }
                                 onValueChange={(value) => {
                                   handleInputChange(row.id, column, value);
-                                  // If this row is selected, update all selected rows
                                   if (selectedTransactions.includes(row.id)) {
                                     selectedTransactions.forEach((id) => {
                                       if (id !== row.id) {
-                                        // Skip current row since already updated
                                         handleInputChange(
                                           id,
                                           "ledger_group",
@@ -1058,60 +1251,16 @@ const TallyTable = ({
                                 }}
                                 className="w-full"
                               >
-                                <SelectTrigger className="w-full">
-                                  <SelectValue>
-                                    {row[column] || "Select Ledger Group"}
-                                  </SelectValue>
+                                <SelectTrigger
+                                  className="w-full"
+                                  placeholder="Select Ledger Group"
+                                >
+                                  <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent
-                                  onCloseAutoFocus={(e) => {
-                                    e.preventDefault();
-                                  }}
+                                  onCloseAutoFocus={(e) => e.preventDefault()}
                                 >
-                                  <div className="p-2 border-b flex gap-2">
-                                    <div className="relative flex-1">
-                                      <Input
-                                        placeholder="Search Group..."
-                                        value={categorySearchTerm}
-                                        onChange={(e) =>
-                                          handleCategorySearch(e)
-                                        }
-                                        // onFocus={() =>
-                                        //   setIsSearchInputFocused(true)
-                                        // }
-                                        // onBlur={() =>
-                                        //   setIsSearchInputFocused(false)
-                                        // }
-                                        onKeyDown={(e) => e.stopPropagation()}
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                        }}
-                                      />
-                                    </div>
-                                    {/* <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="px-2 h-10"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    if (categorySearchTerm.trim()) {
-                                      // Pass the whole row for a single update
-                                      const added = handleAddCategory(
-                                        categorySearchTerm.trim(),
-                                        row
-                                      );
-                                      if (added) {
-                                        setCategorySearchTerm("");
-                                      }
-                                    }
-                                  }}
-                                >
-                                  <Plus className="h-4 w-4" />
-                                  Add
-                                </Button> */}
-                                  </div>
+                                  {/* ... your search input and list of options ... */}
                                   <div className="max-h-[200px] overflow-y-auto">
                                     {filteredCategories.length > 0 ? (
                                       filteredCategories.map((ledgerGroup) => (
@@ -1229,6 +1378,37 @@ const TallyTable = ({
                                 }
                                 className="w-full p-2 border border-gray-300 rounded-md"
                               />
+                            </TableCell>
+                          );
+                        } else if (column.toLowerCase() === "ledger") {
+                          return (
+                            <TableCell
+                              key={column}
+                              className="max-w-[200px] relative"
+                            >
+                              <div className="flex items-center">
+                                <Input
+                                  type="text"
+                                  value={
+                                    editedEntities[row.id] !== undefined
+                                      ? editedEntities[row.id]
+                                      : row[column]
+                                  }
+                                  onChange={(e) =>
+                                    handleEntityChange(row.id, e.target.value)
+                                  }
+                                  className="w-full"
+                                />
+                                {editedEntities[row.id] !== undefined &&
+                                  editedEntities[row.id] !== row[column] && (
+                                    <Check
+                                      className="ml-2 cursor-pointer text-green-500"
+                                      onClick={() =>
+                                        handleEntityUpdateConfirm(row)
+                                      }
+                                    />
+                                  )}
+                              </div>
                             </TableCell>
                           );
                         } else if (column.toLowerCase() === "imported") {
@@ -1474,6 +1654,35 @@ const TallyTable = ({
           </div>
         )}
       </CardContent>
+
+      {/* Batch Edit Modal */}
+      {batchModalOpen && (
+        <Dialog open={batchModalOpen} onOpenChange={setBatchModalOpen}>
+          <DialogContent className="sm:max-w-[400px]">
+            <DialogHeader>
+              <DialogTitle>Batch Update ledgers</DialogTitle>
+              <p className="text-sm text-gray-600">
+                Enter new Entity value for selected transactions:
+              </p>
+            </DialogHeader>
+            <Input
+              type="text"
+              placeholder="New Entity value"
+              value={batchEntityValue}
+              onChange={(e) => setBatchEntityValue(e.target.value)}
+              className="mb-4"
+            />
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setBatchModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button variant="default" onClick={handleBatchUpdate}>
+                Confirm
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Category Filter Modal - Apple Style */}
       {filterModalOpen && (
