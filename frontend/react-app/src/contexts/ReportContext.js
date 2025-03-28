@@ -16,6 +16,7 @@ export const ReportProvider = ({ children }) => {
     customerName: null,
     triggerRectify: { caseId: null, caseName: null },
     importedLedgers: [],
+    tallyPortNumber: 9000,
     categoryOptions: [
       "Bank Charges",
       "Bank Interest Received",

@@ -146,9 +146,18 @@ const IndividualDashboard = () => {
     }
   }, []);
 
+  // useEffect(() => {
+  //   console.log({ defaultTab });
+  //   if (defaultTab === "defaultTab") setActiveTab(navItems[0].title);
+  //   else setActiveTab(defaultTab);
+  // }, []);
+
   useEffect(() => {
-    if (defaultTab === "defaultTab") setActiveTab(navItems[0].title);
-    else setActiveTab(defaultTab);
+    const computedTab =
+      defaultTab === "defaultTab" ? navItems[0].title : defaultTab;
+    if (activeTab !== computedTab) {
+      setActiveTab(computedTab);
+    }
   }, []);
 
   const handleTabChange = (newTab) => {

@@ -156,9 +156,26 @@ const TallyTable = ({
   const [bankLedgers, setBankLedgers] = useState([]);
   const [isLedgersCreated, setIsLedgersCreated] = useState(false);
 
+  // Ledger dropdown states
+  const [ledgerOptions, setLedgerOptions] = useState([]);
+  const [ledgerSearchTerm, setLedgerSearchTerm] = useState("");
+  const [ledgerSelectDropdownOpen, setLedgerSelectDropdownOpen] = useState({});
+  const [ledgerSearchTerms, setLedgerSearchTerms] = useState({});
+
   const isFirstLoad = useRef(true);
 
   useEffect(() => {
+    if (!reportData?.importedLedgers) return;
+
+    // e.g., each ledger has { ledgerName, ledgerGroup } etc.
+    const allLedgerNames = reportData.importedLedgers.map((l) => l.ledgerName);
+    // remove duplicates
+    const uniqueLedgerNames = Array.from(
+      new Set(allLedgerNames.filter(Boolean))
+    );
+
+    setLedgerOptions(uniqueLedgerNames);
+
     const filterBankLedgers = reportData.importedLedgers.filter(
       (l) => l.ledgerGroup === "Bank Accounts"
     );
@@ -166,6 +183,35 @@ const TallyTable = ({
     const filteredLedgerNames = filterBankLedgers.map((l) => l.ledgerName);
     setBankLedgers(filteredLedgerNames);
   }, [reportData.importedLedgers]);
+
+  const handleLedgerSelectOpenChange = (rowId, open) => {
+    setLedgerSelectDropdownOpen((prev) => ({ ...prev, [rowId]: open }));
+  };
+  // When the user picks a ledger from the dropdown
+  const handleLedgerChange = (row, newLedgerValue) => {
+    // Update the row’s ledger in filteredData (or transactions)
+    setFilteredData((prevData) =>
+      prevData.map((tx) =>
+        tx.id === row.id
+          ? { ...tx, ledger: newLedgerValue, entity: newLedgerValue }
+          : tx
+      )
+    );
+  };
+
+  // If user typed a brand-new ledger and clicked "Add"
+  const handleAddLedger = (newLedgerName, row) => {
+    // If it's not already in ledgerOptions, add it
+    if (newLedgerName && !ledgerOptions.includes(newLedgerName.trim())) {
+      setLedgerOptions((prev) => [...prev, newLedgerName.trim()]);
+    }
+
+    // Immediately update that row’s ledger value
+    handleLedgerChange(row, newLedgerName.trim());
+
+    // Return true so we know we successfully added it
+    return true;
+  };
 
   const sortByImportedStatus = (data) => {
     return data.sort((a, b) => a.imported - b.imported);
@@ -817,7 +863,8 @@ const TallyTable = ({
           title: "Ledger Updated",
           description: "Ledger updated successfully",
           type: "success",
-          duration: 3000,
+          variant: "success",
+          duration: 1500,
         });
 
         // clear the ledger table stored in cache and force user to go to that page and make sure to create all ledgers
@@ -830,6 +877,7 @@ const TallyTable = ({
           title: "Error",
           description: "Ledger update failed",
           type: "error",
+          variant: "error",
           duration: 3000,
         });
         // console.log("Ledger update failed");
@@ -839,52 +887,54 @@ const TallyTable = ({
     }
   };
 
-  const handleEntityUpdateConfirm = (row) => {
+  const handleEntityUpdateConfirm = (row, newValue) => {
     const id = row.id;
-    const newValue = editedEntities[id];
-    // if (
-    //   window.confirm(
-    //     "Are you sure you want to update the Entity for this transaction?"
-    //   )
-    // ) {
+    // Instead of reading from editedEntities, use the passed newValue.
     const payload = [{ entity: newValue, transactionId: row.id }];
     entityUpdateIpc(payload);
 
-    // Update the local state so the UI immediately reflects the new value.
+    // Update filteredData immediately
     setFilteredData((prevData) => {
       const updatedData = [...prevData];
-      // Determine the correct key (e.g., "Entity" or "entity")
-      const index = updatedData.findIndex((row) => row.id === id);
-      updatedData[index] = {
-        ...updatedData[index],
-        entity: newValue,
-        ledger: newValue,
-      };
+      const index = updatedData.findIndex((item) => item.id === id);
+      if (index !== -1) {
+        updatedData[index] = {
+          ...updatedData[index],
+          entity: newValue,
+          ledger: newValue,
+        };
+      }
+
+      setLedgerSearchTerms((prev) => ({
+        ...prev,
+        [row.id]: "",
+      }));
+
+      handleLedgerSelectOpenChange(row.id, false);
 
       return updatedData;
     });
 
-    // Update the local state so the UI immediately reflects the new value.
+    // Similarly, update transactions state if necessary
     setTransactions((prevData) => {
       const updatedData = [...prevData];
-      // Determine the correct key (e.g., "Entity" or "entity")
-      const index = updatedData.findIndex((row) => row.id === id);
-      updatedData[index] = {
-        ...updatedData[index],
-        entity: newValue,
-        ledger: newValue,
-      };
-
+      const index = updatedData.findIndex((item) => item.id === id);
+      if (index !== -1) {
+        updatedData[index] = {
+          ...updatedData[index],
+          entity: newValue,
+          ledger: newValue,
+        };
+      }
       return updatedData;
     });
 
-    // Clear the edit state for this row.
+    // Clear the edited state for this row.
     setEditedEntities((prev) => {
       const newState = { ...prev };
       delete newState[id];
       return newState;
     });
-    // }
   };
 
   // Called when the user confirms a batch update from the modal.
@@ -923,6 +973,9 @@ const TallyTable = ({
     setBatchModalOpen(false);
     // setSearchTerm("");
     // clearFilters();
+
+    // Clear the selected transactions
+    setSelectedTransactions([]);
   };
 
   const getLedgerCreationStatus = async () => {
@@ -931,6 +984,10 @@ const TallyTable = ({
     );
     return savedData.length === 0;
   };
+
+  const filteredLedgers = ledgerOptions.filter((ledger) =>
+    ledger.toLowerCase().includes(ledgerSearchTerm.toLowerCase())
+  );
 
   return (
     <Card className="min-w-full max-w-[0]">
@@ -1052,7 +1109,7 @@ const TallyTable = ({
               <Button
                 variant="default"
                 className="min-w-[150px]"
-                disabled={selectedTransactions.size === 0}
+                disabled={selectedTransactions.length < 2}
                 onClick={() => setBatchModalOpen(true)}
               >
                 Bulk Edit Ledger Name
@@ -1396,45 +1453,47 @@ const TallyTable = ({
                               />
                             </TableCell>
                           );
-                        } else if (column.toLowerCase() === "ledger") {
-                          return (
-                            <TableCell
-                              key={column}
-                              className="max-w-[200px] relative"
-                            >
-                              <form
-                                onSubmit={(e) =>
-                                  handleEntityChangeFormSubmit(e, row)
-                                }
-                              >
-                                <div className="flex items-center">
-                                  <Input
-                                    type="text"
-                                    name="ledger"
-                                    value={
-                                      editedEntities[row.id] !== undefined
-                                        ? editedEntities[row.id]
-                                        : row[column]
-                                    }
-                                    onChange={(e) =>
-                                      handleEntityChange(row.id, e.target.value)
-                                    }
-                                    className="w-full"
-                                  />
-                                  {editedEntities[row.id] !== undefined &&
-                                    editedEntities[row.id] !== row[column] && (
-                                      <Check
-                                        className="ml-2 cursor-pointer text-green-500"
-                                        onClick={() =>
-                                          handleEntityUpdateConfirm(row)
-                                        }
-                                      />
-                                    )}
-                                </div>
-                              </form>
-                            </TableCell>
-                          );
-                        } else if (column.toLowerCase() === "imported") {
+                        }
+                        // else if (column.toLowerCase() === "ledger") {
+                        //   return (
+                        //     <TableCell
+                        //       key={column}
+                        //       className="max-w-[200px] relative"
+                        //     >
+                        //       <form
+                        //         onSubmit={(e) =>
+                        //           handleEntityChangeFormSubmit(e, row)
+                        //         }
+                        //       >
+                        //         <div className="flex items-center">
+                        //           <Input
+                        //             type="text"
+                        //             name="ledger"
+                        //             value={
+                        //               editedEntities[row.id] !== undefined
+                        //                 ? editedEntities[row.id]
+                        //                 : row[column]
+                        //             }
+                        //             onChange={(e) =>
+                        //               handleEntityChange(row.id, e.target.value)
+                        //             }
+                        //             className="w-full"
+                        //           />
+                        //           {editedEntities[row.id] !== undefined &&
+                        //             editedEntities[row.id] !== row[column] && (
+                        //               <Check
+                        //                 className="ml-2 cursor-pointer text-green-500"
+                        //                 onClick={() =>
+                        //                   handleEntityUpdateConfirm(row)
+                        //                 }
+                        //               />
+                        //             )}
+                        //         </div>
+                        //       </form>
+                        //     </TableCell>
+                        //   );
+                        // }
+                        else if (column.toLowerCase() === "imported") {
                           return (
                             <TableCell key={column} className="max-w-[200px]">
                               <div>
@@ -1524,6 +1583,180 @@ const TallyTable = ({
                                 }}
                                 className="border rounded-md p-2 w-full dark:bg-gray-800 dark:text-white"
                               />
+                            </TableCell>
+                          );
+                        } else if (column.toLowerCase() === "ledger") {
+                          const isBalance = false;
+                          const currentSearchTerm =
+                            ledgerSearchTerms[row.id] || "";
+                          const rowFilteredLedgers = ledgerOptions.filter(
+                            (ledger) =>
+                              ledger
+                                .toLowerCase()
+                                .includes(currentSearchTerm.toLowerCase())
+                          );
+
+                          return (
+                            <TableCell
+                              key={column}
+                              className="min-w-[280px] relative"
+                            >
+                              {isBalance ? (
+                                <div className="truncate" />
+                              ) : (
+                                <form
+                                  onSubmit={(e) => {
+                                    e.preventDefault();
+                                    // Use the current value from editedEntities if available, else fallback.
+                                    const updatedValue =
+                                      currentSearchTerm ||
+                                      (editedEntities[row.id] !== undefined
+                                        ? editedEntities[row.id]
+                                        : row[column]);
+                                    handleEntityUpdateConfirm(
+                                      row,
+                                      updatedValue
+                                    );
+                                  }}
+                                >
+                                  <div className="relative flex items-center">
+                                    <Input
+                                      type="text"
+                                      name="ledger"
+                                      placeholder="Type to search or enter new ledger"
+                                      value={
+                                        currentSearchTerm ||
+                                        (editedEntities[row.id] !== undefined
+                                          ? editedEntities[row.id]
+                                          : row[column])
+                                      }
+                                      onChange={(e) => {
+                                        const newVal = e.target.value;
+                                        setLedgerSearchTerms((prev) => ({
+                                          ...prev,
+                                          [row.id]: newVal,
+                                        }));
+                                        handleEntityChange(row.id, newVal);
+                                      }}
+                                      onFocus={() =>
+                                        handleLedgerSelectOpenChange(
+                                          row.id,
+                                          true
+                                        )
+                                      }
+                                      onBlur={() => {
+                                        setTimeout(() => {
+                                          handleLedgerSelectOpenChange(
+                                            row.id,
+                                            false
+                                          );
+                                          setLedgerSearchTerms((prev) => ({
+                                            ...prev,
+                                            [row.id]: "",
+                                          }));
+                                        }, 150);
+                                      }}
+                                      className="w-full p-2 border rounded-md"
+                                    />
+                                    {editedEntities[row.id] !== undefined &&
+                                      editedEntities[row.id] !==
+                                        row[column] && (
+                                        <Check
+                                          className="ml-2 cursor-pointer text-green-500"
+                                          onClick={() => {
+                                            // For manual typing, pass the new value explicitly
+                                            const updatedValue =
+                                              editedEntities[row.id] !==
+                                              undefined
+                                                ? editedEntities[row.id]
+                                                : row[column];
+                                            handleEntityUpdateConfirm(
+                                              row,
+                                              updatedValue
+                                            );
+                                          }}
+                                        />
+                                      )}
+                                  </div>
+
+                                  {ledgerSelectDropdownOpen[row.id] && (
+                                    <div className="absolute z-10 top-full mt-[-10px] w-full max-h-60 overflow-auto rounded-md bg-white border shadow-sm">
+                                      {rowFilteredLedgers.length === 0 &&
+                                      currentSearchTerm.trim() !== "" ? (
+                                        <div
+                                          className="cursor-pointer select-none p-2 hover:bg-gray-100 flex items-center gap-1"
+                                          onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            const trimmed =
+                                              currentSearchTerm.trim();
+                                            if (
+                                              !ledgerOptions.some(
+                                                (l) =>
+                                                  l.toLowerCase() ===
+                                                  trimmed.toLowerCase()
+                                              )
+                                            ) {
+                                              handleAddLedger(trimmed, row);
+                                            }
+                                            // Capture the value in a variable
+                                            const newValue = trimmed;
+                                            handleEntityChange(
+                                              row.id,
+                                              newValue
+                                            );
+                                            handleEntityUpdateConfirm(
+                                              row,
+                                              newValue
+                                            );
+                                            setLedgerSearchTerms((prev) => ({
+                                              ...prev,
+                                              [row.id]: "",
+                                            }));
+                                            handleLedgerSelectOpenChange(
+                                              row.id,
+                                              false
+                                            );
+                                          }}
+                                        >
+                                          <Plus className="h-4 w-4" />
+                                          <span>
+                                            Create "{currentSearchTerm}"
+                                          </span>
+                                        </div>
+                                      ) : (
+                                        rowFilteredLedgers.map((ledgerName) => (
+                                          <div
+                                            key={ledgerName}
+                                            className="cursor-pointer select-none p-2 hover:bg-gray-100"
+                                            onMouseDown={(e) => {
+                                              e.preventDefault();
+                                              const newValue = ledgerName;
+                                              handleEntityChange(
+                                                row.id,
+                                                newValue
+                                              );
+                                              handleEntityUpdateConfirm(
+                                                row,
+                                                newValue
+                                              );
+                                              setLedgerSearchTerms((prev) => ({
+                                                ...prev,
+                                                [row.id]: "",
+                                              }));
+                                              handleLedgerSelectOpenChange(
+                                                row.id,
+                                                false
+                                              );
+                                            }}
+                                          >
+                                            {ledgerName}
+                                          </div>
+                                        ))
+                                      )}
+                                    </div>
+                                  )}
+                                </form>
+                              )}
                             </TableCell>
                           );
                         } else if (
@@ -1687,20 +1920,152 @@ const TallyTable = ({
       {/* Batch Edit Modal */}
       {batchModalOpen && (
         <Dialog open={batchModalOpen} onOpenChange={setBatchModalOpen}>
-          <DialogContent className="sm:max-w-[400px]">
+          <DialogContent
+            className="sm:max-w-[400px] "
+            open={batchModalOpen}
+            onOpenChange={setBatchModalOpen}
+          >
             <DialogHeader>
               <DialogTitle>Batch Update ledgers</DialogTitle>
               <p className="text-sm text-gray-600">
                 Enter new Entity value for selected transactions:
               </p>
             </DialogHeader>
-            <Input
+            {/* <Input
               type="text"
               placeholder="New Entity value"
               value={batchEntityValue}
               onChange={(e) => setBatchEntityValue(e.target.value)}
               className="mb-4"
-            />
+            /> */}
+
+            <div className="relative flex items-center">
+              <Input
+                type="text"
+                name="ledger"
+                placeholder="Type to search or enter new ledger"
+                value={batchEntityValue}
+                onChange={(e) => {
+                  const newVal = e.target.value;
+                  setLedgerSearchTerms((prev) => ({
+                    ...prev,
+                    bulkEditLedger: newVal,
+                  }));
+                  setBatchEntityValue(newVal);
+                  handleEntityChange("bulkEditLedger", newVal);
+                }}
+                onFocus={() =>
+                  handleLedgerSelectOpenChange("bulkEditLedger", true)
+                }
+                onBlur={() => {
+                  setTimeout(() => {
+                    handleLedgerSelectOpenChange("bulkEditLedger", false);
+                    setLedgerSearchTerms((prev) => ({
+                      ...prev,
+                      bulkEditLedger: "",
+                    }));
+                  }, 150);
+                }}
+                className="w-full p-2 border rounded-md"
+              />
+              {/* {editedEntities["bulkEditLedger"] !== undefined &&
+                editedEntities["bulkEditLedger"] !== bulkLedgerValue && (
+                  <Check
+                    className="ml-2 cursor-pointer text-green-500"
+                    onClick={() => {
+                      // For manual typing, pass the new value explicitly
+                      const updatedValue =
+                        editedEntities["bulkEditLedger"] !== undefined
+                          ? editedEntities["bulkEditLedger"]
+                          : bulkLedgerValue;
+                      handleEntityUpdateConfirm("bulkEditLedger", updatedValue);
+                    }}
+                  />
+                )} */}
+
+              {ledgerSelectDropdownOpen["bulkEditLedger"] && (
+                <div className="absolute z-10 top-full mt-1 w-full max-h-60 overflow-auto rounded-md bg-white border shadow-sm">
+                  {ledgerOptions.filter((ledger) =>
+                    ledger
+                      .toLowerCase()
+                      .includes(
+                        (
+                          ledgerSearchTerms["bulkEditLedger"] || ""
+                        ).toLowerCase()
+                      )
+                  ).length === 0 &&
+                  (ledgerSearchTerms["bulkEditLedger"] || "").trim() !== "" ? (
+                    <div
+                      className="cursor-pointer select-none p-2 hover:bg-gray-100 flex items-center gap-1"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        const trimmed = (
+                          ledgerSearchTerms["bulkEditLedger"] || ""
+                        ).trim();
+                        // if (
+                        //   !ledgerOptions.some(
+                        //     (l) => l.toLowerCase() === trimmed.toLowerCase()
+                        //   )
+                        // ) {
+                        //   handleAddLedger(trimmed, row);
+                        // }
+                        // Capture the value in a variable
+                        const newValue = trimmed;
+                        setBatchEntityValue(newValue);
+                        // handleEntityChange(row.id, newValue);
+                        // handleEntityUpdateConfirm(row, newValue);
+
+                        setLedgerSearchTerms((prev) => ({
+                          ...prev,
+                          bulkEditLedger: "",
+                        }));
+                        handleLedgerSelectOpenChange("bulkEditLedger", false);
+                      }}
+                    >
+                      <Plus className="h-4 w-4" />
+                      <span>
+                        Create "{ledgerSearchTerms["bulkEditLedger"]}"
+                      </span>
+                    </div>
+                  ) : (
+                    ledgerOptions
+                      .filter((ledger) =>
+                        ledger
+                          .toLowerCase()
+                          .includes(
+                            (
+                              ledgerSearchTerms["bulkEditLedger"] || ""
+                            ).toLowerCase()
+                          )
+                      )
+                      .map((ledgerName) => (
+                        <div
+                          key={ledgerName}
+                          className="cursor-pointer select-none p-2 hover:bg-gray-100"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            const newValue = ledgerName;
+                            // handleEntityChange(row.id, newValue);
+                            // handleEntityUpdateConfirm(row, newValue);
+                            setBatchEntityValue(newValue);
+                            setLedgerSearchTerms((prev) => ({
+                              ...prev,
+                              bulkEditLedger: "",
+                            }));
+                            handleLedgerSelectOpenChange(
+                              "bulkEditLedger",
+                              false
+                            );
+                          }}
+                        >
+                          {ledgerName}
+                        </div>
+                      ))
+                  )}
+                </div>
+              )}
+            </div>
+
             <div className="flex justify-end gap-2">
               <Button variant="ghost" onClick={() => setBatchModalOpen(false)}>
                 Cancel

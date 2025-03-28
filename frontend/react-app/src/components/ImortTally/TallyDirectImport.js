@@ -36,6 +36,7 @@ import {
   AlertDialogTrigger,
 } from "../ui/alert-dialog";
 import { Checkbox } from "../ui/checkbox";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const defaultColumns = {
   "Payment Receipt Contra": [
@@ -66,13 +67,14 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
   const [uniqueLedgers, setUniqueLedgers] = useState([]);
   const [dataToRender, setDataToRender] = useState([]);
   const [excelHeaders, setExcelHeaders] = useState([]);
-
+  const navigate = useNavigate();
+  const location = useLocation();
   // If you have a caseId in the ReportContext:
   const { reportData, updateReportData } = useReportContext();
   const { caseId } = reportData;
   const [ledgerCreationTableData, setLedgerCreationTableData] = useState([]);
   const { toast } = useToast();
-  const [port, setPort] = useState("9000");
+  const [port, setPort] = useState(reportData.tallyPortNumber);
   const [tallyVersion, setTallyVersion] = useState("TallyPrime");
   const [importedLedgers, setImportedLedgers] = useState([]);
   const [selectedBankLedger, setSelectedBankLedger] = useState();
@@ -93,8 +95,9 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
     checkIsTallyStatus();
   }, []);
 
-  const handleInputChange = (e) => {
+  const handlePortChange = (e) => {
     setPort(e.target.value);
+    updateReportData({ tallyPortNumber: e.target.value });
   };
 
   // ----------------------------------
@@ -779,7 +782,8 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
     }
   };
 
-  const recheckTallystatus = async () => {
+  const recheckTallystatus = async (e) => {
+    e.preventDefault();
     const response = await window.electron.checkTallyRunning(port);
     const isTallyRunning = response.success;
 
@@ -794,6 +798,16 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
         type: "error",
       });
     }
+  };
+
+  const goToSummary = () => {
+    // print current path
+    console.log(location);
+    const currentPath = location.pathname.split("/");
+    currentPath.pop();
+
+    console.log(currentPath.join("/") + "/defaultTab");
+    navigate(currentPath.join("/") + "/defaultTab");
   };
 
   return (
@@ -848,7 +862,7 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
               <Input
                 type="number"
                 value={port}
-                onChange={handleInputChange}
+                onChange={handlePortChange}
                 placeholder="Enter Port Number"
               />
             </div>
@@ -1024,28 +1038,35 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
         <AlertDialog open={showTallyWarning}>
           {/* <AlertDialogTrigger>Open</AlertDialogTrigger> */}
           <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Alert</AlertDialogTitle>
-              <AlertDialogDescription>
-                Tally is not running, please start tally to continue.
-                {/*  */}
-                <div className="mt-4 max-w-xl flex gap-x-4 items-center">
-                  <label className="whitespace-nowrap">Port Number:</label>
-                  <Input
-                    type="number"
-                    value={port}
-                    onChange={handleInputChange}
-                    placeholder="Enter Port Number"
-                  />
-                </div>
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              {/* <AlertDialogCancel>Cancel</AlertDialogCancel> */}
-              <AlertDialogAction onClick={recheckTallystatus}>
-                Retry
-              </AlertDialogAction>
-            </AlertDialogFooter>
+            <form onSubmit={recheckTallystatus}>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Alert</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Tally is not running, please start tally to continue.
+                  {/*  */}
+                  <div className="mt-4 max-w-xl flex gap-x-4 items-center">
+                    <label className="whitespace-nowrap">Port Number:</label>
+                    <Input
+                      type="number"
+                      value={port}
+                      onChange={handlePortChange}
+                      placeholder="Enter Port Number"
+                    />
+                  </div>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                {/* <AlertDialogCancel>Cancel</AlertDialogCancel> */}
+                {/* <AlertDialogAction onClick={goToSummary}>
+                Go to Home
+              </AlertDialogAction> */}
+                <Button type="submit" variant="default">
+                  <AlertDialogAction onClick={recheckTallystatus}>
+                    Retry
+                  </AlertDialogAction>
+                </Button>
+              </AlertDialogFooter>
+            </form>
           </AlertDialogContent>
         </AlertDialog>
       </Card>
