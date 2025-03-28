@@ -845,18 +845,21 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
             {selectedVoucher === "Payment Receipt Contra" && (
               <div className="text-sm text-gray-800 max-w-xl flex gap-x-4 items-center">
                 <Checkbox
-                  id="confirm-delete"
+                  id="empty-ledger"
                   checked={isEmptyLedgersSelected}
                   onCheckedChange={setIsEmptyLedgersSelected}
                   className=""
                 />
-                <label className="whitespace-nowrap">
+                <label
+                  htmlFor="empty-ledger"
+                  className="whitespace-nowrap select-none"
+                >
                   Upload Empty Ledgers
                 </label>
               </div>
             )}
             <div className="text-sm text-gray-800 max-w-xl flex gap-x-4 items-center">
-              <label className="whitespace-nowrap">
+              <label className="whitespace-nowrap select-none">
                 Please Enter Port Number:
               </label>
               <Input
