@@ -14,6 +14,7 @@ const {
   fetchLedgerData,
 } = require("./buildTallyXml");
 const { XMLParser } = require("fast-xml-parser");
+const { tallyVoucher } = require("../db/schema/TallyVoucher");
 
 function registerTallyIpc() {
   const db = databaseManager.getInstance().getDatabase();
@@ -265,6 +266,149 @@ function registerTallyIpc() {
       return { success: false };
     }
   });
+
+  ipcMain.handle(
+    "store-tally-upload",
+    async (event, uploadResponse, bankLedger, uploadData) => {
+      try {
+        // Prepare the data to be inserted
+        const insertRecords = uploadData.map((transaction) => {
+          // Check if this transaction was successful
+          const isSuccessful = uploadResponse.successIds.includes(
+            transaction.id
+          );
+
+          return {
+            transactionId: transaction.id,
+            effective_date: transaction.effectiveDate
+              ? new Date(transaction.effectiveDate)
+              : new Date(),
+            bill_reference: transaction.billRefernce || "",
+            failed_reason: isSuccessful
+              ? ""
+              : JSON.stringify(
+                  uploadResponse.failedTransactions.find(
+                    (failed) => failed.id === transaction.id
+                  ) || "Unknown failure"
+                ),
+            bank_ledger: bankLedger || "",
+            result: isSuccessful ? 1 : 0,
+            createdAt: new Date(),
+          };
+        });
+
+        // Batch insert the records
+        const insertedRecords = [];
+        for (const record of insertRecords) {
+          const inserted = await db
+            .insert(tallyVoucher)
+            .values(record)
+            .returning();
+          insertedRecords.push(inserted[0]);
+        }
+
+        return {
+          success: true,
+          insertedRecords: insertedRecords,
+        };
+      } catch (error) {
+        console.error("Error storing Tally upload:", error);
+        return {
+          success: false,
+          error: error.message,
+        };
+      }
+    }
+  );
+
+  ipcMain.handle(
+    "get-tally-transactions",
+    async (event, caseId, individualId) => {
+      try {
+        let allTransactions = [];
+
+        // Get all transactions based on caseId or individualId
+        if (individualId) {
+          console.log("individualId", individualId);
+          allTransactions = await db
+            .select({
+              id: transactions.id,
+              ...transactions,
+            })
+            .from(transactions)
+            .where(and(eq(transactions.statementId, individualId.toString())));
+
+          log.info({ allTransactions: allTransactions.length });
+        } else {
+          const allStatements = await db
+            .select()
+            .from(statements)
+            .where(eq(statements.caseId, caseId));
+
+          if (allStatements.length === 0) {
+            log.info("No statements found for case:", caseId);
+            return [];
+          }
+
+          allTransactions = await db
+            .select({
+              id: transactions.id,
+              ...transactions,
+            })
+            .from(transactions)
+            .where(
+              inArray(
+                transactions.statementId,
+                allStatements.map((stmt) => stmt.id.toString())
+              )
+            );
+        }
+
+        // Join with the tally_voucher table to get upload status information
+        const transactionsWithTallyStatus = await Promise.all(
+          allTransactions.map(async (transaction) => {
+            // Query the tally_voucher table for this transaction
+            const tallyData = await db
+              .select()
+              .from(tallyVoucher)
+              .where(eq(tallyVoucher.transactionId, transaction.id))
+              .limit(1);
+
+            // Determine if the transaction was successfully uploaded to Tally
+            const isImported =
+              tallyData.length > 0 && tallyData[0].result === true;
+            const failedReason =
+              tallyData.length > 0 ? tallyData[0].failed_reason : "";
+            const bankLedger =
+              tallyData.length > 0 ? tallyData[0].bank_ledger : "";
+            const effective_date =
+              tallyData.length > 0 ? tallyData[0].effective_date : null;
+            const bill_reference =
+              tallyData.length > 0 ? tallyData[0].bill_reference : "";
+
+            // Return transaction with the additional Tally status info
+            return {
+              ...transaction,
+              imported: isImported ? 1 : 0,
+              failed_reason: failedReason,
+              bank_ledger: bankLedger,
+              effective_date: effective_date
+                ? new Date(effective_date).toISOString()
+                : "",
+              bill_reference: bill_reference,
+            };
+          })
+        );
+
+        log.info("transactionsWithTallyStatus", transactionsWithTallyStatus);
+
+        return transactionsWithTallyStatus;
+      } catch (error) {
+        log.error("Error fetching transactions with Tally status:", error);
+        throw error;
+      }
+    }
+  );
 }
 
 module.exports = { registerTallyIpc };

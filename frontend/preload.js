@@ -86,6 +86,9 @@ contextBridge.exposeInMainWorld("electron", {
 
   getStatements: (case_id) => ipcRenderer.invoke("get-statements", case_id),
 
+  getSingleStatement: (statementId) =>
+    ipcRenderer.invoke("get-single-statement", statementId),
+
   updateStatement: ({ id, customerName, accountNumber }) =>
     ipcRenderer.invoke("update-statement", { id, customerName, accountNumber }),
 
@@ -171,6 +174,17 @@ contextBridge.exposeInMainWorld("electron", {
     ipcRenderer.invoke("edit-pdf", result, reportName),
   editEntity: (payload) => ipcRenderer.invoke("edit-entity", payload),
   uploadToTally: (data, port) => ipcRenderer.invoke("tally-upload", data, port),
+  storeTallyUpload: (uploadResponse, bankLedger, uploadData) =>
+    ipcRenderer.invoke(
+      "store-tally-upload",
+      uploadResponse,
+      bankLedger,
+      uploadData
+    ),
+
+  getTallyTransactions: (caseId) =>
+    ipcRenderer.invoke("get-tally-transactions", caseId),
+  getTallyVouchers: () => ipcRenderer.invoke("get-tally-vouchers"),
   getProgressed: () => ipcRenderer.invoke("get-user-progress"),
 
   // Add auto-update related methods

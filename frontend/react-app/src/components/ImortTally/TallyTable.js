@@ -220,9 +220,16 @@ const TallyTable = ({
   const mergeData = (savedData, incomingData) => {
     const columnsToUpdate = [
       "imported",
-      "failed_reasons",
+      "failed_reason", // Changed from "failed_reasons" to match your schema
       "ledger_name",
       "ledger",
+      "bill_reference", // Add bill_reference
+      "effective_date", // Add effective_date
+      "date", // Include date if needed
+      "amount",
+      "narration",
+      "voucher_type",
+      "type",
     ];
 
     // Create a lookup map for incomingData by id
@@ -233,9 +240,11 @@ const TallyTable = ({
       if (incomingRow) {
         // For each column that should be updated, check if the values differ
         columnsToUpdate.forEach((col) => {
-          if (incomingRow[col] !== savedRow[col]) {
-            // Update the value with the latest from incoming data
-            // savedRow[col] = incomingRow[col];
+          if (
+            incomingRow[col] !== undefined &&
+            incomingRow[col] !== savedRow[col]
+          ) {
+            savedRow[col] = incomingRow[col];
           }
           if (incomingRow.imported === true && savedRow.imported === false) {
             savedRow.imported = true;
@@ -1367,41 +1376,47 @@ const TallyTable = ({
                           return (
                             <TableCell
                               key={column}
-                              className="max-w-[500px] group relative"
+                              className="max-w-[500px] relative"
                             >
-                              <Input
-                                type="text"
-                                value={
-                                  pendingValues[row.id]?.[column] ??
-                                  row[column] ??
-                                  ""
-                                }
-                                onChange={(e) => {
-                                  handleInputChange(
-                                    row.id,
-                                    column,
-                                    e.target.value
-                                  );
-                                  // If this row is selected, update all selected rows
-                                  if (selectedTransactions.includes(row.id)) {
-                                    selectedTransactions.forEach((id) => {
-                                      if (id !== row.id) {
-                                        // Skip current row since already updated
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Input
+                                      type="text"
+                                      value={
+                                        pendingValues[row.id]?.[column] ??
+                                        row[column] ??
+                                        ""
+                                      }
+                                      onChange={(e) => {
                                         handleInputChange(
-                                          id,
+                                          row.id,
                                           column,
                                           e.target.value
                                         );
-                                      }
-                                    });
-                                  }
-                                }}
-                                placeholder="Enter Narration"
-                                className="w-full p-2 border border-gray-300  truncate rounded-md"
-                              />
-                              <div className="absolute right-24 top-12 hidden group-hover:block bg-black text-white text-sm rounded p-2 z-50 whitespace-normal min-w-[200px] ">
-                                {row[column]}
-                              </div>
+                                        if (
+                                          selectedTransactions.includes(row.id)
+                                        ) {
+                                          selectedTransactions.forEach((id) => {
+                                            if (id !== row.id) {
+                                              handleInputChange(
+                                                id,
+                                                column,
+                                                e.target.value
+                                              );
+                                            }
+                                          });
+                                        }
+                                      }}
+                                      placeholder="Enter Narration"
+                                      className="w-full p-2 border border-gray-300 truncate rounded-md"
+                                    />
+                                  </TooltipTrigger>
+                                  <TooltipContent className="bg-black text-white text-sm rounded p-2 max-w-[300px] whitespace-normal">
+                                    {row[column]}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             </TableCell>
                           );
                         } else if (

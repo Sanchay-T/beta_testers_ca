@@ -1,6 +1,6 @@
 const { ipcMain } = require("electron");
 const log = require("electron-log");
-const databaseManager = require('../db/db');
+const databaseManager = require("../db/db");
 const { statements } = require("../db/schema/Statement");
 const { eq, and } = require("drizzle-orm"); // Add this import
 const { transactions } = require("../db/schema/Transactions");
@@ -17,6 +17,21 @@ function registerCaseDashboardIpc() {
 
     console.log("Statements fetched successfully:", result);
     return result;
+  });
+
+  ipcMain.handle("get-single-statement", async (event, statementId) => {
+    try {
+      const result = await db
+        .select()
+        .from(statements)
+        .where(eq(statements.id, statementId));
+
+      console.log("Statement fetched successfully:", result);
+      return result;
+    } catch (error) {
+      log.error("Error fetching statement:", error);
+      throw error; // Re-throw to handle in the renderer process
+    }
   });
 
   ipcMain.handle(
@@ -85,20 +100,23 @@ function registerCaseDashboardIpc() {
 
       await db.transaction(async (trx) => {
         // Step 1: Delete all related transactions
-        await trx.delete(transactions).where(eq(transactions.statementId, statementId));
+        await trx
+          .delete(transactions)
+          .where(eq(transactions.statementId, statementId));
 
         // Step 2: Delete the statement itself
         await trx.delete(statements).where(eq(statements.id, statementId));
       });
 
-      console.log(`Statement ${statementId} and its related transactions deleted successfully`);
+      console.log(
+        `Statement ${statementId} and its related transactions deleted successfully`
+      );
       return { success: true, message: "Statement deleted successfully" };
     } catch (error) {
       log.error("Error deleting statement:", error);
       throw error;
     }
   });
-
 }
 
 module.exports = { registerCaseDashboardIpc };

@@ -3,12 +3,25 @@ import { saveAs } from "file-saver";
 
 // Main function to create multi-sheet Excel file
 
-function mapDataForExcelGenerator(
-  accountNumber,
-  customerName,
-  bankName,
-  summaryObject
-) {
+function mapDataForExcelGenerator(accountsData, summaryObject, individualId) {
+  // Helper function to convert object keys to camelCase
+  const toCamelCase = (str) =>
+    str
+      .replace(/\s(.)/g, (match) => match.toUpperCase()) // Convert space-letter to uppercase
+      .replace(/\s/g, "") // Remove spaces
+      .replace(/^(.)/, (match) => match.toLowerCase()); // Ensure first letter is lowercase
+
+  // Convert summaryObject keys to camelCase if individualId exists
+  let formattedSummaryObject = summaryObject;
+  if (individualId) {
+    formattedSummaryObject = Object.keys(summaryObject).reduce((acc, key) => {
+      acc[toCamelCase(key)] = summaryObject[key];
+      return acc;
+    }, {});
+  }
+
+  console.log("Formatted summaryObject:", formattedSummaryObject);
+
   // Helper function to convert the format of each table
   const reformatTable = (tableData) => {
     if (!tableData || !Array.isArray(tableData)) return [];
@@ -28,10 +41,9 @@ function mapDataForExcelGenerator(
           ],
       };
 
-      // Add all month data and Total column
+      // Add all month data and "Total" column
       Object.keys(item).forEach((key) => {
         if (key.includes("-202") || key === "Total") {
-          // Ensures "Total" is also included
           newItem[key] = item[key];
         }
       });
@@ -41,16 +53,18 @@ function mapDataForExcelGenerator(
   };
 
   return {
-    accountNumber,
-    customerName,
-    bankName,
+    accountsData,
     summaryObject: {
-      particulars: reformatTable(summaryObject.particulars || []),
-      incomeReceipts: reformatTable(summaryObject.incomeReceipts || []),
-      importantExpenses: reformatTable(summaryObject.importantExpenses || []),
-      otherExpenses: reformatTable(summaryObject.otherExpenses || []),
-      contraCredit: reformatTable(summaryObject.contraCredit || []),
-      contraDebit: reformatTable(summaryObject.contraDebit || []),
+      particulars: reformatTable(formattedSummaryObject.particulars || []),
+      incomeReceipts: reformatTable(
+        formattedSummaryObject.incomeReceipts || []
+      ),
+      importantExpenses: reformatTable(
+        formattedSummaryObject.importantExpenses || []
+      ),
+      otherExpenses: reformatTable(formattedSummaryObject.otherExpenses || []),
+      contraCredit: reformatTable(formattedSummaryObject.contraCredit || []),
+      contraDebit: reformatTable(formattedSummaryObject.contraDebit || []),
     },
   };
 }
@@ -180,6 +194,7 @@ function formatVoucherTransaction(data) {
 
 const generateFinancialReport = async (
   caseid,
+  individualId,
   caseName,
   summaryOnly = false
 ) => {
@@ -187,20 +202,47 @@ const generateFinancialReport = async (
     const workbook = new ExcelJS.Workbook();
 
     // Fetch all required data
-    const summaryData = await window.electron.getSummary(caseid);
+    let summaryData;
+    if (individualId) {
+      summaryData = await window.electron.getSummary(caseid, individualId);
+      console.log("summaryData idnividual", summaryData[0].data);
+    } else {
+      summaryData = await window.electron.getSummary(caseid);
+      console.log("summaryData combined", summaryData[0].data);
+    }
     const summaryObject = JSON.parse(summaryData[0].data);
-    const getStatements = await window.electron.getStatements(caseid);
-    const accountNumber = getStatements[0].accountNumber;
-    const customerName = getStatements[0].customerName;
-    const bankName = getStatements[0].bankName;
+    console.log("summaryObject", summaryObject);
+    let getStatements;
+    let accountsData;
+    if (individualId) {
+      getStatements = await window.electron.getSingleStatement(individualId);
+      accountsData = getStatements.map((statement) => ({
+        accountNumber: statement.accountNumber,
+        customerName: statement.customerName,
+        bankName: statement.bankName,
+      }));
+    } else {
+      getStatements = await window.electron.getStatements(caseid);
+      accountsData = getStatements.map((statement) => ({
+        accountNumber: statement.accountNumber,
+        customerName: statement.customerName,
+        bankName: statement.bankName,
+      }));
+    }
 
     // Map the data to the required format
-    const mappedData = mapDataForExcelGenerator(
-      accountNumber,
-      customerName,
-      bankName,
-      summaryObject
-    );
+    let mappedData;
+    if (individualId) {
+      mappedData = mapDataForExcelGenerator(
+        accountsData,
+        summaryObject,
+        individualId
+      );
+      console.log("mappedData idnividual", mappedData);
+    } else {
+      mappedData = mapDataForExcelGenerator(accountsData, summaryObject);
+      console.log("mappedData combined", mappedData);
+    }
 
     const opportunityToEarnData =
       await window.electron.getOpportunityToEarnForExcel(caseid);
@@ -284,13 +326,17 @@ const generateFinancialReport = async (
 
 // Function to add the Summary sheet
 const addSummarySheet = (workbook, data) => {
+  console.log("data", data);
   const worksheet = workbook.addWorksheet("Summary");
 
   // Set tab color
   worksheet.properties.tabColor = { argb: "D9E1F2" };
 
   // Extract data from the input
-  const { accountNumber, customerName, bankName, summaryObject } = data;
+  const { accountsData, summaryObject } = data;
+  console.log("inside the addSummarySheet", data);
+  console.log("summaryObject", summaryObject);
+  console.log("summaryObject.particulars", summaryObject.particulars);
 
   // Check if data exists
   if (
@@ -361,14 +407,19 @@ const addSummarySheet = (workbook, data) => {
   }
 
   // Account Info Header
-  worksheet.getCell("A1").value = accountNumber;
-  worksheet.getCell("A1").font = { bold: true };
+  let rowIndex = 1;
+  accountsData.forEach((account) => {
+    worksheet.getRow(rowIndex).getCell(1).value = account.accountNumber;
+    worksheet.getRow(rowIndex).getCell(2).value = account.customerName;
+    worksheet.getRow(rowIndex).getCell(3).value = account.bankName;
+    worksheet.getRow(rowIndex).eachCell((cell) => {
+      cell.font = { bold: true };
+    });
+    rowIndex++; // Move to the next row
+  });
 
-  worksheet.getCell("B1").value = customerName;
-  worksheet.getCell("B1").font = { bold: true };
-
-  worksheet.getCell("C1").value = bankName;
-  worksheet.getCell("C1").font = { bold: true };
+  // Leave an empty row before tables
+  rowIndex++;
 
   // Define styles
   const headerStyle = {

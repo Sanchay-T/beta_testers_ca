@@ -118,11 +118,16 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
   // New helper function to fetch and process transactions data
   async function fetchAllTransactions() {
     try {
-      const data = await window.electron.getTransactions(caseId);
+      const data = await window.electron.getTallyTransactions(caseId);
+      console.log("fetched data", data);
       // const sortedData = data.sort((a, b) => a.imported - b.imported);
       // const storedReasons = JSON.parse(
       //   localStorage.getItem("failedTransactions") || "{}"
       // );
+      console.log(
+        "particular",
+        data.map((d) => d.bill_reference)
+      );
       const formattedData = data
         .map((transaction) => {
           if (transaction.voucher_type === "unknown") return null;
@@ -132,8 +137,8 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
               month: "2-digit",
               year: "numeric",
             }),
-            effective_date: "",
-            bill_reference: "",
+            effective_date: transaction.effective_date || "",
+            bill_reference: transaction.bill_reference || "",
             ledger:
               transaction.entity !== "unknown"
                 ? transaction.entity
@@ -156,10 +161,12 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
             narration: transaction.description,
             id: transaction.id,
             imported: transaction.imported === 1,
-            failed_reason: "",
+            failed_reason: transaction.failed_reason || "",
           };
         })
         .filter((t) => t !== null);
+
+      console.log("formattedData", formattedData);
       // Update state so that other parts of your component can use this data
       setTransactions(formattedData);
       return formattedData;
@@ -212,6 +219,7 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
         // Render Payment Receipt Contra
         // For other vouchers, use the fetched transactions directly
         setDataToRender(allTransactions);
+        console.log("data to render", dataToRender);
       }
     } catch (err) {
       console.error("Error handling voucher change:", err);
@@ -292,6 +300,7 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
     // Prepare data for Tally
     const tallyData = txData
       .map((transaction) => {
+        console.log("transaction", transaction);
         if (transaction.imported) {
           // Already uploaded
           return null;
@@ -320,6 +329,7 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
           effectiveDate: formatDateForTally(transaction.effective_date || ""),
           // effectiveDate: 20240401,
           // referenceNumber: transaction.reference_number || null,
+          billRefernce: transaction.bill_reference || "",
           DrLedger: isEmptyLedgersSelected ? "Suspense" : dr_ledger,
           CrLedger: isEmptyLedgersSelected ? "Suspense" : cr_ledger,
           amount: parseInt(transaction.amount),
@@ -395,9 +405,11 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
   const handleUploadAfterConfirmation = async () => {
     setLoading2(true);
     try {
+      console.log("tallyUploadData", tallyUploadData);
       let response;
       if (selectedVoucher === "Payment Receipt Contra") {
         response = await window.electron.uploadToTally(tallyUploadData, port);
+        console.log("response payment receipt", response);
         //  TODO - store the success data to tally new table in db
       } else if (selectedVoucher === "Ledgers") {
         response = await window.electron.uploadLedgerToTally(
@@ -409,6 +421,29 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
       }
 
       const { failedTransactions = [], successIds = [] } = response;
+      console.log("selectedBankLedger", selectedBankLedger);
+      // selectedBankLedger
+      const dbStoreResponse = await window.electron.storeTallyUpload(
+        response,
+        selectedBankLedger,
+        tallyUploadData
+      );
+
+      if (dbStoreResponse.success) {
+        // Handle successful database storage
+        console.log(
+          "Tally upload results stored successfully",
+          dbStoreResponse.insertedRecords
+        );
+      } else {
+        // Handle storage failure
+        console.error(
+          "Failed to store Tally upload results",
+          dbStoreResponse.error
+        );
+      }
+
+      console.log("response11", response);
 
       const newDataToRender = dataToRender.map((ledger) => {
         if (successIds.includes(ledger.id)) {

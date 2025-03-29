@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const log = require("electron-log");
 const axios = require("axios");
-const sessionManager = require('../SessionManager');
+const sessionManager = require("../SessionManager");
 const databaseManager = require("../db/db");
 const { transactions } = require("../db/schema/Transactions");
 const { statements } = require("../db/schema/Statement");
@@ -32,7 +32,7 @@ const sanitizeJSONString = (jsonString) => {
 const validateAndTransformTransaction = (transaction, statementId) => {
   // log.info({ BeforeTransformation: transaction })
   if (!transaction["Value Date"] || !transaction.Description) {
-    log.info("Missing required transaction fields")
+    log.info("Missing required transaction fields");
     throw new Error("Missing required transaction fields");
   }
   let date = null;
@@ -48,10 +48,18 @@ const validateAndTransformTransaction = (transaction, statementId) => {
 
   let amount = 0;
   let type = "";
-  if (transaction.Credit !== null && !isNaN(transaction.Credit) && transaction.Credit > 0) {
+  if (
+    transaction.Credit !== null &&
+    !isNaN(transaction.Credit) &&
+    transaction.Credit > 0
+  ) {
     amount = Math.abs(transaction.Credit);
     type = "credit";
-  } else if (transaction.Debit !== null && !isNaN(transaction.Debit) && transaction.Debit > 0) {
+  } else if (
+    transaction.Debit !== null &&
+    !isNaN(transaction.Debit) &&
+    transaction.Debit > 0
+  ) {
     amount = Math.abs(transaction.Debit);
     type = "debit";
   }
@@ -157,7 +165,6 @@ const storeTransactionsBatch = async (transformedTransactions) => {
 };
 
 const getOrCreateCase = async (caseName) => {
-
   const userId = sessionManager.getUserId() || 1;
   log.info("User ID : ", userId);
 
@@ -168,7 +175,7 @@ const getOrCreateCase = async (caseName) => {
       .from(cases)
       .where(
         and(
-          eq(cases.name, caseName),
+          eq(cases.name, caseName)
           // eq(cases.status, "active")
         )
       )
@@ -296,7 +303,10 @@ const processStatementAndEOD = async (
     // Get NER results for this file using passed fileIndex
     const customerName = nerResults?.Name?.[fileIndex] || "UNKNOWN";
     const accountNumber = nerResults?.["Acc Number"]?.[fileIndex] || "UNKNOWN";
-    log.info("transaction_temp", { len: transactions_temp.length, example: transactions_temp[1] });
+    log.info("transaction_temp", {
+      len: transactions_temp.length,
+      example: transactions_temp[1],
+    });
     log.info("fileDetail ", { fileDetail });
     // const tempBankName = fileDetail.bankName.replace(/\d/g, "");
     // log.info({withFileIndex:fileDetail.bankName+fileIndex})
@@ -453,6 +463,8 @@ const processStatementAndEOD = async (
 };
 
 const processSummaryData = async (parsedData, caseName) => {
+  log.info("Processing summary data for case:", caseName);
+  log.info("Parsed Data in summary:", parsedData);
   try {
     const validCaseId = await getOrCreateCase(caseName);
 
@@ -481,6 +493,8 @@ const processSummaryData = async (parsedData, caseName) => {
       contraDebit: parsedData["Contra Debit"],
       contraCredit: parsedData["Contra Credit"],
     };
+
+    log.info("Summary Data 1:", summaryData);
 
     // Check if summary data already exists for this case
     const existingSummary = await db
@@ -667,6 +681,8 @@ function generateReportIpc(tmpdir_path) {
   const editPdfEndpoint = `${baseUrl}/column-rectify-add-pdf/`;
 
   ipcMain.handle("generate-report", async (event, receivedResult, caseName) => {
+    log.info("Received result:", receivedResult);
+    log.info("Received caseName:", caseName);
     const caseId = await getOrCreateCase(caseName);
     // Track file status
     const successfulFiles = new Set();
@@ -737,7 +753,7 @@ function generateReportIpc(tmpdir_path) {
         validateStatus: (status) => status === 200,
       });
 
-      log.info("API response received:", response.data);
+      log.info("API response received:", response.data.length);
       log.info("missing month list", response.data?.["missing_months_list"]);
 
       // Step 3: Handle failed extractions
@@ -816,14 +832,16 @@ function generateReportIpc(tmpdir_path) {
         }
       );
 
-      console.log("transactions_temp", transactions_temp.length, { example: transactions_temp[1] });
+      console.log("transactions_temp", transactions_temp.length, {
+        example: transactions_temp[1],
+      });
 
       // Step 5: Process each file
       const processedData = [];
       // log.info({ exampleFileDetails: fileDetails });
 
       for (const fileDetail of fileDetails) {
-        console.log({ fileDetail })
+        console.log({ fileDetail });
         try {
           const result = await processStatementAndEOD(
             fileDetail,
