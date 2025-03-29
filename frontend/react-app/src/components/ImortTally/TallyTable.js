@@ -165,10 +165,18 @@ const TallyTable = ({
   const isFirstLoad = useRef(true);
 
   useEffect(() => {
-    if (!reportData?.importedLedgers) return;
+    if (!reportData?.importedLedgerData) return;
+    if (!companyName) return;
+
+    // Filter the imported ledger data based on the selected company name
+    const selectedCompanyData = reportData.importedLedgerData.filter(
+      (data) => data.companyName === companyName
+    )[0];
 
     // e.g., each ledger has { ledgerName, ledgerGroup } etc.
-    const allLedgerNames = reportData.importedLedgers.map((l) => l.ledgerName);
+    const allLedgerNames = selectedCompanyData.ledgerData.map(
+      (l) => l.ledgerName
+    );
     // remove duplicates
     const uniqueLedgerNames = Array.from(
       new Set(allLedgerNames.filter(Boolean))
@@ -176,13 +184,13 @@ const TallyTable = ({
 
     setLedgerOptions(uniqueLedgerNames);
 
-    const filterBankLedgers = reportData.importedLedgers.filter(
+    const filterBankLedgers = selectedCompanyData.ledgerData.filter(
       (l) => l.ledgerGroup === "Bank Accounts"
     );
 
     const filteredLedgerNames = filterBankLedgers.map((l) => l.ledgerName);
     setBankLedgers(filteredLedgerNames);
-  }, [reportData.importedLedgers]);
+  }, [reportData.importedLedgerData, companyName]);
 
   const handleLedgerSelectOpenChange = (rowId, open) => {
     setLedgerSelectDropdownOpen((prev) => ({ ...prev, [rowId]: open }));
@@ -1002,18 +1010,25 @@ const TallyTable = ({
             >
               Company Name:
             </label>
-            <input
-              id="companyName"
-              type="text"
-              placeholder="Enter Company Name"
-              value={companyName}
-              tabIndex="0"
-              onChange={(e) => setCompanyName(e.target.value)}
-              className="border rounded-md p-2 w-full sm:w-64 dark:bg-gray-800 dark:text-white min-w-0"
-              onFocus={(e) => e.target.select()}
-            />
-          </div>
 
+            <Select value={companyName} onValueChange={setCompanyName}>
+              <SelectTrigger
+                id="companyName"
+                className="w-full sm:w-64 dark:bg-gray-800 dark:text-white min-w-0"
+              >
+                <SelectValue placeholder="Select Company Name" />
+              </SelectTrigger>
+              <SelectContent>
+                {reportData.importedLedgerData
+                  .map((data) => data.companyName)
+                  .map((name) => (
+                    <SelectItem key={name} value={name}>
+                      {name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
           {/* Ledger Selection Controls */}
           {selectedVoucher === "Payment Receipt Contra Voucher" && (
             <div className="flex items-center gap-4">

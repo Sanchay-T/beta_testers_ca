@@ -76,10 +76,12 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
   const { toast } = useToast();
   const [port, setPort] = useState(reportData.tallyPortNumber);
   const [tallyVersion, setTallyVersion] = useState("TallyPrime");
-  const [importedLedgers, setImportedLedgers] = useState([]);
+  const [importedLedgerData, setImportedLedgerData] = useState([]);
   const [selectedBankLedger, setSelectedBankLedger] = useState();
   const [showTallyWarning, setShowTallyWarning] = useState(false);
   const [isEmptyLedgersSelected, setIsEmptyLedgersSelected] = useState(false);
+  const [inititalLedgersData, setInititalLedgersData] = useState([]);
+  const [initialPayRecContraData, setInitialPayRecContraData] = useState([]);
 
   useEffect(() => {
     const checkIsTallyStatus = async () => {
@@ -92,8 +94,19 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
       }
     };
 
+    if (reportData.selectedCompany) {
+      setCompanyName(reportData.selectedCompany);
+    }
+
     checkIsTallyStatus();
+    handleLedgerImport();
   }, []);
+
+  useEffect(() => {
+    if (selectedVoucher === "Ledgers") {
+      removeDuplicateLedgers();
+    }
+  }, [companyName]);
 
   const handlePortChange = (e) => {
     setPort(e.target.value);
@@ -162,6 +175,7 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
         .filter((t) => t !== null);
       // Update state so that other parts of your component can use this data
       setTransactions(formattedData);
+      setInitialPayRecContraData(formattedData);
       return formattedData;
     } catch (err) {
       console.error("Error fetching transactions:", err);
@@ -207,6 +221,7 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
 
         setLedgerCreationTableData(tableDataForLedgerCreation);
         setDataToRender(tableDataForLedgerCreation);
+        setInititalLedgersData(tableDataForLedgerCreation);
       } else if (voucherName === "Import Ledgers") {
       } else if (voucherName === "Payment Receipt Contra") {
         // Render Payment Receipt Contra
@@ -481,27 +496,27 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
   };
 
   const handleLedgerImport = async () => {
-    if (!companyName.trim()) {
-      // alert("Please enter a company name before uploading.");
-      toast({
-        title: "Error",
-        description: "Please enter a company name before uploading.",
-        status: "error",
-        duration: 5000,
-        variant: "destructive",
-        type: "error",
-      });
-      return;
-    }
+    // if (!companyName.trim()) {
+    //   toast({
+    //     title: "Error",
+    //     description: "Please enter a company name before uploading.",
+    //     status: "error",
+    //     duration: 5000,
+    //     variant: "destructive",
+    //     type: "error",
+    //   });
+    //   return;
+    // }
 
     const response = await window.electron.importLedgers(companyName, port);
+    console.log({ response });
     if (response.success) {
       const ledgerData = response.ledgerData;
-      setImportedLedgers(ledgerData);
+      setImportedLedgerData(ledgerData);
       removeDuplicateLedgers(ledgerData);
       // TODO - store imported ledgers in db
 
-      updateReportData({ importedLedgers: ledgerData });
+      updateReportData({ importedLedgerData: ledgerData });
     }
     toast({
       title: "Success",
@@ -511,11 +526,36 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
     });
   };
 
-  const removeDuplicateLedgers = (resLedgers = importedLedgers) => {
-    const ledgers = resLedgers.map((ledger) => ledger.ledgerName);
-    const uniqueLedgersData = dataToRender.filter(
-      (d) => !ledgers.includes(d.ledger_name)
+  const removeDuplicateLedgers = (
+    resLedgers = reportData.importedLedgerData
+  ) => {
+    if (!companyName) return;
+    console.log({ resLedgers, companyName });
+
+    const selectedCompanyData = resLedgers.filter(
+      (data) => data.companyName === companyName
+    )[0];
+
+    // e.g., each ledger has { ledgerName, ledgerGroup } etc.
+    const allLedgerNames = selectedCompanyData.ledgerData.map(
+      (l) => l.ledgerName
     );
+    // remove duplicates
+    const uniqueLedgerNames = Array.from(
+      new Set(allLedgerNames.filter(Boolean))
+    );
+    console.log({ uniqueLedgerNames });
+
+    let uniqueLedgersData;
+    if (selectedVoucher === "Ledgers") {
+      uniqueLedgersData = inititalLedgersData.filter(
+        (d) => !uniqueLedgerNames.includes(d.ledger_name)
+      );
+    } else if (selectedVoucher === "Payment Receipt Contra Voucher") {
+      uniqueLedgersData = initialPayRecContraData.filter(
+        (d) => !uniqueLedgerNames.includes(d.ledger_name)
+      );
+    }
     setDataToRender(uniqueLedgersData);
   };
 
@@ -810,6 +850,10 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
     navigate(currentPath.join("/") + "/defaultTab");
   };
 
+  const handleCompanyNameChange = (value) => {
+    setCompanyName(value);
+    updateReportData({ selectedCompany: value });
+  };
   return (
     <div className="p-8">
       <Card>
@@ -917,7 +961,7 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
                     }
                     originalHeaders={excelHeaders}
                     handleUpload={handleManualEntriesSubmit}
-                    setCompanyName={setCompanyName}
+                    setCompanyName={handleCompanyNameChange}
                     companyName={companyName}
                   />
                 </div>
@@ -932,7 +976,7 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
                   }
                   subtitle=""
                   handleUpload={handleUploadClick}
-                  setCompanyName={setCompanyName}
+                  setCompanyName={handleCompanyNameChange}
                   companyName={companyName}
                   selectedVoucher={selectedVoucher}
                   caseId={caseId}

@@ -11,8 +11,9 @@ const {
   buildTallyXmlContra,
   buildTallyPrimeLedgerXml,
   buildTallyERPLedgerXml,
-  fetchLedgerData,
-} = require("./buildTallyXml");
+} = require("./utils/buildTallyXml");
+const { fetchLedgersForAllCompanies } = require("./utils/getComapnyAndLedgers");
+
 const { XMLParser } = require("fast-xml-parser");
 
 function registerTallyIpc() {
@@ -233,17 +234,12 @@ function registerTallyIpc() {
     log.info({ companyName, port });
 
     try {
-      const response = await fetchLedgerData(companyName);
-      // const response = await axios.post(
-      //   `http://localhost:${[port]}`,
-      //   xmlContent,
-      //   {
-      //     headers: { "Content-Type": "application/xml" },
-      //   }
-      // );
-      // const xmlResponse = response.data;
+      const response = await fetchLedgersForAllCompanies(port);
 
-      // const dummyLedgers = ["ledger1", "ledger2", "ledger3"];
+      console.log({ response });
+
+      // const response = await fetchLedgerData(companyName);
+
       const ledgers = response;
       return { success: true, ledgerData: ledgers };
     } catch (error) {

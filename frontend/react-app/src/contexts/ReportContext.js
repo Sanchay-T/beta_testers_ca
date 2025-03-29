@@ -15,7 +15,10 @@ export const ReportProvider = ({ children }) => {
     individualId: null,
     customerName: null,
     triggerRectify: { caseId: null, caseName: null },
-    importedLedgers: [],
+
+    // tally
+    selectedCompany: null,
+    importedLedgerData: [],
     tallyPortNumber: 9000,
     categoryOptions: [
       "Bank Charges",
