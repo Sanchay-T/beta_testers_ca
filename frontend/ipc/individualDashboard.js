@@ -53,9 +53,14 @@ function registerIndividualDashboardIpc() {
 
   // Handler for getting summary data
   ipcMain.handle("get-summary", async (event, caseId, individualId) => {
-    log.info({ caseId, individualId });
-    if (!individualId || individualId == "undefined" || individualId == null || individualId == undefined) {
-
+    log.info("caseId in ipc handler", caseId);
+    log.info("individualId in ipc handler", individualId);
+    if (
+      !individualId ||
+      individualId == "undefined" ||
+      individualId == null ||
+      individualId == undefined
+    ) {
       log.info("combined Dashboard");
       try {
         const result = await db
@@ -71,40 +76,43 @@ function registerIndividualDashboardIpc() {
     } else {
       log.info("individual Dashboard");
       try {
-
         const allTransactions = await db
           .select({
             id: transactions.id,
-            ...transactions
+            ...transactions,
           })
           .from(transactions)
           .where(and(eq(transactions.statementId, individualId.toString())));
 
-        const updatedTransactions = allTransactions.map((transaction, index) => {
-          const { id, date, amount, type, balance, bank, ...requiredFields } = transaction;
-          return {
-            "Value Date": formatDate(date),
-            ...requiredFields,
-            Debit: type === "debit" ? amount : 0,
-            Credit: type === "credit" ? amount : 0,
-            Balance: balance,
-            Bank: bank
-          };
-        });
+        const updatedTransactions = allTransactions.map(
+          (transaction, index) => {
+            const { id, date, amount, type, balance, bank, ...requiredFields } =
+              transaction;
+            return {
+              "Value Date": formatDate(date),
+              ...requiredFields,
+              Debit: type === "debit" ? amount : 0,
+              Credit: type === "credit" ? amount : 0,
+              Balance: balance,
+              Bank: bank,
+            };
+          }
+        );
 
-        log.info({ allTransactions: updatedTransactions.length })
+        log.info({ allTransactions: updatedTransactions.length });
         // make a fastapi call to /individual-summary
 
-        log.info({ exampleTransaction: allTransactions[8] })
-        log.info({ exampleupdatedTransactions: updatedTransactions[8] })
-        const response = await axios.post("http://localhost:7500/individual-summary/", {
-          transactions_data: updatedTransactions
-        },
+        log.info({ exampleTransaction: allTransactions[8] });
+        log.info({ exampleupdatedTransactions: updatedTransactions[8] });
+        const response = await axios.post(
+          "http://localhost:7500/individual-summary/",
+          {
+            transactions_data: updatedTransactions,
+          },
           {
             headers: { "Content-Type": "application/json" },
             // timeout: 300000,
             validateStatus: (status) => status === 200,
-
           }
         );
 

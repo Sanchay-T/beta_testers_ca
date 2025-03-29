@@ -54,6 +54,7 @@ const MaximizableChart = ({ children, title, isMaximized, setIsMaximized }) => {
 
 const Summary = () => {
   const { reportData, updateReportData } = useReportContext();
+  console.log("reportData in summ", reportData);
 
   // const [activeTable, setActiveTable] = useState("Income Receipts");
   const [summaryData, setSummaryData] = useState({
@@ -323,10 +324,10 @@ const Summary = () => {
     const formattedTransactions = matchingTransactions.map((transaction) => ({
       date: transaction.date
         ? new Date(transaction.date).toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        })
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          })
         : "",
       description: transaction.description || "",
       amount: Math.abs(parseFloat(transaction.amount || 0)),
@@ -386,18 +387,42 @@ const Summary = () => {
     if (status === "Pending") {
       toast({
         title: "Cannot Download",
-        description: "Report is still being processed. Please wait until it's complete.",
+        description:
+          "Report is still being processed. Please wait until it's complete.",
         variant: "warning",
         duration: 3000,
       });
       return;
     }
 
+    let isCombinedDashboard =
+      individualId === undefined ||
+      individualId === "undefined" ||
+      individualId === null ||
+      individualId === "combined";
+
     try {
       // console.log("Downloading summary report for case:", caseid);
+      let success = false;
 
       const fileName = reportData.customerName || reportData.reportName;
-      const success = await generateFinancialReport(caseid, fileName, true); // Pass true for summaryOnly
+      console.log("fileName", fileName);
+      if (isCombinedDashboard) {
+        console.log("fileName", fileName);
+        success = await generateFinancialReport(caseid, null, fileName, true);
+      } else {
+        const fileName = reportData.customerName || reportData.reportName;
+        console.log("individualId", individualId);
+        console.log("fileName", fileName);
+        success = await generateFinancialReport(
+          caseid,
+          individualId,
+          fileName,
+          true
+        ); // Pass true for summaryOnly
+      }
+      // const success = await generateFinancialReport(caseid, fileName, true); // Pass true for summaryOnly
+      console.log("success", success);
 
       if (success) {
         // console.log("Summary report downloaded successfully.");
@@ -422,7 +447,6 @@ const Summary = () => {
       });
     }
   };
-
 
   return (
     <div className="bg-white rounded-lg space-y-6 m-8 pr-16 mt-2 min-w-full max-w-[0] dark:bg-slate-950">

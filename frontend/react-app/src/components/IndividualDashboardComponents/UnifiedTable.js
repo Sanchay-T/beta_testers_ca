@@ -1604,7 +1604,13 @@ const DataTable = ({
                               setCategorySearchTerm("");
                               setFilterModalOpen(true);
                               setDateFilterModalOpen(true);
-                            } else {
+                            } else if (
+                              column.toLowerCase() === "category" ||
+                              column.toLowerCase() === "entity" ||
+                              column.toLowerCase() === "ledger" ||
+                              column.toLowerCase() === "voucher_type" ||
+                              column.toLowerCase() === "bank"
+                            ) {
                               setCurrentFilterColumn(column);
                               setCurrentDateColumn(column);
                               setSelectedCategories([]);
