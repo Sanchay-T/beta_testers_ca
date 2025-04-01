@@ -23,20 +23,18 @@ import ManualTallyTable from "./ManualTable";
 import * as XLSX from "xlsx";
 import { useToast } from "../../hooks/use-toast";
 import { Input } from "../ui/input";
-import localForage from "localforage";
 import {
   AlertDialog,
   AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "../ui/alert-dialog";
 import { Checkbox } from "../ui/checkbox";
 import { useNavigate, useLocation } from "react-router-dom";
+import localForage, { clear } from "localforage";
 
 const defaultColumns = {
   "Payment Receipt Contra": [
@@ -72,11 +70,9 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
   // If you have a caseId in the ReportContext:
   const { reportData, updateReportData } = useReportContext();
   const { caseId } = reportData;
-  const [ledgerCreationTableData, setLedgerCreationTableData] = useState([]);
   const { toast } = useToast();
   const [port, setPort] = useState(reportData.tallyPortNumber);
   const [tallyVersion, setTallyVersion] = useState("TallyPrime");
-  const [importedLedgerData, setImportedLedgerData] = useState([]);
   const [selectedBankLedger, setSelectedBankLedger] = useState();
   const [showTallyWarning, setShowTallyWarning] = useState(false);
   const [isEmptyLedgersSelected, setIsEmptyLedgersSelected] = useState(false);
@@ -94,7 +90,7 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
       }
     };
 
-    if (reportData.selectedCompany) {
+    if (reportData.selectedCompany && selectedVoucher !== "Ledgers") {
       setCompanyName(reportData.selectedCompany);
     }
 
@@ -226,7 +222,6 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
           })
         );
 
-        setLedgerCreationTableData(tableDataForLedgerCreation);
         setDataToRender(tableDataForLedgerCreation);
         setInititalLedgersData(tableDataForLedgerCreation);
       } else if (voucherName === "Import Ledgers") {
@@ -396,6 +391,10 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
     // Prepare data for Tally
     const tallyData = data
       .map((transaction) => {
+        if (transaction.imported) {
+          // Already uploaded
+          return null;
+        }
         return {
           companyName: companyName,
           id: transaction.id,
@@ -522,6 +521,10 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
 
       // setTransactions(tempSortedTransactions);
       // setDataToRender(tempSortedTransactions);
+
+      if (selectedVoucher === "Ledgers") {
+        handleLedgerImport();
+      }
     } catch (err) {
       console.error("Error uploading to Tally:", err);
     } finally {
@@ -547,28 +550,37 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
     console.log({ response });
     if (response.success) {
       const ledgerData = response.ledgerData;
-      setImportedLedgerData(ledgerData);
       removeDuplicateLedgers(ledgerData);
       // TODO - store imported ledgers in db
 
       updateReportData({ importedLedgerData: ledgerData });
     }
-    toast({
-      title: "Success",
-      description: `Imported Ledgers and removed already existing ones from above list.`,
-      duration: 3000,
-      variant: "success",
-    });
+    // toast({
+    //   title: "Success",
+    //   description: `Imported Ledgers and removed already existing ones from above list.`,
+    //   duration: 3000,
+    //   variant: "success",
+    // });
   };
 
   const removeDuplicateLedgers = (
     resLedgers = reportData.importedLedgerData
   ) => {
-    if (!companyName) return;
-    console.log({ resLedgers, companyName });
+    const currentCompanyName = companyName || reportData.selectedCompany;
+    const currentLedgerData = dataToRender || inititalLedgersData;
+    if (!currentCompanyName) {
+      console.log("Returned as currentCompanyName is null");
+      return;
+    }
+    if (currentLedgerData.length === 0) {
+      console.log("Returned as currentLedgerData is empty");
+      return;
+    }
+    if (selectedVoucher !== "Ledgers") return;
+    console.log("from removeDuplicates", { resLedgers, currentCompanyName });
 
     const selectedCompanyData = resLedgers.filter(
-      (data) => data.companyName === companyName
+      (data) => data.companyName === currentCompanyName
     )[0];
 
     // e.g., each ledger has { ledgerName, ledgerGroup } etc.
@@ -581,17 +593,80 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
     );
     console.log({ uniqueLedgerNames });
 
-    let uniqueLedgersData;
-    if (selectedVoucher === "Ledgers") {
-      uniqueLedgersData = inititalLedgersData.filter(
-        (d) => !uniqueLedgerNames.includes(d.ledger_name)
-      );
-    } else if (selectedVoucher === "Payment Receipt Contra Voucher") {
-      uniqueLedgersData = initialPayRecContraData.filter(
-        (d) => !uniqueLedgerNames.includes(d.ledger_name)
-      );
+    // let uniqueLedgersData;
+    // if (selectedVoucher === "Ledgers") {
+    // uniqueLedgersData = inititalLedgersData.filter(
+    //   (d) => !uniqueLedgerNames.includes(d.ledger_name)
+    // );
+    // }
+
+    // if (uniqueLedgersData && uniqueLedgersData.length === 0) {
+    //   localForage.setItem(`${caseId}_${currentCompanyName}_ledgersCreated`, true)
+    //     .then(() => {
+    //       console.log(`All ledgers created for ${currentCompanyName}`);
+    //     })
+    //     .catch(err => {
+    //       console.error("Error saving ledger creation status:", err);
+    //     });
+    // }
+    // setDataToRender(uniqueLedgersData);
+
+    let updatedLedgersData;
+    console.log("AIYAZ", { inititalLedgersData });
+    // Instead of filtering out already created ledgers, mark them as imported
+    updatedLedgersData = dataToRender.map((ledger) => {
+      // If the ledger is already in Tally, mark it as imported
+      if (uniqueLedgerNames.includes(ledger.ledger_name)) {
+        return {
+          ...ledger,
+          imported: true,
+          failed_reason: "", // Clear any previous error
+        };
+      }
+      // Otherwise, keep it as not imported
+      return ledger;
+    });
+
+    console.log({ updatedLedgersData });
+
+    // Sort the data so non-imported ledgers appear first
+    updatedLedgersData.sort((a, b) => {
+      // Sort by imported status first (false comes before true)
+      if (a.imported !== b.imported) {
+        return a.imported ? 1 : -1;
+      }
+      // If imported status is the same, sort alphabetically by ledger name
+      return a.ledger_name.localeCompare(b.ledger_name);
+    });
+
+    console.log({ updatedLedgersData });
+
+    // Check if all ledgers are imported
+    const allLedgersImported = updatedLedgersData
+      ? updatedLedgersData.every((ledger) => ledger.imported === true)
+      : false;
+
+    console.log({ allLedgersImported });
+    // Update ledger creation status in localStorage based on whether all ledgers are imported
+    if (allLedgersImported) {
+      localForage
+        .setItem(`${caseId}_${currentCompanyName}_ledgersCreated`, true)
+        .then(() => {
+          console.log(`All ledgers created for ${currentCompanyName}`);
+        })
+        .catch((err) => {
+          console.error("Error saving ledger creation status:", err);
+        });
+    } else {
+      localForage
+        .setItem(`${caseId}_${currentCompanyName}_ledgersCreated`, false)
+        .catch((err) => {
+          console.error("Error saving ledger creation status:", err);
+        });
     }
-    setDataToRender(uniqueLedgersData);
+
+    console.log({ updatedLedgersData });
+    setDataToRender(updatedLedgersData);
   };
 
   // Simple summary for the Tally upload dialog
@@ -1142,7 +1217,7 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
                 {/* <AlertDialogAction onClick={goToSummary}>
                 Go to Home
               </AlertDialogAction> */}
-                <Button type="submit" variant="default">
+                <Button type="submit" variant="default" className="mt-4">
                   <AlertDialogAction onClick={recheckTallystatus}>
                     Retry
                   </AlertDialogAction>

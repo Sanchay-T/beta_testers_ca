@@ -10,6 +10,7 @@ import {
   Copy,
   Trash2,
   Check,
+  Loader2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader } from "../ui/card";
 import {
@@ -190,6 +191,17 @@ const TallyTable = ({
 
     const filteredLedgerNames = filterBankLedgers.map((l) => l.ledgerName);
     setBankLedgers(filteredLedgerNames);
+    // Create an async function inside useEffect to properly await
+    const checkLedgerStatus = async () => {
+      const ledgerStatus = await getLedgerCreationStatus();
+      console.log({ ledgerStatus });
+      setIsLedgersCreated(ledgerStatus);
+    };
+
+    // Call the async function
+    checkLedgerStatus();
+
+    // change ledger status if company is changed
   }, [reportData.importedLedgerData, companyName]);
 
   const handleLedgerSelectOpenChange = (rowId, open) => {
@@ -225,19 +237,13 @@ const TallyTable = ({
     return data.sort((a, b) => a.imported - b.imported);
   };
   // Merge function that takes savedData and incomingData
-  const mergeData = (savedData, incomingData) => {
+  const mergeData = (incomingData, savedData) => {
     const columnsToUpdate = [
       "imported",
-      "failed_reason", // Changed from "failed_reasons" to match your schema
+      "failed_reasons",
       "ledger_name",
       "ledger",
-      "bill_reference", // Add bill_reference
-      "effective_date", // Add effective_date
-      "date", // Include date if needed
-      "amount",
-      "narration",
-      "voucher_type",
-      "type",
+      "bill_reference",
     ];
 
     // Create a lookup map for incomingData by id
@@ -248,23 +254,22 @@ const TallyTable = ({
       if (incomingRow) {
         // For each column that should be updated, check if the values differ
         columnsToUpdate.forEach((col) => {
-          if (
-            incomingRow[col] !== undefined &&
-            incomingRow[col] !== savedRow[col]
-          ) {
+          if (incomingRow.imported && incomingRow[col] !== savedRow[col]) {
+            // Update the value with the latest from incoming data
             savedRow[col] = incomingRow[col];
-          }
-          if (incomingRow.imported === true && savedRow.imported === false) {
-            savedRow.imported = true;
-            savedRow.failed_reason = "";
-          }
+          } else {
+            if (incomingRow.imported === true && savedRow.imported === false) {
+              savedRow.imported = true;
+              savedRow.failed_reason = "";
+            }
 
-          if (incomingRow.ledger_name !== savedRow.ledger_name) {
-            savedRow.ledger_name = incomingRow.ledger_name;
-          }
+            if (incomingRow.ledger_name !== savedRow.ledger_name) {
+              savedRow.ledger_name = incomingRow.ledger_name;
+            }
 
-          if (incomingRow.ledger !== savedRow.ledger) {
-            savedRow.ledger = incomingRow.ledger;
+            if (incomingRow.ledger !== savedRow.ledger) {
+              savedRow.ledger = incomingRow.ledger;
+            }
           }
         });
       } else {
@@ -280,68 +285,68 @@ const TallyTable = ({
     return sortByImportedStatus(newSavedDataFiltered);
   };
 
-  const cacheData = (dataToCache = transactions) => {
-    try {
-      localForage.setItem(
-        `tallyTableData_${selectedVoucher}_${caseId}`,
-        dataToCache
-      );
-    } catch (error) {
-      console.error("Error saving data:", error);
-    }
-  };
+  // const cacheData = (dataToCache = transactions) => {
+  //   try {
+  //     localForage.setItem(
+  //       `tallyTableData_${selectedVoucher}_${caseId}`,
+  //       dataToCache
+  //     );
+  //   } catch (error) {
+  //     console.error("Error saving data:", error);
+  //   }
+  // };
 
   // Load data for this report when component mounts
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const savedData = await localForage.getItem(
-          `tallyTableData_${selectedVoucher}_${caseId}`
-        );
+  // useEffect(() => {
+  //   const loadData = async () => {
+  //     try {
+  //       const savedData = await localForage.getItem(
+  //         `tallyTableData_${selectedVoucher}_${caseId}`
+  //       );
 
-        if (savedData) {
-          const mergedData = mergeData(savedData, data);
+  //       if (savedData) {
+  //         const mergedData = mergeData(savedData, data);
 
-          setTransactions(mergedData);
-          setFilteredData(mergedData);
-        } else {
-          // Only initialize with provided data if no saved data exists.
-          const sortedData = sortByImportedStatus(data);
-          setTransactions(sortedData);
-          setFilteredData(sortedData);
-          cacheData(sortedData);
-        }
+  //         setTransactions(mergedData);
+  //         setFilteredData(mergedData);
+  //       } else {
+  //         // Only initialize with provided data if no saved data exists.
+  //         const sortedData = sortByImportedStatus(data);
+  //         setTransactions(sortedData);
+  //         setFilteredData(sortedData);
+  //         cacheData(sortedData);
+  //       }
 
-        const ledgerCreated = await getLedgerCreationStatus();
-        // console.log({ ledgerCreated, caseId });
-        setIsLedgersCreated(ledgerCreated);
+  //       const ledgerCreated = await getLedgerCreationStatus();
+  //       // console.log({ ledgerCreated, caseId });
+  //       setIsLedgersCreated(ledgerCreated);
 
-        // // Import ledgers on start itself
-        // handleLedgerImport();
-      } catch (error) {
-        console.error("Error loading saved data:", error);
-      }
-    };
+  //       // // Import ledgers on start itself
+  //       // handleLedgerImport();
+  //     } catch (error) {
+  //       console.error("Error loading saved data:", error);
+  //     }
+  //   };
 
-    loadData();
-  }, [caseId, data]);
+  //   loadData();
+  // }, [caseId, data]);
 
   // Save transactions state to localForage whenever it changes (debounced)
-  useEffect(() => {
-    // Use a simple timeout to debounce saves by 1 second
-    let timer;
-    if (selectedVoucher === "Ledgers") {
-      timer = setTimeout(() => {
-        cacheData();
-      }, 500); // Save every half second
-    } else {
-      timer = setTimeout(() => {
-        cacheData();
-      }, 1000 * 60); // Save every 1 minute
-    }
+  // useEffect(() => {
+  //   // Use a simple timeout to debounce saves by 1 second
+  //   let timer;
+  //   if (selectedVoucher === "Ledgers") {
+  //     timer = setTimeout(() => {
+  //       cacheData();
+  //     }, 500); // Save every half second
+  //   } else {
+  //     timer = setTimeout(() => {
+  //       cacheData();
+  //     }, 1000 * 60); // Save every 1 minute
+  //   }
 
-    return () => clearTimeout(timer);
-  }, [transactions, caseId, selectedVoucher]);
+  //   return () => clearTimeout(timer);
+  // }, [transactions, caseId, selectedVoucher]);
 
   // A stable ref to our debounced update
   const debouncedUpdate = useRef(
@@ -367,13 +372,24 @@ const TallyTable = ({
 
   useEffect(() => {
     // console.log("Data from tally table - ", data);
-    const formattedData = data.map((row) => {
+    const sortedData = sortByImportedStatus(data);
+    const formattedData = sortedData.map((row) => {
       const newRow = { ...row };
       Object.keys(row).forEach((key) => {
         newRow[key] = formatValue(row[key]);
       });
       return newRow;
     });
+
+    // Create an async function inside useEffect to properly await
+    const checkLedgerStatus = async () => {
+      const ledgerStatus = await getLedgerCreationStatus();
+      console.log({ ledgerStatus });
+      setIsLedgersCreated(ledgerStatus);
+    };
+
+    // Call the async function
+    checkLedgerStatus();
 
     // If it's the first load, set the transactions
     if (isFirstLoad) {
@@ -885,7 +901,8 @@ const TallyTable = ({
         });
 
         // clear the ledger table stored in cache and force user to go to that page and make sure to create all ledgers
-        localForage.removeItem(`tallyTableData_Ledgers_${caseId}`);
+        // localForage.removeItem(`tallyTableData_Ledgers_${caseId}`);
+        localForage.removeItem(`${caseId}_${companyName}_ledgersCreated`);
         setIsLedgersCreated(false);
       } else {
         // Show an error toast
@@ -995,16 +1012,39 @@ const TallyTable = ({
     setSelectedTransactions([]);
   };
 
+  // const getLedgerCreationStatus = async () => {
+
+  // const savedData = await localForage.getItem(
+  //   `tallyTableData_Ledgers_${caseId}`
+  // );
+  // return savedData.length === 0;
+  // };
+
   const getLedgerCreationStatus = async () => {
-    const savedData = await localForage.getItem(
-      `tallyTableData_Ledgers_${caseId}`
-    );
-    return savedData.length === 0;
+    try {
+      const response = await localForage.getItem(
+        `${caseId}_${companyName}_ledgersCreated`
+      );
+      return response === true;
+    } catch (error) {
+      console.error("Error getting ledger creation status:", error);
+      return false;
+    }
   };
 
   const filteredLedgers = ledgerOptions.filter((ledger) =>
     ledger.toLowerCase().includes(ledgerSearchTerm.toLowerCase())
   );
+
+  const handleRefreshImports = () => {
+    handleLedgerImport();
+    toast({
+      title: "Success",
+      description: `Imported Ledgers and removed already existing ones from above list.`,
+      duration: 3000,
+      variant: "success",
+    });
+  };
 
   return (
     <Card className="min-w-full max-w-[0]">
@@ -1020,12 +1060,29 @@ const TallyTable = ({
               Company Name:
             </label>
 
-            <Select value={companyName} onValueChange={setCompanyName}>
+            <Select
+              value={companyName}
+              onValueChange={setCompanyName}
+              disabled={reportData.importedLedgerData.length === 0}
+            >
               <SelectTrigger
                 id="companyName"
-                className="w-full sm:w-64 dark:bg-gray-800 dark:text-white min-w-0"
+                // className="w-full sm:w-64 dark:bg-gray-800 dark:text-white min-w-0"
+                className={`w-full sm:w-64 dark:bg-gray-800 dark:text-white min-w-0 ${
+                  reportData.importedLedgerData.length === 0
+                    ? "bg-gray-100 dark:bg-gray-700"
+                    : ""
+                }`}
               >
-                <SelectValue placeholder="Select Company Name" />
+                {reportData.importedLedgerData.length === 0 ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+                    <span className="text-gray-500">Loading companies...</span>
+                  </div>
+                ) : (
+                  <SelectValue placeholder="Select Company Name" />
+                )}
+                {/* <SelectValue placeholder="Select Company Name" /> */}
               </SelectTrigger>
               <SelectContent>
                 {reportData.importedLedgerData
@@ -1161,11 +1218,11 @@ const TallyTable = ({
             </Button> */}
             <div className="flex items-center gap-2">
               <Button
-                onClick={handleLedgerImport}
+                onClick={handleRefreshImports}
                 className="px-3 py-2 text-base font-medium text-white bg-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 hover:bg-gray-700 transition-all duration-200 ease-in-out rounded-lg flex items-center gap-2 shadow-sm hover:shadow-md"
               >
                 <UploadCloud className="w-5 h-5 text-white" />
-                Import Ledgers
+                Refresh Imports
               </Button>
               <Button
                 onClick={handleUploadToTally}
@@ -1391,47 +1448,41 @@ const TallyTable = ({
                           return (
                             <TableCell
                               key={column}
-                              className="max-w-[500px] relative"
+                              className="max-w-[500px] group relative"
                             >
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Input
-                                      type="text"
-                                      value={
-                                        pendingValues[row.id]?.[column] ??
-                                        row[column] ??
-                                        ""
-                                      }
-                                      onChange={(e) => {
+                              <Input
+                                type="text"
+                                value={
+                                  pendingValues[row.id]?.[column] ??
+                                  row[column] ??
+                                  ""
+                                }
+                                onChange={(e) => {
+                                  handleInputChange(
+                                    row.id,
+                                    column,
+                                    e.target.value
+                                  );
+                                  // If this row is selected, update all selected rows
+                                  if (selectedTransactions.includes(row.id)) {
+                                    selectedTransactions.forEach((id) => {
+                                      if (id !== row.id) {
+                                        // Skip current row since already updated
                                         handleInputChange(
-                                          row.id,
+                                          id,
                                           column,
                                           e.target.value
                                         );
-                                        if (
-                                          selectedTransactions.includes(row.id)
-                                        ) {
-                                          selectedTransactions.forEach((id) => {
-                                            if (id !== row.id) {
-                                              handleInputChange(
-                                                id,
-                                                column,
-                                                e.target.value
-                                              );
-                                            }
-                                          });
-                                        }
-                                      }}
-                                      placeholder="Enter Narration"
-                                      className="w-full p-2 border border-gray-300 truncate rounded-md"
-                                    />
-                                  </TooltipTrigger>
-                                  <TooltipContent className="bg-black text-white text-sm rounded p-2 max-w-[300px] whitespace-normal">
-                                    {row[column]}
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
+                                      }
+                                    });
+                                  }
+                                }}
+                                placeholder="Enter Narration"
+                                className="w-full p-2 border border-gray-300  truncate rounded-md"
+                              />
+                              <div className="absolute right-24 top-12 hidden group-hover:block bg-black text-white text-sm rounded p-2 z-50 whitespace-normal min-w-[200px] ">
+                                {row[column]}
+                              </div>
                             </TableCell>
                           );
                         } else if (
