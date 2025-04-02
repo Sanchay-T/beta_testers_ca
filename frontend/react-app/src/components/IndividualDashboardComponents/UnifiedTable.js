@@ -2176,6 +2176,7 @@ const DataTable = ({
                 <div className="p-2 border-b flex gap-2">
                   <div className="relative flex-1">
                     <Input
+                      type="text"
                       placeholder="Search categories..."
                       value={categorySearchTerm}
                       onChange={(e) => setCategorySearchTerm(e.target.value)}
