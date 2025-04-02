@@ -40,7 +40,7 @@ import {
 } from "lucide-react";
 import { useReportContext } from "../contexts/ReportContext";
 import DashboardDropdown from "../components/IndividualDashboardComponents/DashboardDropdown";
-import TallyDirectImport from "../components/ImortTally/TallyDirectImport";
+import TallyDirectImport from "../components/ImportTally/TallyDirectImport";
 
 const IndividualDashboard = () => {
   const [activeTab, setActiveTab] = useState("Summary");

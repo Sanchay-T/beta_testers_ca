@@ -9,7 +9,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useBreadcrumb } from "../contexts/BreadcrumbContext";
 import { BreadcrumbDynamic } from "../components/BreadCrumb";
 import { User, UserPen, Import } from "lucide-react";
-import TallyDirectImport from "../components/ImortTally/TallyDirectImport";
+import TallyDirectImport from "../components/ImportTally/TallyDirectImport";
 import { useReportContext } from "../contexts/ReportContext";
 
 const CaseDashboard = () => {

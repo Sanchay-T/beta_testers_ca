@@ -187,10 +187,11 @@ async def analyze_bank_statements(request: BankStatementRequest):
                     temp_aiyaz_array.append(col.model_dump())
                 temp_aiyaz_array_of_array.append(temp_aiyaz_array)
 
-        whole_transaction_sheet = pd.DataFrame(whole_transaction_sheet)
-        whole_transaction_sheet["Value Date"] = pd.to_datetime(whole_transaction_sheet["Value Date"], format="%d-%m-%Y")
+        if whole_transaction_sheet is not None:
+            whole_transaction_sheet = pd.DataFrame(whole_transaction_sheet)
+            whole_transaction_sheet["Value Date"] = pd.to_datetime(whole_transaction_sheet["Value Date"], format="%d-%m-%Y")
 
-        print("whole_transaction_sheet", whole_transaction_sheet.head())
+            print("whole_transaction_sheet", whole_transaction_sheet.head())
                 
         result = start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_date, end_date, CA_ID, progress_data,whole_transaction_sheet=whole_transaction_sheet,aiyazs_array_of_array=temp_aiyaz_array_of_array)
         
