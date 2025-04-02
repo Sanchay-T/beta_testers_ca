@@ -34,6 +34,7 @@ import {
   XCircle,
   Download,
   Upload,
+  RotateCw,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -209,46 +210,45 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
   const viewAnalysis = () => {
     navigate(`/case-dashboard/${currentCaseId}/defaultTab`);
   };
+  const fetchReports = async () => {
+    setIsLoading(true);
+    try {
+      const result = await window.electron.getRecentReports();
+      console.log({ reportsGotFromBackend: result });
+      const formattedReports = result
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .map((report) => ({
+          ...report,
+          createdAt: new Date(report.createdAt).toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          }),
+          statements: report.statements.map((statement) => ({
+            ...statement,
+            createdAt: new Date(statement.createdAt).toLocaleDateString(
+              "en-GB",
+              {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+              }
+            ),
+          })),
+        }));
 
+      updateReportData({ recentReportsData: formattedReports });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to load reports: ${error.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
   useEffect(() => {
-    const fetchReports = async () => {
-      setIsLoading(true);
-      try {
-        const result = await window.electron.getRecentReports();
-        const formattedReports = result
-          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-          .map((report) => ({
-            ...report,
-            createdAt: new Date(report.createdAt).toLocaleDateString("en-GB", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-            }),
-            statements: report.statements.map((statement) => ({
-              ...statement,
-              createdAt: new Date(statement.createdAt).toLocaleDateString(
-                "en-GB",
-                {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                }
-              ),
-            })),
-          }));
-
-        updateReportData({ recentReportsData: formattedReports });
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: `Failed to load reports: ${error.message}`,
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     if (reportData.recentReportsData.length === 0) {
       fetchReports();
     }
@@ -1124,7 +1124,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
               A list of recent reports
             </CardDescription>
           </div>
-          <div className="relative">
+          <div className="relative flex gap-x-2">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search reports..."
@@ -1132,7 +1132,15 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+            <Button
+              onClick={fetchReports}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <RotateCw className="w-4 h-4" />
+            </Button>
           </div>
+          {/* add refresh button */}
         </div>
       </CardHeader>
       <CardContent>
@@ -1157,6 +1165,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                     <TableCell>{report.createdAt}</TableCell>
                     <TableCell>{report.name}</TableCell>
                     <TableCell>
+                      {console.log({ report })}
                       <StatusBadge status={report.status} />
                     </TableCell>
                     <TableCell>
@@ -1406,6 +1415,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                       : -1;
                                   })
                                   .map((statement, index) => {
+                                    console.log({ aiyaz: statement });
                                     const isDone = statement.resolved;
                                     const hasError = Boolean(
                                       statement.respectiveReasonsForError
@@ -1434,7 +1444,8 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                           {/* {!hasError && ( */}
                                           {
                                             <div className="flex-1">
-                                              {report.status === "Success" ||
+                                              {(report.status === "Success" &&
+                                                isDone) ||
                                               isDone ? (
                                                 <Button
                                                   size="sm"
@@ -1489,7 +1500,10 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                             {failedDatasOfCurrentReport?.length > 0 &&
                               !report.resolved && (
                                 <div className="flex justify-center">
-                                  {report.status === "Success" ? (
+                                  {report.status === "Success" &&
+                                  failedDatasOfCurrentReport.every(
+                                    (st) => st.resolved
+                                  ) ? (
                                     ""
                                   ) : (
                                     <Button

@@ -77,7 +77,9 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
           caseId,
           parseInt(individualId)
         );
-        setTransactionData(data);
+        // remove entity and bank from the data
+        const filteredData = data.map(({ entity, ...rest }) => rest);
+        setTransactionData(filteredData);
         // console.log("Fetched summary transactions:", data.length);
       } catch (err) {
         setError("Failed to fetch transactions");
@@ -138,7 +140,7 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
           category: transaction.category,
           balance: transaction.balance,
           bank: transaction.bank,
-          entity: transaction.entity,
+          // entity: transaction.entity,
           id: transaction.id,
         };
       });

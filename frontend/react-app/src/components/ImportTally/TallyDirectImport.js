@@ -33,7 +33,7 @@ import {
   AlertDialogTitle,
 } from "../ui/alert-dialog";
 import { Checkbox } from "../ui/checkbox";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, matchPath } from "react-router-dom";
 import localForage, { clear } from "localforage";
 
 const defaultColumns = {
@@ -49,7 +49,7 @@ const defaultColumns = {
   ],
 };
 
-const TallyDirectImport = ({ defaultVoucher, source }) => {
+const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
   const vouchers = ["Payment Receipt Contra", "Ledgers", "Import Ledgers"];
   // const [vouchers, setVouchers] = useState(["Payment Receipt Contra"]);
   const [selectedVoucher, setSelectedVoucher] = useState(defaultVoucher);
@@ -951,13 +951,7 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
   };
 
   const goToSummary = () => {
-    // print current path
-    console.log(location);
-    const currentPath = location.pathname.split("/");
-    currentPath.pop();
-
-    console.log(currentPath.join("/") + "/defaultTab");
-    navigate(currentPath.join("/") + "/defaultTab");
+    setActiveTab("Summary");
   };
 
   const handleCompanyNameChange = (value) => {
@@ -1212,12 +1206,12 @@ const TallyDirectImport = ({ defaultVoucher, source }) => {
                   </div>
                 </AlertDialogDescription>
               </AlertDialogHeader>
-              <AlertDialogFooter>
+              <AlertDialogFooter className={"mt-4"}>
                 {/* <AlertDialogCancel>Cancel</AlertDialogCancel> */}
-                {/* <AlertDialogAction onClick={goToSummary}>
-                Go to Home
-              </AlertDialogAction> */}
-                <Button type="submit" variant="default" className="mt-4">
+                <AlertDialogAction onClick={goToSummary}>
+                  Go Back
+                </AlertDialogAction>
+                <Button type="submit" variant="default" className="">
                   <AlertDialogAction onClick={recheckTallystatus}>
                     Retry
                   </AlertDialogAction>

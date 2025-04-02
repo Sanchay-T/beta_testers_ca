@@ -201,13 +201,22 @@ const IndividualDashboard = () => {
               {activeTab === "Insurance" && <Insurance />}
               {activeTab === "Contra" && <Contra />}
               {activeTab === "Upload to Tally" && (
-                <TallyDirectImport defaultVoucher={"Payment Receipt Contra"} />
+                <TallyDirectImport
+                  defaultVoucher={"Payment Receipt Contra"}
+                  setActiveTab={setActiveTab}
+                />
               )}
               {activeTab === "Ledgers" && (
-                <TallyDirectImport defaultVoucher={"Ledgers"} />
+                <TallyDirectImport
+                  defaultVoucher={"Ledgers"}
+                  setActiveTab={setActiveTab}
+                />
               )}
               {activeTab === "Import Ledgers" && (
-                <TallyDirectImport defaultVoucher={"Import Ledgers"} />
+                <TallyDirectImport
+                  defaultVoucher={"Import Ledgers"}
+                  setActiveTab={setActiveTab}
+                />
               )}
             </main>
           </div>

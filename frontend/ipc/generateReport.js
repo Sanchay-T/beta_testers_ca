@@ -474,7 +474,7 @@ const processSummaryData = async (parsedData, caseName) => {
     if (
       !parsedData ||
       typeof parsedData !== "object" ||
-      // !parsedData["Particulars"] ||
+      !parsedData["Particulars"] ||
       !parsedData["Income Receipts"] ||
       !parsedData["Important Expenses"] ||
       !parsedData["Other Expenses"] ||
@@ -671,6 +671,14 @@ function preprocessPayload(payload) {
 
   return payload;
 }
+const formatDate = (dateString) => {
+  const date = new Date(dateString); // Parse the date string
+  const day = String(date.getDate()).padStart(2, "0"); // Get day and pad with zero
+  const month = String(date.getMonth() + 1).padStart(2, "0"); // Get month (0-based) and pad with zero
+  const year = date.getFullYear(); // Get full year
+
+  return `${day}-${month}-${year}`; // Format as dd-mm-yyyy
+};
 
 function generateReportIpc(tmpdir_path) {
   db = databaseManager.getInstance().getDatabase();
@@ -742,27 +750,52 @@ function generateReportIpc(tmpdir_path) {
         });
 
         let whole_transaction_sheet = null;
+        let transactionsForCase = null;
         if (source === "add-pdf") {
-          log.info({ source });
-          const allStatements = await db
-            .select()
-            .from(statements)
-            .where(eq(statements.caseId, caseId));
-          if (allStatements.length === 0) {
-            log.info("No statements found for case:", caseId);
-          }
-
-          const allTransactions = await db
-            .select()
-            .from(transactions)
-            .where(
-              inArray(
-                transactions.statementId,
-                allStatements.map((stmt) => stmt.id.toString()) // Convert integer ID to string
+          try {
+            transactionsForCase = await db
+              .select({
+                id: transactions.id,
+                Date: transactions.date,
+                Description: transactions.description,
+                Type: transactions.type,
+                Amount: transactions.amount,
+                Balance: transactions.balance,
+                Category: transactions.category,
+              })
+              .from(transactions)
+              .innerJoin(
+                statements,
+                eq(transactions.statementId, statements.id)
               )
-            );
+              .innerJoin(cases, eq(statements.caseId, cases.id))
+              .where(eq(cases.id, caseId));
+          } catch (err) {
+            log.error("Error fetching transactions for case:", err);
+          }
+          log.info(
+            "Count of transactions for case:",
+            transactionsForCase.length
+          );
 
-          whole_transaction_sheet = allTransactions || null;
+          const updatedTransactions = transactionsForCase.map(
+            (transaction, index) => {
+              const { id, Date, Amount, Type, ...requiredFields } = transaction;
+
+              return {
+                "Value Date": formatDate(Date),
+                ...requiredFields,
+                Debit: Type === "debit" ? Amount : 0,
+                Credit: Type === "credit" ? Amount : 0,
+              };
+            }
+          );
+          log.info(
+            "Updated transactions example whole transaction ka :",
+            updatedTransactions[1]
+          );
+
+          whole_transaction_sheet = updatedTransactions || null;
         }
 
         // Step 2: Send API request
@@ -1006,7 +1039,7 @@ function generateReportIpc(tmpdir_path) {
     log.info("IPC handler invoked for edit-pdf", caseName);
     const tempDir = tmpdir_path;
     log.info("Temp Directory : ", tempDir);
-    let caseId = null;
+    let caseId = result[0].caseId;
     console.log("CaseName backend edit pdf: ", caseName);
     console.log("Result backend edit pdf: ", result);
 
@@ -1016,27 +1049,41 @@ function generateReportIpc(tmpdir_path) {
 
     console.log("Result: ", result);
     try {
-      caseId = await getOrCreateCase(caseName);
-
-      const allStatements = await db
-        .select()
-        .from(statements)
-        .where(eq(statements.caseId, caseId));
-      if (allStatements.length === 0) {
-        log.info("No statements found for case:", caseId);
-      }
-
-      const allTransactions = await db
-        .select()
+      transactionsForCase = await db
+        .select({
+          id: transactions.id,
+          Date: transactions.date,
+          Description: transactions.description,
+          Type: transactions.type,
+          Amount: transactions.amount,
+          Balance: transactions.balance,
+          Category: transactions.category,
+        })
         .from(transactions)
-        .where(
-          inArray(
-            transactions.statementId,
-            allStatements.map((stmt) => stmt.id.toString()) // Convert integer ID to string
-          )
-        );
+        .innerJoin(statements, eq(transactions.statementId, statements.id))
+        .innerJoin(cases, eq(statements.caseId, cases.id))
+        .where(eq(cases.id, caseId));
 
-      const whole_transaction_sheet = allTransactions || null;
+      log.info("Count of transactions for case:", transactionsForCase.length);
+
+      const updatedTransactions = transactionsForCase.map(
+        (transaction, index) => {
+          const { id, Date, Amount, Type, ...requiredFields } = transaction;
+
+          return {
+            "Value Date": formatDate(Date),
+            ...requiredFields,
+            Debit: Type === "debit" ? Amount : 0,
+            Credit: Type === "credit" ? Amount : 0,
+          };
+        }
+      );
+      log.info(
+        "Updated transactions example whole transaction ka :",
+        updatedTransactions[1]
+      );
+
+      whole_transaction_sheet = updatedTransactions || null;
       // log.info("Whole Transaction Sheet: ",whole_transaction_sheet.length);
 
       const payload = {
@@ -1201,6 +1248,7 @@ function generateReportIpc(tmpdir_path) {
       try {
         await processSummaryData(
           {
+            Particulars: parsedData["Particulars"] || [],
             "Income Receipts": parsedData["Income Receipts"] || [],
             "Important Expenses": parsedData["Important Expenses"] || [],
             "Other Expenses": parsedData["Other Expenses"] || [],

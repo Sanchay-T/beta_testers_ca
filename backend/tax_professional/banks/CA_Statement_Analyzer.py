@@ -730,7 +730,7 @@ def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_
         list_of_dataframes = list(dfs.values())
 
         if whole_transaction_sheet is not None:
-            list_of_dataframes.append(transaction_sheet)
+            list_of_dataframes.append(whole_transaction_sheet)
 
         # arrange dfs
         initial_df = pd.concat(sort_dataframes_by_date(list_of_dataframes)).fillna("").reset_index(drop=True)

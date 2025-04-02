@@ -334,7 +334,7 @@ const Summary = () => {
       category: transaction.category || "",
       balance: parseFloat(transaction.balance || 0),
       bank: transaction.bank || "",
-      entity: transaction.entity || "unknown",
+      // entity: transaction.entity || "unknown",
       id: transaction.id,
     }));
 

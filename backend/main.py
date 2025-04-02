@@ -189,9 +189,9 @@ async def analyze_bank_statements(request: BankStatementRequest):
 
         if whole_transaction_sheet is not None:
             whole_transaction_sheet = pd.DataFrame(whole_transaction_sheet)
+            print("whole_transaction_sheet", whole_transaction_sheet.head())
             whole_transaction_sheet["Value Date"] = pd.to_datetime(whole_transaction_sheet["Value Date"], format="%d-%m-%Y")
 
-            print("whole_transaction_sheet", whole_transaction_sheet.head())
                 
         result = start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_date, end_date, CA_ID, progress_data,whole_transaction_sheet=whole_transaction_sheet,aiyazs_array_of_array=temp_aiyaz_array_of_array)
         
