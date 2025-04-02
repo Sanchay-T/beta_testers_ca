@@ -537,6 +537,7 @@ def find_debit_column(df, desc_col, date_col, bal_column):
 def find_credit_column(df, desc_col, date_col, bal_column):
     # Convert all entries in the DataFrame to lowercase strings
     df = df.applymap(lambda x: str(x).lower())
+    df = df.applymap(lambda x: re.sub(r'\bscroll\b', '', str(x), flags=re.IGNORECASE))
     cred = []
     keywords = ["deposit", "credit", "cr amount", "depo", "cr"]
 
@@ -676,7 +677,8 @@ def cleaning(new_df):
     df = check_date(df)
     df = df[df['Balance'].notna() & (df['Balance'] != "")]
     df = df[~((df["Debit"].fillna(0) == 0) & (df["Credit"].fillna(0) == 0))]
-    idf = df[["Value Date", "Description", "Debit", "Credit", "Balance"]]
+    df = df[["Value Date", "Description", "Debit", "Credit", "Balance"]]
+    idf = df.reset_index(drop=True)
 
     return idf
 
@@ -1014,31 +1016,106 @@ def cut_the_datframe_from_headers(df):
 
     return df
 
-def check_balance_consistency(df):
+
+def validate_bank_statement(df, tolerance=2, raise_error=True):
     """
-    Check for inconsistencies in the balance column of a transaction DataFrame with a tolerance range.
-    :param df: Pandas DataFrame with columns 'Debit', 'Credit', and 'Balance'
-    :param tolerance: Allowed error range for balance comparison (default is 1.0)
-    :return: List of rows with balance inconsistencies
+    Validates a bank statement by checking that each row's balance matches the previous balance +/- credit/debit.
+
+    Args:
+        df: DataFrame with columns 'Date', 'Credit', 'Debit', and 'Balance'
+        tolerance: Maximum allowed difference between expected and actual balance (default: 2)
+        raise_error: Whether to raise an exception on non-sign mismatch (default: True)
+
+    Returns:
+        DataFrame with added columns 'Expected_Balance', 'Match', 'Sign_Error', and 'Difference'
+
+    Raises:
+        BalanceMismatchError: If a balance mismatch (not a sign error) is detected and raise_error is True
     """
+    # Make a copy to avoid modifying the original
+    validated_df = df.copy()
 
-    df.reset_index(inplace=True)
-    tolerance = 1.0
-    df['Debit'] = df['Debit'].fillna(0)
-    df['Credit'] = df['Credit'].fillna(0)
-    balance_issues = []
-    for i in range(1, len(df)):
-        # Calculate the expected balance
-        expected_balance = df.loc[i - 1, 'Balance'] - (df.loc[i, 'Debit']) + (df.loc[i, 'Credit'])
-        actual_balance = df.loc[i, 'Balance']
+    # Convert financial columns to numeric (handle strings, commas, currency symbols)
+    for col in ['Credit', 'Debit', 'Balance']:
+        print("0")
+        # First handle common formatting issues
+        if validated_df[col].dtype == 'object':
+            # Remove currency symbols, commas, and spaces
+            validated_df[col] = validated_df[col].astype(str).str.replace('[$£€,\s]', '', regex=True)
+            # Convert empty strings and non-numeric strings to NaN
+            validated_df[col] = pd.to_numeric(validated_df[col], errors='coerce')
+            # Replace NaN with 0
+            validated_df[col].fillna(0, inplace=True)
 
-        # Compare with tolerance
-        if not pd.isna(expected_balance) and abs(expected_balance - actual_balance) > tolerance:
-            raise ValueError(
-                f"Transaction between {df.loc[i - 1, 'Value Date']} and {df.loc[i, 'Value Date']} are missing"
-            )
+    # Create new columns
+    validated_df['Expected_Balance'] = 0.0
+    validated_df['Match'] = False
+    validated_df['Sign_Error'] = False
+    validated_df['Difference'] = 0.0
 
-    return balance_issues
+    # First row's expected balance is the same as its actual balance
+    if len(validated_df) > 0:
+        validated_df.loc[0, 'Expected_Balance'] = validated_df.loc[0, 'Balance']
+        validated_df.loc[0, 'Match'] = True
+
+    # Track the true expected balance (not affected by display errors)
+    true_expected_balance = validated_df.loc[0, 'Balance'] if len(validated_df) > 0 else 0.0
+
+    # For each subsequent row, calculate expected balance
+    for i in range(1, len(validated_df)):
+        credit = validated_df.loc[i, 'Credit']
+        debit = validated_df.loc[i, 'Debit']
+        actual_balance = validated_df.loc[i, 'Balance']
+
+        # Get date from the appropriate column
+        try:
+            date = validated_df.loc[i, 'Value Date']
+        except KeyError:
+            try:
+                date = validated_df.loc[i, 'Date']
+            except KeyError:
+                date = f"Row {i}"
+
+        # Calculate the true expected balance based on previous true expected balance
+        if credit > 0:
+            true_expected_balance += credit
+        elif debit > 0:
+            true_expected_balance -= debit
+
+        # Round to avoid floating-point comparison issues
+        true_expected_balance = round(true_expected_balance, 2)
+        actual_balance = round(actual_balance, 2)
+
+        # Store the expected balance
+        validated_df.loc[i, 'Expected_Balance'] = true_expected_balance
+
+        # Calculate difference
+        difference = abs(true_expected_balance - actual_balance)
+        validated_df.loc[i, 'Difference'] = difference
+
+        # Check for match within tolerance
+        if difference <= tolerance:
+            validated_df.loc[i, 'Match'] = True
+        # Check for sign error (absolute values are close but signs differ)
+        elif abs(abs(true_expected_balance) - abs(
+                actual_balance)) <= tolerance and true_expected_balance * actual_balance <= 0:
+            validated_df.loc[i, 'Match'] = False
+            validated_df.loc[i, 'Sign_Error'] = True
+            # No error raised for sign errors, just flagged in the dataframe
+
+        # Otherwise, there's some other type of mismatch
+        else:
+            validated_df.loc[i, 'Match'] = False
+
+            if raise_error:
+                error_msg = (f"Balance mismatch at row {i} (Date: {date}): "
+                             f"Expected balance {true_expected_balance}, "
+                             f"Actual balance {actual_balance}. "
+                             f"Difference: {difference}")
+                raise Exception(error_msg)
+
+    return df
+
 
 def model_for_pdf(df):
     # Simulate cleaning or processing the dataframe
@@ -1103,8 +1180,9 @@ def model_for_pdf(df):
 
     print(final_df.head(10))
 
-    # bal = check_balance_consistency(final_df)
+    final_df = validate_bank_statement(final_df)
     return final_df, lists
+
 
 def new_mode_for_pdf(df, lists):
     print(df.head(20))
@@ -1195,6 +1273,7 @@ def run_test_case_B(page_with_rows_added, explicit_lines):
                 "edge_min_length": 20,
                 "intersection_x_tolerance": 120
             })
+            print(df.head(20))
             model_df, lists = model_for_pdf(df)  # Process the DataFrame
             return model_df, lists  # No coordinates for Test Case A
         else:
@@ -1204,6 +1283,7 @@ def run_test_case_B(page_with_rows_added, explicit_lines):
                 "horizontal_strategy": "text",
                 "intersection_x_tolerance": 120
             })
+            print(df.head(20))
             model_df, lists = model_for_pdf(df)
             return model_df, lists  # No coordinates for Test Case B
     except Exception as e:

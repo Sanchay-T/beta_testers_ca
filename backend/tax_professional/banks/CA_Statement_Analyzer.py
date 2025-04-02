@@ -44,7 +44,7 @@ from ...common_functions import (process_excel_to_json, process_name_n_num_df, c
 def save_to_excel(df, name_n_num_df, account_number):
     # Generate all necessary DataFrames
     eod_sheet_df = eod(df)
-    opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df, df)
+    opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df)
 
     summary_df_list, missing_months_list = summary_sheet(df, opening_bal, closing_bal, df)
 
@@ -55,7 +55,7 @@ def save_to_excel(df, name_n_num_df, account_number):
     contra_credit_df = summary_df_list[4]
     contra_debit_df = summary_df_list[5]
 
-    df['Value Date'] = pd.to_datetime(df['Value Date']).dt.strftime('%d-%m-%Y')
+    df['Value Date'] = pd.to_datetime(df['Value Date'], format='%d-%m-%Y').dt.strftime('%d-%m-%Y')
     transaction_sheet_df = transaction_sheet(df)
     investment_df = total_investment(df)
     creditor_df = creditor_list(df)
@@ -432,7 +432,7 @@ def save_to_excel(df, name_n_num_df, account_number):
 def returns_json_output_of_all_sheets(df, name_n_num_df):
     # Generate all necessary DataFrames
     eod_sheet_df = eod(df)
-    opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df, df)
+    opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df)
 
     summary_df_list, missing_months_list = summary_sheet(df, opening_bal, closing_bal, df)
 
@@ -504,7 +504,7 @@ def returns_json_output_of_all_sheets(df, name_n_num_df):
 
 def refresh_category_all_sheets(df,eod_sheet_df, new_categories):
     # eod_sheet_df = eod(df)
-    opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df, df)
+    opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df)
 
     if not new_categories:
         summary_df_list, missing_months_list = summary_sheet(df, opening_bal, closing_bal, df)
@@ -585,7 +585,7 @@ def individual_summary(transactions_df):
     
     eod_sheet_df = eod(transactions_df)
     print(eod_sheet_df.head(10))
-    opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df, transactions_df)
+    opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df)
     # named print 
     print("opening_bal", opening_bal)
     print("closing_bal", closing_bal)
