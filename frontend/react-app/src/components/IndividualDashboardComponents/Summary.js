@@ -54,7 +54,6 @@ const MaximizableChart = ({ children, title, isMaximized, setIsMaximized }) => {
 
 const Summary = () => {
   const { reportData, updateReportData } = useReportContext();
-  console.log("reportData in summ", reportData);
 
   // const [activeTable, setActiveTable] = useState("Income Receipts");
   const [summaryData, setSummaryData] = useState({

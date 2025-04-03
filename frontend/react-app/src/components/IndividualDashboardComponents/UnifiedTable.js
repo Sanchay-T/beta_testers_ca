@@ -881,7 +881,7 @@ const DataTable = ({
   };
 
   const getUniqueValues = (columnName) => {
-    return [...new Set(data.map((row) => String(row[columnName])))];
+    return [...new Set(transactions.map((row) => String(row[columnName])))];
   };
 
   const getFilteredUniqueValues = (columnName) => {
@@ -1600,7 +1600,7 @@ const DataTable = ({
                             } else if (dateColumns.includes(column)) {
                               setCurrentFilterColumn(column);
                               setCurrentDateColumn(column);
-                              setSelectedCategories([]);
+                              // setSelectedCategories([]);
                               setCategorySearchTerm("");
                               setFilterModalOpen(true);
                               setDateFilterModalOpen(true);
@@ -1613,7 +1613,7 @@ const DataTable = ({
                             ) {
                               setCurrentFilterColumn(column);
                               setCurrentDateColumn(column);
-                              setSelectedCategories([]);
+                              // setSelectedCategories([]);
                               setCategorySearchTerm("");
                               setFilterModalOpen(true);
                               setDateFilterModalOpen(false);

@@ -764,6 +764,8 @@ const MainDashboard = ({ handleTabChange }) => {
 
   return (
     <ScrollArea className="h-full">
+      {/* scroll to top */}
+
       <div className="p-8 pt-0 space-y-8">
         <div className="flex justify-between items-center">
           <div>

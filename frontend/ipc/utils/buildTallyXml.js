@@ -1,7 +1,7 @@
 const { DOMParser } = require("xmldom");
 
 function buildTallyXmlPayment(row) {
-  const {
+  let {
     companyName,
     invoiceDate,
     effectiveDate,
@@ -15,6 +15,11 @@ function buildTallyXmlPayment(row) {
 
   const invoiceDateFormatted = invoiceDate;
   const effectiveDateFormatted = effectiveDate;
+
+  companyName = companyName.replace(/&/g, "&amp;");
+  narration = narration.replace(/&/g, "&amp;");
+  DrLedger = DrLedger.replace(/&/g, "&amp;");
+  CrLedger = CrLedger.replace(/&/g, "&amp;");
 
   let xml = `
 <ENVELOPE>
@@ -71,7 +76,7 @@ function buildTallyXmlPayment(row) {
 }
 
 function buildTallyXmlReceipt(row) {
-  const {
+  let {
     companyName,
     invoiceDate,
     effectiveDate,
@@ -85,6 +90,14 @@ function buildTallyXmlReceipt(row) {
 
   const invoiceDateFormatted = invoiceDate;
   const effectiveDateFormatted = effectiveDate;
+  console.log({ DrLedger, CrLedger });
+
+  companyName = companyName.replace(/&/g, "&amp;");
+  narration = narration.replace(/&/g, "&amp;");
+  DrLedger = DrLedger.replace(/&/g, "&amp;");
+  CrLedger = CrLedger.replace(/&/g, "&amp;");
+
+  console.log({ DrLedger, CrLedger });
 
   let xml = `
 <ENVELOPE>
@@ -179,7 +192,7 @@ function buildTallyXmlReceipt(row) {
 }
 
 function buildTallyXmlContra(row) {
-  const {
+  let {
     companyName,
     invoiceDate,
     effectiveDate,
@@ -189,6 +202,11 @@ function buildTallyXmlContra(row) {
     amount,
     voucherName,
   } = row;
+
+  companyName = companyName.replace(/&/g, "&amp;");
+  narration = narration.replace(/&/g, "&amp;");
+  DrLedger = DrLedger.replace(/&/g, "&amp;");
+  CrLedger = CrLedger.replace(/&/g, "&amp;");
 
   const xml = `
 <ENVELOPE>

@@ -311,10 +311,10 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
     const tallyData = txData
       .map((transaction) => {
         console.log("transaction", transaction);
-        if (transaction.imported) {
-          // Already uploaded
-          return null;
-        }
+        // if (transaction.imported) {
+        //   // Already uploaded
+        //   return null;
+        // }
         const tempVoucherType =
           transaction.voucher_type === "Payment Voucher"
             ? "Payment"
@@ -583,44 +583,52 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
       (data) => data.companyName === currentCompanyName
     )[0];
 
-    // e.g., each ledger has { ledgerName, ledgerGroup } etc.
-    const allLedgerNames = selectedCompanyData.ledgerData.map(
-      (l) => l.ledgerName
-    );
-    // remove duplicates
-    const uniqueLedgerNames = Array.from(
-      new Set(allLedgerNames.filter(Boolean))
-    );
+    if (!selectedCompanyData || !selectedCompanyData.ledgerData) {
+      console.log("No ledger data found for the selected company");
+      return;
+    }
+
+    // Create a map of ledger names to their full data from Tally
+    const tallyLedgersMap = new Map();
+    selectedCompanyData.ledgerData.forEach((ledger) => {
+      if (ledger.ledgerName) {
+        tallyLedgersMap.set(ledger.ledgerName, ledger);
+      }
+    });
+
+    // Get unique ledger names for quick lookup
+    const uniqueLedgerNames = Array.from(tallyLedgersMap.keys());
     console.log({ uniqueLedgerNames });
-
-    // let uniqueLedgersData;
-    // if (selectedVoucher === "Ledgers") {
-    // uniqueLedgersData = inititalLedgersData.filter(
-    //   (d) => !uniqueLedgerNames.includes(d.ledger_name)
-    // );
-    // }
-
-    // if (uniqueLedgersData && uniqueLedgersData.length === 0) {
-    //   localForage.setItem(`${caseId}_${currentCompanyName}_ledgersCreated`, true)
-    //     .then(() => {
-    //       console.log(`All ledgers created for ${currentCompanyName}`);
-    //     })
-    //     .catch(err => {
-    //       console.error("Error saving ledger creation status:", err);
-    //     });
-    // }
-    // setDataToRender(uniqueLedgersData);
 
     let updatedLedgersData;
     console.log("AIYAZ", { inititalLedgersData });
-    // Instead of filtering out already created ledgers, mark them as imported
+
+    // Instead of just marking as imported, also fill in details from Tally
     updatedLedgersData = dataToRender.map((ledger) => {
-      // If the ledger is already in Tally, mark it as imported
+      // If the ledger is already in Tally
       if (uniqueLedgerNames.includes(ledger.ledger_name)) {
+        const tallyLedgerData = tallyLedgersMap.get(ledger.ledger_name);
+        console.log({ tallyLedgerData });
         return {
           ...ledger,
           imported: true,
           failed_reason: "", // Clear any previous error
+          // Fill in additional details from Tally data
+          ledger_group: tallyLedgerData.ledgerGroup || ledger.ledger_group,
+          opening_balance:
+            tallyLedgerData.openingBalance || ledger.opening_balance,
+          gst_number:
+            tallyLedgerData.GSTNumber === "null"
+              ? ledger.gst_number
+              : tallyLedgerData.GSTNumber,
+          country:
+            tallyLedgerData.country === "null"
+              ? ledger.country
+              : tallyLedgerData.country,
+          state:
+            tallyLedgerData.state === "null"
+              ? ledger.state
+              : tallyLedgerData.state,
         };
       }
       // Otherwise, keep it as not imported
