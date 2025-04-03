@@ -113,35 +113,35 @@ function registerTallyIpc() {
         xmlContent = buildTallyXmlContra(row);
       }
 
-      // try {
-      //   const response = await axios.post(tallyPath, xmlContent, {
-      //     headers: { "Content-Type": "application/xml" },
-      //   });
-      //   const xmlResponse = response.data;
-      //   const parsedResponse = parser.parse(xmlResponse);
-      //   // log.info({ parsedResponse });
-      //   const lineError = parsedResponse.RESPONSE?.LINEERROR || null;
+      try {
+        const response = await axios.post(tallyPath, xmlContent, {
+          headers: { "Content-Type": "application/xml" },
+        });
+        const xmlResponse = response.data;
+        const parsedResponse = parser.parse(xmlResponse);
+        // log.info({ parsedResponse });
+        const lineError = parsedResponse.RESPONSE?.LINEERROR || null;
 
-      //   if (lineError) {
-      //     console.error(`Transaction ${row.id} Failed: ${lineError}`);
-      //     failedTransactions.push({ id: row.id, error: lineError });
-      //   } else {
-      //     console.log(`Transaction ${row.id} Successful`);
-      //     successIds.push(row.id);
-      //   }
-      // } catch (error) {
-      //   console.error(
-      //     `Transaction ${row.id} Failed (Server Error): ${error.message}`
-      //   );
-      //   if (error.message == "") {
-      //     failedTransactions.push({
-      //       id: row.id,
-      //       error: "Please check Port number and Company name",
-      //     });
-      //   } else {
-      //     failedTransactions.push({ id: row.id, error: error.message });
-      //   }
-      // }
+        if (lineError) {
+          console.error(`Transaction ${row.id} Failed: ${lineError}`);
+          failedTransactions.push({ id: row.id, error: lineError });
+        } else {
+          console.log(`Transaction ${row.id} Successful`);
+          successIds.push(row.id);
+        }
+      } catch (error) {
+        console.error(
+          `Transaction ${row.id} Failed (Server Error): ${error.message}`
+        );
+        if (error.message == "") {
+          failedTransactions.push({
+            id: row.id,
+            error: "Please check Port number and Company name",
+          });
+        } else {
+          failedTransactions.push({ id: row.id, error: error.message });
+        }
+      }
     }
 
     // Outside for loop
