@@ -134,7 +134,7 @@ const Card1 = ({
 }) => {
   const cardStyles = getCardStyles(type);
   const borderGradient = getBorderStyle(type);
-  const [duration, setDuration] = useState(type === "pages" ? "1Y" : "1M");
+  // const [duration, setDuration] = useState(type === "pages" ? "1Y" : "1M");
   const [userProgress, setUserProgress] = useState({
     progress: 0,
     remainingDays: 0,
@@ -210,16 +210,16 @@ const Card1 = ({
     );
 
     // Format dates to show only month and year
-    const formattedChartData = filteredChartData.map((item) => {
-      const date = new Date(item.date);
-      return {
-        ...item,
-        formattedDate: date.toLocaleDateString("en-US", {
-          month: "short",
-          year: "2-digit",
-        }),
-      };
-    });
+    // const formattedChartData = filteredChartData.map((item) => {
+    //   const date = new Date(item.date);
+    //   return {
+    //     ...item,
+    //     formattedDate: date.toLocaleDateString("en-US", {
+    //       month: "short",
+    //       year: "2-digit",
+    //     }),
+    //   };
+    // });
 
     // Default: "reports" (or similar types) when chartData is provided.
     return (

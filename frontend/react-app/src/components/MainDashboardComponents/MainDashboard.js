@@ -46,7 +46,6 @@ const MainDashboard = ({ handleTabChange }) => {
     totalTransactions: 0,
     totalTimeSaved: 0,
     averageTimeSavedPerDay: 0,
-    chartData: [],
     duration: "all",
   });
   const { user } = useAuth();
@@ -567,10 +566,15 @@ const MainDashboard = ({ handleTabChange }) => {
 
         // Fetch fresh data
         const reports = await window.electron.getReportsProcessed();
+        console.log("Reports:", reports);
         const statements = await window.electron.getStatementsProcessed();
+        console.log("Statements:", statements);
         const transactions = await window.electron.getTransactionsProcessed();
+        console.log("Transactions:", transactions);
         const pages = await window.electron.getPages();
+        console.log("Pages:", pages);
         const opportunityToEarn = await window.electron.getOpportunityToEarn();
+        console.log("Opportunity to Earn:", opportunityToEarn);
         let totalEligibility1 = 0;
 
         let totalCommission1 = 0;
@@ -641,6 +645,7 @@ const MainDashboard = ({ handleTabChange }) => {
         setTotalCommission(totalCommission1);
         setPagesData(pages);
         const mergedData = processData(reports, statements, transactions);
+        console.log("Merged Data:", mergedData);
         setAllData(mergedData);
 
         // Aggregate Data for Charts
@@ -666,8 +671,10 @@ const MainDashboard = ({ handleTabChange }) => {
 
           return acc;
         }, {});
+        console.log("aggregatedData:", aggregatedData);
 
         const aggregatedArray = Object.values(aggregatedData);
+        console.log("aggregatedArray:", aggregatedArray);
 
         // Calculate Metrics
         const totalPages = pages.reduce((sum, item) => sum + item.pages, 0);
@@ -690,20 +697,13 @@ const MainDashboard = ({ handleTabChange }) => {
           chartData: aggregatedArray,
           duration: "all",
         };
+        console.log("Reports Metrics Data:", reportsMetricsData);
 
         const pagesMetricsData = {
           totalPages: totalPages,
           totalTransactions: reportsMetricsData.totalTransactions,
           totalTimeSaved: totalTimeSaved,
           averageTimeSavedPerDay: Math.round(totalTimeSaved / daysCount),
-          chartData: pages.map((item) => ({
-            date: new Date(item.createdAt).toLocaleDateString("en-US", {
-              month: "short",
-              day: "2-digit",
-              year: "numeric",
-            }),
-            pages: item.pages,
-          })),
           duration: "all",
         };
 
