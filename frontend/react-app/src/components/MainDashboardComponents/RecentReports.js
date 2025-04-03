@@ -19,7 +19,7 @@ import { Input } from "../ui/input";
 import { useToast } from "../../hooks/use-toast";
 import { Badge } from "../ui/badge";
 import { cn } from "../../lib/utils";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   Eye,
   Plus,
@@ -119,6 +119,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
   const [isRectifyAlertOpen, setIsRectifyAlertOpen] = useState(false);
   const [isHandleDetailsDialogOpen, setIsHandleDetailsDialogOpen] =
     useState(null);
+  const { individualId } = useParams();
 
   const handleSubmitEditPdf = async () => {
     setPdfEditLoading(true);
@@ -802,7 +803,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
     }
 
     try {
-      const success = await generateFinancialReport(caseid, caseName, false);
+      const success = await generateFinancialReport(caseid, false, caseName);
 
       if (success) {
       } else {
@@ -977,7 +978,71 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
 
     exportToExcel(suspenseData, newTitle, false, reportData.categoryOptions);
   };
-  const handleSummaryDownload = () => {};
+  const handleSummaryDownload = async (caseid, status, reportName) => {
+    if (status === "Pending") {
+      toast({
+        title: "Cannot Download",
+        description:
+          "Report is still being processed. Please wait until it's complete.",
+        variant: "warning",
+        duration: 3000,
+      });
+      return;
+    }
+
+    let isCombinedDashboard =
+      individualId === undefined ||
+      individualId === "undefined" ||
+      individualId === null ||
+      individualId === "combined";
+
+    try {
+      // console.log("Downloading summary report for case:", caseid);
+      let success = false;
+      console.log("reportData", reportName);
+
+      const fileName = reportName;
+      console.log("fileName", fileName);
+      if (isCombinedDashboard) {
+        console.log("fileName", fileName);
+        success = await generateFinancialReport(caseid, null, fileName, true);
+      } else {
+        const fileName = reportName;
+        console.log("individualId", individualId);
+        console.log("fileName", fileName);
+        success = await generateFinancialReport(
+          caseid,
+          individualId,
+          fileName,
+          true
+        ); // Pass true for summaryOnly
+      }
+      // const success = await generateFinancialReport(caseid, fileName, true); // Pass true for summaryOnly
+      console.log("success", success);
+
+      if (success) {
+        // console.log("Summary report downloaded successfully.");
+        toast({
+          title: "Success",
+          description: "Summary Excel file downloaded successfully",
+        });
+      } else {
+        console.error("Failed to generate the summary report.");
+        toast({
+          title: "Error",
+          description: "Failed to download Summary Excel file.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error in handleDownloadSummary:", error);
+      toast({
+        title: "Error",
+        description: `Failed to initiate summary download: ${error.message}`,
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleExcelFileUpload = async (event, caseId) => {
     const file = event.target.files[0];
