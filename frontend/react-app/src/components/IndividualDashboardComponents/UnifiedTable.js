@@ -787,8 +787,8 @@ const DataTable = ({
   };
 
   const handleColumnFilter = () => {
-    const dataToFilter =
-      existingFilterData.length > 0 ? existingFilterData : data;
+    const dataToFilter = transactions;
+    //   existingFilterData.length > 0 ? existingFilterData : data;
     if (selectedCategories.length === 0) {
       setFilteredData(data);
     } else {
@@ -803,8 +803,8 @@ const DataTable = ({
   };
 
   const handleNumericFilter = (columnName, min, max) => {
-    const dataToFilter =
-      existingFilterData.length > 0 ? existingFilterData : data;
+    const dataToFilter = transactions;
+    // existingFilterData.length > 0 ? existingFilterData : data;
     const filtered = dataToFilter.filter((row) => {
       const value = parseFloat(row[columnName]);
       if (isNaN(value)) return false;
@@ -2375,7 +2375,8 @@ const DataTable = ({
               variant="default"
               onClick={() => {
                 setBulkCategoryModalOpen(false);
-                setConfirmationModalOpen(true);
+                // setConfirmationModalOpen(true);
+                handleBulkCategoryChange();
               }}
               disabled={!selectedBulkCategory}
             >
@@ -2386,7 +2387,7 @@ const DataTable = ({
       </Dialog>
 
       {/* Confirmation Modal */}
-      <Dialog
+      {/* <Dialog
         open={confirmationModalOpen}
         onOpenChange={setConfirmationModalOpen}
       >
@@ -2411,7 +2412,7 @@ const DataTable = ({
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
 
       {/* Classification Modal */}
       <Dialog
