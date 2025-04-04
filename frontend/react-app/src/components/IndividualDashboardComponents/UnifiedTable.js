@@ -1483,7 +1483,6 @@ const DataTable = ({
         const transaction = filteredData.find(tx => tx.id === firstId);
         
         if (transaction) {
-          console.log({aiyaz:transaction,debit:transaction.debit})
           // Set transaction type based on first transaction
           const transactionType = Number(transaction.debit) > 0 ? 'debit' : 'credit';
           setCurrentTransactionType(transactionType);
@@ -2511,7 +2510,7 @@ const DataTable = ({
             value={selectedType}
             onValueChange={setSelectedType}
             className="space-y-3"
-          >{console.log({currentTransactionType,hey:pendingCategoryChange?.isDebit})}
+          >
             {(currentTransactionType === 'credit' ) && (
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="Income" id="income" />
