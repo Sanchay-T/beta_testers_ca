@@ -90,14 +90,11 @@ function buildTallyXmlReceipt(row) {
 
   const invoiceDateFormatted = invoiceDate;
   const effectiveDateFormatted = effectiveDate;
-  console.log({ DrLedger, CrLedger });
 
   companyName = companyName.replace(/&/g, "&amp;");
   narration = narration.replace(/&/g, "&amp;");
   DrLedger = DrLedger.replace(/&/g, "&amp;");
   CrLedger = CrLedger.replace(/&/g, "&amp;");
-
-  console.log({ DrLedger, CrLedger });
 
   let xml = `
 <ENVELOPE>
@@ -306,10 +303,6 @@ function buildTallyPrimeLedgerXml({
   companyName = companyName.replace(/&/g, "&amp;");
   ledgerName = ledgerName.replace(/&/g, "&amp;");
   ledgerGroup = ledgerGroup.replace(/&/g, "&amp;");
-  state = state.replace(/&/g, "&amp;");
-  Address = Address.replace(/&/g, "&amp;");
-  country = country.replace(/&/g, "&amp;");
-  GSTnum = GSTnum.replace(/&/g, "&amp;");
   return `
 <ENVELOPE>
   <HEADER>

@@ -1514,9 +1514,10 @@ const TallyTable = ({
                           return (
                             <TableCell
                               key={column}
-                              className={`w-[250px] group relative ${
-                                selectedVoucher === "Ledgers" && "z-[200]"
-                              }`}
+                              className={`w-[250px] group relative `}
+                              // ${
+                              //   selectedVoucher === "Ledgers" && "z-[200]"
+                              // }
                             >
                               <DatePicker
                                 selected={
@@ -1533,7 +1534,7 @@ const TallyTable = ({
                                 }
                                 dateFormat="yyyy-MM-dd" // Displays date as 2025-03-04
                                 placeholderText="YYYY-MM-DD" // Clear placeholder format
-                                className="w-full p-2 border border-gray-300 rounded-md z-[100]"
+                                className="w-full p-2 border border-gray-300 rounded-md"
                               />
                             </TableCell>
                           );
