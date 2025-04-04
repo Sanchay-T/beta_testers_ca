@@ -637,8 +637,7 @@ def cleaning(new_df):
         # except Exception as e:
         #     return pd.NaT
 
-    df = new_df.drop_duplicates()
-    df = df.reset_index(drop=True)
+    df = new_df.reset_index(drop=True)
     # if 2 value dates eg : 02-Apr-23 (02-Apr-2023)
     df["Value Date"] = df["Value Date"].apply(
         lambda x: x.split("(")[0].strip() if isinstance(x, str) and "(" in x else x
@@ -678,6 +677,7 @@ def cleaning(new_df):
     df = df[df['Balance'].notna() & (df['Balance'] != "")]
     df = df[~((df["Debit"].fillna(0) == 0) & (df["Credit"].fillna(0) == 0))]
     df = df[["Value Date", "Description", "Debit", "Credit", "Balance"]]
+    df = df.drop_duplicates()
     idf = df.reset_index(drop=True)
 
     return idf
