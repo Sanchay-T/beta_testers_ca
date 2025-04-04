@@ -332,13 +332,9 @@ const addSummarySheet = (workbook, data) => {
   // Set tab color
   worksheet.properties.tabColor = { argb: "D9E1F2" };
 
-  // Extract data from the input
+  // Extract data from input
   const { accountsData, summaryObject } = data;
-  console.log("inside the addSummarySheet", data);
   console.log("summaryObject", summaryObject);
-  console.log("summaryObject.particulars", summaryObject.particulars);
-
-  // Check if data exists
   if (
     !summaryObject ||
     !summaryObject.particulars ||
@@ -347,63 +343,36 @@ const addSummarySheet = (workbook, data) => {
     worksheet.addRow(["No summary data available"]);
     return;
   }
+
+  // Dynamically get all months from the data
+  const months = Object.keys(summaryObject.particulars[0] || {}).filter(
+    (key) => key !== "Particulars"
+  );
+  console.log("months", months);
+
+  // Dynamically set columns: "Particulars" + months + "Total"
   worksheet.columns = [
-    { width: 30 },
-    { width: 12 },
-    { width: 12 },
-    { width: 12 },
-    { width: 12 },
-    { width: 12 },
-    { width: 12 },
-    { width: 12 },
-    { width: 12 },
-    { width: 12 },
-    { width: 12 },
-    { width: 12 },
-    { width: 12 },
+    { width: 30 }, // "Particulars"
+    ...months.map(() => ({ width: 12 })), // Dynamic months
+    // { width: 12 }, // "Total"
   ];
 
   // Set row heights
   worksheet.getRow(1).height = 20;
   worksheet.getRow(2).height = 20;
 
-  // Get all months from the data
-  const months = Object.keys(summaryObject.particulars[0] || {}).filter(
-    (key) => key !== "Particulars"
-  );
-
-  // Create a gray background for the top section
-  const topRow = worksheet.getRow(1);
-  for (let i = 1; i <= 13; i++) {
-    // Include Total column
-    const cell = topRow.getCell(i);
-    cell.fill = {
+  // Create gray background for first two rows
+  for (let i = 1; i <= months.length + 2; i++) {
+    worksheet.getRow(1).getCell(i).fill = {
       type: "pattern",
       pattern: "solid",
       fgColor: { argb: "FFD3D3D3" },
     };
-    // cell.border = {
-    //     top: { style: "thin" },
-    //     left: { style: "thin" },
-    //     bottom: { style: "thin" },
-    //     right: { style: "thin" },
-    // };
-  }
-
-  const secondRow = worksheet.getRow(2);
-  for (let i = 1; i <= 13; i++) {
-    const cell = secondRow.getCell(i);
-    cell.fill = {
+    worksheet.getRow(2).getCell(i).fill = {
       type: "pattern",
       pattern: "solid",
       fgColor: { argb: "FFD3D3D3" },
     };
-    // cell.border = {
-    //     top: { style: "thin" },
-    //     left: { style: "thin" },
-    //     bottom: { style: "thin" },
-    //     right: { style: "thin" },
-    // };
   }
 
   // Account Info Header
@@ -415,7 +384,7 @@ const addSummarySheet = (workbook, data) => {
     worksheet.getRow(rowIndex).eachCell((cell) => {
       cell.font = { bold: true };
     });
-    rowIndex++; // Move to the next row
+    rowIndex++;
   });
 
   // Leave an empty row before tables
@@ -432,84 +401,61 @@ const addSummarySheet = (workbook, data) => {
     fill: { type: "pattern", pattern: "solid", fgColor: { argb: "D9E1F2" } },
   };
 
-  // const borderStyle = {
-  //     top: { style: "thin" },
-  //     left: { style: "thin" },
-  //     bottom: { style: "thin" },
-  //     right: { style: "thin" },
-  // };
-
   // Helper function to add a table
   const addTable = (title, data, startRow) => {
-    if (!data || data.length === 0) {
-      return startRow; // Skip empty tables
-    }
+    if (!data || data.length === 0) return startRow;
 
     let row = startRow + 1;
     const subHeaderRow = worksheet.getRow(row);
 
-    // Apply header style to all cells in the header row, including "Total"
-    for (let i = 1; i <= 13; i++) {
+    // Apply header style to all cells
+    for (let i = 1; i <= months.length + 1; i++) {
       const cell = subHeaderRow.getCell(i);
       cell.fill = headerStyle.fill;
       cell.font = headerStyle.font;
       cell.alignment = headerStyle.alignment;
-      // cell.border = borderStyle;
     }
 
-    // Add column headers
+    // Add table title
     subHeaderRow.getCell(1).value = title;
 
-    // Add month headers
+    // Add month headers dynamically
     months.forEach((month, index) => {
-      if (index < 11) {
-        // We have space for 11 months plus Total
-        const cell = subHeaderRow.getCell(index + 2);
-        cell.value = month;
-      }
+      subHeaderRow.getCell(index + 2).value = month;
     });
 
-    // Add "Total" header in the last column (Column M)
-    const totalHeaderCell = subHeaderRow.getCell(13);
-    totalHeaderCell.value = "Total";
+    // Add "Total" header
+    // subHeaderRow.getCell(months.length + 2).value = "Total";
 
     // Add data rows
     data.forEach((item, index) => {
       row++;
       const dataRow = worksheet.getRow(row);
       dataRow.getCell(1).value = item.Particulars;
-      // dataRow.getCell(1).border = borderStyle;
 
       // Apply alternating row color
       if (index % 2 === 0) {
-        for (let i = 1; i <= 13; i++) {
+        for (let i = 1; i <= months.length + 1; i++) {
           dataRow.getCell(i).fill = alternatingRowStyle.fill;
-          // dataRow.getCell(i).border = borderStyle;
-        }
-      } else {
-        // Ensure all cells have borders even on non-alternating rows
-        for (let i = 1; i <= 13; i++) {
-          // dataRow.getCell(i).border = borderStyle;
         }
       }
 
-      let totalValue = 0;
-
-      // Add month values
+      // Add month values dynamically
       months.forEach((month, monthIndex) => {
-        if (monthIndex < 11) {
-          const cell = dataRow.getCell(monthIndex + 2);
-          const value = parseFloat(item[month] || 0);
-          cell.value = value;
-          cell.numFmt = "0.00";
-          cell.alignment = { horizontal: "right" };
-          totalValue += value;
-        }
+        const cell = dataRow.getCell(monthIndex + 2);
+        const value = parseFloat(item[month] || 0);
+        cell.value = value;
+        cell.numFmt = "0.00";
+        cell.alignment = { horizontal: "right" };
       });
 
-      // Add "Total" column value
-      const totalCell = dataRow.getCell(13);
-      totalCell.value = totalValue;
+      // Calculate total dynamically
+      const totalCell = dataRow.getCell(months.length + 2);
+      totalCell.value = {
+        formula: `SUM(B${row}:${String.fromCharCode(
+          65 + months.length
+        )}${row})`,
+      };
       totalCell.numFmt = "0.00";
       totalCell.alignment = { horizontal: "right" };
     });
@@ -517,61 +463,43 @@ const addSummarySheet = (workbook, data) => {
     return row;
   };
 
-  // Add tables
-  let currentRow = 3;
+  // Add tables dynamically
+  let currentRow = rowIndex;
 
-  // Table 1: Particulars
-  currentRow = addTable("Particulars", summaryObject.particulars, currentRow);
-  currentRow += 1; // Add space between tables
+  currentRow =
+    addTable("Particulars", summaryObject.particulars, currentRow) + 1;
+  currentRow =
+    addTable("Income / Receipts", summaryObject.incomeReceipts, currentRow) + 1;
+  currentRow =
+    addTable(
+      "Important Expenses / Payments",
+      summaryObject.importantExpenses,
+      currentRow
+    ) + 1;
+  currentRow =
+    addTable(
+      "Other Expenses / Payments",
+      summaryObject.otherExpenses,
+      currentRow
+    ) + 1;
+  currentRow =
+    addTable("Contra Credit", summaryObject.contraCredit, currentRow) + 1;
+  currentRow =
+    addTable("Contra Debit", summaryObject.contraDebit, currentRow) + 1;
 
-  // Table 2: Income / Receipts
-  currentRow = addTable(
-    "Income / Receipts",
-    summaryObject.incomeReceipts,
-    currentRow
-  );
-  currentRow += 1;
-
-  // Table 3: Important Expenses / Payments
-  currentRow = addTable(
-    "Important Expenses / Payments",
-    summaryObject.importantExpenses,
-    currentRow
-  );
-  currentRow += 1;
-
-  // Table 4: Other Expenses / Payments
-  currentRow = addTable(
-    "Other Expenses / Payments",
-    summaryObject.otherExpenses,
-    currentRow
-  );
-  currentRow += 1;
-
-  // Table 5: Contra Credit
-  currentRow = addTable(
-    "Contra Credit",
-    summaryObject.contraCredit,
-    currentRow
-  );
-  currentRow += 1;
-
-  // Table 6: Contra Debit
-  currentRow = addTable("Contra Debit", summaryObject.contraDebit, currentRow);
-
+  // Disclaimer text
   const descriptionText =
-    "Disclaimer/Caveat: The entries throughout this file and tables are based on best guess basis and " +
-    "information filtered under expenses and income. An attempt has been made to reflect the narration as " +
-    "close as possible to the actuals. However, variations from above are possible based on customer profile " +
-    "and their transactions with parties. Kindly cross check with your clients for any discrepancies.";
+    "Disclaimer: The entries throughout this file are based on best guess analysis. Variations may occur " +
+    "based on customer transactions. Please verify with actual records.";
 
-  const lastRow = worksheet.lastRow.number + 2; // Leave some space after the table
-  const descriptionRow = worksheet.getRow(lastRow);
-  descriptionRow.getCell(1).value = descriptionText;
-  descriptionRow.getCell(1).alignment = { wrapText: true };
-  worksheet.mergeCells(lastRow, 1, lastRow, worksheet.columnCount);
+  const lastRow = worksheet.lastRow.number + 2;
+  worksheet.getRow(lastRow).getCell(1).value = descriptionText;
+  worksheet.getRow(lastRow).getCell(1).alignment = { wrapText: true };
 
-  // Make the worksheet active so it's displayed first
+  // Merge disclaimer cells
+  worksheet.mergeCells(lastRow, 1, lastRow, months.length + 2);
+
+  // Set worksheet as active
   worksheet.state = "visible";
   worksheet.views = [{ state: "normal", firstSheet: 0, activeTab: 0 }];
 };

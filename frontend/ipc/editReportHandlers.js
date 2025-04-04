@@ -395,6 +395,8 @@ function registerEditReportHandlers() {
         validateStatus: (status) => status === 200,
       });
 
+      log.info("API response:", response);
+
       // log.info("API response:", typeof response.data);
 
       const sanitizedJsonString = sanitizeJSONString(response.data);

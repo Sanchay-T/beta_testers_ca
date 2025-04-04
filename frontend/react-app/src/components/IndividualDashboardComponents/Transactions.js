@@ -101,10 +101,11 @@ const Transactions = () => {
     return transactions.map((transaction) => ({
       date: transaction.date,
       description: transaction.description,
-      credit:
-        transaction.type.toLowerCase() === "credit" ? transaction.amount : 0,
       debit:
         transaction.type.toLowerCase() === "debit" ? transaction.amount : 0,
+      credit:
+        transaction.type.toLowerCase() === "credit" ? transaction.amount : 0,
+
       balance: transaction.balance,
       category: transaction.category,
       // entity: transaction.entity,

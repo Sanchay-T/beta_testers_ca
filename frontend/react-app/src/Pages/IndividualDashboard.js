@@ -40,7 +40,7 @@ import {
 } from "lucide-react";
 import { useReportContext } from "../contexts/ReportContext";
 import DashboardDropdown from "../components/IndividualDashboardComponents/DashboardDropdown";
-import TallyDirectImport from "../components/ImortTally/TallyDirectImport";
+import TallyDirectImport from "../components/ImportTally/TallyDirectImport";
 
 const IndividualDashboard = () => {
   const [activeTab, setActiveTab] = useState("Summary");
@@ -201,13 +201,22 @@ const IndividualDashboard = () => {
               {activeTab === "Insurance" && <Insurance />}
               {activeTab === "Contra" && <Contra />}
               {activeTab === "Upload to Tally" && (
-                <TallyDirectImport defaultVoucher={"Payment Receipt Contra"} />
+                <TallyDirectImport
+                  defaultVoucher={"Payment Receipt Contra"}
+                  setActiveTab={setActiveTab}
+                />
               )}
               {activeTab === "Ledgers" && (
-                <TallyDirectImport defaultVoucher={"Ledgers"} />
+                <TallyDirectImport
+                  defaultVoucher={"Ledgers"}
+                  setActiveTab={setActiveTab}
+                />
               )}
               {activeTab === "Import Ledgers" && (
-                <TallyDirectImport defaultVoucher={"Import Ledgers"} />
+                <TallyDirectImport
+                  defaultVoucher={"Import Ledgers"}
+                  setActiveTab={setActiveTab}
+                />
               )}
             </main>
           </div>

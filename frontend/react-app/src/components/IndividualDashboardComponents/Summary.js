@@ -54,7 +54,6 @@ const MaximizableChart = ({ children, title, isMaximized, setIsMaximized }) => {
 
 const Summary = () => {
   const { reportData, updateReportData } = useReportContext();
-  console.log("reportData in summ", reportData);
 
   // const [activeTable, setActiveTable] = useState("Income Receipts");
   const [summaryData, setSummaryData] = useState({
@@ -334,7 +333,7 @@ const Summary = () => {
       category: transaction.category || "",
       balance: parseFloat(transaction.balance || 0),
       bank: transaction.bank || "",
-      entity: transaction.entity || "unknown",
+      // entity: transaction.entity || "unknown",
       id: transaction.id,
     }));
 

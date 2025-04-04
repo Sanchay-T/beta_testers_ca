@@ -56,6 +56,8 @@ import { useReportContext } from "../../contexts/ReportContext";
 import { AiFillFileExcel } from "react-icons/ai"; // Install react-icons using npm install react-icons
 import { debounce } from "lodash"; // or write a small debounce of your own
 import localForage, { clear } from "localforage";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 const ledgerGroups = [
   "Branch / Divisions",
@@ -194,7 +196,6 @@ const TallyTable = ({
     // Create an async function inside useEffect to properly await
     const checkLedgerStatus = async () => {
       const ledgerStatus = await getLedgerCreationStatus();
-      console.log({ ledgerStatus });
       setIsLedgersCreated(ledgerStatus);
     };
 
@@ -464,6 +465,20 @@ const TallyTable = ({
     );
   };
 
+  const parseCustomDate = (dateStr) => {
+    if (!dateStr) return null;
+    // Check if the string matches the DD-MM-YYYY pattern
+    const regex = /^(\d{2})-(\d{2})-(\d{4})$/;
+    const match = dateStr.match(regex);
+    if (match) {
+      const [, day, month, year] = match;
+      // Create a date string in the format YYYY-MM-DD
+      return new Date(`${year}-${month}-${day}`);
+    }
+    // Fallback: attempt to create a Date with the original string
+    return new Date(dateStr);
+  };
+
   const filteredCategories = ledgerGroups.filter((category) =>
     category.toLowerCase().includes(categorySearchTerm.toLowerCase())
   );
@@ -477,8 +492,9 @@ const TallyTable = ({
   };
 
   const handleColumnFilter = () => {
-    const dataToFilter =
-      existingFilterData.length > 0 ? existingFilterData : data;
+    // const dataToFilter =
+    //   existingFilterData.length > 0 ? existingFilterData : data;
+    const dataToFilter = data;
     if (selectedCategories.length === 0) {
       setFilteredData(data);
     } else {
@@ -595,7 +611,7 @@ const TallyTable = ({
   };
 
   const getUniqueValues = (columnName) => {
-    return [...new Set(data.map((row) => String(row[columnName])))];
+    return [...new Set(transactions.map((row) => String(row[columnName])))];
   };
 
   const getFilteredUniqueValues = (columnName) => {
@@ -1240,7 +1256,7 @@ const TallyTable = ({
             {selectedVoucher === "Payment Receipt Contra" &&
               !isLedgersCreated && (
                 <p className="mt-2 text-sm text-red-500 ml-2">
-                  First create ledgers in order to upload to tally.
+                  First create all ledgers in order to upload to tally.
                 </p>
               )}
           </div>
@@ -1319,6 +1335,12 @@ const TallyTable = ({
                         "bill_reference",
                         "effective_date",
                         "reference_number",
+                        "gst_number",
+                        "address",
+                        "pincode",
+                        "state",
+                        "country",
+                        "opening_balance",
                       ].includes(column.toLowerCase()) === false && (
                         <Button
                           variant="ghost"
@@ -1335,7 +1357,7 @@ const TallyTable = ({
                               setDateFilterModalOpen(false);
                             } else {
                               setCurrentFilterColumn(column);
-                              setSelectedCategories([]);
+                              // setSelectedCategories([]);
                               setCategorySearchTerm("");
                               setFilterModalOpen(true);
                               setDateFilterModalOpen(false);
@@ -1486,50 +1508,32 @@ const TallyTable = ({
                             </TableCell>
                           );
                         } else if (
-                          column.toLowerCase() === "date" &&
-                          row.isAdded
+                          column.toLowerCase() === "effective_date" ||
+                          (column.toLowerCase() === "date" && row.isAdded)
                         ) {
                           return (
                             <TableCell
                               key={column}
-                              className="w-[250px] group relative"
+                              className={`w-[250px] group relative `}
+                              // ${
+                              //   selectedVoucher === "Ledgers" && "z-[200]"
+                              // }
                             >
-                              {" "}
-                              <Input
-                                type="date"
-                                value={
-                                  row[column] ? row[column].split("T")[0] : ""
+                              <DatePicker
+                                selected={
+                                  row[column]
+                                    ? parseCustomDate(row[column])
+                                    : null
                                 }
-                                onChange={(e) =>
+                                onChange={(date) =>
                                   handleInputChange(
                                     row.id,
                                     column,
-                                    e.target.value
+                                    date ? date.toISOString().split("T")[0] : ""
                                   )
                                 }
-                                className="w-full p-2 border border-gray-300 rounded-md"
-                              />
-                            </TableCell>
-                          );
-                        } else if (column.toLowerCase() === "effective_date") {
-                          return (
-                            <TableCell
-                              key={column}
-                              className="w-[250px] group relative"
-                            >
-                              {" "}
-                              <Input
-                                type="date"
-                                value={
-                                  row[column] ? row[column].split("T")[0] : ""
-                                }
-                                onChange={(e) =>
-                                  handleInputChange(
-                                    row.id,
-                                    column,
-                                    e.target.value
-                                  )
-                                }
+                                dateFormat="yyyy-MM-dd" // Displays date as 2025-03-04
+                                placeholderText="YYYY-MM-DD" // Clear placeholder format
                                 className="w-full p-2 border border-gray-300 rounded-md"
                               />
                             </TableCell>
@@ -2184,6 +2188,11 @@ const TallyTable = ({
                   key={value}
                   className="flex items-center gap-1 p-2 hover:bg-gray-50 rounded-md cursor-pointer dark:hover:bg-gray-700"
                 >
+                  {console.log({
+                    selectedCategories,
+                    aiyaz: selectedCategories.includes(value),
+                  })}
+
                   <Checkbox
                     checked={selectedCategories.includes(value)}
                     onCheckedChange={() => handleCategorySelect(value)}
@@ -2201,7 +2210,7 @@ const TallyTable = ({
                 className="bg-black hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
                 onClick={handleColumnFilter}
               >
-                Save changes
+                Apply Filter
               </Button>
             </div>
           </DialogContent>
@@ -2253,7 +2262,7 @@ const TallyTable = ({
                   setNumericFilterModalOpen(false);
                 }}
               >
-                Save changes
+                Apply Filter
               </Button>
             </div>
           </DialogContent>

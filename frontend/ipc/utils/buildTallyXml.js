@@ -1,7 +1,7 @@
 const { DOMParser } = require("xmldom");
 
 function buildTallyXmlPayment(row) {
-  const {
+  let {
     companyName,
     invoiceDate,
     effectiveDate,
@@ -15,6 +15,11 @@ function buildTallyXmlPayment(row) {
 
   const invoiceDateFormatted = invoiceDate;
   const effectiveDateFormatted = effectiveDate;
+
+  companyName = companyName.replace(/&/g, "&amp;");
+  narration = narration.replace(/&/g, "&amp;");
+  DrLedger = DrLedger.replace(/&/g, "&amp;");
+  CrLedger = CrLedger.replace(/&/g, "&amp;");
 
   let xml = `
 <ENVELOPE>
@@ -71,7 +76,7 @@ function buildTallyXmlPayment(row) {
 }
 
 function buildTallyXmlReceipt(row) {
-  const {
+  let {
     companyName,
     invoiceDate,
     effectiveDate,
@@ -85,6 +90,11 @@ function buildTallyXmlReceipt(row) {
 
   const invoiceDateFormatted = invoiceDate;
   const effectiveDateFormatted = effectiveDate;
+
+  companyName = companyName.replace(/&/g, "&amp;");
+  narration = narration.replace(/&/g, "&amp;");
+  DrLedger = DrLedger.replace(/&/g, "&amp;");
+  CrLedger = CrLedger.replace(/&/g, "&amp;");
 
   let xml = `
 <ENVELOPE>
@@ -179,7 +189,7 @@ function buildTallyXmlReceipt(row) {
 }
 
 function buildTallyXmlContra(row) {
-  const {
+  let {
     companyName,
     invoiceDate,
     effectiveDate,
@@ -189,6 +199,11 @@ function buildTallyXmlContra(row) {
     amount,
     voucherName,
   } = row;
+
+  companyName = companyName.replace(/&/g, "&amp;");
+  narration = narration.replace(/&/g, "&amp;");
+  DrLedger = DrLedger.replace(/&/g, "&amp;");
+  CrLedger = CrLedger.replace(/&/g, "&amp;");
 
   const xml = `
 <ENVELOPE>
@@ -285,6 +300,9 @@ function buildTallyPrimeLedgerXml({
   date,
   companyName,
 }) {
+  companyName = companyName.replace(/&/g, "&amp;");
+  ledgerName = ledgerName.replace(/&/g, "&amp;");
+  ledgerGroup = ledgerGroup.replace(/&/g, "&amp;");
   return `
 <ENVELOPE>
   <HEADER>
@@ -351,63 +369,77 @@ function buildTallyERPLedgerXml({
   state,
   country,
   openingBalance,
-  date,
+  invoiceDate,
   companyName,
 }) {
+  companyName = companyName.replace(/&/g, "&amp;");
+  ledgerName = ledgerName.replace(/&/g, "&amp;");
+  ledgerGroup = ledgerGroup.replace(/&/g, "&amp;");
+  state = state.replace(/&/g, "&amp;");
+  Address = Address.replace(/&/g, "&amp;");
+  country = country.replace(/&/g, "&amp;");
+  GSTnum = GSTnum.replace(/&/g, "&amp;");
+
   return `
-<ENVELOPE>
+
+  <ENVELOPE>
   <HEADER>
-    <TALLYREQUEST>Import Data</TALLYREQUEST>
+   <TALLYREQUEST>Import Data</TALLYREQUEST>
   </HEADER>
   <BODY>
-    <IMPORTDATA>
-      <REQUESTDESC>
-        <REPORTNAME>All Masters</REPORTNAME>
-        <STATICVARIABLES>
-          <SVCURRENTCOMPANY>${companyName}</SVCURRENTCOMPANY>
-        </STATICVARIABLES>
-      </REQUESTDESC>
-      <REQUESTDATA>
-        <TALLYMESSAGE xmlns:UDF="TallyUDF">
-          <LEDGER NAME="${ledgerName}" RESERVEDNAME="">
-            <OLDAUDITENTRYIDS.LIST TYPE="Number">
-              <OLDAUDITENTRYIDS>-1</OLDAUDITENTRYIDS>
-            </OLDAUDITENTRYIDS.LIST>
-            <PRIORSTATENAME>${state}</PRIORSTATENAME>
-            <VATDEALERTYPE>Regular</VATDEALERTYPE>
-            <PARENT>${ledgerGroup}</PARENT>
-            <COUNTRYOFRESIDENCE>${country}</COUNTRYOFRESIDENCE>
-            <ASORIGINAL>Yes</ASORIGINAL>
-            <AUDITED>No</AUDITED>
-            <OPENINGBALANCE>-${openingBalance}</OPENINGBALANCE>
-            <LANGUAGENAME.LIST>
-              <NAME.LIST TYPE="String">
-                <NAME>${ledgerName}</NAME>
-              </NAME.LIST>
-              <LANGUAGEID>1033</LANGUAGEID>
-            </LANGUAGENAME.LIST>
-            <LEDGSTREGDETAILS.LIST>
-              <APPLICABLEFROM>${date}</APPLICABLEFROM>
-              <GSTREGISTRATIONTYPE>Regular</GSTREGISTRATIONTYPE>
-              <PLACEOFSUPPLY>${state}</PLACEOFSUPPLY>
-              <GSTIN>${GSTnum}</GSTIN>
-            </LEDGSTREGDETAILS.LIST>
-            <LEDMAILINGDETAILS.LIST>
-              <ADDRESS.LIST TYPE="String">
-                <ADDRESS>${Address}</ADDRESS>
-              </ADDRESS.LIST>
-              <APPLICABLEFROM>${date}</APPLICABLEFROM>
-              <PINCODE>${pincode}</PINCODE>
-              <MAILINGNAME>${ledgerName}</MAILINGNAME>
-              <STATE>${state}</STATE>
-              <COUNTRY>${country}</COUNTRY>
-            </LEDMAILINGDETAILS.LIST>
-          </LEDGER>
-        </TALLYMESSAGE>
-      </REQUESTDATA>
-    </IMPORTDATA>
+   <IMPORTDATA>
+    <REQUESTDESC>
+     <REPORTNAME>All Masters</REPORTNAME>
+     <STATICVARIABLES>
+      <SVCURRENTCOMPANY>${companyName}</SVCURRENTCOMPANY>
+     </STATICVARIABLES>
+    </REQUESTDESC>
+    <REQUESTDATA>
+     <TALLYMESSAGE xmlns:UDF="TallyUDF">
+      <LEDGER NAME="${ledgerName}" RESERVEDNAME="">
+       <ADDRESS.LIST TYPE="String">
+        <ADDRESS>${Address}</ADDRESS>
+       </ADDRESS.LIST>
+       <MAILINGNAME.LIST TYPE="String">
+        <MAILINGNAME>${ledgerName}</MAILINGNAME>
+       </MAILINGNAME.LIST>
+       <OLDAUDITENTRYIDS.LIST TYPE="Number">
+        <OLDAUDITENTRYIDS>-1</OLDAUDITENTRYIDS>
+       </OLDAUDITENTRYIDS.LIST>
+       <STARTINGFROM>${invoiceDate}</STARTINGFROM>
+       <PRIORSTATENAME>${state}</PRIORSTATENAME>
+       <PINCODE>${pincode}</PINCODE>
+       <COUNTRYNAME>${country}</COUNTRYNAME>
+       <VATDEALERTYPE>Regular</VATDEALERTYPE>
+       <PARENT>${ledgerGroup}</PARENT>
+       <TAXCLASSIFICATIONNAME/>
+       <TAXTYPE>Others</TAXTYPE>
+       <COUNTRYOFRESIDENCE>${country}</COUNTRYOFRESIDENCE>
+       <GSTTYPE/>
+       <APPROPRIATEFOR/>
+       <PARTYGSTIN>${GSTnum}</PARTYGSTIN>
+       <LEDSTATENAME>${state}</LEDSTATENAME>
+       <EXCISELEDGERCLASSIFICATION/>
+       <EXCISEDUTYTYPE/>
+       <EXCISENATUREOFPURCHASE/>
+       <LEDGERFBTCATEGORY/>
+       <BANKACCHOLDERNAME>Ledger</BANKACCHOLDERNAME>
+       <ISBILLWISEON>Yes</ISBILLWISEON>
+       <ASORIGINAL>Yes</ASORIGINAL>
+       <ISCHEQUEPRINTINGENABLED>Yes</ISCHEQUEPRINTINGENABLED>
+       <SORTPOSITION>${-openingBalance}</SORTPOSITION>
+       <OPENINGBALANCE>${-openingBalance}</OPENINGBALANCE>
+       <LANGUAGENAME.LIST>
+        <NAME.LIST TYPE="String">
+         <NAME>${ledgerName}</NAME>
+        </NAME.LIST>
+       </LANGUAGENAME.LIST>
+      </LEDGER>
+     </TALLYMESSAGE>
+    </REQUESTDATA>
+   </IMPORTDATA>
   </BODY>
-</ENVELOPE>
+ </ENVELOPE>
   `;
 }
 

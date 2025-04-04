@@ -77,7 +77,9 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
           caseId,
           parseInt(individualId)
         );
-        setTransactionData(data);
+        // remove entity and bank from the data
+        const filteredData = data.map(({ entity, ...rest }) => rest);
+        setTransactionData(filteredData);
         // console.log("Fetched summary transactions:", data.length);
       } catch (err) {
         setError("Failed to fetch transactions");
@@ -97,22 +99,32 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
 
     // Get the category value from the summary row
     const categoryColumn = Object.keys(row)[0];
-    // console.log("Category column:", categoryColumn);
     const categoryValue = row[categoryColumn];
-    // console.log("Category value:", categoryValue);
+
+    // console.log({ categoryColumn, categoryValue });
+
+    let transactionType = "debit";
+
+    if (
+      categoryColumn === "Important Expenses / Payments" ||
+      categoryColumn === "Other Expenses / Payments" ||
+      categoryColumn === "Contra Debit"
+    ) {
+      console.log("Debit Transaction");
+      transactionType = "debit";
+    } else if (
+      categoryColumn === "Income / Receipts" ||
+      categoryColumn === "Contra Credit"
+    ) {
+      transactionType = "credit";
+      console.log("Credit Transaction");
+    }
 
     return transactionData
-      .filter((transaction) =>
-        (transaction.category === categoryValue &&
-          categoryColumn === "Contra Debit" &&
-          transaction.type == "credit") ||
-        (categoryColumn === "Contra Credit" && transaction.type == "debit")
-          ? transaction.description
-              .toLowerCase()
-              .includes(categoryValue.toLowerCase())
-          : transaction.category
-              .toLowerCase()
-              .includes(categoryValue.toLowerCase())
+      .filter(
+        (transaction) =>
+          transaction.category === categoryValue &&
+          transaction.type === transactionType
       )
       .map((transaction) => {
         // console.log({ transaction });
@@ -138,7 +150,7 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
           category: transaction.category,
           balance: transaction.balance,
           bank: transaction.bank,
-          entity: transaction.entity,
+          // entity: transaction.entity,
           id: transaction.id,
         };
       });

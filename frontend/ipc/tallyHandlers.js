@@ -102,7 +102,7 @@ function registerTallyIpc() {
       const voucherName = row.voucherName;
       // const isContra = voucherName === "Contra";
       let xmlContent = null;
-      tallyUploadData[i].invoiceDate = "20250401"; // Hardcoded date for now
+      // tallyUploadData[i].invoiceDate = "20250401"; // Hardcoded date for now
 
       if (voucherName === "Payment") {
         xmlContent = buildTallyXmlPayment(row);
@@ -176,7 +176,7 @@ function registerTallyIpc() {
       const isPrime = tallyVersion === "TallyPrime";
       for (let i = 0; i < end; i++) {
         const row = tallyUploadData[i];
-        tallyUploadData[i].date = "20250401"; // Hardcoded date for now
+        // tallyUploadData[i].date = "20250401"; // Hardcoded date for now
 
         const xmlContent = isPrime
           ? buildTallyPrimeLedgerXml(row)

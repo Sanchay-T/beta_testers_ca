@@ -116,6 +116,7 @@ const Card2 = ({
           setIsLoading(true);
 
           const progress = await window.electron.getProgressed();
+          console.log("User Progress:", progress); // Debugging line
           if (!progress.error) {
             setUserProgress(progress);
           }
@@ -286,7 +287,7 @@ const Card2 = ({
                 <span className="text-base sm:text-xl md:text-2xl font-bold text-white">
                   {mainValue4.toLocaleString()}
                   <span className="text-sm pl-1">mins</span>
-                  </span>
+                </span>
               </>
             )}
           </div>

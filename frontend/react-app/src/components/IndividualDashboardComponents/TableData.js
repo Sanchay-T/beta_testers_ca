@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Search, Loader2, Check,Download,X,MessageCircle,Mail, Share2 } from "lucide-react";
+import {
+  Search,
+  Loader2,
+  Check,
+  Download,
+  X,
+  MessageCircle,
+  Mail,
+  Share2,
+} from "lucide-react";
 import {
   Card,
   CardContent,
@@ -33,10 +42,15 @@ import {
 } from "../ui/pagination";
 import { Label } from "../ui/label";
 import { useToast } from "../../hooks/use-toast";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../ui/tooltip";
 import { exportToExcel } from "../exportToExcel";
 
-const DataTable = ({ data = [], source, title, subtitle}) => {
+const DataTable = ({ data = [], source, title, subtitle }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [filteredData, setFilteredData] = useState(data);
   const [searchTerm, setSearchTerm] = useState("");
@@ -49,7 +63,9 @@ const DataTable = ({ data = [], source, title, subtitle}) => {
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [categorySearchTerm, setCategorySearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(
+    title === "EOD Balance" ? 33 : 10
+  );
   const [showAllRows, setShowAllRows] = useState(false);
   const [columnsToIgnore, setColumnsToIgnore] = useState(["transactionId"]);
 
@@ -60,16 +76,14 @@ const DataTable = ({ data = [], source, title, subtitle}) => {
   const [batchEntityValue, setBatchEntityValue] = useState("");
   const { toast } = useToast();
 
-  // States for sharing 
+  // States for sharing
   const [shareModalOpen, setShareModalOpen] = useState(false);
-  
+
   // Get dynamic columns from first data item
   let columns = data.length > 0 ? Object.keys(data[0]) : [];
   columns = columns.filter((column) => !columnsToIgnore.includes(column));
 
-  const hasEntity = columns.some(
-    (column) => column.toLowerCase() === "entity"
-  );
+  const hasEntity = columns.some((column) => column.toLowerCase() === "entity");
 
   // Determine which columns are numeric
   const numericColumns = columns.filter((column) =>
@@ -187,11 +201,12 @@ const DataTable = ({ data = [], source, title, subtitle}) => {
   };
 
   // Pagination calculations
-  const totalPages = showAllRows ? 1 : Math.ceil(filteredData.length / rowsPerPage);
+  const totalPages = showAllRows
+    ? 1
+    : Math.ceil(filteredData.length / rowsPerPage);
   const startIndex = showAllRows ? 0 : (currentPage - 1) * rowsPerPage;
-  const endIndex = showAllRows ? filteredData.length : (startIndex + rowsPerPage);
+  const endIndex = showAllRows ? filteredData.length : startIndex + rowsPerPage;
   const currentData = filteredData.slice(startIndex, endIndex);
-
 
   // ===== Helper functions for inline & batch "Entity" editing =====
   const handleEntityChange = (globalIndex, originalValue, newValue) => {
@@ -205,7 +220,7 @@ const DataTable = ({ data = [], source, title, subtitle}) => {
     try {
       const response = await window.electron.editEntity(payload);
       // console.log({entityUpdateIpc:response});
-      if(response.success) {
+      if (response.success) {
         // console.log("Entity updated successfully");
         // Show a success toast
         toast({
@@ -213,26 +228,23 @@ const DataTable = ({ data = [], source, title, subtitle}) => {
           title: "Entity Update",
           description: "Entities updated successfully",
           type: "success",
-          duration:3000
+          duration: 3000,
         });
-      }else{
+      } else {
         // Show an error toast
         toast({
           id: "entity-update-error",
           title: "Entity Update",
           description: "Entity update failed",
           type: "error",
-          duration:3000
-          
+          duration: 3000,
         });
         // console.log("Entity update failed");
       }
-    }
-    catch (err) {
+    } catch (err) {
       // console.log(err);
     }
-  }
-
+  };
 
   const handleEntityUpdateConfirm = (globalIndex, row) => {
     const newValue = editedEntities[globalIndex];
@@ -241,23 +253,22 @@ const DataTable = ({ data = [], source, title, subtitle}) => {
         "Are you sure you want to update the Entity for this transaction?"
       )
     ) {
-
-      const payload = [{ entity: newValue, transactionId: row.id }]
+      const payload = [{ entity: newValue, transactionId: row.id }];
       entityUpdateIpc(payload);
 
       // Update the local state so the UI immediately reflects the new value.
-    setFilteredData((prevData) => {
-      const updatedData = [...prevData];
-      // Determine the correct key (e.g., "Entity" or "entity")
-      const entityKey = Object.keys(updatedData[globalIndex]).find(
-        (key) => key.toLowerCase() === "entity"
-      );
-      updatedData[globalIndex] = {
-        ...updatedData[globalIndex],
-        [entityKey]: newValue,
-      };
-      return updatedData;
-    });
+      setFilteredData((prevData) => {
+        const updatedData = [...prevData];
+        // Determine the correct key (e.g., "Entity" or "entity")
+        const entityKey = Object.keys(updatedData[globalIndex]).find(
+          (key) => key.toLowerCase() === "entity"
+        );
+        updatedData[globalIndex] = {
+          ...updatedData[globalIndex],
+          [entityKey]: newValue,
+        };
+        return updatedData;
+      });
 
       // Clear the edit state for this row.
       setEditedEntities((prev) => {
@@ -305,7 +316,6 @@ const DataTable = ({ data = [], source, title, subtitle}) => {
     }
   };
 
-
   // Called when the user confirms a batch update from the modal.
   const handleBatchUpdate = () => {
     if (!batchEntityValue) return;
@@ -319,16 +329,15 @@ const DataTable = ({ data = [], source, title, subtitle}) => {
         const row = filteredData[globalIndex];
         // console.log(row)
         // Replace this console.log with your backend call.
-        return { entity: batchEntityValue, transactionId: row.id }
+        return { entity: batchEntityValue, transactionId: row.id };
       });
-      entityUpdateIpc(payload)
+      entityUpdateIpc(payload);
       // Clear selections and close the modal.
       setSelectedRows([]);
       setBatchEntityValue("");
       setBatchModalOpen(false);
     }
   };
-
 
   // Generate page numbers for pagination
   const getPageNumbers = () => {
@@ -368,39 +377,38 @@ const DataTable = ({ data = [], source, title, subtitle}) => {
     setShareModalOpen(true);
   };
 
-  const handleDownload = ()=>{
-    exportToExcel(data,title);
-  }
-
+  const handleDownload = () => {
+    exportToExcel(data, title);
+  };
 
   const handleMailShare = async () => {
-      const fileName = await exportToExcel(data, `${title}.xlsx`, true);
-      if (!fileName) return alert("File saving was canceled.");
-    
-      // Generate mailto link (without attachment, since it's not possible)
-      const subject = encodeURIComponent(`${title} Report`);
-      const body = encodeURIComponent(`Please find the attached ${title} report.\n\n📌 Don't forget to manually attach the saved file before sending.`);
-      const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
-  
+    const fileName = await exportToExcel(data, `${title}.xlsx`, true);
+    if (!fileName) return alert("File saving was canceled.");
+
+    // Generate mailto link (without attachment, since it's not possible)
+    const subject = encodeURIComponent(`${title} Report`);
+    const body = encodeURIComponent(
+      `Please find the attached ${title} report.\n\n📌 Don't forget to manually attach the saved file before sending.`
+    );
+    const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
+
     // Open mail client **only after the file is saved**
     window.location.href = mailtoLink;
   };
-  
 
   const handleWhatsappShare = async () => {
     const fileName = await exportToExcel(data, `${title}.xlsx`, true);
     if (!fileName) return alert("File saving was canceled.");
-  
+
     // Generate WhatsApp sharing link (without attachment, since it's not possible)
     const message = encodeURIComponent(
       `📁 Please find the attached Report: ${title}\n\n📌 Don't forget to manually attach the saved file before sending.`
     );
     const whatsappLink = `https://api.whatsapp.com/send?text=${message}`;
-  
+
     // Open WhatsApp Web
     window.open(whatsappLink, "_blank");
   };
-  
 
   // If source is lifo or fifo, render a different table
   if (source === "LIFO" || source === "FIFO") {
@@ -431,7 +439,6 @@ const DataTable = ({ data = [], source, title, subtitle}) => {
               >
                 Clear Filters
               </Button>
-              
             </div>
           </div>
         </CardHeader>
@@ -491,10 +498,11 @@ const DataTable = ({ data = [], source, title, subtitle}) => {
                         {columns.map((column) => (
                           <TableCell
                             key={column}
-                            className={`max-w-[200px] relative ${column.toLowerCase() === "description"
-                              ? "group"
-                              : ""
-                              } text-[15px]`}
+                            className={`max-w-[200px] relative ${
+                              column.toLowerCase() === "description"
+                                ? "group"
+                                : ""
+                            } text-[15px]`}
                           >
                             {/* Truncate only for the description column */}
                             {column.toLowerCase() === "description" ? (
@@ -523,7 +531,6 @@ const DataTable = ({ data = [], source, title, subtitle}) => {
                         {numericColumns.includes(column) ? totals[column] : ""}
                       </TableCell>
                     ))}
-
                   </TableRow>
                 </TableFooter>
               </Table>
@@ -568,7 +575,7 @@ const DataTable = ({ data = [], source, title, subtitle}) => {
                       className={cn(
                         "cursor-pointer",
                         currentPage === totalPages &&
-                        "pointer-events-none opacity-50"
+                          "pointer-events-none opacity-50"
                       )}
                     />
                   </PaginationItem>
@@ -587,8 +594,12 @@ const DataTable = ({ data = [], source, title, subtitle}) => {
       <CardHeader>
         <div className="flex justify-between items-center">
           <div className="space-y-2">
-            <CardTitle className="dark:text-slate-300">{title || "Data Table"}</CardTitle>
-            <CardDescription>{subtitle || "View and manage your data"}</CardDescription>
+            <CardTitle className="dark:text-slate-300">
+              {title || "Data Table"}
+            </CardTitle>
+            <CardDescription>
+              {subtitle || "View and manage your data"}
+            </CardDescription>
           </div>
           <div className="flex items-center gap-2">
             <div className="relative flex items-center gap-2">
@@ -622,14 +633,14 @@ const DataTable = ({ data = [], source, title, subtitle}) => {
                 {/* <option value="all">Show all</option> */}
               </select>
               <Button
-  variant="outline"
-  className="px-3 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-600 
+                variant="outline"
+                className="px-3 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-600 
              bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
              transition-all rounded-md shadow-sm hover:shadow-md"
-  onClick={clearFilters}
->
-  Clear Filters
-</Button>
+                onClick={clearFilters}
+              >
+                Clear Filters
+              </Button>
               <div className="flex gap-2">
                 {/* Download Button */}
                 <Tooltip>
@@ -694,8 +705,10 @@ const DataTable = ({ data = [], source, title, subtitle}) => {
                   </TableHead>
                 )}
                 {columns.map((column) => (
-                  <TableHead key={column} className="whitespace-nowrap"
-                  // className={source === "summary" ? "bg-gray-900 dark:bg-slate-800 text-white" : ""}
+                  <TableHead
+                    key={column}
+                    className="whitespace-nowrap"
+                    // className={source === "summary" ? "bg-gray-900 dark:bg-slate-800 text-white" : ""}
                   >
                     <div className="flex items-center gap-2">
                       {column.charAt(0).toUpperCase() +
@@ -728,7 +741,10 @@ const DataTable = ({ data = [], source, title, subtitle}) => {
             <TableBody>
               {currentData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={hasEntity ? columns.length + 1 : columns.length} className="text-center">
+                  <TableCell
+                    colSpan={hasEntity ? columns.length + 1 : columns.length}
+                    className="text-center"
+                  >
                     No matching results found
                   </TableCell>
                 </TableRow>
@@ -736,78 +752,83 @@ const DataTable = ({ data = [], source, title, subtitle}) => {
                 currentData.map((row, i) => {
                   const globalIndex = showAllRows ? i : startIndex + i;
 
-                  return <TableRow
-                    key={globalIndex}
-                  // className={source === "summary" ? "even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200" : ""}
-                  >
-                    {hasEntity && (
-                      <TableCell className="w-10">
-                        <Checkbox
-                          checked={selectedRows.includes(globalIndex)}
-                          onCheckedChange={() => toggleRowSelection(globalIndex)}
-                        />
-                      </TableCell>
-                    )}
-                    {columns.map((column) => {
-                      if (column.toLowerCase() === "entity") {
-                        return (
-                          <TableCell
-                            key={column}
-                            className="max-w-[200px] relative"
-                          >
-                            <div className="flex items-center">
-                              <Input
-                                type="text"
-                                value={
-                                  editedEntities[globalIndex] !== undefined
-                                    ? editedEntities[globalIndex]
-                                    : row[column]
-                                }
-                                onChange={(e) =>
-                                  handleEntityChange(
-                                    globalIndex,
-                                    row[column],
-                                    e.target.value
-                                  )
-                                }
-                                className="w-full"
-                              />
-                              {editedEntities[globalIndex] !== undefined &&
-                                editedEntities[globalIndex] !== row[column] && (
-                                  <Check
-                                    className="ml-2 cursor-pointer text-green-500"
-                                    onClick={() =>
-                                      handleEntityUpdateConfirm(
-                                        globalIndex,
-                                        row
-                                      )
-                                    }
-                                  />
-                                )}
-                            </div>
-                          </TableCell>
-                        );
-                      } else if (column.toLowerCase() === "description") {
-                        return (
-                          <TableCell
-                            key={column}
-                            className="max-w-[200px] group relative"
-                          >
-                            <div className="truncate">{row[column]}</div>
-                            <div className="absolute left-0 top-10 hidden group-hover:block bg-black text-white text-sm rounded p-2 z-50 whitespace-normal min-w-[200px] max-w-[400px]">
-                              {row[column]}
-                            </div>
-                          </TableCell>
-                        );
-                      } else {
-                        return (
-                          <TableCell key={column} className="max-w-[200px]">
-                            <div>{row[column]}</div>
-                          </TableCell>
-                        );
-                      }
-                    })}
-                  </TableRow>
+                  return (
+                    <TableRow
+                      key={globalIndex}
+                      // className={source === "summary" ? "even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200" : ""}
+                    >
+                      {hasEntity && (
+                        <TableCell className="w-10">
+                          <Checkbox
+                            checked={selectedRows.includes(globalIndex)}
+                            onCheckedChange={() =>
+                              toggleRowSelection(globalIndex)
+                            }
+                          />
+                        </TableCell>
+                      )}
+                      {columns.map((column) => {
+                        if (column.toLowerCase() === "entity") {
+                          return (
+                            <TableCell
+                              key={column}
+                              className="max-w-[200px] relative"
+                            >
+                              <div className="flex items-center">
+                                <Input
+                                  type="text"
+                                  value={
+                                    editedEntities[globalIndex] !== undefined
+                                      ? editedEntities[globalIndex]
+                                      : row[column]
+                                  }
+                                  onChange={(e) =>
+                                    handleEntityChange(
+                                      globalIndex,
+                                      row[column],
+                                      e.target.value
+                                    )
+                                  }
+                                  className="w-full"
+                                />
+                                {editedEntities[globalIndex] !== undefined &&
+                                  editedEntities[globalIndex] !==
+                                    row[column] && (
+                                    <Check
+                                      className="ml-2 cursor-pointer text-green-500"
+                                      onClick={() =>
+                                        handleEntityUpdateConfirm(
+                                          globalIndex,
+                                          row
+                                        )
+                                      }
+                                    />
+                                  )}
+                              </div>
+                            </TableCell>
+                          );
+                        } else if (column.toLowerCase() === "description") {
+                          return (
+                            <TableCell
+                              key={column}
+                              className="max-w-[200px] group relative"
+                            >
+                              <div className="truncate">{row[column]}</div>
+                              <div className="absolute left-0 top-10 hidden group-hover:block bg-black text-white text-sm rounded p-2 z-50 whitespace-normal min-w-[200px] max-w-[400px]">
+                                {row[column]}
+                              </div>
+                            </TableCell>
+                          );
+                        } else {
+                          return (
+                            <TableCell key={column} className="max-w-[200px]">
+                              <div>{row[column]}</div>
+                            </TableCell>
+                          );
+                        }
+                      })}
+                    </TableRow>
+                  );
                 })
               )}
             </TableBody>
@@ -863,7 +884,7 @@ const DataTable = ({ data = [], source, title, subtitle}) => {
                     className={cn(
                       "cursor-pointer",
                       currentPage === totalPages &&
-                      "pointer-events-none opacity-50"
+                        "pointer-events-none opacity-50"
                     )}
                   />
                 </PaginationItem>
@@ -1005,60 +1026,60 @@ const DataTable = ({ data = [], source, title, subtitle}) => {
 
       {/* Create a share modal dialog */}
       <Dialog open={shareModalOpen} onOpenChange={setShareModalOpen}>
-      <DialogContent className="max-w-md p-6 rounded-lg shadow-lg border dark:border-gray-700 bg-white dark:bg-gray-900">
-        {/* Header with Close Button */}
-        <DialogHeader className="flex justify-between items-center">
-          <DialogTitle className="text-lg font-semibold text-gray-800 dark:text-white">Share This Report</DialogTitle>
-        </DialogHeader>
+        <DialogContent className="max-w-md p-6 rounded-lg shadow-lg border dark:border-gray-700 bg-white dark:bg-gray-900">
+          {/* Header with Close Button */}
+          <DialogHeader className="flex justify-between items-center">
+            <DialogTitle className="text-lg font-semibold text-gray-800 dark:text-white">
+              Share This Report
+            </DialogTitle>
+          </DialogHeader>
 
-        {/* Share Options */}
-        <div className="flex justify-center gap-6 py-4">
-          <TooltipProvider>
-            {/* Mail Button */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="p-4 transition-all rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
-                  onClick={handleMailShare}
-                >
-                  <Mail className="w-6 h-6 text-red-500" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Share via Email</TooltipContent>
-            </Tooltip>
+          {/* Share Options */}
+          <div className="flex justify-center gap-6 py-4">
+            <TooltipProvider>
+              {/* Mail Button */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="p-4 transition-all rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
+                    onClick={handleMailShare}
+                  >
+                    <Mail className="w-6 h-6 text-red-500" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Share via Email</TooltipContent>
+              </Tooltip>
 
-            {/* WhatsApp Button */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="p-4 transition-all rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
-                  onClick={handleWhatsappShare}
-                >
-                  <MessageCircle className="w-6 h-6 text-green-500" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Share via WhatsApp</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
+              {/* WhatsApp Button */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="p-4 transition-all rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
+                    onClick={handleWhatsappShare}
+                  >
+                    <MessageCircle className="w-6 h-6 text-green-500" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Share via WhatsApp</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
 
-        {/* Cancel Button */}
-        <div className="flex justify-end">
-          <Button
-            variant="outline"
-            className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-            onClick={() => setShareModalOpen(false)}
-          >
-            Cancel
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+          {/* Cancel Button */}
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+              onClick={() => setShareModalOpen(false)}
+            >
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-
-      
       {/* Loading Overlay */}
       {isLoading && (
         <div className="fixed inset-0 bg-white bg-opacity-80 backdrop-blur-sm flex items-center justify-center">

@@ -1,4 +1,13 @@
 const { DOMParser } = require("xmldom");
+// Function to escape special characters for XML
+function escapeXML(str) {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
 
 // Fetch list of companies using the working XML from Postman
 async function fetchCompanyList(port) {
@@ -75,6 +84,8 @@ async function fetchCompanyList(port) {
 
 // Fetch ledger data for a specific company
 async function fetchLedgerDataForCompany(companyName, port) {
+  const escapedCompanyName = escapeXML(companyName);
+
   const xmlInput = `
 <ENVELOPE>
   <HEADER>
@@ -85,7 +96,7 @@ async function fetchLedgerDataForCompany(companyName, port) {
       <REQUESTDESC>
         <REPORTNAME>List of Accounts</REPORTNAME>
         <STATICVARIABLES>
-          <SVCURRENTCOMPANY>${companyName}</SVCURRENTCOMPANY>
+          <SVCURRENTCOMPANY>${escapedCompanyName}</SVCURRENTCOMPANY>
           <SVEXPORTFORMAT>$$SysName:XML</SVEXPORTFORMAT>
           <SVFROMDATE></SVFROMDATE>
           <SVTODATE></SVTODATE>
@@ -121,13 +132,29 @@ async function fetchLedgerDataForCompany(companyName, port) {
           return node ? node.textContent.trim() : "";
         };
 
+        let ledgerName = getText("NAME").replace(/&amp;/g, "&");
+        let ledgerGroup = getText("PARENT").replace(/&amp;/g, "&");
+
+        let GSTNumber = getText("GSTIN").trim(); // Prime
+        if (GSTNumber === "") {
+          GSTNumber = getText("PARTYGSTIN").trim(); // ERP
+        }
+
+        let state = getText("PLACEOFSUPPLY").trim(); // Prime
+        if (state === "") {
+          state = getText("LEDSTATENAME").trim(); // ERP
+        }
+
+        let country = getText("COUNTRYOFRESIDENCE");
+        let openingBalance = getText("OPENINGBALANCE");
+
         ledgerData.push({
-          ledgerName: getText("NAME").replace(/&amp;/g, "&"),
-          ledgerGroup: getText("PARENT").replace(/&amp;/g, "&"),
-          GSTNumber: getText("GSTIN"),
-          state: getText("PLACEOFSUPPLY"),
-          country: getText("COUNTRYOFRESIDENCE"),
-          openingBalance: getText("OPENINGBALANCE"),
+          ledgerName: ledgerName,
+          ledgerGroup: ledgerGroup,
+          GSTNumber: GSTNumber,
+          state: state,
+          country: country,
+          openingBalance: openingBalance,
         });
       }
     }
