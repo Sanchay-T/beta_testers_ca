@@ -58,13 +58,14 @@ if (process.platform === 'darwin') {
   autoUpdater.allowDowngrade = false;
 }
 
-// Log update configuration
+// Log update configuration (without exposing the token)
 log.info('Update Configuration:', {
   platform: process.platform,
   appVersion: app.getVersion(),
   autoDownload: autoUpdater.autoDownload,
   allowPrerelease: autoUpdater.allowPrerelease,
-  feedURL: autoUpdater.getFeedURL()
+  feedURL: autoUpdater.getFeedURL(),
+  tokenConfigured: !!process.env.GH_TOKEN
 });
 log.info("process.env.NODE_ENV", process.env.NODE_ENV);
 
@@ -81,8 +82,12 @@ autoUpdater.allowPrerelease = false;
 autoUpdater.setFeedURL({
   provider: 'github',
   owner: 'Shama-Cyphersol',
-  repo: 'ca-offline-suite'
+  repo: 'ca-offline-suite',
+  token: process.env.GH_TOKEN
 });
+
+// Add version tracking
+let lastCheckedVersion = null;
 
 // Auto-update event handlers with detailed logging
 autoUpdater.on('checking-for-update', () => {
@@ -91,8 +96,15 @@ autoUpdater.on('checking-for-update', () => {
 });
 
 autoUpdater.on('update-available', (info) => {
+  // Skip if we've already notified about this version
+  if (lastCheckedVersion === info.version) {
+    log.info('Skipping notification for already notified version:', info.version);
+    return;
+  }
+  
   log.info('Update available. Current version:', app.getVersion());
   log.info('New version:', info.version);
+  lastCheckedVersion = info.version;
 
   dialog.showMessageBox({
     type: 'info',
@@ -128,6 +140,9 @@ autoUpdater.on('download-progress', (progress) => {
   win?.setProgressBar(progress.percent / 100);
 });
 
+// Add flag for tracking update status
+let isUpdating = false;
+
 autoUpdater.on('update-downloaded', (info) => {
   log.info('Update downloaded. Version:', info.version);
   win?.setProgressBar(-1); // Remove progress bar
@@ -142,6 +157,7 @@ autoUpdater.on('update-downloaded', (info) => {
   }).then(({ response }) => {
     if (response === 0) {
       log.info('User accepted install');
+      isUpdating = true; // Set flag before restart
       autoUpdater.quitAndInstall(false, true);
     }
   });
@@ -402,29 +418,30 @@ async function createWindow() {
   }
 
   win.on("close", (event) => {
-    // event.preventDefault();
     log.info("Close event triggered");
-    // win.hide();
-    // if (process.platform === 'darwin') {
-    // Show the confirmation dialog when the close button is clicked
+    
+    // Skip confirmation if we're updating
+    if (isUpdating) {
+      log.info("Skipping close confirmation for update installation");
+      sessionManager.clearUser();
+      return;
+    }
+
     const choice = dialog.showMessageBoxSync(win, {
       type: "warning",
       buttons: ["Yes", "Cancel"],
       defaultId: 1,
       title: "Confirm Exit",
-      message:
-        "Closing the app will log out your session. Do you want to proceed?",
+      message: "Closing the app will log out your session. Do you want to proceed?",
     });
 
     if (choice === 0) {
       log.info("User confirmed app close. Logging out...");
       sessionManager.clearUser();
-      // Add your session logout logic here
     } else {
       log.info("User canceled app close.");
-      event.preventDefault(); // Prevent app from closing, keeping it in the background
+      event.preventDefault();
     }
-    // }
   });
   // setTimeout(() => {
   //   log.info("Closing window after 5 seconds");
@@ -607,10 +624,11 @@ async function createWindow() {
   // Check for updates after window is ready
   win.webContents.on('did-finish-load', () => {
     if (!isDev) {
+      // Initial check after 3 seconds
       setTimeout(checkForUpdates, 3000);
 
-      // Check for updates every hour
-      setInterval(checkForUpdates, 60 * 60 * 1000);
+      // Check for updates every 4 hours instead of every hour
+      setInterval(checkForUpdates, 4 * 60 * 60 * 1000);
     }
   });
 }
@@ -704,6 +722,14 @@ ipcMain.handle('quit-and-install', () => {
 function checkForUpdates() {
   if (isDev) {
     log.info('Skipping update check in development mode');
+    return;
+  }
+
+  const currentVersion = app.getVersion();
+  
+  // Skip check if we're already on the latest notified version
+  if (lastCheckedVersion && lastCheckedVersion === currentVersion) {
+    log.info('Already on latest notified version:', currentVersion);
     return;
   }
 
