@@ -11,6 +11,7 @@ import {
   Mail,
   Share2,
   Eye,
+  ChevronDown,
 } from "lucide-react";
 import {
   Card,
@@ -101,6 +102,7 @@ const DataTable = ({
   const [existingFilterData, setExistingFilterData] = useState([]);
   const [pdfBlob, setPdfBlob] = useState(null);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [columnsToIgnore, setColumnsToIgnore] = useState([
     "id",
     "transactionId",
@@ -687,10 +689,11 @@ const DataTable = ({
             updatedRow.is_new = true;
           }
           newModifiedData.push({
-            ...row,
+            ...updatedRow,
             category: newCategory,
             oldCategory,
             reasoning: bulkReasoning,
+            is_new: selectedType ? true : false,
           });
           return updatedRow;
         }
@@ -2165,65 +2168,83 @@ const DataTable = ({
           </DialogHeader>
 
           <div className="space-y-4">
-            <Select
-              value={selectedBulkCategory}
-              onValueChange={setSelectedBulkCategory}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select new category" />
-              </SelectTrigger>
-              <SelectContent>
-                <div className="p-2 border-b flex gap-2">
-                  <div className="relative flex-1">
-                    <Input
-                      type="text"
-                      placeholder="Search categories..."
-                      value={categorySearchTerm}
-                      onChange={(e) => setCategorySearchTerm(e.target.value)}
-                    />
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="px-2 h-10"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      if (categorySearchTerm.trim()) {
-                        // In bulk mode we do not pass a row
-                        const added = handleAddCategory(
-                          categorySearchTerm.trim()
-                        );
-                        if (added) {
-                          setCategorySearchTerm("");
-                        }
-                      }
-                    }}
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add
-                  </Button>
-                </div>
-                <div className="overflow-y-auto">
-                  {filteredCategories.length > 0 ? (
-                    filteredCategories.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <div className="p-4 max-w-[300px] text-center text-muted-foreground">
-                      <p className="text-md">No matching categories found</p>
-                      <p className="text-sm mt-1">
-                        Click the <Plus className="h-3 w-3 inline-block mx-1" />{" "}
-                        icon above to add "{categorySearchTerm}" as a new
-                        category
-                      </p>
+            {/* Custom dropdown implementation */}
+            <div className="relative w-full">
+              {/* Clickable button that looks like SelectTrigger */}
+              <Button
+                variant="outline"
+                className="w-full justify-between font-normal"
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                type="button"
+              >
+                <span>{selectedBulkCategory || "Select new category"}</span>
+                <ChevronDown className="h-4 w-4 opacity-50" />
+              </Button>
+
+              {/* Custom dropdown content */}
+              {dropdownOpen && (
+                <div className="absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-md animate-in fade-in-80">
+                  {/* Search input in custom dropdown */}
+                  <div className="p-2 border-b flex gap-2">
+                    <div className="relative flex-1">
+                      <Input
+                        type="text"
+                        placeholder="Search categories..."
+                        value={categorySearchTerm}
+                        onChange={(e) => setCategorySearchTerm(e.target.value)}
+                      />
                     </div>
-                  )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="px-2 h-10"
+                      onClick={() => {
+                        if (categorySearchTerm.trim()) {
+                          const added = handleAddCategory(
+                            categorySearchTerm.trim()
+                          );
+                          if (added) {
+                            setCategorySearchTerm("");
+                            setDropdownOpen(false);
+                          }
+                        }
+                      }}
+                      type="button"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add
+                    </Button>
+                  </div>
+
+                  {/* Custom dropdown items */}
+                  <div className="overflow-y-auto max-h-[200px]">
+                    {filteredCategories.length > 0 ? (
+                      filteredCategories.map((category) => (
+                        <div
+                          key={category}
+                          className="px-2 py-1.5 text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground"
+                          onClick={() => {
+                            setSelectedBulkCategory(category);
+                            setDropdownOpen(false);
+                          }}
+                        >
+                          {category}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-4 max-w-[300px] text-center text-muted-foreground">
+                        <p className="text-md">No matching categories found</p>
+                        <p className="text-sm mt-1">
+                          Click the{" "}
+                          <Plus className="h-3 w-3 inline-block mx-1" /> icon
+                          above to add "{categorySearchTerm}" as a new category
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </SelectContent>
-            </Select>
+              )}
+            </div>
 
             <div className="space-y-4">
               <div className="flex items-center space-x-2 mt-4">
