@@ -14,7 +14,6 @@ const axios = require("axios");
 
 function registerEditReportHandlers() {
   const db = databaseManager.getInstance().getDatabase();
-  log.info("Database instance : ", db);
 
   async function processOpportunityToEarnData(opportunityToEarnData, caseId) {
     try {

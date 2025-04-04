@@ -7,7 +7,6 @@ const axios = require("axios");
 
 function registerVoucherIpc() {
   const db = databaseManager.getInstance().getDatabase();
-  log.info("Database instance : ", db);
 
   ipcMain.handle("update-voucher", async (event, data) => {
     log.info({ data });

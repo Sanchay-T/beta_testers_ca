@@ -674,7 +674,6 @@ function preprocessPayload(payload) {
 
 function generateReportIpc(tmpdir_path) {
   db = databaseManager.getInstance().getDatabase();
-  log.info("Database instance : ", db);
 
   const baseUrl = `http://localhost:7500`;
   const generateReportEndpoint = `${baseUrl}/analyze-statements/`;

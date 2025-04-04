@@ -157,6 +157,7 @@ contextBridge.exposeInMainWorld("electron", {
     checkLicense: () => ipcRenderer.invoke("license:check"),
     activateLicense: (credentials) =>
       ipcRenderer.invoke("license:activate", credentials),
+    searchnNetworkLicenses: (networkLicense) => ipcRenderer.invoke("license:search-network-licenses", networkLicense),
   },
 
   getRecentReports: () => ipcRenderer.invoke("get-recent-reports"),
@@ -189,7 +190,7 @@ contextBridge.exposeInMainWorld("electron", {
 
   // Add auto-update related methods
   updates: {
-    checkForUpdates: () => ipcRenderer.invoke("check-for-updates", () => {}),
+    checkForUpdates: () => ipcRenderer.invoke("check-for-updates", () => { }),
     // downloadUpdate: () => ipcRenderer.invoke('download-update'),
     // installUpdate: () => ipcRenderer.invoke('install-update'),
     onUpdateStatus: (callback) =>

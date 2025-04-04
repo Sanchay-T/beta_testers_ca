@@ -15,7 +15,6 @@ const axios = require("axios");
 function registerExcelDownloadHandlers(downloadPath) {
 
     const db = databaseManager.getInstance().getDatabase();
-    log.info("Database instance : ", db);
 
     const formatDate = (dateString) => {
         const date = new Date(dateString); // Parse the date string
@@ -100,7 +99,7 @@ function registerExcelDownloadHandlers(downloadPath) {
             }
 
             if (transactionsForCase.length > 0) {
-                log.info({transactionsForCase})
+                log.info({ transactionsForCase })
 
                 formattedTransactions = transactionsForCase.map(txn => {
 

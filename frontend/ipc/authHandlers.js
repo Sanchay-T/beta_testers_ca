@@ -5,13 +5,58 @@ const licenseManager = require("../LicenseManager");
 const { users } = require("../db/schema/User");
 const bcrypt = require("bcrypt");
 const databaseManager = require("../db/db");
-
 const { eq, exists, sql } = require("drizzle-orm");
+const bonjour = require("bonjour")();
 
 log.info("License manager process.env.NODE_ENV", process.env.NODE_ENV);
 
 const toValidateLicense = process.env.VALIDATE_LICENSE == "true";
 log.info("Validate License : ", toValidateLicense);
+
+
+/**
+ * Discover mDNS services by type.
+ * @param {string} serviceType - The type of service to discover (required).
+ * @param {number} timeout - Time in milliseconds to wait for discovery (default: 5000).
+ * @returns {Promise<Array>} - Resolves with an array of discovered services.
+ */
+function discoverMdnsServices(serviceType = '', timeout = 5000) {
+  return new Promise((resolve, reject) => {
+    if (!serviceType) {
+      return reject(new Error("Service type is required for mDNS discovery."));
+    }
+    const discoveredServices = [];
+    const browser = bonjour.find({ type: serviceType });
+
+    // Listen for each service as it comes online
+    browser.on('up', (service) => {
+      const serviceInfo = {
+        name: service.name || "Unknown",
+        host: service.host || "",
+        // Try using the referer's address; fallback to addresses array if needed.
+        ip: (service.referer && service.referer.address) || (service.addresses && service.addresses[0]) || "",
+        port: service.port || ""
+      };
+
+      // Deduplicate services based on IP and port
+      if (!discoveredServices.some(s => s.ip === serviceInfo.ip && s.port === serviceInfo.port)) {
+        discoveredServices.push(serviceInfo);
+      }
+    });
+
+    // Handle possible errors
+    browser.on('error', (err) => {
+      browser.stop();
+      reject(err);
+    });
+
+    // Stop the browser after the timeout and resolve with the discovered services
+    setTimeout(() => {
+      browser.stop();
+      resolve(discoveredServices);
+    }, timeout);
+  });
+}
 
 function registerAuthHandlers() {
   const db = databaseManager.getInstance().getDatabase();
@@ -304,6 +349,47 @@ function registerAuthHandlers() {
         success: false,
         message: "An unexpected error occurred while resetting your password. Please try again later."
       };
+    }
+  });
+
+
+  // // IPC Handler for searching network licenses
+  // ipcMain.handle("license:search-network-licenses", async (event) => {
+  //   try {
+  //     // You can use networkLicense parameter to perform an actual search,
+  //     // for example by querying a remote server or a local database.
+  //     // For demonstration, we simulate the search with a hardcoded response:
+  //     const licenses = [
+  //       { id: 1, name: "License A", networkIp: "192.168.1.10" },
+  //       { id: 2, name: "License B", networkIp: "192.168.1.11" },
+  //       { id: 3, name: "License C", networkIp: "192.168.1.12" },
+  //     ];
+
+  //     // Simulate a delay if needed:
+  //     await new Promise((resolve) => setTimeout(resolve, 1500));
+
+  //     return { success: true, licenses };
+  //   } catch (error) {
+  //     console.error("Error searching network licenses:", error);
+  //     return { success: false, error: error.message };
+  //   }
+  // });
+
+
+
+
+
+  // IPC Handler for searching network licenses using mDNS discovery
+  ipcMain.handle("license:search-network-licenses", async (event, networkLicense) => {
+    try {
+      // Optionally, if networkLicense contains a specific service type, use it; otherwise default to "license"
+      const serviceType = networkLicense?.serviceType || "license";
+      // Discover services via mDNS
+      const licenses = await discoverMdnsServices(serviceType, 5000);
+      return { success: true, licenses };
+    } catch (error) {
+      console.error("Error searching network licenses:", error);
+      return { success: false, error: error.message };
     }
   });
 }

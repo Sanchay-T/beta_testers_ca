@@ -17,6 +17,7 @@ import UpdateNotification from "./components/UpdateNotification";
 import { useLoading } from "./contexts/LoadingContext";
 import { useToast } from "./hooks/use-toast";
 import { Toaster } from "./components/ui/toaster";
+import LicenseActivation from "./components/Authentication/LicenseActivation";
 
 function App() {
   const [showIntro, setShowIntro] = useState(true);
@@ -79,6 +80,7 @@ function App() {
               <Routes>
                 {/* Public route */}
                 <Route path="/login" element={<Login />} />
+                <Route path="/license-activation" element={<LicenseActivation />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
 
 

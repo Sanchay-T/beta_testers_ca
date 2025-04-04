@@ -13,7 +13,6 @@ const sessionManager = require('../SessionManager');
 
 function registerMainDashboardIpc(tmpdir_path) {
   const db = databaseManager.getInstance().getDatabase();
-  log.info("Database instance : ", db);
 
   const userId = sessionManager.getUserId() || 1;
   log.info("User ID : ", userId);

@@ -26,11 +26,31 @@ const { registerTallyIpc } = require("./ipc/tallyHandlers.js");
 const { registerVoucherIpc } = require("./ipc/VoucherHandlers.js");
 const { registerExcelDownloadHandlers } = require("./ipc/excelDownloadHandler")
 const databaseManager = require("./db/db");
-const { spawn, execFile } = require("child_process");
+const { spawn, execFile, exec, execSync } = require("child_process");
 const log = require("electron-log");
 const portscanner = require("portscanner"); // Import portscanner
 const { autoUpdater } = require("electron-updater");
 const { getdata } = require("./ipc/getData.js");
+const bonjour = require('bonjour')();
+
+function discoverMdnsServices(serviceType = '', callback) {
+  bonjour.find({ type: serviceType }, (service) => {
+    const serviceInfo = {
+      name: service.name,
+      host: service.host,
+      ip: service.referer.address,
+      port: service.port
+    };
+
+    // console.log('🔍 Found service:', serviceInfo);
+
+    if (callback && typeof callback === 'function') {
+      callback(serviceInfo);
+    }
+  });
+}
+
+
 
 // Configure electron-log
 log.transports.console.level = "debug"; // Set the log level
@@ -164,6 +184,102 @@ let win = null;
 let pythonProcess = null;
 
 const BACKEND_PORT = 5000; // Replace with the port your backend is listening to
+
+// frontend\license-server.exe
+const SERVICE_NAME = "LicensingServer";
+const LICENSE_SERVER_EXECUTABLE = path.join(__dirname, "license-server.exe");
+console.log("LICENSE_SERVE EXECUTABLE: ", LICENSE_SERVER_EXECUTABLE);
+
+// const RUST_EXECUTABLE = "C:\\path\\to\\rust.exe"; // Change this to your actual path
+
+// Function to check if service exists
+async function checkServiceExists(callback) {
+  exec(`sc query ${SERVICE_NAME}`, (error, stdout, stderr) => {
+    if (error || stderr) {
+      log.error("ERROR checking service existence:");
+      if (error) {
+        let extendedErrorMessage;
+        try {
+          extendedErrorMessage = execSync(`net helpmsg ${error.code}`, { encoding: 'utf8' }).trim();
+        } catch (syncError) {
+          extendedErrorMessage = 'Could not retrieve extended error message';
+        }
+        log.error("Error Message:", error.message);
+        log.error("Error Code:", error.code);
+        log.error("Extended Error Message:", extendedErrorMessage);
+        log.error("Error Signal:", error.signal);
+        log.error("Executed Command:", error.cmd);
+        log.error("Full Error Object:", JSON.stringify(error, null, 2));
+      }
+      log.error("STDERR checking service existence:", stderr || "None");
+      callback(false);
+    }
+    if (stdout.includes("FAILED") || stdout.includes("does not exist")) {
+      log.info("Service existence error: ", stdout);
+      callback(false);
+    } else {
+      log.info("Service probably exists: ", stdout);
+      callback(true);
+    }
+  });
+}
+
+
+async function createAndStartService() {
+  const createServiceCommand = `sc create ${SERVICE_NAME} binPath= "${RUST_EXECUTABLE}" start= auto`;
+
+  exec(createServiceCommand, (error, stdout, stderr) => {
+    if (error || stderr) {
+      let extendedErrorMessage = '';
+      if (error) {
+        try {
+          extendedErrorMessage = execSync(`net helpmsg ${error.code}`, { encoding: 'utf8' }).trim();
+        } catch (syncError) {
+          extendedErrorMessage = 'Could not retrieve extended error message';
+        }
+        log.error("Error creating service:");
+        log.error("Error Message:", error.message);
+        log.error("Error Code:", error.code);
+        log.error("Extended Error Message:", extendedErrorMessage);
+        log.error("Error Signal:", error.signal);
+        log.error("Executed Command:", error.cmd);
+        log.error("Full Error Object:", JSON.stringify(error, null, 2));
+      }
+      if (stderr) {
+        log.error("STDERR:", stderr);
+      }
+      return;
+    }
+    log.info("Service created successfully.");
+
+    // Start the service
+    exec(`sc start ${SERVICE_NAME}`, (err, out, errOut) => {
+      if (err || errOut) {
+        let extendedErrorMessage2 = '';
+        if (err) {
+          try {
+            extendedErrorMessage2 = execSync(`net helpmsg ${err.code}`, { encoding: 'utf8' }).trim();
+          } catch (syncError) {
+            extendedErrorMessage2 = 'Could not retrieve extended error message';
+          }
+          log.error("Error starting service:");
+          log.error("Error Message:", err.message);
+          log.error("Error Code:", err.code);
+          log.error("Extended Error Message:", extendedErrorMessage2);
+          log.error("Error Signal:", err.signal);
+          log.error("Executed Command:", err.cmd);
+          log.error("Full Error Object:", JSON.stringify(err, null, 2));
+        }
+        if (errOut) {
+          log.error("STDERR:", errOut);
+        }
+        return;
+      }
+      log.info("Rust Licensing Server started successfully.");
+    });
+  });
+}
+
 
 // Listen for remaining seconds updates
 // sessionManager.on('remainingSecondsUpdated', (seconds) => {
@@ -619,11 +735,75 @@ app.setName("CypherSol Dev");
 
 app.whenReady().then(async () => {
   log.info("App is ready", app.getPath("userData"));
+  // Example usage
+  log.info("📡 Discovering services...");
+  discoverMdnsServices('', async (service) => {
+    log.info('📡 Service Found:', service);
+
+    // Using host (e.g., 'DESKTOP-85MU4TU.license-server.local')
+    const healthUrl = `http://${service.name}:${service.port}/api/health`;
+    try {
+      const response = await fetch(healthUrl, {
+        headers: {
+          Accept: 'text/html' // Explicitly request HTML
+        }
+      });
+
+      const html = await response.text();
+
+      console.log("✅ Health Check Response:\n", html);
+    } catch (err) {
+      console.error("❌ Error fetching health check:", err.message);
+    }
+
+
+    log.info("\n*********************************************\n");
+  });
+
+  // return;
+
+
+  // await checkServiceExists(async (exists) => {
+  //   if (!exists) {
+  //     log.info("Service does not exist. Creating...");
+  //     await createAndStartService();
+  //   } else {
+  //     log.info("Service already exists. Starting...");
+  //     exec(`sc start ${SERVICE_NAME}`, (error, stdout, stderr) => {
+  //       log.info("Service start output:", stdout);
+  //       if (error || stderr) {
+  //         let extendedErrorMessage = '';
+  //         if (error) {
+  //           try {
+  //             extendedErrorMessage = execSync(`net helpmsg ${error.code}`, { encoding: 'utf8' }).trim();
+  //           } catch (syncError) {
+  //             extendedErrorMessage = 'Could not retrieve extended error message';
+  //           }
+  //           log.error("Error starting service:");
+  //           log.error("Error Message:", error.message);
+  //           log.error("Error Code:", error.code);
+  //           log.error("Extended Error Message:", extendedErrorMessage);
+  //           log.error("Error Signal:", error.signal);
+  //           log.error("Executed Command:", error.cmd);
+  //           log.error("Full Error Object:", JSON.stringify(error, null, 2));
+  //         }
+  //         if (stderr) {
+  //           log.error("STDERR:", stderr);
+  //         }
+  //         return;
+  //       }
+  //       log.info("Rust service started.");
+  //     });
+  //   }
+  // });
+
+  // return;
+
   try {
     try {
       const dbManager = databaseManager.getInstance();
       await dbManager.initialize(app.getPath("userData"));
-      log.info("Database initialized successfully", dbManager.getDatabase());
+      log.info("Database initialized successfully");
     } catch (error) {
       log.error("Database initialization failed:", error);
       throw error;

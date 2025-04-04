@@ -5,7 +5,9 @@
   "main": "main.js",
   "icon": "./assets/cyphersol-icon.png",
   "scripts": {
-    "start": "electron main.js",
+     "start_": "powershell -Command \"Start-Process cmd -ArgumentList '/k cd /d \\\"C:\\Users\\admin\\Desktop\\CA-Offline\\frontend\\\" && npm run electron' -Verb runAs\"",
+    "start": "npm run electron",
+    "electron": "electron main.js",
     "start:fastapi": "cd ../ && uvicorn backend.main:app --reload --port 7500",
     "start:react": "cd react-app && npm start",
     "start:electron": "cross-env NODE_ENV=development wait-on http://localhost:3000 && electron main.js",
@@ -131,6 +133,7 @@
     "@radix-ui/react-toast": "^1.2.4",
     "axios": "^1.7.9",
     "bcrypt": "^5.1.1",
+    "bonjour": "^3.5.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "crypto": "^1.0.1",

@@ -12,8 +12,8 @@ const SERVICE_NAME = "Cyphersol-dumm";
 const LICENSE_KEY_ACCOUNT = "license-key";
 
 
-const API_URL = isDev ? "https://cyphersol-uat.duckdns.org/validate-offlineapp-login/" : process.env.API_URL || "https://cyphersol.co.in/validate-offlineapp-login/";
-// const API_URL = "https://cyphersol.co.in/validate-offlineapp-login/";
+// const API_URL = isDev ? "https://cyphersol-uat.duckdns.org/validate-offlineapp-login/" : process.env.API_URL || "https://cyphersol.co.in/validate-offlineapp-login/";
+const API_URL = "https://cyphersol.co.in/validate-offlineapp-login/";
 
 log.info("API URL : ", API_URL)
 

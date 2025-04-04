@@ -7,7 +7,6 @@ const { transactions } = require("../db/schema/Transactions");
 
 function registerCaseDashboardIpc() {
   const db = databaseManager.getInstance().getDatabase();
-  log.info("Database instance : ", db);
 
   ipcMain.handle("get-statements", async (event, caseId) => {
     const result = await db

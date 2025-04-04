@@ -8,7 +8,6 @@ const { statements } = require("../db/schema/Statement");
 function getdata() {
 
   const db = databaseManager.getInstance().getDatabase();
-  log.info("Database instance : ", db);
 
   ipcMain.handle("get-Report-Name", async (event, caseId) => {
     log.info("Case ID : ", caseId);

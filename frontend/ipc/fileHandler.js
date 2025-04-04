@@ -8,7 +8,6 @@ const { users } = require('../db/schema/User');
 async function registerOpenFileIpc(BASE_DIR) {
 
     const db = databaseManager.getInstance().getDatabase();
-    log.info("Database instance : ", db);
 
     // console.log("Registering open-file IPC handler");
     // console.log("Trying Db connection");

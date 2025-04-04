@@ -32,7 +32,6 @@ const sanitizeJSONString = (jsonString) => {
 
 function registerIndividualDashboardIpc() {
   const db = databaseManager.getInstance().getDatabase();
-  log.info("Database instance : ", db);
   // Handler for getting EOD balance
   ipcMain.handle("get-eod-balance", async (event, caseId) => {
     if (!caseId) {

@@ -208,11 +208,11 @@ const createStatement = async (fileDetail, caseId) => {
 };
 
 // Helper function to process transactions
-const processTransactions = async (transactions, fileDetail, statementId,index) => {
+const processTransactions = async (transactions, fileDetail, statementId, index) => {
   try {
     // Transform and validate transactions for this statement
     const statementTransactions = transactions
-      .filter((t) => t.Bank === fileDetail.bankName+index)
+      .filter((t) => t.Bank === fileDetail.bankName + index)
       .map((transaction) => {
         try {
           return validateAndTransformTransaction(transaction, statementId);
@@ -252,7 +252,6 @@ async function getModifiedTransactions() {
 function registerReportHandlers(tmpdir_path) {
 
   db = databaseManager.getInstance().getDatabase();
-  log.info("Database instance : ", db);
 
   ipcMain.handle("get-recent-reports", async (event) => {
     try {

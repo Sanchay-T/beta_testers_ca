@@ -8,7 +8,6 @@ const { cases } = require("../db/schema/Cases");
 
 function registerOpportunityToEarnIpc() {
   const db = databaseManager.getInstance().getDatabase();
-  log.info("Database instance : ", db);
 
   ipcMain.handle("getOpportunityToEarn", async () => {
     try {

@@ -19,7 +19,6 @@ const { tallyVoucher } = require("../db/schema/TallyVoucher");
 
 function registerTallyIpc() {
   const db = databaseManager.getInstance().getDatabase();
-  log.info("Database instance : ", db);
 
   ipcMain.handle(
     "get-tally-voucher-transactions",
@@ -283,10 +282,10 @@ function registerTallyIpc() {
             failed_reason: isSuccessful
               ? ""
               : JSON.stringify(
-                  uploadResponse.failedTransactions.find(
-                    (failed) => failed.id === transaction.id
-                  ) || "Unknown failure"
-                ),
+                uploadResponse.failedTransactions.find(
+                  (failed) => failed.id === transaction.id
+                ) || "Unknown failure"
+              ),
             bank_ledger: bankLedger || "",
             result: isSuccessful ? 1 : 0,
             createdAt: new Date(),
