@@ -303,6 +303,13 @@ function buildTallyPrimeLedgerXml({
   date,
   companyName,
 }) {
+  companyName = companyName.replace(/&/g, "&amp;");
+  ledgerName = ledgerName.replace(/&/g, "&amp;");
+  ledgerGroup = ledgerGroup.replace(/&/g, "&amp;");
+  state = state.replace(/&/g, "&amp;");
+  Address = Address.replace(/&/g, "&amp;");
+  country = country.replace(/&/g, "&amp;");
+  GSTnum = GSTnum.replace(/&/g, "&amp;");
   return `
 <ENVELOPE>
   <HEADER>
