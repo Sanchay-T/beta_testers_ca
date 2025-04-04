@@ -1256,7 +1256,7 @@ const TallyTable = ({
             {selectedVoucher === "Payment Receipt Contra" &&
               !isLedgersCreated && (
                 <p className="mt-2 text-sm text-red-500 ml-2">
-                  First create ledgers in order to upload to tally.
+                  First create all ledgers in order to upload to tally.
                 </p>
               )}
           </div>

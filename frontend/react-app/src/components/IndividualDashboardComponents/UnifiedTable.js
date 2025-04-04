@@ -110,6 +110,9 @@ const DataTable = ({
   const [pdfBlob, setPdfBlob] = useState(null);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [currentTransactionType, setCurrentTransactionType] = useState(null);
+  const [typeErrorMessage, setTypeErrorMessage] = useState("");
+
   const [columnsToIgnore, setColumnsToIgnore] = useState([
     "id",
     "transactionId",
@@ -904,6 +907,7 @@ const DataTable = ({
     setSelectedCategories([]);
     setCategorySearchTerm("");
     setExistingFilterData([]);
+    setGlobalSelectedRows(new Set());
   };
 
   const getUniqueValues = (columnName) => {
@@ -1151,6 +1155,7 @@ const DataTable = ({
           transaction: row,
           isDebit: row.credit === 0,
         });
+        setCurrentTransactionType(row.debit >0 ? "debit" : "credit");
         setShowClassificationModal(true);
       } else {
         // Bulk update flow: simply show the classification modal.
@@ -1424,6 +1429,70 @@ const DataTable = ({
       bytes[i] = binaryString.charCodeAt(i);
     }
     return new Blob([bytes], { type: type });
+  };
+
+
+  const checkTransactionTypesConsistency = () => {
+    if (globalSelectedRows.size === 0) return true;
+    
+    let hasDebit = false;
+    let hasCredit = false;
+    let firstType = null;
+    let allSameType = true;
+    
+    // Check all selected transactions
+    for (const id of globalSelectedRows) {
+      const transaction = filteredData.find(tx => tx.id === id);
+      if (!transaction) continue;
+      
+      // Determine transaction type
+      const isDebit = Number(transaction.debit) > 0;
+      const isCredit = Number(transaction.credit) > 0;
+      
+      // Track types
+      if (isDebit) hasDebit = true;
+      if (isCredit) hasCredit = true;
+      
+      // Set the first type we encounter
+      if (firstType === null) {
+        firstType = isDebit ? 'debit' : 'credit';
+      } else {
+        // Compare current transaction type with first type
+        const currentType = isDebit ? 'debit' : 'credit';
+        if (currentType !== firstType) {
+          allSameType = false;
+        }
+      }
+    }
+    
+    return allSameType;
+  };
+
+  const openBulkCategoryModal = () => {
+    const consistentTypes = checkTransactionTypesConsistency();
+    
+    if (!consistentTypes) {
+      setTypeErrorMessage("Please select transactions of the same type (all debit or all credit)");
+      setBulkCategoryModalOpen(true);
+    }  else {
+      setTypeErrorMessage("");
+      
+      // Just check the first transaction's type since we know they're all consistent
+      if (globalSelectedRows.size > 0) {
+        const firstId = Array.from(globalSelectedRows)[0];
+        const transaction = filteredData.find(tx => tx.id === firstId);
+        
+        if (transaction) {
+          console.log({aiyaz:transaction,debit:transaction.debit})
+          // Set transaction type based on first transaction
+          const transactionType = Number(transaction.debit) > 0 ? 'debit' : 'credit';
+          setCurrentTransactionType(transactionType);
+        }
+
+      }
+      setBulkCategoryModalOpen(true);
+
+    }
   };
 
   return (
@@ -2216,7 +2285,12 @@ const DataTable = ({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
+          {typeErrorMessage && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+              <span className="block sm:inline">{typeErrorMessage}</span>
+            </div>
+          )}
+          {!typeErrorMessage&&<div className="space-y-4">
             {/* Collapsible Command component */}
             <div className="relative w-full" ref={commandRef}>
               {/* Trigger button styled like a Select */}
@@ -2362,12 +2436,15 @@ const DataTable = ({
                 </div>
               )}
             </div>
-          </div>
+          </div>}
 
           <DialogFooter>
             <Button
               variant="ghost"
-              onClick={() => setBulkCategoryModalOpen(false)}
+              onClick={() => {
+                setBulkCategoryModalOpen(false);
+          setTypeErrorMessage("");
+              }}
             >
               Cancel
             </Button>
@@ -2377,8 +2454,10 @@ const DataTable = ({
                 setBulkCategoryModalOpen(false);
                 // setConfirmationModalOpen(true);
                 handleBulkCategoryChange();
+
+                
               }}
-              disabled={!selectedBulkCategory}
+              disabled={!selectedBulkCategory || typeErrorMessage}
             >
               Update Categories
             </Button>
@@ -2432,14 +2511,14 @@ const DataTable = ({
             value={selectedType}
             onValueChange={setSelectedType}
             className="space-y-3"
-          >
-            {(!pendingCategoryChange?.isDebit || bulkCategoryModalOpen) && (
+          >{console.log({currentTransactionType,hey:pendingCategoryChange?.isDebit})}
+            {(currentTransactionType === 'credit' ) && (
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="Income" id="income" />
                 <Label htmlFor="Income">Income</Label>
               </div>
             )}
-            {(pendingCategoryChange?.isDebit || bulkCategoryModalOpen) && (
+            {( currentTransactionType === 'debit' ) && (
               <div className="flex items-center space-x-2">
                 <RadioGroupItem
                   value="Important Expenses / Payments"
@@ -2448,7 +2527,7 @@ const DataTable = ({
                 <Label htmlFor="important_expenses">Important Expenses</Label>
               </div>
             )}
-            {(pendingCategoryChange?.isDebit || bulkCategoryModalOpen) && (
+            {( currentTransactionType === 'debit' ) && (
               <div className="flex items-center space-x-2">
                 <RadioGroupItem
                   value="Other Expenses / Payments"
@@ -2840,7 +2919,9 @@ const DataTable = ({
           {globalSelectedRows.size > 0 && (
             <Button
               variant="secondary"
-              onClick={() => setBulkCategoryModalOpen(true)}
+              // onClick={() => setBulkCategoryModalOpen(true)}
+              onClick={openBulkCategoryModal}
+
             >
               Update Selected Categories ({globalSelectedRows.size})
             </Button>
