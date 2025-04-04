@@ -342,7 +342,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
           billRefernce: transaction.bill_reference || "",
           DrLedger: isEmptyLedgersSelected ? "Suspense" : dr_ledger,
           CrLedger: isEmptyLedgersSelected ? "Suspense" : cr_ledger,
-          amount: parseInt(transaction.amount),
+          amount: transaction.amount,
           narration: transaction.narration,
           voucherName: tempVoucherType,
           id: transaction.id,
