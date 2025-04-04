@@ -460,18 +460,7 @@ def monthly( df):
 
 def eod(df_original):
     df = df_original.copy()
-def eod(df_original):
-    df = df_original.copy()
     df["Value Date"] = pd.to_datetime(
-        df["Value Date"], format="%d-%m-%Y", errors="coerce")
-    df.dropna(subset=["Value Date"], inplace=True)
-    if df.empty: return pd.DataFrame()  # Handle empty df after NaT drop
-    df["Balance"] = pd.to_numeric(df["Balance"], errors="coerce")
-    df.dropna(subset=["Balance"], inplace=True)  # Option: Drop rows with invalid balances
-    if df.empty: return pd.DataFrame()  # Handle empty df after balance cleaning
-    df.sort_values(by=["Bank", "Value Date"], inplace=True)  # Sort by Bank too for consistency
-    df["YearMonth"] = df["Value Date"].dt.strftime("%Y%m")  # Keep as string initially for easier date range generation
-    df["MonthStr"] = df["Value Date"].dt.strftime("%b-%Y")
         df["Value Date"], format="%d-%m-%Y", errors="coerce")
     df.dropna(subset=["Value Date"], inplace=True)
     if df.empty: return pd.DataFrame()  # Handle empty df after NaT drop
@@ -484,52 +473,10 @@ def eod(df_original):
     df["Date"] = df["Value Date"].dt.day
     global_max_date = df["Value Date"].max() if not df.empty else None
     df = df[["Value Date", "Balance", "YearMonth", "MonthStr", "Date", "Bank"]]
-    global_max_date = df["Value Date"].max() if not df.empty else None
-    df = df[["Value Date", "Balance", "YearMonth", "MonthStr", "Date", "Bank"]]
     bank_names = df["Bank"].unique().tolist()
     multiple_eods = []
     all_banks_processed_months = set()  # Keep track of all month columns across banks
-    all_banks_processed_months = set()  # Keep track of all month columns across banks
     for bank in bank_names:
-        idf = df[df["Bank"] == bank].copy()  # Use copy for safety
-        if idf.empty: continue  # Skip banks with no valid data
-        min_ym_str = idf['YearMonth'].min()
-        max_ym_str = idf['YearMonth'].max()
-        start_date = pd.to_datetime(min_ym_str, format='%Y%m')
-        end_date = pd.to_datetime(max_ym_str, format='%Y%m')
-        all_month_starts = pd.date_range(start=start_date, end=end_date, freq='MS')
-        result_eod_bank = pd.DataFrame()  # Accumulate results for this bank
-        previous_month_end_balance = None  # Reset for each bank
-        processed_months_strs_bank = []  # Keep track of month strings in order for THIS bank
-        for month_start in all_month_starts:
-            current_ym_str = month_start.strftime('%Y%m')
-            current_month_str = month_start.strftime('%b-%Y')
-            processed_months_strs_bank.append(current_month_str)  # Add to ordered list for pivoting
-            all_banks_processed_months.add(current_month_str)  # Add to global set for final merging
-            month_data_exists = current_ym_str in idf['YearMonth'].values
-            eod_month_df = pd.DataFrame()  # Initialize DataFrame for the current month
-            if month_data_exists:
-                month_subset = idf.loc[idf["YearMonth"] == current_ym_str]
-                eod_month_df = month_subset.drop_duplicates(subset="Date", keep="last").copy()  # Use copy
-                eod_month_df = eod_month_df.set_index("Date")
-                all_days_index = pd.RangeIndex(start=1, stop=32, name="Date")
-                eod_month_df = eod_month_df.reindex(all_days_index)
-                eod_month_df["Bank"] = bank
-                eod_month_df["MonthStr"] = current_month_str
-                eod_month_df["YearMonth"] = current_ym_str
-                eod_month_df.reset_index(inplace=True)  # Get 'Date' back as column
-                if previous_month_end_balance is not None and pd.isna(eod_month_df.loc[0, "Balance"]):
-                    first_valid_idx = eod_month_df['Balance'].first_valid_index()
-                    if first_valid_idx is not None:
-                        eod_month_df.loc[0:first_valid_idx - 1, 'Balance'] = previous_month_end_balance
-                    else:  # Whole month was NaN initially (only possible if input month_subset was empty, but check exists)
-                        eod_month_df['Balance'] = previous_month_end_balance
-                eod_month_df["Balance"] = eod_month_df["Balance"].ffill()
-                fill_value = 0.0 if previous_month_end_balance is None else previous_month_end_balance
-                eod_month_df["Balance"] = eod_month_df["Balance"].fillna(fill_value)
-                if not eod_month_df.empty:
-                    previous_month_end_balance = eod_month_df["Balance"].iloc[-1]
-
         idf = df[df["Bank"] == bank].copy()  # Use copy for safety
         if idf.empty: continue  # Skip banks with no valid data
         min_ym_str = idf['YearMonth'].min()
@@ -611,72 +558,7 @@ def eod(df_original):
             except ValueError:
                 print(f"Could not parse last column '{last_month_in_pivot}' during final day zeroing.",
                                 UserWarning)
-                fill_balance = 0.0 if previous_month_end_balance is None else previous_month_end_balance
-                eod_month_df = pd.DataFrame({
-                    "Date": range(1, 32),
-                    "Balance": fill_balance,
-                    "YearMonth": current_ym_str,
-                    "MonthStr": current_month_str,
-                    "Bank": bank,
-                    "Value Date": pd.NaT  # Or None
-                })
-            result_eod_bank = pd.concat([result_eod_bank, eod_month_df], ignore_index=True)
-        if result_eod_bank.empty: continue  # Skip if bank had no processable data at all
-        pivot_df = result_eod_bank.pivot(
-            index="Date", columns="MonthStr", values="Balance"
-        )  # Index is 'Date' (1-31)
-        pivot_df = pivot_df.reindex(columns=processed_months_strs_bank)
-        pivot_df.reset_index(inplace=True)
-        pivot_df.rename(columns={"Date": "Day"}, inplace=True)
-        day_col_name = "Day"  # Use the actual column name
-        pivot_numeric_cols = pivot_df.columns.difference([day_col_name])  # Exclude 'Day'/'Date'
-        mask = pd.DataFrame(False, index=pivot_df.index, columns=pivot_numeric_cols)
-        for col in pivot_numeric_cols:
-            try:
-                month_dt = pd.to_datetime(col, format="%b-%Y")
-                days_in_month = month_dt.days_in_month
-                # Use the correct day column name here
-                mask[col] = pivot_df[day_col_name] > days_in_month
-            except ValueError:
-                print(f"Could not parse column '{col}' to determine days in month during zeroing.",
-                                UserWarning)
-        pivot_df.loc[:, pivot_numeric_cols] = pivot_df.loc[:, pivot_numeric_cols].mask(mask, 0.0)
-        if global_max_date and not pivot_df.empty:
-            last_month_in_pivot = pivot_df.columns[-1]
-            try:
-                last_month_dt = pd.to_datetime(last_month_in_pivot, format="%b-%Y")
-                global_max_month_dt = pd.Timestamp(global_max_date.year, global_max_date.month, 1)
-                if last_month_dt == global_max_month_dt:
-                    end_day_of_global_max = global_max_date.day
-                    pivot_df.loc[pivot_df[day_col_name] > end_day_of_global_max, last_month_in_pivot] = 0.0
-            except ValueError:
-                print(f"Could not parse last column '{last_month_in_pivot}' during final day zeroing.",
-                                UserWarning)
         multiple_eods.append(pivot_df)
-    if not multiple_eods:
-        return pd.DataFrame()  # No data processed for any bank
-    if len(multiple_eods) == 1:
-        adf = multiple_eods[0]
-    else:
-        adf = process_repeating_columns(
-            multiple_eods)  # Make sure this function correctly merges based on 'Day'
-    final_ordered_months = sorted(
-        list(all_banks_processed_months),
-        key=lambda x: pd.to_datetime(x, format='%b-%Y', errors='coerce')
-    )
-    day_col_name = "Day" if "Day" in adf.columns else ("Date" if "Date" in adf.columns else None)
-    if day_col_name:
-        adf = adf.reindex(columns=[day_col_name] + final_ordered_months, fill_value=0.0)
-    else:
-        adf = adf.reindex(columns=final_ordered_months, fill_value=0.0)
-    day_col_name = "Day" if "Day" in adf.columns else None  # Find Day column name again
-    numeric_cols_for_sum = adf.columns.difference([day_col_name]) if day_col_name else adf.columns
-    sum_row_data = adf.iloc[0:31][numeric_cols_for_sum].sum(axis=0)
-    if day_col_name:
-        sum_row_data[day_col_name] = 'Total'  # Add the label for the 'Day' column
-    total_row_df = pd.DataFrame([sum_row_data], columns=adf.columns)
-    total_df = pd.concat([adf, total_row_df], ignore_index=True)
-    all_df = monthly(total_df)  # Assuming this function exists
     if not multiple_eods:
         return pd.DataFrame()  # No data processed for any bank
     if len(multiple_eods) == 1:
@@ -762,8 +644,6 @@ def opening_and_closing_bal(edf):
 
         return opening_bal, closing_bal
     
-        return opening_bal, closing_bal
-    
 def avgs_df( df):
     # quarterly_avg
     if df.shape[1] > 3:
@@ -836,73 +716,6 @@ def avgs_df( df):
 
     return df
 
-def calculate_fixed_day_average(data):
-        day_col_name = 'Day'
-        if day_col_name not in data.columns:
-            return pd.DataFrame()  # Return empty if essential column is missing
-        df = data.copy()
-        month_columns = [col for col in df.columns if col != day_col_name]
-        if not month_columns:
-            return pd.DataFrame()
-        calc_df = df[pd.to_numeric(df[day_col_name], errors='coerce').notna()]
-        calc_df[day_col_name] = calc_df[day_col_name].astype(int)  # Ensure Day is int
-        calc_df = calc_df[calc_df[day_col_name].between(1, 31)].reset_index(drop=True)
-        for col in month_columns:
-            calc_df[col] = pd.to_numeric(calc_df[col], errors='coerce').fillna(
-                0)  # Coerce errors to NaN, then fill with 0
-        daily_averages = {day_col_name: "Daily_Avg"}
-        for month_str in month_columns:
-            try:
-                month_dt = pd.to_datetime(month_str, format="%b-%Y")
-                days_in_month = month_dt.days_in_month
-                valid_day_data = calc_df.loc[calc_df[day_col_name] <= days_in_month, month_str]
-                month_sum = valid_day_data.sum()
-                if days_in_month > 0:
-                    daily_averages[month_str] = month_sum / float(days_in_month)
-                else:
-                    daily_averages[month_str] = np.nan
-            except Exception as e:
-                daily_averages[month_str] = np.nan
-        Average_df = pd.DataFrame([daily_averages])
-        sets_of_days = [
-            {"days": [5, 15, 25], "label": "Avg_Days_5_15_25"},
-            {"days": [5, 10, 15, 25], "label": "Avg_Days_5_10_15_25"},
-            {"days": [1, 5, 10, 15, 20, 25], "label": "Avg_Days_1_5_10_15_20_25"},
-            {"days": [8, 10, 15, 20, 25], "label": "Avg_Days_8_10_15_20_25"},
-            {"days": [1, 5, 10, 15, 20], "label": "Avg_Days_1_5_10_15_20"},
-            {"days": [5, 10, 15, 20, 25], "label": "Avg_Days_5_10_15_20_25"},
-            {"days": [1, 7, 14, 21, 28], "label": "Avg_Days_1_7_14_21_28"},
-            {"days": [1, 5, 10, 15, 25], "label": "Avg_Days_1_5_10_15_25"},
-            {"days": [5, 15, 25, 30], "label": "Avg_Days_5_15_25_30"},
-            {"days": [2, 4, 10, 17, 21], "label": "Avg_Days_2_4_10_17_25"},
-            {"days": [5, 15, 25, 30], "label": "Avg_Days_5_15_25_30"},
-            {"days": [1, 5, 15, 20, 25], "label": "Avg_Days_1_5_15_20_25"},
-            {"days": [4, 5, 7, 10, 15, 25], "label": "Avg_Days_4_5_7_10_15_25"},
-            {"days": [5, 10, 15, 20, 25, 30], "label": "Avg_Days_5_10_15_20_25_30"},
-            {"days": [5, 10, 15, 20, 26], "label": "Avg_Days_5_10_15_20_26"},
-            {"days": [1, 5, 10, 18, 25], "label": "Avg_Days_1_5_10_18_25"},
-            {"days": [2, 10, 20, 30], "label": "Avg_Days_2_10_20_30"},
-        ]
-        avg_balance_df_list = []
-        for day_set in sets_of_days:
-            selected_days_subset = calc_df[calc_df[day_col_name].isin(day_set["days"])]
-            set_averages = {day_col_name: day_set["label"]}
-            for month_str in month_columns:
-                try:
-                    month_dt = pd.to_datetime(month_str, format="%b-%Y")
-                    days_in_month = month_dt.days_in_month
-                    valid_selected_days = selected_days_subset[selected_days_subset[day_col_name] <= days_in_month]
-                    month_avg = valid_selected_days[month_str].mean()
-                    set_averages[month_str] = month_avg
-                except Exception as e:
-                    set_averages[month_str] = np.nan
-            average_balance_df = pd.DataFrame([set_averages])
-            avg_balance_df_list.append(average_balance_df)
-        all_avg_balances = pd.concat([Average_df] + avg_balance_df_list, ignore_index=True)
-        numeric_cols = all_avg_balances.columns.difference([day_col_name])
-        all_avg_balances[numeric_cols] = all_avg_balances[numeric_cols].round(2)
-        averages_with_monthly = calculate_monthly_averages(all_avg_balances)
-        return averages_with_monthly
 def calculate_fixed_day_average(data):
         day_col_name = 'Day'
         if day_col_name not in data.columns:
