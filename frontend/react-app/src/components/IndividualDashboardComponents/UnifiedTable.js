@@ -1155,7 +1155,7 @@ const DataTable = ({
           transaction: row,
           isDebit: row.credit === 0,
         });
-        setCurrentTransactionType(row.debit >0 ? "debit" : "credit");
+        setCurrentTransactionType(row.debit > 0 ? "debit" : "credit");
         setShowClassificationModal(true);
       } else {
         // Bulk update flow: simply show the classification modal.
@@ -1431,66 +1431,66 @@ const DataTable = ({
     return new Blob([bytes], { type: type });
   };
 
-
   const checkTransactionTypesConsistency = () => {
     if (globalSelectedRows.size === 0) return true;
-    
+
     let hasDebit = false;
     let hasCredit = false;
     let firstType = null;
     let allSameType = true;
-    
+
     // Check all selected transactions
     for (const id of globalSelectedRows) {
-      const transaction = filteredData.find(tx => tx.id === id);
+      const transaction = filteredData.find((tx) => tx.id === id);
       if (!transaction) continue;
-      
+
       // Determine transaction type
       const isDebit = Number(transaction.debit) > 0;
       const isCredit = Number(transaction.credit) > 0;
-      
+
       // Track types
       if (isDebit) hasDebit = true;
       if (isCredit) hasCredit = true;
-      
+
       // Set the first type we encounter
       if (firstType === null) {
-        firstType = isDebit ? 'debit' : 'credit';
+        firstType = isDebit ? "debit" : "credit";
       } else {
         // Compare current transaction type with first type
-        const currentType = isDebit ? 'debit' : 'credit';
+        const currentType = isDebit ? "debit" : "credit";
         if (currentType !== firstType) {
           allSameType = false;
         }
       }
     }
-    
+
     return allSameType;
   };
 
   const openBulkCategoryModal = () => {
     const consistentTypes = checkTransactionTypesConsistency();
-    
+
     if (!consistentTypes) {
-      setTypeErrorMessage("Please select transactions of the same type (all debit or all credit)");
+      setTypeErrorMessage(
+        "Please select transactions of the same type (all debit or all credit)"
+      );
       setBulkCategoryModalOpen(true);
-    }  else {
+    } else {
       setTypeErrorMessage("");
-      
+
       // Just check the first transaction's type since we know they're all consistent
       if (globalSelectedRows.size > 0) {
         const firstId = Array.from(globalSelectedRows)[0];
-        const transaction = filteredData.find(tx => tx.id === firstId);
-        
+        const transaction = filteredData.find((tx) => tx.id === firstId);
+
         if (transaction) {
           // Set transaction type based on first transaction
-          const transactionType = Number(transaction.debit) > 0 ? 'debit' : 'credit';
+          const transactionType =
+            Number(transaction.debit) > 0 ? "debit" : "credit";
           setCurrentTransactionType(transactionType);
         }
-
       }
       setBulkCategoryModalOpen(true);
-
     }
   };
 
@@ -1786,70 +1786,85 @@ const DataTable = ({
                               {isBalance ? (
                                 <div className="truncate"></div>
                               ) : (
-                                <div className="w-full">
-                                  <Select
-                                    value={row[column]}
-                                    open={
-                                      categorySelectDropdownOpen[row.id] ||
-                                      false
-                                    }
-                                    onOpenChange={(open) =>
+                                <div
+                                  className="w-full relative"
+                                  ref={commandRef}
+                                >
+                                  {/* Trigger button styled like a Select */}
+                                  <div
+                                    className="flex items-center justify-between w-full h-10 px-3 py-2 text-sm border rounded-md border-input bg-background cursor-pointer"
+                                    onClick={() =>
                                       handleCategorySelectOpenChange(
                                         row.id,
-                                        open
+                                        !categorySelectDropdownOpen[row.id]
                                       )
                                     }
-                                    onValueChange={(value) =>
-                                      handleCategoryChange(row, value)
-                                    }
-                                    className="w-full"
-                                    disabled={globalSelectedRows.has(row.id)}
                                   >
-                                    <SelectTrigger className="w-full">
-                                      <SelectValue>{row[column]}</SelectValue>
-                                    </SelectTrigger>
-                                    <SelectContent className="p-0">
-                                      <Command className="rounded-md border-none bg-background">
-                                        <div className="p-2 border-b flex gap-2">
-                                          <div className="relative flex-1">
+                                    <span
+                                      className={
+                                        row[column]
+                                          ? ""
+                                          : "text-muted-foreground"
+                                      }
+                                    >
+                                      {row[column] || "Select category"}
+                                    </span>
+                                    <ChevronDown
+                                      className={cn(
+                                        "h-4 w-4 transition-transform",
+                                        categorySelectDropdownOpen[row.id]
+                                          ? "transform rotate-180"
+                                          : ""
+                                      )}
+                                    />
+                                  </div>
+
+                                  {/* Dropdown Command component */}
+                                  {categorySelectDropdownOpen[row.id] && (
+                                    <div className="absolute z-50 w-full mt-1 min-w-[350px] ">
+                                      <Command className="rounded-md border border-input bg-background shadow-md">
+                                        <div className="flex items-center border-b ">
+                                          <div className="relative flex items-center w-full">
                                             <CommandInput
-                                              placeholder="Search categories..."
+                                              placeholder="Search or add categories..."
                                               value={categorySearchTerm}
                                               onValueChange={
                                                 setCategorySearchTerm
                                               }
-                                              className="h-10"
+                                              className="flex border-none focus:ring-0 focus:outline-none w-full pr-16"
+                                              autoFocus
                                             />
-                                          </div>
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="px-2 h-10"
-                                            onClick={(e) => {
-                                              e.preventDefault();
-                                              e.stopPropagation();
-                                              if (categorySearchTerm.trim()) {
-                                                // Pass the whole row for a single update
-                                                const added = handleAddCategory(
-                                                  categorySearchTerm.trim(),
-                                                  row
-                                                );
-                                                if (added) {
-                                                  setCategorySearchTerm("");
-                                                  handleCategorySelectOpenChange(
-                                                    row.id,
-                                                    false
-                                                  );
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              className="h-8 px-2 absolute right-2 top-1/2 transform -translate-y-1/2"
+                                              onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                if (categorySearchTerm.trim()) {
+                                                  // Pass the whole row for a single update
+                                                  const added =
+                                                    handleAddCategory(
+                                                      categorySearchTerm.trim(),
+                                                      row
+                                                    );
+                                                  if (added) {
+                                                    setCategorySearchTerm("");
+                                                    handleCategorySelectOpenChange(
+                                                      row.id,
+                                                      false
+                                                    );
+                                                  }
                                                 }
-                                              }
-                                            }}
-                                          >
-                                            <Plus className="h-4 w-4" />
-                                            Add
-                                          </Button>
+                                              }}
+                                            >
+                                              <Plus className="h-4 w-4 mr-1" />
+                                              Add
+                                            </Button>
+                                          </div>
                                         </div>
                                         <CommandEmpty>
-                                          <div className="p-4 max-w-[300px] text-center text-muted-foreground">
+                                          <div className="text-center space-y-2 p-4">
                                             <p className="text-md">
                                               No matching categories found
                                             </p>
@@ -1900,8 +1915,8 @@ const DataTable = ({
                                           </CommandGroup>
                                         </div>
                                       </Command>
-                                    </SelectContent>
-                                  </Select>
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </TableCell>
@@ -2289,49 +2304,84 @@ const DataTable = ({
               <span className="block sm:inline">{typeErrorMessage}</span>
             </div>
           )}
-          {!typeErrorMessage&&<div className="space-y-4">
-            {/* Collapsible Command component */}
-            <div className="relative w-full" ref={commandRef}>
-              {/* Trigger button styled like a Select */}
-              <div
-                className="flex items-center justify-between w-full h-10 px-3 py-2 text-sm border rounded-md border-input bg-background cursor-pointer"
-                onClick={() => setIsOpen(!isOpen)}
-              >
-                <span
-                  className={
-                    selectedBulkCategory ? "" : "text-muted-foreground"
-                  }
+          {!typeErrorMessage && (
+            <div className="space-y-4">
+              {/* Collapsible Command component */}
+              <div className="relative w-full" ref={commandRef}>
+                {/* Trigger button styled like a Select */}
+                <div
+                  className="flex items-center justify-between w-full h-10 px-3 py-2 text-sm border rounded-md border-input bg-background cursor-pointer"
+                  onClick={() => setIsOpen(!isOpen)}
                 >
-                  {selectedBulkCategory || "Select new category"}
-                </span>
-                <ChevronDown
-                  className={cn(
-                    "h-4 w-4 transition-transform",
-                    isOpen ? "transform rotate-180" : ""
-                  )}
-                />
-              </div>
+                  <span
+                    className={
+                      selectedBulkCategory ? "" : "text-muted-foreground"
+                    }
+                  >
+                    {selectedBulkCategory || "Select new category"}
+                  </span>
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 transition-transform",
+                      isOpen ? "transform rotate-180" : ""
+                    )}
+                  />
+                </div>
 
-              {/* Dropdown Command component */}
-              {isOpen && (
-                <div className="absolute z-50 w-full mt-1">
-                  <Command className="rounded-md border border-input bg-background shadow-md">
-                    <div className="flex items-center border-b px-3">
-                      <div className="relative flex items-center w-full">
-                        <CommandInput
-                          placeholder="Search or Add categories..."
-                          value={categorySearchTerm}
-                          onValueChange={setCategorySearchTerm}
-                          className="flex border-none focus:ring-0 focus:outline-none w-full pr-16"
-                          autoFocus
-                        />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 px-2 absolute right-0 top-1/2 transform -translate-y-1/2"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (categorySearchTerm.trim()) {
+                {/* Dropdown Command component */}
+                {isOpen && (
+                  <div className="absolute z-50 w-full mt-1">
+                    <Command className="rounded-md border border-input bg-background shadow-md">
+                      <div className="flex items-center border-b px-3">
+                        <div className="relative flex items-center w-full">
+                          <CommandInput
+                            placeholder="Search or Add categories..."
+                            value={categorySearchTerm}
+                            onValueChange={setCategorySearchTerm}
+                            className="flex border-none focus:ring-0 focus:outline-none w-full pr-16"
+                            autoFocus
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 px-2 absolute right-0 top-1/2 transform -translate-y-1/2"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (categorySearchTerm.trim()) {
+                                const added = handleAddCategory(
+                                  categorySearchTerm.trim()
+                                );
+                                if (added) {
+                                  setSelectedBulkCategory(
+                                    categorySearchTerm.trim()
+                                  );
+                                  setCategorySearchTerm("");
+                                  setIsOpen(false);
+                                }
+                              }
+                            }}
+                          >
+                            <Plus className="h-4 w-4 mr-1" />
+                            Add
+                          </Button>
+                        </div>
+                      </div>
+                      <CommandEmpty>
+                        <div className="text-center space-y-2 p-4">
+                          <p className="text-md">
+                            No matching categories found
+                          </p>
+                          <p className="text-sm mt-1">
+                            Click the{" "}
+                            <Plus className="h-3 w-3 inline-block mx-1" /> icon
+                            above to add "{categorySearchTerm}" as a new
+                            category
+                          </p>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
                               const added = handleAddCategory(
                                 categorySearchTerm.trim()
                               );
@@ -2342,107 +2392,77 @@ const DataTable = ({
                                 setCategorySearchTerm("");
                                 setIsOpen(false);
                               }
-                            }
-                          }}
-                        >
-                          <Plus className="h-4 w-4 mr-1" />
-                          Add
-                        </Button>
-                      </div>
-                    </div>
-                    <CommandEmpty>
-                      <div className="text-center space-y-2 p-4">
-                        <p className="text-md">No matching categories found</p>
-                        <p className="text-sm mt-1">
-                          Click the{" "}
-                          <Plus className="h-3 w-3 inline-block mx-1" /> icon
-                          above to add "{categorySearchTerm}" as a new category
-                        </p>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const added = handleAddCategory(
-                              categorySearchTerm.trim()
-                            );
-                            if (added) {
-                              setSelectedBulkCategory(
-                                categorySearchTerm.trim()
-                              );
-                              setCategorySearchTerm("");
-                              setIsOpen(false);
-                            }
-                          }}
-                        ></Button>
-                      </div>
-                    </CommandEmpty>
-                    <div className="max-h-64 overflow-y-auto">
-                      <CommandGroup>
-                        {filteredCategories.map((category) => (
-                          <CommandItem
-                            key={category}
-                            onSelect={() => {
-                              setSelectedBulkCategory(category);
-                              setCategorySearchTerm("");
-                              setIsOpen(false);
                             }}
-                            className="flex items-center"
-                          >
-                            <div className="flex-1">
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4 inline",
-                                  selectedBulkCategory === category
-                                    ? "opacity-100"
-                                    : "opacity-0"
-                                )}
-                              />
-                              {category}
-                            </div>
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </div>
-                  </Command>
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2 mt-4">
-                <Checkbox
-                  id="show-keywords"
-                  checked={showKeywordInput}
-                  onCheckedChange={setShowKeywordInput}
-                />
-                <Label htmlFor="show-keywords">
-                  Add keywords for category change
-                </Label>
+                          ></Button>
+                        </div>
+                      </CommandEmpty>
+                      <div className="max-h-64 overflow-y-auto">
+                        <CommandGroup>
+                          {filteredCategories.map((category) => (
+                            <CommandItem
+                              key={category}
+                              onSelect={() => {
+                                setSelectedBulkCategory(category);
+                                setCategorySearchTerm("");
+                                setIsOpen(false);
+                              }}
+                              className="flex items-center"
+                            >
+                              <div className="flex-1">
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4 inline",
+                                    selectedBulkCategory === category
+                                      ? "opacity-100"
+                                      : "opacity-0"
+                                  )}
+                                />
+                                {category}
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </div>
+                    </Command>
+                  </div>
+                )}
               </div>
 
-              {showKeywordInput && (
-                <div className="space-y-2">
-                  <Label>
-                    What common keywords in these transactions made you choose "
-                    {selectedBulkCategory}" as their category?
-                  </Label>
-                  <Input
-                    value={reasoning}
-                    onChange={(e) => setReasoning(e.target.value)}
-                    placeholder="Enter Keyword..."
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2 mt-4">
+                  <Checkbox
+                    id="show-keywords"
+                    checked={showKeywordInput}
+                    onCheckedChange={setShowKeywordInput}
                   />
+                  <Label htmlFor="show-keywords">
+                    Add keywords for category change
+                  </Label>
                 </div>
-              )}
+
+                {showKeywordInput && (
+                  <div className="space-y-2">
+                    <Label>
+                      What common keywords in these transactions made you choose
+                      "{selectedBulkCategory}" as their category?
+                    </Label>
+                    <Input
+                      value={reasoning}
+                      onChange={(e) => setReasoning(e.target.value)}
+                      placeholder="Enter Keyword..."
+                    />
+                  </div>
+                )}
+              </div>
             </div>
-          </div>}
+          )}
 
           <DialogFooter>
             <Button
               variant="ghost"
               onClick={() => {
                 setBulkCategoryModalOpen(false);
-          setTypeErrorMessage("");
+                setTypeErrorMessage("");
               }}
             >
               Cancel
@@ -2453,8 +2473,6 @@ const DataTable = ({
                 setBulkCategoryModalOpen(false);
                 // setConfirmationModalOpen(true);
                 handleBulkCategoryChange();
-
-                
               }}
               disabled={!selectedBulkCategory || typeErrorMessage}
             >
@@ -2511,13 +2529,13 @@ const DataTable = ({
             onValueChange={setSelectedType}
             className="space-y-3"
           >
-            {(currentTransactionType === 'credit' ) && (
+            {currentTransactionType === "credit" && (
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="Income" id="income" />
                 <Label htmlFor="Income">Income</Label>
               </div>
             )}
-            {( currentTransactionType === 'debit' ) && (
+            {currentTransactionType === "debit" && (
               <div className="flex items-center space-x-2">
                 <RadioGroupItem
                   value="Important Expenses / Payments"
@@ -2526,7 +2544,7 @@ const DataTable = ({
                 <Label htmlFor="important_expenses">Important Expenses</Label>
               </div>
             )}
-            {( currentTransactionType === 'debit' ) && (
+            {currentTransactionType === "debit" && (
               <div className="flex items-center space-x-2">
                 <RadioGroupItem
                   value="Other Expenses / Payments"
@@ -2920,7 +2938,6 @@ const DataTable = ({
               variant="secondary"
               // onClick={() => setBulkCategoryModalOpen(true)}
               onClick={openBulkCategoryModal}
-
             >
               Update Selected Categories ({globalSelectedRows.size})
             </Button>
