@@ -311,10 +311,10 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
     const tallyData = txData
       .map((transaction) => {
         console.log("transaction", transaction);
-        // if (transaction.imported) {
-        //   // Already uploaded
-        //   return null;
-        // }
+        if (transaction.imported) {
+          // remove Already uploaded
+          return null;
+        }
         const tempVoucherType =
           transaction.voucher_type === "Payment Voucher"
             ? "Payment"
