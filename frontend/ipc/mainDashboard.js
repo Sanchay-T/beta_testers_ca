@@ -9,7 +9,7 @@ const path = require("path");
 const axios = require("axios");
 const { transactions } = require("../db/schema/Transactions");
 const { users } = require("../db/schema/User");
-const sessionManager = require('../SessionManager');
+const sessionManager = require("../SessionManager");
 
 function registerMainDashboardIpc(tmpdir_path) {
   const db = databaseManager.getInstance().getDatabase();
@@ -135,7 +135,7 @@ function registerMainDashboardIpc(tmpdir_path) {
         })
         .from(cases);
 
-      log.info({ result })
+      log.info({ result });
       return result;
     } catch (error) {
       console.error("Error getting pages by period:", error);
@@ -152,17 +152,24 @@ function registerMainDashboardIpc(tmpdir_path) {
         .limit(1);
 
       if (!user || user.length === 0) {
-        log.error("No user found with ID 1");
+        log.error("No user found with ID", userId);
         throw new Error("No user found");
       }
 
+      console.log("user", user[0]);
       const dateJoined = new Date(user[0].dateJoined);
+      const expiryDate = new Date(user[0].expiryTimestamp); // Use the stored expiry date
       const currentDate = new Date();
-      const oneYearFromJoin = new Date(dateJoined);
-      oneYearFromJoin.setFullYear(dateJoined.getFullYear() + 1);
 
-      // Calculate progress percentage
-      const totalDuration = oneYearFromJoin - dateJoined;
+      console.log("dateJoined", dateJoined);
+      console.log("expiryDate", expiryDate);
+      console.log("currentDate", currentDate);
+      console.log("currentDate", currentDate.getTime());
+      console.log("expiryDate", expiryDate.getTime());
+      console.log("dateJoined", dateJoined.getTime());
+
+      // Calculate progress percentage based on stored expiry date
+      const totalDuration = expiryDate - dateJoined;
       const elapsed = currentDate - dateJoined;
       const progress = Math.min(
         Math.round((elapsed / totalDuration) * 100),
@@ -170,17 +177,24 @@ function registerMainDashboardIpc(tmpdir_path) {
       );
 
       // Calculate remaining days
-      const remainingMs = oneYearFromJoin - currentDate;
+      const remainingMs = expiryDate - currentDate;
       const remainingDays = Math.max(
         0,
         Math.ceil(remainingMs / (1000 * 60 * 60 * 24))
       );
 
+      console.log({
+        progress,
+        remainingDays,
+        dateJoined: dateJoined.toISOString(),
+        expiryDate: expiryDate.toISOString(),
+      });
+
       return {
         progress,
         remainingDays,
         dateJoined: dateJoined.toISOString(),
-        expiryDate: oneYearFromJoin.toISOString(),
+        expiryDate: expiryDate.toISOString(),
       };
     } catch (error) {
       log.error("Error fetching user progress:", error);

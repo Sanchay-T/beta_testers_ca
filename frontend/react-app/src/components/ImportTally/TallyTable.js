@@ -1053,13 +1053,8 @@ const TallyTable = ({
   );
 
   const handleRefreshImports = () => {
-    handleLedgerImport();
-    toast({
-      title: "Success",
-      description: `Imported Ledgers and removed already existing ones from above list.`,
-      duration: 3000,
-      variant: "success",
-    });
+    handleLedgerImport(true);
+   
   };
 
   return (

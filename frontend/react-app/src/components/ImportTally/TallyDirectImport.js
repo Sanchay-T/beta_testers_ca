@@ -533,7 +533,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
     }
   };
 
-  const handleLedgerImport = async () => {
+  const handleLedgerImport = async (isFromRefresh = false) => {
     // if (!companyName.trim()) {
     //   toast({
     //     title: "Error",
@@ -555,12 +555,14 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
 
       updateReportData({ importedLedgerData: ledgerData });
     }
-    // toast({
-    //   title: "Success",
-    //   description: `Imported Ledgers and removed already existing ones from above list.`,
-    //   duration: 3000,
-    //   variant: "success",
-    // });
+    if (isFromRefresh) {
+      toast({
+        title: "Success",
+        description: `Imported Ledgers and removed already existing ones from above list.`,
+        duration: 3000,
+        variant: "success",
+      });
+    }
   };
 
   const removeDuplicateLedgers = (
