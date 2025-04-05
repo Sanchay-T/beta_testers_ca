@@ -15,7 +15,7 @@ contextBridge.exposeInMainWorld("electron", {
 
   getPages: () => ipcRenderer.invoke("get-total-pages"),
 
-  getProgressed: () => ipcRenderer.invoke("get-user-progress"),
+  // getProgressed: () => ipcRenderer.invoke("get-user-progress"),
 
   getTransactions: (caseId, individualId) =>
     ipcRenderer.invoke("get-transactions", caseId, individualId),

@@ -151,6 +151,9 @@ function registerMainDashboardIpc(tmpdir_path) {
         .where(eq(users.id, userId))
         .limit(1);
 
+      log.info("user", user);
+      log.info("userId", userId);
+
       if (!user || user.length === 0) {
         log.error("No user found with ID", userId);
         throw new Error("No user found");
@@ -158,15 +161,11 @@ function registerMainDashboardIpc(tmpdir_path) {
 
       console.log("user", user[0]);
       const dateJoined = new Date(user[0].dateJoined);
-      const expiryDate = new Date(user[0].expiryTimestamp); // Use the stored expiry date
+      const expiryDate = new Date(user[0].expiryDate); // Use the stored expiry date
       const currentDate = new Date();
 
       console.log("dateJoined", dateJoined);
       console.log("expiryDate", expiryDate);
-      console.log("currentDate", currentDate);
-      console.log("currentDate", currentDate.getTime());
-      console.log("expiryDate", expiryDate.getTime());
-      console.log("dateJoined", dateJoined.getTime());
 
       // Calculate progress percentage based on stored expiry date
       const totalDuration = expiryDate - dateJoined;
@@ -183,18 +182,11 @@ function registerMainDashboardIpc(tmpdir_path) {
         Math.ceil(remainingMs / (1000 * 60 * 60 * 24))
       );
 
-      console.log({
-        progress,
-        remainingDays,
-        dateJoined: dateJoined.toISOString(),
-        expiryDate: expiryDate.toISOString(),
-      });
-
       return {
         progress,
         remainingDays,
-        dateJoined: dateJoined.toISOString(),
-        expiryDate: expiryDate.toISOString(),
+        dateJoined: dateJoined,
+        expiryDate: expiryDate,
       };
     } catch (error) {
       log.error("Error fetching user progress:", error);
