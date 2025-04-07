@@ -53,20 +53,20 @@ export function LicenseActivationForm({ className, ...props }) {
   const [activationStatus, setActivationStatus] = useState(null);
   const [isNetworkSearching, setIsNetworkSearching] = useState(false);
 
-  useEffect(() => {
-    // Check if license is already activated (pseudo-code)
-    const checkActivationStatus = async () => {
-      try {
-        const status = await window.electron.ipcRenderer.invoke("check-license-status");
-        if (status.isActivated) {
-          setActivationStatus("active");
-        }
-      } catch (error) {
-        console.error("Failed to check license status:", error);
-      }
-    };
-    checkActivationStatus();
-  }, []);
+  // useEffect(() => {
+  //   // Check if license is already activated (pseudo-code)
+  //   const checkActivationStatus = async () => {
+  //     try {
+  //       const status = await window.electron.ipcRenderer.invoke("check-license-status");
+  //       if (status.isActivated) {
+  //         setActivationStatus("active");
+  //       }
+  //     } catch (error) {
+  //       console.error("Failed to check license status:", error);
+  //     }
+  //   };
+  //   checkActivationStatus();
+  // }, []);
 
   // ------------------
   // Handlers
@@ -77,7 +77,7 @@ export function LicenseActivationForm({ className, ...props }) {
     setActivationStatus("processing");
 
     try {
-      const result = await window.electron.ipcRenderer.invoke("activate-license", {
+      const result = await window.electron.auth.activateLicense({
         licenseKey: credentials.licenseKey,
         role: credentials.role,
       });
@@ -99,7 +99,7 @@ export function LicenseActivationForm({ className, ...props }) {
     setIsNetworkSearching(true);
 
     try {
-      const result = await window.electron.auth.searchnNetworkLicenses({ serviceType: "license" });
+      const result = await window.electron.auth.searchnNetworkLicenses({ serviceType: "license-server" });
 
       if (result.success && result.licenses && result.licenses.length > 0) {
         setNetworkLicenses(result.licenses);
@@ -119,9 +119,9 @@ export function LicenseActivationForm({ className, ...props }) {
     setActivationStatus("processing");
 
     try {
-      const result = await window.electron.ipcRenderer.invoke("connect-network-license", {
+      const result = await window.electron.auth.connectNetworkLicense({
         licenseId: license.id,
-        serverAddress: networkLicense.serverAddress,
+        ip: networkLicense.ip,
         port: networkLicense.port,
         username: networkLicense.username,
         role: credentials.role,
@@ -142,7 +142,7 @@ export function LicenseActivationForm({ className, ...props }) {
   const handleAccountSetup = async (e) => {
     e.preventDefault();
     try {
-      const success = await window.electron.ipcRenderer.invoke("sign-up", {
+      const success = await window.electron.auth.signUp({
         email: credentials.email,
         password: credentials.password,
         role: localStorage.getItem("role") || credentials.role,
@@ -392,8 +392,8 @@ export function LicenseActivationForm({ className, ...props }) {
                         required
                         value={credentials.licenseKey}
                         onChange={handleInputChange}
-                        pattern="^[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}$"
-                        title="Please enter a valid license key in the format: XXXX-XXXX-XXXX-XXXX"
+                      // pattern="^[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}$"
+                      // title="Please enter a valid license key in the format: XXXX-XXXX-XXXX-XXXX"
                       />
                     </motion.div>
 
@@ -481,7 +481,7 @@ export function LicenseActivationForm({ className, ...props }) {
                               onClick={() => handleNetworkLicenseSelect(license)}
                             >
                               <td className="border px-4 py-2">{license.name}</td>
-                              <td className="border px-4 py-2">{license.networkIp}</td>
+                              <td className="border px-4 py-2">{license.ip}</td>
                             </tr>
                           ))}
                         </tbody>

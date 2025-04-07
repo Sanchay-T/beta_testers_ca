@@ -39,7 +39,8 @@ function discoverMdnsServices(serviceType = '', callback) {
       name: service.name,
       host: service.host,
       ip: service.referer.address,
-      port: service.port
+      port: service.port,
+      additional: service.txt || {}
     };
 
     // console.log('🔍 Found service:', serviceInfo);
@@ -121,7 +122,7 @@ autoUpdater.on('update-available', (info) => {
     log.info('Skipping notification for already notified version:', info.version);
     return;
   }
-  
+
   log.info('Update available. Current version:', app.getVersion());
   log.info('New version:', info.version);
   lastCheckedVersion = info.version;
@@ -535,7 +536,7 @@ async function createWindow() {
 
   win.on("close", (event) => {
     log.info("Close event triggered");
-    
+
     // Skip confirmation if we're updating
     if (isUpdating) {
       log.info("Skipping close confirmation for update installation");
@@ -630,7 +631,7 @@ async function createWindow() {
   generateReportIpc(TMP_DIR);
   registerOpenFileIpc(BASE_DIR);
   registerReportHandlers(TMP_DIR);
-  registerAuthHandlers();
+  registerAuthHandlers(app.getPath("userData"));
   registerOpportunityToEarnIpc();
   registerTallyIpc();
   registerVoucherIpc();
@@ -755,11 +756,12 @@ app.whenReady().then(async () => {
   log.info("App is ready", app.getPath("userData"));
   // Example usage
   log.info("📡 Discovering services...");
-  discoverMdnsServices('', async (service) => {
+  discoverMdnsServices('license-server', async (service) => {
     log.info('📡 Service Found:', service);
 
     // Using host (e.g., 'DESKTOP-85MU4TU.license-server.local')
     const healthUrl = `http://${service.name}:${service.port}/api/health`;
+    log.info("Health URL:", healthUrl);
     try {
       const response = await fetch(healthUrl, {
         headers: {
@@ -906,7 +908,7 @@ function checkForUpdates() {
   }
 
   const currentVersion = app.getVersion();
-  
+
   // Skip check if we're already on the latest notified version
   if (lastCheckedVersion && lastCheckedVersion === currentVersion) {
     log.info('Already on latest notified version:', currentVersion);

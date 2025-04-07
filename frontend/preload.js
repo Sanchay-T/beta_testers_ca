@@ -155,9 +155,9 @@ contextBridge.exposeInMainWorld("electron", {
     getUser: () => ipcRenderer.invoke("auth:getUser"),
     // updateUser: (userData) => ipcRenderer.invoke('auth:updateUser', userData)
     checkLicense: () => ipcRenderer.invoke("license:check"),
+    searchnNetworkLicenses: (networkLicense) => ipcRenderer.invoke("license:search-network-licenses", networkLicense),
     activateLicense: (credentials) =>
       ipcRenderer.invoke("license:activate", credentials),
-    searchnNetworkLicenses: (networkLicense) => ipcRenderer.invoke("license:search-network-licenses", networkLicense),
   },
 
   getRecentReports: () => ipcRenderer.invoke("get-recent-reports"),

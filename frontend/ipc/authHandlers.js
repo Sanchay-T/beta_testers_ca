@@ -6,7 +6,11 @@ const { users } = require("../db/schema/User");
 const bcrypt = require("bcrypt");
 const databaseManager = require("../db/db");
 const { eq, exists, sql } = require("drizzle-orm");
+const { uuid } = require("systeminformation");
+const systemInformation = require("../SystemInformation");
 const bonjour = require("bonjour")();
+const axios = require("axios");
+const path = require("path");
 
 log.info("License manager process.env.NODE_ENV", process.env.NODE_ENV);
 
@@ -58,7 +62,7 @@ function discoverMdnsServices(serviceType = '', timeout = 5000) {
   });
 }
 
-function registerAuthHandlers() {
+function registerAuthHandlers(userDataPath) {
   const db = databaseManager.getInstance().getDatabase();
 
   // Handle login
@@ -148,16 +152,18 @@ function registerAuthHandlers() {
 
   ipcMain.handle("auth:signUp", async (event, credentials) => {
     let user;
-    const result = await licenseManager.validateLicense(
-      credentials.licenseKey,
-      credentials.email
-    );
-    console.log("License activation result:", result);
+    // const result = await licenseManager.validateLicense(
+    //   credentials.licenseKey,
+    //   credentials.email
+    // );
+    // console.log("License activation result:", result);
 
-    if (result.success) {
-      // const userAlreadyExists = await db.select(
-      //     exists(db.select().from(users).where(eq(users.email, credentials.email)))
-      // );
+    // if (result.success) {
+    //   // const userAlreadyExists = await db.select(
+    //   //     exists(db.select().from(users).where(eq(users.email, credentials.email)))
+    //   // );
+    try {
+
 
       const userAlreadyExists = await db
         .select()
@@ -195,31 +201,32 @@ function registerAuthHandlers() {
           log.info("Error in creating new user : ", err);
           return { success: false, error: "Failed to register user." };
         }
-      }
 
-      const remainingSeconds = licenseManager.calculateRemainingSeconds(
-        result.data.expiry_timestamp
-      );
-      const storeResult = await licenseManager.storeLicense({
-        licenseKey: credentials.licenseKey,
-        email: credentials.email,
-      });
+        // const remainingSeconds = licenseManager.calculateRemainingSeconds(
+        //   result.data.expiry_timestamp
+        // );
+        // const storeResult = await licenseManager.storeLicense({
+        //   licenseKey: credentials.licenseKey,
+        //   email: credentials.email,
+        // });
 
-      if (storeResult.success) {
-        sessionManager.startLicenseCountdown(remainingSeconds);
+        // if (storeResult.success) {
+        //   sessionManager.startLicenseCountdown(remainingSeconds);
+        // }
+
+        return {
+          success: true,
+          message: "User created successfully.",
+          user: user[0],
+        };
       }
+    } catch (err) {
 
       return {
-        success: true,
-        message: "User created successfully.",
-        user: user[0],
+        success: false,
+        error: "Failed to register user.",
       };
     }
-
-    return {
-      success: false,
-      error: result.error,
-    };
   });
 
   // ipcMain.handle("license:activate", async (event, credentials) => {
@@ -231,21 +238,6 @@ function registerAuthHandlers() {
   //         return { success: false, message: "Failed to retrieve license key." };
   //     }
   // });
-
-  ipcMain.handle("license:check", async () => {
-    try {
-      const isValid = await licenseManager.checkActivation();
-
-      return {
-        success: isValid,
-        message: isValid ? "License key is valid." : "Invalid license key.",
-      };
-    } catch (error) {
-      console.error("Error validating license key:", error);
-      return { success: false, message: "Failed to validate license key." };
-    }
-  });
-
 
   // Set up IPC handler for direct password reset using local DB
   ipcMain.handle('auth:reset-password', async (event, data) => {
@@ -353,31 +345,53 @@ function registerAuthHandlers() {
   });
 
 
-  // // IPC Handler for searching network licenses
-  // ipcMain.handle("license:search-network-licenses", async (event) => {
-  //   try {
-  //     // You can use networkLicense parameter to perform an actual search,
-  //     // for example by querying a remote server or a local database.
-  //     // For demonstration, we simulate the search with a hardcoded response:
-  //     const licenses = [
-  //       { id: 1, name: "License A", networkIp: "192.168.1.10" },
-  //       { id: 2, name: "License B", networkIp: "192.168.1.11" },
-  //       { id: 3, name: "License C", networkIp: "192.168.1.12" },
-  //     ];
+  ipcMain.handle("license:check", async () => {
+    try {
+      const isValid = await licenseManager.checkActivation();
 
-  //     // Simulate a delay if needed:
-  //     await new Promise((resolve) => setTimeout(resolve, 1500));
-
-  //     return { success: true, licenses };
-  //   } catch (error) {
-  //     console.error("Error searching network licenses:", error);
-  //     return { success: false, error: error.message };
-  //   }
-  // });
+      return {
+        success: isValid,
+        message: isValid ? "License key is valid." : "Invalid license key.",
+      };
+    } catch (error) {
+      console.error("Error validating license key:", error);
+      return { success: false, message: "Failed to validate license key." };
+    }
+  });
 
 
+  ipcMain.handle("license:activate", async (event, args) => {
 
+    const { licenseKey, role } = args;
+    const username = "myusername"
+    const uuid_hash = await systemInformation.getHashedUUID();
+    console.log("UUID Hash:", uuid_hash);
+    // Ensure gateway server service is running
+    // await gatewayServer.init();
 
+    // Optional: wait a moment to ensure service has started
+    await new Promise((res) => setTimeout(res, 1000));
+
+    try {
+      const response = await axios.post("http://localhost:7890/api/validate-license", {
+        licenseKey,
+        role,
+        username,
+        uuid_hash
+      });
+
+      if (response.data.status === "OK") {
+        log.info("License activated successfully:", response.data);
+        return { success: true, data: response.data };
+      } else {
+        log.error("License activation failed:", response.data.message);
+        return { success: false, error: response.data.message || "Invalid license" };
+      }
+    } catch (err) {
+      log.error("Error activating license:", err.message);
+      return { success: false, error: "License service not reachable." };
+    }
+  });
 
   // IPC Handler for searching network licenses using mDNS discovery
   ipcMain.handle("license:search-network-licenses", async (event, networkLicense) => {
@@ -392,6 +406,37 @@ function registerAuthHandlers() {
       return { success: false, error: error.message };
     }
   });
+
+
+  ipcMain.handle("license:connect-network-license", async (event, licenseData) => {
+    try {
+      const { ip, port } = licenseData;
+      if (!ip || !port) throw new Error("Invalid license data. IP and port are required.");
+
+      const uuidHash = await systemInformation.getHashedUUID(); // assuming you defined this somewhere
+      const response = await axios.post(`http://${ip}:${port}/api/license/assign`, {
+        clientId: uuidHash,
+      });
+
+      if (response.data.success) {
+        const encryptedData = await encryptLicenseData(JSON.stringify(response.data));
+
+        const filePath = path.join(userDataPath, "license.enc");
+        await fs.writeFile(filePath, encryptedData);
+        console.log("License encrypted and saved at:", filePath);
+
+        return { success: true, data: response.data };
+      } else {
+        console.error("License assignment failed:", response.data.message);
+        return { success: false, error: response.data.message };
+      }
+    } catch (error) {
+      console.error("License connection error:", error);
+      return { success: false, error: error.message };
+    }
+  });
+
+
 }
 
 module.exports = { registerAuthHandlers };
