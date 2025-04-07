@@ -1687,6 +1687,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Report Generated Successfully!</DialogTitle>
+            {console.log({failedStatements})}
             <DialogDescription className="flex items-end gap-x-4 pt-4 ">
               {failedStatements.length === 0 ? (
                 <div className="flex items-center gap-x-4">

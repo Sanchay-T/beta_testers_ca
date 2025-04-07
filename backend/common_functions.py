@@ -1668,7 +1668,7 @@ def category_add_ca(df):
                     "toachdrtatacapita", "toachdrtpachmag", "toachdrtpachneo", "toachdrtpcapfrst", "toachdryesbankr",
                     "achracpc",
                     ]
-        pattern = r"(" + "|".join(keywords) + r")"
+        pattern = r"^(" + "|".join(keywords) + r")"
         emi_transactions = df[
             df["Description"].str.contains(pattern, case=False, regex=True) & (~df["Debit"].isnull()) & (
                         df["Debit"] > 0)]
@@ -2826,7 +2826,7 @@ def creditor_list(df):
                         "toachdrmagmafinco",
                         "toachdrmahnimahin", "toachdrmoneywisef", "toachdrneogrowth", "toachdrtatacapita",
                         "toachdrtpachmag",
-                        "toachdrtpachneo", "toachdrtpcapfrst", "toachdryesbankr", "gsttaxpayment",
+                        "toachdrtpachneo", "toachdrtpcapfrst", "toachdryesbankr", "gsttaxpayment","self-chqpaid"
                         ]
     exclude_pattern = "|".join(exclude_keywords)
     Creditor_list = Creditor_list[
@@ -2936,12 +2936,20 @@ def Upi(df):
         return row['Entity']
 
     def apply_regex_to_categories_hdfc(row):
-        if row['Category'] in categories_to_include:
-            if "upi-" in row['Description']:
-                match = re.search(r'(?<=upi-)([a-zA-Z]+)', row['Description'])
-                if match:
-                    return match.group(1)
-        return row['Entity']
+            if row['Category'] in categories_to_include:
+                if "upi-" in row['Description']:
+                    # For the simplest pattern (first type)
+                    match1 = re.search(r'(?<=upi-)([a-zA-Z]+)', row['Description'])
+
+                    # Comprehensive pattern that requires at least one letter in the name
+                    match2 = re.search(r'upi-\d+-([a-zA-Z][a-zA-Z0-9._]*)[-@]', row['Description'])
+
+                    if match2:
+                        return match2.group(1)
+                    elif match1:
+                        return match1.group(1)
+
+            return row['Entity']
 
     def apply_regex_to_empty_entities_sbi(row):
         if row['Category'] in categories_to_include:

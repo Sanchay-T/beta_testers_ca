@@ -141,7 +141,7 @@ export default function GenerateReport() {
       }
 
       setCurrentCaseId(result.data.caseId); // Store caseId
-
+      console.log({ result });
       if (result.success) {
         clearInterval(progressIntervalRef.current);
         setProgress(100);
@@ -152,6 +152,7 @@ export default function GenerateReport() {
           duration: 3000,
           variant: "success",
         });
+        console.log("Report generated successfully:", result.data);
         if (result.data.failedFiles.length > 0) {
           setShowRectifyButton(true);
           const failedFiles = result.data.failedFiles.map((file_path) => {
@@ -178,15 +179,23 @@ export default function GenerateReport() {
             statements: null,
           };
 
+          // setShowRectifyButton(true);
+          const successfulFiles = result.data.successfulFiles.map(
+            (file_path) => {
+              // Get the filename from the path and remove the timestamp
+              const filename = file_path.split("\\").pop(); // Get filename from path
+              const filenameWithoutTimestamp = filename.substring(
+                filename.indexOf("-") + 1
+              ); // Remove everything before first hyphen
+              return filenameWithoutTimestamp;
+            }
+          );
+          setSuccessfulStatements(successfulFiles || []); // Store successful
+
           updateReportData({
             recentReportsData: [newData, ...reportData.recentReportsData],
           });
-        }
-
-        if (
-          result.data.successfulFiles.length > 0 &&
-          !result.data.failedFiles
-        ) {
+        } else {
           // setShowRectifyButton(true);
           const successfulFiles = result.data.successfulFiles.map(
             (file_path) => {
