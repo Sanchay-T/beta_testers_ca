@@ -308,25 +308,61 @@ const DataTable = ({
 
     setTransactions(formattedData);
 
+    // const storedCategories = localStorage.getItem("categoryOptions");
+    // console.log("Stored categories", storedCategories);
+    // let localCats = storedCategories ? JSON.parse(storedCategories) : null;
+    // if (!localCats) {
+    //   localCats = categoryOptions;
+    //   localStorage.setItem("categoryOptions", JSON.stringify(localCats));
+    // }
+
+    // const transCats = transactions.map((tx) => tx.category);
+    // const mergedCategories = Array.from(new Set([...localCats, ...transCats]));
+    // // Step 3: If there are any new categories, update localStorage.
+    // if (mergedCategories.length !== localCats.length) {
+    //   localStorage.setItem("categoryOptions", JSON.stringify(mergedCategories));
+    // }
+    // // remove duplicates and null values
+    // const mergedCategories0 = mergedCategories.filter(
+    //   (cat) => cat && cat.trim().length > 0
+    // );
+    // console.log("Merged categories", mergedCategories0);
+
+    // setCategoryOptions(mergedCategories0);
+  }, [data]);
+
+  useEffect(() => {
+    // First check if we have stored categories in localStorage
     const storedCategories = localStorage.getItem("categoryOptions");
-    let localCats = storedCategories ? JSON.parse(storedCategories) : null;
-    if (!localCats) {
-      localCats = categoryOptions;
-      localStorage.setItem("categoryOptions", JSON.stringify(localCats));
-    }
+    if (title === "Transactions") {
+      // If no stored categories, merge default + transaction categories
+      const defaultCategories = categoryOptions; // Your predefined defaults
+      // console.log("defaultCategories", defaultCategories);
+      const transactionCategories = data
+        .filter((tx) => tx && tx.category) // Filter out null/undefined
+        .map((tx) => tx.category);
 
-    const transCats = transactions.map((tx) => tx.category);
-    const mergedCategories = Array.from(new Set([...localCats, ...transCats]));
-    // Step 3: If there are any new categories, update localStorage.
-    if (mergedCategories.length !== localCats.length) {
+      // console.log("transactionCategories", transactionCategories);
+      // Merge, deduplicate, and filter out empty strings
+      const mergedCategories = Array.from(
+        new Set([...defaultCategories, ...transactionCategories])
+      ).filter((cat) => cat && cat.trim().length > 0);
+
+      // console.log("Merged categories", mergedCategories);
+
+      // Store in localStorage and update state
       localStorage.setItem("categoryOptions", JSON.stringify(mergedCategories));
+      setCategoryOptions(mergedCategories);
+      console.log("Created new category list:", mergedCategories);
+    } else {
+      // If categories already exist in localStorage, just use those
+      const parsedCategories = JSON.parse(storedCategories);
+      setCategoryOptions(parsedCategories);
+      console.log(
+        "Using existing categories from localStorage:",
+        parsedCategories
+      );
     }
-    // remove duplicates and null values
-    const mergedCategories0 = mergedCategories.filter(
-      (cat) => cat && cat.trim().length > 0
-    );
-
-    setCategoryOptions(mergedCategories0);
   }, [data]);
 
   // Get dynamic columns from first data item
@@ -776,8 +812,8 @@ const DataTable = ({
         : [...prev, category]
     );
   };
-
-  const filteredCategories = categoryOptions.filter((category) => {
+  const allCategoryOptions = [...categoryOptions, ...pendingCategories];
+  const filteredCategories = allCategoryOptions.filter((category) => {
     return category.toLowerCase().includes(categorySearchTerm.toLowerCase());
   });
 

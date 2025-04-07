@@ -24,7 +24,7 @@ const { generateReportIpc } = require("./ipc/generateReport");
 const { registerOpportunityToEarnIpc } = require("./ipc/opportunityToEarn");
 const { registerTallyIpc } = require("./ipc/tallyHandlers.js");
 const { registerVoucherIpc } = require("./ipc/VoucherHandlers.js");
-const { registerExcelDownloadHandlers } = require("./ipc/excelDownloadHandler")
+const { registerExcelDownloadHandlers } = require("./ipc/excelDownloadHandler");
 const databaseManager = require("./db/db");
 const { spawn, execFile } = require("child_process");
 const log = require("electron-log");
@@ -49,9 +49,9 @@ autoUpdater.disableWebInstaller = true;
 autoUpdater.allowPrerelease = true;
 
 // Platform specific configurations
-if (process.platform === 'darwin') {
+if (process.platform === "darwin") {
   autoUpdater.allowDowngrade = true;
-} else if (process.platform === 'win32') {
+} else if (process.platform === "win32") {
   // app.setAppUserModelId('com.electron.electronapp');
   app.setAppUserModelId(process.execPath); // changed it to process.execPath from 'com.electron.electronapp' to fix the taskbar icon not showing issue ~ Aiyaz
   autoUpdater.autoInstallOnAppQuit = true;
@@ -59,13 +59,13 @@ if (process.platform === 'darwin') {
 }
 
 // Log update configuration (without exposing the token)
-log.info('Update Configuration:', {
+log.info("Update Configuration:", {
   platform: process.platform,
   appVersion: app.getVersion(),
   autoDownload: autoUpdater.autoDownload,
   allowPrerelease: autoUpdater.allowPrerelease,
   feedURL: autoUpdater.getFeedURL(),
-  tokenConfigured: !!process.env.GH_TOKEN
+  tokenConfigured: !!process.env.GH_TOKEN,
 });
 log.info("process.env.NODE_ENV", process.env.NODE_ENV);
 
@@ -80,62 +80,71 @@ autoUpdater.allowPrerelease = false;
 
 // Configure autoUpdater for GitHub repository
 autoUpdater.setFeedURL({
-  provider: 'github',
-  owner: 'Shama-Cyphersol',
-  repo: 'ca-offline-suite',
-  token: process.env.GH_TOKEN
+  provider: "github",
+  owner: "Shama-Cyphersol",
+  repo: "ca-offline-suite",
+  token: process.env.GH_TOKEN,
 });
 
 // Add version tracking
 let lastCheckedVersion = null;
 
 // Auto-update event handlers with detailed logging
-autoUpdater.on('checking-for-update', () => {
-  log.info('Checking for updates...');
-  win?.webContents.send('update-status', 'checking');
+autoUpdater.on("checking-for-update", () => {
+  log.info("Checking for updates...");
+  win?.webContents.send("update-status", "checking");
 });
 
-autoUpdater.on('update-available', (info) => {
+autoUpdater.on("update-available", (info) => {
   // Skip if we've already notified about this version
   if (lastCheckedVersion === info.version) {
-    log.info('Skipping notification for already notified version:', info.version);
+    log.info(
+      "Skipping notification for already notified version:",
+      info.version
+    );
     return;
   }
-  
-  log.info('Update available. Current version:', app.getVersion());
-  log.info('New version:', info.version);
+
+  log.info("Update available. Current version:", app.getVersion());
+  log.info("New version:", info.version);
   lastCheckedVersion = info.version;
 
-  dialog.showMessageBox({
-    type: 'info',
-    title: 'Update Available',
-    message: `A new version (${info.version}) is available. Your current version is ${app.getVersion()}.\n\nWould you like to download it now?`,
-    detail: info.releaseNotes ? `Release Notes:\n${info.releaseNotes}` : undefined,
-    buttons: ['Download Now', 'Later'],
-    defaultId: 0
-  }).then(({ response }) => {
-    if (response === 0) {
-      log.info('User accepted download');
-      autoUpdater.downloadUpdate();
+  dialog
+    .showMessageBox({
+      type: "info",
+      title: "Update Available",
+      message: `A new version (${
+        info.version
+      }) is available. Your current version is ${app.getVersion()}.\n\nWould you like to download it now?`,
+      detail: info.releaseNotes
+        ? `Release Notes:\n${info.releaseNotes}`
+        : undefined,
+      buttons: ["Download Now", "Later"],
+      defaultId: 0,
+    })
+    .then(({ response }) => {
+      if (response === 0) {
+        log.info("User accepted download");
+        autoUpdater.downloadUpdate();
 
-      // Show progress dialog
-      dialog.showMessageBox({
-        type: 'info',
-        title: 'Downloading Update',
-        message: 'The update is being downloaded',
-        buttons: ['OK']
-      });
-    }
-  });
+        // Show progress dialog
+        dialog.showMessageBox({
+          type: "info",
+          title: "Downloading Update",
+          message: "The update is being downloaded",
+          buttons: ["OK"],
+        });
+      }
+    });
 });
 
-autoUpdater.on('update-not-available', (info) => {
-  log.info('Update not available. Current version:', app.getVersion());
-  log.info('Latest version:', info?.version);
-  win?.webContents.send('update-status', 'not-available');
+autoUpdater.on("update-not-available", (info) => {
+  log.info("Update not available. Current version:", app.getVersion());
+  log.info("Latest version:", info?.version);
+  win?.webContents.send("update-status", "not-available");
 });
 
-autoUpdater.on('download-progress', (progress) => {
+autoUpdater.on("download-progress", (progress) => {
   log.info(`Download progress: ${progress.percent}%`);
   win?.setProgressBar(progress.percent / 100);
 });
@@ -143,30 +152,32 @@ autoUpdater.on('download-progress', (progress) => {
 // Add flag for tracking update status
 let isUpdating = false;
 
-autoUpdater.on('update-downloaded', (info) => {
-  log.info('Update downloaded. Version:', info.version);
+autoUpdater.on("update-downloaded", (info) => {
+  log.info("Update downloaded. Version:", info.version);
   win?.setProgressBar(-1); // Remove progress bar
 
-  dialog.showMessageBox({
-    type: 'info',
-    title: 'Update Ready',
-    message: 'The update has been downloaded successfully.',
-    detail: 'The application will restart to install the update.',
-    buttons: ['Restart Now', 'Later'],
-    defaultId: 0
-  }).then(({ response }) => {
-    if (response === 0) {
-      log.info('User accepted install');
-      isUpdating = true; // Set flag before restart
-      autoUpdater.quitAndInstall(false, true);
-    }
-  });
+  dialog
+    .showMessageBox({
+      type: "info",
+      title: "Update Ready",
+      message: "The update has been downloaded successfully.",
+      detail: "The application will restart to install the update.",
+      buttons: ["Restart Now", "Later"],
+      defaultId: 0,
+    })
+    .then(({ response }) => {
+      if (response === 0) {
+        log.info("User accepted install");
+        isUpdating = true; // Set flag before restart
+        autoUpdater.quitAndInstall(false, true);
+      }
+    });
 });
 
-autoUpdater.on('error', (err) => {
-  log.error('Auto-updater error:', err.message);
-  log.error('Error details:', err);
-  win?.webContents.send('update-error', err.message);
+autoUpdater.on("error", (err) => {
+  log.error("Auto-updater error:", err.message);
+  log.error("Error details:", err);
+  win?.webContents.send("update-error", err.message);
 });
 
 log.info("Working Directory:", process.cwd());
@@ -272,7 +283,8 @@ async function startPythonExecutable() {
       const workingDir = path.join(__dirname, "../");
 
       if (!fs.existsSync(pythonScriptPath)) {
-        const errorMessage = "Python script main.py not found in development mode.";
+        const errorMessage =
+          "Python script main.py not found in development mode.";
         log.error(errorMessage);
         dialog.showErrorBox("Development Error", errorMessage);
         reject(new Error(errorMessage));
@@ -280,7 +292,8 @@ async function startPythonExecutable() {
       }
 
       if (!fs.existsSync(venvPythonPath)) {
-        const errorMessage = "Virtual environment not found. Ensure .venv is set up.";
+        const errorMessage =
+          "Virtual environment not found. Ensure .venv is set up.";
         log.error(errorMessage);
         dialog.showErrorBox("Development Error", errorMessage);
         reject(new Error(errorMessage));
@@ -323,7 +336,7 @@ async function startPythonExecutable() {
       log.info("Spawning process with options:", {
         command,
         args,
-        options
+        options,
       });
 
       pythonProcess = spawn(command, args, options);
@@ -360,11 +373,12 @@ async function startPythonExecutable() {
       // Wait a bit to ensure process starts
       setTimeout(() => {
         if (pythonProcess.exitCode === null) {
-          log.info("Process still running after timeout - considering it successful");
+          log.info(
+            "Process still running after timeout - considering it successful"
+          );
           resolve();
         }
       }, 2000);
-
     } catch (error) {
       const errorMessage = `Unexpected error starting process: ${error.message}`;
       log.error(errorMessage);
@@ -401,7 +415,7 @@ async function createWindow() {
     autoHideMenuBar: true,
     title: isDev ? "CypherSol Dev" : "CypherSol",
   });
-  if (isDev) {
+  if (!isDev) {
     win.loadURL("http://localhost:3000");
   } else {
     const prodPath = path.resolve(
@@ -419,7 +433,7 @@ async function createWindow() {
 
   win.on("close", (event) => {
     log.info("Close event triggered");
-    
+
     // Skip confirmation if we're updating
     if (isUpdating) {
       log.info("Skipping close confirmation for update installation");
@@ -432,7 +446,8 @@ async function createWindow() {
       buttons: ["Yes", "Cancel"],
       defaultId: 1,
       title: "Confirm Exit",
-      message: "Closing the app will log out your session. Do you want to proceed?",
+      message:
+        "Closing the app will log out your session. Do you want to proceed?",
     });
 
     if (choice === 0) {
@@ -523,58 +538,60 @@ async function createWindow() {
   registerExcelDownloadHandlers(app.getPath("downloads"));
 
   // Auto-update IPC handlers with detailed logging
-  ipcMain.handle('check-for-updates', async () => {
-    log.info('Manual update check requested');
+  ipcMain.handle("check-for-updates", async () => {
+    log.info("Manual update check requested");
     if (isDev) {
-      const msg = 'Skip update check in dev mode';
+      const msg = "Skip update check in dev mode";
       log.info(msg);
       return msg;
     }
     try {
       const result = await autoUpdater.checkForUpdates();
-      log.info('Check for updates result:', result);
+      log.info("Check for updates result:", result);
       return result;
     } catch (err) {
-      log.error('Check for updates failed:', err);
+      log.error("Check for updates failed:", err);
       throw err;
     }
   });
 
-  ipcMain.handle('download-update', async () => {
-    log.info('Update download requested');
+  ipcMain.handle("download-update", async () => {
+    log.info("Update download requested");
     try {
       // Backup database before update
-      const dbPath = path.join(app.getPath('userData'), 'database.sqlite');
-      const backupDir = path.join(app.getPath('userData'), 'backups');
+      const dbPath = path.join(app.getPath("userData"), "database.sqlite");
+      const backupDir = path.join(app.getPath("userData"), "backups");
 
-      log.info('Creating backup directory:', backupDir);
+      log.info("Creating backup directory:", backupDir);
       if (!fs.existsSync(backupDir)) {
         fs.mkdirSync(backupDir, { recursive: true });
       }
 
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
       const backupPath = path.join(backupDir, `db-backup-${timestamp}.sqlite`);
 
-      log.info('Creating database backup:', backupPath);
+      log.info("Creating database backup:", backupPath);
       if (fs.existsSync(dbPath)) {
         fs.copyFileSync(dbPath, backupPath);
-        log.info('Database backup created successfully');
+        log.info("Database backup created successfully");
       } else {
-        log.info('No database found to backup');
+        log.info("No database found to backup");
       }
 
       const result = await autoUpdater.downloadUpdate();
-      log.info('Update download completed');
+      log.info("Update download completed");
       return result;
     } catch (err) {
-      log.error('Update download failed:', err);
+      log.error("Update download failed:", err);
       throw err;
     }
   });
 
-  ipcMain.handle('install-update', () => {
-    log.info('Update installation requested. Quitting app and installing update...');
-    if (process.platform === 'win32') {
+  ipcMain.handle("install-update", () => {
+    log.info(
+      "Update installation requested. Quitting app and installing update..."
+    );
+    if (process.platform === "win32") {
       // For Windows, we want to restart the app after update
       autoUpdater.quitAndInstall(true, true);
     } else {
@@ -584,10 +601,10 @@ async function createWindow() {
   });
 
   // Add platform-specific update settings
-  if (process.platform === 'win32') {
-    ipcMain.handle('get-update-location', () => {
-      const updatePath = path.join(app.getPath('temp'), 'cyphersol-updates');
-      log.info('Windows update location:', updatePath);
+  if (process.platform === "win32") {
+    ipcMain.handle("get-update-location", () => {
+      const updatePath = path.join(app.getPath("temp"), "cyphersol-updates");
+      log.info("Windows update location:", updatePath);
       return updatePath;
     });
   }
@@ -622,7 +639,7 @@ async function createWindow() {
   });
 
   // Check for updates after window is ready
-  win.webContents.on('did-finish-load', () => {
+  win.webContents.on("did-finish-load", () => {
     if (!isDev) {
       // Initial check after 3 seconds
       setTimeout(checkForUpdates, 3000);
@@ -710,37 +727,37 @@ app.on("activate", () => {
 });
 
 // Add these IPC handlers
-ipcMain.handle('start-download', () => {
+ipcMain.handle("start-download", () => {
   autoUpdater.downloadUpdate();
 });
 
-ipcMain.handle('quit-and-install', () => {
+ipcMain.handle("quit-and-install", () => {
   autoUpdater.quitAndInstall();
 });
 
 // Modify the update check function
 function checkForUpdates() {
   if (isDev) {
-    log.info('Skipping update check in development mode');
+    log.info("Skipping update check in development mode");
     return;
   }
 
   const currentVersion = app.getVersion();
-  
+
   // Skip check if we're already on the latest notified version
   if (lastCheckedVersion && lastCheckedVersion === currentVersion) {
-    log.info('Already on latest notified version:', currentVersion);
+    log.info("Already on latest notified version:", currentVersion);
     return;
   }
 
-  log.info('Checking for updates...');
-  autoUpdater.checkForUpdates().catch(err => {
-    log.error('Error checking for updates:', err);
+  log.info("Checking for updates...");
+  autoUpdater.checkForUpdates().catch((err) => {
+    log.error("Error checking for updates:", err);
     dialog.showMessageBox({
-      type: 'error',
-      title: 'Update Error',
+      type: "error",
+      title: "Update Error",
       message: `Error checking for updates: ${err.message}`,
-      buttons: ['OK']
+      buttons: ["OK"],
     });
   });
 }
