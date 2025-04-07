@@ -332,14 +332,14 @@ const IndividualTable = () => {
                             "Re-run"
                           )}
                         </Button>
-                        <Button
+                        {/* <Button
                           onClick={(e) => {
                             e.stopPropagation();
                             confirmDelete(item.id);
                           }}
                         >
                           Delete
-                        </Button>
+                        </Button> */}
                       </TableCell>
                     </TableRow>
                   );

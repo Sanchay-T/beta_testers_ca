@@ -183,7 +183,10 @@ export default function GenerateReport() {
           });
         }
 
-        if (result.data.successfulFiles.length > 0) {
+        if (
+          result.data.successfulFiles.length > 0 &&
+          !result.data.failedFiles
+        ) {
           // setShowRectifyButton(true);
           const successfulFiles = result.data.successfulFiles.map(
             (file_path) => {
