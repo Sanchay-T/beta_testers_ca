@@ -310,7 +310,16 @@ const IndividualTable = () => {
                         <Button
                           onClick={(e) => {
                             e.stopPropagation(); // Prevent row click
-                            handleRectify(item.filePath);
+                            if (item.filePath.includes(".pdf")) {
+                              handleRectify(item.filePath);
+                            } else {
+                              toast({
+                                title: "Alert",
+                                description: "File not supported for rerun",
+                                variant: "destructive",
+                                duration: 3000,
+                              });
+                            }
                           }}
                           disabled={isProcessing}
                         >
