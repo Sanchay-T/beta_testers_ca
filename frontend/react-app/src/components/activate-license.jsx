@@ -118,13 +118,13 @@ export function LicenseActivationForm({ className, ...props }) {
     setSelectedNetworkLicense(license);
     setActivationStatus("processing");
 
+    console.log("Selected Network License:", license);
+    console.log("Network License:", networkLicense);
+
     try {
       const result = await window.electron.auth.connectNetworkLicense({
-        licenseId: license.id,
-        ip: networkLicense.ip,
-        port: networkLicense.port,
-        username: networkLicense.username,
-        role: credentials.role,
+        ip: license.ip,
+        port: license.port,
       });
 
       if (result.success) {

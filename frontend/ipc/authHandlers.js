@@ -363,7 +363,7 @@ function registerAuthHandlers(userDataPath) {
   ipcMain.handle("license:activate", async (event, args) => {
 
     const { licenseKey, role } = args;
-    const username = "myusername"
+    const username = "rajaa"
     const uuid_hash = await systemInformation.getHashedUUID();
     console.log("UUID Hash:", uuid_hash);
     // Ensure gateway server service is running
@@ -373,14 +373,14 @@ function registerAuthHandlers(userDataPath) {
     await new Promise((res) => setTimeout(res, 1000));
 
     try {
-      const response = await axios.post("http://localhost:7890/api/validate-license", {
+      const response = await axios.post("http://localhost:7890/api/activate-license", {
         licenseKey,
         role,
         username,
         uuid_hash
       });
 
-      if (response.data.status === "OK") {
+      if (response.status === 200) {
         log.info("License activated successfully:", response.data);
         return { success: true, data: response.data };
       } else {
@@ -393,14 +393,42 @@ function registerAuthHandlers(userDataPath) {
     }
   });
 
-  // IPC Handler for searching network licenses using mDNS discovery
+
+  // IPC Handler for searching network licenses using mDNS discovery,
+  // then validating each discovered service via its /api/validate-license endpoint.
   ipcMain.handle("license:search-network-licenses", async (event, networkLicense) => {
     try {
-      // Optionally, if networkLicense contains a specific service type, use it; otherwise default to "license"
+      // Determine service type (default to "license" if not provided)
       const serviceType = networkLicense?.serviceType || "license";
       // Discover services via mDNS
-      const licenses = await discoverMdnsServices(serviceType, 5000);
-      return { success: true, licenses };
+      const discoveredServices = await discoverMdnsServices(serviceType, 5000);
+      const validatedServices = [];
+      const now = Date.now() / 1000; // current time in seconds
+
+      // Iterate over discovered services and validate each one
+      for (const service of discoveredServices) {
+        try {
+          // Construct the validation URL (assuming the endpoint is /api/validate-license)
+          const url = `http://${service.ip}:${service.port}/api/validate-license`;
+          // Send a POST request (empty body or you can add required data)
+          const response = await axios.post(url, {});
+
+          // Check response validity:
+          // Assume a valid response has response.data.status === "OK"
+          // and an expiry_timestamp greater than current time.
+          if (response.data && response.data.status === "OK" && response.data.expiry_timestamp > now) {
+            validatedServices.push({
+              ...service,
+              validation: response.data
+            });
+          }
+        } catch (err) {
+          console.error("Validation error for service", service, ":", err.message);
+          // Skip this service if validation fails.
+        }
+      }
+
+      return { success: true, licenses: validatedServices };
     } catch (error) {
       console.error("Error searching network licenses:", error);
       return { success: false, error: error.message };
@@ -409,6 +437,7 @@ function registerAuthHandlers(userDataPath) {
 
 
   ipcMain.handle("license:connect-network-license", async (event, licenseData) => {
+    log.info("Connecting to network license:", licenseData);
     try {
       const { ip, port } = licenseData;
       if (!ip || !port) throw new Error("Invalid license data. IP and port are required.");
@@ -421,7 +450,7 @@ function registerAuthHandlers(userDataPath) {
       if (response.data.success) {
         const encryptedData = await encryptLicenseData(JSON.stringify(response.data));
 
-        const filePath = path.join(userDataPath, "license.enc");
+        const filePath = path.join(userDataPath, "clientLicense.enc");
         await fs.writeFile(filePath, encryptedData);
         console.log("License encrypted and saved at:", filePath);
 
