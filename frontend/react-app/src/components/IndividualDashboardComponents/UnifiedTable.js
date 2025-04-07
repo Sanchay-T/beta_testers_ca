@@ -2567,7 +2567,7 @@ const DataTable = ({
           >
             {currentTransactionType === "credit" && (
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Income" id="income" />
+                <RadioGroupItem value="Income" id="Income" />
                 <Label htmlFor="Income">Income</Label>
               </div>
             )}

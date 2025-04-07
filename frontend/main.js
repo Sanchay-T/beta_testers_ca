@@ -415,7 +415,7 @@ async function createWindow() {
     autoHideMenuBar: true,
     title: isDev ? "CypherSol Dev" : "CypherSol",
   });
-  if (!isDev) {
+  if (isDev) {
     win.loadURL("http://localhost:3000");
   } else {
     const prodPath = path.resolve(
