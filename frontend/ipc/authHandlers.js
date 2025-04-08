@@ -363,7 +363,6 @@ function registerAuthHandlers(userDataPath) {
   ipcMain.handle("license:activate", async (event, args) => {
 
     const { licenseKey, role } = args;
-    const username = "rajaa"
     const uuid_hash = await systemInformation.getHashedUUID();
     console.log("UUID Hash:", uuid_hash);
     // Ensure gateway server service is running
@@ -376,7 +375,6 @@ function registerAuthHandlers(userDataPath) {
       const response = await axios.post("http://localhost:7890/api/activate-license", {
         licenseKey,
         role,
-        username,
         uuid_hash
       });
 
@@ -442,9 +440,28 @@ function registerAuthHandlers(userDataPath) {
       const { ip, port } = licenseData;
       if (!ip || !port) throw new Error("Invalid license data. IP and port are required.");
 
-      const uuidHash = await systemInformation.getHashedUUID(); // assuming you defined this somewhere
+      const uuid = systemInformation.getUUID(); // assuming you defined this somewhere
+      const uuidHash = systemInformation.getHashedUUID(); // assuming you defined this somewhere
+      const macAddress = systemInformation.getMACAddress(); // assuming you defined this somewhere
+      const hostname = systemInformation.getHostname(); // assuming you defined this somewhere
+      const windowsUserSID = systemInformation.getWindowsUserSID(); // assuming you defined this somewhere
+      const username = systemInformation.getUsername(); // assuming you defined this somewhere
+
+      log.info("Details for license connection:",
+        uuid,
+        uuidHash,
+        macAddress,
+        windowsUserSID,
+        hostname,
+        username,
+      );
+
       const response = await axios.post(`http://${ip}:${port}/api/license/assign`, {
-        clientId: uuidHash,
+        clientId: windowsUserSID,
+        uuid: uuid,
+        hostname: hostname,
+        username: username,
+        macAddress: macAddress,
       });
 
       if (response.data.success) {
@@ -460,7 +477,7 @@ function registerAuthHandlers(userDataPath) {
         return { success: false, error: response.data.message };
       }
     } catch (error) {
-      console.error("License connection error:", error);
+      console.error("License connection error:", error.message);
       return { success: false, error: error.message };
     }
   });

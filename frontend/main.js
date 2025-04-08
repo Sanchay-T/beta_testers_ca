@@ -32,6 +32,7 @@ const portscanner = require("portscanner"); // Import portscanner
 const { autoUpdater } = require("electron-updater");
 const { getdata } = require("./ipc/getData.js");
 const bonjour = require('bonjour')();
+const systemInfo = require("./SystemInformation.js");
 
 function discoverMdnsServices(serviceType = '', callback) {
   bonjour.find({ type: serviceType }, (service) => {
@@ -190,12 +191,8 @@ autoUpdater.on('error', (err) => {
   win?.webContents.send('update-error', err.message);
 });
 
-log.info("Working Directory:", process.cwd());
 
 const BASE_DIR = isDev ? __dirname : process.resourcesPath;
-log.info("current directory", app.getAppPath());
-log.info("BASE_DIR", BASE_DIR);
-log.info("__dirname", __dirname);
 
 let win = null;
 let pythonProcess = null;
@@ -333,10 +330,6 @@ function getProductionExecutablePath() {
 
   const executablePath = platformExecutables[process.platform];
 
-  // Add detailed logging
-  log.info("Current platform:", process.platform);
-  log.info("Resources path:", process.resourcesPath);
-  log.info("Looking for executable at:", executablePath);
 
   if (!executablePath || !fs.existsSync(executablePath)) {
     const errorMessage = `Executable not found for platform: ${process.platform}. Path: ${executablePath}`;
@@ -345,17 +338,14 @@ function getProductionExecutablePath() {
     // Log the contents of the resources directory
     try {
       const resourcesContents = fs.readdirSync(process.resourcesPath);
-      log.info("Contents of resources directory:", resourcesContents);
 
       const backendPath = path.join(process.resourcesPath, "backend");
       if (fs.existsSync(backendPath)) {
         const backendContents = fs.readdirSync(backendPath);
-        log.info("Contents of backend directory:", backendContents);
 
         const mainPath = path.join(backendPath, "main");
         if (fs.existsSync(mainPath)) {
           const mainContents = fs.readdirSync(mainPath);
-          log.info("Contents of main directory:", mainContents);
         }
       }
     } catch (err) {
@@ -366,7 +356,6 @@ function getProductionExecutablePath() {
     return null;
   }
 
-  log.info("Found executable at:", executablePath);
   return executablePath;
 }
 
@@ -415,15 +404,9 @@ async function startPythonExecutable() {
         return;
       }
 
-      // Log the working directory and executable details
-      log.info("Working directory:", process.cwd());
-      log.info("Executable path:", executablePath);
-      log.info("Executable exists:", fs.existsSync(executablePath));
-
       // Check if the executable is actually executable
       try {
         fs.accessSync(executablePath, fs.constants.X_OK);
-        log.info("Executable has execution permissions");
       } catch (err) {
         log.error("Executable lacks execution permissions:", err);
       }
@@ -433,15 +416,9 @@ async function startPythonExecutable() {
 
       // Set working directory to the executable's directory
       options.cwd = path.dirname(executablePath);
-      log.info("Setting working directory to:", options.cwd);
     }
 
     try {
-      log.info("Spawning process with options:", {
-        command,
-        args,
-        options
-      });
 
       pythonProcess = spawn(command, args, options);
 
@@ -496,6 +473,7 @@ async function startPythonExecutable() {
 function createProtocol() {
   protocol.registerFileProtocol("app", (request, callback) => {
     const url = request.url.replace("app://", "");
+    log.info("Request URL:", url);
     try {
       return callback(path.normalize(`${__dirname}/../react-app/build/${url}`));
     } catch (error) {
@@ -505,7 +483,6 @@ function createProtocol() {
 }
 
 async function createWindow() {
-  log.info("Creating window");
   win = new BrowserWindow({
     width: 1800,
     height: 1000,
@@ -527,8 +504,6 @@ async function createWindow() {
       "build",
       "index.html"
     );
-    log.info("Directory name:", __dirname);
-    log.info("Production path:", prodPath);
     win.loadFile(prodPath).catch((err) => {
       log.error("Failed to load production build:", err);
     });
@@ -755,30 +730,30 @@ app.setName("CypherSol Dev");
 app.whenReady().then(async () => {
   log.info("App is ready", app.getPath("userData"));
   // Example usage
-  log.info("📡 Discovering services...");
-  discoverMdnsServices('license-server', async (service) => {
-    log.info('📡 Service Found:', service);
+  // log.info("📡 Discovering services...");
+  // discoverMdnsServices('license-server', async (service) => {
+  //   log.info('📡 Service Found:', service);
 
-    // Using host (e.g., 'DESKTOP-85MU4TU.license-server.local')
-    const healthUrl = `http://${service.name}:${service.port}/api/health`;
-    log.info("Health URL:", healthUrl);
-    try {
-      const response = await fetch(healthUrl, {
-        headers: {
-          Accept: 'text/html' // Explicitly request HTML
-        }
-      });
+  //   // Using host (e.g., 'DESKTOP-85MU4TU.license-server.local')
+  //   const healthUrl = `http://${service.name}:${service.port}/api/health`;
+  //   log.info("Health URL:", healthUrl);
+  //   try {
+  //     const response = await fetch(healthUrl, {
+  //       headers: {
+  //         Accept: 'text/html' // Explicitly request HTML
+  //       }
+  //     });
 
-      const html = await response.text();
+  //     const html = await response.text();
 
-      console.log("✅ Health Check Response:\n", html);
-    } catch (err) {
-      console.error("❌ Error fetching health check:", err.message);
-    }
+  //     console.log("✅ Health Check Response:\n", html);
+  //   } catch (err) {
+  //     console.error("❌ Error fetching health check:", err.message);
+  //   }
 
 
-    log.info("\n*********************************************\n");
-  });
+  //   log.info("\n*********************************************\n");
+  // });
 
   // return;
 
@@ -820,6 +795,7 @@ app.whenReady().then(async () => {
   // return;
 
   try {
+
     try {
       const dbManager = databaseManager.getInstance();
       await dbManager.initialize(app.getPath("userData"));
@@ -838,9 +814,22 @@ app.whenReady().then(async () => {
 
     try {
       await licenseManager.init();
-      log.info("Python process started successfully");
     } catch (error) {
       log.error("LicenseManager initialization failed:", error);
+      throw error;
+    }
+
+    createProtocol();
+    createWindow();
+
+
+    try {
+      await systemInfo.loadData(app.getPath("userData"));
+      log.info("SystemInfo loaded successfully");
+      log.info("SystemInfo data:", systemInfo.getHostname()); win
+
+    } catch (error) {
+      log.error("SystemInfo initialization failed:", error);
       throw error;
     }
 
@@ -851,10 +840,6 @@ app.whenReady().then(async () => {
       throw error;
     }
 
-    // Proceed with the window creation and other tasks after initialization
-    log.info("After all initializations");
-    createProtocol();
-    createWindow();
 
     // Initial update check after 1 minute
     if (!isDev) {
