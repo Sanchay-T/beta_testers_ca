@@ -311,6 +311,16 @@ export default function GenerateReport() {
   // const handleTestEdit = () => {
   //   window.electron.excelFileDownload(5);
   // };
+  const observerError =
+    "ResizeObserver loop completed with undelivered notifications.";
+  window.addEventListener("error", (e) => {
+    if (e.message === observerError) {
+      e.stopImmediatePropagation();
+      console.error(
+        "AQ - ResizeObserver loop completed with undelivered notifications."
+      );
+    }
+  });
 
   const note = {
     content: [
