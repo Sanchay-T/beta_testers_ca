@@ -727,8 +727,23 @@ async function createWindow() {
 
 app.setName("CypherSol Dev");
 
+async function fetchLicenseStatus() {
+  try {
+    const res = await axios.get("http://localhost:5000/license/status/all");
+    if (res.data.success) {
+      console.log("🧾 Current License Sessions:");
+      console.table(res.data.sessions);
+    } else {
+      console.error("Failed to fetch license sessions:", res.data);
+    }
+  } catch (err) {
+    console.error("Error fetching license status:", err.message);
+  }
+}
+
 app.whenReady().then(async () => {
   log.info("App is ready", app.getPath("userData"));
+  await fetchLicenseStatus();
   // Example usage
   // log.info("📡 Discovering services...");
   // discoverMdnsServices('license-server', async (service) => {
@@ -826,7 +841,7 @@ app.whenReady().then(async () => {
     try {
       await systemInfo.loadData(app.getPath("userData"));
       log.info("SystemInfo loaded successfully");
-      log.info("SystemInfo data:", systemInfo.getHostname()); win
+      log.info("SystemInfo data:", systemInfo.getHostname());
 
     } catch (error) {
       log.error("SystemInfo initialization failed:", error);

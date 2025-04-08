@@ -6,7 +6,6 @@ const log = require("electron-log");
 const { uuid } = require("systeminformation");
 
 const isDev = process.env.NODE_ENV === "development";
-log.info('License manager process.env.NODE_ENV', isDev);
 
 const SERVICE_NAME = "Cyphersol-dumm";
 const LICENSE_KEY_ACCOUNT = "license-key";
@@ -19,7 +18,6 @@ log.info("API URL : ", API_URL)
 
 
 const toValidateLicense = process.env.VALIDATE_LICENSE == "true"
-log.info("Validate License : ", toValidateLicense);
 // const API_URL = "http://127.0.0.1/validate-offlineapp-login/";
 // username : 2-32e6d741
 // licensekey : SOMEX4Y4ZLicenseKEYForCAOffline
@@ -143,20 +141,16 @@ class LicenseManager {
     async getHashedUUID() {
         const uuid = await getSystemUUID();
         const salt = process.env.UUID_SALT || 'default-salt'; // Use env variable!
-        log.info("UUID Salt:", salt);
         return crypto.createHash('sha256').update(uuid + salt).digest('hex');
     }
 
     async getHashedUUIDTest(uuid) {
         const salt = process.env.UUID_SALT || 'default-salt'; // Use env variable!
-        log.info("UUID Salt:", salt);
         return crypto.createHash('sha256').update(uuid + salt).digest('hex');
     }
 
     async isValidUUIDHash(storedHash) {
         const computedHash = await this.getHashedUUID();
-        log.info("Stoede UUID Hash:", storedHash);
-        log.info("UUID Computed:", computedHash);
         // const salt = process.env.UUID_SALT || 'default-salt'; // Use the same salt
         // const computedHash = crypto.createHash('sha256').update(uuid + salt).digest('hex');
 
@@ -174,7 +168,6 @@ class LicenseManager {
                 if (!isValid) {
                     throw new Error("UUID Hash is invalid");
                 }
-                log.info("UUID Hash is valid");
             }
             else {
                 uuidHash = await this.getHashedUUID();
@@ -201,7 +194,6 @@ class LicenseManager {
                     }
                 );
 
-                // console.log("License Validation Response : ", response);
                 const { data } = response;
 
                 // Handle successful response
