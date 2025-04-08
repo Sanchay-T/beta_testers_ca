@@ -33,6 +33,7 @@ const { autoUpdater } = require("electron-updater");
 const { getdata } = require("./ipc/getData.js");
 const bonjour = require('bonjour')();
 const systemInfo = require("./SystemInformation.js");
+const axios = require("axios");
 
 function discoverMdnsServices(serviceType = '', callback) {
   bonjour.find({ type: serviceType }, (service) => {
