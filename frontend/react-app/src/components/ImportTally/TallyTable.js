@@ -385,7 +385,6 @@ const TallyTable = ({
     // Create an async function inside useEffect to properly await
     const checkLedgerStatus = async () => {
       const ledgerStatus = await getLedgerCreationStatus();
-      console.log({ ledgerStatus });
       setIsLedgersCreated(ledgerStatus);
     };
 

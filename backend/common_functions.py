@@ -2563,8 +2563,9 @@ def summary_sheet(idf, open_bal, close_bal, new_tran_df, new_categories = None):
     excel_file_path = os.path.join(BASE_DIR, "Final_Category.xlsx")
     user_created = os.path.join(BASE_DIR, "Customer_category.xlsx")
     # print("excel_file_path_bruh -",excel_file_path)
-
+        # excel_file_path+user_created
     df2 = pd.read_excel(excel_file_path)
+    user_created_df = pd.read_excel(user_created)
     
     df_new = pd.DataFrame()
     
@@ -2574,7 +2575,7 @@ def summary_sheet(idf, open_bal, close_bal, new_tran_df, new_categories = None):
         append_to_excel(user_created, new_categories)
 
     # Append new data
-    df2 = pd.concat([df2, df_new], ignore_index=True)
+    df2 = pd.concat([df2, df_new,user_created_df], ignore_index=True)
 
     sheet_1, sheet_2, sheet_3, sheet_4, sheet_5, sheet_6, missing_months_list = make_summary_great_again(new_tran_df, opening_closing_balance, df2)
     df_list = [sheet_1, sheet_2, sheet_3, sheet_4, sheet_5, sheet_6]

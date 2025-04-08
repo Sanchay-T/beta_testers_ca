@@ -292,9 +292,7 @@ const DataTable = ({
   useEffect(() => {
     const handleOutsideClick = (event) => {
       // Return early if click is on or within a dropdown trigger or its content
-      console.log({
-        aiyaz: event.target.closest(".category-dropdown-container"),
-      });
+    
       if (event.target.closest(".category-dropdown-container")) {
         return;
       }
@@ -304,7 +302,6 @@ const DataTable = ({
       setCategorySelectDropdownOpen(null);
     };
 
-    console.log({ isOpen, categorySelectDropdownOpen });
     // Listen for clicks if any dropdown is open
     if (isOpen || categorySelectDropdownOpen != null) {
       document.addEventListener("mousedown", handleOutsideClick);
@@ -408,7 +405,6 @@ const DataTable = ({
       try {
         initialCategories = JSON.parse(storedCategoriesArray);
         setCategoriesArray(initialCategories);
-        console.log("Loaded categoriesArray from localStorage", initialCategories);
       } catch (e) {
         console.error("Error parsing categoriesArray", e);
       }
@@ -439,12 +435,10 @@ const DataTable = ({
           }
         }
 
-        console.log({hasNewCategories, categoryMap});
   
         // Only update localStorage if we added new categories
         if (hasNewCategories) {
           const newArray = Array.from(categoryMap.values());
-          console.log("New categories added to array", newArray);
           localStorage.setItem("categoriesArray", JSON.stringify(newArray));
           return newArray;
         }
@@ -687,8 +681,6 @@ const DataTable = ({
 
   // --- Single Row Update: Use the entire row (which includes its id) ---
   const handleCategoryChange = (transaction, newCategory) => {
-    console.log("Transaction", transaction);
-    console.log("New category", newCategory);
     const oldCategory = transaction.category;
     // Find similar transactions
     const similarTransactions1 = processSimilarCategory(
@@ -1657,7 +1649,6 @@ const DataTable = ({
       if (globalSelectedRows.size > 0) {
         const firstId = Array.from(globalSelectedRows)[0];
         const transaction = filteredData.find((tx) => tx.id === firstId);
-        console.log("Transaction aq", transaction);
         // Set transaction type based on first transaction
         setCurrentTransactionType(transaction?.debit > 0 ? "debit" : "credit");
       }
