@@ -675,7 +675,12 @@ def cleaning(new_df):
 
     df = check_date(df)
     df = df[df['Balance'].notna() & (df['Balance'] != "")]
-    df = df[~((df["Debit"].fillna(0) == 0) & (df["Credit"].fillna(0) == 0))]
+    
+    df = df[~(
+    ((df["Debit"].fillna(0) == 0) & (df["Credit"].fillna(0) == 0)) |
+    ((df["Debit"].fillna(0) > 0) & (df["Credit"].fillna(0) > 0))
+    )]
+    
     df = df[["Value Date", "Description", "Debit", "Credit", "Balance"]]
     df = df.drop_duplicates()
     idf = df.reset_index(drop=True)
