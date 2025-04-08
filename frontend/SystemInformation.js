@@ -53,11 +53,11 @@ class SystemInformation {
             this.username = this.computeUsername();
 
             // Load Windows User SID if on Windows, else set as null.
-            // if (process.platform === "win32") {
-            //     this.userSID = await this.computeWindowsUserSID(userDataPath);
-            // } else {
-            //     this.userSID = null;
-            // }
+            if (process.platform === "win32") {
+                this.userSID = await this.computeWindowsUserSID(userDataPath);
+            } else {
+                this.userSID = null;
+            }
             log.info("System information loaded successfully.");
         } catch (error) {
             log.error("Error during system information loading:", error);
@@ -131,6 +131,7 @@ class SystemInformation {
                 const encrypted = fs.readFileSync(sidCachePath, "utf8");
                 const sid = decryptData(encrypted);
                 log.info("Loaded cached User SID.");
+                log.info("User SID:", sid);
                 return sid;
             } catch (err) {
                 log.warn("Failed to read cached SID. Recomputing.", err);
@@ -158,6 +159,8 @@ class SystemInformation {
                     } catch (encryptErr) {
                         log.error("Failed to cache encrypted SID:", encryptErr);
                     }
+
+                    log.info("User SID:", sid)
 
                     resolve(sid);
                 } else {

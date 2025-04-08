@@ -51,9 +51,7 @@ class LicenseManager {
                 SERVICE_NAME,
                 LICENSE_KEY_ACCOUNT
             );
-            console.log("Init licenseKey:", licenseKey);
             this.isActivated = !!licenseKey;
-            console.log("Init isActivated:", this.isActivated);
             return this.isActivated;
         } catch (error) {
             console.error("License check failed:", error);
@@ -87,7 +85,6 @@ class LicenseManager {
     async storeLicense(credentials) {
 
         const uuidHash = await this.getHashedUUID();
-        console.log("UUID Hash in storing:", uuidHash);
 
         const licenseData = {
             licenseKey: credentials.licenseKey,
@@ -96,7 +93,6 @@ class LicenseManager {
 
 
         try {
-            console.log("Credentials:", credentials);
             // const isValid = await this.validateLicense(
             //     credentials.licenseKey,
             //     credentials.email
@@ -117,7 +113,6 @@ class LicenseManager {
             //     error: "Invalid license key",
             // };
         } catch (error) {
-            console.log("License storage error:", error);
             return {
                 success: false,
                 error: "License storage failed",
@@ -208,8 +203,6 @@ class LicenseManager {
 
                 // console.log("License Validation Response : ", response);
                 const { data } = response;
-                console.log("Response Status : ", response.status);
-                console.log("Data : ", data);
 
                 // Handle successful response
                 if (response.status === 200) {
@@ -279,7 +272,6 @@ class LicenseManager {
 
     // Method to check if the license is activated
     async checkActivation() {
-        console.log("isActivated:", this.isActivated);
         return this.isActivated;
     }
 }

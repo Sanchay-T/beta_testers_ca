@@ -11,6 +11,9 @@ const systemInformation = require("../SystemInformation");
 const bonjour = require("bonjour")();
 const axios = require("axios");
 const path = require("path");
+const { encryptData, decryptData } = require("../CryptoHandler"); // your crypto module
+const fs = require("fs");
+
 
 log.info("License manager process.env.NODE_ENV", process.env.NODE_ENV);
 
@@ -464,20 +467,31 @@ function registerAuthHandlers(userDataPath) {
         macAddress: macAddress,
       });
 
+      log.info("License assignment response:", response.data);
+
       if (response.data.success) {
-        const encryptedData = await encryptLicenseData(JSON.stringify(response.data));
+        const encryptedData = await encryptData(JSON.stringify(response.data));
 
         const filePath = path.join(userDataPath, "clientLicense.enc");
-        await fs.writeFile(filePath, encryptedData);
-        console.log("License encrypted and saved at:", filePath);
-
+        fs.writeFile(filePath, encryptedData, (err) => {
+          if (err) {
+            console.error("Failed to write license file:", err);
+          } else {
+            console.log("License file saved successfully at:", filePath);
+          }
+        });
         return { success: true, data: response.data };
       } else {
         console.error("License assignment failed:", response.data.message);
         return { success: false, error: response.data.message };
       }
     } catch (error) {
-      console.error("License connection error:", error.message);
+      if (error.response) {
+        log.error("License assignment error:", error.response.data);
+      }
+      else {
+        log.error("License connection error:", error.message);
+      }
       return { success: false, error: error.message };
     }
   });

@@ -25,9 +25,6 @@ class SessionManager extends EventEmitter {
         });
 
         this._user = this.store.get('user') || null;
-
-        // console.log('SessionManager initialized', "User:", this._user, " Store: ", this.store);
-        console.log('SessionManager initialized');
     }
 
     static getInstance() {
@@ -41,7 +38,6 @@ class SessionManager extends EventEmitter {
 
         if (remainingSeconds <= 0) {
             this.emit('licenseExpired');
-            console.log('License expired');
             return;
         }
 
@@ -56,13 +52,12 @@ class SessionManager extends EventEmitter {
                 clearInterval(this.interval);
                 this.remainingSeconds = 0;
                 this.emit('licenseExpired');
-                console.log('License expired');
             } else {
                 this.setRemainingSeconds(remainingSeconds);
             }
         }, 1000);
 
-        console.log(`License countdown started: ${remainingSeconds} seconds remaining`);
+        // console.log(`License countdown started: ${remainingSeconds} seconds remaining`);
     }
 
     setRemainingSeconds(seconds) {
@@ -101,7 +96,6 @@ class SessionManager extends EventEmitter {
         this._user = null;
         try {
             this.store.delete('user');
-            log.info("User deleted");
             return { success: true };
         }
         catch (err) {
