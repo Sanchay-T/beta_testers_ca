@@ -1480,7 +1480,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                       : -1;
                                   })
                                   .map((statement, index) => {
-                                    console.log({ aiyaz: statement });
+                                    console.log({ statement });
                                     const isDone = statement.resolved;
                                     const hasError = Boolean(
                                       statement.respectiveReasonsForError
@@ -1509,8 +1509,11 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                           {/* {!hasError && ( */}
                                           {
                                             <div className="flex-1">
-                                              {(report.status === "Success" &&
-                                                isDone) ||
+                                              {console.log({
+                                                status: report.status,
+                                              })}
+
+                                              {report.status === "Success" ||
                                               isDone ? (
                                                 <Button
                                                   size="sm"
@@ -1562,7 +1565,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                             )}
                           </div>
                           <AlertDialogFooter className="border-t border-black/10 pt-6">
-                            {failedDatasOfCurrentReport?.length > 0 &&
+                            {/* {failedDatasOfCurrentReport?.length > 0 &&
                               !report.resolved && (
                                 <div className="flex justify-center">
                                   {report.status === "Success" &&
@@ -1587,6 +1590,27 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                       )}
                                     </Button>
                                   )}
+                                </div>
+                              )} */}
+                            {failedDatasOfCurrentReport?.length > 0 &&
+                              !report.hasFailedStatements &&
+                              report.status === "Failed" && (
+                                <div className="flex justify-center">
+                                  <Button
+                                    type="submit"
+                                    disabled={pdfEditLoading}
+                                    onClick={handleSubmitEditPdf}
+                                    className="relative inline-flex items-center px-4 py-2"
+                                  >
+                                    {pdfEditLoading ? (
+                                      <>
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        <span>Processing...</span>
+                                      </>
+                                    ) : (
+                                      "Submit"
+                                    )}
+                                  </Button>
                                 </div>
                               )}
                             <AlertDialogCancel
@@ -1687,7 +1711,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Report Generated Successfully!</DialogTitle>
-            {console.log({failedStatements})}
+            {console.log({ failedStatements })}
             <DialogDescription className="flex items-end gap-x-4 pt-4 ">
               {failedStatements.length === 0 ? (
                 <div className="flex items-center gap-x-4">

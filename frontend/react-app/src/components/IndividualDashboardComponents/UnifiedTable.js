@@ -168,6 +168,7 @@ const DataTable = ({
     "Salary Paid",
     "Self transfer",
   ]);
+  
   const [currentDateColumn, setCurrentDateColumn] = useState([]);
 
   // Category states

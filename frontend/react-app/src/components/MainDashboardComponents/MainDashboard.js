@@ -824,7 +824,7 @@ const MainDashboard = ({ handleTabChange }) => {
           
         </div> */}
 
-        <ResponsiveContainer className={gridClasses}>
+        <ResponsiveContainer className={gridClasses} width="100%" height={570}>
           <Card1
             type="reports"
             title="Overview"
