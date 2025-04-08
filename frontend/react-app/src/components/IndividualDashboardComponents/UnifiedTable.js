@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   Search,
   Loader2,
@@ -119,56 +119,113 @@ const DataTable = ({
     "monthKey",
   ]);
 
-  const [categoryOptions, setCategoryOptions] = useState([
-    "UPI-Cr",
-    "UPI-Dr",
-    "Bank Charges",
-    "Bank Interest Received",
-    "Bounce",
-    "Bonus Paid",
-    "Bonus Received",
-    "Cash Deposits",
-    "Cash Reversal",
-    "Cash Withdrawal",
-    "Credit Card Payment",
-    "Debtor List",
-    "Departmental Stores",
-    "Donation",
-    "Subscription / Entertainment",
-    "Food Expense/Hotel",
-    "General Insurance",
-    "Gold Loan",
-    "GST Paid",
-    "Income Tax Paid",
-    "Income Tax Refund",
-    "Indirect tax",
-    "Interest Debit",
-    "Interest Received",
-    "Investment",
-    "Life insurance",
-    "Loan",
-    "Loan given",
-    "Local Cheque Collection",
-    "Online Shopping",
-    "Other Expenses",
-    "POS-Cr",
-    "POS-Dr",
-    "Probable Claim Settlement",
-    "Property Tax",
-    "Provident Fund",
-    "Redemption, Dividend & Interest",
-    "Refund/Reversal",
-    "Rent Paid",
-    "Rent Received",
-    "TDS Deducted",
-    "Total Income Tax Paid",
-    "Travelling Expense",
-    "Utility Bills",
-    "Salary Received",
-    "Salary Paid",
-    "Self transfer",
+  // const [categoryOptions, setCategoryOptions] = useState([
+  //   "UPI-Cr",
+  //   "UPI-Dr",
+  //   "Bank Charges",
+  //   "Bank Interest Received",
+  //   "Bounce",
+  //   "Bonus Paid",
+  //   "Bonus Received",
+  //   "Cash Deposits",
+  //   "Cash Reversal",
+  //   "Cash Withdrawal",
+  //   "Credit Card Payment",
+  //   "Debtor List",
+  //   "Departmental Stores",
+  //   "Donation",
+  //   "Subscription / Entertainment",
+  //   "Food Expense/Hotel",
+  //   "General Insurance",
+  //   "Gold Loan",
+  //   "GST Paid",
+  //   "Income Tax Paid",
+  //   "Income Tax Refund",
+  //   "Indirect tax",
+  //   "Interest Debit",
+  //   "Interest Received",
+  //   "Investment",
+  //   "Life insurance",
+  //   "Loan",
+  //   "Loan given",
+  //   "Local Cheque Collection",
+  //   "Online Shopping",
+  //   "Other Expenses",
+  //   "POS-Cr",
+  //   "POS-Dr",
+  //   "Probable Claim Settlement",
+  //   "Property Tax",
+  //   "Provident Fund",
+  //   "Redemption, Dividend & Interest",
+  //   "Refund/Reversal",
+  //   "Rent Paid",
+  //   "Rent Received",
+  //   "TDS Deducted",
+  //   "Total Income Tax Paid",
+  //   "Travelling Expense",
+  //   "Utility Bills",
+  //   "Salary Received",
+  //   "Salary Paid",
+  //   "Self transfer",
+  // ]);
+
+  const [categoriesArray, setCategoriesArray] = useState([
+    { name: "GST Paid", type: "debit" },
+    { name: "Creditor", type: "debit" },
+    { name: "Donation", type: "debit" },
+    { name: "General Insurance", type: "debit" },
+    { name: "Gold Loan", type: "debit" },
+    { name: "Income Tax Paid", type: "debit" },
+    { name: "Interest Debit", type: "debit" },
+    { name: "Investment", type: "debit" },
+    { name: "Life insurance", type: "debit" },
+    { name: "Probable EMI", type: "debit" },
+    { name: "Property Tax", type: "debit" },
+    { name: "Rent Paid", type: "debit" },
+    { name: "Salary Paid", type: "debit" },
+    { name: "TDS Deducted", type: "debit" },
+    { name: "Tax Payment", type: "debit" },
+    { name: "Total Income Tax Paid", type: "debit" },
+    { name: "Travelling Expense", type: "debit" },
+    { name: "UPI-Dr", type: "debit" },
+    { name: "Suspense", type: "debit" },
+    { name: "Bank Charges", type: "debit" },
+    { name: "Bounce", type: "debit" },
+    { name: "Credit Card Payment", type: "debit" },
+    { name: "Departmental Stores", type: "debit" },
+    { name: "Food Expense/Hotel", type: "debit" },
+    { name: "Indirect tax", type: "debit" },
+    { name: "Loan given", type: "debit" },
+    { name: "Local Cheque Collection", type: "debit" },
+    { name: "Online Shopping", type: "debit" },
+    { name: "Other Expenses", type: "debit" },
+    { name: "POS-Dr", type: "debit" },
+    { name: "Provident Fund", type: "debit" },
+    { name: "Refund/Reversal", type: "debit" },
+    { name: "Subscription / Entertainment", type: "debit" },
+    { name: "Utility Bills", type: "debit" },
+    { name: "Cash Withdrawal", type: "debit" },
+    { name: "Self transfer", type: "debit" },
+    { name: "Debtor", type: "credit" },
+    { name: "Suspense", type: "credit" },
+    { name: "Bank Interest Received", type: "credit" },
+    { name: "Bonus Received", type: "credit" },
+    { name: "Cash Reversal", type: "credit" },
+    { name: "Income Tax Refund", type: "credit" },
+    { name: "Interest Received", type: "credit" },
+    { name: "Loan", type: "credit" },
+    { name: "Online Shopping", type: "credit" },
+    { name: "POS-Cr", type: "credit" },
+    { name: "Probable Claim Settlement", type: "credit" },
+    { name: "Redemption, Dividend & Interest", type: "credit" },
+    { name: "Refund/Reversal", type: "credit" },
+    { name: "Rent Received", type: "credit" },
+    { name: "Salary Received", type: "credit" },
+    { name: "UPI-Cr", type: "credit" },
+    { name: "Cash Deposits", type: "credit" },
+    { name: "Self transfer", type: "credit" },
   ]);
-  
+
   const [currentDateColumn, setCurrentDateColumn] = useState([]);
 
   // Category states
@@ -178,9 +235,8 @@ const DataTable = ({
     selectedCategorySimilarTransactions,
     setSelectedCategorySimilarTransactions,
   ] = useState(new Set());
-  const [categorySelectDropdownOpen, setCategorySelectDropdownOpen] = useState(
-    {}
-  );
+  const [categorySelectDropdownOpen, setCategorySelectDropdownOpen] =
+    useState(null);
 
   const [hasChanges, setHasChanges] = useState(false);
   const [modifiedData, setModifiedData] = useState([]);
@@ -189,9 +245,9 @@ const DataTable = ({
   const [totalPages, setTotalPages] = useState(0);
 
   // States for entity updating
-  const [similarEntityTransactions, setSimilarEntityTransactions] = useState(
-    []
-  );
+  // const [similarEntityTransactions, setSimilarEntityTransactions] = useState(
+  //   []
+  // );
   const [editedEntities, setEditedEntities] = useState({});
   const [batchModalOpen, setBatchModalOpen] = useState(false);
   const [batchEntityValue, setBatchEntityValue] = useState("");
@@ -232,21 +288,32 @@ const DataTable = ({
 
   const { reportData, updateReportData } = useReportContext();
   const [sliderValue, setSliderValue] = useState(85);
+
   useEffect(() => {
     const handleOutsideClick = (event) => {
-      if (commandRef.current && !commandRef.current.contains(event.target)) {
-        setIsOpen(false);
+      // Return early if click is on or within a dropdown trigger or its content
+      console.log({
+        aiyaz: event.target.closest(".category-dropdown-container"),
+      });
+      if (event.target.closest(".category-dropdown-container")) {
+        return;
       }
+
+      // Otherwise, close dropdowns
+      setIsOpen(false);
+      setCategorySelectDropdownOpen(null);
     };
 
-    if (isOpen) {
+    console.log({ isOpen, categorySelectDropdownOpen });
+    // Listen for clicks if any dropdown is open
+    if (isOpen || categorySelectDropdownOpen != null) {
       document.addEventListener("mousedown", handleOutsideClick);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
     };
-  }, [isOpen]);
+  }, [isOpen, categorySelectDropdownOpen]);
   // Helper: Format dates
   const formatValue = (value) => {
     if (value instanceof Date) return value.toLocaleDateString();
@@ -333,38 +400,83 @@ const DataTable = ({
   }, [data]);
 
   useEffect(() => {
-    // First check if we have stored categories in localStorage
-    const storedCategories = localStorage.getItem("categoryOptions");
-    if (title === "Transactions") {
-      // If no stored categories, merge default + transaction categories
-      const defaultCategories = categoryOptions; // Your predefined defaults
-      // console.log("defaultCategories", defaultCategories);
-      const transactionCategories = data
-        .filter((tx) => tx && tx.category) // Filter out null/undefined
-        .map((tx) => tx.category);
-
-      // console.log("transactionCategories", transactionCategories);
-      // Merge, deduplicate, and filter out empty strings
-      const mergedCategories = Array.from(
-        new Set([...defaultCategories, ...transactionCategories])
-      ).filter((cat) => cat && cat.trim().length > 0);
-
-      // console.log("Merged categories", mergedCategories);
-
-      // Store in localStorage and update state
-      localStorage.setItem("categoryOptions", JSON.stringify(mergedCategories));
-      setCategoryOptions(mergedCategories);
-      console.log("Created new category list:", mergedCategories);
-    } else {
-      // If categories already exist in localStorage, just use those
-      const parsedCategories = JSON.parse(storedCategories);
-      setCategoryOptions(parsedCategories);
-      console.log(
-        "Using existing categories from localStorage:",
-        parsedCategories
-      );
+    // First try to load categoriesArray from localStorage
+    const storedCategoriesArray = localStorage.getItem("categoriesArray");
+    let initialCategories = [];
+  
+    if (storedCategoriesArray) {
+      try {
+        initialCategories = JSON.parse(storedCategoriesArray);
+        setCategoriesArray(initialCategories);
+        console.log("Loaded categoriesArray from localStorage", initialCategories);
+      } catch (e) {
+        console.error("Error parsing categoriesArray", e);
+      }
     }
-  }, [data]);
+  
+    // Always update with new transaction categories (regardless of stored data)
+    if (title === "Transactions") {
+      // Analyze transactions to identify types
+      const txCategories = new Map();
+  
+      data.forEach((tx) => {
+        if (tx && tx.category) {
+          const type = Number(tx.credit) > 0 ? "credit" : "debit";
+          txCategories.set(tx.category, type);
+        }
+      });
+  
+      // Update categoriesArray with transaction data
+      setCategoriesArray((prevArray) => {
+        const categoryMap = new Map(prevArray.map((cat) => [cat.name, cat]));
+  
+        // Add any new categories from transactions
+        let hasNewCategories = false || storedCategoriesArray === null;
+        for (const [name, type] of txCategories.entries()) {
+          if (!categoryMap.has(name) && name && name.trim()) {
+            categoryMap.set(name, { name, type });
+            hasNewCategories = true;
+          }
+        }
+
+        console.log({hasNewCategories, categoryMap});
+  
+        // Only update localStorage if we added new categories
+        if (hasNewCategories) {
+          const newArray = Array.from(categoryMap.values());
+          console.log("New categories added to array", newArray);
+          localStorage.setItem("categoriesArray", JSON.stringify(newArray));
+          return newArray;
+        }
+        
+        return prevArray;
+      });
+    }
+  }, [data, title]);
+  const categoryOptions = useMemo(
+    () => categoriesArray.map((cat) => cat.name),
+    [categoriesArray]
+  );
+
+  // 3. Add a helper function to get a category's type
+  const getCategoryType = (categoryName) => {
+    const category = categoriesArray.find((cat) => cat.name === categoryName);
+    return category ? category.type : null;
+  };
+
+  const getFilteredCategoriesByType = (transactionType) => {
+    // If no type specified, return all categories (for backward compatibility)
+    if (!transactionType) return categoryOptions;
+
+    return categoriesArray
+      .filter(
+        (cat) => cat.type === transactionType || cat.name === "Self transfer"
+      )
+      .map((cat) => cat.name)
+      .filter((name) =>
+        name.toLowerCase().includes(categorySearchTerm.toLowerCase())
+      );
+  };
 
   // Get dynamic columns from first data item
   let columns = data.length > 0 ? Object.keys(data[0]) : [];
@@ -575,6 +687,8 @@ const DataTable = ({
 
   // --- Single Row Update: Use the entire row (which includes its id) ---
   const handleCategoryChange = (transaction, newCategory) => {
+    console.log("Transaction", transaction);
+    console.log("New category", newCategory);
     const oldCategory = transaction.category;
     // Find similar transactions
     const similarTransactions1 = processSimilarCategory(
@@ -1001,18 +1115,24 @@ const DataTable = ({
 
       // After successful save, update categoryOptions with pending categories
       if (pendingCategories.length > 0) {
-        const updatedOptions = [
-          ...categoryOptions,
-          ...pendingCategories,
-        ].sort();
-        setCategoryOptions(updatedOptions);
-        localStorage.setItem("categoryOptions", JSON.stringify(updatedOptions));
+        // Save categoriesArray to localStorage
+        localStorage.setItem(
+          "categoriesArray",
+          JSON.stringify(categoriesArray)
+        );
+
+        // For backward compatibility with existing code
+        // const updatedOptions = categoriesArray.map((cat) => cat.name);
+        // localStorage.setItem("categoryOptions", JSON.stringify(updatedOptions));
+
+        // Update context if needed
         updateReportData({
           ...reportData,
-          categoryOptions: updatedOptions,
+          // categoryOptions: updatedOptions,
+          categoriesArray: categoriesArray,
         });
 
-        // Clear pending categories
+        // Clear pending
         setPendingCategories([]);
       }
       setHasChanges(false);
@@ -1171,33 +1291,45 @@ const DataTable = ({
   };
 
   const handleAddCategory = (newCategory, row) => {
-    // Check if the new category is non-empty and not already in the options
     if (
       newCategory &&
       !categoryOptions.includes(newCategory) &&
       !pendingCategories.includes(newCategory)
     ) {
-      // Set the category that needs classification
-      setNewCategoryToClassify(newCategory);
-
-      // Add to pending categories list instead of directly to categoryOptions
-      setPendingCategories([...pendingCategories, newCategory]);
+      // Determine the type based on the transaction
+      let type = "debit"; // Default
 
       if (row) {
-        // Single-row update flow: store the pending change using the transaction id.
+        type = Number(row.credit) > 0 ? "credit" : "debit";
+      } else if (globalSelectedRows.size > 0) {
+        // For bulk operation, use the first selected row's type
+        const firstId = Array.from(globalSelectedRows)[0];
+        const transaction = filteredData.find((tx) => tx.id === firstId);
+        if (transaction) {
+          type = Number(transaction.credit) > 0 ? "credit" : "debit";
+        }
+      }
+
+      // Add to categoriesArray
+      setCategoriesArray((prev) => [...prev, { name: newCategory, type }]);
+
+      // Add to pending categories for backward compatibility
+      setPendingCategories((prev) => [...prev, newCategory]);
+
+      // Continue with existing logic
+      setNewCategoryToClassify(newCategory);
+
+      if (row) {
         setPendingCategoryChange({
           transactionId: row.id,
           newCategory,
           oldCategory: row.category,
           transaction: row,
-          isDebit: row.credit === 0,
         });
         setCurrentTransactionType(row.debit > 0 ? "debit" : "credit");
-        setShowClassificationModal(true);
-      } else {
-        // Bulk update flow: simply show the classification modal.
-        setShowClassificationModal(true);
       }
+
+      setShowClassificationModal(true);
       return true;
     }
     return false;
@@ -1432,8 +1564,14 @@ const DataTable = ({
     setFilteredData(updatedData);
   };
 
-  const handleCategorySelectOpenChange = (id, open) => {
-    setCategorySelectDropdownOpen((prev) => ({ ...prev, [id]: open }));
+  const handleCategorySelectOpenChange = (id) => {
+    // setCategorySelectDropdownOpen((prev) => ({ ...prev, [id]: open }));
+    if (categorySelectDropdownOpen === id) {
+      setCategorySelectDropdownOpen(null);
+    } else {
+      // Otherwise, open the clicked dropdown
+      setCategorySelectDropdownOpen(id);
+    }
   };
 
   const handlePreviewFile = (previewUrl) => {
@@ -1519,13 +1657,9 @@ const DataTable = ({
       if (globalSelectedRows.size > 0) {
         const firstId = Array.from(globalSelectedRows)[0];
         const transaction = filteredData.find((tx) => tx.id === firstId);
-
-        if (transaction) {
-          // Set transaction type based on first transaction
-          const transactionType =
-            Number(transaction.debit) > 0 ? "debit" : "credit";
-          setCurrentTransactionType(transactionType);
-        }
+        console.log("Transaction aq", transaction);
+        // Set transaction type based on first transaction
+        setCurrentTransactionType(transaction?.debit > 0 ? "debit" : "credit");
       }
       setBulkCategoryModalOpen(true);
     }
@@ -1586,22 +1720,24 @@ const DataTable = ({
             </Button>
 
             {/* Conditional preview button */}
-            {source === "transactions" && reportData?.individualId && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
+            {source === "transactions" &&
+              reportData?.individualId &&
+              reportData?.individualId !== "combined" && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
                       transition-all shadow-sm hover:shadow-md"
-                    onClick={() => handlePreviewFile(reportData.filePath)}
-                  >
-                    <Eye className="w-4 h-4 text-blue-500" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Preview Statement</TooltipContent>
-              </Tooltip>
-            )}
+                      onClick={() => handlePreviewFile(reportData.filePath)}
+                    >
+                      <Eye className="w-4 h-4 text-blue-500" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Preview Statement</TooltipContent>
+                </Tooltip>
+              )}
 
             {/* Conditional upload button */}
             {["suspense", "upi-dr", "upi-cr"].includes(source) && (
@@ -1830,12 +1966,9 @@ const DataTable = ({
                                   {/* Trigger button styled like a Select */}
                                   <div
                                     className="flex items-center justify-between w-full h-10 px-3 py-2 text-sm border rounded-md border-input bg-background cursor-pointer"
-                                    onClick={() =>
-                                      handleCategorySelectOpenChange(
-                                        row.id,
-                                        !categorySelectDropdownOpen[row.id]
-                                      )
-                                    }
+                                    onClick={() => {
+                                      handleCategorySelectOpenChange(row.id);
+                                    }}
                                   >
                                     <span
                                       className={
@@ -1849,7 +1982,7 @@ const DataTable = ({
                                     <ChevronDown
                                       className={cn(
                                         "h-4 w-4 transition-transform",
-                                        categorySelectDropdownOpen[row.id]
+                                        categorySelectDropdownOpen === row.id
                                           ? "transform rotate-180"
                                           : ""
                                       )}
@@ -1857,11 +1990,11 @@ const DataTable = ({
                                   </div>
 
                                   {/* Dropdown Command component */}
-                                  {categorySelectDropdownOpen[row.id] && (
+                                  {categorySelectDropdownOpen === row.id && (
                                     <div className="absolute z-50 w-full mt-1 min-w-[350px] ">
                                       <Command className="rounded-md border border-input bg-background shadow-md">
                                         <div className="flex items-center border-b ">
-                                          <div className="relative flex items-center w-full">
+                                          <div className="relative flex items-center w-full category-dropdown-container">
                                             <CommandInput
                                               placeholder="Search or add categories..."
                                               value={categorySearchTerm}
@@ -1888,8 +2021,7 @@ const DataTable = ({
                                                   if (added) {
                                                     setCategorySearchTerm("");
                                                     handleCategorySelectOpenChange(
-                                                      row.id,
-                                                      false
+                                                      null
                                                     );
                                                   }
                                                 }
@@ -1916,39 +2048,36 @@ const DataTable = ({
                                         </CommandEmpty>
                                         <div className="max-h-[200px] overflow-y-auto">
                                           <CommandGroup>
-                                            {filteredCategories.length > 0 &&
-                                              filteredCategories.map(
-                                                (category) => (
-                                                  <CommandItem
-                                                    key={category}
-                                                    onSelect={() => {
-                                                      handleCategoryChange(
-                                                        row,
-                                                        category
-                                                      );
-                                                      setCategorySearchTerm("");
-                                                      handleCategorySelectOpenChange(
-                                                        row.id,
-                                                        false
-                                                      );
-                                                    }}
-                                                    className="flex items-center"
-                                                  >
-                                                    <div className="flex-1">
-                                                      <Check
-                                                        className={cn(
-                                                          "mr-2 h-4 w-4 inline",
-                                                          row[column] ===
-                                                            category
-                                                            ? "opacity-100"
-                                                            : "opacity-0"
-                                                        )}
-                                                      />
-                                                      {category}
-                                                    </div>
-                                                  </CommandItem>
-                                                )
-                                              )}
+                                            {getFilteredCategoriesByType(
+                                              row.debit > 0 ? "debit" : "credit"
+                                            ).map((category) => (
+                                              <CommandItem
+                                                key={category}
+                                                onSelect={() => {
+                                                  handleCategoryChange(
+                                                    row,
+                                                    category
+                                                  );
+                                                  setCategorySearchTerm("");
+                                                  handleCategorySelectOpenChange(
+                                                    null
+                                                  );
+                                                }}
+                                                className="flex items-center category-dropdown-container"
+                                              >
+                                                <div className="flex-1">
+                                                  <Check
+                                                    className={cn(
+                                                      "mr-2 h-4 w-4 inline",
+                                                      row[column] === category
+                                                        ? "opacity-100"
+                                                        : "opacity-0"
+                                                    )}
+                                                  />
+                                                  {category}
+                                                </div>
+                                              </CommandItem>
+                                            ))}
                                           </CommandGroup>
                                         </div>
                                       </Command>
@@ -2370,7 +2499,7 @@ const DataTable = ({
                   <div className="absolute z-50 w-full mt-1">
                     <Command className="rounded-md border border-input bg-background shadow-md">
                       <div className="flex items-center border-b px-3">
-                        <div className="relative flex items-center w-full">
+                        <div className="relative flex items-center w-full category-dropdown-container">
                           <CommandInput
                             placeholder="Search or Add categories..."
                             value={categorySearchTerm}
@@ -2435,7 +2564,9 @@ const DataTable = ({
                       </CommandEmpty>
                       <div className="max-h-64 overflow-y-auto">
                         <CommandGroup>
-                          {filteredCategories.map((category) => (
+                          {getFilteredCategoriesByType(
+                            currentTransactionType
+                          ).map((category) => (
                             <CommandItem
                               key={category}
                               onSelect={() => {
@@ -2443,7 +2574,7 @@ const DataTable = ({
                                 setCategorySearchTerm("");
                                 setIsOpen(false);
                               }}
-                              className="flex items-center"
+                              className="flex items-center category-dropdown-container"
                             >
                               <div className="flex-1">
                                 <Check
