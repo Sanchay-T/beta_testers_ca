@@ -1168,8 +1168,12 @@ def category_add_ca(df):
             df[col] = df[col].str.lower()
     df["Description"] = df["Description"].str.replace(" ", "")
     excel_file_path = os.path.join(BASE_DIR, "Final_Category.xlsx")
+    excel2 = os.path.join(BASE_DIR, "Customer_category.xlsx")
+    df1 = pd.read_excel(excel_file_path)
+    df2_additional = pd.read_excel(excel2)
+    df2 = pd.concat([df1, df2_additional], ignore_index=True)
     print("excel_file_path -",excel_file_path)
-    df2 = pd.read_excel(excel_file_path)
+    # df2 = pd.read_excel(excel_file_path)
 
     # Initialize the 'Category' column with "Suspense" for all rows
     df["Category"] = "Suspense"
@@ -2557,7 +2561,8 @@ def summary_sheet(idf, open_bal, close_bal, new_tran_df, new_categories = None):
     opening_closing_balance = {month: [open_bal[month], close_bal[month]] for month in open_bal}
 
     excel_file_path = os.path.join(BASE_DIR, "Final_Category.xlsx")
-    print("excel_file_path_bruh -",excel_file_path)
+    user_created = os.path.join(BASE_DIR, "Customer_category.xlsx")
+    # print("excel_file_path_bruh -",excel_file_path)
 
     df2 = pd.read_excel(excel_file_path)
     
@@ -2566,7 +2571,7 @@ def summary_sheet(idf, open_bal, close_bal, new_tran_df, new_categories = None):
     if new_categories:
         print("new_categories -",new_categories)
         df_new = pd.DataFrame(new_categories)
-        new_excel_file_path = append_to_excel(excel_file_path, new_categories)
+        append_to_excel(user_created, new_categories)
 
     # Append new data
     df2 = pd.concat([df2, df_new], ignore_index=True)
