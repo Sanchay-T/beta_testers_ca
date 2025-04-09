@@ -635,8 +635,9 @@ const DataTable = ({
   const handleSearch = (searchValue) => {
     setSearchTerm(searchValue);
 
-    const dataToFilter =
-      existingFilterData.length > 0 ? existingFilterData : data;
+    // const dataToFilter =
+    //   existingFilterData.length > 0 ? existingFilterData : data;
+    const dataToFilter = filteredData.length > 0 ? filteredData : transactions;
 
     // Reset to original data if search value is empty
     if (searchValue === "") {
