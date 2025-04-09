@@ -69,15 +69,15 @@ export function LicenseActivationForm({ className, ...props }) {
   // }, []);
 
 
-  const handleCheck = async () => {
-    await checkLicenseStatus(() => {
-      setActivationStep(2); // 🎯 Transition step on success
-    });
-  };
+  // const handleCheck = async () => {
+  //   await checkLicenseStatus(() => {
+  //     setActivationStep(2); // 🎯 Transition step on success
+  //   });
+  // };
 
-  useEffect(() => {
-    handleCheck();
-  }, []);
+  // useEffect(() => {
+  //   handleCheck();
+  // }, []);
 
 
   // ------------------
