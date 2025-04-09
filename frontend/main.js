@@ -19,7 +19,7 @@ const { registerReportHandlers } = require("./ipc/reportHandlers.js");
 const { registerAuthHandlers } = require("./ipc/authHandlers.js");
 const { registerEditReportHandlers } = require("./ipc/editReportHandlers.js");
 const sessionManager = require("./SessionManager");
-const licenseManager = require("./LicenseManager");
+// const licenseManager = require("./LicenseManager");
 const { generateReportIpc } = require("./ipc/generateReport");
 const { registerOpportunityToEarnIpc } = require("./ipc/opportunityToEarn");
 const { registerTallyIpc } = require("./ipc/tallyHandlers.js");
@@ -34,6 +34,7 @@ const { getdata } = require("./ipc/getData.js");
 const bonjour = require('bonjour')();
 const systemInfo = require("./SystemInformation.js");
 const axios = require("axios");
+const licenseManager = require("./LicenseManager");
 
 function discoverMdnsServices(serviceType = '', callback) {
   bonjour.find({ type: serviceType }, (service) => {
@@ -730,7 +731,7 @@ app.setName("CypherSol Dev");
 
 async function fetchLicenseStatus() {
   try {
-    const res = await axios.get("http://localhost:5000/license/status/all");
+    const res = await axios.get("http://localhost:7890/license/status/all/");
     if (res.data.success) {
       console.log("🧾 Current License Sessions:");
       console.table(res.data.sessions);
@@ -822,18 +823,28 @@ app.whenReady().then(async () => {
     }
 
     try {
+      const isLicenseValid = await licenseManager.init(app.getPath("userData"));
+      log.info("License status: ", isLicenseValid);
+      log.info("License Info Data: ", licenseManager.licenseData)
+    }
+    catch (error) {
+      log.error("License initialization failed:", error);
+      throw error;
+    }
+
+    try {
       await sessionManager.init();
     } catch (error) {
       log.error("SessionManager initialization failed:", error);
       throw error;
     }
 
-    try {
-      await licenseManager.init();
-    } catch (error) {
-      log.error("LicenseManager initialization failed:", error);
-      throw error;
-    }
+    // try {
+    //   await licenseManager.init();
+    // } catch (error) {
+    //   log.error("LicenseManager initialization failed:", error);
+    //   throw error;
+    // }
 
     createProtocol();
     createWindow();

@@ -68,6 +68,18 @@ export function LicenseActivationForm({ className, ...props }) {
   //   checkActivationStatus();
   // }, []);
 
+
+  const handleCheck = async () => {
+    await checkLicenseStatus(() => {
+      setActivationStep(2); // 🎯 Transition step on success
+    });
+  };
+
+  useEffect(() => {
+    handleCheck();
+  }, []);
+
+
   // ------------------
   // Handlers
   // ------------------

@@ -403,6 +403,7 @@ function registerAuthHandlers(userDataPath) {
       const serviceType = networkLicense?.serviceType || "license";
       // Discover services via mDNS
       const discoveredServices = await discoverMdnsServices(serviceType, 5000);
+      log.info("Discovered services:", discoveredServices);
       const validatedServices = [];
       const now = Date.now() / 1000; // current time in seconds
 
@@ -470,7 +471,14 @@ function registerAuthHandlers(userDataPath) {
       log.info("License assignment response:", response.data);
 
       if (response.data.success) {
-        const encryptedData = await encryptData(JSON.stringify(response.data));
+
+        const enrichedLicenseData = {
+          ...response.data,
+          ip,
+          port
+        };
+
+        const encryptedData = await encryptData(JSON.stringify(enrichedLicenseData));
 
         const filePath = path.join(userDataPath, "clientLicense.enc");
         fs.writeFile(filePath, encryptedData, (err) => {
@@ -480,7 +488,7 @@ function registerAuthHandlers(userDataPath) {
             console.log("License file saved successfully at:", filePath);
           }
         });
-        return { success: true, data: response.data };
+        return { success: true, data: enrichedLicenseData };
       } else {
         console.error("License assignment failed:", response.data.message);
         return { success: false, error: response.data.message };
