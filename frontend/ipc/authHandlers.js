@@ -502,8 +502,17 @@ function registerAuthHandlers(userDataPath) {
         return { success: true, data: enrichedLicenseData };
       } else {
         console.error("License assignment failed:", response.data.message);
-        return { success: false, error: response.data.message };
+        if (response.data.inactiveLicenses) {
+          return {
+            success: false,
+            error: response.data.message,
+            inactiveLicenses: response.data.inactiveLicenses,
+          };
+        } else {
+          return { success: false, error: response.data.message };
+        }
       }
+
     } catch (error) {
       if (error.response) {
         log.error("License assignment error:", error.response.data);
