@@ -339,7 +339,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
           effectiveDate: formatDateForTally(transaction.effective_date || ""),
           // effectiveDate: 20240401,
           // referenceNumber: transaction.reference_number || null,
-          billRefernce: transaction.bill_reference || "",
+          billRefernce: transaction.bill_reference || "-",
           DrLedger: isEmptyLedgersSelected ? "Suspense" : dr_ledger,
           CrLedger: isEmptyLedgersSelected ? "Suspense" : cr_ledger,
           amount: transaction.amount,
@@ -391,10 +391,10 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
     // Prepare data for Tally
     const tallyData = data
       .map((transaction) => {
-        if (transaction.imported) {
-          // Already uploaded
-          return null;
-        }
+        // if (transaction.imported) {
+        //   // Already uploaded
+        //   return null;
+        // }
         return {
           companyName: companyName,
           id: transaction.id,

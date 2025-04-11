@@ -5,7 +5,7 @@ function buildTallyXmlPayment(row) {
     companyName,
     invoiceDate,
     effectiveDate,
-    referenceNumber,
+    billRefernce,
     narration,
     DrLedger,
     CrLedger,
@@ -47,7 +47,7 @@ function buildTallyXmlPayment(row) {
               <ISDEEMEDPOSITIVE>Yes</ISDEEMEDPOSITIVE>
               <AMOUNT>-${amount}</AMOUNT>
               <BILLALLOCATIONS.LIST>
-                <NAME>${referenceNumber}</NAME>
+                <NAME>${billRefernce}</NAME>
                 <BILLTYPE>Agst Ref</BILLTYPE>
                 <AMOUNT>-${amount}</AMOUNT>
               </BILLALLOCATIONS.LIST>
@@ -80,7 +80,7 @@ function buildTallyXmlReceipt(row) {
     companyName,
     invoiceDate,
     effectiveDate,
-    referenceNumber,
+    billRefernce,
     narration,
     DrLedger,
     CrLedger,
