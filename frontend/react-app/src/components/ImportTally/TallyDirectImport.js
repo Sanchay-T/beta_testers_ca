@@ -73,7 +73,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
   const { toast } = useToast();
   const [port, setPort] = useState(reportData.tallyPortNumber);
   const [tallyVersion, setTallyVersion] = useState("TallyPrime");
-  const [selectedBankLedger, setSelectedBankLedger] = useState();
+  const [selectedBankLedger, setSelectedBankLedger] = useState("");
   const [showTallyWarning, setShowTallyWarning] = useState(false);
   const [isEmptyLedgersSelected, setIsEmptyLedgersSelected] = useState(false);
   const [inititalLedgersData, setInititalLedgersData] = useState([]);
@@ -271,7 +271,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
         variant: "destructive",
         type: "error",
       });
-      return;
+      return false;
     }
     if (selectedVoucher === "Payment Receipt Contra" && !selectedBankLedger) {
       // alert("Please enter a company name before uploading.");
@@ -283,7 +283,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
         variant: "destructive",
         type: "error",
       });
-      return;
+      return false;
     }
     // // Check if any non-imported transaction is missing DrLedger or CrLedger
     // const incompleteTransactions = txData.filter((transaction) => {
@@ -352,6 +352,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
 
     setTallyUploadData(tallyData);
     setConfirmationModal(true);
+    return true;
   };
 
   const handleLedgerCreation = async (data) => {
@@ -367,7 +368,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
         type: "error",
       });
 
-      return;
+      return false;
     }
 
     // Check if any non-imported transaction is missing DrLedger or CrLedger
@@ -385,7 +386,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
         variant: "destructive",
         type: "error",
       });
-      return;
+      return false;
     }
 
     // Prepare data for Tally
@@ -414,6 +415,8 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
     setTallyUploadData(tallyData);
     setConfirmationModal(true);
     // updateReportData({ ledgerCreated: true });
+
+    return true;
   };
 
   const handleUploadAfterConfirmation = async () => {
@@ -603,7 +606,6 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
     console.log({ uniqueLedgerNames });
 
     let updatedLedgersData;
-    console.log("AIYAZ", { inititalLedgersData });
 
     // Instead of just marking as imported, also fill in details from Tally
     updatedLedgersData = dataToRender.map((ledger) => {
@@ -934,11 +936,11 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
     setDataToRender([]);
   };
 
-  const handleUploadClick = (transactions = null) => {
+  const handleUploadClick = async (transactions = null) => {
     if (selectedVoucher === "Payment Receipt Contra") {
-      handleTallyUpload(transactions);
+      return await handleTallyUpload(transactions);
     } else if (selectedVoucher === "Ledgers") {
-      handleLedgerCreation(transactions);
+      return await handleLedgerCreation(transactions);
     }
   };
 
@@ -1095,6 +1097,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
                   selectedVoucher={selectedVoucher}
                   caseId={caseId}
                   handleLedgerImport={handleLedgerImport}
+                  selectedBankLedger={selectedBankLedger}
                   setSelectedBankLedger={setSelectedBankLedger}
                 />
               ) : (

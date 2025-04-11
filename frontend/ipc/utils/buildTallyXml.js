@@ -16,10 +16,10 @@ function buildTallyXmlPayment(row) {
   const invoiceDateFormatted = invoiceDate;
   const effectiveDateFormatted = effectiveDate;
 
-  companyName = companyName.replace(/&/g, "&amp;");
-  narration = narration.replace(/&/g, "&amp;");
-  DrLedger = DrLedger.replace(/&/g, "&amp;");
-  CrLedger = CrLedger.replace(/&/g, "&amp;");
+  companyName = companyName ? companyName.replace(/&/g, "&amp;") : companyName;
+  narration = narration ? narration.replace(/&/g, "&amp;") : narration;
+  DrLedger = DrLedger ? DrLedger.replace(/&/g, "&amp;") : DrLedger;
+  CrLedger = CrLedger ? CrLedger.replace(/&/g, "&amp;") : CrLedger;
 
   let xml = `
 <ENVELOPE>
@@ -91,10 +91,10 @@ function buildTallyXmlReceipt(row) {
   const invoiceDateFormatted = invoiceDate;
   const effectiveDateFormatted = effectiveDate;
 
-  companyName = companyName.replace(/&/g, "&amp;");
-  narration = narration.replace(/&/g, "&amp;");
-  DrLedger = DrLedger.replace(/&/g, "&amp;");
-  CrLedger = CrLedger.replace(/&/g, "&amp;");
+  companyName = companyName ? companyName.replace(/&/g, "&amp;") : companyName;
+  narration = narration ? narration.replace(/&/g, "&amp;") : narration;
+  DrLedger = DrLedger ? DrLedger.replace(/&/g, "&amp;") : DrLedger;
+  CrLedger = CrLedger ? CrLedger.replace(/&/g, "&amp;") : CrLedger;
 
   let xml = `
 <ENVELOPE>
@@ -200,10 +200,10 @@ function buildTallyXmlContra(row) {
     voucherName,
   } = row;
 
-  companyName = companyName.replace(/&/g, "&amp;");
-  narration = narration.replace(/&/g, "&amp;");
-  DrLedger = DrLedger.replace(/&/g, "&amp;");
-  CrLedger = CrLedger.replace(/&/g, "&amp;");
+  companyName = companyName ? companyName.replace(/&/g, "&amp;") : companyName;
+  narration = narration ? narration.replace(/&/g, "&amp;") : narration;
+  DrLedger = DrLedger ? DrLedger.replace(/&/g, "&amp;") : DrLedger;
+  CrLedger = CrLedger ? CrLedger.replace(/&/g, "&amp;") : CrLedger;
 
   const xml = `
 <ENVELOPE>
@@ -300,9 +300,14 @@ function buildTallyPrimeLedgerXml({
   date,
   companyName,
 }) {
-  companyName = companyName.replace(/&/g, "&amp;");
-  ledgerName = ledgerName.replace(/&/g, "&amp;");
-  ledgerGroup = ledgerGroup.replace(/&/g, "&amp;");
+  companyName = companyName ? companyName.replace(/&/g, "&amp;") : companyName;
+  ledgerName = ledgerName ? ledgerName.replace(/&/g, "&amp;") : ledgerName;
+  ledgerGroup = ledgerGroup ? ledgerGroup.replace(/&/g, "&amp;") : ledgerGroup;
+  state = state ? state.replace(/&/g, "&amp;") : state;
+  Address = Address ? Address.replace(/&/g, "&amp;") : Address;
+  country = country ? country.replace(/&/g, "&amp;") : country;
+  GSTnum = GSTnum ? GSTnum.replace(/&/g, "&amp;") : GSTnum;
+
   return `
 <ENVELOPE>
   <HEADER>
@@ -372,13 +377,13 @@ function buildTallyERPLedgerXml({
   invoiceDate,
   companyName,
 }) {
-  companyName = companyName.replace(/&/g, "&amp;");
-  ledgerName = ledgerName.replace(/&/g, "&amp;");
-  ledgerGroup = ledgerGroup.replace(/&/g, "&amp;");
-  state = state.replace(/&/g, "&amp;");
-  Address = Address.replace(/&/g, "&amp;");
-  country = country.replace(/&/g, "&amp;");
-  GSTnum = GSTnum.replace(/&/g, "&amp;");
+  companyName = companyName ? companyName.replace(/&/g, "&amp;") : companyName;
+  ledgerName = ledgerName ? ledgerName.replace(/&/g, "&amp;") : ledgerName;
+  ledgerGroup = ledgerGroup ? ledgerGroup.replace(/&/g, "&amp;") : ledgerGroup;
+  state = state ? state.replace(/&/g, "&amp;") : state;
+  Address = Address ? Address.replace(/&/g, "&amp;") : Address;
+  country = country ? country.replace(/&/g, "&amp;") : country;
+  GSTnum = GSTnum ? GSTnum.replace(/&/g, "&amp;") : GSTnum;
 
   return `
 

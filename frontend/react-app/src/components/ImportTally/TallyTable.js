@@ -758,7 +758,11 @@ const TallyTable = ({
       data = transactions.filter((tx) => selectedTransactions.includes(tx.id));
     }
 
-    handleUpload(data);
+    const res = await handleUpload(data);
+    console.log("Upload response: ", { res });
+    if (res) {
+      setSelectedTransactions([]);
+    }
   };
 
   const toggleTransactionSelection = (transactionId) => {
@@ -831,19 +835,51 @@ const TallyTable = ({
     // Use the same "columns" array (filtered to ignore unwanted keys)
     // const headerRow = columns.join('\t');
     // Map over the filteredData (or data you want to copy) and join each row's values with a tab.
-    const rows = filteredData.map((row) => {
-      const rowValues = columns.map((col) => {
-        if (col === "bill_reference") {
-          return row[col] ? row[col] : "-";
-        }
-        return row[col];
-      });
-      return [companyName, ...rowValues].join("\t");
-    });
+    console.log(
+      "Copying to clipboard... ",
+      filteredData.length,
+      selectedBankLedger
+    );
+    // make a seep copy of filteredData
+    const filteredDataCopy = structuredClone(filteredData);
 
+    const rows = filteredDataCopy.map((row) => {
+      console.log("Row = ", row);
+
+      if (
+        row["description"] === "openingbalance" ||
+        row["description"] === "closingbalance"
+      ) {
+        return null;
+      }
+      row["bill_reference"] = row["bill_reference"]
+        ? row["bill_reference"]
+        : "-";
+
+      // Add dr_ledger and cr_ledger using original logic
+      const dr_ledger = row.type === "debit" ? row.ledger : selectedBankLedger;
+
+      const cr_ledger = row.type === "credit" ? row.ledger : selectedBankLedger;
+
+      return [
+        companyName,
+        row["date"],
+        row["effective_date"],
+        row["bill_reference"],
+        dr_ledger,
+        cr_ledger,
+        row["amount"],
+        row["voucher_type"],
+        row["narration"],
+        row["imported"],
+        row["failed_reason"],
+      ].join("\t");
+    });
+    console.log({ rows });
     // const textToCopy = [headerRow, ...rows].join('\n');
     const textToCopy = [...rows].join("\n");
 
+    console.log({ textToCopy });
     navigator.clipboard
       .writeText(textToCopy)
       .then(() => {
@@ -1053,7 +1089,6 @@ const TallyTable = ({
 
   const handleRefreshImports = () => {
     handleLedgerImport(true);
-   
   };
 
   return (

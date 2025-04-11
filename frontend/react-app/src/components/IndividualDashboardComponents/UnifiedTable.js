@@ -292,7 +292,7 @@ const DataTable = ({
   useEffect(() => {
     const handleOutsideClick = (event) => {
       // Return early if click is on or within a dropdown trigger or its content
-    
+
       if (event.target.closest(".category-dropdown-container")) {
         return;
       }
@@ -400,7 +400,7 @@ const DataTable = ({
     // First try to load categoriesArray from localStorage
     const storedCategoriesArray = localStorage.getItem("categoriesArray");
     let initialCategories = [];
-  
+
     if (storedCategoriesArray) {
       try {
         initialCategories = JSON.parse(storedCategoriesArray);
@@ -409,23 +409,23 @@ const DataTable = ({
         console.error("Error parsing categoriesArray", e);
       }
     }
-  
+
     // Always update with new transaction categories (regardless of stored data)
     if (title === "Transactions") {
       // Analyze transactions to identify types
       const txCategories = new Map();
-  
+
       data.forEach((tx) => {
         if (tx && tx.category) {
           const type = Number(tx.credit) > 0 ? "credit" : "debit";
           txCategories.set(tx.category, type);
         }
       });
-  
+
       // Update categoriesArray with transaction data
       setCategoriesArray((prevArray) => {
         const categoryMap = new Map(prevArray.map((cat) => [cat.name, cat]));
-  
+
         // Add any new categories from transactions
         let hasNewCategories = false || storedCategoriesArray === null;
         for (const [name, type] of txCategories.entries()) {
@@ -435,14 +435,13 @@ const DataTable = ({
           }
         }
 
-  
         // Only update localStorage if we added new categories
         if (hasNewCategories) {
           const newArray = Array.from(categoryMap.values());
           localStorage.setItem("categoriesArray", JSON.stringify(newArray));
           return newArray;
         }
-        
+
         return prevArray;
       });
     }
@@ -1350,7 +1349,7 @@ const DataTable = ({
     newTitle = `${tmpName} ${newTitle}`;
 
     exportToExcel(
-      data,
+      filteredData,
       (title = newTitle),
       false,
       ["suspense", "upi-dr", "upi-cr"].includes(source) ? categoryOptions : null
