@@ -37,6 +37,9 @@
     "appId": "com.electron.electronapp",
     "productName": "Cyphersol",
     "icon": "assets/cyphersol-icon.ico",
+    "asarUnpack": [
+      "**/*.node"
+    ],
     "directories": {
       "output": "dist"
     },
