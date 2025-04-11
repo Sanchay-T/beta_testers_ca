@@ -30,7 +30,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { motion } from "framer-motion";
 
 export function LicenseActivationForm({ className, ...props }) {
-  const { login, loading, error, isActivated, signUp, activateLicense } = useAuth();
+  const { login, loading, error, isActivated, isSignedUp, signUp } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -53,31 +53,20 @@ export function LicenseActivationForm({ className, ...props }) {
   const [activationStatus, setActivationStatus] = useState(null);
   const [isNetworkSearching, setIsNetworkSearching] = useState(false);
 
-  // useEffect(() => {
-  //   // Check if license is already activated (pseudo-code)
-  //   const checkActivationStatus = async () => {
-  //     try {
-  //       const status = await window.electron.ipcRenderer.invoke("check-license-status");
-  //       if (status.isActivated) {
-  //         setActivationStatus("active");
-  //       }
-  //     } catch (error) {
-  //       console.error("Failed to check license status:", error);
-  //     }
-  //   };
-  //   checkActivationStatus();
-  // }, []);
 
+  useEffect(() => {
+    if (isActivated) {
+      console.log("isActivated is true");
+      if (isSignedUp) {
+        console.log("isSignedUp is true");
 
-  // const handleCheck = async () => {
-  //   await checkLicenseStatus(() => {
-  //     setActivationStep(2); // 🎯 Transition step on success
-  //   });
-  // };
+        setActivationStep(3);
+        return;
+      }
 
-  // useEffect(() => {
-  //   handleCheck();
-  // }, []);
+      setActivationStep(2);
+    }
+  }, [isActivated, isSignedUp]);
 
 
   // ------------------
@@ -154,7 +143,7 @@ export function LicenseActivationForm({ className, ...props }) {
   const handleAccountSetup = async (e) => {
     e.preventDefault();
     try {
-      const success = await window.electron.auth.signUp({
+      const success = await signUp({
         email: credentials.email,
         password: credentials.password,
         role: localStorage.getItem("role") || credentials.role,
@@ -164,18 +153,24 @@ export function LicenseActivationForm({ className, ...props }) {
       }
     } catch (error) {
       console.error("Account setup failed:", error);
+
     }
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
+
     try {
-      const success = await window.electron.ipcRenderer.invoke("login", {
+      // console.log("Inside Login");
+      let result = await login({
         email: credentials.email,
         password: credentials.password,
         role: localStorage.getItem("role") || credentials.role,
       });
-      if (success) {
+
+
+      // console.log("License activation result:", success);
+      if (result) {
         const from = location.state?.from?.pathname || "/";
         navigate(from, { replace: true });
       }

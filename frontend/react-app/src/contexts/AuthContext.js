@@ -7,10 +7,31 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isActivated, setIsActivated] = useState(null);
+  const [isSignedUp, setIsSignedUp] = useState(false);
 
   useEffect(() => {
-    checkLicenseStatus();
+    const checkAuth = async () => {
+      try {
+        await checkLicenseStatus();
+        await checkAccountStatus();
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
   }, []);
+  const checkAccountStatus = async () => {
+    try {
+      const result = await window.electron.auth.checkAccountStatus();
+      console.log("Check account status:", result);
+      setIsSignedUp(result.success);
+    } catch (err) {
+      throw err
+    }
+  };
 
   const checkLicenseStatus = async () => {
     try {
@@ -25,9 +46,7 @@ export const AuthProvider = ({ children }) => {
         if (userData) setUser(userData);
       }
     } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      throw err
     }
   };
 
@@ -65,6 +84,7 @@ export const AuthProvider = ({ children }) => {
       setError(null);
 
       const result = await window.electron.auth.signUp(credentials);
+      console.log("Sign up result:", result);
       if (result.success) {
         // setIsActivated(false);
         setUser(credentials); // Use returned user data if available
@@ -93,11 +113,14 @@ export const AuthProvider = ({ children }) => {
       }
 
       const result = await window.electron.auth.login(credentials);
+      const { success, ...userData } = result
 
-      if (result.success) {
+      if (success) {
         // After successful login, explicitly fetch the complete user data
-        const userData = await window.electron.auth.getUser();
+        // const userData = await window.electron.auth.getUser();
+
         setUser({ ...userData, role: credentials.role });
+        console.log("Printing Dama user, ", userData)
         // console.log("User logged in:", userData);
         localStorage.removeItem("dashboardData");
         return true;
@@ -159,6 +182,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     error,
     isActivated,
+    isSignedUp,
     signUp,
     login,
     logout,

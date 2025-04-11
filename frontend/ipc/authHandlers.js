@@ -92,33 +92,28 @@ function registerAuthHandlers(userDataPath) {
         throw new Error("Invalid email or password"); // Incorrect password
       }
 
-      // Set the user session
-      const { licenseKey, uuidHash } = await licenseManager.getLicenseKey();
-      console.log("License key:", licenseKey);
 
-      if (!licenseKey) {
-        throw new Error("License key not found");
+      // ✅ Get system info from your license manager
+      const { clientId, uuid, macAddress, hostname, ip, port } = licenseManager.getLicenseInfo(); // Ensure this function returns what you need
+
+      // ✅ Call the .NET licensing server API to activate session
+      const response = await axios.post(`http://${ip}:${port}/api/license/activate-session`, {
+        clientId,
+        uuid,
+        macAddress,
+        hostname,
+      });
+
+      const { data } = response;
+
+      if (!data.success) {
+        throw new Error(data.error || "Session activation failed");
       }
 
-      // Validate the license
-      const result = await licenseManager.validateLicense(
-        licenseKey,
-        credentials.email,
-        uuidHash,
-        true
-      );
-      console.log("License activation result:", result);
+      sessionManager.setUser({ userId: user.id, email: user.email, role: user.role, name: user.name });
 
-      if (!result.success) {
-        throw new Error("Invalid license key");
-      }
+      log.info("Login License session activated:", data);
 
-      const remainingSeconds = licenseManager.calculateRemainingSeconds(
-        result.data.expiry_timestamp
-      );
-      sessionManager.startLicenseCountdown(remainingSeconds);
-
-      sessionManager.setUser(user);
 
       return { success: true, user: credentials };
     } catch (error) {
@@ -130,7 +125,7 @@ function registerAuthHandlers(userDataPath) {
   // Handle logout
   ipcMain.handle("auth:logout", async () => {
     try {
-      return sessionManager.clearUser();
+      return sessionManager.logoutUser();
     } catch (error) {
       console.error("Logout error:", error);
       return { success: false, error: error.message };
@@ -155,16 +150,7 @@ function registerAuthHandlers(userDataPath) {
 
   ipcMain.handle("auth:signUp", async (event, credentials) => {
     let user;
-    // const result = await licenseManager.validateLicense(
-    //   credentials.licenseKey,
-    //   credentials.email
-    // );
-    // console.log("License activation result:", result);
 
-    // if (result.success) {
-    //   // const userAlreadyExists = await db.select(
-    //   //     exists(db.select().from(users).where(eq(users.email, credentials.email)))
-    //   // );
     try {
 
 
@@ -176,11 +162,11 @@ function registerAuthHandlers(userDataPath) {
       console.log("User already exists: ", userAlreadyExists);
 
       if (userAlreadyExists.length > 0) {
-        if (toValidateLicense) {
-          return { success: false, error: "User already exists." };
-        }
+        // if (toValidateLicense) {
+        return { success: false, error: "User already exists." };
+        // }
 
-        user = userAlreadyExists;
+        // user = userAlreadyExists;
       } else {
         // Step 3: Create New User
         const hashedPassword = await bcrypt.hash(credentials.password, 10);
@@ -224,7 +210,7 @@ function registerAuthHandlers(userDataPath) {
         };
       }
     } catch (err) {
-
+      log.info("Error in creating new user : ", err);
       return {
         success: false,
         error: "Failed to register user.",
@@ -344,6 +330,24 @@ function registerAuthHandlers(userDataPath) {
         success: false,
         message: "An unexpected error occurred while resetting your password. Please try again later."
       };
+    }
+  });
+
+
+  ipcMain.handle('auth:check-account-status', async () => {
+    try {
+      // Query to select one user from the 'users' table
+      const result = await db.select().from(users).limit(1);
+
+      // Print the length of the result array to the console
+      console.log("Number of users found:", result.length);
+
+      // Return "yes" if a user exists, false otherwise
+      return (result && result.length > 0) ? { "success": true, "message": "Users found" } : { "success": false, "message": "No users found" };
+    } catch (error) {
+      // Log error details and return false in case of failure
+      console.error("Error while checking account status:", error);
+      return { "success": false, "message": "Failed to check account status" };
     }
   });
 
@@ -470,10 +474,17 @@ function registerAuthHandlers(userDataPath) {
 
       log.info("License assignment response:", response.data);
 
+      const { message, ...data } = response.data;
+
       if (response.data.success) {
 
         const enrichedLicenseData = {
-          ...response.data,
+          ...data,
+          clientId: windowsUserSID,
+          uuid,
+          hostname,
+          macAddress,
+          username,
           ip,
           port
         };
