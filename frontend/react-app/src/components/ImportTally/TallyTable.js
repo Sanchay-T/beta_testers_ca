@@ -838,46 +838,68 @@ const TallyTable = ({
     console.log(
       "Copying to clipboard... ",
       filteredData.length,
+      filteredData[0],
       selectedBankLedger
     );
-    // make a seep copy of filteredData
     const filteredDataCopy = structuredClone(filteredData);
 
-    const rows = filteredDataCopy.map((row) => {
-      console.log("Row = ", row);
+    let textToCopy = "";
+    if (selectedVoucher === "Ledgers") {
+      const rows = filteredData.map((row) => {
+        return [
+          row.date || "",
+          row.ledger_name || "",
+          row.ledger_group || "",
+          row.gst_number || "",
+          row.address || "",
+          row.pincode || "",
+          row.state || "",
+          row.country || "",
+          row.opening_balance || "",
+          row.imported || "False",
+        ].join("\t");
+      });
+      textToCopy = [...rows].join("\n");
+    } else {
+      // make a seep copy of filteredData
 
-      if (
-        row["description"] === "openingbalance" ||
-        row["description"] === "closingbalance"
-      ) {
-        return null;
-      }
-      row["bill_reference"] = row["bill_reference"]
-        ? row["bill_reference"]
-        : "-";
+      const rows = filteredDataCopy.map((row) => {
+        console.log("Row = ", row);
 
-      // Add dr_ledger and cr_ledger using original logic
-      const dr_ledger = row.type === "debit" ? row.ledger : selectedBankLedger;
+        if (
+          row["description"] === "openingbalance" ||
+          row["description"] === "closingbalance"
+        ) {
+          return null;
+        }
+        row["bill_reference"] = row["bill_reference"]
+          ? row["bill_reference"]
+          : "-";
 
-      const cr_ledger = row.type === "credit" ? row.ledger : selectedBankLedger;
+        // Add dr_ledger and cr_ledger using original logic
+        const dr_ledger =
+          row.type === "debit" ? row.ledger : selectedBankLedger;
 
-      return [
-        companyName,
-        row["date"],
-        row["effective_date"],
-        row["bill_reference"],
-        dr_ledger,
-        cr_ledger,
-        row["amount"],
-        row["voucher_type"],
-        row["narration"],
-        row["imported"],
-        row["failed_reason"],
-      ].join("\t");
-    });
-    console.log({ rows });
-    // const textToCopy = [headerRow, ...rows].join('\n');
-    const textToCopy = [...rows].join("\n");
+        const cr_ledger =
+          row.type === "credit" ? row.ledger : selectedBankLedger;
+
+        return [
+          companyName,
+          row["date"],
+          row["effective_date"],
+          row["bill_reference"],
+          dr_ledger,
+          cr_ledger,
+          row["amount"],
+          row["voucher_type"],
+          row["narration"],
+          row["imported"],
+        ].join("\t");
+      });
+      console.log({ rows });
+      // const textToCopy = [headerRow, ...rows].join('\n');
+      textToCopy = [...rows].join("\n");
+    }
 
     console.log({ textToCopy });
     navigator.clipboard
