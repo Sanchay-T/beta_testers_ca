@@ -1,5 +1,7 @@
 const { EventEmitter } = require('events');
 const log = require('electron-log');
+const licenseManager = require('./LicenseManager');
+const axios = require('axios');
 
 class SessionManager extends EventEmitter {
     constructor() {
@@ -18,16 +20,13 @@ class SessionManager extends EventEmitter {
     }
 
     async init() {
-        const { default: Store } = await import('electron-store');
-        this.store = new Store({
-            encryptionKey: process.env.NODE_ENV === 'production' ? 'your-encryption-key' : undefined,
-            name: 'session'
-        });
+        // const { default: Store } = await import('electron-store');
+        // this.store = new Store({
+        //     encryptionKey: process.env.NODE_ENV === 'production' ? 'your-encryption-key' : undefined,
+        //     name: 'session'
+        // });
 
-        this._user = this.store.get('user') || null;
-
-        // console.log('SessionManager initialized', "User:", this._user, " Store: ", this.store);
-        console.log('SessionManager initialized');
+        // this._user = this.store.get('user') || null;
     }
 
     static getInstance() {
@@ -41,7 +40,6 @@ class SessionManager extends EventEmitter {
 
         if (remainingSeconds <= 0) {
             this.emit('licenseExpired');
-            console.log('License expired');
             return;
         }
 
@@ -56,13 +54,12 @@ class SessionManager extends EventEmitter {
                 clearInterval(this.interval);
                 this.remainingSeconds = 0;
                 this.emit('licenseExpired');
-                console.log('License expired');
             } else {
                 this.setRemainingSeconds(remainingSeconds);
             }
         }, 1000);
 
-        console.log(`License countdown started: ${remainingSeconds} seconds remaining`);
+        // console.log(`License countdown started: ${remainingSeconds} seconds remaining`);
     }
 
     setRemainingSeconds(seconds) {
@@ -78,6 +75,13 @@ class SessionManager extends EventEmitter {
         }
     }
 
+    setUser(userData) {
+        this._user = userData;
+        return {
+            success: true,
+        };
+    }
+
     getUser() {
         return this._user || null;
     }
@@ -91,22 +95,51 @@ class SessionManager extends EventEmitter {
         return this._user !== null;
     }
 
-    setUser(userData) {
-        this._user = userData;
-        this.store.set('user', userData);
-        return { success: true };
-    }
 
     clearUser() {
         this._user = null;
         try {
             this.store.delete('user');
-            log.info("User deleted");
             return { success: true };
         }
         catch (err) {
             log.error("Error deleting user:", err);
             return { success: false };
+        }
+    }
+
+    async logoutUser() {
+        const user = this._user;
+        this._user = null;
+
+        if (!user) return { success: true, message: "No active user." };
+
+        try {
+            // ✅ Get system info from your license manager
+            const { clientId, uuid, macAddress, hostname, ip, port } = licenseManager.getLicenseInfo(); // Ensure this function returns what you need
+
+            // ✅ Call the .NET licensing server API to activate session
+            const response = await axios.post(`http://${ip}:${port}/api/license/inactivate-session`, {
+                clientId,
+                uuid,
+                macAddress,
+                hostname,
+            });
+
+            if (response.data?.success) {
+                // this.stopLicenseCountdown();
+
+                return {
+                    success: true,
+                    message: "License session inactivated.",
+                    activeCount: response.data.activeCount,
+                };
+            } else {
+                throw new Error(response.data?.error || "Inactivation failed.");
+            }
+        } catch (err) {
+            log.error("Unexpected logout error:", err);
+            return { success: false, error: err.message };
         }
     }
 

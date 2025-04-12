@@ -153,11 +153,14 @@ contextBridge.exposeInMainWorld("electron", {
     logout: () => ipcRenderer.invoke("auth:logout"),
     resetPassword: (data) => ipcRenderer.invoke("auth:reset-password", data),
     getUser: () => ipcRenderer.invoke("auth:getUser"),
+    checkAccountStatus: () => ipcRenderer.invoke("auth:check-account-status"),
     // updateUser: (userData) => ipcRenderer.invoke('auth:updateUser', userData)
     checkLicense: () => ipcRenderer.invoke("license:check"),
+    searchnNetworkLicenses: (networkLicense) => ipcRenderer.invoke("license:search-network-licenses", networkLicense),
     activateLicense: (credentials) =>
       ipcRenderer.invoke("license:activate", credentials),
-    searchnNetworkLicenses: (networkLicense) => ipcRenderer.invoke("license:search-network-licenses", networkLicense),
+    connectNetworkLicense: (credentials) =>
+      ipcRenderer.invoke("license:connect-network-license", credentials),
   },
 
   getRecentReports: () => ipcRenderer.invoke("get-recent-reports"),

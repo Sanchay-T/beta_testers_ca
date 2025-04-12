@@ -19,7 +19,7 @@ const { registerReportHandlers } = require("./ipc/reportHandlers.js");
 const { registerAuthHandlers } = require("./ipc/authHandlers.js");
 const { registerEditReportHandlers } = require("./ipc/editReportHandlers.js");
 const sessionManager = require("./SessionManager");
-const licenseManager = require("./LicenseManager");
+// const licenseManager = require("./LicenseManager");
 const { generateReportIpc } = require("./ipc/generateReport");
 const { registerOpportunityToEarnIpc } = require("./ipc/opportunityToEarn");
 const { registerTallyIpc } = require("./ipc/tallyHandlers.js");
@@ -32,6 +32,9 @@ const portscanner = require("portscanner"); // Import portscanner
 const { autoUpdater } = require("electron-updater");
 const { getdata } = require("./ipc/getData.js");
 const bonjour = require('bonjour')();
+const systemInfo = require("./SystemInformation.js");
+const axios = require("axios");
+const licenseManager = require("./LicenseManager");
 
 function discoverMdnsServices(serviceType = '', callback) {
   bonjour.find({ type: serviceType }, (service) => {
@@ -39,7 +42,8 @@ function discoverMdnsServices(serviceType = '', callback) {
       name: service.name,
       host: service.host,
       ip: service.referer.address,
-      port: service.port
+      port: service.port,
+      additional: service.txt || {}
     };
 
     // console.log('🔍 Found service:', serviceInfo);
@@ -121,7 +125,7 @@ autoUpdater.on('update-available', (info) => {
     log.info('Skipping notification for already notified version:', info.version);
     return;
   }
-  
+
   log.info('Update available. Current version:', app.getVersion());
   log.info('New version:', info.version);
   lastCheckedVersion = info.version;
@@ -189,12 +193,8 @@ autoUpdater.on('error', (err) => {
   win?.webContents.send('update-error', err.message);
 });
 
-log.info("Working Directory:", process.cwd());
 
 const BASE_DIR = isDev ? __dirname : process.resourcesPath;
-log.info("current directory", app.getAppPath());
-log.info("BASE_DIR", BASE_DIR);
-log.info("__dirname", __dirname);
 
 let win = null;
 let pythonProcess = null;
@@ -332,10 +332,6 @@ function getProductionExecutablePath() {
 
   const executablePath = platformExecutables[process.platform];
 
-  // Add detailed logging
-  log.info("Current platform:", process.platform);
-  log.info("Resources path:", process.resourcesPath);
-  log.info("Looking for executable at:", executablePath);
 
   if (!executablePath || !fs.existsSync(executablePath)) {
     const errorMessage = `Executable not found for platform: ${process.platform}. Path: ${executablePath}`;
@@ -344,17 +340,14 @@ function getProductionExecutablePath() {
     // Log the contents of the resources directory
     try {
       const resourcesContents = fs.readdirSync(process.resourcesPath);
-      log.info("Contents of resources directory:", resourcesContents);
 
       const backendPath = path.join(process.resourcesPath, "backend");
       if (fs.existsSync(backendPath)) {
         const backendContents = fs.readdirSync(backendPath);
-        log.info("Contents of backend directory:", backendContents);
 
         const mainPath = path.join(backendPath, "main");
         if (fs.existsSync(mainPath)) {
           const mainContents = fs.readdirSync(mainPath);
-          log.info("Contents of main directory:", mainContents);
         }
       }
     } catch (err) {
@@ -365,7 +358,6 @@ function getProductionExecutablePath() {
     return null;
   }
 
-  log.info("Found executable at:", executablePath);
   return executablePath;
 }
 
@@ -414,15 +406,9 @@ async function startPythonExecutable() {
         return;
       }
 
-      // Log the working directory and executable details
-      log.info("Working directory:", process.cwd());
-      log.info("Executable path:", executablePath);
-      log.info("Executable exists:", fs.existsSync(executablePath));
-
       // Check if the executable is actually executable
       try {
         fs.accessSync(executablePath, fs.constants.X_OK);
-        log.info("Executable has execution permissions");
       } catch (err) {
         log.error("Executable lacks execution permissions:", err);
       }
@@ -432,15 +418,9 @@ async function startPythonExecutable() {
 
       // Set working directory to the executable's directory
       options.cwd = path.dirname(executablePath);
-      log.info("Setting working directory to:", options.cwd);
     }
 
     try {
-      log.info("Spawning process with options:", {
-        command,
-        args,
-        options
-      });
 
       pythonProcess = spawn(command, args, options);
 
@@ -495,6 +475,7 @@ async function startPythonExecutable() {
 function createProtocol() {
   protocol.registerFileProtocol("app", (request, callback) => {
     const url = request.url.replace("app://", "");
+    log.info("Request URL:", url);
     try {
       return callback(path.normalize(`${__dirname}/../react-app/build/${url}`));
     } catch (error) {
@@ -504,7 +485,6 @@ function createProtocol() {
 }
 
 async function createWindow() {
-  log.info("Creating window");
   win = new BrowserWindow({
     width: 1800,
     height: 1000,
@@ -526,8 +506,6 @@ async function createWindow() {
       "build",
       "index.html"
     );
-    log.info("Directory name:", __dirname);
-    log.info("Production path:", prodPath);
     win.loadFile(prodPath).catch((err) => {
       log.error("Failed to load production build:", err);
     });
@@ -535,7 +513,7 @@ async function createWindow() {
 
   win.on("close", (event) => {
     log.info("Close event triggered");
-    
+
     // Skip confirmation if we're updating
     if (isUpdating) {
       log.info("Skipping close confirmation for update installation");
@@ -630,7 +608,7 @@ async function createWindow() {
   generateReportIpc(TMP_DIR);
   registerOpenFileIpc(BASE_DIR);
   registerReportHandlers(TMP_DIR);
-  registerAuthHandlers();
+  registerAuthHandlers(app.getPath("userData"));
   registerOpportunityToEarnIpc();
   registerTallyIpc();
   registerVoucherIpc();
@@ -751,32 +729,48 @@ async function createWindow() {
 
 app.setName("CypherSol Dev");
 
+async function fetchLicenseStatus() {
+  try {
+    const res = await axios.get("http://localhost:7890/license/status/all/");
+    if (res.data.success) {
+      console.log("🧾 Current License Sessions:");
+      console.table(res.data.sessions);
+    } else {
+      console.error("Failed to fetch license sessions:", res.data);
+    }
+  } catch (err) {
+    console.error("Error fetching license status:", err.message);
+  }
+}
+
 app.whenReady().then(async () => {
   log.info("App is ready", app.getPath("userData"));
+  await fetchLicenseStatus();
   // Example usage
-  log.info("📡 Discovering services...");
-  discoverMdnsServices('', async (service) => {
-    log.info('📡 Service Found:', service);
+  // log.info("📡 Discovering services...");
+  // discoverMdnsServices('license-server', async (service) => {
+  //   log.info('📡 Service Found:', service);
 
-    // Using host (e.g., 'DESKTOP-85MU4TU.license-server.local')
-    const healthUrl = `http://${service.name}:${service.port}/api/health`;
-    try {
-      const response = await fetch(healthUrl, {
-        headers: {
-          Accept: 'text/html' // Explicitly request HTML
-        }
-      });
+  //   // Using host (e.g., 'DESKTOP-85MU4TU.license-server.local')
+  //   const healthUrl = `http://${service.name}:${service.port}/api/health`;
+  //   log.info("Health URL:", healthUrl);
+  //   try {
+  //     const response = await fetch(healthUrl, {
+  //       headers: {
+  //         Accept: 'text/html' // Explicitly request HTML
+  //       }
+  //     });
 
-      const html = await response.text();
+  //     const html = await response.text();
 
-      console.log("✅ Health Check Response:\n", html);
-    } catch (err) {
-      console.error("❌ Error fetching health check:", err.message);
-    }
+  //     console.log("✅ Health Check Response:\n", html);
+  //   } catch (err) {
+  //     console.error("❌ Error fetching health check:", err.message);
+  //   }
 
 
-    log.info("\n*********************************************\n");
-  });
+  //   log.info("\n*********************************************\n");
+  // });
 
   // return;
 
@@ -818,6 +812,7 @@ app.whenReady().then(async () => {
   // return;
 
   try {
+
     try {
       const dbManager = databaseManager.getInstance();
       await dbManager.initialize(app.getPath("userData"));
@@ -828,17 +823,40 @@ app.whenReady().then(async () => {
     }
 
     try {
+      const isLicenseValid = await licenseManager.init(app.getPath("userData"));
+      log.info("License status: ", isLicenseValid);
+      log.info("License Info Data: ", licenseManager.licenseData)
+    }
+    catch (error) {
+      log.error("License initialization failed:", error);
+      throw error;
+    }
+
+    try {
       await sessionManager.init();
     } catch (error) {
       log.error("SessionManager initialization failed:", error);
       throw error;
     }
 
+    // try {
+    //   await licenseManager.init();
+    // } catch (error) {
+    //   log.error("LicenseManager initialization failed:", error);
+    //   throw error;
+    // }
+
+    createProtocol();
+    createWindow();
+
+
     try {
-      await licenseManager.init();
-      log.info("Python process started successfully");
+      await systemInfo.loadData(app.getPath("userData"));
+      log.info("SystemInfo loaded successfully");
+      log.info("SystemInfo data:", systemInfo.getHostname());
+
     } catch (error) {
-      log.error("LicenseManager initialization failed:", error);
+      log.error("SystemInfo initialization failed:", error);
       throw error;
     }
 
@@ -849,10 +867,6 @@ app.whenReady().then(async () => {
       throw error;
     }
 
-    // Proceed with the window creation and other tasks after initialization
-    log.info("After all initializations");
-    createProtocol();
-    createWindow();
 
     // Initial update check after 1 minute
     if (!isDev) {
@@ -906,7 +920,7 @@ function checkForUpdates() {
   }
 
   const currentVersion = app.getVersion();
-  
+
   // Skip check if we're already on the latest notified version
   if (lastCheckedVersion && lastCheckedVersion === currentVersion) {
     log.info('Already on latest notified version:', currentVersion);
