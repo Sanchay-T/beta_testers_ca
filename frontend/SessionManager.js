@@ -119,7 +119,7 @@ class SessionManager extends EventEmitter {
             const { clientId, uuid, macAddress, hostname, ip, port } = licenseManager.getLicenseInfo(); // Ensure this function returns what you need
 
             // ✅ Call the .NET licensing server API to activate session
-            const response = await axios.post(`http://${ip}:${port}/api/license/inactivate-session`, {
+            const response = await axios.post(`http://${ip}:${port}/api/license/deactivate-session`, {
                 clientId,
                 uuid,
                 macAddress,

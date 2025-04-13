@@ -20,6 +20,34 @@ log.info("License manager process.env.NODE_ENV", process.env.NODE_ENV);
 const toValidateLicense = process.env.VALIDATE_LICENSE == "true";
 log.info("Validate License : ", toValidateLicense);
 
+// Simple check if gateway server is already running
+async function isServerRunning(url) {
+  try {
+    const res = await axios.get(url);
+    return res.status === 200;
+  } catch {
+    return false;
+  }
+}
+
+
+async function waitUntilServerIsReady(url, timeout = 10000, interval = 500) {
+  const start = Date.now();
+  while (Date.now() - start < timeout) {
+    try {
+      const res = await axios.get(url);
+      if (res.status === 200) {
+        return true;
+      }
+    } catch (_) {
+      // wait and retry
+
+    }
+    await new Promise((r) => setTimeout(r, interval));
+  }
+  throw new Error("Gateway server did not respond in time.");
+}
+
 
 /**
  * Discover mDNS services by type.
@@ -94,7 +122,7 @@ function registerAuthHandlers(userDataPath) {
 
 
       // ✅ Get system info from your license manager
-      const { clientId, uuid, macAddress, hostname, ip, port } = licenseManager.getLicenseInfo(); // Ensure this function returns what you need
+      const { clientId, uuid, macAddress, hostname, username, ip, port } = licenseManager.getLicenseInfo(); // Ensure this function returns what you need
 
       // ✅ Call the .NET licensing server API to activate session
       const response = await axios.post(`http://${ip}:${port}/api/license/activate-session`, {
@@ -102,6 +130,7 @@ function registerAuthHandlers(userDataPath) {
         uuid,
         macAddress,
         hostname,
+        username
       });
 
       const { data } = response;
@@ -372,17 +401,32 @@ function registerAuthHandlers(userDataPath) {
     const { licenseKey, role } = args;
     const uuid_hash = await systemInformation.getHashedUUID();
     console.log("UUID Hash:", uuid_hash);
-    // Ensure gateway server service is running
-    // await gatewayServer.init();
-
-    // Optional: wait a moment to ensure service has started
-    await new Promise((res) => setTimeout(res, 1000));
+    const serverUrl = "http://localhost:7890/api/health";
 
     try {
+      // ✅ Check first if it's already running
+      const alreadyRunning = await isServerRunning(serverUrl);
+
+      if (!alreadyRunning) {
+        log.info("Starting license gateway server...");
+        // await gatewayServer.init();
+        // Wait until the server is responsive
+        await waitUntilServerIsReady(serverUrl, 10000);
+      } else {
+        log.info("License gateway server already running.");
+      }
+
+      const deviceInfo = {
+        uuid: systemInformation.getUUID(),
+        macAddress: systemInformation.getMACAddress(),
+        hostname: systemInformation.getHostname(),
+        windowsUserSID: systemInformation.getWindowsUserSID(),
+        username: systemInformation.getUsername(),
+      }
       const response = await axios.post("http://localhost:7890/api/activate-license", {
         licenseKey,
         role,
-        uuid_hash
+        deviceInfo
       });
 
       if (response.status === 200) {
@@ -474,7 +518,7 @@ function registerAuthHandlers(userDataPath) {
 
       log.info("License assignment response:", response.data);
 
-      const { message, ...data } = response.data;
+      const { message, activeCount, maxUsers, ...data } = response.data;
 
       if (response.data.success) {
 
@@ -494,14 +538,16 @@ function registerAuthHandlers(userDataPath) {
         const filePath = path.join(userDataPath, "clientLicense.enc");
         fs.writeFile(filePath, encryptedData, (err) => {
           if (err) {
-            console.error("Failed to write license file:", err);
+            log.error("Failed to write license file:", err);
           } else {
-            console.log("License file saved successfully at:", filePath);
+            log.info("License file saved successfully at:", filePath);
+            licenseManager.setLicenseInfo(enrichedLicenseData);
           }
         });
         return { success: true, data: enrichedLicenseData };
-      } else {
-        console.error("License assignment failed:", response.data.message);
+      }
+      else {
+        log.error("License assignment failed:", response.data.message);
         if (response.data.inactiveLicenses) {
           return {
             success: false,
@@ -509,13 +555,24 @@ function registerAuthHandlers(userDataPath) {
             inactiveLicenses: response.data.inactiveLicenses,
           };
         } else {
+          log.error("License assignment failing gggggg:", response.data);
           return { success: false, error: response.data.message };
         }
       }
 
     } catch (error) {
       if (error.response) {
-        log.error("License assignment error:", error.response.data);
+        log.error("License assignment error:", error.response.data, error.message);
+        if (error.response.data.inactiveLicenses) {
+          return {
+            success: false,
+            error: error.response.data.error,
+            inactiveLicenses: error.response.data.inactiveLicenses,
+          };
+        } else {
+          log.error("License assignment failing gggggg:", error);
+          return { success: false, error: error.message };
+        }
       }
       else {
         log.error("License connection error:", error.message);
@@ -525,6 +582,29 @@ function registerAuthHandlers(userDataPath) {
   });
 
 
-}
+  ipcMain.handle("license:revoke-session", async (event, licenseData) => {
+    log.info("Revoking license session:", licenseData);
+
+    const { sessionKey, ip, port } = licenseData;
+
+    try {
+      const response = await axios.post(`http://${ip}:${port}/api/license/revoke-session`, {
+        sessionKey: sessionKey,
+      });
+
+      log.info("License revocation response:", response.data);
+      if (response.data.success) {
+        return { success: true, message: response.data.message };
+      } else {
+        log.error("License revocation failed:", response.data.message);
+        return { success: false, error: response.data.message };
+      }
+    } catch (error) {
+      log.error("License revocation error:", error.message);
+      return { success: false, error: error.message };
+    }
+  })
+
+};
 
 module.exports = { registerAuthHandlers };

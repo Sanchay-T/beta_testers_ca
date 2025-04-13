@@ -1,5 +1,5 @@
 const { contextBridge, ipcRenderer, shell } = require("electron");
-const { generateReportIpc } = require("./ipc/generateReport");
+// const { generateReportIpc } = require("./ipc/generateReport");
 const log = require("electron-log");
 
 // Expose a secure API for opening files to the renderer process
@@ -98,6 +98,8 @@ contextBridge.exposeInMainWorld("electron", {
   saveFileToTemp: (fileBuffer) =>
     ipcRenderer.invoke("save-file-to-temp", fileBuffer),
   cleanupTempFiles: () => ipcRenderer.invoke("cleanup-temp-files"),
+
+  checkStatementLimit: () => ipcRenderer.invoke("check-statement-limit"),
   generateReportIpc: (result, reportName, source) =>
     ipcRenderer.invoke("generate-report", result, reportName, source),
 
@@ -161,6 +163,8 @@ contextBridge.exposeInMainWorld("electron", {
       ipcRenderer.invoke("license:activate", credentials),
     connectNetworkLicense: (credentials) =>
       ipcRenderer.invoke("license:connect-network-license", credentials),
+    revokeSession: (credentials) =>
+      ipcRenderer.invoke("license:revoke-session", credentials),
   },
 
   getRecentReports: () => ipcRenderer.invoke("get-recent-reports"),

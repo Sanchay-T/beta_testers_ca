@@ -20,7 +20,7 @@ import { Toaster } from "./components/ui/toaster";
 import LicenseActivation from "./components/Authentication/LicenseActivation";
 
 function App() {
-  const [showIntro, setShowIntro] = useState(true);
+  const [showIntro, setShowIntro] = useState(false);
   const { isExcelLoading, isReportLoading } = useLoading();
   const { toast } = useToast();
 
@@ -52,9 +52,10 @@ function App() {
 
 
   return (
-    <ThemeProvider defaultTheme="system" storageKey="app-theme">
+    // <ThemeProvider defaultTheme="system" storageKey="app-theme">
+    <ThemeProvider defaultTheme="light" storageKey={null}>
       {showIntro && <ElectronIntro onComplete={() => setShowIntro(false)} />}
-      <UpdateNotification />
+      {/* <UpdateNotification /> */}
       <SidebarProvider>
         <HashRouter>
           <BreadcrumbProvider>

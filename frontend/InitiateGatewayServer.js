@@ -16,15 +16,34 @@ class GatewayServerService {
     }
     GatewayServerService.instance = this;
   }
-
   async init() {
     const exists = await this.checkServiceExists();
+
     if (!exists) {
       await this.createAndStartService();
     } else {
-      await this.startService();
+      const isRunning = await this.isServiceRunning();
+      if (!isRunning) {
+        await this.startService();
+      } else {
+        log.info("Service already running.");
+      }
     }
   }
+
+
+  isServiceRunning() {
+    return new Promise((resolve) => {
+      exec(`sc query ${SERVICE_NAME}`, (error, stdout) => {
+        if (error) {
+          resolve(false);
+        } else {
+          resolve(stdout.includes("RUNNING"));
+        }
+      });
+    });
+  }
+
 
   checkServiceExists() {
     return new Promise((resolve) => {

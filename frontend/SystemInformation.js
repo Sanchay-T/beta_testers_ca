@@ -56,7 +56,7 @@ class SystemInformation {
             if (process.platform === "win32") {
                 this.userSID = await this.computeWindowsUserSID(userDataPath);
             } else {
-                this.userSID = null;
+                this.userSID = "SIDWindows2";
             }
             log.info("System information loaded successfully.");
         } catch (error) {

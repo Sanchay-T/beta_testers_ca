@@ -745,71 +745,7 @@ async function fetchLicenseStatus() {
 
 app.whenReady().then(async () => {
   log.info("App is ready", app.getPath("userData"));
-  await fetchLicenseStatus();
-  // Example usage
-  // log.info("📡 Discovering services...");
-  // discoverMdnsServices('license-server', async (service) => {
-  //   log.info('📡 Service Found:', service);
-
-  //   // Using host (e.g., 'DESKTOP-85MU4TU.license-server.local')
-  //   const healthUrl = `http://${service.name}:${service.port}/api/health`;
-  //   log.info("Health URL:", healthUrl);
-  //   try {
-  //     const response = await fetch(healthUrl, {
-  //       headers: {
-  //         Accept: 'text/html' // Explicitly request HTML
-  //       }
-  //     });
-
-  //     const html = await response.text();
-
-  //     console.log("✅ Health Check Response:\n", html);
-  //   } catch (err) {
-  //     console.error("❌ Error fetching health check:", err.message);
-  //   }
-
-
-  //   log.info("\n*********************************************\n");
-  // });
-
-  // return;
-
-
-  // await checkServiceExists(async (exists) => {
-  //   if (!exists) {
-  //     log.info("Service does not exist. Creating...");
-  //     await createAndStartService();
-  //   } else {
-  //     log.info("Service already exists. Starting...");
-  //     exec(`sc start ${SERVICE_NAME}`, (error, stdout, stderr) => {
-  //       log.info("Service start output:", stdout);
-  //       if (error || stderr) {
-  //         let extendedErrorMessage = '';
-  //         if (error) {
-  //           try {
-  //             extendedErrorMessage = execSync(`net helpmsg ${error.code}`, { encoding: 'utf8' }).trim();
-  //           } catch (syncError) {
-  //             extendedErrorMessage = 'Could not retrieve extended error message';
-  //           }
-  //           log.error("Error starting service:");
-  //           log.error("Error Message:", error.message);
-  //           log.error("Error Code:", error.code);
-  //           log.error("Extended Error Message:", extendedErrorMessage);
-  //           log.error("Error Signal:", error.signal);
-  //           log.error("Executed Command:", error.cmd);
-  //           log.error("Full Error Object:", JSON.stringify(error, null, 2));
-  //         }
-  //         if (stderr) {
-  //           log.error("STDERR:", stderr);
-  //         }
-  //         return;
-  //       }
-  //       log.info("Rust service started.");
-  //     });
-  //   }
-  // });
-
-  // return;
+  // await fetchLicenseStatus();
 
   try {
 
@@ -853,19 +789,19 @@ app.whenReady().then(async () => {
     try {
       await systemInfo.loadData(app.getPath("userData"));
       log.info("SystemInfo loaded successfully");
-      log.info("SystemInfo data:", systemInfo.getHostname());
+      log.info("SystemInfo data:", systemInfo.getHostname(), systemInfo.getWindowsUserSID());
 
     } catch (error) {
       log.error("SystemInfo initialization failed:", error);
       throw error;
     }
 
-    try {
-      await startPythonExecutable();
-    } catch (error) {
-      log.error("Python initialization failed:", error);
-      throw error;
-    }
+    // try {
+    //   await startPythonExecutable();
+    // } catch (error) {
+    //   log.error("Python initialization failed:", error);
+    //   throw error;
+    // }
 
 
     // Initial update check after 1 minute

@@ -108,6 +108,11 @@ class LicenseManager {
         return this.isActivated;
     }
 
+    setLicenseInfo(licenseData) {
+        log.info("Setting license data:", licenseData);
+        this.licenseData = licenseData; // <-- Setter method if needed externally
+    }
+
     getLicenseInfo() {
         return this.licenseData; // <-- Accessor method if needed externally
     }

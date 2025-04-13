@@ -4,6 +4,7 @@ const path = require("path");
 const log = require("electron-log");
 const axios = require("axios");
 const sessionManager = require("../SessionManager");
+const licenseManager = require("../LicenseManager");
 const databaseManager = require("../db/db");
 const { transactions } = require("../db/schema/Transactions");
 const { statements } = require("../db/schema/Statement");
@@ -680,6 +681,37 @@ const formatDate = (dateString) => {
   return `${day}-${month}-${year}`; // Format as dd-mm-yyyy
 };
 
+
+
+async function checkStatementLimit() {
+  log.info("Checking statement limit...");
+
+  const { ip, port } = licenseManager.getLicenseData() || { ip: "localhost", port: 7890 }
+
+  try {
+    const response = await axios.get(`http://${ip}:${port}/api/license/check-statement-limit`);
+
+    if (response.status === 200) {
+      const { limitReached, remaining } = response.data;
+      log.info(`Limit reached: ${limitReached}, Remaining: ${remaining}`);
+      return {
+        success: true,
+        data: {
+          limitReached,
+          remaining
+        }
+      };
+    } else {
+      log.error("Unexpected response status:", response.statusText);
+      throw new Error("Unexpected response status");
+    }
+  } catch (err) {
+    log.error("Error contacting license server:", err.message);
+    throw new Error("Error contacting license server");
+  }
+}
+
+
 function generateReportIpc(tmpdir_path) {
   db = databaseManager.getInstance().getDatabase();
 
@@ -690,6 +722,21 @@ function generateReportIpc(tmpdir_path) {
   ipcMain.handle(
     "generate-report",
     async (event, receivedResult, caseName, source = "generate-report") => {
+
+      try {
+        const { success, data } = await checkStatementLimit();
+        if (!success) {
+          throw new Error("Failed to check statement limit.");
+        }
+        if (data.limitReached) {
+          throw new Error("Statement limit reached. Please contact support.");
+        }
+        log.info("Remaining statements:", data.remaining);
+      } catch (error) {
+        log.error("Error checking statement limit:", error.message);
+        throw new Error("Something went wrong.");
+      }
+
       log.info("Received result:", receivedResult);
       log.info("Received caseName:", caseName);
       const caseId = await getOrCreateCase(caseName);

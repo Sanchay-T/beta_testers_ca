@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { motion } from "framer-motion";
+// import { set } from "react-datepicker/dist/date_utils";
 
 export function LicenseActivationForm({ className, ...props }) {
   const { login, loading, error, isActivated, isSignedUp, signUp } = useAuth();
@@ -58,6 +59,22 @@ export function LicenseActivationForm({ className, ...props }) {
   // New state for inactive licenses
   const [inactiveLicenses, setInactiveLicenses] = useState([]);
   const [revokingLicense, setRevokingLicense] = useState(null);
+  // Track modal open state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Function to close the modal
+  const handleCloseModal = () => {
+    setInactiveLicenses([]);
+    setIsModalOpen(false);
+  };
+
+  // Option 1: Auto-open the modal if inactive licenses are present
+  useEffect(() => {
+    if (inactiveLicenses && inactiveLicenses.length > 0) {
+      setIsModalOpen(true);
+    }
+  }, [inactiveLicenses]);
+
 
   useEffect(() => {
     if (isActivated) {
@@ -89,8 +106,26 @@ export function LicenseActivationForm({ className, ...props }) {
       });
 
       if (result.success) {
-        setActivationStatus("active");
-        setActivationStep(2);
+
+        try {
+          const result = await window.electron.auth.connectNetworkLicense({
+            ip: "localhost",
+            port: "7890",
+          });
+          console.log("Network License Result:", result);
+          if (result.success) {
+            setActivationStatus("active");
+            setActivationStep(2);
+            localStorage.setItem("role", credentials.role);
+          } else {
+            setActivationStatus("active");
+            setActivationStep(2);
+          }
+        } catch (error) {
+          console.error("Error connecting to network license:", error);
+          setActivationStatus("active");
+          setActivationStep(2);
+        }
         localStorage.setItem("role", credentials.role);
       } else {
         setActivationStatus("failed");
@@ -108,6 +143,7 @@ export function LicenseActivationForm({ className, ...props }) {
       const result = await window.electron.auth.searchnNetworkLicenses({ serviceType: "license-server" });
 
       if (result.success && result.licenses && result.licenses.length > 0) {
+        console.log("Network Licenses Found:", result.licenses);
         setNetworkLicenses(result.licenses);
       } else {
         setNetworkLicenses([]);
@@ -134,12 +170,13 @@ export function LicenseActivationForm({ className, ...props }) {
         ip: license.ip,
         port: license.port,
       });
-
+      console.log("Network License Result:", result);
       if (result.success) {
         setActivationStatus("active");
         setActivationStep(2);
         localStorage.setItem("role", credentials.role);
       } else {
+        console.log("Network License Error:", result.inactiveLicenses);
         // Check for inactive licenses in the result
         if (result.inactiveLicenses && result.inactiveLicenses.length > 0) {
           setInactiveLicenses(result.inactiveLicenses);
@@ -149,25 +186,26 @@ export function LicenseActivationForm({ className, ...props }) {
         }
       }
     } catch (error) {
+      console.error("Error connecting to network license:", error);
       setActivationStatus("failed");
     }
   };
 
   // New handler for revoking inactive licenses
-  const handleRevokeLicense = async (licenseId) => {
-    setRevokingLicense(licenseId);
+  const handleRevokeLicense = async (sessionKey) => {
+    setRevokingLicense(sessionKey);
 
     try {
       // Assuming you'll implement this endpoint in your electron main process
-      const result = await window.electron.auth.revokeLicense({
-        licenseId: licenseId,
+      const result = await window.electron.auth.revokeSession({
+        sessionKey: sessionKey,
         ip: selectedNetworkLicense.ip,
         port: selectedNetworkLicense.port
       });
 
       if (result.success) {
         // Remove the revoked license from the list
-        setInactiveLicenses(prev => prev.filter(license => license.id !== licenseId));
+        setInactiveLicenses(prev => prev.filter(session => session.sessionKey !== sessionKey));
 
         // If that was the last one, retry connection automatically
         if (inactiveLicenses.length === 1) {
@@ -321,49 +359,59 @@ export function LicenseActivationForm({ className, ...props }) {
     if (inactiveLicenses.length === 0) return null;
 
     return (
-      <motion.div
-        className="mt-6"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
-        <Alert className="mb-4 bg-amber-50 border-amber-200">
-          <AlertTriangle className="h-4 w-4 text-amber-700 mr-2" />
-          <AlertDescription className="text-amber-700">
-            Your device has inactive licenses that need to be revoked before activating a new one.
-            Please revoke any unused licenses below.
-          </AlertDescription>
-        </Alert>
+      // Modal container and backdrop
+      <div className="fixed inset-0 z-50 flex items-center justify-center">
+        {/* Backdrop: clicking on it can close the modal if desired */}
+        <div
+          className="absolute inset-0 bg-black/50"
+          onClick={handleCloseModal} // make sure you define this function to close the modal
+        />
 
-        <div className="rounded-md border border-amber-200 overflow-hidden">
-          <table className="w-full border-collapse">
-            <thead className="bg-amber-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium text-amber-800">Device</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-amber-800">Last Used</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-amber-800">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-amber-100">
+        {/* Popup card with framer-motion animation */}
+        <motion.div
+          className="relative z-50 w-full max-w-2xl mx-auto rounded-md border border-amber-200 bg-white shadow-lg p-6 overflow-visible" // Changed from overflow-hidden
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          {/* Close button */}
+          <button
+            onClick={handleCloseModal}
+            className="absolute -top-3 -right-3 p-2 rounded-full bg-white border border-gray-300 shadow-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 z-50"
+          >
+            <X className="h-5 w-5 text-gray-700 hover:text-gray-900" />
+          </button>
+
+          <Alert className="mb-4 bg-amber-50 border-amber-200">
+            <AlertTriangle className="h-4 w-4 text-amber-700 mr-2" />
+            <AlertDescription className="text-amber-700">
+              Your device has inactive licenses that need to be revoked before activating a new one.
+              Please revoke any unused licenses below.
+            </AlertDescription>
+          </Alert>
+
+          <div className="rounded-md border border-amber-200 overflow-hidden">
+            {/* Mobile view - Card-based layout */}
+            <div className="md:hidden">
               {inactiveLicenses.map((license) => (
-                <tr key={license.id} className="bg-white">
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    <div className="font-medium">{license.hostname || 'Unknown Device'}</div>
-                    <div className="text-xs text-gray-500">{license.username || 'Unknown User'}</div>
-                    <div>Info : {license}</div>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    {license.lastActive ? new Date(license.lastActive).toLocaleDateString() : 'Never'}
-                  </td>
-                  <td className="px-4 py-3 text-sm">
+                <div key={license.sessionKey} className="p-4 border-b border-amber-100 bg-white">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <h4 className="font-medium">
+                        {license.sessionDetails.hostname || 'Unknown Device'}
+                      </h4>
+                      <p className="text-xs text-gray-500">
+                        {license.sessionDetails.username || 'Unknown User'}
+                      </p>
+                    </div>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleRevokeLicense(license.id)}
-                      disabled={revokingLicense === license.id}
+                      onClick={() => handleRevokeLicense(license.sessionKey)}
+                      disabled={revokingLicense === license.sessionKey}
                       className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
                     >
-                      {revokingLicense === license.id ? (
+                      {revokingLicense === license.sessionKey ? (
                         <>
                           <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
                           Revoking...
@@ -375,27 +423,102 @@ export function LicenseActivationForm({ className, ...props }) {
                         </>
                       )}
                     </Button>
-                  </td>
-                </tr>
+                  </div>
+                  <div className="text-sm text-gray-700">
+                    <span className="font-medium">Last Used:</span>{" "}
+                    {new Date(license.sessionDetails.lastHeartbeat).toLocaleString("en-GB", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true,
+                    })}                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </div>
 
-        {inactiveLicenses.length > 0 && (
-          <div className="mt-4 flex justify-end">
-            <Button
-              onClick={handleRetryAfterRevoke}
-              className="bg-amber-600 hover:bg-amber-700 text-white rounded-md flex items-center justify-center gap-2"
-            >
-              <RefreshCcw className="h-4 w-4" />
-              Retry Connection
-            </Button>
+            {/* Desktop view - Table layout */}
+            <div className="hidden md:block">
+              <table className="w-full">
+                <thead className="bg-amber-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-amber-800">
+                      Device
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-amber-800">
+                      Last Used
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-amber-800">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-amber-100">
+                  {inactiveLicenses.map((license) => (
+                    <tr key={license.sessionKey} className="bg-white">
+                      <td className="px-4 py-3 text-sm text-gray-700">
+                        <div className="font-medium">
+                          {license.sessionDetails.hostname || 'Unknown Device'}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {license.sessionDetails.username || 'Unknown User'}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-700">
+                        {new Date(license.sessionDetails.lastHeartbeat).toLocaleString("en-GB", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: true,
+                        })}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleRevokeLicense(license.sessionKey)}
+                          disabled={revokingLicense === license.sessionKey}
+                          className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                        >
+                          {revokingLicense === license.sessionKey ? (
+                            <>
+                              <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                              Revoking...
+                            </>
+                          ) : (
+                            <>
+                              <X className="h-3 w-3 mr-1" />
+                              Revoke
+                            </>
+                          )}
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        )}
-      </motion.div>
+
+          {inactiveLicenses.length > 0 && (
+            <div className="mt-4 flex justify-end">
+              <Button
+                onClick={handleRetryAfterRevoke}
+                className="bg-amber-600 hover:bg-amber-700 text-white flex items-center justify-center gap-2"
+              >
+                <RefreshCcw className="h-4 w-4" />
+                Retry Connection
+              </Button>
+            </div>
+          )}
+        </motion.div>
+      </div>
     );
   };
+
 
   const renderProgressSteps = () => {
     return (
@@ -489,7 +612,7 @@ export function LicenseActivationForm({ className, ...props }) {
           {renderStatusAlert()}
 
           {/* Render inactive licenses if present */}
-          {activationStatus === "inactive-licenses" && renderInactiveLicenses()}
+          {activationStatus === "inactive-licenses" && isModalOpen && renderInactiveLicenses()}
 
           {activationStep === 1 && (
             <Tabs
@@ -600,7 +723,7 @@ export function LicenseActivationForm({ className, ...props }) {
                     </motion.div>
                   </div>
 
-                  {networkLicenses.length > 0 && !inactiveLicenses.length && (
+                  {networkLicenses.length > 0 && (
                     <motion.div
                       className="mt-6"
                       initial={{ opacity: 0, y: 10 }}
