@@ -662,6 +662,8 @@ def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_
                                                                          end_date)
 
         print(f"Extracted {bank} bank statement successfully")
+      
+        pdf_paths_not_extracted["respective_reasons_for_error"].append(errorz[bank])
         # account_number += f"{name_dfs[bank][1][:4]}x{name_dfs[bank][1][-4:]}_"
         # Check if the extracted dataframe is empty
         if dfs[bank].empty:
