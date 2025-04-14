@@ -307,10 +307,10 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
     //   return;
     // }
 
+
     // Prepare data for Tally
     const tallyData = txData
       .map((transaction) => {
-        console.log("transaction", transaction);
         if (transaction.imported) {
           // remove Already uploaded
           return null;
@@ -392,10 +392,10 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
     // Prepare data for Tally
     const tallyData = data
       .map((transaction) => {
-        // if (transaction.imported) {
-        //   // Already uploaded
-        //   return null;
-        // }
+        if (transaction.imported) {
+          // Already uploaded
+          return null;
+        }
         return {
           companyName: companyName,
           id: transaction.id,
@@ -422,7 +422,6 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
   const handleUploadAfterConfirmation = async () => {
     setLoading2(true);
     try {
-      console.log("tallyUploadData", tallyUploadData);
       let response;
       if (selectedVoucher === "Payment Receipt Contra") {
         response = await window.electron.uploadToTally(tallyUploadData, port);
@@ -460,7 +459,6 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
         );
       }
 
-      console.log("response11", response);
 
       const newDataToRender = dataToRender.map((ledger) => {
         if (successIds.includes(ledger.id)) {
@@ -489,7 +487,6 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
       setFailedTransactions(failedTransactions);
       setSuccessIds(successIds);
 
-      console.log({ afterCreation: response });
 
       // // Store failed reasons in localStorage
       // const storedReasons = JSON.parse(
@@ -550,7 +547,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
     // }
 
     const response = await window.electron.importLedgers(companyName, port);
-    console.log({ response });
+    console.log({ importLedgers: response });
     if (response.success) {
       const ledgerData = response.ledgerData;
       removeDuplicateLedgers(ledgerData);
@@ -612,7 +609,6 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
       // If the ledger is already in Tally
       if (uniqueLedgerNames.includes(ledger.ledger_name)) {
         const tallyLedgerData = tallyLedgersMap.get(ledger.ledger_name);
-        console.log({ tallyLedgerData });
         return {
           ...ledger,
           imported: true,
@@ -639,7 +635,6 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
       return ledger;
     });
 
-    console.log({ updatedLedgersData });
 
     // Sort the data so non-imported ledgers appear first
     updatedLedgersData.sort((a, b) => {
@@ -651,14 +646,12 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
       return a.ledger_name.localeCompare(b.ledger_name);
     });
 
-    console.log({ updatedLedgersData });
 
     // Check if all ledgers are imported
     const allLedgersImported = updatedLedgersData
       ? updatedLedgersData.every((ledger) => ledger.imported === true)
       : false;
 
-    console.log({ allLedgersImported });
     // Update ledger creation status in localStorage based on whether all ledgers are imported
     if (allLedgersImported) {
       localForage
@@ -677,7 +670,6 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
         });
     }
 
-    console.log({ updatedLedgersData });
     setDataToRender(updatedLedgersData);
   };
 

@@ -132,7 +132,8 @@ export default function GenerateReport() {
         caseName,
         "generate-report"
       );
-
+    
+      console.log({electronResponse:result});
       if (
         result.data.missingMonthsList &&
         result.data.missingMonthsList.length > 0

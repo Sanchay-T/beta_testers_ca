@@ -19,6 +19,7 @@ import Card3 from "../Elements/Card3";
 import { ResponsiveContainer } from "recharts";
 import { useAuth } from "../../contexts/AuthContext";
 import MSME_Card3 from "../Elements/MSME_Card3";
+import CustomContainer from "./CustomContainer";
 
 const MainDashboard = ({ handleTabChange }) => {
   const { theme, setTheme } = useTheme();
@@ -49,6 +50,17 @@ const MainDashboard = ({ handleTabChange }) => {
     duration: "all",
   });
   const { user } = useAuth();
+
+  const observerError =
+    "ResizeObserver loop completed with undelivered notifications.";
+  window.addEventListener("error", (e) => {
+    if (e.message === observerError) {
+      e.stopImmediatePropagation();
+      console.error(
+        "AQ - ResizeObserver loop completed with undelivered notifications."
+      );
+    }
+  });
 
   // const [timeMetrics, setTimeMetrics] = useState({
   //   totalTimeSaved: 0,
@@ -824,7 +836,13 @@ const MainDashboard = ({ handleTabChange }) => {
           
         </div> */}
 
-        <ResponsiveContainer className={gridClasses} width="100%" height={570}>
+        {/* <ResponsiveContainer className={gridClasses} width="100%" height={570}> */}
+        <CustomContainer
+          className={gridClasses}
+          width="100%"
+          // height={570}
+          style={{ display: "grid" }} // Add this to maintain grid layout properties
+        >
           <Card1
             type="reports"
             title="Overview"
@@ -879,7 +897,7 @@ const MainDashboard = ({ handleTabChange }) => {
               handleTabChange={handleTabChange}
             />
           )}
-        </ResponsiveContainer>
+        </CustomContainer>
 
         <RecentReports />
       </div>

@@ -4,6 +4,7 @@ import shutil
 # Define source paths
 models = os.path.join("backend", "models")
 category_sheet = os.path.join("backend", "Final_Category.xlsx")
+customer_sheet = os.path.join("backend", "Customer_category.xlsx")
 # assets = os.path.join("src", "utils", "assets")
 # root_db = "db.sqlite3"
 # root_license = "LICENSE.txt"
@@ -11,6 +12,7 @@ category_sheet = os.path.join("backend", "Final_Category.xlsx")
 
 # Define destination paths
 dist_internal = os.path.join("dist", "main", "_internal")
+print(dist_internal)
 # dist_main = os.path.join("dist", "main")
 
 # Ensure destination directories exist
@@ -31,6 +33,12 @@ if os.path.exists(category_sheet):
 else:
     print(f"Source not found: {category_sheet}")
 
+# Copy category sheet
+if os.path.exists(customer_sheet):
+    shutil.copy(customer_sheet, dist_internal)
+    print(f"Copied: {customer_sheet} to {dist_internal}")
+else:
+    print(f"Source not found: {customer_sheet}")
 # Copy assets folder
 # if os.path.exists(src_assets):
 #     shutil.copytree(src_assets, os.path.join(dist_internal, "assets"), dirs_exist_ok=True)

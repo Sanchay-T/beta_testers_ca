@@ -135,6 +135,9 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         currentCaseName
       );
 
+      console.log({electronResponse:result});
+      
+
       if (
         result.success &&
         result.data.failedStatements.bank_names.length === 0
@@ -566,6 +569,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         caseName,
         "add-pdf"
       );
+      console.log({electronResponse:result});
 
       setCurrentCaseId(result.data.caseId); // Store caseId
 

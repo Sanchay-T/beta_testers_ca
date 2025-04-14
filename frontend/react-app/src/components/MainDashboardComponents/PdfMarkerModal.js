@@ -32,12 +32,15 @@ const PDFMarkerModal = ({
         [modifiedSelectedFailedFile],
         reportName
       );
+      console.log({ electronResponse: result });
 
       // console.log("result11", result);
       if (result.success) {
         // console.log("result success", result.success);
         // delete the existing statement as new one is added
-        const response  =await window.electron.deleteStatement(modifiedSelectedFailedFile.id)
+        const response = await window.electron.deleteStatement(
+          modifiedSelectedFailedFile.id
+        );
         // console.log({deleteResponse:response})
         toast({
           title: "Success",
@@ -50,8 +53,6 @@ const PDFMarkerModal = ({
         if (typeof onProcessingComplete === "function") {
           onProcessingComplete();
         }
-
-
       } else {
         // If the rectification failed, show error message and reasons
         const unrectifiedStatements = failedDatasOfCurrentReport.filter(

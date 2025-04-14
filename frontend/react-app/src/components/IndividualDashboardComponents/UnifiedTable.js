@@ -1573,6 +1573,16 @@ const DataTable = ({
         return;
       }
 
+      if (!previewUrl.includes(".pdf")) {
+        toast({
+          title: "Alert",
+          description: "File not supported for preview",
+          variant: "destructive",
+          duration: 3000,
+        });
+        return;
+      }
+
       window.electron.fetchPdfContent(previewUrl).then((base64) => {
         const blob = base64StringToBlob(base64, "application/pdf");
         const objectUrl = URL.createObjectURL(blob);
