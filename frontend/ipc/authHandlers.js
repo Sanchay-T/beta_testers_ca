@@ -140,6 +140,7 @@ function registerAuthHandlers(userDataPath) {
       }
 
       sessionManager.setUser({ userId: user.id, email: user.email, role: user.role, name: user.name });
+      log.info("Login User session activated:", sessionManager.getUser());
 
       log.info("Login License session activated:", data);
 

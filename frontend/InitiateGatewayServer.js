@@ -16,7 +16,7 @@ class GatewayServerService {
     }
     GatewayServerService.instance = this;
   }
-  async init() {
+  async init(executablePath) {
     const exists = await this.checkServiceExists();
 
     if (!exists) {

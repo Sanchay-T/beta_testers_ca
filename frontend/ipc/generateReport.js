@@ -674,6 +674,7 @@ function preprocessPayload(payload) {
 }
 const formatDate = (dateString) => {
   const date = new Date(dateString); // Parse the date string
+
   const day = String(date.getDate()).padStart(2, "0"); // Get day and pad with zero
   const month = String(date.getMonth() + 1).padStart(2, "0"); // Get month (0-based) and pad with zero
   const year = date.getFullYear(); // Get full year
@@ -686,7 +687,7 @@ const formatDate = (dateString) => {
 async function checkStatementLimit() {
   log.info("Checking statement limit...");
 
-  const { ip, port } = licenseManager.getLicenseData() || { ip: "localhost", port: 7890 }
+  const { ip, port } = licenseManager.getLicenseInfo() || { ip: "localhost", port: 7890 }
 
   try {
     const response = await axios.get(`http://${ip}:${port}/api/license/check-statement-limit`);
@@ -708,6 +709,49 @@ async function checkStatementLimit() {
   } catch (err) {
     log.error("Error contacting license server:", err.message);
     throw new Error("Error contacting license server");
+  }
+}
+
+
+async function useStatement() {
+  log.info("Requesting to use a statement...");
+
+  const { ip, port } = licenseManager.getLicenseInfo() || { ip: "localhost", port: 7890 };
+
+  try {
+    const response = await axios.post(`http://${ip}:${port}/api/license/use-statement`);
+
+    if (response.status === 200) {
+      const { success, message, remaining, used } = response.data;
+      log.info(`Statement used successfully. Remaining: ${remaining}, Used: ${used}`);
+      return {
+        success: true,
+        data: {
+          message,
+          remaining,
+          used
+        }
+      };
+    } else {
+      log.error("Unexpected response status:", response.statusText);
+      throw new Error("Unexpected response status");
+    }
+  } catch (err) {
+    if (err.response && err.response.data) {
+      const { error, remaining, used } = err.response.data;
+      log.warn(`Failed to use statement: ${error}. Remaining: ${remaining}, Used: ${used}`);
+      return {
+        success: false,
+        error,
+        data: {
+          remaining,
+          used
+        }
+      };
+    } else {
+      log.error("Error contacting license server:", err.message);
+      throw new Error("Error contacting license server");
+    }
   }
 }
 
@@ -899,6 +943,7 @@ function generateReportIpc(tmpdir_path) {
         const parsedData = JSON.parse(sanitizeJSONString(response.data.data));
 
         if (parsedData == null) {
+          log.info("Parsed data is null, Statement Failed");
           await updateCaseStatus(caseId, "Failed");
           const failedPDFsDir = path.join(tmpdir_path, "failed_pdfs", caseName);
           fs.mkdirSync(failedPDFsDir, { recursive: true });
@@ -1037,6 +1082,20 @@ function generateReportIpc(tmpdir_path) {
         // }
 
         log.info("missingMonthsList", response.data?.["missing_months_list"]);
+
+        try {
+          const result = await useStatement();
+          if (result.success) {
+            const { message, remaining, used } = result.data;
+            log.info(`✅ ${message}\nRemaining: ${remaining}, Used: ${used}`);
+          } else {
+            const { error, remaining, used } = result;
+            log.error(`❌ ${error}\nRemaining: ${remaining}, Used: ${used}`);
+          }
+        } catch (err) {
+          log.error("Error using statement:", err.message);
+        }
+
 
         return {
           success: true,

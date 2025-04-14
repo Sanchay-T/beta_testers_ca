@@ -77,6 +77,7 @@ class SessionManager extends EventEmitter {
 
     setUser(userData) {
         this._user = userData;
+        log.info("Setting user : ", this._user);
         return {
             success: true,
         };
@@ -88,7 +89,7 @@ class SessionManager extends EventEmitter {
 
     getUserId() {
         const user = this.getUser();
-        return user ? user.id : 1;
+        return user ? user.userId : 1;
     }
 
     isAuthenticated() {
@@ -116,7 +117,7 @@ class SessionManager extends EventEmitter {
 
         try {
             // ✅ Get system info from your license manager
-            const { clientId, uuid, macAddress, hostname, ip, port } = licenseManager.getLicenseInfo(); // Ensure this function returns what you need
+            const { clientId, uuid, macAddress, hostname, username, ip, port } = licenseManager.getLicenseInfo(); // Ensure this function returns what you need
 
             // ✅ Call the .NET licensing server API to activate session
             const response = await axios.post(`http://${ip}:${port}/api/license/deactivate-session`, {
@@ -124,6 +125,7 @@ class SessionManager extends EventEmitter {
                 uuid,
                 macAddress,
                 hostname,
+                username,
             });
 
             if (response.data?.success) {

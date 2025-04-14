@@ -306,7 +306,7 @@ async function createAndStartService() {
 sessionManager.on("licenseExpired", () => {
   log.info("License expired");
   // Optionally handle the license expiration, e.g., show a dialog or quit the app
-  sessionManager.clearUser();
+  sessionManager.logoutUser();
 
   win.webContents.send("navigateToLogin");
   // win?.destroy();
@@ -517,7 +517,7 @@ async function createWindow() {
     // Skip confirmation if we're updating
     if (isUpdating) {
       log.info("Skipping close confirmation for update installation");
-      sessionManager.clearUser();
+      sessionManager.logoutUser();
       return;
     }
 
@@ -531,7 +531,7 @@ async function createWindow() {
 
     if (choice === 0) {
       log.info("User confirmed app close. Logging out...");
-      sessionManager.clearUser();
+      sessionManager.logoutUser();
     } else {
       log.info("User canceled app close.");
       event.preventDefault();
@@ -796,12 +796,12 @@ app.whenReady().then(async () => {
       throw error;
     }
 
-    // try {
-    //   await startPythonExecutable();
-    // } catch (error) {
-    //   log.error("Python initialization failed:", error);
-    //   throw error;
-    // }
+    try {
+      await startPythonExecutable();
+    } catch (error) {
+      log.error("Python initialization failed:", error);
+      throw error;
+    }
 
 
     // Initial update check after 1 minute
@@ -826,7 +826,7 @@ app.on("window-all-closed", () => {
 
 app.on("will-quit", () => {
   log.info("App is quitting");
-  sessionManager.clearUser();
+  sessionManager.logoutUser();
   if (pythonProcess) {
     log.info("Stopping Python process...");
     pythonProcess.kill("SIGTERM");
