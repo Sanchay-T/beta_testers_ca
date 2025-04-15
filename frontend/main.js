@@ -209,6 +209,7 @@ autoUpdater.on("error", (err) => {
 const BASE_DIR = isDev ? __dirname : process.resourcesPath;
 
 let win = null;
+let splashWindow = null;
 let pythonProcess = null;
 
 const BACKEND_PORT = 5000; // Replace with the port your backend is listening to
@@ -502,11 +503,45 @@ function createProtocol() {
   });
 }
 
+
+function createSplashWindow() {
+  splashWindow = new BrowserWindow({
+    width: 500,
+    height: 400,
+    frame: false,
+    transparent: false,
+    resizable: false,
+    skipTaskbar: true,
+    show: true,
+    alwaysOnTop: true,
+    center: true,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+    },
+  });
+
+  const splashPath = path.join(__dirname, '/react-app/splash.html');
+  splashWindow.loadFile(splashPath);
+
+  // splashWindow.once('ready-to-show', () => {
+  //   log.info("Splashscreen ready to show")
+  //   splashWindow.show();
+  // });
+
+  splashWindow.on('closed', () => {
+    log.info("Splashscreen closed")
+    splashWindow = null;
+  });
+}
+
+
 async function createWindow() {
   win = new BrowserWindow({
     width: 1800,
     height: 1000,
     simpleFullscreen: true,
+    show: false,
     webPreferences: {
       nodeIntegration: true,
       preload: path.join(__dirname, "preload.js"),
@@ -634,7 +669,7 @@ async function createWindow() {
   getdata();
   registerEditReportHandlers();
   registerExcelDownloadHandlers(app.getPath("downloads"));
-  registerAppLevelIPCHandlers(app)
+  registerAppLevelIPCHandlers(app, win, BASE_DIR);
 
   // Auto-update IPC handlers with detailed logging
   ipcMain.handle("check-for-updates", async () => {
@@ -769,6 +804,9 @@ app.whenReady().then(async () => {
   log.info("App is ready", app.getPath("userData"));
   // await fetchLicenseStatus();
 
+  createSplashWindow(); // Show immediately
+
+
   try {
 
     try {
@@ -813,9 +851,6 @@ app.whenReady().then(async () => {
     //   throw error;
     // }
 
-    createProtocol();
-    createWindow();
-
 
     try {
       await systemInfo.loadData(app.getPath("userData"));
@@ -826,6 +861,13 @@ app.whenReady().then(async () => {
       log.error("SystemInfo initialization failed:", error);
       throw error;
     }
+
+    createProtocol();
+    createWindow();
+    win.once('ready-to-show', () => {
+      splashWindow.close();
+      win.show();
+    });
 
     try {
       await startPythonExecutable();

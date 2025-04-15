@@ -1,35 +1,50 @@
 const { dialog, ipcMain } = require('electron');
+const sudo = require('sudo-prompt')
+const log = require('electron-log');
+const path = require('path');
 
-function registerAppLevelIPCHandlers(appInstance) {
+
+function registerAppLevelIPCHandlers(appInstance, appWindow, base_dir) {
 
     ipcMain.handle('app:check-admin-rights', async () => {
 
         const isElevated = await import('is-elevated');
         const elevated = await isElevated.default();
 
-        if (!elevated) {
-            const result = await dialog.showMessageBox({
-                type: 'warning',
-                buttons: ['Restart as Admin', 'Cancel'],
-                defaultId: 0,
-                cancelId: 1,
-                title: 'Administrator Required',
-                message:
-                    'This action requires administrative privileges.\n\nWould you like to restart the app as Administrator?',
-            });
-
-            if (result.response === 0) {
-                appInstance.relaunch({ args: process.argv.slice(1), execPath: process.execPath, handleSquirrelEvent: false });
-                appInstance.exit();
-                return { restarting: true }; // ⚠ Will likely not reach here, but added for completeness
-            }
-
-            return { elevated: false };
-        }
-
-        return { elevated: true };
+        return { elevated: elevated };
     });
 
+
+    ipcMain.on("app:relaunchAsAdmin", () => {
+
+        const isDev = !appInstance.isPackaged;
+
+        const electronPath = path.join(base_dir, 'node_modules', 'electron', 'dist', 'electron.exe');
+
+        const entryPath = path.join(base_dir, 'main.js'); // Adjust this path to your actual entry file
+
+        log.info("Electron Binary Path: ", electronPath);
+        log.info("Entry Path: ", entryPath);
+
+        const execCommand = isDev
+            ? `"${electronPath}" "${entryPath}"`
+            : `"${process.execPath}"`;
+
+
+        sudo.exec(execCommand, { name: "Cyphersol" }, (error, stdout, stderr) => {
+            if (error) {
+                log.error("Failed to relaunch as admin:", error);
+                throw error;
+            }
+
+            console.log('Relaunch Stdout: ' + stdout);
+        });
+
+        setTimeout(() => {
+            appInstance.exit(0);
+        }, 500); // 300ms is usually enough; tweak if needed    });
+
+    })
 }
 
 

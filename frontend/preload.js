@@ -17,6 +17,8 @@ contextBridge.exposeInMainWorld("electron", {
 
   app: {
     checkAdminRights: () => ipcRenderer.invoke('app:check-admin-rights'),
+    relaunchAsAdmin: () => ipcRenderer.send("app:relaunchAsAdmin"),
+
   },
   // getProgressed: () => ipcRenderer.invoke("get-user-progress"),
 

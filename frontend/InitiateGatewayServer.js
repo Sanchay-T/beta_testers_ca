@@ -36,7 +36,7 @@ class GatewayServerService {
   }
 
 
-  init(userDataPath){
+  init(userDataPath) {
     this.userDataPath = userDataPath;
     this.gatewayServerExecutablePath = path.join(userDataPath, this.executableName);
     log.info("Gateway Executable Path: ", this.gatewayServerExecutablePath);
@@ -45,7 +45,7 @@ class GatewayServerService {
 
   isServiceRunning() {
     return new Promise((resolve) => {
-      exec(`sc query ${SERVICE_NAME}`, (error, stdout) => {
+      exec(`sc query ${this.serviceName}`, (error, stdout) => {
         if (error) {
           resolve(false);
         } else {
