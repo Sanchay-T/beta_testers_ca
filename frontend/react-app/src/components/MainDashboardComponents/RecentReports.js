@@ -135,8 +135,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         currentCaseName
       );
 
-      console.log({electronResponse:result});
-      
+      console.log({ electronResponse: result });
 
       if (
         result.success &&
@@ -181,13 +180,15 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                 Some statements could not be rectified. Please contact sales for
                 assistance.
               </p>
-              <ul className="list-disc pl-4">
+              <p>{result.data.errorMessage}</p>
+
+              {/* <ul className="list-disc pl-4">
                 {unrectifiedStatements.map((statement, index) => (
                   <li key={index} className="text-sm">
                     {statement.pdfName}: {statement.respectiveReasonsForError}
                   </li>
                 ))}
-              </ul>
+              </ul> */}
             </div>
           ),
           variant: "destructive",
@@ -569,7 +570,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         caseName,
         "add-pdf"
       );
-      console.log({electronResponse:result});
+      console.log({ electronResponse: result });
 
       setCurrentCaseId(result.data.caseId); // Store caseId
 

@@ -41,7 +41,7 @@ import {
 import { useReportContext } from "../contexts/ReportContext";
 import DashboardDropdown from "../components/IndividualDashboardComponents/DashboardDropdown";
 import TallyDirectImport from "../components/ImportTally/TallyDirectImport";
-
+import TallyPrime from "../components/ImportTally/TallyPrime";
 const IndividualDashboard = () => {
   const [activeTab, setActiveTab] = useState("Summary");
   const { breadcrumbs, setIndividualDashboard } = useBreadcrumb();
@@ -76,6 +76,11 @@ const IndividualDashboard = () => {
         },
         {
           title: "Upload to Tally",
+          url: "#",
+          icon: Upload,
+        },
+        {
+          title: "Vouchers",
           url: "#",
           icon: Upload,
         },
@@ -218,6 +223,7 @@ const IndividualDashboard = () => {
                   setActiveTab={setActiveTab}
                 />
               )}
+              {activeTab === "Vouchers" && <TallyPrime />}
             </main>
           </div>
         </ScrollArea>
