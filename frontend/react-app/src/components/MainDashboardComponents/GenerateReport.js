@@ -29,6 +29,7 @@ export default function GenerateReport() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const { reportData, updateReportData } = useReportContext();
   const [missingMonthsList, setMissingMonthsList] = useState([]);
+  const [warning, setWarning] = useState("");
 
   const handleSubmit = async (
     setProgress,
@@ -132,13 +133,17 @@ export default function GenerateReport() {
         caseName,
         "generate-report"
       );
-    
-      console.log({electronResponse:result});
+
+      console.log({ electronResponse: result });
       if (
         result.data.missingMonthsList &&
         result.data.missingMonthsList.length > 0
       ) {
         setMissingMonthsList(result.data.missingMonthsList);
+      }
+
+      if (result.data.warning && result.data.warning.length > 0) {
+        setWarning(result.data.warning);
       }
 
       setCurrentCaseId(result.data.caseId); // Store caseId
@@ -147,12 +152,7 @@ export default function GenerateReport() {
         clearInterval(progressIntervalRef.current);
         setProgress(100);
         toast.dismiss(newToastId);
-        toast({
-          title: "Success",
-          description: `${caseName} Report generated successfully!`,
-          duration: 3000,
-          variant: "success",
-        });
+
         console.log("Report generated successfully:", result.data);
         if (result.data.failedFiles.length > 0) {
           setShowRectifyButton(true);
@@ -196,6 +196,13 @@ export default function GenerateReport() {
           updateReportData({
             recentReportsData: [newData, ...reportData.recentReportsData],
           });
+
+          toast({
+            title: "Failed",
+            description: `${caseName} report had some issues!`,
+            duration: 3000,
+            variant: "destructive",
+          });
         } else {
           // setShowRectifyButton(true);
           const successfulFiles = result.data.successfulFiles.map(
@@ -229,7 +236,15 @@ export default function GenerateReport() {
           });
         }
 
-        if (result.data.totalTransactions) setShowAnalysisButton(true);
+        if (result.data.totalTransactions) {
+          toast({
+            title: "Success",
+            description: `${caseName} report generated successfully!`,
+            duration: 3000,
+            variant: "success",
+          });
+          setShowAnalysisButton(true);
+        }
 
         // setFailedStatements(result.pdf_paths_not_extracted || []); // Store failed
 
@@ -408,8 +423,8 @@ export default function GenerateReport() {
       </Card>
 
       {/* Dialog for successful report generation */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen} className="">
+        <DialogContent className="max-h-[90vh] overflow-y-auto pb-0">
           <DialogHeader>
             {failedStatements.length === 0 ? (
               <DialogTitle>
@@ -421,7 +436,7 @@ export default function GenerateReport() {
                 Some statement had errors.
               </DialogTitle>
             )}
-            <DialogDescription className="flex items-end gap-x-4 pt-4 ">
+            <DialogDescription className="flex items-end gap-x-4 pt-4">
               {/* {failedStatements.length === 0 && (
                 <div className="flex items-center gap-x-4">
                   <CheckCircle className="text-green-500 w-6 h-6 mt-2" />
@@ -473,7 +488,33 @@ export default function GenerateReport() {
               </Card>
             </div>
           )}
-          <div className="flex gap-4">
+
+          {/* display any other warning if any */}
+          {warning.length > 0 && (
+            <div className="mb-4 mt-2">
+              <h3 className="text-md font-semibold flex items-center gap-x-2 mb-2">
+                <AlertCircle className="text-red-500 w-5 h-5" />
+                Warning
+              </h3>
+              <Card className="p-3 bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800">
+              <ul className="space-y-1">
+                  {warning.map((month, index) => (
+                    <li
+                      key={index}
+                      className="text-red-700 dark:text-red-400 flex items-start"
+                    >
+                      •  <span className="ml-1"> { month}</span>
+                    </li>
+                  ))}
+                </ul>
+                {/* <p className="text-sm text-amber-700 dark:text-amber-400 mt-3">
+                  These months are missing from your statements. You may want to
+                  add them for a complete analysis.
+                </p> */}
+              </Card>
+            </div>
+          )}
+          <div className="flex gap-4 sticky w-full p-4  bottom-0 bg-white">
             {showAnalsisButton && (
               <Button onClick={() => viewAnalysis()} className="flex-1">
                 View Analysis
