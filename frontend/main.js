@@ -25,6 +25,7 @@ const { registerOpportunityToEarnIpc } = require("./ipc/opportunityToEarn");
 const { registerTallyIpc } = require("./ipc/tallyHandlers.js");
 const { registerVoucherIpc } = require("./ipc/VoucherHandlers.js");
 const { registerExcelDownloadHandlers } = require("./ipc/excelDownloadHandler");
+const { registerAppLevelIPCHandlers } = require("./ipc/appLevelIPC");
 const databaseManager = require("./db/db");
 const { spawn, execFile, exec, execSync } = require("child_process");
 const log = require("electron-log");
@@ -35,6 +36,7 @@ const bonjour = require('bonjour')();
 const systemInfo = require("./SystemInformation.js");
 const axios = require("axios");
 const licenseManager = require("./LicenseManager");
+const gatewayServer = require("./InitiateGatewayServer")
 
 function discoverMdnsServices(serviceType = '', callback) {
   bonjour.find({ type: serviceType }, (service) => {
@@ -137,9 +139,8 @@ autoUpdater.on("update-available", (info) => {
     .showMessageBox({
       type: "info",
       title: "Update Available",
-      message: `A new version (${
-        info.version
-      }) is available. Your current version is ${app.getVersion()}.\n\nWould you like to download it now?`,
+      message: `A new version (${info.version
+        }) is available. Your current version is ${app.getVersion()}.\n\nWould you like to download it now?`,
       detail: info.releaseNotes
         ? `Release Notes:\n${info.releaseNotes}`
         : undefined,
@@ -212,10 +213,8 @@ let pythonProcess = null;
 
 const BACKEND_PORT = 5000; // Replace with the port your backend is listening to
 
-// frontend\license-server.exe
-const SERVICE_NAME = "LicensingServer";
-const LICENSE_SERVER_EXECUTABLE = path.join(__dirname, "license-server.exe");
-console.log("LICENSE_SERVE EXECUTABLE: ", LICENSE_SERVER_EXECUTABLE);
+const LICENSE_EXECUTABLE_DIR = isDev ? __dirname : app.getPath("userData");
+console.log("LICENSE_SERVE EXECUTABLE DIR:", LICENSE_EXECUTABLE_DIR);
 
 // const RUST_EXECUTABLE = "C:\\path\\to\\rust.exe"; // Change this to your actual path
 
@@ -635,6 +634,7 @@ async function createWindow() {
   getdata();
   registerEditReportHandlers();
   registerExcelDownloadHandlers(app.getPath("downloads"));
+  registerAppLevelIPCHandlers(app)
 
   // Auto-update IPC handlers with detailed logging
   ipcMain.handle("check-for-updates", async () => {
@@ -797,6 +797,15 @@ app.whenReady().then(async () => {
       throw error;
     }
 
+    try {
+      gatewayServer.init(LICENSE_EXECUTABLE_DIR)
+    }
+    catch (error) {
+      log.error("GatewayServer initialization failed:", error);
+      throw error;
+    }
+
+
     // try {
     //   await licenseManager.init();
     // } catch (error) {
@@ -828,6 +837,7 @@ app.whenReady().then(async () => {
 
     // Initial update check after 1 minute
     if (!isDev) {
+      gatewayServer
       setTimeout(() => {
         autoUpdater.checkForUpdates().catch((err) => {
           log.error("Error in initial update check:", err);

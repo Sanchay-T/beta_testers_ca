@@ -5,7 +5,7 @@
   "main": "main.js",
   "icon": "./assets/cyphersol-icon.png",
   "scripts": {
-     "start_": "powershell -Command \"Start-Process cmd -ArgumentList '/k cd /d \\\"C:\\Users\\admin\\Desktop\\CA-Offline\\frontend\\\" && npm run electron' -Verb runAs\"",
+    "start_": "powershell -Command \"Start-Process cmd -ArgumentList '/k cd /d \\\"C:\\Users\\admin\\Desktop\\CA-Offline\\frontend\\\" && npm run electron' -Verb runAs\"",
     "start": "npm run electron",
     "electron": "electron main.js",
     "start:fastapi": "cd ../ && uvicorn backend.main:app --reload --port 7500",
@@ -150,6 +150,7 @@
     "electron-updater": "^6.3.9",
     "fast-xml-parser": "^4.5.1",
     "fs": "^0.0.1-security",
+    "is-elevated": "^4.0.0",
     "keytar": "^7.9.0",
     "node-fetch": "^3.3.2",
     "pg": "^8.13.1",

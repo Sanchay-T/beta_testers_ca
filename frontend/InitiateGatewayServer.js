@@ -2,10 +2,10 @@
 
 const { exec, execSync } = require("child_process");
 const path = require("path");
-const log = console; // Replace this with your actual logger if needed
+const log = require("electron-log");
 
-const SERVICE_NAME = "RustLicenseService";
-const RUST_EXECUTABLE = path.join(__dirname, "resources", "gateway", "gatewayserver.exe");
+// const GATEWAY_EXECUTABLE = path.join(__dirname, "MyLanService.exe");
+// log.info("Gateway Executable Path:", GATEWAY_EXECUTABLE);
 
 class GatewayServerService {
   static instance;
@@ -14,9 +14,13 @@ class GatewayServerService {
     if (GatewayServerService.instance) {
       return GatewayServerService.instance;
     }
+    this.serviceName = "LicensingServer";
+    this.executableName = "MyLanService.exe";
+    this.userDataPath = null;
+    this.gatewayServerExecutablePath = null;
     GatewayServerService.instance = this;
   }
-  async init(executablePath) {
+  async initialize() {
     const exists = await this.checkServiceExists();
 
     if (!exists) {
@@ -29,6 +33,13 @@ class GatewayServerService {
         log.info("Service already running.");
       }
     }
+  }
+
+
+  init(userDataPath){
+    this.userDataPath = userDataPath;
+    this.gatewayServerExecutablePath = path.join(userDataPath, this.executableName);
+    log.info("Gateway Executable Path: ", this.gatewayServerExecutablePath);
   }
 
 
@@ -47,7 +58,7 @@ class GatewayServerService {
 
   checkServiceExists() {
     return new Promise((resolve) => {
-      exec(`sc query ${SERVICE_NAME}`, (error, stdout, stderr) => {
+      exec(`sc query ${this.serviceName}`, (error, stdout, stderr) => {
         if (error || stderr || stdout.includes("FAILED") || stdout.includes("does not exist")) {
           log.error("Service check error:");
           if (error) {
@@ -65,7 +76,7 @@ class GatewayServerService {
 
   createAndStartService() {
     return new Promise((resolve) => {
-      const createCmd = `sc create ${SERVICE_NAME} binPath= "${RUST_EXECUTABLE}" start= auto`;
+      const createCmd = `sc create ${this.serviceName} binPath= "${this.gatewayServerExecutablePath}" start= auto`;
 
       exec(createCmd, (error, stdout, stderr) => {
         if (error || stderr) {
@@ -84,7 +95,7 @@ class GatewayServerService {
 
   startService() {
     return new Promise((resolve) => {
-      exec(`sc start ${SERVICE_NAME}`, (err, stdout, stderr) => {
+      exec(`sc start ${this.serviceName}`, (err, stdout, stderr) => {
         if (err || stderr) {
           log.error("Failed to start service.");
           if (err) this.logErrorDetails(err);

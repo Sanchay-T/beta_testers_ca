@@ -13,6 +13,7 @@ const axios = require("axios");
 const path = require("path");
 const { encryptData, decryptData } = require("../CryptoHandler"); // your crypto module
 const fs = require("fs");
+const gatewayServer = require("../InitiateGatewayServer")
 
 
 log.info("License manager process.env.NODE_ENV", process.env.NODE_ENV);
@@ -202,7 +203,7 @@ function registerAuthHandlers(userDataPath) {
         const hashedPassword = await bcrypt.hash(credentials.password, 10);
 
         const dateJoined = new Date();
-        const expiryDate = new Date(result.data.expiry_timestamp * 1000);
+        const expiryDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
         // console.log("dateJoined : ", dateJoined, "HashPassword : ", hashedPassword);
         try {
           user = await db
@@ -422,7 +423,9 @@ function registerAuthHandlers(userDataPath) {
 
       if (!alreadyRunning) {
         log.info("Starting license gateway server...");
-        // await gatewayServer.init();
+        await gatewayServer.initialize();
+        const alreadyRunning = await isServerRunning(serverUrl);
+        log.info("License gateway server started.");
         // Wait until the server is responsive
         await waitUntilServerIsReady(serverUrl, 10000);
       } else {

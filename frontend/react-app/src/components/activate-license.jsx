@@ -99,6 +99,19 @@ export function LicenseActivationForm({ className, ...props }) {
     e.preventDefault();
     setActivationStatus("processing");
 
+    const adminStatus = await window.electron.app.checkAdminRights();
+
+    if (adminStatus?.restarting) {
+      console.log("Relaunching as admin")
+      return; // Relaunching as admin
+    }
+
+    if (!adminStatus?.elevated) {
+      setActivationStatus("failed");
+      console.log("Failed no elevated permissions")
+      return;
+    }
+
     try {
       const result = await window.electron.auth.activateLicense({
         licenseKey: credentials.licenseKey,
