@@ -128,7 +128,8 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
 
   const handleSubmitEditPdf = async () => {
     setPdfEditLoading(true);
-
+    setFailedStatements([]);
+    setSuccessfulStatements([]);
     const allRectified = failedDatasOfCurrentReport.every(
       (statement) => statement.resolved
     );
@@ -575,7 +576,8 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       });
       return;
     }
-
+    setFailedStatements([]);
+    setSuccessfulStatements([]);
     setLoading(true);
     const newToastId = toast({
       title: "Initializing Report Generation",
@@ -1963,7 +1965,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                       key={index}
                       className="text-red-700 dark:text-red-400 flex items-start"
                     >
-                      •  <span className="ml-1"> { month}</span>
+                      • <span className="ml-1"> {month}</span>
                     </li>
                   ))}
                 </ul>

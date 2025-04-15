@@ -890,6 +890,10 @@ function generateReportIpc(tmpdir_path) {
                 "Acc Number": [],
               },
               processing_times: response.data?.processing_times || [],
+              warning:
+                response.data?.["pdf_paths_not_extracted"][
+                  "respective_reasons_for_error"
+                ] || null,
             },
           };
         }

@@ -126,6 +126,9 @@ export default function GenerateReport() {
         })
       );
 
+      setFailedStatements([]);
+      setSuccessfulStatements([]);
+
       const result = await window.electron.generateReportIpc(
         {
           files: filesWithContent,
@@ -143,7 +146,10 @@ export default function GenerateReport() {
       }
 
       if (result.data.warning && result.data.warning.length > 0) {
-        setWarning(result.data.warning);
+        const formattedWarnings = result.data.warning.filter((warn) => {
+          return warn !== "" || warn !== " ";
+        });
+        setWarning(formattedWarnings);
       }
 
       setCurrentCaseId(result.data.caseId); // Store caseId
@@ -297,6 +303,7 @@ export default function GenerateReport() {
       localStorage.removeItem("dashboardData");
       // refreshPage();
       progressIntervalRef.current = null;
+      return true;
     }
   };
 
@@ -497,13 +504,13 @@ export default function GenerateReport() {
                 Warning
               </h3>
               <Card className="p-3 bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800">
-              <ul className="space-y-1">
+                <ul className="space-y-1">
                   {warning.map((month, index) => (
                     <li
                       key={index}
                       className="text-red-700 dark:text-red-400 flex items-start"
                     >
-                      •  <span className="ml-1"> { month}</span>
+                      • <span className="ml-1"> {month}</span>
                     </li>
                   ))}
                 </ul>

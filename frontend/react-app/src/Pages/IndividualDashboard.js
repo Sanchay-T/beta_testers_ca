@@ -82,7 +82,7 @@ const IndividualDashboard = () => {
         {
           title: "Vouchers",
           url: "#",
-          icon: Upload,
+          icon: Grid2X2,
         },
       ],
       alwaysOpen: true,
