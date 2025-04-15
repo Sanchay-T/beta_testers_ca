@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   Search,
   Loader2,
@@ -119,55 +119,113 @@ const DataTable = ({
     "monthKey",
   ]);
 
-  const [categoryOptions, setCategoryOptions] = useState([
-    "UPI-Cr",
-    "UPI-Dr",
-    "Bank Charges",
-    "Bank Interest Received",
-    "Bounce",
-    "Bonus Paid",
-    "Bonus Received",
-    "Cash Deposits",
-    "Cash Reversal",
-    "Cash Withdrawal",
-    "Credit Card Payment",
-    "Debtor List",
-    "Departmental Stores",
-    "Donation",
-    "Subscription / Entertainment",
-    "Food Expense/Hotel",
-    "General Insurance",
-    "Gold Loan",
-    "GST Paid",
-    "Income Tax Paid",
-    "Income Tax Refund",
-    "Indirect tax",
-    "Interest Debit",
-    "Interest Received",
-    "Investment",
-    "Life insurance",
-    "Loan",
-    "Loan given",
-    "Local Cheque Collection",
-    "Online Shopping",
-    "Other Expenses",
-    "POS-Cr",
-    "POS-Dr",
-    "Probable Claim Settlement",
-    "Property Tax",
-    "Provident Fund",
-    "Redemption, Dividend & Interest",
-    "Refund/Reversal",
-    "Rent Paid",
-    "Rent Received",
-    "TDS Deducted",
-    "Total Income Tax Paid",
-    "Travelling Expense",
-    "Utility Bills",
-    "Salary Received",
-    "Salary Paid",
-    "Self transfer",
+  // const [categoryOptions, setCategoryOptions] = useState([
+  //   "UPI-Cr",
+  //   "UPI-Dr",
+  //   "Bank Charges",
+  //   "Bank Interest Received",
+  //   "Bounce",
+  //   "Bonus Paid",
+  //   "Bonus Received",
+  //   "Cash Deposits",
+  //   "Cash Reversal",
+  //   "Cash Withdrawal",
+  //   "Credit Card Payment",
+  //   "Debtor List",
+  //   "Departmental Stores",
+  //   "Donation",
+  //   "Subscription / Entertainment",
+  //   "Food Expense/Hotel",
+  //   "General Insurance",
+  //   "Gold Loan",
+  //   "GST Paid",
+  //   "Income Tax Paid",
+  //   "Income Tax Refund",
+  //   "Indirect tax",
+  //   "Interest Debit",
+  //   "Interest Received",
+  //   "Investment",
+  //   "Life insurance",
+  //   "Loan",
+  //   "Loan given",
+  //   "Local Cheque Collection",
+  //   "Online Shopping",
+  //   "Other Expenses",
+  //   "POS-Cr",
+  //   "POS-Dr",
+  //   "Probable Claim Settlement",
+  //   "Property Tax",
+  //   "Provident Fund",
+  //   "Redemption, Dividend & Interest",
+  //   "Refund/Reversal",
+  //   "Rent Paid",
+  //   "Rent Received",
+  //   "TDS Deducted",
+  //   "Total Income Tax Paid",
+  //   "Travelling Expense",
+  //   "Utility Bills",
+  //   "Salary Received",
+  //   "Salary Paid",
+  //   "Self transfer",
+  // ]);
+
+  const [categoriesArray, setCategoriesArray] = useState([
+    { name: "GST Paid", type: "debit" },
+    { name: "Creditor", type: "debit" },
+    { name: "Donation", type: "debit" },
+    { name: "General Insurance", type: "debit" },
+    { name: "Gold Loan", type: "debit" },
+    { name: "Income Tax Paid", type: "debit" },
+    { name: "Interest Debit", type: "debit" },
+    { name: "Investment", type: "debit" },
+    { name: "Life insurance", type: "debit" },
+    { name: "Probable EMI", type: "debit" },
+    { name: "Property Tax", type: "debit" },
+    { name: "Rent Paid", type: "debit" },
+    { name: "Salary Paid", type: "debit" },
+    { name: "TDS Deducted", type: "debit" },
+    { name: "Tax Payment", type: "debit" },
+    { name: "Total Income Tax Paid", type: "debit" },
+    { name: "Travelling Expense", type: "debit" },
+    { name: "UPI-Dr", type: "debit" },
+    { name: "Suspense", type: "debit" },
+    { name: "Bank Charges", type: "debit" },
+    { name: "Bounce", type: "debit" },
+    { name: "Credit Card Payment", type: "debit" },
+    { name: "Departmental Stores", type: "debit" },
+    { name: "Food Expense/Hotel", type: "debit" },
+    { name: "Indirect tax", type: "debit" },
+    { name: "Loan given", type: "debit" },
+    { name: "Local Cheque Collection", type: "debit" },
+    { name: "Online Shopping", type: "debit" },
+    { name: "Other Expenses", type: "debit" },
+    { name: "POS-Dr", type: "debit" },
+    { name: "Provident Fund", type: "debit" },
+    { name: "Refund/Reversal", type: "debit" },
+    { name: "Subscription / Entertainment", type: "debit" },
+    { name: "Utility Bills", type: "debit" },
+    { name: "Cash Withdrawal", type: "debit" },
+    { name: "Self transfer", type: "debit" },
+    { name: "Debtor", type: "credit" },
+    { name: "Suspense", type: "credit" },
+    { name: "Bank Interest Received", type: "credit" },
+    { name: "Bonus Received", type: "credit" },
+    { name: "Cash Reversal", type: "credit" },
+    { name: "Income Tax Refund", type: "credit" },
+    { name: "Interest Received", type: "credit" },
+    { name: "Loan", type: "credit" },
+    { name: "Online Shopping", type: "credit" },
+    { name: "POS-Cr", type: "credit" },
+    { name: "Probable Claim Settlement", type: "credit" },
+    { name: "Redemption, Dividend & Interest", type: "credit" },
+    { name: "Refund/Reversal", type: "credit" },
+    { name: "Rent Received", type: "credit" },
+    { name: "Salary Received", type: "credit" },
+    { name: "UPI-Cr", type: "credit" },
+    { name: "Cash Deposits", type: "credit" },
+    { name: "Self transfer", type: "credit" },
   ]);
+
   const [currentDateColumn, setCurrentDateColumn] = useState([]);
 
   // Category states
@@ -177,9 +235,8 @@ const DataTable = ({
     selectedCategorySimilarTransactions,
     setSelectedCategorySimilarTransactions,
   ] = useState(new Set());
-  const [categorySelectDropdownOpen, setCategorySelectDropdownOpen] = useState(
-    {}
-  );
+  const [categorySelectDropdownOpen, setCategorySelectDropdownOpen] =
+    useState(null);
 
   const [hasChanges, setHasChanges] = useState(false);
   const [modifiedData, setModifiedData] = useState([]);
@@ -188,9 +245,9 @@ const DataTable = ({
   const [totalPages, setTotalPages] = useState(0);
 
   // States for entity updating
-  const [similarEntityTransactions, setSimilarEntityTransactions] = useState(
-    []
-  );
+  // const [similarEntityTransactions, setSimilarEntityTransactions] = useState(
+  //   []
+  // );
   const [editedEntities, setEditedEntities] = useState({});
   const [batchModalOpen, setBatchModalOpen] = useState(false);
   const [batchEntityValue, setBatchEntityValue] = useState("");
@@ -231,21 +288,29 @@ const DataTable = ({
 
   const { reportData, updateReportData } = useReportContext();
   const [sliderValue, setSliderValue] = useState(85);
+
   useEffect(() => {
     const handleOutsideClick = (event) => {
-      if (commandRef.current && !commandRef.current.contains(event.target)) {
-        setIsOpen(false);
+      // Return early if click is on or within a dropdown trigger or its content
+
+      if (event.target.closest(".category-dropdown-container")) {
+        return;
       }
+
+      // Otherwise, close dropdowns
+      setIsOpen(false);
+      setCategorySelectDropdownOpen(null);
     };
 
-    if (isOpen) {
+    // Listen for clicks if any dropdown is open
+    if (isOpen || categorySelectDropdownOpen != null) {
       document.addEventListener("mousedown", handleOutsideClick);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
     };
-  }, [isOpen]);
+  }, [isOpen, categorySelectDropdownOpen]);
   // Helper: Format dates
   const formatValue = (value) => {
     if (value instanceof Date) return value.toLocaleDateString();
@@ -308,26 +373,103 @@ const DataTable = ({
 
     setTransactions(formattedData);
 
-    const storedCategories = localStorage.getItem("categoryOptions");
-    let localCats = storedCategories ? JSON.parse(storedCategories) : null;
-    if (!localCats) {
-      localCats = categoryOptions;
-      localStorage.setItem("categoryOptions", JSON.stringify(localCats));
-    }
+    // const storedCategories = localStorage.getItem("categoryOptions");
+    // console.log("Stored categories", storedCategories);
+    // let localCats = storedCategories ? JSON.parse(storedCategories) : null;
+    // if (!localCats) {
+    //   localCats = categoryOptions;
+    //   localStorage.setItem("categoryOptions", JSON.stringify(localCats));
+    // }
 
-    const transCats = transactions.map((tx) => tx.category);
-    const mergedCategories = Array.from(new Set([...localCats, ...transCats]));
-    // Step 3: If there are any new categories, update localStorage.
-    if (mergedCategories.length !== localCats.length) {
-      localStorage.setItem("categoryOptions", JSON.stringify(mergedCategories));
-    }
-    // remove duplicates and null values
-    const mergedCategories0 = mergedCategories.filter(
-      (cat) => cat && cat.trim().length > 0
-    );
+    // const transCats = transactions.map((tx) => tx.category);
+    // const mergedCategories = Array.from(new Set([...localCats, ...transCats]));
+    // // Step 3: If there are any new categories, update localStorage.
+    // if (mergedCategories.length !== localCats.length) {
+    //   localStorage.setItem("categoryOptions", JSON.stringify(mergedCategories));
+    // }
+    // // remove duplicates and null values
+    // const mergedCategories0 = mergedCategories.filter(
+    //   (cat) => cat && cat.trim().length > 0
+    // );
+    // console.log("Merged categories", mergedCategories0);
 
-    setCategoryOptions(mergedCategories0);
+    // setCategoryOptions(mergedCategories0);
   }, [data]);
+
+  useEffect(() => {
+    // First try to load categoriesArray from localStorage
+    const storedCategoriesArray = localStorage.getItem("categoriesArray");
+    let initialCategories = [];
+
+    if (storedCategoriesArray) {
+      try {
+        initialCategories = JSON.parse(storedCategoriesArray);
+        setCategoriesArray(initialCategories);
+      } catch (e) {
+        console.error("Error parsing categoriesArray", e);
+      }
+    }
+
+    // Always update with new transaction categories (regardless of stored data)
+    if (title === "Transactions") {
+      // Analyze transactions to identify types
+      const txCategories = new Map();
+
+      data.forEach((tx) => {
+        if (tx && tx.category) {
+          const type = Number(tx.credit) > 0 ? "credit" : "debit";
+          txCategories.set(tx.category, type);
+        }
+      });
+
+      // Update categoriesArray with transaction data
+      setCategoriesArray((prevArray) => {
+        const categoryMap = new Map(prevArray.map((cat) => [cat.name, cat]));
+
+        // Add any new categories from transactions
+        let hasNewCategories = false || storedCategoriesArray === null;
+        for (const [name, type] of txCategories.entries()) {
+          if (!categoryMap.has(name) && name && name.trim()) {
+            categoryMap.set(name, { name, type });
+            hasNewCategories = true;
+          }
+        }
+
+        // Only update localStorage if we added new categories
+        if (hasNewCategories) {
+          const newArray = Array.from(categoryMap.values());
+          localStorage.setItem("categoriesArray", JSON.stringify(newArray));
+          return newArray;
+        }
+
+        return prevArray;
+      });
+    }
+  }, [data, title]);
+  const categoryOptions = useMemo(
+    () => categoriesArray.map((cat) => cat.name),
+    [categoriesArray]
+  );
+
+  // 3. Add a helper function to get a category's type
+  const getCategoryType = (categoryName) => {
+    const category = categoriesArray.find((cat) => cat.name === categoryName);
+    return category ? category.type : null;
+  };
+
+  const getFilteredCategoriesByType = (transactionType) => {
+    // If no type specified, return all categories (for backward compatibility)
+    if (!transactionType) return categoryOptions;
+
+    return categoriesArray
+      .filter(
+        (cat) => cat.type === transactionType || cat.name === "Self transfer"
+      )
+      .map((cat) => cat.name)
+      .filter((name) =>
+        name.toLowerCase().includes(categorySearchTerm.toLowerCase())
+      );
+  };
 
   // Get dynamic columns from first data item
   let columns = data.length > 0 ? Object.keys(data[0]) : [];
@@ -492,8 +634,9 @@ const DataTable = ({
   const handleSearch = (searchValue) => {
     setSearchTerm(searchValue);
 
-    const dataToFilter =
-      existingFilterData.length > 0 ? existingFilterData : data;
+    // const dataToFilter =
+    //   existingFilterData.length > 0 ? existingFilterData : data;
+    const dataToFilter = filteredData.length > 0 ? filteredData : transactions;
 
     // Reset to original data if search value is empty
     if (searchValue === "") {
@@ -776,8 +919,8 @@ const DataTable = ({
         : [...prev, category]
     );
   };
-
-  const filteredCategories = categoryOptions.filter((category) => {
+  const allCategoryOptions = [...categoryOptions, ...pendingCategories];
+  const filteredCategories = allCategoryOptions.filter((category) => {
     return category.toLowerCase().includes(categorySearchTerm.toLowerCase());
   });
 
@@ -964,18 +1107,24 @@ const DataTable = ({
 
       // After successful save, update categoryOptions with pending categories
       if (pendingCategories.length > 0) {
-        const updatedOptions = [
-          ...categoryOptions,
-          ...pendingCategories,
-        ].sort();
-        setCategoryOptions(updatedOptions);
-        localStorage.setItem("categoryOptions", JSON.stringify(updatedOptions));
+        // Save categoriesArray to localStorage
+        localStorage.setItem(
+          "categoriesArray",
+          JSON.stringify(categoriesArray)
+        );
+
+        // For backward compatibility with existing code
+        // const updatedOptions = categoriesArray.map((cat) => cat.name);
+        // localStorage.setItem("categoryOptions", JSON.stringify(updatedOptions));
+
+        // Update context if needed
         updateReportData({
           ...reportData,
-          categoryOptions: updatedOptions,
+          // categoryOptions: updatedOptions,
+          categoriesArray: categoriesArray,
         });
 
-        // Clear pending categories
+        // Clear pending
         setPendingCategories([]);
       }
       setHasChanges(false);
@@ -1134,33 +1283,45 @@ const DataTable = ({
   };
 
   const handleAddCategory = (newCategory, row) => {
-    // Check if the new category is non-empty and not already in the options
     if (
       newCategory &&
       !categoryOptions.includes(newCategory) &&
       !pendingCategories.includes(newCategory)
     ) {
-      // Set the category that needs classification
-      setNewCategoryToClassify(newCategory);
-
-      // Add to pending categories list instead of directly to categoryOptions
-      setPendingCategories([...pendingCategories, newCategory]);
+      // Determine the type based on the transaction
+      let type = "debit"; // Default
 
       if (row) {
-        // Single-row update flow: store the pending change using the transaction id.
+        type = Number(row.credit) > 0 ? "credit" : "debit";
+      } else if (globalSelectedRows.size > 0) {
+        // For bulk operation, use the first selected row's type
+        const firstId = Array.from(globalSelectedRows)[0];
+        const transaction = filteredData.find((tx) => tx.id === firstId);
+        if (transaction) {
+          type = Number(transaction.credit) > 0 ? "credit" : "debit";
+        }
+      }
+
+      // Add to categoriesArray
+      setCategoriesArray((prev) => [...prev, { name: newCategory, type }]);
+
+      // Add to pending categories for backward compatibility
+      setPendingCategories((prev) => [...prev, newCategory]);
+
+      // Continue with existing logic
+      setNewCategoryToClassify(newCategory);
+
+      if (row) {
         setPendingCategoryChange({
           transactionId: row.id,
           newCategory,
           oldCategory: row.category,
           transaction: row,
-          isDebit: row.credit === 0,
         });
-        setCurrentTransactionType(row.debit >0 ? "debit" : "credit");
-        setShowClassificationModal(true);
-      } else {
-        // Bulk update flow: simply show the classification modal.
-        setShowClassificationModal(true);
+        setCurrentTransactionType(row.debit > 0 ? "debit" : "credit");
       }
+
+      setShowClassificationModal(true);
       return true;
     }
     return false;
@@ -1188,7 +1349,7 @@ const DataTable = ({
     newTitle = `${tmpName} ${newTitle}`;
 
     exportToExcel(
-      data,
+      filteredData,
       (title = newTitle),
       false,
       ["suspense", "upi-dr", "upi-cr"].includes(source) ? categoryOptions : null
@@ -1395,14 +1556,30 @@ const DataTable = ({
     setFilteredData(updatedData);
   };
 
-  const handleCategorySelectOpenChange = (id, open) => {
-    setCategorySelectDropdownOpen((prev) => ({ ...prev, [id]: open }));
+  const handleCategorySelectOpenChange = (id) => {
+    // setCategorySelectDropdownOpen((prev) => ({ ...prev, [id]: open }));
+    if (categorySelectDropdownOpen === id) {
+      setCategorySelectDropdownOpen(null);
+    } else {
+      // Otherwise, open the clicked dropdown
+      setCategorySelectDropdownOpen(id);
+    }
   };
 
   const handlePreviewFile = (previewUrl) => {
     try {
       if (!previewUrl) {
         console.error("Error: No file path provided");
+        return;
+      }
+
+      if (!previewUrl.includes(".pdf")) {
+        toast({
+          title: "Alert",
+          description: "File not supported for preview",
+          variant: "destructive",
+          duration: 3000,
+        });
         return;
       }
 
@@ -1431,66 +1608,61 @@ const DataTable = ({
     return new Blob([bytes], { type: type });
   };
 
-
   const checkTransactionTypesConsistency = () => {
     if (globalSelectedRows.size === 0) return true;
-    
+
     let hasDebit = false;
     let hasCredit = false;
     let firstType = null;
     let allSameType = true;
-    
+
     // Check all selected transactions
     for (const id of globalSelectedRows) {
-      const transaction = filteredData.find(tx => tx.id === id);
+      const transaction = filteredData.find((tx) => tx.id === id);
       if (!transaction) continue;
-      
+
       // Determine transaction type
       const isDebit = Number(transaction.debit) > 0;
       const isCredit = Number(transaction.credit) > 0;
-      
+
       // Track types
       if (isDebit) hasDebit = true;
       if (isCredit) hasCredit = true;
-      
+
       // Set the first type we encounter
       if (firstType === null) {
-        firstType = isDebit ? 'debit' : 'credit';
+        firstType = isDebit ? "debit" : "credit";
       } else {
         // Compare current transaction type with first type
-        const currentType = isDebit ? 'debit' : 'credit';
+        const currentType = isDebit ? "debit" : "credit";
         if (currentType !== firstType) {
           allSameType = false;
         }
       }
     }
-    
+
     return allSameType;
   };
 
   const openBulkCategoryModal = () => {
     const consistentTypes = checkTransactionTypesConsistency();
-    
+
     if (!consistentTypes) {
-      setTypeErrorMessage("Please select transactions of the same type (all debit or all credit)");
+      setTypeErrorMessage(
+        "Please select transactions of the same type (all debit or all credit)"
+      );
       setBulkCategoryModalOpen(true);
-    }  else {
+    } else {
       setTypeErrorMessage("");
-      
+
       // Just check the first transaction's type since we know they're all consistent
       if (globalSelectedRows.size > 0) {
         const firstId = Array.from(globalSelectedRows)[0];
-        const transaction = filteredData.find(tx => tx.id === firstId);
-        
-        if (transaction) {
-          // Set transaction type based on first transaction
-          const transactionType = Number(transaction.debit) > 0 ? 'debit' : 'credit';
-          setCurrentTransactionType(transactionType);
-        }
-
+        const transaction = filteredData.find((tx) => tx.id === firstId);
+        // Set transaction type based on first transaction
+        setCurrentTransactionType(transaction?.debit > 0 ? "debit" : "credit");
       }
       setBulkCategoryModalOpen(true);
-
     }
   };
 
@@ -1549,22 +1721,24 @@ const DataTable = ({
             </Button>
 
             {/* Conditional preview button */}
-            {source === "transactions" && reportData?.individualId && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
+            {source === "transactions" &&
+              reportData?.individualId &&
+              reportData?.individualId !== "combined" && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
                       transition-all shadow-sm hover:shadow-md"
-                    onClick={() => handlePreviewFile(reportData.filePath)}
-                  >
-                    <Eye className="w-4 h-4 text-blue-500" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Preview Statement</TooltipContent>
-              </Tooltip>
-            )}
+                      onClick={() => handlePreviewFile(reportData.filePath)}
+                    >
+                      <Eye className="w-4 h-4 text-blue-500" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Preview Statement</TooltipContent>
+                </Tooltip>
+              )}
 
             {/* Conditional upload button */}
             {["suspense", "upi-dr", "upi-cr"].includes(source) && (
@@ -1786,70 +1960,81 @@ const DataTable = ({
                               {isBalance ? (
                                 <div className="truncate"></div>
                               ) : (
-                                <div className="w-full">
-                                  <Select
-                                    value={row[column]}
-                                    open={
-                                      categorySelectDropdownOpen[row.id] ||
-                                      false
-                                    }
-                                    onOpenChange={(open) =>
-                                      handleCategorySelectOpenChange(
-                                        row.id,
-                                        open
-                                      )
-                                    }
-                                    onValueChange={(value) =>
-                                      handleCategoryChange(row, value)
-                                    }
-                                    className="w-full"
-                                    disabled={globalSelectedRows.has(row.id)}
+                                <div
+                                  className="w-full relative"
+                                  ref={commandRef}
+                                >
+                                  {/* Trigger button styled like a Select */}
+                                  <div
+                                    className="flex items-center justify-between w-full h-10 px-3 py-2 text-sm border rounded-md border-input bg-background cursor-pointer"
+                                    onClick={() => {
+                                      handleCategorySelectOpenChange(row.id);
+                                    }}
                                   >
-                                    <SelectTrigger className="w-full">
-                                      <SelectValue>{row[column]}</SelectValue>
-                                    </SelectTrigger>
-                                    <SelectContent className="p-0">
-                                      <Command className="rounded-md border-none bg-background">
-                                        <div className="p-2 border-b flex gap-2">
-                                          <div className="relative flex-1">
+                                    <span
+                                      className={
+                                        row[column]
+                                          ? ""
+                                          : "text-muted-foreground"
+                                      }
+                                    >
+                                      {row[column] || "Select category"}
+                                    </span>
+                                    <ChevronDown
+                                      className={cn(
+                                        "h-4 w-4 transition-transform",
+                                        categorySelectDropdownOpen === row.id
+                                          ? "transform rotate-180"
+                                          : ""
+                                      )}
+                                    />
+                                  </div>
+
+                                  {/* Dropdown Command component */}
+                                  {categorySelectDropdownOpen === row.id && (
+                                    <div className="absolute z-50 w-full mt-1 min-w-[350px] ">
+                                      <Command className="rounded-md border border-input bg-background shadow-md">
+                                        <div className="flex items-center border-b ">
+                                          <div className="relative flex items-center w-full category-dropdown-container">
                                             <CommandInput
-                                              placeholder="Search categories..."
+                                              placeholder="Search or add categories..."
                                               value={categorySearchTerm}
                                               onValueChange={
                                                 setCategorySearchTerm
                                               }
-                                              className="h-10"
+                                              className="flex border-none focus:ring-0 focus:outline-none w-full pr-16"
+                                              autoFocus
                                             />
-                                          </div>
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="px-2 h-10"
-                                            onClick={(e) => {
-                                              e.preventDefault();
-                                              e.stopPropagation();
-                                              if (categorySearchTerm.trim()) {
-                                                // Pass the whole row for a single update
-                                                const added = handleAddCategory(
-                                                  categorySearchTerm.trim(),
-                                                  row
-                                                );
-                                                if (added) {
-                                                  setCategorySearchTerm("");
-                                                  handleCategorySelectOpenChange(
-                                                    row.id,
-                                                    false
-                                                  );
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              className="h-8 px-2 absolute right-2 top-1/2 transform -translate-y-1/2"
+                                              onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                if (categorySearchTerm.trim()) {
+                                                  // Pass the whole row for a single update
+                                                  const added =
+                                                    handleAddCategory(
+                                                      categorySearchTerm.trim(),
+                                                      row
+                                                    );
+                                                  if (added) {
+                                                    setCategorySearchTerm("");
+                                                    handleCategorySelectOpenChange(
+                                                      null
+                                                    );
+                                                  }
                                                 }
-                                              }
-                                            }}
-                                          >
-                                            <Plus className="h-4 w-4" />
-                                            Add
-                                          </Button>
+                                              }}
+                                            >
+                                              <Plus className="h-4 w-4 mr-1" />
+                                              Add
+                                            </Button>
+                                          </div>
                                         </div>
                                         <CommandEmpty>
-                                          <div className="p-4 max-w-[300px] text-center text-muted-foreground">
+                                          <div className="text-center space-y-2 p-4">
                                             <p className="text-md">
                                               No matching categories found
                                             </p>
@@ -1864,44 +2049,41 @@ const DataTable = ({
                                         </CommandEmpty>
                                         <div className="max-h-[200px] overflow-y-auto">
                                           <CommandGroup>
-                                            {filteredCategories.length > 0 &&
-                                              filteredCategories.map(
-                                                (category) => (
-                                                  <CommandItem
-                                                    key={category}
-                                                    onSelect={() => {
-                                                      handleCategoryChange(
-                                                        row,
-                                                        category
-                                                      );
-                                                      setCategorySearchTerm("");
-                                                      handleCategorySelectOpenChange(
-                                                        row.id,
-                                                        false
-                                                      );
-                                                    }}
-                                                    className="flex items-center"
-                                                  >
-                                                    <div className="flex-1">
-                                                      <Check
-                                                        className={cn(
-                                                          "mr-2 h-4 w-4 inline",
-                                                          row[column] ===
-                                                            category
-                                                            ? "opacity-100"
-                                                            : "opacity-0"
-                                                        )}
-                                                      />
-                                                      {category}
-                                                    </div>
-                                                  </CommandItem>
-                                                )
-                                              )}
+                                            {getFilteredCategoriesByType(
+                                              row.debit > 0 ? "debit" : "credit"
+                                            ).map((category) => (
+                                              <CommandItem
+                                                key={category}
+                                                onSelect={() => {
+                                                  handleCategoryChange(
+                                                    row,
+                                                    category
+                                                  );
+                                                  setCategorySearchTerm("");
+                                                  handleCategorySelectOpenChange(
+                                                    null
+                                                  );
+                                                }}
+                                                className="flex items-center category-dropdown-container"
+                                              >
+                                                <div className="flex-1">
+                                                  <Check
+                                                    className={cn(
+                                                      "mr-2 h-4 w-4 inline",
+                                                      row[column] === category
+                                                        ? "opacity-100"
+                                                        : "opacity-0"
+                                                    )}
+                                                  />
+                                                  {category}
+                                                </div>
+                                              </CommandItem>
+                                            ))}
                                           </CommandGroup>
                                         </div>
                                       </Command>
-                                    </SelectContent>
-                                  </Select>
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </TableCell>
@@ -2289,49 +2471,84 @@ const DataTable = ({
               <span className="block sm:inline">{typeErrorMessage}</span>
             </div>
           )}
-          {!typeErrorMessage&&<div className="space-y-4">
-            {/* Collapsible Command component */}
-            <div className="relative w-full" ref={commandRef}>
-              {/* Trigger button styled like a Select */}
-              <div
-                className="flex items-center justify-between w-full h-10 px-3 py-2 text-sm border rounded-md border-input bg-background cursor-pointer"
-                onClick={() => setIsOpen(!isOpen)}
-              >
-                <span
-                  className={
-                    selectedBulkCategory ? "" : "text-muted-foreground"
-                  }
+          {!typeErrorMessage && (
+            <div className="space-y-4">
+              {/* Collapsible Command component */}
+              <div className="relative w-full" ref={commandRef}>
+                {/* Trigger button styled like a Select */}
+                <div
+                  className="flex items-center justify-between w-full h-10 px-3 py-2 text-sm border rounded-md border-input bg-background cursor-pointer"
+                  onClick={() => setIsOpen(!isOpen)}
                 >
-                  {selectedBulkCategory || "Select new category"}
-                </span>
-                <ChevronDown
-                  className={cn(
-                    "h-4 w-4 transition-transform",
-                    isOpen ? "transform rotate-180" : ""
-                  )}
-                />
-              </div>
+                  <span
+                    className={
+                      selectedBulkCategory ? "" : "text-muted-foreground"
+                    }
+                  >
+                    {selectedBulkCategory || "Select new category"}
+                  </span>
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 transition-transform",
+                      isOpen ? "transform rotate-180" : ""
+                    )}
+                  />
+                </div>
 
-              {/* Dropdown Command component */}
-              {isOpen && (
-                <div className="absolute z-50 w-full mt-1">
-                  <Command className="rounded-md border border-input bg-background shadow-md">
-                    <div className="flex items-center border-b px-3">
-                      <div className="relative flex items-center w-full">
-                        <CommandInput
-                          placeholder="Search or Add categories..."
-                          value={categorySearchTerm}
-                          onValueChange={setCategorySearchTerm}
-                          className="flex border-none focus:ring-0 focus:outline-none w-full pr-16"
-                          autoFocus
-                        />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 px-2 absolute right-0 top-1/2 transform -translate-y-1/2"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (categorySearchTerm.trim()) {
+                {/* Dropdown Command component */}
+                {isOpen && (
+                  <div className="absolute z-50 w-full mt-1">
+                    <Command className="rounded-md border border-input bg-background shadow-md">
+                      <div className="flex items-center border-b px-3">
+                        <div className="relative flex items-center w-full category-dropdown-container">
+                          <CommandInput
+                            placeholder="Search or Add categories..."
+                            value={categorySearchTerm}
+                            onValueChange={setCategorySearchTerm}
+                            className="flex border-none focus:ring-0 focus:outline-none w-full pr-16"
+                            autoFocus
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 px-2 absolute right-0 top-1/2 transform -translate-y-1/2"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (categorySearchTerm.trim()) {
+                                const added = handleAddCategory(
+                                  categorySearchTerm.trim()
+                                );
+                                if (added) {
+                                  setSelectedBulkCategory(
+                                    categorySearchTerm.trim()
+                                  );
+                                  setCategorySearchTerm("");
+                                  setIsOpen(false);
+                                }
+                              }
+                            }}
+                          >
+                            <Plus className="h-4 w-4 mr-1" />
+                            Add
+                          </Button>
+                        </div>
+                      </div>
+                      <CommandEmpty>
+                        <div className="text-center space-y-2 p-4">
+                          <p className="text-md">
+                            No matching categories found
+                          </p>
+                          <p className="text-sm mt-1">
+                            Click the{" "}
+                            <Plus className="h-3 w-3 inline-block mx-1" /> icon
+                            above to add "{categorySearchTerm}" as a new
+                            category
+                          </p>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
                               const added = handleAddCategory(
                                 categorySearchTerm.trim()
                               );
@@ -2342,107 +2559,79 @@ const DataTable = ({
                                 setCategorySearchTerm("");
                                 setIsOpen(false);
                               }
-                            }
-                          }}
-                        >
-                          <Plus className="h-4 w-4 mr-1" />
-                          Add
-                        </Button>
-                      </div>
-                    </div>
-                    <CommandEmpty>
-                      <div className="text-center space-y-2 p-4">
-                        <p className="text-md">No matching categories found</p>
-                        <p className="text-sm mt-1">
-                          Click the{" "}
-                          <Plus className="h-3 w-3 inline-block mx-1" /> icon
-                          above to add "{categorySearchTerm}" as a new category
-                        </p>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const added = handleAddCategory(
-                              categorySearchTerm.trim()
-                            );
-                            if (added) {
-                              setSelectedBulkCategory(
-                                categorySearchTerm.trim()
-                              );
-                              setCategorySearchTerm("");
-                              setIsOpen(false);
-                            }
-                          }}
-                        ></Button>
-                      </div>
-                    </CommandEmpty>
-                    <div className="max-h-64 overflow-y-auto">
-                      <CommandGroup>
-                        {filteredCategories.map((category) => (
-                          <CommandItem
-                            key={category}
-                            onSelect={() => {
-                              setSelectedBulkCategory(category);
-                              setCategorySearchTerm("");
-                              setIsOpen(false);
                             }}
-                            className="flex items-center"
-                          >
-                            <div className="flex-1">
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4 inline",
-                                  selectedBulkCategory === category
-                                    ? "opacity-100"
-                                    : "opacity-0"
-                                )}
-                              />
-                              {category}
-                            </div>
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </div>
-                  </Command>
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2 mt-4">
-                <Checkbox
-                  id="show-keywords"
-                  checked={showKeywordInput}
-                  onCheckedChange={setShowKeywordInput}
-                />
-                <Label htmlFor="show-keywords">
-                  Add keywords for category change
-                </Label>
+                          ></Button>
+                        </div>
+                      </CommandEmpty>
+                      <div className="max-h-64 overflow-y-auto">
+                        <CommandGroup>
+                          {getFilteredCategoriesByType(
+                            currentTransactionType
+                          ).map((category) => (
+                            <CommandItem
+                              key={category}
+                              onSelect={() => {
+                                setSelectedBulkCategory(category);
+                                setCategorySearchTerm("");
+                                setIsOpen(false);
+                              }}
+                              className="flex items-center category-dropdown-container"
+                            >
+                              <div className="flex-1">
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4 inline",
+                                    selectedBulkCategory === category
+                                      ? "opacity-100"
+                                      : "opacity-0"
+                                  )}
+                                />
+                                {category}
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </div>
+                    </Command>
+                  </div>
+                )}
               </div>
 
-              {showKeywordInput && (
-                <div className="space-y-2">
-                  <Label>
-                    What common keywords in these transactions made you choose "
-                    {selectedBulkCategory}" as their category?
-                  </Label>
-                  <Input
-                    value={reasoning}
-                    onChange={(e) => setReasoning(e.target.value)}
-                    placeholder="Enter Keyword..."
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2 mt-4">
+                  <Checkbox
+                    id="show-keywords"
+                    checked={showKeywordInput}
+                    onCheckedChange={setShowKeywordInput}
                   />
+                  <Label htmlFor="show-keywords">
+                    Add keywords for category change
+                  </Label>
                 </div>
-              )}
+
+                {showKeywordInput && (
+                  <div className="space-y-2">
+                    <Label>
+                      What common keywords in these transactions made you choose
+                      "{selectedBulkCategory}" as their category?
+                    </Label>
+                    <Input
+                      value={reasoning}
+                      onChange={(e) => setReasoning(e.target.value)}
+                      placeholder="Enter Keyword..."
+                    />
+                  </div>
+                )}
+              </div>
             </div>
-          </div>}
+          )}
 
           <DialogFooter>
             <Button
               variant="ghost"
               onClick={() => {
                 setBulkCategoryModalOpen(false);
-          setTypeErrorMessage("");
+                setTypeErrorMessage("");
               }}
             >
               Cancel
@@ -2453,8 +2642,6 @@ const DataTable = ({
                 setBulkCategoryModalOpen(false);
                 // setConfirmationModalOpen(true);
                 handleBulkCategoryChange();
-
-                
               }}
               disabled={!selectedBulkCategory || typeErrorMessage}
             >
@@ -2511,13 +2698,13 @@ const DataTable = ({
             onValueChange={setSelectedType}
             className="space-y-3"
           >
-            {(currentTransactionType === 'credit' ) && (
+            {currentTransactionType === "credit" && (
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Income" id="income" />
+                <RadioGroupItem value="Income" id="Income" />
                 <Label htmlFor="Income">Income</Label>
               </div>
             )}
-            {( currentTransactionType === 'debit' ) && (
+            {currentTransactionType === "debit" && (
               <div className="flex items-center space-x-2">
                 <RadioGroupItem
                   value="Important Expenses / Payments"
@@ -2526,7 +2713,7 @@ const DataTable = ({
                 <Label htmlFor="important_expenses">Important Expenses</Label>
               </div>
             )}
-            {( currentTransactionType === 'debit' ) && (
+            {currentTransactionType === "debit" && (
               <div className="flex items-center space-x-2">
                 <RadioGroupItem
                   value="Other Expenses / Payments"
@@ -2920,7 +3107,6 @@ const DataTable = ({
               variant="secondary"
               // onClick={() => setBulkCategoryModalOpen(true)}
               onClick={openBulkCategoryModal}
-
             >
               Update Selected Categories ({globalSelectedRows.size})
             </Button>

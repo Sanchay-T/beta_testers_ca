@@ -9,7 +9,9 @@ const users = sqliteTable("users", {
   role: text("role").notNull().default("CA"),
   password: text("password").notNull(),
   dateJoined: integer("date_joined", { mode: "timestamp" }).notNull(),
+  expiryDate: integer("expiry", { mode: "timestamp" }).notNull(),
   lastLogin: integer("last_login", { mode: "timestamp" }),
+
 });
 
 module.exports = { users };

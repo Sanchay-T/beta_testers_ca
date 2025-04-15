@@ -236,7 +236,9 @@ const exportToExcel = async (
   const data = new Blob([buffer], {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
-
+  if (!fileName.endsWith(".xlsx")) {
+    fileName += ".xlsx";
+  }
   if (!forShare) {
     saveAs(data, fileName);
     return null;

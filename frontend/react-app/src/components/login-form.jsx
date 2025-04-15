@@ -15,6 +15,15 @@ import { useAuth } from "../contexts/AuthContext";
 import { Alert, AlertDescription } from "./ui/alert";
 import Logo from "../data/assets/logo.png";
 import { Eye, EyeOff } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
 export function LoginForm({ className, ...props }) {
   const { login, loading, error, isActivated, signUp } = useAuth();
@@ -44,10 +53,10 @@ export function LoginForm({ className, ...props }) {
     let success = false;
     if (!isActivated) {
       // First handle license activation
-      // console.log("Inside Signup..");
+      console.log("Inside Signup..", credentials);
       success = await signUp(credentials);
       // set localstorage for role selection
-      localStorage.setItem("role", credentials.role);
+      // localStorage.setItem("role", credentials.role);
       if (!success) {
         return;
       }
@@ -56,7 +65,7 @@ export function LoginForm({ className, ...props }) {
       success = await login({
         email: credentials.email,
         password: credentials.password,
-        role: localStorage.getItem("role") || credentials.role,
+        // role: localStorage.getItem("role") || credentials.role,
       });
     }
 
@@ -115,16 +124,30 @@ export function LoginForm({ className, ...props }) {
                   </div>
                   {/* Role Selection Dropdown */}
                   <div className="grid gap-2">
-                    <Label htmlFor="role">Select Role</Label>
-                    <select
-                      id="role"
+                    <Select
+                      onValueChange={(value) => {
+                        setCredentials((prev) => ({
+                          ...prev,
+                          role: value,
+                        }));
+                      }}
+                      defaultValu={credentials.role}
                       value={credentials.role}
-                      onChange={handleInputChange}
-                      className="border p-2 rounded-md"
+                      required
+                      className="w-full"
                     >
-                      <option value="CA">Tax Professionals</option>
-                      <option value="MSME">Accounting for Businesses</option>
-                    </select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="CA">Tax Professionals</SelectItem>
+                          <SelectItem value="MSME">
+                            Accounting for Businesses
+                          </SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </>
               )}

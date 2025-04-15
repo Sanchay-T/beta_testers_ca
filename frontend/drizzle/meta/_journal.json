@@ -141,6 +141,20 @@
       "when": 1742904345281,
       "tag": "0019_chunky_sauron",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1743829921932,
+      "tag": "0020_minor_hex",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "6",
+      "when": 1743830543509,
+      "tag": "0021_marvelous_squirrel_girl",
+      "breakpoints": true
     }
   ]
 }

@@ -907,8 +907,21 @@ function generateReportIpc(tmpdir_path) {
           validateStatus: (status) => status === 200,
         });
 
+        if (response.data.status == "failed") {
+          log.info("API response failed:", response.data);
+          return {
+            success: false,
+            data: {
+              caseId: caseId,
+              processed: null,
+              errorMessage: response.data.message || "Unknown error",
+            },
+          };
+        }
+
         log.info("API response received:", response.data.length);
         log.info("missing month list", response.data?.["missing_months_list"]);
+        log.info("time taken to process", response.data?.["processing_times"]);
 
         // Step 3: Handle failed extractions
         if (response.data?.["pdf_paths_not_extracted"]?.paths?.length > 0) {
@@ -963,6 +976,7 @@ function generateReportIpc(tmpdir_path) {
                 Name: [],
                 "Acc Number": [],
               },
+              processing_times: response.data?.processing_times || [],
             },
           };
         }
@@ -1116,6 +1130,7 @@ function generateReportIpc(tmpdir_path) {
               "Acc Number": [],
             },
             missingMonthsList: response.data?.["missing_months_list"] || [],
+            processing_times: response.data?.processing_times || [],
           },
         };
       } catch (error) {
@@ -1212,6 +1227,29 @@ function generateReportIpc(tmpdir_path) {
         validateStatus: (status) => status === 200,
       });
 
+      if (response.data.status == "failed") {
+        log.info("API response failed:", response.data);
+        return {
+          success: false,
+          data: {
+            caseId: caseId,
+            processed: null,
+            errorMessage: response.data.message || "Unknown error",
+            // totalTransactions: 0,
+            // eodProcessed: false,
+            // summaryProcessed: false,
+            // failedStatements:
+            //   response.data["pdf_paths_not_extracted"] || null,
+            // failedFiles: Array.from(failedFiles),
+            // successfulFiles: Array.from(successfulFiles),
+            // nerResults: response.data?.ner_results || {
+            //   Name: [],
+            //   "Acc Number": [],
+            // },
+          },
+        };
+      }
+
       log.info("Response from fastapi: ", response.data);
 
       let failedPdfPaths = [];
@@ -1266,6 +1304,7 @@ function generateReportIpc(tmpdir_path) {
                 Name: [],
                 "Acc Number": [],
               },
+              processing_times: response.data?.processing_times || [],
             },
           };
         }
@@ -1407,6 +1446,7 @@ function generateReportIpc(tmpdir_path) {
           failedStatements: response.data["pdf_paths_not_extracted"] || null,
           failedFiles: failedFiles,
           successfulFiles: successfulFiles,
+          processing_times: response.data?.processing_times || [],
         },
       };
     } catch (error) {

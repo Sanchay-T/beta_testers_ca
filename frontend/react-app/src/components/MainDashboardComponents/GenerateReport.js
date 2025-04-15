@@ -132,7 +132,8 @@ export default function GenerateReport() {
         caseName,
         "generate-report"
       );
-
+    
+      console.log({electronResponse:result});
       if (
         result.data.missingMonthsList &&
         result.data.missingMonthsList.length > 0
@@ -141,7 +142,7 @@ export default function GenerateReport() {
       }
 
       setCurrentCaseId(result.data.caseId); // Store caseId
-
+      console.log({ result });
       if (result.success) {
         clearInterval(progressIntervalRef.current);
         setProgress(100);
@@ -152,6 +153,7 @@ export default function GenerateReport() {
           duration: 3000,
           variant: "success",
         });
+        console.log("Report generated successfully:", result.data);
         if (result.data.failedFiles.length > 0) {
           setShowRectifyButton(true);
           const failedFiles = result.data.failedFiles.map((file_path) => {
@@ -178,12 +180,23 @@ export default function GenerateReport() {
             statements: null,
           };
 
+          // setShowRectifyButton(true);
+          const successfulFiles = result.data.successfulFiles.map(
+            (file_path) => {
+              // Get the filename from the path and remove the timestamp
+              const filename = file_path.split("\\").pop(); // Get filename from path
+              const filenameWithoutTimestamp = filename.substring(
+                filename.indexOf("-") + 1
+              ); // Remove everything before first hyphen
+              return filenameWithoutTimestamp;
+            }
+          );
+          setSuccessfulStatements(successfulFiles || []); // Store successful
+
           updateReportData({
             recentReportsData: [newData, ...reportData.recentReportsData],
           });
-        }
-
-        if (result.data.successfulFiles.length > 0) {
+        } else {
           // setShowRectifyButton(true);
           const successfulFiles = result.data.successfulFiles.map(
             (file_path) => {
@@ -299,6 +312,16 @@ export default function GenerateReport() {
   // const handleTestEdit = () => {
   //   window.electron.excelFileDownload(5);
   // };
+  const observerError =
+    "ResizeObserver loop completed with undelivered notifications.";
+  window.addEventListener("error", (e) => {
+    if (e.message === observerError) {
+      e.stopImmediatePropagation();
+      console.error(
+        "AQ - ResizeObserver loop completed with undelivered notifications."
+      );
+    }
+  });
 
   const note = {
     content: [

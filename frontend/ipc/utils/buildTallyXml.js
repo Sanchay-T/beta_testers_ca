@@ -5,7 +5,7 @@ function buildTallyXmlPayment(row) {
     companyName,
     invoiceDate,
     effectiveDate,
-    referenceNumber,
+    billRefernce,
     narration,
     DrLedger,
     CrLedger,
@@ -16,10 +16,10 @@ function buildTallyXmlPayment(row) {
   const invoiceDateFormatted = invoiceDate;
   const effectiveDateFormatted = effectiveDate;
 
-  companyName = companyName.replace(/&/g, "&amp;");
-  narration = narration.replace(/&/g, "&amp;");
-  DrLedger = DrLedger.replace(/&/g, "&amp;");
-  CrLedger = CrLedger.replace(/&/g, "&amp;");
+  companyName = companyName ? companyName.replace(/&/g, "&amp;") : companyName;
+  narration = narration ? narration.replace(/&/g, "&amp;") : narration;
+  DrLedger = DrLedger ? DrLedger.replace(/&/g, "&amp;") : DrLedger;
+  CrLedger = CrLedger ? CrLedger.replace(/&/g, "&amp;") : CrLedger;
 
   let xml = `
 <ENVELOPE>
@@ -47,7 +47,7 @@ function buildTallyXmlPayment(row) {
               <ISDEEMEDPOSITIVE>Yes</ISDEEMEDPOSITIVE>
               <AMOUNT>-${amount}</AMOUNT>
               <BILLALLOCATIONS.LIST>
-                <NAME>${referenceNumber}</NAME>
+                <NAME>${billRefernce}</NAME>
                 <BILLTYPE>Agst Ref</BILLTYPE>
                 <AMOUNT>-${amount}</AMOUNT>
               </BILLALLOCATIONS.LIST>
@@ -80,7 +80,7 @@ function buildTallyXmlReceipt(row) {
     companyName,
     invoiceDate,
     effectiveDate,
-    referenceNumber,
+    billRefernce,
     narration,
     DrLedger,
     CrLedger,
@@ -91,99 +91,99 @@ function buildTallyXmlReceipt(row) {
   const invoiceDateFormatted = invoiceDate;
   const effectiveDateFormatted = effectiveDate;
 
-  companyName = companyName.replace(/&/g, "&amp;");
-  narration = narration.replace(/&/g, "&amp;");
-  DrLedger = DrLedger.replace(/&/g, "&amp;");
-  CrLedger = CrLedger.replace(/&/g, "&amp;");
+  companyName = companyName ? companyName.replace(/&/g, "&amp;") : companyName;
+  narration = narration ? narration.replace(/&/g, "&amp;") : narration;
+  DrLedger = DrLedger ? DrLedger.replace(/&/g, "&amp;") : DrLedger;
+  CrLedger = CrLedger ? CrLedger.replace(/&/g, "&amp;") : CrLedger;
 
   let xml = `
-<ENVELOPE>
-  <HEADER>
-    <TALLYREQUEST>Import Data</TALLYREQUEST>
-  </HEADER>
-  <BODY>
-    <IMPORTDATA>
-      <REQUESTDESC>
-        <REPORTNAME>All Masters</REPORTNAME>
-        <STATICVARIABLES>
-          <SVCURRENTCOMPANY>${companyName}</SVCURRENTCOMPANY>
-        </STATICVARIABLES>
-      </REQUESTDESC>
-      <REQUESTDATA>
-        <TALLYMESSAGE xmlns:UDF="TallyUDF">
-          <VOUCHER VCHTYPE="Receipt" ACTION="Create" OBJVIEW="Accounting Voucher View">
-            <OLDAUDITENTRYIDS.LIST TYPE="Number">
-              <OLDAUDITENTRYIDS>-1</OLDAUDITENTRYIDS>
-            </OLDAUDITENTRYIDS.LIST>
-            <DATE>${invoiceDateFormatted}</DATE>
-            <NARRATION>${narration}</NARRATION>
-            <VOUCHERTYPENAME>Receipt</VOUCHERTYPENAME>
-            <VOUCHERNUMBER>1</VOUCHERNUMBER>
-            <PARTYLEDGERNAME>${CrLedger}</PARTYLEDGERNAME>
-            <CSTFORMISSUETYPE/>
-            <CSTFORMRECVTYPE/>
-            <PERSISTEDVIEW>Accounting Voucher View</PERSISTEDVIEW>
-            <VCHGSTCLASS/>
-            <EFFECTIVEDATE>${effectiveDateFormatted}</EFFECTIVEDATE>
-            <ALLLEDGERENTRIES.LIST>
+  <ENVELOPE>
+    <HEADER>
+      <TALLYREQUEST>Import Data</TALLYREQUEST>
+    </HEADER>
+    <BODY>
+      <IMPORTDATA>
+        <REQUESTDESC>
+          <REPORTNAME>All Masters</REPORTNAME>
+          <STATICVARIABLES>
+            <SVCURRENTCOMPANY>${companyName}</SVCURRENTCOMPANY>
+          </STATICVARIABLES>
+        </REQUESTDESC>
+        <REQUESTDATA>
+          <TALLYMESSAGE xmlns:UDF="TallyUDF">
+            <VOUCHER VCHTYPE="Receipt" ACTION="Create" OBJVIEW="Accounting Voucher View">
               <OLDAUDITENTRYIDS.LIST TYPE="Number">
                 <OLDAUDITENTRYIDS>-1</OLDAUDITENTRYIDS>
               </OLDAUDITENTRYIDS.LIST>
-              <LEDGERNAME>${CrLedger}</LEDGERNAME>
-              <GSTCLASS/>
-              <AMOUNT>${amount}</AMOUNT>
-              <BANKALLOCATIONS.LIST>
-                <DATE>${invoiceDateFormatted}</DATE>
-                <INSTRUMENTDATE>${invoiceDateFormatted}</INSTRUMENTDATE>
-                <NAME>e216acbc-d76e-48a7-a6e7-30a843e73917</NAME>
-                <TRANSACTIONTYPE>Cheque</TRANSACTIONTYPE>
-                <CHEQUECROSSCOMMENT>A/c Payee</CHEQUECROSSCOMMENT>
-                <UNIQUEREFERENCENUMBER>5uXBl9T4CKj659i6</UNIQUEREFERENCENUMBER>
-                <STATUS>No</STATUS>
-                <PAYMENTMODE>Transacted</PAYMENTMODE>
+              <DATE>${invoiceDateFormatted}</DATE>
+              <NARRATION>${narration}</NARRATION>
+              <VOUCHERTYPENAME>Receipt</VOUCHERTYPENAME>
+              <VOUCHERNUMBER>1</VOUCHERNUMBER>
+              <PARTYLEDGERNAME>${CrLedger}</PARTYLEDGERNAME>
+              <CSTFORMISSUETYPE/>
+              <CSTFORMRECVTYPE/>
+              <PERSISTEDVIEW>Accounting Voucher View</PERSISTEDVIEW>
+              <VCHGSTCLASS/>
+              <EFFECTIVEDATE>${effectiveDateFormatted}</EFFECTIVEDATE>
+              <ALLLEDGERENTRIES.LIST>
+                <OLDAUDITENTRYIDS.LIST TYPE="Number">
+                  <OLDAUDITENTRYIDS>-1</OLDAUDITENTRYIDS>
+                </OLDAUDITENTRYIDS.LIST>
+                <LEDGERNAME>${CrLedger}</LEDGERNAME>
+                <GSTCLASS/>
                 <AMOUNT>${amount}</AMOUNT>
-              </BANKALLOCATIONS.LIST>
-            </ALLLEDGERENTRIES.LIST>
-            <ALLLEDGERENTRIES.LIST>
-              <OLDAUDITENTRYIDS.LIST TYPE="Number">
-                <OLDAUDITENTRYIDS>-1</OLDAUDITENTRYIDS>
-              </OLDAUDITENTRYIDS.LIST>
-              <LEDGERNAME>${DrLedger}</LEDGERNAME>
-              <GSTCLASS/>
-              <ISDEEMEDPOSITIVE>Yes</ISDEEMEDPOSITIVE>
-              <LEDGERFROMITEM>No</LEDGERFROMITEM>
-              <REMOVEZEROENTRIES>No</REMOVEZEROENTRIES>
-              <ISPARTYLEDGER>Yes</ISPARTYLEDGER>
-              <ISLASTDEEMEDPOSITIVE>Yes</ISLASTDEEMEDPOSITIVE>
-              <AMOUNT>-${amount}</AMOUNT>
-              <BANKALLOCATIONS.LIST>
-                <DATE>${invoiceDateFormatted}</DATE>
-                <INSTRUMENTDATE>${invoiceDateFormatted}</INSTRUMENTDATE>
-                <NAME>e216acbc-d76e-48a7-a6e7-30a843e73917</NAME>
-                <TRANSACTIONTYPE>Cheque</TRANSACTIONTYPE>
-                <BANKNAME>${CrLedger}</BANKNAME>
-                <CHEQUECROSSCOMMENT>A/c Payee</CHEQUECROSSCOMMENT>
-                <UNIQUEREFERENCENUMBER>5uXBl9T4CKj659i6</UNIQUEREFERENCENUMBER>
-                <PAYMENTMODE>Transacted</PAYMENTMODE>
+                <BANKALLOCATIONS.LIST>
+                  <DATE>${invoiceDateFormatted}</DATE>
+                  <INSTRUMENTDATE>${invoiceDateFormatted}</INSTRUMENTDATE>
+                  <NAME>e216acbc-d76e-48a7-a6e7-30a843e73917</NAME>
+                  <TRANSACTIONTYPE>Cheque</TRANSACTIONTYPE>
+                  <CHEQUECROSSCOMMENT>A/c Payee</CHEQUECROSSCOMMENT>
+                  <UNIQUEREFERENCENUMBER>5uXBl9T4CKj659i6</UNIQUEREFERENCENUMBER>
+                  <STATUS>No</STATUS>
+                  <PAYMENTMODE>Transacted</PAYMENTMODE>
+                  <AMOUNT>${amount}</AMOUNT>
+                </BANKALLOCATIONS.LIST>
+              </ALLLEDGERENTRIES.LIST>
+              <ALLLEDGERENTRIES.LIST>
+                <OLDAUDITENTRYIDS.LIST TYPE="Number">
+                  <OLDAUDITENTRYIDS>-1</OLDAUDITENTRYIDS>
+                </OLDAUDITENTRYIDS.LIST>
+                <LEDGERNAME>${DrLedger}</LEDGERNAME>
+                <GSTCLASS/>
+                <ISDEEMEDPOSITIVE>Yes</ISDEEMEDPOSITIVE>
+                <LEDGERFROMITEM>No</LEDGERFROMITEM>
+                <REMOVEZEROENTRIES>No</REMOVEZEROENTRIES>
+                <ISPARTYLEDGER>Yes</ISPARTYLEDGER>
+                <ISLASTDEEMEDPOSITIVE>Yes</ISLASTDEEMEDPOSITIVE>
                 <AMOUNT>-${amount}</AMOUNT>
-              </BANKALLOCATIONS.LIST>
-            </ALLLEDGERENTRIES.LIST>
-          </VOUCHER>
-        </TALLYMESSAGE>
-        <TALLYMESSAGE xmlns:UDF="TallyUDF">
-          <COMPANY>
-            <REMOTECMPINFO.LIST MERGE="Yes">
-              <NAME>899112ee-c1a5-4b29-9ed2-fc061b58f587</NAME>
-              <REMOTECMPNAME>Demo</REMOTECMPNAME>
-              <REMOTECMPSTATE>Maharashtra</REMOTECMPSTATE>
-            </REMOTECMPINFO.LIST>
-          </COMPANY>
-        </TALLYMESSAGE>
-      </REQUESTDATA>
-    </IMPORTDATA>
-  </BODY>
-</ENVELOPE>
-    `.trim();
+                <BANKALLOCATIONS.LIST>
+                  <DATE>${invoiceDateFormatted}</DATE>
+                  <INSTRUMENTDATE>${invoiceDateFormatted}</INSTRUMENTDATE>
+                  <NAME>e216acbc-d76e-48a7-a6e7-30a843e73917</NAME>
+                  <TRANSACTIONTYPE>Cheque</TRANSACTIONTYPE>
+                  <BANKNAME>${CrLedger}</BANKNAME>
+                  <CHEQUECROSSCOMMENT>A/c Payee</CHEQUECROSSCOMMENT>
+                  <UNIQUEREFERENCENUMBER>5uXBl9T4CKj659i6</UNIQUEREFERENCENUMBER>
+                  <PAYMENTMODE>Transacted</PAYMENTMODE>
+                  <AMOUNT>-${amount}</AMOUNT>
+                </BANKALLOCATIONS.LIST>
+              </ALLLEDGERENTRIES.LIST>
+            </VOUCHER>
+          </TALLYMESSAGE>
+          <TALLYMESSAGE xmlns:UDF="TallyUDF">
+            <COMPANY>
+              <REMOTECMPINFO.LIST MERGE="Yes">
+                <NAME>899112ee-c1a5-4b29-9ed2-fc061b58f587</NAME>
+                <REMOTECMPNAME>Demo</REMOTECMPNAME>
+                <REMOTECMPSTATE>Maharashtra</REMOTECMPSTATE>
+              </REMOTECMPINFO.LIST>
+            </COMPANY>
+          </TALLYMESSAGE>
+        </REQUESTDATA>
+      </IMPORTDATA>
+    </BODY>
+  </ENVELOPE>
+      `.trim();
 
   return xml;
 }
@@ -200,10 +200,10 @@ function buildTallyXmlContra(row) {
     voucherName,
   } = row;
 
-  companyName = companyName.replace(/&/g, "&amp;");
-  narration = narration.replace(/&/g, "&amp;");
-  DrLedger = DrLedger.replace(/&/g, "&amp;");
-  CrLedger = CrLedger.replace(/&/g, "&amp;");
+  companyName = companyName ? companyName.replace(/&/g, "&amp;") : companyName;
+  narration = narration ? narration.replace(/&/g, "&amp;") : narration;
+  DrLedger = DrLedger ? DrLedger.replace(/&/g, "&amp;") : DrLedger;
+  CrLedger = CrLedger ? CrLedger.replace(/&/g, "&amp;") : CrLedger;
 
   const xml = `
 <ENVELOPE>
@@ -300,9 +300,14 @@ function buildTallyPrimeLedgerXml({
   date,
   companyName,
 }) {
-  companyName = companyName.replace(/&/g, "&amp;");
-  ledgerName = ledgerName.replace(/&/g, "&amp;");
-  ledgerGroup = ledgerGroup.replace(/&/g, "&amp;");
+  companyName = companyName ? companyName.replace(/&/g, "&amp;") : companyName;
+  ledgerName = ledgerName ? ledgerName.replace(/&/g, "&amp;") : ledgerName;
+  ledgerGroup = ledgerGroup ? ledgerGroup.replace(/&/g, "&amp;") : ledgerGroup;
+  state = state ? state.replace(/&/g, "&amp;") : state;
+  Address = Address ? Address.replace(/&/g, "&amp;") : Address;
+  country = country ? country.replace(/&/g, "&amp;") : country;
+  GSTnum = GSTnum ? GSTnum.replace(/&/g, "&amp;") : GSTnum;
+
   return `
 <ENVELOPE>
   <HEADER>
@@ -372,13 +377,13 @@ function buildTallyERPLedgerXml({
   invoiceDate,
   companyName,
 }) {
-  companyName = companyName.replace(/&/g, "&amp;");
-  ledgerName = ledgerName.replace(/&/g, "&amp;");
-  ledgerGroup = ledgerGroup.replace(/&/g, "&amp;");
-  state = state.replace(/&/g, "&amp;");
-  Address = Address.replace(/&/g, "&amp;");
-  country = country.replace(/&/g, "&amp;");
-  GSTnum = GSTnum.replace(/&/g, "&amp;");
+  companyName = companyName ? companyName.replace(/&/g, "&amp;") : companyName;
+  ledgerName = ledgerName ? ledgerName.replace(/&/g, "&amp;") : ledgerName;
+  ledgerGroup = ledgerGroup ? ledgerGroup.replace(/&/g, "&amp;") : ledgerGroup;
+  state = state ? state.replace(/&/g, "&amp;") : state;
+  Address = Address ? Address.replace(/&/g, "&amp;") : Address;
+  country = country ? country.replace(/&/g, "&amp;") : country;
+  GSTnum = GSTnum ? GSTnum.replace(/&/g, "&amp;") : GSTnum;
 
   return `
 

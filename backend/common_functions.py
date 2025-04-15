@@ -46,7 +46,7 @@ BASE_DIR = get_base_dir()
 logger.info("Base Dir : ", BASE_DIR)
 #from old_bank_extractions import CustomStatement
 import json
-from .code_for_extraction import extract_text_from_pdf, extract_with_test_cases, model_for_pdf, extract_dataframe_from_pdf
+from .code_for_extraction import extract_text_from_pdf, extract_with_test_cases, model_for_pdf, extract_dataframe_from_pdf, validate_bank_statement_returns_error_message
 
 ##EXTRACTION PROCESS
 def extract_text_from_file(file_path):
@@ -313,6 +313,7 @@ def extraction_process(bank, pdf_path, pdf_password, start_date, end_date):
     try:
         if ext == ".pdf":
             idf, text, explicit_lines = extract_with_test_cases(bank, pdf_path, pdf_password, CA_ID)
+            a = validate_bank_statement_returns_error_message(idf)
             name_n_num = explicit_lines if idf.empty else extract_account_details(text)
 
         elif ext == ".csv":
@@ -330,6 +331,7 @@ def extraction_process(bank, pdf_path, pdf_password, start_date, end_date):
             ).idxmax()
             df = df.loc[start_index:] if start_index is not None else pd.DataFrame()
             idf, _ = model_for_pdf(df)
+            a = validate_bank_statement_returns_error_message(idf)
             name_n_num = extract_account_details(extract_text_from_file(pdf_path))
 
         else:
@@ -346,6 +348,7 @@ def extraction_process(bank, pdf_path, pdf_password, start_date, end_date):
             ).idxmax()
             df = df.loc[start_index:] if start_index is not None else pd.DataFrame()
             idf, _ = model_for_pdf(df)
+            a = validate_bank_statement_returns_error_message(idf)
             name_n_num = extract_account_details(extract_text_from_file(pdf_path))
 
         if not idf.empty:
@@ -386,6 +389,7 @@ def extraction_process_explicit_lines(bank, pdf_path, pdf_password, start_date, 
             df.sort_index(inplace=True)  # Reorder the DataFrame to update the row positions
 
         idf, _ = model_for_pdf(df)
+        a = validate_bank_statement_returns_error_message(idf)
         name_n_num = extract_account_details(extract_text_from_pdf(pdf_path))
 
         # Add start and end date
@@ -410,6 +414,7 @@ def extraction_process_explicit_lines(bank, pdf_path, pdf_password, start_date, 
                 df.sort_index(inplace=True)  # Reorder the DataFrame to update the row positions
 
             idf, _ = model_for_pdf(df)
+            a = validate_bank_statement_returns_error_message(idf)
             name_n_num = extract_account_details(extract_text_from_pdf(pdf_path))
 
         idf = add_start_n_end_date(idf, start_date, end_date, bank)
@@ -439,6 +444,7 @@ def extraction_process_explicit_lines(bank, pdf_path, pdf_password, start_date, 
             df.sort_index(inplace=True)  # Reorder the DataFrame to update the row positions
 
         idf, _ = model_for_pdf(df)
+        a = validate_bank_statement_returns_error_message(idf)
         name_n_num = extract_account_details(extract_text_from_pdf(pdf_path))
 
         # Add start and end date
@@ -1168,8 +1174,12 @@ def category_add_ca(df):
             df[col] = df[col].str.lower()
     df["Description"] = df["Description"].str.replace(" ", "")
     excel_file_path = os.path.join(BASE_DIR, "Final_Category.xlsx")
+    excel2 = os.path.join(BASE_DIR, "Customer_category.xlsx")
+    df1 = pd.read_excel(excel_file_path)
+    df2_additional = pd.read_excel(excel2)
+    df2 = pd.concat([df1, df2_additional], ignore_index=True)
     print("excel_file_path -",excel_file_path)
-    df2 = pd.read_excel(excel_file_path)
+    # df2 = pd.read_excel(excel_file_path)
 
     # Initialize the 'Category' column with "Suspense" for all rows
     df["Category"] = "Suspense"
@@ -1668,7 +1678,7 @@ def category_add_ca(df):
                     "toachdrtatacapita", "toachdrtpachmag", "toachdrtpachneo", "toachdrtpcapfrst", "toachdryesbankr",
                     "achracpc",
                     ]
-        pattern = r"(" + "|".join(keywords) + r")"
+        pattern = r"^(" + "|".join(keywords) + r")"
         emi_transactions = df[
             df["Description"].str.contains(pattern, case=False, regex=True) & (~df["Debit"].isnull()) & (
                         df["Debit"] > 0)]
@@ -2557,19 +2567,21 @@ def summary_sheet(idf, open_bal, close_bal, new_tran_df, new_categories = None):
     opening_closing_balance = {month: [open_bal[month], close_bal[month]] for month in open_bal}
 
     excel_file_path = os.path.join(BASE_DIR, "Final_Category.xlsx")
-    print("excel_file_path_bruh -",excel_file_path)
-
+    user_created = os.path.join(BASE_DIR, "Customer_category.xlsx")
+    # print("excel_file_path_bruh -",excel_file_path)
+        # excel_file_path+user_created
     df2 = pd.read_excel(excel_file_path)
+    user_created_df = pd.read_excel(user_created)
     
     df_new = pd.DataFrame()
     
     if new_categories:
         print("new_categories -",new_categories)
         df_new = pd.DataFrame(new_categories)
-        new_excel_file_path = append_to_excel(excel_file_path, new_categories)
+        append_to_excel(user_created, new_categories)
 
     # Append new data
-    df2 = pd.concat([df2, df_new], ignore_index=True)
+    df2 = pd.concat([df2, df_new,user_created_df], ignore_index=True)
 
     sheet_1, sheet_2, sheet_3, sheet_4, sheet_5, sheet_6, missing_months_list = make_summary_great_again(new_tran_df, opening_closing_balance, df2)
     df_list = [sheet_1, sheet_2, sheet_3, sheet_4, sheet_5, sheet_6]
@@ -2826,7 +2838,7 @@ def creditor_list(df):
                         "toachdrmagmafinco",
                         "toachdrmahnimahin", "toachdrmoneywisef", "toachdrneogrowth", "toachdrtatacapita",
                         "toachdrtpachmag",
-                        "toachdrtpachneo", "toachdrtpcapfrst", "toachdryesbankr", "gsttaxpayment",
+                        "toachdrtpachneo", "toachdrtpcapfrst", "toachdryesbankr", "gsttaxpayment","self-chqpaid"
                         ]
     exclude_pattern = "|".join(exclude_keywords)
     Creditor_list = Creditor_list[
@@ -2936,12 +2948,20 @@ def Upi(df):
         return row['Entity']
 
     def apply_regex_to_categories_hdfc(row):
-        if row['Category'] in categories_to_include:
-            if "upi-" in row['Description']:
-                match = re.search(r'(?<=upi-)([a-zA-Z]+)', row['Description'])
-                if match:
-                    return match.group(1)
-        return row['Entity']
+            if row['Category'] in categories_to_include:
+                if "upi-" in row['Description']:
+                    # For the simplest pattern (first type)
+                    match1 = re.search(r'(?<=upi-)([a-zA-Z]+)', row['Description'])
+
+                    # Comprehensive pattern that requires at least one letter in the name
+                    match2 = re.search(r'upi-\d+-([a-zA-Z][a-zA-Z0-9._]*)[-@]', row['Description'])
+
+                    if match2:
+                        return match2.group(1)
+                    elif match1:
+                        return match1.group(1)
+
+            return row['Entity']
 
     def apply_regex_to_empty_entities_sbi(row):
         if row['Category'] in categories_to_include:
