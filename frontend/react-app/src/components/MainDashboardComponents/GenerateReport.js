@@ -147,8 +147,9 @@ export default function GenerateReport() {
 
       if (result.data.warning && result.data.warning.length > 0) {
         const formattedWarnings = result.data.warning.filter((warn) => {
-          return warn !== "" || warn !== " ";
+          return warn && warn.trim() !== ""; // Return true for non-empty warnings
         });
+        console.log("formattedWarnings", formattedWarnings);
         setWarning(formattedWarnings);
       }
 

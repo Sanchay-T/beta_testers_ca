@@ -359,15 +359,21 @@ const DataTable = ({
         const modifiedRow = prevFilteredData.find(
           (prevRow) => prevRow.id === newRow.id
         );
-        return modifiedRow
-          ? {
-              ...newRow,
-              category: modifiedRow.category,
-              // entity: modifiedRow.entity,
-              ledger: modifiedRow.ledger,
-              entity: modifiedRow.entity,
-            }
-          : newRow;
+        if (modifiedRow) {
+          const update = {
+            ...newRow,
+            category: modifiedRow.category,
+          };
+          if (modifiedRow.ledger) {
+            update.ledger = modifiedRow.ledger;
+          }
+          if (modifiedRow.entity) {
+            update.entity = modifiedRow.entity;
+          }
+          return update;
+        } else {
+          return newRow;
+        }
       });
     });
 
