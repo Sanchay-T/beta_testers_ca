@@ -506,13 +506,13 @@ function createProtocol() {
 
 function createSplashWindow() {
   splashWindow = new BrowserWindow({
-    width: 500,
-    height: 400,
+    width: 400,
+    height: 300,
     frame: false,
     transparent: false,
     resizable: false,
     skipTaskbar: true,
-    show: true,
+    show: false,
     alwaysOnTop: true,
     center: true,
     webPreferences: {
@@ -524,10 +524,10 @@ function createSplashWindow() {
   const splashPath = path.join(__dirname, '/react-app/splash.html');
   splashWindow.loadFile(splashPath);
 
-  // splashWindow.once('ready-to-show', () => {
-  //   log.info("Splashscreen ready to show")
-  //   splashWindow.show();
-  // });
+  splashWindow.once('ready-to-show', () => {
+    log.info("Splashscreen ready to show")
+    splashWindow.show();
+  });
 
   splashWindow.on('closed', () => {
     log.info("Splashscreen closed")
@@ -862,8 +862,12 @@ app.whenReady().then(async () => {
       throw error;
     }
 
+    // await new Promise(resolve => setTimeout(resolve, 1500)); // Wait 1.5 seconds
+
     createProtocol();
     createWindow();
+
+
     win.once('ready-to-show', () => {
       splashWindow.close();
       win.show();
