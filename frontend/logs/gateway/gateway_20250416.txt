@@ -1,0 +1,470 @@
+2025-04-16 16:59:06.782 +05:30 [INF] Starting service...
+2025-04-16 16:59:06.911 +05:30 [INF] Actual log path: C:\Users\admin\Desktop\CA-Offline\frontend\logs\gateway\gateway_.txt
+2025-04-16 16:59:06.974 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-04-16 16:59:07.057 +05:30 [ERR] Error reading encrypted license file: License file not found at C:\ProgramData\Cyphersol\license.enc
+2025-04-16 16:59:07.062 +05:30 [ERR] Error loading license info: Exception of type 'System.Exception' was thrown.
+2025-04-16 16:59:07.153 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "license_key": null,
+  "current_timestamp": 0,
+  "expiry_timestamp": 0,
+  "number_of_users": 0,
+  "number_of_statements": 0,
+  "role": null,
+  "UsedStatements": 0
+}
+2025-04-16 16:59:07.154 +05:30 [INF] LicenseInfoProvider initialized.
+2025-04-16 16:59:07.155 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "license_key": null,
+  "current_timestamp": 0,
+  "expiry_timestamp": 0,
+  "number_of_users": 0,
+  "number_of_statements": 0,
+  "role": null,
+  "UsedStatements": 0
+}
+2025-04-16 16:59:07.155 +05:30 [INF] [LicenseStateManager] Max licenses: 5, Current used statements: 0
+2025-04-16 16:59:07.156 +05:30 [INF] Worker initialized.
+2025-04-16 16:59:07.174 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-04-16 16:59:07.174 +05:30 [INF] TCP Server starting...
+2025-04-16 16:59:07.185 +05:30 [INF] TCP API Server started on port 5000
+2025-04-16 16:59:07.214 +05:30 [INF] Django base URL: http://localhost:8000
+2025-04-16 16:59:07.367 +05:30 [INF] Fingerprint: DESKTOP-85MU4TUDESKTOP-85MU4TU$S-1-5-1842303F4C-2D17-11B2-A85C-89F79A31E41D
+2025-04-16 16:59:07.546 +05:30 [INF] License Loaded: {
+  "license_key": null,
+  "current_timestamp": 0,
+  "expiry_timestamp": 0,
+  "number_of_users": 0,
+  "number_of_statements": 0,
+  "role": null,
+  "UsedStatements": 0
+}
+2025-04-16 16:59:07.696 +05:30 [INF] HTTP API Server started on port 7890
+2025-04-16 16:59:07.697 +05:30 [INF] Waiting for network to be ready...
+2025-04-16 16:59:07.902 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.12
+2025-04-16 16:59:07.902 +05:30 [INF] Network is ready with IP: 192.168.1.12
+2025-04-16 16:59:08.097 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.12
+2025-04-16 16:59:08.394 +05:30 [INF] Got MDNS IP address fe80::99c1:2fa1:23b7:234e%11
+2025-04-16 16:59:08.395 +05:30 [INF] Got MDNS IP address 192.168.56.1
+2025-04-16 16:59:08.395 +05:30 [INF] Got MDNS IP address 2401:4900:1c21:1839:74ab:6ef5:97dd:9bf1
+2025-04-16 16:59:08.395 +05:30 [INF] Got MDNS IP address 2401:4900:1c21:1839:c566:cf30:20e:c32b
+2025-04-16 16:59:08.395 +05:30 [INF] Got MDNS IP address fe80::3b8e:b4d4:4c8b:61e5%20
+2025-04-16 16:59:08.395 +05:30 [INF] Got MDNS IP address 192.168.1.12
+2025-04-16 16:59:08.395 +05:30 [INF] Got MDNS IP address fe80::9cb:9385:a02:afb5%55
+2025-04-16 16:59:08.395 +05:30 [INF] Got MDNS IP address 172.30.160.1
+2025-04-16 16:59:08.403 +05:30 [INF] IP address: 192.168.1.12
+2025-04-16 16:59:08.832 +05:30 [INF] discovered NIC 'Ethernet 4'
+2025-04-16 16:59:08.832 +05:30 [INF] discovered NIC 'Wi-Fi'
+2025-04-16 16:59:08.832 +05:30 [INF] discovered NIC 'vEthernet (WSL (Hyper-V firewall))'
+2025-04-16 16:59:08.832 +05:30 [INF] discovered NIC 'vSwitch (WSL (Hyper-V firewall))-Hyper-V Virtual Switch Extension Filter-0000'
+2025-04-16 16:59:08.832 +05:30 [INF] discovered NIC 'vSwitch (WSL (Hyper-V firewall))-Virtual Filtering Platform VMSwitch Extension-0000'
+2025-04-16 16:59:08.832 +05:30 [INF] discovered NIC 'vEthernet (WSL (Hyper-V firewall))-WFP Native MAC Layer LightWeight Filter-0000'
+2025-04-16 16:59:08.832 +05:30 [INF] discovered NIC 'vEthernet (WSL (Hyper-V firewall))-VirtualBox NDIS Light-Weight Filter-0000'
+2025-04-16 16:59:08.832 +05:30 [INF] discovered NIC 'Ethernet 4-WFP Native MAC Layer LightWeight Filter-0000'
+2025-04-16 16:59:08.832 +05:30 [INF] discovered NIC 'Ethernet 4-QoS Packet Scheduler-0000'
+2025-04-16 16:59:08.832 +05:30 [INF] discovered NIC 'Ethernet 4-WFP 802.3 MAC Layer LightWeight Filter-0000'
+2025-04-16 16:59:08.832 +05:30 [INF] discovered NIC 'vEthernet (WSL (Hyper-V firewall))-QoS Packet Scheduler-0000'
+2025-04-16 16:59:08.832 +05:30 [INF] discovered NIC 'vEthernet (WSL (Hyper-V firewall))-WFP 802.3 MAC Layer LightWeight Filter-0000'
+2025-04-16 16:59:08.832 +05:30 [INF] discovered NIC 'Local Area Connection* 7-WFP Native MAC Layer LightWeight Filter-0000'
+2025-04-16 16:59:08.832 +05:30 [INF] discovered NIC 'Local Area Connection* 7-QoS Packet Scheduler-0000'
+2025-04-16 16:59:08.832 +05:30 [INF] discovered NIC 'Local Area Connection* 8-WFP Native MAC Layer LightWeight Filter-0000'
+2025-04-16 16:59:08.833 +05:30 [INF] discovered NIC 'Local Area Connection* 8-QoS Packet Scheduler-0000'
+2025-04-16 16:59:08.833 +05:30 [INF] discovered NIC 'Local Area Connection* 9-WFP Native MAC Layer LightWeight Filter-0000'
+2025-04-16 16:59:08.833 +05:30 [INF] discovered NIC 'Local Area Connection* 9-QoS Packet Scheduler-0000'
+2025-04-16 16:59:08.833 +05:30 [INF] discovered NIC 'Local Area Connection* 7'
+2025-04-16 16:59:08.833 +05:30 [INF] discovered NIC 'Local Area Connection* 8'
+2025-04-16 16:59:08.833 +05:30 [INF] discovered NIC 'Local Area Connection* 9'
+2025-04-16 16:59:08.833 +05:30 [INF] discovered NIC 'vSwitch (WSL (Hyper-V firewall))'
+2025-04-16 16:59:08.833 +05:30 [INF] discovered NIC 'Wi-Fi-WFP Native MAC Layer LightWeight Filter-0000'
+2025-04-16 16:59:08.833 +05:30 [INF] discovered NIC 'Wi-Fi-Virtual WiFi Filter Driver-0000'
+2025-04-16 16:59:08.833 +05:30 [INF] discovered NIC 'Wi-Fi-Native WiFi Filter Driver-0000'
+2025-04-16 16:59:08.833 +05:30 [INF] discovered NIC 'Wi-Fi-VirtualBox NDIS Light-Weight Filter-0000'
+2025-04-16 16:59:08.833 +05:30 [INF] discovered NIC 'Wi-Fi-QoS Packet Scheduler-0000'
+2025-04-16 16:59:08.833 +05:30 [INF] discovered NIC 'Wi-Fi-WFP 802.3 MAC Layer LightWeight Filter-0000'
+2025-04-16 16:59:08.835 +05:30 [INF] mDNS advertisement started using hostname: DESKTOP-85MU4TU and IP: 192.168.1.12:7890
+2025-04-16 16:59:08.837 +05:30 [INF] Application started. Hosting environment: Production; Content root path: C:\Users\admin\Desktop\CA-Offline\frontend\
+2025-04-16 16:59:10.663 +05:30 [INF] Django API response: {"license_key":"SOMEX4Y4ZLicenseKEYForRaj","current_timestamp":1744802950.506893,"expiry_timestamp":1747394950.506893,"number_of_users":2,"number_of_statements":10}
+2025-04-16 16:59:10.679 +05:30 [INF] Final JSON before encryption: {"license_key":"SOMEX4Y4ZLicenseKEYForRaj","current_timestamp":1744802950.506893,"expiry_timestamp":1747394950.506893,"number_of_users":2,"number_of_statements":10,"role":"CA"}
+2025-04-16 16:59:10.680 +05:30 [INF] Fingerprint: DESKTOP-85MU4TUDESKTOP-85MU4TU$S-1-5-1842303F4C-2D17-11B2-A85C-89F79A31E41D
+2025-04-16 16:59:11.037 +05:30 [INF] Successfully encrypted license JSON: 192 bytes
+2025-04-16 16:59:11.039 +05:30 [INF] Writing async license file to C:\ProgramData\Cyphersol\license.enc
+2025-04-16 16:59:11.044 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-04-16 16:59:11.057 +05:30 [INF] Fingerprint: DESKTOP-85MU4TUDESKTOP-85MU4TU$S-1-5-1842303F4C-2D17-11B2-A85C-89F79A31E41D
+2025-04-16 16:59:11.384 +05:30 [INF] Decrypted JSON for validation: 192
+2025-04-16 16:59:11.386 +05:30 [INF] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-04-16 16:59:11.428 +05:30 [INF] License assign request: {"clientId":"Windows1","uuid":"42303f4c-2d17-11b2-a85c-89f79a31e41d","hostname":"DESKTOP-85MU4TU","username":"admin","macAddress":"0a:00:27:00:00:0b"}
+2025-04-16 16:59:11.430 +05:30 [INF] License assign request: Windows1, 42303f4c-2d17-11b2-a85c-89f79a31e41d, 0a:00:27:00:00:0b, DESKTOP-85MU4TU, admin
+2025-04-16 16:59:11.433 +05:30 [INF] License info: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744802950.506893,
+  "expiry_timestamp": 1747394950.506893,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 0
+}
+2025-04-16 16:59:11.433 +05:30 [INF] License manager active count: 0 / 2
+2025-04-16 16:59:55.980 +05:30 [INF] Application is shutting down...
+2025-04-16 16:59:55.982 +05:30 [INF] Stopping Worker...
+2025-04-16 16:59:55.987 +05:30 [INF] [FlushToDisk] Flushing 0 used statements to disk.
+2025-04-16 16:59:55.990 +05:30 [INF] [FlushToDisk] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForRaj","current_timestamp":1744802950.506893,"expiry_timestamp":1747394950.506893,"number_of_users":2,"number_of_statements":10,"role":"CA","UsedStatements":0}
+2025-04-16 16:59:55.990 +05:30 [INF] Fingerprint: DESKTOP-85MU4TUDESKTOP-85MU4TU$S-1-5-1842303F4C-2D17-11B2-A85C-89F79A31E41D
+2025-04-16 16:59:56.250 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-04-16 16:59:56.251 +05:30 [INF] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-04-16 17:00:26.002 +05:30 [FTL] Service terminated unexpectedly
+System.OperationCanceledException: The operation was canceled.
+   at System.Threading.CancellationToken.ThrowOperationCanceledException()
+   at System.Threading.CancellationToken.ThrowIfCancellationRequested()
+   at Microsoft.Extensions.Hosting.WindowsServices.WindowsServiceLifetime.StopAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.StopAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.StopAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.WaitForShutdownAsync(IHost host, CancellationToken token)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
+   at Program.<Main>$(String[] args)
+2025-04-16 17:17:53.182 +05:30 [INF] Starting service...
+2025-04-16 17:17:53.250 +05:30 [INF] Actual log path: C:\Users\admin\Desktop\CA-Offline\frontend\logs\gateway\gateway_.txt
+2025-04-16 17:17:53.284 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-04-16 17:17:53.350 +05:30 [ERR] Error reading encrypted license file: License file not found at C:\ProgramData\Cyphersol\license.enc
+2025-04-16 17:17:53.352 +05:30 [ERR] Error loading license info: Exception of type 'System.Exception' was thrown.
+2025-04-16 17:17:53.407 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "license_key": null,
+  "current_timestamp": 0,
+  "expiry_timestamp": 0,
+  "number_of_users": 0,
+  "number_of_statements": 0,
+  "role": null,
+  "UsedStatements": 0
+}
+2025-04-16 17:17:53.407 +05:30 [INF] LicenseInfoProvider initialized.
+2025-04-16 17:17:53.408 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "license_key": null,
+  "current_timestamp": 0,
+  "expiry_timestamp": 0,
+  "number_of_users": 0,
+  "number_of_statements": 0,
+  "role": null,
+  "UsedStatements": 0
+}
+2025-04-16 17:17:53.408 +05:30 [INF] [LicenseStateManager] Max licenses: 5, Current used statements: 0
+2025-04-16 17:17:53.409 +05:30 [INF] Worker initialized.
+2025-04-16 17:17:53.424 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-04-16 17:17:53.424 +05:30 [INF] TCP Server starting...
+2025-04-16 17:17:53.437 +05:30 [INF] TCP API Server started on port 5000
+2025-04-16 17:17:53.476 +05:30 [INF] Django base URL: http://localhost:8000
+2025-04-16 17:17:53.563 +05:30 [INF] Fingerprint: DESKTOP-85MU4TUDESKTOP-85MU4TU$S-1-5-1842303F4C-2D17-11B2-A85C-89F79A31E41D
+2025-04-16 17:17:53.637 +05:30 [INF] License Loaded: {
+  "license_key": null,
+  "current_timestamp": 0,
+  "expiry_timestamp": 0,
+  "number_of_users": 0,
+  "number_of_statements": 0,
+  "role": null,
+  "UsedStatements": 0
+}
+2025-04-16 17:17:53.769 +05:30 [INF] HTTP API Server started on port 7890
+2025-04-16 17:17:53.770 +05:30 [INF] Waiting for network to be ready...
+2025-04-16 17:17:54.017 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.12
+2025-04-16 17:17:54.017 +05:30 [INF] Network is ready with IP: 192.168.1.12
+2025-04-16 17:17:54.222 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.12
+2025-04-16 17:17:54.459 +05:30 [INF] Got MDNS IP address fe80::99c1:2fa1:23b7:234e%11
+2025-04-16 17:17:54.459 +05:30 [INF] Got MDNS IP address 192.168.56.1
+2025-04-16 17:17:54.459 +05:30 [INF] Got MDNS IP address 2401:4900:1c21:1839:74ab:6ef5:97dd:9bf1
+2025-04-16 17:17:54.459 +05:30 [INF] Got MDNS IP address 2401:4900:1c21:1839:c566:cf30:20e:c32b
+2025-04-16 17:17:54.459 +05:30 [INF] Got MDNS IP address fe80::3b8e:b4d4:4c8b:61e5%20
+2025-04-16 17:17:54.459 +05:30 [INF] Got MDNS IP address 192.168.1.12
+2025-04-16 17:17:54.459 +05:30 [INF] Got MDNS IP address fe80::9cb:9385:a02:afb5%55
+2025-04-16 17:17:54.459 +05:30 [INF] Got MDNS IP address 172.30.160.1
+2025-04-16 17:17:54.461 +05:30 [INF] IP address: 192.168.1.12
+2025-04-16 17:17:54.861 +05:30 [INF] discovered NIC 'Ethernet 4'
+2025-04-16 17:17:54.862 +05:30 [INF] discovered NIC 'Wi-Fi'
+2025-04-16 17:17:54.862 +05:30 [INF] discovered NIC 'vEthernet (WSL (Hyper-V firewall))'
+2025-04-16 17:17:54.862 +05:30 [INF] discovered NIC 'vSwitch (WSL (Hyper-V firewall))-Hyper-V Virtual Switch Extension Filter-0000'
+2025-04-16 17:17:54.862 +05:30 [INF] discovered NIC 'vSwitch (WSL (Hyper-V firewall))-Virtual Filtering Platform VMSwitch Extension-0000'
+2025-04-16 17:17:54.862 +05:30 [INF] discovered NIC 'vEthernet (WSL (Hyper-V firewall))-WFP Native MAC Layer LightWeight Filter-0000'
+2025-04-16 17:17:54.862 +05:30 [INF] discovered NIC 'vEthernet (WSL (Hyper-V firewall))-VirtualBox NDIS Light-Weight Filter-0000'
+2025-04-16 17:17:54.862 +05:30 [INF] discovered NIC 'Ethernet 4-WFP Native MAC Layer LightWeight Filter-0000'
+2025-04-16 17:17:54.862 +05:30 [INF] discovered NIC 'Ethernet 4-QoS Packet Scheduler-0000'
+2025-04-16 17:17:54.862 +05:30 [INF] discovered NIC 'Ethernet 4-WFP 802.3 MAC Layer LightWeight Filter-0000'
+2025-04-16 17:17:54.862 +05:30 [INF] discovered NIC 'vEthernet (WSL (Hyper-V firewall))-QoS Packet Scheduler-0000'
+2025-04-16 17:17:54.862 +05:30 [INF] discovered NIC 'vEthernet (WSL (Hyper-V firewall))-WFP 802.3 MAC Layer LightWeight Filter-0000'
+2025-04-16 17:17:54.862 +05:30 [INF] discovered NIC 'Local Area Connection* 7-WFP Native MAC Layer LightWeight Filter-0000'
+2025-04-16 17:17:54.862 +05:30 [INF] discovered NIC 'Local Area Connection* 7-QoS Packet Scheduler-0000'
+2025-04-16 17:17:54.862 +05:30 [INF] discovered NIC 'Local Area Connection* 8-WFP Native MAC Layer LightWeight Filter-0000'
+2025-04-16 17:17:54.862 +05:30 [INF] discovered NIC 'Local Area Connection* 8-QoS Packet Scheduler-0000'
+2025-04-16 17:17:54.862 +05:30 [INF] discovered NIC 'Local Area Connection* 9-WFP Native MAC Layer LightWeight Filter-0000'
+2025-04-16 17:17:54.862 +05:30 [INF] discovered NIC 'Local Area Connection* 9-QoS Packet Scheduler-0000'
+2025-04-16 17:17:54.862 +05:30 [INF] discovered NIC 'Local Area Connection* 7'
+2025-04-16 17:17:54.862 +05:30 [INF] discovered NIC 'Local Area Connection* 8'
+2025-04-16 17:17:54.862 +05:30 [INF] discovered NIC 'Local Area Connection* 9'
+2025-04-16 17:17:54.862 +05:30 [INF] discovered NIC 'vSwitch (WSL (Hyper-V firewall))'
+2025-04-16 17:17:54.862 +05:30 [INF] discovered NIC 'Wi-Fi-WFP Native MAC Layer LightWeight Filter-0000'
+2025-04-16 17:17:54.862 +05:30 [INF] discovered NIC 'Wi-Fi-Virtual WiFi Filter Driver-0000'
+2025-04-16 17:17:54.863 +05:30 [INF] discovered NIC 'Wi-Fi-Native WiFi Filter Driver-0000'
+2025-04-16 17:17:54.863 +05:30 [INF] discovered NIC 'Wi-Fi-VirtualBox NDIS Light-Weight Filter-0000'
+2025-04-16 17:17:54.863 +05:30 [INF] discovered NIC 'Wi-Fi-QoS Packet Scheduler-0000'
+2025-04-16 17:17:54.863 +05:30 [INF] discovered NIC 'Wi-Fi-WFP 802.3 MAC Layer LightWeight Filter-0000'
+2025-04-16 17:17:54.865 +05:30 [INF] mDNS advertisement started using hostname: DESKTOP-85MU4TU and IP: 192.168.1.12:7890
+2025-04-16 17:17:54.868 +05:30 [INF] Application started. Hosting environment: Production; Content root path: C:\Users\admin\Desktop\CA-Offline\frontend\
+2025-04-16 17:17:56.590 +05:30 [INF] Django API response: {"license_key":"SOMEX4Y4ZLicenseKEYForRaj","current_timestamp":1744804076.283155,"expiry_timestamp":1747396076.283155,"number_of_users":2,"number_of_statements":10}
+2025-04-16 17:17:56.620 +05:30 [INF] Final JSON before encryption: {"license_key":"SOMEX4Y4ZLicenseKEYForRaj","current_timestamp":1744804076.283155,"expiry_timestamp":1747396076.283155,"number_of_users":2,"number_of_statements":10,"role":"CA"}
+2025-04-16 17:17:56.621 +05:30 [INF] Fingerprint: DESKTOP-85MU4TUDESKTOP-85MU4TU$S-1-5-1842303F4C-2D17-11B2-A85C-89F79A31E41D
+2025-04-16 17:17:56.949 +05:30 [INF] Successfully encrypted license JSON: 192 bytes
+2025-04-16 17:17:56.949 +05:30 [INF] Writing async license file to C:\ProgramData\Cyphersol\license.enc
+2025-04-16 17:17:56.953 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-04-16 17:17:56.964 +05:30 [INF] Fingerprint: DESKTOP-85MU4TUDESKTOP-85MU4TU$S-1-5-1842303F4C-2D17-11B2-A85C-89F79A31E41D
+2025-04-16 17:17:57.319 +05:30 [INF] Decrypted JSON for validation: 192
+2025-04-16 17:17:57.320 +05:30 [INF] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-04-16 17:17:57.364 +05:30 [INF] License assign request: {"clientId":"Windows1","uuid":"42303f4c-2d17-11b2-a85c-89f79a31e41d","hostname":"DESKTOP-85MU4TU","username":"admin","macAddress":"0a:00:27:00:00:0b"}
+2025-04-16 17:17:57.366 +05:30 [INF] License assign request: Windows1, 42303f4c-2d17-11b2-a85c-89f79a31e41d, 0a:00:27:00:00:0b, DESKTOP-85MU4TU, admin
+2025-04-16 17:17:57.370 +05:30 [INF] License info: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804076.283155,
+  "expiry_timestamp": 1747396076.283155,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 0
+}
+2025-04-16 17:17:57.370 +05:30 [INF] License manager active count: 0 / 2
+2025-04-16 17:18:52.503 +05:30 [INF] Application is shutting down...
+2025-04-16 17:18:52.506 +05:30 [INF] Stopping Worker...
+2025-04-16 17:18:52.511 +05:30 [INF] [FlushToDisk] Flushing 0 used statements to disk.
+2025-04-16 17:18:52.514 +05:30 [INF] [FlushToDisk] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForRaj","current_timestamp":1744804076.283155,"expiry_timestamp":1747396076.283155,"number_of_users":2,"number_of_statements":10,"role":"CA","UsedStatements":0}
+2025-04-16 17:18:52.515 +05:30 [INF] Fingerprint: DESKTOP-85MU4TUDESKTOP-85MU4TU$S-1-5-1842303F4C-2D17-11B2-A85C-89F79A31E41D
+2025-04-16 17:18:52.769 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-04-16 17:18:52.770 +05:30 [INF] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-04-16 17:19:22.520 +05:30 [FTL] Service terminated unexpectedly
+System.OperationCanceledException: The operation was canceled.
+   at System.Threading.CancellationToken.ThrowOperationCanceledException()
+   at System.Threading.CancellationToken.ThrowIfCancellationRequested()
+   at Microsoft.Extensions.Hosting.WindowsServices.WindowsServiceLifetime.StopAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.StopAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.StopAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.WaitForShutdownAsync(IHost host, CancellationToken token)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
+   at Program.<Main>$(String[] args)
+2025-04-16 17:21:00.112 +05:30 [INF] Starting service...
+2025-04-16 17:21:00.166 +05:30 [INF] Actual log path: C:\Users\admin\Desktop\CA-Offline\frontend\logs\gateway\gateway_.txt
+2025-04-16 17:21:00.192 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-04-16 17:21:00.236 +05:30 [ERR] Error reading encrypted license file: License file not found at C:\ProgramData\Cyphersol\license.enc
+2025-04-16 17:21:00.237 +05:30 [ERR] Error loading license info: Exception of type 'System.Exception' was thrown.
+2025-04-16 17:21:00.274 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "license_key": null,
+  "current_timestamp": 0,
+  "expiry_timestamp": 0,
+  "number_of_users": 0,
+  "number_of_statements": 0,
+  "role": null,
+  "UsedStatements": 0
+}
+2025-04-16 17:21:00.274 +05:30 [INF] LicenseInfoProvider initialized.
+2025-04-16 17:21:00.275 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "license_key": null,
+  "current_timestamp": 0,
+  "expiry_timestamp": 0,
+  "number_of_users": 0,
+  "number_of_statements": 0,
+  "role": null,
+  "UsedStatements": 0
+}
+2025-04-16 17:21:00.275 +05:30 [INF] [LicenseStateManager] Max licenses: 5, Current used statements: 0
+2025-04-16 17:21:00.275 +05:30 [INF] Worker initialized.
+2025-04-16 17:21:00.283 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-04-16 17:21:00.283 +05:30 [INF] TCP Server starting...
+2025-04-16 17:21:00.290 +05:30 [INF] TCP API Server started on port 5000
+2025-04-16 17:21:00.306 +05:30 [INF] Django base URL: http://localhost:8000
+2025-04-16 17:21:00.384 +05:30 [INF] Fingerprint: DESKTOP-85MU4TUDESKTOP-85MU4TU$S-1-5-1842303F4C-2D17-11B2-A85C-89F79A31E41D
+2025-04-16 17:21:00.435 +05:30 [INF] License Loaded: {
+  "license_key": null,
+  "current_timestamp": 0,
+  "expiry_timestamp": 0,
+  "number_of_users": 0,
+  "number_of_statements": 0,
+  "role": null,
+  "UsedStatements": 0
+}
+2025-04-16 17:21:00.502 +05:30 [INF] HTTP API Server started on port 7890
+2025-04-16 17:21:00.503 +05:30 [INF] Waiting for network to be ready...
+2025-04-16 17:21:00.671 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.12
+2025-04-16 17:21:00.671 +05:30 [INF] Network is ready with IP: 192.168.1.12
+2025-04-16 17:21:00.822 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.12
+2025-04-16 17:21:01.062 +05:30 [INF] Got MDNS IP address fe80::99c1:2fa1:23b7:234e%11
+2025-04-16 17:21:01.062 +05:30 [INF] Got MDNS IP address 192.168.56.1
+2025-04-16 17:21:01.062 +05:30 [INF] Got MDNS IP address 2401:4900:1c21:1839:74ab:6ef5:97dd:9bf1
+2025-04-16 17:21:01.062 +05:30 [INF] Got MDNS IP address 2401:4900:1c21:1839:c566:cf30:20e:c32b
+2025-04-16 17:21:01.062 +05:30 [INF] Got MDNS IP address fe80::3b8e:b4d4:4c8b:61e5%20
+2025-04-16 17:21:01.062 +05:30 [INF] Got MDNS IP address 192.168.1.12
+2025-04-16 17:21:01.062 +05:30 [INF] Got MDNS IP address fe80::9cb:9385:a02:afb5%55
+2025-04-16 17:21:01.062 +05:30 [INF] Got MDNS IP address 172.30.160.1
+2025-04-16 17:21:01.064 +05:30 [INF] IP address: 192.168.1.12
+2025-04-16 17:21:01.345 +05:30 [INF] discovered NIC 'Ethernet 4'
+2025-04-16 17:21:01.345 +05:30 [INF] discovered NIC 'Wi-Fi'
+2025-04-16 17:21:01.345 +05:30 [INF] discovered NIC 'vEthernet (WSL (Hyper-V firewall))'
+2025-04-16 17:21:01.345 +05:30 [INF] discovered NIC 'vSwitch (WSL (Hyper-V firewall))-Hyper-V Virtual Switch Extension Filter-0000'
+2025-04-16 17:21:01.345 +05:30 [INF] discovered NIC 'vSwitch (WSL (Hyper-V firewall))-Virtual Filtering Platform VMSwitch Extension-0000'
+2025-04-16 17:21:01.345 +05:30 [INF] discovered NIC 'vEthernet (WSL (Hyper-V firewall))-WFP Native MAC Layer LightWeight Filter-0000'
+2025-04-16 17:21:01.345 +05:30 [INF] discovered NIC 'vEthernet (WSL (Hyper-V firewall))-VirtualBox NDIS Light-Weight Filter-0000'
+2025-04-16 17:21:01.345 +05:30 [INF] discovered NIC 'Ethernet 4-WFP Native MAC Layer LightWeight Filter-0000'
+2025-04-16 17:21:01.345 +05:30 [INF] discovered NIC 'Ethernet 4-QoS Packet Scheduler-0000'
+2025-04-16 17:21:01.345 +05:30 [INF] discovered NIC 'Ethernet 4-WFP 802.3 MAC Layer LightWeight Filter-0000'
+2025-04-16 17:21:01.345 +05:30 [INF] discovered NIC 'vEthernet (WSL (Hyper-V firewall))-QoS Packet Scheduler-0000'
+2025-04-16 17:21:01.345 +05:30 [INF] discovered NIC 'vEthernet (WSL (Hyper-V firewall))-WFP 802.3 MAC Layer LightWeight Filter-0000'
+2025-04-16 17:21:01.345 +05:30 [INF] discovered NIC 'Local Area Connection* 7-WFP Native MAC Layer LightWeight Filter-0000'
+2025-04-16 17:21:01.345 +05:30 [INF] discovered NIC 'Local Area Connection* 7-QoS Packet Scheduler-0000'
+2025-04-16 17:21:01.345 +05:30 [INF] discovered NIC 'Local Area Connection* 8-WFP Native MAC Layer LightWeight Filter-0000'
+2025-04-16 17:21:01.345 +05:30 [INF] discovered NIC 'Local Area Connection* 8-QoS Packet Scheduler-0000'
+2025-04-16 17:21:01.345 +05:30 [INF] discovered NIC 'Local Area Connection* 9-WFP Native MAC Layer LightWeight Filter-0000'
+2025-04-16 17:21:01.345 +05:30 [INF] discovered NIC 'Local Area Connection* 9-QoS Packet Scheduler-0000'
+2025-04-16 17:21:01.345 +05:30 [INF] discovered NIC 'Local Area Connection* 7'
+2025-04-16 17:21:01.345 +05:30 [INF] discovered NIC 'Local Area Connection* 8'
+2025-04-16 17:21:01.345 +05:30 [INF] discovered NIC 'Local Area Connection* 9'
+2025-04-16 17:21:01.345 +05:30 [INF] discovered NIC 'vSwitch (WSL (Hyper-V firewall))'
+2025-04-16 17:21:01.345 +05:30 [INF] discovered NIC 'Wi-Fi-WFP Native MAC Layer LightWeight Filter-0000'
+2025-04-16 17:21:01.345 +05:30 [INF] discovered NIC 'Wi-Fi-Virtual WiFi Filter Driver-0000'
+2025-04-16 17:21:01.345 +05:30 [INF] discovered NIC 'Wi-Fi-Native WiFi Filter Driver-0000'
+2025-04-16 17:21:01.345 +05:30 [INF] discovered NIC 'Wi-Fi-VirtualBox NDIS Light-Weight Filter-0000'
+2025-04-16 17:21:01.345 +05:30 [INF] discovered NIC 'Wi-Fi-QoS Packet Scheduler-0000'
+2025-04-16 17:21:01.345 +05:30 [INF] discovered NIC 'Wi-Fi-WFP 802.3 MAC Layer LightWeight Filter-0000'
+2025-04-16 17:21:01.353 +05:30 [INF] mDNS advertisement started using hostname: DESKTOP-85MU4TU and IP: 192.168.1.12:7890
+2025-04-16 17:21:01.354 +05:30 [INF] Application started. Hosting environment: Production; Content root path: C:\Users\admin\Desktop\CA-Offline\frontend\
+2025-04-16 17:21:03.319 +05:30 [INF] Django API response: {"license_key":"SOMEX4Y4ZLicenseKEYForRaj","current_timestamp":1744804263.093842,"expiry_timestamp":1747396263.093842,"number_of_users":2,"number_of_statements":10}
+2025-04-16 17:21:03.335 +05:30 [INF] Final JSON before encryption: {"license_key":"SOMEX4Y4ZLicenseKEYForRaj","current_timestamp":1744804263.093842,"expiry_timestamp":1747396263.093842,"number_of_users":2,"number_of_statements":10,"role":"CA"}
+2025-04-16 17:21:03.336 +05:30 [INF] Fingerprint: DESKTOP-85MU4TUDESKTOP-85MU4TU$S-1-5-1842303F4C-2D17-11B2-A85C-89F79A31E41D
+2025-04-16 17:21:03.623 +05:30 [INF] Successfully encrypted license JSON: 192 bytes
+2025-04-16 17:21:03.624 +05:30 [INF] Writing async license file to C:\ProgramData\Cyphersol\license.enc
+2025-04-16 17:21:03.628 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-04-16 17:21:03.636 +05:30 [INF] Fingerprint: DESKTOP-85MU4TUDESKTOP-85MU4TU$S-1-5-1842303F4C-2D17-11B2-A85C-89F79A31E41D
+2025-04-16 17:21:03.953 +05:30 [INF] Decrypted JSON for validation: 192
+2025-04-16 17:21:03.954 +05:30 [INF] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-04-16 17:21:03.986 +05:30 [INF] License assign request: {"clientId":"Windows1","uuid":"42303f4c-2d17-11b2-a85c-89f79a31e41d","hostname":"DESKTOP-85MU4TU","username":"admin","macAddress":"0a:00:27:00:00:0b"}
+2025-04-16 17:21:03.988 +05:30 [INF] License assign request: Windows1, 42303f4c-2d17-11b2-a85c-89f79a31e41d, 0a:00:27:00:00:0b, DESKTOP-85MU4TU, admin
+2025-04-16 17:21:03.992 +05:30 [INF] License info: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 0
+}
+2025-04-16 17:21:03.992 +05:30 [INF] License manager active count: 0 / 2
+2025-04-16 17:21:24.809 +05:30 [INF] Session activation logged to Django.
+2025-04-16 17:47:07.629 +05:30 [INF] Reading async license file from C:\ProgramData\Cyphersol\license.enc
+2025-04-16 17:47:07.633 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc
+2025-04-16 17:47:07.633 +05:30 [INF] Fingerprint: DESKTOP-85MU4TUDESKTOP-85MU4TU$S-1-5-1842303F4C-2D17-11B2-A85C-89F79A31E41D
+2025-04-16 17:47:12.172 +05:30 [INF] License assign request: {"clientId":"Windows2","uuid":"42303f4c-2d17-11b2-a85c-89f79a31e41d","hostname":"DESKTOP-85MU4TU","username":"admin","macAddress":"0a:00:27:00:00:0b"}
+2025-04-16 17:47:12.172 +05:30 [INF] License assign request: Windows2, 42303f4c-2d17-11b2-a85c-89f79a31e41d, 0a:00:27:00:00:0b, DESKTOP-85MU4TU, admin
+2025-04-16 17:47:12.177 +05:30 [INF] License info: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 0
+}
+2025-04-16 17:47:12.177 +05:30 [INF] License manager active count: 1 / 2
+2025-04-16 17:47:35.910 +05:30 [INF] Session activation logged to Django.
+2025-04-16 17:52:26.430 +05:30 [INF] Reading async license file from C:\ProgramData\Cyphersol\license.enc
+2025-04-16 17:52:26.431 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc
+2025-04-16 17:52:26.431 +05:30 [INF] Fingerprint: DESKTOP-85MU4TUDESKTOP-85MU4TU$S-1-5-1842303F4C-2D17-11B2-A85C-89F79A31E41D
+2025-04-16 17:52:30.743 +05:30 [INF] License assign request: {"clientId":"Windows3","uuid":"42303f4c-2d17-11b2-a85c-89f79a31e41d","hostname":"DESKTOP-85MU4TU","username":"admin","macAddress":"0a:00:27:00:00:0b"}
+2025-04-16 17:52:30.743 +05:30 [INF] License assign request: Windows3, 42303f4c-2d17-11b2-a85c-89f79a31e41d, 0a:00:27:00:00:0b, DESKTOP-85MU4TU, admin
+2025-04-16 17:52:30.745 +05:30 [INF] License info: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 0
+}
+2025-04-16 17:52:30.745 +05:30 [INF] License manager active count: 2 / 2
+2025-04-16 17:52:54.156 +05:30 [INF] [InactivateSession] Found session for clientId: Windows1, uuid: 42303f4c-2d17-11b2-a85c-89f79a31e41d, macAddress: 0a:00:27:00:00:0b, hostname: DESKTOP-85MU4TU
+2025-04-16 17:52:56.535 +05:30 [INF] Session deactivation logged to Django.
+2025-04-16 17:53:05.080 +05:30 [INF] License assign request: {"clientId":"Windows3","uuid":"42303f4c-2d17-11b2-a85c-89f79a31e41d","hostname":"DESKTOP-85MU4TU","username":"admin","macAddress":"0a:00:27:00:00:0b"}
+2025-04-16 17:53:05.080 +05:30 [INF] License assign request: Windows3, 42303f4c-2d17-11b2-a85c-89f79a31e41d, 0a:00:27:00:00:0b, DESKTOP-85MU4TU, admin
+2025-04-16 17:53:05.083 +05:30 [INF] License info: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 0
+}
+2025-04-16 17:53:05.084 +05:30 [INF] License manager active count: 2 / 2
+2025-04-16 17:53:31.136 +05:30 [INF] Revoke session request: c293574ecb48082c73af6760fe59c5cf04e097e197f6a164e2629aae6e5968b3
+2025-04-16 17:53:31.179 +05:30 [INF] License assign request: {"clientId":"Windows3","uuid":"42303f4c-2d17-11b2-a85c-89f79a31e41d","hostname":"DESKTOP-85MU4TU","username":"admin","macAddress":"0a:00:27:00:00:0b"}
+2025-04-16 17:53:31.180 +05:30 [INF] License assign request: Windows3, 42303f4c-2d17-11b2-a85c-89f79a31e41d, 0a:00:27:00:00:0b, DESKTOP-85MU4TU, admin
+2025-04-16 17:53:31.180 +05:30 [INF] License info: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 0
+}
+2025-04-16 17:53:31.180 +05:30 [INF] License manager active count: 1 / 2
+2025-04-16 17:56:22.378 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 0
+}
+2025-04-16 17:56:22.379 +05:30 [INF] [IsStatementLimitReached] Current used statements: 0, License limit: 10
+2025-04-16 17:56:40.323 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 0
+}
+2025-04-16 17:56:40.323 +05:30 [INF] [IsStatementLimitReached] Current used statements: 0, License limit: 10
+2025-04-16 17:57:12.763 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 0
+}
+2025-04-16 17:57:12.764 +05:30 [INF] [IsStatementLimitReached] Current used statements: 0, License limit: 10
+2025-04-16 17:57:30.731 +05:30 [INF] [TryUseStatement] Flushing 1 used statements to disk., last flush was at 16-04-2025 11:51:00, difference: 00:36:30.4505881
+2025-04-16 17:57:30.733 +05:30 [INF] [FlushToDisk] Flushing 1 used statements to disk.
+2025-04-16 17:57:30.737 +05:30 [INF] [FlushToDisk] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForRaj","current_timestamp":1744804263.093842,"expiry_timestamp":1747396263.093842,"number_of_users":2,"number_of_statements":10,"role":"CA","UsedStatements":1}
+2025-04-16 17:57:30.738 +05:30 [INF] Fingerprint: DESKTOP-85MU4TUDESKTOP-85MU4TU$S-1-5-1842303F4C-2D17-11B2-A85C-89F79A31E41D
+2025-04-16 17:57:31.049 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-04-16 17:57:31.050 +05:30 [INF] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-04-16 17:57:45.509 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 1
+}
+2025-04-16 17:57:45.509 +05:30 [INF] [IsStatementLimitReached] Current used statements: 1, License limit: 10
+2025-04-16 17:58:26.094 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 1
+}
+2025-04-16 17:58:26.094 +05:30 [INF] [IsStatementLimitReached] Current used statements: 1, License limit: 10
+2025-04-16 18:04:54.570 +05:30 [INF] Session activation logged to Django.
+2025-04-16 18:05:10.649 +05:30 [INF] Reading async license file from C:\ProgramData\Cyphersol\license.enc
+2025-04-16 18:05:10.650 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc
+2025-04-16 18:05:10.650 +05:30 [INF] Fingerprint: DESKTOP-85MU4TUDESKTOP-85MU4TU$S-1-5-1842303F4C-2D17-11B2-A85C-89F79A31E41D

@@ -862,7 +862,7 @@ app.whenReady().then(async () => {
       throw error;
     }
 
-    // await new Promise(resolve => setTimeout(resolve, 1500)); // Wait 1.5 seconds
+    // await new Promise(resolve => setTimeout(resolve, 255500)); // Wait 1.5 seconds
 
     createProtocol();
     createWindow();

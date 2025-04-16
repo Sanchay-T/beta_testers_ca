@@ -489,14 +489,14 @@ function registerAuthHandlers(userDataPath) {
             });
           }
         } catch (err) {
-          console.error("Validation error for service", service, ":", err.message);
+          log.error("Validation error for service", service, ":", err.message);
           // Skip this service if validation fails.
         }
       }
 
       return { success: true, licenses: validatedServices };
     } catch (error) {
-      console.error("Error searching network licenses:", error);
+      log.error("Error searching network licenses:", error);
       return { success: false, error: error.message };
     }
   });
