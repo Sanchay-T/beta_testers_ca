@@ -317,21 +317,21 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
         let dr_ledger = "";
         let cr_ledger = "";
 
-        if (transaction.voucher_type !== "Contra") {
-          dr_ledger =
-            transaction.type === "debit"
-              ? transaction.ledger
-              : selectedBankLedger;
+        // if (transaction.voucher_type !== "Contra") {
+        dr_ledger =
+          transaction.type === "debit"
+            ? transaction.ledger
+            : selectedBankLedger;
 
-          cr_ledger =
-            transaction.type === "credit"
-              ? transaction.ledger
-              : selectedBankLedger;
-        } else {
-          // Cr is present two times in buildxml, means the ledger will in cr and bank will be in dr for contra
-          cr_ledger = transaction.ledger;
-          dr_ledger = selectedBankLedger;
-        }
+        cr_ledger =
+          transaction.type === "credit"
+            ? transaction.ledger
+            : selectedBankLedger;
+        // } else {
+        //   // Cr is present two times in buildxml, means the ledger will in cr and bank will be in dr for contra
+        //   cr_ledger = transaction.ledger;
+        //   dr_ledger = selectedBankLedger;
+        // }
 
         const tempVoucherType =
           transaction.voucher_type === "Payment Voucher"

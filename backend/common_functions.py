@@ -591,8 +591,7 @@ def eod(df_original):
     all_df = monthly(total_df)  # Assuming this function exists
     return all_df
 
-def opening_and_closing_bal(edf): 
-        import warnings
+def opening_and_closing_bal(edf, transactions_df):
         opening_bal = {}
         closing_bal = {}
         month_columns = [col for col in edf.columns if col != 'Day']
@@ -616,40 +615,48 @@ def opening_and_closing_bal(edf):
             except ValueError:
                 closing_bal[month_str] = np.nan
             except KeyError:
-                warnings.warn(f"Column '{month_str}' not found during closing balance calculation.", UserWarning)
+                # warnings.warn(f"Column '{month_str}' not found during closing balance calculation.", UserWarning)
                 closing_bal[month_str] = np.nan
             except Exception as e:
-                warnings.warn(f"An unexpected error occurred calculating closing balance for {month_str}: {e}", UserWarning)
+                # warnings.warn(f"An unexpected error occurred calculating closing balance for {month_str}: {e}",UserWarning)
                 closing_bal[month_str] = np.nan
+
         ordered_months = month_columns
         for i, month in enumerate(ordered_months):
             if i == 0:
-                warnings.warn(f"Using balance from Day 1 of month '{month}' in the input DataFrame "
-                              "as the Opening Balance for this first month. Ensure this value "
-                              "represents the start-of-day balance.", UserWarning)
                 try:
-                    first_day_balance_val = edf_data_only.iloc[0][month]
-                    opening_bal[month] = float(first_day_balance_val)
-                except (KeyError, IndexError):
-                    warnings.warn(f"Could not retrieve balance from input DataFrame for Day 1 of the first month ({month}). "
-                                  "Setting opening balance to NaN.", UserWarning)
-                    opening_bal[month] = np.nan
-                except (ValueError, TypeError):
-                    warnings.warn(f"Balance value ('{first_day_balance_val}') from input DataFrame for Day 1 "
-                                  f"of the first month ({month}) could not be converted to float. Setting opening balance to NaN.",
-                                   UserWarning)
-                    opening_bal[month] = np.nan
+                    if len(transactions_df) > 0:
+                        first_month_balance = transactions_df.iloc[0]['Balance']
+                        if isinstance(first_month_balance, str):
+                            first_month_balance = float(first_month_balance.replace(',', ''))
+                        opening_bal[month] = first_month_balance
+                        if 'Description' in transactions_df.columns:
+                            if str(transactions_df.iloc[0]['Description']).lower() != 'openingbalance':
+                                warnings.warn(f"First row description is not 'openingbalance', but using it anyway as instructed.",UserWarning)
+                    else:
+                        raise IndexError("transactions_df is empty")
+                except (KeyError, IndexError, ValueError, TypeError) as e:
+                    warnings.warn(
+                        f"Error retrieving opening balance from the first row of transactions DataFrame: {e}. "
+                        f"Falling back to using balance from Day 1 of month '{month}' in the input DataFrame.",
+                        UserWarning)
+
+                    try:
+                        first_day_balance_val = edf_data_only.iloc[0][month]
+                        opening_bal[month] = float(first_day_balance_val)
+                    except (KeyError, IndexError, ValueError, TypeError) as e2:
+                        # warnings.warn(f"Could not retrieve balance from input DataFrame for Day 1 of the first month ({month}): {e2}. " f"Setting opening balance to NaN.", UserWarning)
+                        opening_bal[month] = np.nan
             else:
                 prev_month = ordered_months[i - 1]
                 if prev_month in closing_bal and not pd.isna(closing_bal[prev_month]):
                     opening_bal[month] = closing_bal[prev_month]
                 else:
-                    warnings.warn(f"Could not find a valid closing balance for the previous month ({prev_month}) "
-                                  f"to use as opening balance for {month}. Setting opening balance to NaN.", UserWarning)
+                    # warnings.warn(f"Could not find a valid closing balance for the previous month ({prev_month}) "f"to use as opening balance for {month}. Setting opening balance to NaN.",UserWarning)
                     opening_bal[month] = np.nan
 
         return opening_bal, closing_bal
-    
+
 def avgs_df( df):
     # quarterly_avg
     if df.shape[1] > 3:
