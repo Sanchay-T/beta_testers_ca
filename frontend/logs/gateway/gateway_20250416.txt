@@ -468,3 +468,340 @@ System.OperationCanceledException: The operation was canceled.
 2025-04-16 18:05:10.649 +05:30 [INF] Reading async license file from C:\ProgramData\Cyphersol\license.enc
 2025-04-16 18:05:10.650 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc
 2025-04-16 18:05:10.650 +05:30 [INF] Fingerprint: DESKTOP-85MU4TUDESKTOP-85MU4TU$S-1-5-1842303F4C-2D17-11B2-A85C-89F79A31E41D
+2025-04-16 18:28:52.302 +05:30 [INF] Reading async license file from C:\ProgramData\Cyphersol\license.enc
+2025-04-16 18:28:52.303 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc
+2025-04-16 18:28:52.303 +05:30 [INF] Fingerprint: DESKTOP-85MU4TUDESKTOP-85MU4TU$S-1-5-1842303F4C-2D17-11B2-A85C-89F79A31E41D
+2025-04-16 18:29:14.271 +05:30 [INF] Reading async license file from C:\ProgramData\Cyphersol\license.enc
+2025-04-16 18:29:14.271 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc
+2025-04-16 18:29:14.272 +05:30 [INF] Fingerprint: DESKTOP-85MU4TUDESKTOP-85MU4TU$S-1-5-1842303F4C-2D17-11B2-A85C-89F79A31E41D
+2025-04-16 18:29:28.179 +05:30 [INF] [InactivateSession] Found session for clientId: Windows2, uuid: 42303f4c-2d17-11b2-a85c-89f79a31e41d, macAddress: 0a:00:27:00:00:0b, hostname: DESKTOP-85MU4TU
+2025-04-16 18:29:30.334 +05:30 [INF] Session deactivation logged to Django.
+2025-04-16 18:29:38.361 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 1
+}
+2025-04-16 18:29:38.361 +05:30 [INF] [IsStatementLimitReached] Current used statements: 1, License limit: 10
+2025-04-16 18:30:32.361 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 1
+}
+2025-04-16 18:30:32.361 +05:30 [INF] [IsStatementLimitReached] Current used statements: 1, License limit: 10
+2025-04-16 18:30:51.467 +05:30 [INF] [InactivateSession] Found session for clientId: Windows3, uuid: 42303f4c-2d17-11b2-a85c-89f79a31e41d, macAddress: 0a:00:27:00:00:0b, hostname: DESKTOP-85MU4TU
+2025-04-16 18:30:53.673 +05:30 [INF] Session deactivation logged to Django.
+2025-04-16 18:31:25.111 +05:30 [INF] Session activation logged to Django.
+2025-04-16 18:31:48.938 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 1
+}
+2025-04-16 18:31:48.938 +05:30 [INF] [IsStatementLimitReached] Current used statements: 1, License limit: 10
+2025-04-16 18:31:54.099 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 1
+}
+2025-04-16 18:31:54.099 +05:30 [INF] [IsStatementLimitReached] Current used statements: 1, License limit: 10
+2025-04-16 18:31:55.990 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 1
+}
+2025-04-16 18:31:55.991 +05:30 [INF] [IsStatementLimitReached] Current used statements: 1, License limit: 10
+2025-04-16 18:31:57.515 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 1
+}
+2025-04-16 18:31:57.515 +05:30 [INF] [IsStatementLimitReached] Current used statements: 1, License limit: 10
+2025-04-16 18:32:00.604 +05:30 [INF] [TryUseStatement] Flushing 2 used statements to disk., last flush was at 16-04-2025 12:27:31, difference: 00:34:29.5537839
+2025-04-16 18:32:00.604 +05:30 [INF] [FlushToDisk] Flushing 2 used statements to disk.
+2025-04-16 18:32:00.604 +05:30 [INF] [FlushToDisk] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForRaj","current_timestamp":1744804263.093842,"expiry_timestamp":1747396263.093842,"number_of_users":2,"number_of_statements":10,"role":"CA","UsedStatements":2}
+2025-04-16 18:32:00.605 +05:30 [INF] Fingerprint: DESKTOP-85MU4TUDESKTOP-85MU4TU$S-1-5-1842303F4C-2D17-11B2-A85C-89F79A31E41D
+2025-04-16 18:32:01.233 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-04-16 18:32:01.234 +05:30 [INF] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-04-16 18:32:04.061 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 2
+}
+2025-04-16 18:32:04.061 +05:30 [INF] [IsStatementLimitReached] Current used statements: 2, License limit: 10
+2025-04-16 18:32:28.989 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 2
+}
+2025-04-16 18:32:28.989 +05:30 [INF] [IsStatementLimitReached] Current used statements: 2, License limit: 10
+2025-04-16 18:32:39.162 +05:30 [INF] [TryUseStatement] Flushing 3 used statements to disk., last flush was at 16-04-2025 13:02:01, difference: 00:00:37.9273685
+2025-04-16 18:32:39.162 +05:30 [INF] [FlushToDisk] Flushing 3 used statements to disk.
+2025-04-16 18:32:39.162 +05:30 [INF] [FlushToDisk] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForRaj","current_timestamp":1744804263.093842,"expiry_timestamp":1747396263.093842,"number_of_users":2,"number_of_statements":10,"role":"CA","UsedStatements":3}
+2025-04-16 18:32:39.162 +05:30 [INF] Fingerprint: DESKTOP-85MU4TUDESKTOP-85MU4TU$S-1-5-1842303F4C-2D17-11B2-A85C-89F79A31E41D
+2025-04-16 18:32:39.535 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-04-16 18:32:39.536 +05:30 [INF] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-04-16 18:32:42.269 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 3
+}
+2025-04-16 18:32:42.269 +05:30 [INF] [IsStatementLimitReached] Current used statements: 3, License limit: 10
+2025-04-16 18:33:04.829 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 3
+}
+2025-04-16 18:33:04.829 +05:30 [INF] [IsStatementLimitReached] Current used statements: 3, License limit: 10
+2025-04-16 18:33:13.124 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 3
+}
+2025-04-16 18:33:13.124 +05:30 [INF] [IsStatementLimitReached] Current used statements: 3, License limit: 10
+2025-04-16 18:33:15.611 +05:30 [INF] [TryUseStatement] Flushing 4 used statements to disk., last flush was at 16-04-2025 13:02:39, difference: 00:00:36.0741944
+2025-04-16 18:33:15.611 +05:30 [INF] [FlushToDisk] Flushing 4 used statements to disk.
+2025-04-16 18:33:15.611 +05:30 [INF] [FlushToDisk] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForRaj","current_timestamp":1744804263.093842,"expiry_timestamp":1747396263.093842,"number_of_users":2,"number_of_statements":10,"role":"CA","UsedStatements":4}
+2025-04-16 18:33:15.611 +05:30 [INF] Fingerprint: DESKTOP-85MU4TUDESKTOP-85MU4TU$S-1-5-1842303F4C-2D17-11B2-A85C-89F79A31E41D
+2025-04-16 18:33:16.045 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-04-16 18:33:16.045 +05:30 [INF] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-04-16 18:33:19.178 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 4
+}
+2025-04-16 18:33:19.178 +05:30 [INF] [IsStatementLimitReached] Current used statements: 4, License limit: 10
+2025-04-16 18:33:44.147 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 4
+}
+2025-04-16 18:33:44.147 +05:30 [INF] [IsStatementLimitReached] Current used statements: 4, License limit: 10
+2025-04-16 18:33:55.598 +05:30 [INF] [TryUseStatement] Flushing 5 used statements to disk., last flush was at 16-04-2025 13:03:16, difference: 00:00:39.5532871
+2025-04-16 18:33:55.599 +05:30 [INF] [FlushToDisk] Flushing 5 used statements to disk.
+2025-04-16 18:33:55.599 +05:30 [INF] [FlushToDisk] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForRaj","current_timestamp":1744804263.093842,"expiry_timestamp":1747396263.093842,"number_of_users":2,"number_of_statements":10,"role":"CA","UsedStatements":5}
+2025-04-16 18:33:55.600 +05:30 [INF] Fingerprint: DESKTOP-85MU4TUDESKTOP-85MU4TU$S-1-5-1842303F4C-2D17-11B2-A85C-89F79A31E41D
+2025-04-16 18:33:56.026 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-04-16 18:33:56.026 +05:30 [INF] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-04-16 18:34:01.514 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 5
+}
+2025-04-16 18:34:01.514 +05:30 [INF] [IsStatementLimitReached] Current used statements: 5, License limit: 10
+2025-04-16 18:34:29.023 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 5
+}
+2025-04-16 18:34:29.023 +05:30 [INF] [IsStatementLimitReached] Current used statements: 5, License limit: 10
+2025-04-16 18:34:40.395 +05:30 [INF] [TryUseStatement] Flushing 6 used statements to disk., last flush was at 16-04-2025 13:03:56, difference: 00:00:44.3687373
+2025-04-16 18:34:40.395 +05:30 [INF] [FlushToDisk] Flushing 6 used statements to disk.
+2025-04-16 18:34:40.395 +05:30 [INF] [FlushToDisk] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForRaj","current_timestamp":1744804263.093842,"expiry_timestamp":1747396263.093842,"number_of_users":2,"number_of_statements":10,"role":"CA","UsedStatements":6}
+2025-04-16 18:34:40.403 +05:30 [INF] Fingerprint: DESKTOP-85MU4TUDESKTOP-85MU4TU$S-1-5-1842303F4C-2D17-11B2-A85C-89F79A31E41D
+2025-04-16 18:34:40.743 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-04-16 18:34:40.744 +05:30 [INF] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-04-16 18:35:04.903 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 6
+}
+2025-04-16 18:35:04.903 +05:30 [INF] [IsStatementLimitReached] Current used statements: 6, License limit: 10
+2025-04-16 18:35:17.598 +05:30 [INF] [TryUseStatement] Flushing 7 used statements to disk., last flush was at 16-04-2025 13:04:40, difference: 00:00:36.8539216
+2025-04-16 18:35:17.598 +05:30 [INF] [FlushToDisk] Flushing 7 used statements to disk.
+2025-04-16 18:35:17.598 +05:30 [INF] [FlushToDisk] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForRaj","current_timestamp":1744804263.093842,"expiry_timestamp":1747396263.093842,"number_of_users":2,"number_of_statements":10,"role":"CA","UsedStatements":7}
+2025-04-16 18:35:17.599 +05:30 [INF] Fingerprint: DESKTOP-85MU4TUDESKTOP-85MU4TU$S-1-5-1842303F4C-2D17-11B2-A85C-89F79A31E41D
+2025-04-16 18:35:17.976 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-04-16 18:35:17.976 +05:30 [INF] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-04-16 18:35:38.743 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 7
+}
+2025-04-16 18:35:38.743 +05:30 [INF] [IsStatementLimitReached] Current used statements: 7, License limit: 10
+2025-04-16 18:35:51.679 +05:30 [INF] [TryUseStatement] Flushing 8 used statements to disk., last flush was at 16-04-2025 13:05:17, difference: 00:00:33.7031723
+2025-04-16 18:35:51.679 +05:30 [INF] [FlushToDisk] Flushing 8 used statements to disk.
+2025-04-16 18:35:51.680 +05:30 [INF] [FlushToDisk] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForRaj","current_timestamp":1744804263.093842,"expiry_timestamp":1747396263.093842,"number_of_users":2,"number_of_statements":10,"role":"CA","UsedStatements":8}
+2025-04-16 18:35:51.687 +05:30 [INF] Fingerprint: DESKTOP-85MU4TUDESKTOP-85MU4TU$S-1-5-1842303F4C-2D17-11B2-A85C-89F79A31E41D
+2025-04-16 18:35:52.032 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-04-16 18:35:52.032 +05:30 [INF] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-04-16 18:35:56.654 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 8
+}
+2025-04-16 18:35:56.654 +05:30 [INF] [IsStatementLimitReached] Current used statements: 8, License limit: 10
+2025-04-16 18:36:22.566 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 8
+}
+2025-04-16 18:36:22.566 +05:30 [INF] [IsStatementLimitReached] Current used statements: 8, License limit: 10
+2025-04-16 18:36:33.264 +05:30 [INF] [TryUseStatement] Flushing 9 used statements to disk., last flush was at 16-04-2025 13:05:52, difference: 00:00:41.2319324
+2025-04-16 18:36:33.264 +05:30 [INF] [FlushToDisk] Flushing 9 used statements to disk.
+2025-04-16 18:36:33.264 +05:30 [INF] [FlushToDisk] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForRaj","current_timestamp":1744804263.093842,"expiry_timestamp":1747396263.093842,"number_of_users":2,"number_of_statements":10,"role":"CA","UsedStatements":9}
+2025-04-16 18:36:33.266 +05:30 [INF] Fingerprint: DESKTOP-85MU4TUDESKTOP-85MU4TU$S-1-5-1842303F4C-2D17-11B2-A85C-89F79A31E41D
+2025-04-16 18:36:33.638 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-04-16 18:36:33.638 +05:30 [INF] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-04-16 18:36:36.100 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 9
+}
+2025-04-16 18:36:36.100 +05:30 [INF] [IsStatementLimitReached] Current used statements: 9, License limit: 10
+2025-04-16 18:36:44.444 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 9
+}
+2025-04-16 18:36:44.444 +05:30 [INF] [IsStatementLimitReached] Current used statements: 9, License limit: 10
+2025-04-16 18:37:05.329 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 9
+}
+2025-04-16 18:37:05.329 +05:30 [INF] [IsStatementLimitReached] Current used statements: 9, License limit: 10
+2025-04-16 18:37:17.243 +05:30 [INF] [TryUseStatement] Flushing 10 used statements to disk., last flush was at 16-04-2025 13:06:33, difference: 00:00:43.6048123
+2025-04-16 18:37:17.243 +05:30 [INF] [FlushToDisk] Flushing 10 used statements to disk.
+2025-04-16 18:37:17.243 +05:30 [INF] [FlushToDisk] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForRaj","current_timestamp":1744804263.093842,"expiry_timestamp":1747396263.093842,"number_of_users":2,"number_of_statements":10,"role":"CA","UsedStatements":10}
+2025-04-16 18:37:17.244 +05:30 [INF] Fingerprint: DESKTOP-85MU4TUDESKTOP-85MU4TU$S-1-5-1842303F4C-2D17-11B2-A85C-89F79A31E41D
+2025-04-16 18:37:17.660 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-04-16 18:37:17.661 +05:30 [INF] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-04-16 18:37:20.461 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 10
+}
+2025-04-16 18:37:20.461 +05:30 [INF] [IsStatementLimitReached] Current used statements: 10, License limit: 10
+2025-04-16 18:37:52.239 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 10
+}
+2025-04-16 18:37:52.239 +05:30 [INF] [IsStatementLimitReached] Current used statements: 10, License limit: 10
+2025-04-16 18:37:59.294 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 10
+}
+2025-04-16 18:37:59.294 +05:30 [INF] [IsStatementLimitReached] Current used statements: 10, License limit: 10
+2025-04-16 18:38:03.792 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 10
+}
+2025-04-16 18:38:03.793 +05:30 [INF] [IsStatementLimitReached] Current used statements: 10, License limit: 10
+2025-04-16 18:38:08.908 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForRaj",
+  "current_timestamp": 1744804263.093842,
+  "expiry_timestamp": 1747396263.093842,
+  "number_of_users": 2,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 10
+}
+2025-04-16 18:38:08.908 +05:30 [INF] [IsStatementLimitReached] Current used statements: 10, License limit: 10
+2025-04-16 18:44:35.977 +05:30 [INF] [InactivateSession] Found session for clientId: Windows3, uuid: 42303f4c-2d17-11b2-a85c-89f79a31e41d, macAddress: 0a:00:27:00:00:0b, hostname: DESKTOP-85MU4TU
+2025-04-16 18:44:38.146 +05:30 [INF] Session deactivation logged to Django.
