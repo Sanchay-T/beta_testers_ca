@@ -326,43 +326,49 @@ export function LicenseActivationForm({ className, ...props }) {
   // UI Render Helpers
   // ------------------
 
-  const renderStatusAlert = (customMessage = null) => {
+
+  const renderStatusAlert = () => {
     if (!activationStatus) return null;
 
-    // If a custom message is passed, use it, otherwise fallback to default messages
-    const message = customMessage || getErrorMessage(activationStatus);
-
-    return (
-      <Alert
-        className={`mb-4 ${message.type === "success" ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}`}
-      >
-        {message.type === "success" ? (
-          <CheckCircle className="h-4 w-4 text-green-700 mr-2" />
-        ) : (
-          <AlertTriangle className="h-4 w-4 text-red-700 mr-2" />
-        )}
-        <AlertDescription className={message.type === "success" ? "text-green-700" : "text-red-700"}>
-          {message.text}
-        </AlertDescription>
-      </Alert>
-    );
-  };
-
-  // Helper function to determine the message based on activation status
-  const getErrorMessage = (status) => {
-    switch (status) {
+    switch (activationStatus) {
       case "active":
-        return { text: "License successfully activated! Please continue to set up your account.", type: "success" };
+        return (
+          <Alert className="mb-4 bg-green-50 border-green-200">
+            <CheckCircle className="h-4 w-4 text-green-700 mr-2" />
+            <AlertDescription className="text-green-700">
+              License successfully activated! Please continue to set up your account.
+            </AlertDescription>
+          </Alert>
+        );
       case "failed":
-        return { text: "License activation failed. Please check your license key or network settings and try again.", type: "error" };
+        return (
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription>
+              License activation failed. Please check your license key or network settings and try again.
+            </AlertDescription>
+          </Alert>
+        );
       case "network-not-found":
-        return { text: "No network licenses found. Please verify server address and port.", type: "error" };
+        return (
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription>
+              No network licenses found. Please verify server address and port.
+            </AlertDescription>
+          </Alert>
+        );
       case "network-error":
-        return { text: "Error connecting to license server. Please check your network connection.", type: "error" };
+        return (
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription>
+              Error connecting to license server. Please check your network connection.
+            </AlertDescription>
+          </Alert>
+        );
       case "processing":
-        return { text: "License activation is being processed. Please wait...", type: "info" };
+        // You could also show a small spinner if you like
+        return null;
       default:
-        return { text: "An unexpected error occurred. Please try again.", type: "error" };
+        return null;
     }
   };
 
