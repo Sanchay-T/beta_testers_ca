@@ -86,9 +86,8 @@ export const AuthProvider = ({ children }) => {
       const result = await window.electron.auth.signUp(credentials);
       console.log("Sign up result:", result);
       if (result.success) {
-        // setIsActivated(false);
-        setUser(credentials); // Use returned user data if available
-        // console.log("User signed up:", result);
+        setIsSignedUp(true)
+        setUser(credentials);
         localStorage.removeItem("dashboardData");
         return true;
       } else {
@@ -188,6 +187,8 @@ export const AuthProvider = ({ children }) => {
     logout,
     // updateUser,
     checkAuth,
+    setIsActivated,
+    setIsSignedUp,
     setError,
   };
 

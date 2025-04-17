@@ -35,7 +35,7 @@ import { AdminPermissionPrompt } from "./AdminPermissionPrompt";
 // import { set } from "react-datepicker/dist/date_utils";
 
 export function LicenseActivationForm({ className, ...props }) {
-  const { login, loading, error, isActivated, isSignedUp, signUp } = useAuth();
+  const { login, loading, error, isActivated, isSignedUp, signUp, setIsActivated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -58,7 +58,7 @@ export function LicenseActivationForm({ className, ...props }) {
   const [activationStatus, setActivationStatus] = useState(null);
   const [isNetworkSearching, setIsNetworkSearching] = useState(false);
   // New state for inactive licenses
-  const [inactiveLicenses, setInactiveLicenses] = useState([]);
+  const [licenses, setLicenses] = useState([]);
   const [revokingLicense, setRevokingLicense] = useState(null);
   // Track modal open state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -67,16 +67,16 @@ export function LicenseActivationForm({ className, ...props }) {
 
   // Function to close the modal
   const handleCloseModal = () => {
-    setInactiveLicenses([]);
+    setLicenses([]);
     setIsModalOpen(false);
   };
 
   // Option 1: Auto-open the modal if inactive licenses are present
   useEffect(() => {
-    if (inactiveLicenses && inactiveLicenses.length > 0) {
+    if (licenses && licenses.length > 0) {
       setIsModalOpen(true);
     }
-  }, [inactiveLicenses]);
+  }, [licenses]);
 
 
   useEffect(() => {
@@ -131,6 +131,7 @@ export function LicenseActivationForm({ className, ...props }) {
           });
           console.log("Network License Result:", result);
           if (result.success) {
+            setIsActivated(true);
             setActivationStatus("active");
             setActivationStep(2);
             localStorage.setItem("role", credentials.role);
@@ -177,7 +178,7 @@ export function LicenseActivationForm({ className, ...props }) {
     setSelectedNetworkLicense(license);
     setActivationStatus("processing");
     // Clear any previous inactive licenses
-    setInactiveLicenses([]);
+    setLicenses([]);
 
     console.log("Selected Network License:", license);
     console.log("Network License:", networkLicense);
@@ -189,17 +190,16 @@ export function LicenseActivationForm({ className, ...props }) {
       });
       console.log("Network License Result:", result);
       if (result.success) {
+        setIsActivated(true);
         setActivationStatus("active");
         setActivationStep(2);
         localStorage.setItem("role", credentials.role);
       } else {
-        console.log("Network License Error:", result.inactiveLicenses);
         // Check for inactive licenses in the result
         if (result.inactiveLicenses && result.inactiveLicenses.length > 0) {
-          setInactiveLicenses(result.inactiveLicenses);
-          setActivationStatus("inactive-licenses");
-        } else {
-          setActivationStatus("failed");
+          setLicenses(result.inactiveLicenses);
+        } else if (result.activateLicenses && result.activateLicenses.length > 0) {
+          setLicenses(result.activateLicenses);
         }
       }
     } catch (error) {
@@ -222,10 +222,10 @@ export function LicenseActivationForm({ className, ...props }) {
 
       if (result.success) {
         // Remove the revoked license from the list
-        setInactiveLicenses(prev => prev.filter(session => session.sessionKey !== sessionKey));
+        setLicenses(prev => prev.filter(session => session.sessionKey !== sessionKey));
 
         // If that was the last one, retry connection automatically
-        if (inactiveLicenses.length === 1) {
+        if (licenses.length === 1) {
           handleNetworkLicenseSelect(selectedNetworkLicense);
         }
       } else {
@@ -326,54 +326,50 @@ export function LicenseActivationForm({ className, ...props }) {
   // UI Render Helpers
   // ------------------
 
-  const renderStatusAlert = () => {
+  const renderStatusAlert = (customMessage = null) => {
     if (!activationStatus) return null;
 
-    switch (activationStatus) {
+    // If a custom message is passed, use it, otherwise fallback to default messages
+    const message = customMessage || getErrorMessage(activationStatus);
+
+    return (
+      <Alert
+        className={`mb-4 ${message.type === "success" ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}`}
+      >
+        {message.type === "success" ? (
+          <CheckCircle className="h-4 w-4 text-green-700 mr-2" />
+        ) : (
+          <AlertTriangle className="h-4 w-4 text-red-700 mr-2" />
+        )}
+        <AlertDescription className={message.type === "success" ? "text-green-700" : "text-red-700"}>
+          {message.text}
+        </AlertDescription>
+      </Alert>
+    );
+  };
+
+  // Helper function to determine the message based on activation status
+  const getErrorMessage = (status) => {
+    switch (status) {
       case "active":
-        return (
-          <Alert className="mb-4 bg-green-50 border-green-200">
-            <CheckCircle className="h-4 w-4 text-green-700 mr-2" />
-            <AlertDescription className="text-green-700">
-              License successfully activated! Please continue to set up your account.
-            </AlertDescription>
-          </Alert>
-        );
+        return { text: "License successfully activated! Please continue to set up your account.", type: "success" };
       case "failed":
-        return (
-          <Alert variant="destructive" className="mb-4">
-            <AlertDescription>
-              License activation failed. Please check your license key or network settings and try again.
-            </AlertDescription>
-          </Alert>
-        );
+        return { text: "License activation failed. Please check your license key or network settings and try again.", type: "error" };
       case "network-not-found":
-        return (
-          <Alert variant="destructive" className="mb-4">
-            <AlertDescription>
-              No network licenses found. Please verify server address and port.
-            </AlertDescription>
-          </Alert>
-        );
+        return { text: "No network licenses found. Please verify server address and port.", type: "error" };
       case "network-error":
-        return (
-          <Alert variant="destructive" className="mb-4">
-            <AlertDescription>
-              Error connecting to license server. Please check your network connection.
-            </AlertDescription>
-          </Alert>
-        );
+        return { text: "Error connecting to license server. Please check your network connection.", type: "error" };
       case "processing":
-        // You could also show a small spinner if you like
-        return null;
+        return { text: "License activation is being processed. Please wait...", type: "info" };
       default:
-        return null;
+        return { text: "An unexpected error occurred. Please try again.", type: "error" };
     }
   };
 
+
   // New function to render inactive licenses UI
-  const renderInactiveLicenses = () => {
-    if (inactiveLicenses.length === 0) return null;
+  const renderLicenses = (licenseStatus = "inactive") => {
+    if (licenses.length === 0) return null;
 
     return (
       // Modal container and backdrop
@@ -399,18 +395,21 @@ export function LicenseActivationForm({ className, ...props }) {
             <X className="h-5 w-5 text-gray-700 hover:text-gray-900" />
           </button>
 
+
+          {/* Description */}
           <Alert className="mb-4 bg-amber-50 border-amber-200">
             <AlertTriangle className="h-4 w-4 text-amber-700 mr-2" />
             <AlertDescription className="text-amber-700">
-              Your device has inactive licenses that need to be revoked before activating a new one.
-              Please revoke any unused licenses below.
+              {licenseStatus === 'active'
+                ? `You currently have an active license session on ${licenses.length} device${licenses.length > 1 ? 's' : ''}. Please logout from one to proceed.`
+                : `Your device has inactive license session${licenses.length > 1 ? 's' : ''} that need to be revoked before activating a new one. Please revoke any unused session below.`}
             </AlertDescription>
           </Alert>
 
           <div className="rounded-md border border-amber-200 overflow-hidden">
             {/* Mobile view - Card-based layout */}
             <div className="md:hidden">
-              {inactiveLicenses.map((license) => (
+              {licenses.map((license) => (
                 <div key={license.sessionKey} className="p-4 border-b border-amber-100 bg-white">
                   <div className="flex justify-between items-start mb-2">
                     <div>
@@ -421,7 +420,9 @@ export function LicenseActivationForm({ className, ...props }) {
                         {license.sessionDetails.username || 'Unknown User'}
                       </p>
                     </div>
-                    <Button
+
+                    (licenseStatus === 'active') &&
+                    {<Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleRevokeLicense(license.sessionKey)}
@@ -440,6 +441,7 @@ export function LicenseActivationForm({ className, ...props }) {
                         </>
                       )}
                     </Button>
+                    }
                   </div>
                   <div className="text-sm text-gray-700">
                     <span className="font-medium">Last Used:</span>{" "}
@@ -472,7 +474,7 @@ export function LicenseActivationForm({ className, ...props }) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-amber-100">
-                  {inactiveLicenses.map((license) => (
+                  {licenses.map((license) => (
                     <tr key={license.sessionKey} className="bg-white">
                       <td className="px-4 py-3 text-sm text-gray-700">
                         <div className="font-medium">
@@ -492,27 +494,29 @@ export function LicenseActivationForm({ className, ...props }) {
                           hour12: true,
                         })}
                       </td>
-                      <td className="px-4 py-3 text-sm">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleRevokeLicense(license.sessionKey)}
-                          disabled={revokingLicense === license.sessionKey}
-                          className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
-                        >
-                          {revokingLicense === license.sessionKey ? (
-                            <>
-                              <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
-                              Revoking...
-                            </>
-                          ) : (
-                            <>
-                              <X className="h-3 w-3 mr-1" />
-                              Revoke
-                            </>
-                          )}
-                        </Button>
-                      </td>
+                      (licenseStatus === 'inactive') &&{
+                        <td className="px-4 py-3 text-sm">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleRevokeLicense(license.sessionKey)}
+                            disabled={revokingLicense === license.sessionKey}
+                            className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                          >
+                            {revokingLicense === license.sessionKey ? (
+                              <>
+                                <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                                Revoking...
+                              </>
+                            ) : (
+                              <>
+                                <X className="h-3 w-3 mr-1" />
+                                Revoke
+                              </>
+                            )}
+                          </Button>
+                        </td>
+                      }
                     </tr>
                   ))}
                 </tbody>
@@ -520,7 +524,7 @@ export function LicenseActivationForm({ className, ...props }) {
             </div>
           </div>
 
-          {inactiveLicenses.length > 0 && (
+          {licenses.length > 0 && (
             <div className="mt-4 flex justify-end">
               <Button
                 onClick={handleRetryAfterRevoke}
@@ -532,7 +536,7 @@ export function LicenseActivationForm({ className, ...props }) {
             </div>
           )}
         </motion.div>
-      </div>
+      </div >
     );
   };
 
@@ -633,7 +637,7 @@ export function LicenseActivationForm({ className, ...props }) {
             {renderStatusAlert()}
 
             {/* Render inactive licenses if present */}
-            {activationStatus === "inactive-licenses" && isModalOpen && renderInactiveLicenses()}
+            {activationStatus === "inactive-licenses" && isModalOpen && renderLicenses("active")}
 
             {activationStep === 1 && (
               <Tabs

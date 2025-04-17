@@ -118,7 +118,7 @@ function registerAuthHandlers(userDataPath) {
       );
 
       if (!isPasswordValid) {
-        throw new Error("Invalid email or password"); // Incorrect password
+        return { success: false, message: "Invalid email or password" };
       }
 
 
@@ -137,7 +137,7 @@ function registerAuthHandlers(userDataPath) {
       const { data } = response;
 
       if (!data.success) {
-        throw new Error(data.error || "Session activation failed");
+        throw new Error("Session activation failed");
       }
 
       sessionManager.setUser({ userId: user.id, email: user.email, role: user.role, name: user.name });
@@ -148,8 +148,15 @@ function registerAuthHandlers(userDataPath) {
 
       return { success: true, user: credentials };
     } catch (error) {
-      console.error("Login error:", error);
-      return { success: false, error: error.message };
+
+      if (error.response && error.response.data.errorCode === "session-not-available") {
+        log.info("Login error:", error.message, error.response.data);
+        return { success: false, message: "Your session has expired. Please use a license from the network." };
+      }
+      else {
+        log.info("Login error:", error.message, error.response.data);
+        return { success: false, message: "An unexpected error occurred" };
+      }
     }
   });
 
@@ -506,7 +513,7 @@ function registerAuthHandlers(userDataPath) {
     log.info("Connecting to network license:", licenseData);
     try {
       const { ip, port } = licenseData;
-      if (!ip || !port) throw new Error("Invalid license data. IP and port are required.");
+      if (!ip || !port) throw new Error("An unexpected error occurred.");
 
       const uuid = systemInformation.getUUID(); // assuming you defined this somewhere
       const uuidHash = systemInformation.getHashedUUID(); // assuming you defined this somewhere
@@ -564,16 +571,7 @@ function registerAuthHandlers(userDataPath) {
       }
       else {
         log.error("License assignment failed:", response.data.message);
-        if (response.data.inactiveLicenses) {
-          return {
-            success: false,
-            error: response.data.message,
-            inactiveLicenses: response.data.inactiveLicenses,
-          };
-        } else {
-          log.error("License assignment failing gggggg:", response.data);
-          return { success: false, error: response.data.message };
-        }
+        return { success: false, error: "License assignment failed. An unexpected error occurred." };
       }
 
     } catch (error) {
@@ -585,15 +583,18 @@ function registerAuthHandlers(userDataPath) {
             error: error.response.data.error,
             inactiveLicenses: error.response.data.inactiveLicenses,
           };
-        } else {
-          log.error("License assignment failing gggggg:", error);
-          return { success: false, error: error.message };
+        } else if (error.response.data.activeLicenses) {
+          return {
+            success: false,
+            error: error.response.data.error,
+            activeLicenses: error.response.data.activeLicenses
+          };
         }
       }
       else {
         log.error("License connection error:", error.message);
+        return { success: false, error: "License connection failed. An unexpected error occurred." };
       }
-      return { success: false, error: error.message };
     }
   });
 
