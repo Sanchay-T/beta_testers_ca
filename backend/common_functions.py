@@ -313,7 +313,6 @@ def extraction_process(bank, pdf_path, pdf_password, start_date, end_date):
     try:
         if ext == ".pdf":
             idf, text, explicit_lines = extract_with_test_cases(bank, pdf_path, pdf_password, CA_ID)
-            a = validate_bank_statement_returns_error_message(idf)
             name_n_num = explicit_lines if idf.empty else extract_account_details(text)
 
         elif ext == ".csv":
@@ -331,7 +330,6 @@ def extraction_process(bank, pdf_path, pdf_password, start_date, end_date):
             ).idxmax()
             df = df.loc[start_index:] if start_index is not None else pd.DataFrame()
             idf, _ = model_for_pdf(df)
-            a = validate_bank_statement_returns_error_message(idf)
             name_n_num = extract_account_details(extract_text_from_file(pdf_path))
 
         else:
@@ -348,10 +346,10 @@ def extraction_process(bank, pdf_path, pdf_password, start_date, end_date):
             ).idxmax()
             df = df.loc[start_index:] if start_index is not None else pd.DataFrame()
             idf, _ = model_for_pdf(df)
-            a = validate_bank_statement_returns_error_message(idf)
             name_n_num = extract_account_details(extract_text_from_file(pdf_path))
 
         if not idf.empty:
+            a = validate_bank_statement_returns_error_message(idf)
             idf = add_start_n_end_date(idf, start_date, end_date, bank)
 
         return idf, name_n_num, a
@@ -389,7 +387,7 @@ def extraction_process_explicit_lines(bank, pdf_path, pdf_password, start_date, 
             df.sort_index(inplace=True)  # Reorder the DataFrame to update the row positions
 
         idf, _ = model_for_pdf(df)
-        a = validate_bank_statement_returns_error_message(idf)
+
         name_n_num = extract_account_details(extract_text_from_pdf(pdf_path))
 
         # Add start and end date
@@ -414,7 +412,7 @@ def extraction_process_explicit_lines(bank, pdf_path, pdf_password, start_date, 
                 df.sort_index(inplace=True)  # Reorder the DataFrame to update the row positions
 
             idf, _ = model_for_pdf(df)
-            a = validate_bank_statement_returns_error_message(idf)
+
             name_n_num = extract_account_details(extract_text_from_pdf(pdf_path))
 
         idf = add_start_n_end_date(idf, start_date, end_date, bank)
@@ -444,11 +442,12 @@ def extraction_process_explicit_lines(bank, pdf_path, pdf_password, start_date, 
             df.sort_index(inplace=True)  # Reorder the DataFrame to update the row positions
 
         idf, _ = model_for_pdf(df)
-        a = validate_bank_statement_returns_error_message(idf)
+
         name_n_num = extract_account_details(extract_text_from_pdf(pdf_path))
 
         # Add start and end date
         if not idf.empty:
+            a = validate_bank_statement_returns_error_message(idf)
             idf = add_start_n_end_date(idf, start_date, end_date, bank)
             return idf, name_n_num, a
         else:

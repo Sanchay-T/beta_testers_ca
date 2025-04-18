@@ -824,7 +824,8 @@ function generateReportIpc(tmpdir_path) {
             data: {
               caseId: caseId,
               processed: null,
-              errorMessage: response.data.message || "Unknown error",
+              warning: [response.data.message] || "Unknown error",
+              processing_times: response.data?.processing_times || [],
             },
           };
         }
@@ -1139,18 +1140,8 @@ function generateReportIpc(tmpdir_path) {
           data: {
             caseId: caseId,
             processed: null,
-            errorMessage: response.data.message || "Unknown error",
-            // totalTransactions: 0,
-            // eodProcessed: false,
-            // summaryProcessed: false,
-            // failedStatements:
-            //   response.data["pdf_paths_not_extracted"] || null,
-            // failedFiles: Array.from(failedFiles),
-            // successfulFiles: Array.from(successfulFiles),
-            // nerResults: response.data?.ner_results || {
-            //   Name: [],
-            //   "Acc Number": [],
-            // },
+            warning: [response.data.message] || "Unknown error",
+            processing_times: response.data?.processing_times || [],
           },
         };
       }
