@@ -46,7 +46,7 @@ BASE_DIR = get_base_dir()
 logger.info("Base Dir : ", BASE_DIR)
 #from old_bank_extractions import CustomStatement
 import json
-from .code_for_extraction import extract_text_from_pdf, extract_with_test_cases, model_for_pdf, extract_dataframe_from_pdf
+from .code_for_extraction import extract_text_from_pdf, extract_with_test_cases, model_for_pdf, extract_dataframe_from_pdf, validate_bank_statement_returns_error_message
 
 ##EXTRACTION PROCESS
 def extract_text_from_file(file_path):
@@ -349,6 +349,7 @@ def extraction_process(bank, pdf_path, pdf_password, start_date, end_date):
             name_n_num = extract_account_details(extract_text_from_file(pdf_path))
 
         if not idf.empty:
+            a = validate_bank_statement_returns_error_message(idf)
             idf = add_start_n_end_date(idf, start_date, end_date, bank)
 
         return idf, name_n_num, a
@@ -386,6 +387,7 @@ def extraction_process_explicit_lines(bank, pdf_path, pdf_password, start_date, 
             df.sort_index(inplace=True)  # Reorder the DataFrame to update the row positions
 
         idf, _ = model_for_pdf(df)
+
         name_n_num = extract_account_details(extract_text_from_pdf(pdf_path))
 
         # Add start and end date
@@ -410,6 +412,7 @@ def extraction_process_explicit_lines(bank, pdf_path, pdf_password, start_date, 
                 df.sort_index(inplace=True)  # Reorder the DataFrame to update the row positions
 
             idf, _ = model_for_pdf(df)
+
             name_n_num = extract_account_details(extract_text_from_pdf(pdf_path))
 
         idf = add_start_n_end_date(idf, start_date, end_date, bank)
@@ -439,10 +442,12 @@ def extraction_process_explicit_lines(bank, pdf_path, pdf_password, start_date, 
             df.sort_index(inplace=True)  # Reorder the DataFrame to update the row positions
 
         idf, _ = model_for_pdf(df)
+
         name_n_num = extract_account_details(extract_text_from_pdf(pdf_path))
 
         # Add start and end date
         if not idf.empty:
+            a = validate_bank_statement_returns_error_message(idf)
             idf = add_start_n_end_date(idf, start_date, end_date, bank)
             return idf, name_n_num, a
         else:
@@ -585,8 +590,7 @@ def eod(df_original):
     all_df = monthly(total_df)  # Assuming this function exists
     return all_df
 
-def opening_and_closing_bal(edf): 
-        import warnings
+def opening_and_closing_bal(edf, transactions_df):
         opening_bal = {}
         closing_bal = {}
         month_columns = [col for col in edf.columns if col != 'Day']
@@ -610,40 +614,48 @@ def opening_and_closing_bal(edf):
             except ValueError:
                 closing_bal[month_str] = np.nan
             except KeyError:
-                warnings.warn(f"Column '{month_str}' not found during closing balance calculation.", UserWarning)
+                # warnings.warn(f"Column '{month_str}' not found during closing balance calculation.", UserWarning)
                 closing_bal[month_str] = np.nan
             except Exception as e:
-                warnings.warn(f"An unexpected error occurred calculating closing balance for {month_str}: {e}", UserWarning)
+                # warnings.warn(f"An unexpected error occurred calculating closing balance for {month_str}: {e}",UserWarning)
                 closing_bal[month_str] = np.nan
+
         ordered_months = month_columns
         for i, month in enumerate(ordered_months):
             if i == 0:
-                warnings.warn(f"Using balance from Day 1 of month '{month}' in the input DataFrame "
-                              "as the Opening Balance for this first month. Ensure this value "
-                              "represents the start-of-day balance.", UserWarning)
                 try:
-                    first_day_balance_val = edf_data_only.iloc[0][month]
-                    opening_bal[month] = float(first_day_balance_val)
-                except (KeyError, IndexError):
-                    warnings.warn(f"Could not retrieve balance from input DataFrame for Day 1 of the first month ({month}). "
-                                  "Setting opening balance to NaN.", UserWarning)
-                    opening_bal[month] = np.nan
-                except (ValueError, TypeError):
-                    warnings.warn(f"Balance value ('{first_day_balance_val}') from input DataFrame for Day 1 "
-                                  f"of the first month ({month}) could not be converted to float. Setting opening balance to NaN.",
-                                   UserWarning)
-                    opening_bal[month] = np.nan
+                    if len(transactions_df) > 0:
+                        first_month_balance = transactions_df.iloc[0]['Balance']
+                        if isinstance(first_month_balance, str):
+                            first_month_balance = float(first_month_balance.replace(',', ''))
+                        opening_bal[month] = first_month_balance
+                        if 'Description' in transactions_df.columns:
+                            if str(transactions_df.iloc[0]['Description']).lower() != 'openingbalance':
+                                warnings.warn(f"First row description is not 'openingbalance', but using it anyway as instructed.",UserWarning)
+                    else:
+                        raise IndexError("transactions_df is empty")
+                except (KeyError, IndexError, ValueError, TypeError) as e:
+                    warnings.warn(
+                        f"Error retrieving opening balance from the first row of transactions DataFrame: {e}. "
+                        f"Falling back to using balance from Day 1 of month '{month}' in the input DataFrame.",
+                        UserWarning)
+
+                    try:
+                        first_day_balance_val = edf_data_only.iloc[0][month]
+                        opening_bal[month] = float(first_day_balance_val)
+                    except (KeyError, IndexError, ValueError, TypeError) as e2:
+                        # warnings.warn(f"Could not retrieve balance from input DataFrame for Day 1 of the first month ({month}): {e2}. " f"Setting opening balance to NaN.", UserWarning)
+                        opening_bal[month] = np.nan
             else:
                 prev_month = ordered_months[i - 1]
                 if prev_month in closing_bal and not pd.isna(closing_bal[prev_month]):
                     opening_bal[month] = closing_bal[prev_month]
                 else:
-                    warnings.warn(f"Could not find a valid closing balance for the previous month ({prev_month}) "
-                                  f"to use as opening balance for {month}. Setting opening balance to NaN.", UserWarning)
+                    # warnings.warn(f"Could not find a valid closing balance for the previous month ({prev_month}) "f"to use as opening balance for {month}. Setting opening balance to NaN.",UserWarning)
                     opening_bal[month] = np.nan
 
         return opening_bal, closing_bal
-    
+
 def avgs_df( df):
     # quarterly_avg
     if df.shape[1] > 3:
@@ -1168,8 +1180,12 @@ def category_add_ca(df):
             df[col] = df[col].str.lower()
     df["Description"] = df["Description"].str.replace(" ", "")
     excel_file_path = os.path.join(BASE_DIR, "Final_Category.xlsx")
+    excel2 = os.path.join(BASE_DIR, "Customer_category.xlsx")
+    df1 = pd.read_excel(excel_file_path)
+    df2_additional = pd.read_excel(excel2)
+    df2 = pd.concat([df1, df2_additional], ignore_index=True)
     print("excel_file_path -",excel_file_path)
-    df2 = pd.read_excel(excel_file_path)
+    # df2 = pd.read_excel(excel_file_path)
 
     # Initialize the 'Category' column with "Suspense" for all rows
     df["Category"] = "Suspense"
@@ -1668,7 +1684,7 @@ def category_add_ca(df):
                     "toachdrtatacapita", "toachdrtpachmag", "toachdrtpachneo", "toachdrtpcapfrst", "toachdryesbankr",
                     "achracpc",
                     ]
-        pattern = r"(" + "|".join(keywords) + r")"
+        pattern = r"^(" + "|".join(keywords) + r")"
         emi_transactions = df[
             df["Description"].str.contains(pattern, case=False, regex=True) & (~df["Debit"].isnull()) & (
                         df["Debit"] > 0)]
@@ -2557,19 +2573,21 @@ def summary_sheet(idf, open_bal, close_bal, new_tran_df, new_categories = None):
     opening_closing_balance = {month: [open_bal[month], close_bal[month]] for month in open_bal}
 
     excel_file_path = os.path.join(BASE_DIR, "Final_Category.xlsx")
-    print("excel_file_path_bruh -",excel_file_path)
-
+    user_created = os.path.join(BASE_DIR, "Customer_category.xlsx")
+    # print("excel_file_path_bruh -",excel_file_path)
+        # excel_file_path+user_created
     df2 = pd.read_excel(excel_file_path)
+    user_created_df = pd.read_excel(user_created)
     
     df_new = pd.DataFrame()
     
     if new_categories:
         print("new_categories -",new_categories)
         df_new = pd.DataFrame(new_categories)
-        new_excel_file_path = append_to_excel(excel_file_path, new_categories)
+        append_to_excel(user_created, new_categories)
 
     # Append new data
-    df2 = pd.concat([df2, df_new], ignore_index=True)
+    df2 = pd.concat([df2, df_new,user_created_df], ignore_index=True)
 
     sheet_1, sheet_2, sheet_3, sheet_4, sheet_5, sheet_6, missing_months_list = make_summary_great_again(new_tran_df, opening_closing_balance, df2)
     df_list = [sheet_1, sheet_2, sheet_3, sheet_4, sheet_5, sheet_6]
@@ -2826,7 +2844,7 @@ def creditor_list(df):
                         "toachdrmagmafinco",
                         "toachdrmahnimahin", "toachdrmoneywisef", "toachdrneogrowth", "toachdrtatacapita",
                         "toachdrtpachmag",
-                        "toachdrtpachneo", "toachdrtpcapfrst", "toachdryesbankr", "gsttaxpayment",
+                        "toachdrtpachneo", "toachdrtpcapfrst", "toachdryesbankr", "gsttaxpayment","self-chqpaid"
                         ]
     exclude_pattern = "|".join(exclude_keywords)
     Creditor_list = Creditor_list[
@@ -2936,12 +2954,20 @@ def Upi(df):
         return row['Entity']
 
     def apply_regex_to_categories_hdfc(row):
-        if row['Category'] in categories_to_include:
-            if "upi-" in row['Description']:
-                match = re.search(r'(?<=upi-)([a-zA-Z]+)', row['Description'])
-                if match:
-                    return match.group(1)
-        return row['Entity']
+            if row['Category'] in categories_to_include:
+                if "upi-" in row['Description']:
+                    # For the simplest pattern (first type)
+                    match1 = re.search(r'(?<=upi-)([a-zA-Z]+)', row['Description'])
+
+                    # Comprehensive pattern that requires at least one letter in the name
+                    match2 = re.search(r'upi-\d+-([a-zA-Z][a-zA-Z0-9._]*)[-@]', row['Description'])
+
+                    if match2:
+                        return match2.group(1)
+                    elif match1:
+                        return match1.group(1)
+
+            return row['Entity']
 
     def apply_regex_to_empty_entities_sbi(row):
         if row['Category'] in categories_to_include:

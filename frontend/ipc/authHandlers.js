@@ -148,6 +148,7 @@ function registerAuthHandlers() {
 
   ipcMain.handle("auth:signUp", async (event, credentials) => {
     let user;
+    console.log({ credentials });
     const result = await licenseManager.validateLicense(
       credentials.licenseKey,
       credentials.email
@@ -177,7 +178,7 @@ function registerAuthHandlers() {
         const hashedPassword = await bcrypt.hash(credentials.password, 10);
 
         const dateJoined = new Date();
-
+        const expiryDate = new Date(result.data.expiry_timestamp * 1000);
         // console.log("dateJoined : ", dateJoined, "HashPassword : ", hashedPassword);
         try {
           user = await db
@@ -189,6 +190,7 @@ function registerAuthHandlers() {
               role: credentials.role,
               password: hashedPassword,
               dateJoined: dateJoined,
+              expiryDate: expiryDate,
             })
             .returning();
         } catch (err) {
@@ -246,15 +248,14 @@ function registerAuthHandlers() {
     }
   });
 
-
   // Set up IPC handler for direct password reset using local DB
-  ipcMain.handle('auth:reset-password', async (event, data) => {
+  ipcMain.handle("auth:reset-password", async (event, data) => {
     // Validate input data
     if (!data || !data.email || !data.newPassword) {
-      console.error('Password reset failed: Missing required fields');
+      console.error("Password reset failed: Missing required fields");
       return {
         success: false,
-        message: "Email and new password are required."
+        message: "Email and new password are required.",
       };
     }
 
@@ -262,37 +263,43 @@ function registerAuthHandlers() {
     if (data.newPassword.length < 8) {
       return {
         success: false,
-        message: "Password must be at least 8 characters long."
+        message: "Password must be at least 8 characters long.",
       };
     }
 
     try {
-
       if (!db) {
-        console.error('Password reset failed: Database connection error');
+        console.error("Password reset failed: Database connection error");
         return {
           success: false,
-          message: "Database connection error. Please try again later."
+          message: "Database connection error. Please try again later.",
         };
       }
 
       // Find the user by email
       let existingUser;
       try {
-        existingUser = await db.select().from(users).where(eq(users.email, data.email)).get();
+        existingUser = await db
+          .select()
+          .from(users)
+          .where(eq(users.email, data.email))
+          .get();
       } catch (dbError) {
-        log.error('Error querying user:', dbError);
+        log.error("Error querying user:", dbError);
         return {
           success: false,
-          message: "Failed to retrieve user information. Database error."
+          message: "Failed to retrieve user information. Database error.",
         };
       }
 
       if (!existingUser) {
-        log.info(`Password reset attempted for non-existent user: ${data.email}`);
+        log.info(
+          `Password reset attempted for non-existent user: ${data.email}`
+        );
         return {
           success: false,
-          message: "Email/Username not found. Please check your entry and try again."
+          message:
+            "Email/Username not found. Please check your entry and try again.",
         };
       }
 
@@ -302,10 +309,10 @@ function registerAuthHandlers() {
         // const salt = await bcrypt.genSalt(10);
         hashedPassword = await bcrypt.hash(data.newPassword, 10);
       } catch (hashError) {
-        console.error('Error hashing password:', hashError);
+        console.error("Error hashing password:", hashError);
         return {
           success: false,
-          message: "Failed to process your new password. Please try again."
+          message: "Failed to process your new password. Please try again.",
         };
       }
 
@@ -315,39 +322,44 @@ function registerAuthHandlers() {
           .update(users)
           .set({
             password: hashedPassword,
-            lastLogin: new Date()
+            lastLogin: new Date(),
           })
           .where(eq(users.email, data.email))
           .run();
       } catch (updateError) {
-        log.error('Error updating password in database:', updateError);
+        log.error("Error updating password in database:", updateError);
         return {
           success: false,
-          message: "Failed to update password in database. Please try again later."
+          message:
+            "Failed to update password in database. Please try again later.",
         };
       }
 
       log.info(`Password successfully reset for user: ${data.email}`);
       return {
         success: true,
-        message: "Password has been reset successfully"
+        message: "Password has been reset successfully",
       };
     } catch (error) {
       // Catch any other unexpected errors
-      log.error('Unexpected error during password reset:', error);
+      log.error("Unexpected error during password reset:", error);
 
       // Check if it's a database-related error
-      if (error.code && (error.code.includes('SQLITE') || error.code.includes('DB'))) {
+      if (
+        error.code &&
+        (error.code.includes("SQLITE") || error.code.includes("DB"))
+      ) {
         return {
           success: false,
-          message: "Database error occurred. Please try again later."
+          message: "Database error occurred. Please try again later.",
         };
       }
 
       // Generic error response
       return {
         success: false,
-        message: "An unexpected error occurred while resetting your password. Please try again later."
+        message:
+          "An unexpected error occurred while resetting your password. Please try again later.",
       };
     }
   });

@@ -349,10 +349,9 @@ const GenerateReportForm = ({
   //   });
   // };
   const handlePreviewFile = (previewUrl, fileType) => {
-    if(fileType.includes("application/pdf")){
+    if (fileType.includes("application/pdf")) {
       window.open(previewUrl, "_blank");
-    }else{
-
+    } else {
       toast({
         title: "Alert",
         description: "File not supported for preview",
@@ -435,7 +434,7 @@ const GenerateReportForm = ({
       }
 
       // If report name is unique, proceed with report generation
-      handleReportSubmit(
+      const response = await handleReportSubmit(
         setProgress,
         setLoading,
         setToastId,
@@ -449,6 +448,13 @@ const GenerateReportForm = ({
         convertDateFormat,
         caseName || currentCaseName
       );
+
+      if (response) {
+        // reset form
+        setCaseName("");
+        setSelectedFiles([]);
+        setFileDetails([]);
+      }
     } catch (error) {
       console.error("Error checking report name:", error);
       toast({

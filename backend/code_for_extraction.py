@@ -654,6 +654,18 @@ def cleaning(new_df):
     df["Debit"] = df["Debit"].str.replace(r"[^\d.-]+", "", regex=True)
     df["Credit"] = df["Credit"].str.replace(r"[^\d.-]+", "", regex=True)
 
+    # # ── NEW BLOCK ────────────────────────────────────────────────────────────────
+    # # If a majority of rows in either Debit or Credit still have a '+' or '-' sign,
+    # # strip all '+' and '-' from both columns so we end up with absolute values.
+    # total_rows = len(df)
+    # debit_signs  = df["Debit"].str.contains(r"[+-]", regex=True).sum()
+    # credit_signs = df["Credit"].str.contains(r"[+-]", regex=True).sum()
+    #
+    # if debit_signs  > total_rows / 2 or credit_signs > total_rows / 2:
+    #     df["Debit"]  = df["Debit"].str.replace(r"[+-]", "", regex=True)
+    #     df["Credit"] = df["Credit"].str.replace(r"[+-]", "", regex=True)
+    # # ─────────────────────────────────────────────────────────────────────────────
+
     df["Debit"] = pd.to_numeric(df["Debit"], errors="coerce")
     df["Credit"] = pd.to_numeric(df["Credit"], errors="coerce")
     df["Balance"] = pd.to_numeric(df["Balance"], errors="coerce")
@@ -675,9 +687,15 @@ def cleaning(new_df):
 
     df = check_date(df)
     df = df[df['Balance'].notna() & (df['Balance'] != "")]
-    df = df[~((df["Debit"].fillna(0) == 0) & (df["Credit"].fillna(0) == 0))]
+    
+    df = df[~(
+        ((df["Debit"].fillna(0) == 0) & (df["Credit"].fillna(0) == 0)) |
+        ((df["Debit"].fillna(0) > 0) & (df["Credit"].fillna(0) > 0)) |
+        ((df["Debit"].fillna(0) < 0) & (df["Credit"].fillna(0) < 0))
+    )]
+
     df = df[["Value Date", "Description", "Debit", "Credit", "Balance"]]
-    df = df.drop_duplicates()
+    # df = df.drop_duplicates()
     idf = df.reset_index(drop=True)
 
     return idf
@@ -855,26 +873,6 @@ def detect_table_columns(image):
     columns = [obj for obj in objects if obj['label'] == "table column"]
 
     return columns
-
-def plot_results(image, columns):
-    plt.figure(figsize=(16, 10))
-    plt.imshow(image)
-    ax = plt.gca()
-
-    for column in columns:
-        score = column["score"]
-        bbox = column["bbox"]
-        label = column["label"]
-
-        xmin, ymin, xmax, ymax = tuple(bbox)
-        ax.add_patch(plt.Rectangle((xmin, ymin), xmax - xmin, ymax - ymin, fill=False, color="red", linewidth=2))
-
-        text = f'{label}: {score:0.2f}'
-        ax.text(xmin, ymin, text, fontsize=12, color='white',
-                bbox=dict(facecolor='red', alpha=0.5))
-
-    plt.axis('off')
-    plt.show()
 
 def annotate_pdf(pdf_document, columns):
     rightmost_column = None
@@ -1117,6 +1115,109 @@ def validate_bank_statement(df, tolerance=2, raise_error=True):
     return df
 
 
+def validate_bank_statement_returns_error_message(df, tolerance=2, raise_error=True):
+    """
+    Validates a bank statement by checking that each row's balance matches the previous balance +/- credit/debit.
+
+    Args:
+        df: DataFrame with columns 'Date', 'Credit', 'Debit', and 'Balance'
+        tolerance: Maximum allowed difference between expected and actual balance (default: 2)
+        raise_error: Whether to raise an exception on non-sign mismatch (default: True)
+
+    Returns:
+        DataFrame with added columns 'Expected_Balance', 'Match', 'Sign_Error', and 'Difference'
+
+    Raises:
+        BalanceMismatchError: If a balance mismatch (not a sign error) is detected and raise_error is True
+    """
+    # Make a copy to avoid modifying the original
+    validated_df = df.copy()
+    error_message = ""
+
+    # Convert financial columns to numeric (handle strings, commas, currency symbols)
+    for col in ['Credit', 'Debit', 'Balance']:
+        print("0")
+        # First handle common formatting issues
+        if validated_df[col].dtype == 'object':
+            # Remove currency symbols, commas, and spaces
+            validated_df[col] = validated_df[col].astype(str).str.replace('[$£€,\s]', '', regex=True)
+            # Convert empty strings and non-numeric strings to NaN
+            validated_df[col] = pd.to_numeric(validated_df[col], errors='coerce')
+            # Replace NaN with 0
+            validated_df[col].fillna(0, inplace=True)
+
+    # Create new columns
+    validated_df['Expected_Balance'] = 0.0
+    validated_df['Match'] = False
+    validated_df['Sign_Error'] = False
+    validated_df['Difference'] = 0.0
+
+    # First row's expected balance is the same as its actual balance
+    if len(validated_df) > 0:
+        validated_df.loc[0, 'Expected_Balance'] = validated_df.loc[0, 'Balance']
+        validated_df.loc[0, 'Match'] = True
+
+    # Track the true expected balance (not affected by display errors)
+    true_expected_balance = validated_df.loc[0, 'Balance'] if len(validated_df) > 0 else 0.0
+
+    # For each subsequent row, calculate expected balance
+    for i in range(1, len(validated_df)):
+        credit = validated_df.loc[i, 'Credit']
+        debit = validated_df.loc[i, 'Debit']
+        actual_balance = validated_df.loc[i, 'Balance']
+        description = validated_df.loc[i, 'Description']
+
+        # Get date from the appropriate column
+        try:
+            date = validated_df.loc[i, 'Value Date']
+        except KeyError:
+            try:
+                date = validated_df.loc[i, 'Date']
+            except KeyError:
+                date = f"Row {i}"
+
+        # Calculate the true expected balance based on previous true expected balance
+        if credit > 0:
+            true_expected_balance += credit
+        elif debit > 0:
+            true_expected_balance -= debit
+
+        # Round to avoid floating-point comparison issues
+        true_expected_balance = round(true_expected_balance, 2)
+        actual_balance = round(actual_balance, 2)
+
+        # Store the expected balance
+        validated_df.loc[i, 'Expected_Balance'] = true_expected_balance
+
+        # Calculate difference
+        difference = abs(true_expected_balance - actual_balance)
+        validated_df.loc[i, 'Difference'] = difference
+
+        # Check for match within tolerance
+        if difference <= tolerance:
+            validated_df.loc[i, 'Match'] = True
+        # Check for sign error (absolute values are close but signs differ)
+        elif abs(abs(true_expected_balance) - abs(
+                actual_balance)) <= tolerance and true_expected_balance * actual_balance <= 0:
+            validated_df.loc[i, 'Match'] = False
+            validated_df.loc[i, 'Sign_Error'] = True
+            # No error raised for sign errors, just flagged in the dataframe
+
+        # Otherwise, there's some other type of mismatch
+        else:
+            validated_df.loc[i, 'Match'] = False
+
+            if raise_error:
+                error_msg = (f"Balance mismatch at row {i} (Date: {date}): "
+                             f"for Description '{description}'; "
+                             f"Expected balance {true_expected_balance}, "
+                             f"Actual balance {actual_balance}. "
+                             f"Difference: {difference}")
+                error_message = error_msg
+                # raise Exception(error_msg)
+
+    return error_message
+
 def model_for_pdf(df):
     # Simulate cleaning or processing the dataframe
     # print(f"Modeling dataframe: {df}")
@@ -1180,9 +1281,7 @@ def model_for_pdf(df):
 
     print(final_df.head(10))
 
-    final_df = validate_bank_statement(final_df)
     return final_df, lists
-
 
 def new_mode_for_pdf(df, lists):
     print(df.head(20))
@@ -1237,7 +1336,6 @@ def add_column_separators_with_coordinates(pdf_path, coordinates):
     pdf_document.save(processed_pdf_path)
     return processed_pdf_path, llama_2
 
-
 # Optimized test case A
 def run_test_case_A(page, explicit_lines):
     try:
@@ -1248,6 +1346,7 @@ def run_test_case_A(page, explicit_lines):
                 "edge_min_length": 20,
             })
             model_df, lists = model_for_pdf(df)  # Process the DataFrame
+            model_df = validate_bank_statement(model_df)
             return model_df, lists  # No coordinates for Test Case A
         else:
             df = extract_dataframe_from_pdf(page, table_settings={
@@ -1256,7 +1355,8 @@ def run_test_case_A(page, explicit_lines):
                 "horizontal_strategy": "lines",
                 "intersection_x_tolerance": 20,
             })
-            model_df, lists = model_for_pdf(df)  # Process the DataFrame
+            model_df, lists = model_for_pdf(df)
+            model_df = validate_bank_statement(model_df)# Process the DataFrame
             return model_df, lists  # No coordinates for Test Case A
 
     except Exception as e:
@@ -1275,6 +1375,7 @@ def run_test_case_B(page_with_rows_added, explicit_lines):
             })
             print(df.head(20))
             model_df, lists = model_for_pdf(df)  # Process the DataFrame
+            model_df = validate_bank_statement(model_df)
             return model_df, lists  # No coordinates for Test Case A
         else:
             df = extract_dataframe_from_pdf(page_with_rows_added, table_settings={
@@ -1285,6 +1386,7 @@ def run_test_case_B(page_with_rows_added, explicit_lines):
             })
             print(df.head(20))
             model_df, lists = model_for_pdf(df)
+            model_df = validate_bank_statement(model_df)
             return model_df, lists  # No coordinates for Test Case B
     except Exception as e:
         print(f"Test Case B failed: {e}")
@@ -1300,6 +1402,7 @@ def run_test_case_C(page_with_columns_added, explicit_lines):
             "intersection_x_tolerance": 120
         })
         model_df, lists = model_for_pdf(df)
+        model_df = validate_bank_statement(model_df)
         return model_df, lists  # Return coordinates for Test Case C
     except Exception as e:
         print(f"Test Case C failed: {e}")
@@ -1315,6 +1418,7 @@ def run_test_case_D(page_with_rows_n_columns_added, explicit_lines):
             "intersection_x_tolerance": 120,
         })
         model_df, lists = model_for_pdf(df)
+        model_df = validate_bank_statement(model_df)
         return model_df, lists  # Return coordinates for Test Case C
     except Exception as e:
         print(f"Test Case D failed: {e}")

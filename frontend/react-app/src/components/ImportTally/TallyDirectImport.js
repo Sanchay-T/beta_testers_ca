@@ -73,7 +73,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
   const { toast } = useToast();
   const [port, setPort] = useState(reportData.tallyPortNumber);
   const [tallyVersion, setTallyVersion] = useState("TallyPrime");
-  const [selectedBankLedger, setSelectedBankLedger] = useState();
+  const [selectedBankLedger, setSelectedBankLedger] = useState("");
   const [showTallyWarning, setShowTallyWarning] = useState(false);
   const [isEmptyLedgersSelected, setIsEmptyLedgersSelected] = useState(false);
   const [inititalLedgersData, setInititalLedgersData] = useState([]);
@@ -271,7 +271,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
         variant: "destructive",
         type: "error",
       });
-      return;
+      return false;
     }
     if (selectedVoucher === "Payment Receipt Contra" && !selectedBankLedger) {
       // alert("Please enter a company name before uploading.");
@@ -283,7 +283,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
         variant: "destructive",
         type: "error",
       });
-      return;
+      return false;
     }
     // // Check if any non-imported transaction is missing DrLedger or CrLedger
     // const incompleteTransactions = txData.filter((transaction) => {
@@ -310,11 +310,29 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
     // Prepare data for Tally
     const tallyData = txData
       .map((transaction) => {
-        console.log("transaction", transaction);
         // if (transaction.imported) {
-        //   // Already uploaded
+        //   // remove Already uploaded
         //   return null;
         // }
+        let dr_ledger = "";
+        let cr_ledger = "";
+
+        // if (transaction.voucher_type !== "Contra") {
+        dr_ledger =
+          transaction.type === "debit"
+            ? transaction.ledger
+            : selectedBankLedger;
+
+        cr_ledger =
+          transaction.type === "credit"
+            ? transaction.ledger
+            : selectedBankLedger;
+        // } else {
+        //   // Cr is present two times in buildxml, means the ledger will in cr and bank will be in dr for contra
+        //   cr_ledger = transaction.ledger;
+        //   dr_ledger = selectedBankLedger;
+        // }
+
         const tempVoucherType =
           transaction.voucher_type === "Payment Voucher"
             ? "Payment"
@@ -322,15 +340,6 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
             ? "Receipt"
             : transaction.voucher_type || "Payment"; // fallback
 
-        const dr_ledger =
-          transaction.type === "debit"
-            ? transaction.ledger
-            : selectedBankLedger;
-
-        const cr_ledger =
-          transaction.type === "credit"
-            ? transaction.ledger
-            : selectedBankLedger;
         return {
           companyName: companyName,
           invoiceDate: formatDateForTally(
@@ -339,7 +348,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
           effectiveDate: formatDateForTally(transaction.effective_date || ""),
           // effectiveDate: 20240401,
           // referenceNumber: transaction.reference_number || null,
-          billRefernce: transaction.bill_reference || "",
+          billRefernce: transaction.bill_reference || "-",
           DrLedger: isEmptyLedgersSelected ? "Suspense" : dr_ledger,
           CrLedger: isEmptyLedgersSelected ? "Suspense" : cr_ledger,
           amount: transaction.amount,
@@ -352,6 +361,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
 
     setTallyUploadData(tallyData);
     setConfirmationModal(true);
+    return true;
   };
 
   const handleLedgerCreation = async (data) => {
@@ -367,7 +377,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
         type: "error",
       });
 
-      return;
+      return false;
     }
 
     // Check if any non-imported transaction is missing DrLedger or CrLedger
@@ -385,7 +395,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
         variant: "destructive",
         type: "error",
       });
-      return;
+      return false;
     }
 
     // Prepare data for Tally
@@ -414,12 +424,13 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
     setTallyUploadData(tallyData);
     setConfirmationModal(true);
     // updateReportData({ ledgerCreated: true });
+
+    return true;
   };
 
   const handleUploadAfterConfirmation = async () => {
     setLoading2(true);
     try {
-      console.log("tallyUploadData", tallyUploadData);
       let response;
       if (selectedVoucher === "Payment Receipt Contra") {
         response = await window.electron.uploadToTally(tallyUploadData, port);
@@ -457,8 +468,6 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
         );
       }
 
-      console.log("response11", response);
-
       const newDataToRender = dataToRender.map((ledger) => {
         if (successIds.includes(ledger.id)) {
           return {
@@ -485,8 +494,6 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
       // Show summary
       setFailedTransactions(failedTransactions);
       setSuccessIds(successIds);
-
-      console.log({ afterCreation: response });
 
       // // Store failed reasons in localStorage
       // const storedReasons = JSON.parse(
@@ -533,7 +540,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
     }
   };
 
-  const handleLedgerImport = async () => {
+  const handleLedgerImport = async (isFromRefresh = false) => {
     // if (!companyName.trim()) {
     //   toast({
     //     title: "Error",
@@ -547,7 +554,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
     // }
 
     const response = await window.electron.importLedgers(companyName, port);
-    console.log({ response });
+    console.log({ importLedgers: response });
     if (response.success) {
       const ledgerData = response.ledgerData;
       removeDuplicateLedgers(ledgerData);
@@ -555,12 +562,14 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
 
       updateReportData({ importedLedgerData: ledgerData });
     }
-    // toast({
-    //   title: "Success",
-    //   description: `Imported Ledgers and removed already existing ones from above list.`,
-    //   duration: 3000,
-    //   variant: "success",
-    // });
+    if (isFromRefresh) {
+      toast({
+        title: "Success",
+        description: `Imported Ledgers and removed already existing ones from above list.`,
+        duration: 3000,
+        variant: "success",
+      });
+    }
   };
 
   const removeDuplicateLedgers = (
@@ -601,14 +610,12 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
     console.log({ uniqueLedgerNames });
 
     let updatedLedgersData;
-    console.log("AIYAZ", { inititalLedgersData });
 
     // Instead of just marking as imported, also fill in details from Tally
     updatedLedgersData = dataToRender.map((ledger) => {
       // If the ledger is already in Tally
       if (uniqueLedgerNames.includes(ledger.ledger_name)) {
         const tallyLedgerData = tallyLedgersMap.get(ledger.ledger_name);
-        console.log({ tallyLedgerData });
         return {
           ...ledger,
           imported: true,
@@ -635,8 +642,6 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
       return ledger;
     });
 
-    console.log({ updatedLedgersData });
-
     // Sort the data so non-imported ledgers appear first
     updatedLedgersData.sort((a, b) => {
       // Sort by imported status first (false comes before true)
@@ -647,14 +652,11 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
       return a.ledger_name.localeCompare(b.ledger_name);
     });
 
-    console.log({ updatedLedgersData });
-
     // Check if all ledgers are imported
     const allLedgersImported = updatedLedgersData
       ? updatedLedgersData.every((ledger) => ledger.imported === true)
       : false;
 
-    console.log({ allLedgersImported });
     // Update ledger creation status in localStorage based on whether all ledgers are imported
     if (allLedgersImported) {
       localForage
@@ -673,7 +675,6 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
         });
     }
 
-    console.log({ updatedLedgersData });
     setDataToRender(updatedLedgersData);
   };
 
@@ -932,11 +933,11 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
     setDataToRender([]);
   };
 
-  const handleUploadClick = (transactions = null) => {
+  const handleUploadClick = async (transactions = null) => {
     if (selectedVoucher === "Payment Receipt Contra") {
-      handleTallyUpload(transactions);
+      return await handleTallyUpload(transactions);
     } else if (selectedVoucher === "Ledgers") {
-      handleLedgerCreation(transactions);
+      return await handleLedgerCreation(transactions);
     }
   };
 
@@ -1093,6 +1094,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
                   selectedVoucher={selectedVoucher}
                   caseId={caseId}
                   handleLedgerImport={handleLedgerImport}
+                  selectedBankLedger={selectedBankLedger}
                   setSelectedBankLedger={setSelectedBankLedger}
                 />
               ) : (

@@ -100,6 +100,9 @@ async def root(data: str = Body(...)):
 @app.post("/analyze-statements/")
 async def analyze_bank_statements(request: BankStatementRequest):
     try:
+
+        start_total = time.time()
+
         logger.info(f"Received request with banks: {request.bank_names}")
         print("Start Date : ", request.start_date)
         print("End Date : ", request.end_date)
@@ -176,6 +179,7 @@ async def analyze_bank_statements(request: BankStatementRequest):
         print("Time taken to process NER", end_ner-start_ner)
         
 
+        start_extraction = time.time()
 
         logger.info("Starting extraction")
         whole_transaction_sheet = request.whole_transaction_sheet or None
@@ -194,9 +198,15 @@ async def analyze_bank_statements(request: BankStatementRequest):
 
                 
         result = start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_date, end_date, CA_ID, progress_data,whole_transaction_sheet=whole_transaction_sheet,aiyazs_array_of_array=temp_aiyaz_array_of_array)
-        
+        end_extraction = time.time()
+        end_total = time.time()
+        total_time = end_total - start_total
+
+        print("Time taken for extraction:", end_extraction-start_extraction, "seconds")
+
         print("RESULT GENERATED")
         logger.info("Extraction completed successfully")
+        logger.info("Result = ", result)
         return {
             "status": "success",
             "message": "Bank statements analyzed successfully",
@@ -204,14 +214,25 @@ async def analyze_bank_statements(request: BankStatementRequest):
             "pdf_paths_not_extracted": result["pdf_paths_not_extracted"],
             "ner_results": ner_results, 
             "success_page_number": result["success_page_number"],
-            "missing_months_list":result["missing_months_list"]
+            "missing_months_list":result["missing_months_list"],
+            "processing_times": {
+                "ner_processing": end_ner - start_ner,
+                "extraction": end_extraction - start_extraction,
+                "total": total_time
+            }
         }
+    
 
     except Exception as e:
+        print(e)
         logger.error(f"Error processing bank statements: {str(e)}")
-        raise HTTPException(
-            status_code=500, detail=f"Error processing bank statements: {str(e)}"
-        )
+        return {
+            "status": "failed",
+            "message": str(e),
+        }
+        # raise HTTPException(
+        #     status_code=500, detail=f"Error processing bank statements: {str(e)}"
+        # )
     
 
 

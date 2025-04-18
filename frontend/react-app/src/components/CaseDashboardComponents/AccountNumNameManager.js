@@ -34,7 +34,6 @@ import {
 import { useReportContext } from "../../contexts/ReportContext";
 import { useToast } from "../../hooks/use-toast";
 
-
 const AccountNumNameManager = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -97,10 +96,10 @@ const AccountNumNameManager = () => {
       toast({
         title: "No changes to save",
         type: "info",
-        variant:"subtle",
+        variant: "subtle",
         duration: 5000,
         isClosable: true,
-      })
+      });
       return;
     }
 
@@ -140,19 +139,19 @@ const AccountNumNameManager = () => {
             successCount !== 1 ? "s" : ""
           }${failCount > 0 ? `. Failed to update ${failCount}.` : ""}`,
           type: "success",
-          variant:"destructive",
+          variant: "success",
           duration: 5000,
           isClosable: true,
-        })
+        });
       } else if (failCount > 0) {
         // alert("Failed to save changes. Please try again.");
         toast({
           title: "Failed to save changes. Please try again.",
           type: "error",
-          variant:"solid",
+          variant: "solid",
           duration: 5000,
           isClosable: true,
-        })
+        });
       }
 
       // Refresh the statements after saving
@@ -164,11 +163,10 @@ const AccountNumNameManager = () => {
       toast({
         title: "Failed to save changes. Please try again.",
         type: "error",
-        variant:"solid",
+        variant: "solid",
         duration: 5000,
         isClosable: true,
-      })
-      
+      });
     } finally {
       setIsSaving(false);
     }
@@ -186,13 +184,11 @@ const AccountNumNameManager = () => {
       statement.filePath?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-
   // Get current page statements
   const currentStatements = filteredStatements.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-
 
   if (loading) {
     return (
@@ -212,7 +208,6 @@ const AccountNumNameManager = () => {
 
   return (
     <div className="p-8 space-y-8">
-      
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
@@ -254,7 +249,9 @@ const AccountNumNameManager = () => {
                 return (
                   <TableRow
                     key={statement.id}
-                    className={modifiedStatements.has(statement.id) ? "bg-muted/50" : ""}
+                    className={
+                      modifiedStatements.has(statement.id) ? "bg-muted/50" : ""
+                    }
                   >
                     <TableCell>
                       {(currentPage - 1) * itemsPerPage + index + 1}
@@ -297,7 +294,6 @@ const AccountNumNameManager = () => {
               })}
             </TableBody>
           </Table>
-
 
           <AlertDialog>
             <div className="flex justify-center">

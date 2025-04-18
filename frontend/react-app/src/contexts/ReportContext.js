@@ -20,6 +20,7 @@ export const ReportProvider = ({ children }) => {
     selectedCompany: null,
     importedLedgerData: [],
     tallyPortNumber: 9000,
+    categoriesArray:[],
     categoryOptions: [
       "Bank Charges",
       "Bank Interest Received",

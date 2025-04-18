@@ -44,7 +44,7 @@ from ...common_functions import (process_excel_to_json, process_name_n_num_df, c
 def save_to_excel(df, name_n_num_df, account_number):
     # Generate all necessary DataFrames
     eod_sheet_df = eod(df)
-    opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df)
+    opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df,df)
 
     summary_df_list, missing_months_list = summary_sheet(df, opening_bal, closing_bal, df)
 
@@ -432,7 +432,7 @@ def save_to_excel(df, name_n_num_df, account_number):
 def returns_json_output_of_all_sheets(df, name_n_num_df):
     # Generate all necessary DataFrames
     eod_sheet_df = eod(df)
-    opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df)
+    opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df,df)
 
     summary_df_list, missing_months_list = summary_sheet(df, opening_bal, closing_bal, df)
 
@@ -504,7 +504,7 @@ def returns_json_output_of_all_sheets(df, name_n_num_df):
 
 def refresh_category_all_sheets(df,eod_sheet_df, new_categories):
     # eod_sheet_df = eod(df)
-    opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df)
+    opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df,df)
 
     if not new_categories:
         summary_df_list, missing_months_list = summary_sheet(df, opening_bal, closing_bal, df)
@@ -585,7 +585,7 @@ def individual_summary(transactions_df):
     
     eod_sheet_df = eod(transactions_df)
     print(eod_sheet_df.head(10))
-    opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df)
+    opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df,transactions_df)
     # named print 
     print("opening_bal", opening_bal)
     print("closing_bal", closing_bal)
@@ -662,6 +662,8 @@ def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_
                                                                          end_date)
 
         print(f"Extracted {bank} bank statement successfully")
+      
+        pdf_paths_not_extracted["respective_reasons_for_error"].append(errorz[bank])
         # account_number += f"{name_dfs[bank][1][:4]}x{name_dfs[bank][1][-4:]}_"
         # Check if the extracted dataframe is empty
         if dfs[bank].empty:

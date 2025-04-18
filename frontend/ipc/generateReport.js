@@ -127,7 +127,7 @@ const storeTransactionsBatch = async (transformedTransactions) => {
       }
     }
 
-    log.info({ uniqueTransactions });
+    // log.info({ uniqueTransactions });
 
     if (uniqueTransactions.length === 0) {
       log.info("No new unique transactions to store");
@@ -464,7 +464,7 @@ const processStatementAndEOD = async (
 
 const processSummaryData = async (parsedData, caseName) => {
   log.info("Processing summary data for case:", caseName);
-  log.info("Parsed Data in summary:", parsedData);
+  // log.info("Parsed Data in summary:", parsedData);
   try {
     const validCaseId = await getOrCreateCase(caseName);
 
@@ -816,8 +816,26 @@ function generateReportIpc(tmpdir_path) {
           validateStatus: (status) => status === 200,
         });
 
-        log.info("API response received:", response.data.length);
+        if (response.data.status == "failed") {
+          log.info("API response failed:", response.data);
+          return {
+            success: false,
+            data: {
+              caseId: caseId,
+              processed: null,
+              warning: [response.data.message] || "Unknown error",
+              processing_times: response.data?.processing_times || [],
+            },
+          };
+        }
+
+        log.info("API response received:", response);
         log.info("missing month list", response.data?.["missing_months_list"]);
+        log.info(
+          "pdf_paths_not_extracted",
+          response.data?.["pdf_paths_not_extracted"]
+        );
+        log.info("time taken to process", response.data?.["processing_times"]);
 
         // Step 3: Handle failed extractions
         if (response.data?.["pdf_paths_not_extracted"]?.paths?.length > 0) {
@@ -871,11 +889,14 @@ function generateReportIpc(tmpdir_path) {
                 Name: [],
                 "Acc Number": [],
               },
+              processing_times: response.data?.processing_times || [],
+              warning:
+                response.data?.["pdf_paths_not_extracted"][
+                  "respective_reasons_for_error"
+                ] || null,
             },
           };
         }
-
-        console.log("parsedData transactions", parsedData.Transactions);
 
         const transactions_temp = (parsedData.Transactions || []).filter(
           (transaction) => {
@@ -1010,6 +1031,11 @@ function generateReportIpc(tmpdir_path) {
               "Acc Number": [],
             },
             missingMonthsList: response.data?.["missing_months_list"] || [],
+            warning:
+              response.data?.["pdf_paths_not_extracted"][
+                "respective_reasons_for_error"
+              ] || null,
+            processing_times: response.data?.processing_times || [],
           },
         };
       } catch (error) {
@@ -1106,6 +1132,19 @@ function generateReportIpc(tmpdir_path) {
         validateStatus: (status) => status === 200,
       });
 
+      if (response.data.status == "failed") {
+        log.info("API response failed:", response.data);
+        return {
+          success: false,
+          data: {
+            caseId: caseId,
+            processed: null,
+            warning: [response.data.message] || "Unknown error",
+            processing_times: response.data?.processing_times || [],
+          },
+        };
+      }
+
       log.info("Response from fastapi: ", response.data);
 
       let failedPdfPaths = [];
@@ -1160,6 +1199,11 @@ function generateReportIpc(tmpdir_path) {
                 Name: [],
                 "Acc Number": [],
               },
+              warning:
+                response.data?.["pdf_paths_not_extracted"][
+                  "respective_reasons_for_error"
+                ] || null,
+              processing_times: response.data?.processing_times || [],
             },
           };
         }
@@ -1301,6 +1345,11 @@ function generateReportIpc(tmpdir_path) {
           failedStatements: response.data["pdf_paths_not_extracted"] || null,
           failedFiles: failedFiles,
           successfulFiles: successfulFiles,
+          processing_times: response.data?.processing_times || [],
+          warning:
+            response.data?.["pdf_paths_not_extracted"][
+              "respective_reasons_for_error"
+            ] || null,
         },
       };
     } catch (error) {

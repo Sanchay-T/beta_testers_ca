@@ -273,7 +273,7 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
-            <DropdownMenuItem>
+            {/* <DropdownMenuItem>
               <Sparkles className="mr-2 h-4 w-4" />
               <span>Refer and Earn</span>
             </DropdownMenuItem>
@@ -288,7 +288,7 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
             <DropdownMenuItem>
               <Bell className="mr-2 h-4 w-4" />
               <span>Notifications</span>
-            </DropdownMenuItem>
+            </DropdownMenuItem> */}
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleLogout}>

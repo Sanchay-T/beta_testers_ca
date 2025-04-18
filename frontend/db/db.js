@@ -5,20 +5,18 @@ const { exec } = require("child_process");
 require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
 
 const isDev = process.env.NODE_ENV === "development";
-log.info('process.env.NODE_ENV', process.env.NODE_ENV);
+log.info("process.env.NODE_ENV", process.env.NODE_ENV);
 // log.info("DB App userData path : ", app.getPath("userData"));
 const BASE_DIR = isDev ? __dirname : process.resourcesPath;
 const drizzleConfigPath = path.resolve(__dirname, "../drizzle.config.js");
-log.info('drizzleConfigPath', drizzleConfigPath);
+log.info("drizzleConfigPath", drizzleConfigPath);
 
-
-log.info('DB process.env.DB_FILE_NAME', process.env.DB_FILE_NAME);
+log.info("DB process.env.DB_FILE_NAME", process.env.DB_FILE_NAME);
 const { drizzle } = require("drizzle-orm/libsql");
 const { migrate } = require("drizzle-orm/libsql/migrator");
 
 // const { createClient } = require("@libsql/client");
 // const { schema } = require("./schema");
-
 
 class DatabaseManager {
   static instance = null;
@@ -47,21 +45,31 @@ class DatabaseManager {
     }
 
     try {
-      const dbUrl = `file:${isDev
-        ? path.resolve(__dirname, "../db.sqlite3")
-        : path.join(userDataPath, "db.sqlite3")}`;
+      const dbName =
+        (process.env.FOR_ATS == "true" ? "ats_db.sqlite3" : "db.sqlite3") ||
+        "db.sqlite3";
+      log.info("DB process.env.FOR_ATS", process.env.FOR_ATS, {
+        dbName,
+      });
+      const dbUrl = `file:${
+        isDev
+          ? path.resolve(__dirname, `../${dbName}`)
+          : path.join(userDataPath, `${dbName}`)
+      }`;
 
       log.info("Resolved dbUrl:", dbUrl);
 
       if (!dbUrl) {
-        throw new Error("DATABASE_URL is not defined in the environment variables.");
+        throw new Error(
+          "DATABASE_URL is not defined in the environment variables."
+        );
       }
 
       this.#db = drizzle(dbUrl);
       // this.#initialized = true;
 
       const migrationsFolder = path.resolve(__dirname, "../drizzle");
-      log.info('migrationsFolder : ', migrationsFolder);
+      log.info("migrationsFolder : ", migrationsFolder);
 
       migrate(this.#db, {
         migrationsFolder: migrationsFolder, // Ensure this path points to your migrations folder
@@ -73,7 +81,6 @@ class DatabaseManager {
           log.error("Error running migrations:", error);
           throw error;
         });
-
     } catch (error) {
       log.error("Error initializing database:", error);
       throw error;

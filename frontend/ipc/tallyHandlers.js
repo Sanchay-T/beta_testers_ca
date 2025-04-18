@@ -395,7 +395,7 @@ function registerTallyIpc() {
           })
         );
 
-        log.info("transactionsWithTallyStatus", transactionsWithTallyStatus);
+        // log.info("transactionsWithTallyStatus", transactionsWithTallyStatus);
 
         return transactionsWithTallyStatus;
       } catch (error) {
