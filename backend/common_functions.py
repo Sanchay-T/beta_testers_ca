@@ -386,16 +386,18 @@ def extraction_process_explicit_lines(bank, pdf_path, pdf_password, start_date, 
             df.index = df.index + 1  # Shift all indices by 1
             df.sort_index(inplace=True)  # Reorder the DataFrame to update the row positions
 
-        idf, _ = model_for_pdf(df)
-
-        name_n_num = extract_account_details(extract_text_from_pdf(pdf_path))
-
+        try:
+            idf, _ = model_for_pdf(df)
+        except Exception as e:
+            idf = empty_idf
+            
         # Add start and end date
         if idf.empty:
             df = extract_dataframe_from_pdf(pdf_path, table_settings={
                 "vertical_strategy": "explicit",
                 "explicit_vertical_lines": explicit_lines,
                 "horizontal_strategy": "text",
+                "intersection_x_tolerance": 120,
             })
 
             all_null = all(label[1] == "null" for label in labels)
@@ -413,46 +415,16 @@ def extraction_process_explicit_lines(bank, pdf_path, pdf_password, start_date, 
 
             idf, _ = model_for_pdf(df)
 
-            name_n_num = extract_account_details(extract_text_from_pdf(pdf_path))
-
         idf = add_start_n_end_date(idf, start_date, end_date, bank)
+        name_n_num = extract_account_details(extract_text_from_pdf(pdf_path))
+        a = validate_bank_statement_returns_error_message(idf)
 
         return idf, name_n_num, a
 
     except Exception as e:
-        
-        df = extract_dataframe_from_pdf(pdf_path, table_settings={
-            "vertical_strategy": "explicit",
-            "explicit_vertical_lines": explicit_lines,
-            "horizontal_strategy": "text",
-            "intersection_x_tolerance": 120,
-        })
-
-        all_null = all(label[1] == "null" for label in labels)
-
-        if not all_null:
-            new_row = [None] * len(df.columns)  # Create a blank row with the same number of columns
-            for index, label_type in labels:
-                if index < len(new_row):
-                    new_row[index] = label_type
-
-            # Insert the new row at the top of the DataFrame
-            df.loc[-1] = new_row  # Add the new row with a negative index to place it at the top
-            df.index = df.index + 1  # Shift all indices by 1
-            df.sort_index(inplace=True)  # Reorder the DataFrame to update the row positions
-
-        idf, _ = model_for_pdf(df)
-
-        name_n_num = extract_account_details(extract_text_from_pdf(pdf_path))
-
-        # Add start and end date
-        if not idf.empty:
-            a = validate_bank_statement_returns_error_message(idf)
-            idf = add_start_n_end_date(idf, start_date, end_date, bank)
-            return idf, name_n_num, a
-        else:
-            return empty_idf, default_name_n_num, str(e)
-
+        er = "There was an exception error, please contact sales team for help."
+        return empty_idf, default_name_n_num, er
+    
 ##EOD
 def monthly( df):
     # add a new row with the average of month values in each column
@@ -2385,6 +2357,10 @@ def append_to_excel(file_path, new_data):
     return file_path
 
 def make_summary_great_again(df1, opening_closing_balance, df2):
+
+
+
+
     def generate_summary(table, value_column, summary_name):
         # Create pivot table
         summary = table.pivot_table(
