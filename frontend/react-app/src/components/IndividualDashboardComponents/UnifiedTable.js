@@ -2079,9 +2079,15 @@ const DataTable = ({
                                 >
                                   {/* Trigger button styled like a Select */}
                                   <div
-                                    className="flex items-center justify-between w-full h-10 px-3 py-2 text-sm border rounded-md border-input bg-background cursor-pointer"
+                                    className={`flex items-center justify-between w-full h-10 px-3 py-2 text-sm border rounded-md ${
+                                      globalSelectedRows.has(row.id)
+                                        ? "bg-gray-100 text-gray-500 cursor-not-allowed opacity-70 border-slate-200"
+                                        : "bg-background cursor-pointer border-input"
+                                    }`}
                                     onClick={() => {
-                                      handleCategorySelectOpenChange(row.id);
+                                      if (!globalSelectedRows.has(row.id)) {
+                                        handleCategorySelectOpenChange(row.id);
+                                      }
                                     }}
                                   >
                                     <span
