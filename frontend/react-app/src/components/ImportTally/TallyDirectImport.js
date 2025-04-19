@@ -265,6 +265,14 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
 
     return dateString;
   };
+  function convertEffectiveDateToTallyFormat(isoDateString) {
+    const date = new Date(isoDateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}${month}${day}`;
+  }
 
   const handleTallyUpload = async (txData) => {
     // “txData” is optional—ManualEntryTable might pass it.
@@ -323,6 +331,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
         // }
         let dr_ledger = "";
         let cr_ledger = "";
+        console.log("transaction.effective_date", transaction.effective_date);
 
         // if (transaction.voucher_type !== "Contra") {
         dr_ledger =
@@ -356,13 +365,14 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
             : transaction.voucher_type === "Receipt Voucher"
             ? "Receipt"
             : transaction.voucher_type || "Payment"; // fallback
-
         return {
           companyName: companyName,
           invoiceDate: formatDateForTally(
             transaction.date || transaction.invoice_date || ""
           ),
-          effectiveDate: formatDateForTally(transaction.effective_date || ""),
+          effectiveDate: convertEffectiveDateToTallyFormat(
+            transaction.effective_date || ""
+          ),
           // effectiveDate: 20240401,
           // referenceNumber: transaction.reference_number || null,
           billRefernce: transaction.bill_reference || "-",

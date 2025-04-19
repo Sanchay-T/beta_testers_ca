@@ -103,6 +103,7 @@ function registerTallyIpc() {
       const voucherName = row.voucherName;
       // const isContra = voucherName === "Contra";
       let xmlContent = null;
+      // console.log({ row });
       // tallyUploadData[i].invoiceDate = "20220401"; // Hardcoded date for now
 
       if (voucherName === "Payment") {
