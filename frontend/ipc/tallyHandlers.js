@@ -103,7 +103,7 @@ function registerTallyIpc() {
       const voucherName = row.voucherName;
       // const isContra = voucherName === "Contra";
       let xmlContent = null;
-      // tallyUploadData[i].invoiceDate = "20250401"; // Hardcoded date for now
+      // tallyUploadData[i].invoiceDate = "20220401"; // Hardcoded date for now
 
       if (voucherName === "Payment") {
         xmlContent = buildTallyXmlPayment(row);
@@ -112,6 +112,8 @@ function registerTallyIpc() {
       } else if (voucherName === "Contra") {
         xmlContent = buildTallyXmlContra(row);
       }
+
+      // log.info({ xmlContent });
 
       try {
         const response = await axios.post(tallyPath, xmlContent, {
