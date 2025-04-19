@@ -266,6 +266,19 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
     return dateString;
   };
   function convertEffectiveDateToTallyFormat(isoDateString) {
+    console.log({ isoDateString });
+
+    // If the date is null, empty, or invalid, return today's date in Tally format
+    if (!isoDateString || isoDateString === "") {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, "0");
+      const day = String(today.getDate()).padStart(2, "0");
+
+      return `${year}${month}${day}`;
+    }
+
+    // Otherwise process the given date
     const date = new Date(isoDateString);
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -325,10 +338,10 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
     // Prepare data for Tally
     const tallyData = txData
       .map((transaction) => {
-        // if (transaction.imported) {
-        //   // remove Already uploaded
-        //   return null;
-        // }
+        if (transaction.imported) {
+          // remove Already uploaded
+          return null;
+        }
         let dr_ledger = "";
         let cr_ledger = "";
         console.log("transaction.effective_date", transaction.effective_date);

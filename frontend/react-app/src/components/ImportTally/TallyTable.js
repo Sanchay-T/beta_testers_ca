@@ -13,9 +13,11 @@ import {
   Loader2,
   RefreshCw,
   Filter,
-  FileSpreadsheet,Settings,Info
+  FileSpreadsheet,
+  Settings,
+  Info,
 } from "lucide-react";
-import { Card, CardContent, CardHeader,CardTitle } from "../ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import {
   Table,
   TableHeader,
@@ -61,11 +63,7 @@ import { debounce } from "lodash"; // or write a small debounce of your own
 import localForage, { clear } from "localforage";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "../ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 const ledgerGroups = [
   "Branch / Divisions",
   "Capital Account",
@@ -115,7 +113,10 @@ const TallyTable = ({
   handleLedgerImport,
   selectedBankLedger,
   setSelectedBankLedger,
-  isEmptyLedgersSelected,setIsEmptyLedgersSelected,port,handlePortChange
+  isEmptyLedgersSelected,
+  setIsEmptyLedgersSelected,
+  port,
+  handlePortChange,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [transactions, setTransactions] = useState([]);
@@ -760,7 +761,7 @@ const TallyTable = ({
   };
 
   const handleUploadToTally = async () => {
-    let data = transactions;
+    let data = filteredData;
     // Check if any rows are selected
     if (selectedTransactions.length > 0) {
       data = transactions.filter((tx) => selectedTransactions.includes(tx.id));
@@ -1123,324 +1124,348 @@ const TallyTable = ({
 
   return (
     <Card className="min-w-full max-w-[0] ">
-<CardHeader className="p-4 space-y-4 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800 rounded-lg border border-slate-100 dark:border-slate-700">
-      {/* Title and main controls row */}
-      <div className="flex flex-wrap md:flex-nowrap items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-slate-700">
-        <div className="flex items-center gap-2">
-          <FileSpreadsheet className="w-5 h-5 text-emerald-500" />
-          <CardTitle className="text-lg dark:text-slate-300">
-            {selectedVoucher === "Ledgers"
-              ? "Create Ledgers"
-              : selectedVoucher + " Voucher"}
-          </CardTitle>
-          
-          {/* Case ID badge */}
-          {/* <span className="text-xs bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200 py-1 px-2 rounded-full border border-slate-200 dark:border-slate-600 ml-2">
+      <CardHeader className="p-4 space-y-4 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800 rounded-lg border border-slate-100 dark:border-slate-700">
+        {/* Title and main controls row */}
+        <div className="flex flex-wrap md:flex-nowrap items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-slate-700">
+          <div className="flex items-center gap-2">
+            <FileSpreadsheet className="w-5 h-5 text-emerald-500" />
+            <CardTitle className="text-lg dark:text-slate-300">
+              {selectedVoucher === "Ledgers"
+                ? "Create Ledgers"
+                : selectedVoucher + " Voucher"}
+            </CardTitle>
+
+            {/* Case ID badge */}
+            {/* <span className="text-xs bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200 py-1 px-2 rounded-full border border-slate-200 dark:border-slate-600 ml-2">
             {caseId ? `Case ID: ${caseId}` : ''}
           </span> */}
-        </div>
-        
-        <div className="flex items-center gap-3 flex-wrap">
-          {/* Empty ledgers checkbox */}
-          {selectedVoucher === "Payment Receipt Contra" && (
-            <div className="flex items-center">
-              <Checkbox
-                id="empty-ledger"
-                checked={isEmptyLedgersSelected}
-                onCheckedChange={setIsEmptyLedgersSelected}
-                className="h-4 w-4 mr-2"
+          </div>
+
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Empty ledgers checkbox */}
+            {selectedVoucher === "Payment Receipt Contra" && (
+              <div className="flex items-center">
+                <Checkbox
+                  id="empty-ledger"
+                  checked={isEmptyLedgersSelected}
+                  onCheckedChange={setIsEmptyLedgersSelected}
+                  className="h-4 w-4 mr-2"
+                />
+                <label
+                  htmlFor="empty-ledger"
+                  className="text-sm font-medium text-gray-700 dark:text-gray-300 select-none cursor-pointer mr-1"
+                >
+                  Upload without ledgers
+                </label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="h-4 w-4 text-gray-400 cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="w-64 p-2">
+                      <p className="text-xs">
+                        Transactions will be uploaded as Suspense rather than
+                        associated ledger.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            )}
+
+            {/* Port configuration */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                Port:
+              </span>
+              <Input
+                type="number"
+                value={port}
+                onChange={handlePortChange}
+                className="h-8 w-20 px-2 py-1 text-sm"
               />
-              <label
-                htmlFor="empty-ledger"
-                className="text-sm font-medium text-gray-700 dark:text-gray-300 select-none cursor-pointer mr-1"
-              >
-                Upload without ledgers
-              </label>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Info className="h-4 w-4 text-gray-400 cursor-help" />
-                  </TooltipTrigger>
-                  <TooltipContent className="w-64 p-2">
-                    <p className="text-xs">
-                      Transactions will be uploaded as Suspense rather
-                      than associated ledger.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="icon" className="h-8 w-8 p-0">
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-60 p-3">
+                  <div className="flex flex-col gap-2">
+                    <h4 className="font-medium text-sm">Advanced Settings</h4>
+                    <div className="grid gap-2">
+                      <div className="grid grid-cols-3 items-center gap-2">
+                        <label className="text-xs">Timeout (ms):</label>
+                        <Input
+                          type="number"
+                          className="col-span-2 h-7 text-xs"
+                          defaultValue="5000"
+                        />
+                      </div>
+                      <div className="grid grid-cols-3 items-center gap-2">
+                        <label className="text-xs">Host:</label>
+                        <Input
+                          type="text"
+                          className="col-span-2 h-7 text-xs"
+                          defaultValue="localhost"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
-          )}
-          
-          {/* Port configuration */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-              Port:
-            </span>
-            <Input
-              type="number"
-              value={port}
-              onChange={handlePortChange}
-              className="h-8 w-20 px-2 py-1 text-sm"
-            />
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="icon" className="h-8 w-8 p-0">
-                  <Settings className="h-4 w-4" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-60 p-3">
-                <div className="flex flex-col gap-2">
-                  <h4 className="font-medium text-sm">
-                    Advanced Settings
-                  </h4>
-                  <div className="grid gap-2">
-                    <div className="grid grid-cols-3 items-center gap-2">
-                      <label className="text-xs">Timeout (ms):</label>
-                      <Input
-                        type="number"
-                        className="col-span-2 h-7 text-xs"
-                        defaultValue="5000"
-                      />
-                    </div>
-                    <div className="grid grid-cols-3 items-center gap-2">
-                      <label className="text-xs">Host:</label>
-                      <Input
-                        type="text"
-                        className="col-span-2 h-7 text-xs"
-                        defaultValue="localhost"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
-      </div>
-
-      {/* Company selection and quick actions */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-        {/* Company selection - takes 4 columns on desktop */}
-        <div className="md:col-span-4">
-          <div className="space-y-1.5">
-            <label htmlFor="companyName" className="text-xs font-medium text-slate-500 dark:text-slate-400">
-              Company
-            </label>
-            <Select
-              value={companyName}
-              onValueChange={setCompanyName}
-              disabled={!reportData.importedLedgerData?.length}
-            >
-              <SelectTrigger
-                id="companyName"
-                className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm"
-              >
-                {!reportData.importedLedgerData?.length ? (
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
-                    <span className="text-slate-400">Loading companies...</span>
-                  </div>
-                ) : (
-                  <SelectValue placeholder="Select Company Name" />
-                )}
-              </SelectTrigger>
-              <SelectContent>
-                {reportData.importedLedgerData
-                  ?.map((data) => data.companyName)
-                  .map((name) => (
-                    <SelectItem key={name} value={name}>
-                      {name}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
           </div>
         </div>
 
-        {/* Bank ledger selection - takes 3 columns on desktop */}
-        {selectedVoucher === "Payment Receipt Contra" && (
-          <div className="md:col-span-3">
+        {/* Company selection and quick actions */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+          {/* Company selection - takes 4 columns on desktop */}
+          <div className="md:col-span-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                Bank Ledger
+              <label
+                htmlFor="companyName"
+                className="text-xs font-medium text-slate-500 dark:text-slate-400"
+              >
+                Company
               </label>
-              <Select value={selectedBankLedger} onValueChange={setSelectedBankLedger}>
-                <SelectTrigger className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                  <SelectValue placeholder="Select Bank Ledger" />
+              <Select
+                value={companyName}
+                onValueChange={setCompanyName}
+                disabled={!reportData.importedLedgerData?.length}
+              >
+                <SelectTrigger
+                  id="companyName"
+                  className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm"
+                >
+                  {!reportData.importedLedgerData?.length ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+                      <span className="text-slate-400">
+                        Loading companies...
+                      </span>
+                    </div>
+                  ) : (
+                    <SelectValue placeholder="Select Company Name" />
+                  )}
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="select-bank">Select Bank Ledger</SelectItem>
-                  {bankLedgers.map((ledger, key) => (
-                    <SelectItem key={key} value={ledger}>
-                      {ledger}
-                    </SelectItem>
-                  ))}
+                  {reportData.importedLedgerData
+                    ?.map((data) => data.companyName)
+                    .map((name) => (
+                      <SelectItem key={name} value={name}>
+                        {name}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
-        )}
 
-        {/* Search field - takes 3 or 4 columns on desktop */}
-        <div className={`md:col-span-${selectedVoucher === "Payment Receipt Contra" ? "3" : "4"}`}>
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-500 dark:text-slate-400">
-              Search
-            </label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <Input
-                placeholder="Search in table..."
-                className="pl-10 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
-                value={searchTerm}
-                onChange={(e) => handleSearch(e.target.value)}
-              />
+          {/* Bank ledger selection - takes 3 columns on desktop */}
+          {selectedVoucher === "Payment Receipt Contra" && (
+            <div className="md:col-span-3">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                  Bank Ledger
+                </label>
+                <Select
+                  value={selectedBankLedger}
+                  onValueChange={setSelectedBankLedger}
+                >
+                  <SelectTrigger className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                    <SelectValue placeholder="Select Bank Ledger" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="select-bank">
+                      Select Bank Ledger
+                    </SelectItem>
+                    {bankLedgers.map((ledger, key) => (
+                      <SelectItem key={key} value={ledger}>
+                        {ledger}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          {/* Search field - takes 3 or 4 columns on desktop */}
+          <div
+            className={`md:col-span-${
+              selectedVoucher === "Payment Receipt Contra" ? "3" : "4"
+            }`}
+          >
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                Search
+              </label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Input
+                  placeholder="Search in table..."
+                  className="pl-10 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+                  value={searchTerm}
+                  onChange={(e) => handleSearch(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Rows per page - takes 2 columns on desktop */}
+          <div className="md:col-span-2">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                Rows
+              </label>
+              <Select
+                value={rowsPerPage.toString()}
+                onValueChange={(v) => setRowsPerPage(Number(v))}
+              >
+                <SelectTrigger className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10 rows</SelectItem>
+                  <SelectItem value="20">20 rows</SelectItem>
+                  <SelectItem value="50">50 rows</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>
 
-        {/* Rows per page - takes 2 columns on desktop */}
-        <div className="md:col-span-2">
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-500 dark:text-slate-400">
-              Rows
-            </label>
-            <Select value={rowsPerPage.toString()} onValueChange={(v) => setRowsPerPage(Number(v))}>
-              <SelectTrigger className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10 rows</SelectItem>
-                <SelectItem value="20">20 rows</SelectItem>
-                <SelectItem value="50">50 rows</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick actions */}
-      <div className="flex flex-wrap items-center gap-3 pt-1">
-        <div className="flex flex-wrap items-center gap-2 mr-auto">
-          <Button
-            onClick={handleRefreshImports}
-            variant="outline"
-            size="sm"
-            className="h-9 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
-          >
-            <RefreshCw className="w-4 h-4 mr-1.5" />
-            Refresh Imports
-          </Button>
-          
-          <Button
-            onClick={handleUploadToTally}
-            disabled={
-              selectedVoucher === "Payment Receipt Contra" &&
-              !isLedgersCreated &&
-              !isEmptyLedgersSelected
-            }
-            size="sm"
-            className="h-9 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200 hover:border-emerald-300 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800"
-          >
-            <UploadCloud className="w-4 h-4 mr-1.5" />
-            Upload to Tally
-          </Button>
-          
-          {selectedVoucher === "Ledgers" && (
+        {/* Quick actions */}
+        <div className="flex flex-wrap items-center gap-3 pt-1">
+          <div className="flex flex-wrap items-center gap-2 mr-auto">
             <Button
-              onClick={handleAddRow}
+              onClick={handleRefreshImports}
+              variant="outline"
               size="sm"
-              className="h-9 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-200 hover:border-indigo-300 dark:bg-indigo-900/20 dark:hover:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800"
+              className="h-9 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
             >
-              <Plus className="w-4 h-4 mr-1.5" />
-              Add Row
+              <RefreshCw className="w-4 h-4 mr-1.5" />
+              Refresh Imports
             </Button>
-          )}
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-9 w-9 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 p-0"
-                  onClick={handleCopyToClipboard}
-                >
-                  <Copy className="w-4 h-4 text-slate-600 dark:text-slate-300" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Copy Data</TooltipContent>
-            </Tooltip>
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-9 w-9 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 p-0"
-                  onClick={handleDownload}
-                >
-                  <Download className="w-4 h-4 text-slate-600 dark:text-slate-300" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Download</TooltipContent>
-            </Tooltip>
+            <Button
+              onClick={handleUploadToTally}
+              disabled={
+                selectedVoucher === "Payment Receipt Contra" &&
+                !isLedgersCreated &&
+                !isEmptyLedgersSelected
+              }
+              size="sm"
+              className="h-9 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200 hover:border-emerald-300 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800"
+            >
+              <UploadCloud className="w-4 h-4 mr-1.5" />
+              Upload to Tally
+            </Button>
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-9 w-9 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 p-0"
-                  onClick={handleShare}
-                >
-                  <Share2 className="w-4 h-4 text-slate-600 dark:text-slate-300" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Share</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          
-          {selectedVoucher === "Payment Receipt Contra" && (
+            {selectedVoucher === "Ledgers" && (
+              <Button
+                onClick={handleAddRow}
+                size="sm"
+                className="h-9 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-200 hover:border-indigo-300 dark:bg-indigo-900/20 dark:hover:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800"
+              >
+                <Plus className="w-4 h-4 mr-1.5" />
+                Add Row
+              </Button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 w-9 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 p-0"
+                    onClick={handleCopyToClipboard}
+                  >
+                    <Copy className="w-4 h-4 text-slate-600 dark:text-slate-300" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Copy Data</TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 w-9 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 p-0"
+                    onClick={handleDownload}
+                  >
+                    <Download className="w-4 h-4 text-slate-600 dark:text-slate-300" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Download</TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 w-9 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 p-0"
+                    onClick={handleShare}
+                  >
+                    <Share2 className="w-4 h-4 text-slate-600 dark:text-slate-300" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Share</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            {selectedVoucher === "Payment Receipt Contra" && (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={selectedTransactions.length < 2}
+                onClick={() => setBatchModalOpen(true)}
+                className="h-9 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
+              >
+                <Plus className="w-4 h-4 mr-1.5" />
+                Bulk Edit Ledgers
+              </Button>
+            )}
+
             <Button
               variant="outline"
               size="sm"
-              disabled={selectedTransactions.length < 2}
-              onClick={() => setBatchModalOpen(true)}
+              onClick={clearFilters}
               className="h-9 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
             >
-              <Plus className="w-4 h-4 mr-1.5" />
-              Bulk Edit
+              <Filter className="w-4 h-4 mr-1.5" />
+              Clear Filters
             </Button>
-          )}
-          
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={clearFilters}
-            className="h-9 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200"
-          >
-            <Filter className="w-4 h-4 mr-1.5" />
-            Clear Filters
-          </Button>
-        </div>
-      </div>
-      
-      {/* Warning message for ledgers */}
-      {selectedVoucher === "Payment Receipt Contra" &&
-        !isLedgersCreated &&
-        !isEmptyLedgersSelected && (
-          <div className="text-sm text-amber-600 dark:text-amber-400 p-2.5 bg-amber-50 dark:bg-amber-900/20 rounded-md border border-amber-200 dark:border-amber-800 flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 mr-2">
-              <path fillRule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
-            </svg>
-            First create all ledgers in order to upload to Tally.
           </div>
-      )}
-    </CardHeader>
+        </div>
+
+        {/* Warning message for ledgers */}
+        {selectedVoucher === "Payment Receipt Contra" &&
+          !isLedgersCreated &&
+          !isEmptyLedgersSelected && (
+            <div className="text-sm text-amber-600 dark:text-amber-400 p-2.5 bg-amber-50 dark:bg-amber-900/20 rounded-md border border-amber-200 dark:border-amber-800 flex items-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="w-5 h-5 mr-2"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              First create all ledgers in order to upload to Tally.
+            </div>
+          )}
+      </CardHeader>
       <CardContent>
         <div className="relative  overflow-x-auto">
           <Table className="w-full">
