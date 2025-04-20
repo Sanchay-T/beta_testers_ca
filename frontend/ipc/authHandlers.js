@@ -145,6 +145,11 @@ function registerAuthHandlers(userDataPath) {
 
       log.info("Login License session activated:", data);
 
+      // ✅ Start countdown based on license validity
+      if (data.remainingSeconds && data.remainingSeconds > 0) {
+        sessionManager.startLicenseCountdown(data.remainingSeconds);
+      }
+
 
       return { success: true, user: credentials };
     } catch (error) {

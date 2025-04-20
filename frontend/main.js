@@ -309,9 +309,10 @@ async function createAndStartService() {
 
 
 // Listen for remaining seconds updates
-// sessionManager.on('remainingSecondsUpdated', (seconds) => {
-//   console.log(`Remaining seconds: ${seconds}`);
-// });
+sessionManager.on('remainingSecondsUpdated', (seconds) => {
+  console.log(`Remaining seconds: ${seconds}`);
+  win.webContents.send('remainingSecondsUpdated', seconds);
+});
 
 // Listen for license expiration
 sessionManager.on("licenseExpired", () => {
