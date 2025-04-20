@@ -152,7 +152,10 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         }
 
         if (result.data.warning && result.data.warning.length > 0) {
-          setWarning(result.data.warning);
+          const formattedWarnings = result.data.warning.filter((warn) => {
+            return warn && warn.trim() !== ""; // Return true for non-empty warnings
+          });
+          setWarning(formattedWarnings);
         }
         setCurrentCaseId(result.data.caseId); // Store caseId
 

@@ -245,6 +245,7 @@ function buildTallyXmlContra(row) {
                 <OLDAUDITENTRYIDS>-1</OLDAUDITENTRYIDS>
               </OLDAUDITENTRYIDS.LIST>
               <LEDGERNAME>${CrLedger}</LEDGERNAME>
+              
               <ISPARTYLEDGER>Yes</ISPARTYLEDGER>
               <AMOUNT>${amount}</AMOUNT>
               
@@ -263,6 +264,9 @@ function buildTallyXmlContra(row) {
                 <OLDAUDITENTRYIDS>-1</OLDAUDITENTRYIDS>
               </OLDAUDITENTRYIDS.LIST>
               <LEDGERNAME>${DrLedger}</LEDGERNAME>
+              <NAME>e216acbc-d76e-48a7-a6e7-30a843e73917</NAME>
+              <ISDEEMEDPOSITIVE>Yes</ISDEEMEDPOSITIVE>
+
               <GSTOVERRIDDEN>No</GSTOVERRIDDEN>
               <ISLASTDEEMEDPOSITIVE>Yes</ISLASTDEEMEDPOSITIVE>
               <ISPARTYLEDGER>Yes</ISPARTYLEDGER>

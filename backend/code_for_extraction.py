@@ -268,6 +268,17 @@ def unlock_and_add_margins_to_pdf(pdf_path, pdf_password, timestamp, CA_ID):
             if not pdf_document.authenticate(pdf_password):
                 raise ValueError("Incorrect password. Unable to unlock the PDF.")
 
+        # FIRST CHECK: Check if the PDF is image-only
+        first_page = pdf_document[0]
+        text = first_page.get_text("text").strip()
+        if not text or text == "CamScanner":
+            raise ValueError("The PDF is of image-only (non-text) format. Please upload a text PDF.")
+
+        # SECOND CHECK: Check if PDF is encoded
+        encoding_result = is_pdf_encoded(pdf_path)
+        if encoding_result != "PDF text is readable and not encoded.":
+            raise ValueError("The PDF appears to be encoded or obfuscated. Please upload a readable PDF.")
+
         # Define the output path for the unlocked PDF
         unlocked_pdf_filename = f"{timestamp}-{CA_ID}_{uuid.uuid4().hex}.pdf"
         unlocked_pdf_path = os.path.join(TEMP_SAVED_PDF_DIR, unlocked_pdf_filename)
@@ -309,14 +320,6 @@ def unlock_and_add_margins_to_pdf(pdf_path, pdf_password, timestamp, CA_ID):
         pdf_document.save(unlocked_pdf_path)
         pdf_document.close()
 
-        # Verify that the PDF contains text
-        pdf_document = fitz.open(unlocked_pdf_path)
-        first_page = pdf_document[0]
-        text = first_page.get_text("text").strip()
-
-        if not text or text == "CamScanner":
-            raise Exception("The PDF is of image-only (non-text) format. Please upload a text PDF.")
-        pdf_document.close()
         return unlocked_pdf_path
 
     except Exception as e:
@@ -1615,7 +1618,6 @@ def is_pdf_encoded(pdf_path):
 def extract_with_test_cases(bank_name, pdf_path, pdf_password, CA_ID):
     timestamp = "1234_temp"
     pdf_in_saved_pdf = unlock_and_add_margins_to_pdf(pdf_path, pdf_password, timestamp, CA_ID)
-    is_pdf_encoded(pdf_in_saved_pdf)
     list_test = process_pdf_with_test_cases(pdf_in_saved_pdf)
     text = extract_text_from_pdf(pdf_in_saved_pdf)
     idf, explicit_lines = run_test_output_on_whole_pdf(list_test, pdf_in_saved_pdf, bank_name, timestamp, CA_ID)

@@ -497,8 +497,8 @@ def returns_json_output_of_all_sheets(df, name_n_num_df):
 
     # Convert the entire dictionary to JSON
     json_output = json.dumps(result_dict, indent=4)
-    with open("new_output.json", "w") as file:
-        file.write(json_output)
+    # with open("new_output.json", "w") as file:
+    #     file.write(json_output)
     return json_output, missing_months_list
 
 
