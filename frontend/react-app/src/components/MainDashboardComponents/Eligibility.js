@@ -256,7 +256,7 @@ export default function Eligibility() {
         ) : (
           <>
             <div className="grid gap-4 md:grid-cols-2 mb-6">
-              {user.role === "CA" && (
+              {user.role === "MSME" && (
                 <Card className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-2 border-green-100 dark:border-green-800">
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-green-50 rounded-lg dark:bg-green-800">
@@ -391,12 +391,12 @@ export default function Eligibility() {
                               <TableHead className="text-center font-semibold">
                                 Amount
                               </TableHead>
-                              {user.role === "CA" && (
+                              {user.role === "MSME" && (
                                 <TableHead className="text-center font-semibold">
                                   Commission %
                                 </TableHead>
                               )}
-                              {user.role === "CA" && (
+                              {user.role === "MSME" && (
                                 <TableHead className="text-right font-semibold">
                                   Commission (₹)
                                 </TableHead>
@@ -426,12 +426,12 @@ export default function Eligibility() {
                                       maximumFractionDigits: 2,
                                     })}
                                   </TableCell>
-                                  {user.role === "CA" && (
+                                  {user.role === "MSME" && (
                                     <TableCell className="text-center">
                                       {item.rate}
                                     </TableCell>
                                   )}
-                                  {user.role === "CA" && (
+                                  {user.role === "MSME" && (
                                     <TableCell className="text-right font-semibold">
                                       ₹
                                       {item.value.toLocaleString("en-IN", {
