@@ -824,7 +824,9 @@ function generateReportIpc(tmpdir_path) {
             data: {
               caseId: caseId,
               processed: null,
-              warning: [response.data.message] || "Unknown error",
+              warning:
+                [response.data.message] || [response?.message] ||
+                "Unknown error",
               processing_times: response.data?.processing_times || [],
             },
           };
