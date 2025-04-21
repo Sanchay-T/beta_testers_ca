@@ -35,6 +35,8 @@ import {
   Download,
   Upload,
   RotateCw,
+  AlertCircle,
+  ChevronRight,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -120,91 +122,156 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
   const [isHandleDetailsDialogOpen, setIsHandleDetailsDialogOpen] =
     useState(null);
   const { individualId } = useParams();
+  const [warning, setWarning] = useState(false);
+  const [missingMonthsList, setMissingMonthsList] = useState([]);
+  const [successfulStatements, setSuccessfulStatements] = useState([]);
 
   const handleSubmitEditPdf = async () => {
     setPdfEditLoading(true);
-
+    setFailedStatements([]);
+    setSuccessfulStatements([]);
     const allRectified = failedDatasOfCurrentReport.every(
       (statement) => statement.resolved
     );
 
-    if (allRectified) {
-      // Call the API to update the statements
-      const result = await window.electron.editPdf(
-        failedDatasOfCurrentReport,
-        currentCaseName
-      );
+    try {
+      if (allRectified) {
+        // Call the API to update the statements
+        let result = await window.electron.editPdf(
+          failedDatasOfCurrentReport,
+          currentCaseName
+        );
 
-      console.log({electronResponse:result});
-      
+        console.log({ electronResponse: result });
 
-      if (
-        result.success &&
-        result.data.failedStatements.bank_names.length === 0
-      ) {
-        toast({
-          title: "Success",
-          description: "All statements have been rectified.",
-          variant: "success",
-          className: "bg-white text-black opacity-100 shadow-lg",
-        });
-        setPdfEditLoading(false);
+        if (
+          result.data.missingMonthsList &&
+          result.data.missingMonthsList.length > 0
+        ) {
+          setMissingMonthsList(result.data.missingMonthsList);
+        }
 
-        const updatedRecentReportsData = reportData.recentReportsData.map(
-          (report) => {
-            if (report.id === result.data.caseId) {
-              return {
-                ...report,
-                name: currentCaseName,
-                status: "Success",
-              };
+        if (result.data.warning && result.data.warning.length > 0) {
+          const formattedWarnings = result.data.warning.filter((warn) => {
+            return warn && warn.trim() !== ""; // Return true for non-empty warnings
+          });
+          setWarning(formattedWarnings);
+        }
+        setCurrentCaseId(result.data.caseId); // Store caseId
+
+        if (
+          result.success &&
+          result?.data?.failedStatements?.bank_names?.length === 0
+        ) {
+          // setShowRectifyButton(true);
+          const successfulFiles = result.data.successfulFiles.map(
+            (file_path) => {
+              // Get the filename from the path and remove the timestamp
+              const filename = file_path.split("\\").pop(); // Get filename from path
+              const filenameWithoutTimestamp = filename.substring(
+                filename.indexOf("-") + 1
+              ); // Remove everything before first hyphen
+              return filenameWithoutTimestamp;
             }
-            return report;
-          }
-        );
-        updateReportData({
-          ...reportData, // Preserve other reportData properties
+          );
+          setSuccessfulStatements(successfulFiles || []); // Store successful
 
-          recentReportsData: updatedRecentReportsData,
-        });
-      } else {
-        // If the rectification failed, show error message and reasons
-        const unrectifiedStatements = failedDatasOfCurrentReport.filter(
-          (statement) => statement.respectiveReasonsForError
-        );
+          toast({
+            title: "Success",
+            description: "All statements have been rectified.",
+            variant: "success",
+            className: "bg-white text-black opacity-100 shadow-lg",
+          });
+          setPdfEditLoading(false);
 
-        toast({
-          title: "Rectification Failed",
-          description: (
-            <div>
-              <p className="mb-2">
-                Some statements could not be rectified. Please contact sales for
-                assistance.
-              </p>
-              <ul className="list-disc pl-4">
+          const updatedRecentReportsData = reportData.recentReportsData.map(
+            (report) => {
+              if (report.id === result.data.caseId) {
+                return {
+                  ...report,
+                  name: currentCaseName,
+                  status: "Success",
+                };
+              }
+              return report;
+            }
+          );
+          updateReportData({
+            ...reportData, // Preserve other reportData properties
+
+            recentReportsData: updatedRecentReportsData,
+          });
+        } else {
+          const failedFiles = result?.data?.failedFiles?.map((file_path) => {
+            // Get the filename from the path and remove the timestamp
+            const filename = file_path.split("\\").pop(); // Get filename from path
+            const filenameWithoutTimestamp = filename.substring(
+              filename.indexOf("-") + 1
+            ); // Remove everything before first hyphen
+            return filenameWithoutTimestamp;
+          });
+          setFailedStatements(failedFiles || []); // Store failed
+
+          // setShowRectifyButton(true);
+          const successfulFiles = result.data.successfulFiles.map(
+            (file_path) => {
+              // Get the filename from the path and remove the timestamp
+              const filename = file_path.split("\\").pop(); // Get filename from path
+              const filenameWithoutTimestamp = filename.substring(
+                filename.indexOf("-") + 1
+              ); // Remove everything before first hyphen
+              return filenameWithoutTimestamp;
+            }
+          );
+          setSuccessfulStatements(successfulFiles || []); // Store successful
+
+          toast({
+            title: "Rectification Failed",
+            description: (
+              <div>
+                <p className="mb-2">
+                  Some statements could not be rectified. Please contact sales
+                  for assistance.
+                </p>
+                <p>{result.data.errorMessage}</p>
+
+                {/* <ul className="list-disc pl-4">
                 {unrectifiedStatements.map((statement, index) => (
                   <li key={index} className="text-sm">
                     {statement.pdfName}: {statement.respectiveReasonsForError}
                   </li>
                 ))}
-              </ul>
-            </div>
-          ),
+              </ul> */}
+              </div>
+            ),
+            variant: "destructive",
+            duration: 6000,
+          });
+        }
+        if (result.data.totalTransactions) {
+          setShowAnalysisButton(true);
+        }
+      } else {
+        toast({
+          title: "Contact Sales",
+          description:
+            "Unable to rectify all statements. Please contact our sales team for assistance.",
           variant: "destructive",
-          duration: 6000,
+          duration: 5000,
         });
       }
-    } else {
-      toast({
-        title: "Contact Sales",
-        description:
-          "Unable to rectify all statements. Please contact our sales team for assistance.",
-        variant: "destructive",
-        duration: 5000,
-      });
+    } catch (error) {
+      console.error("Error during rectification:", error);
+      // toast({
+      //   title: "Error",
+      //   description: `Failed to rectify statements: ${error.message}`,
+      //   variant: "destructive",
+      // });
+    } finally {
+      setPdfEditLoading(false);
+      setDialogOpen(true); // Open the Dialog
+      localStorage.removeItem("dashboardData");
     }
-    setPdfEditLoading(false);
-    localStorage.removeItem("dashboardData");
   };
 
   const handleRectify = () => {
@@ -520,7 +587,8 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       });
       return;
     }
-
+    setFailedStatements([]);
+    setSuccessfulStatements([]);
     setLoading(true);
     const newToastId = toast({
       title: "Initializing Report Generation",
@@ -569,30 +637,81 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         caseName,
         "add-pdf"
       );
-      console.log({electronResponse:result});
+      console.log({ electronResponse: result });
+
+      if (
+        result.data.missingMonthsList &&
+        result.data.missingMonthsList.length > 0
+      ) {
+        setMissingMonthsList(result.data.missingMonthsList);
+      }
+
+      if (result.data.warning && result.data.warning.length > 0) {
+        setWarning(result.data.warning);
+      }
 
       setCurrentCaseId(result.data.caseId); // Store caseId
-
       if (result.success) {
         clearInterval(progressIntervalRef.current);
         setProgress(100);
         toast.dismiss(newToastId);
-        toast({
-          title: "Success",
-          description: "Report generated successfully!",
-          duration: 3000,
-          variant: "success",
-        });
+        console.log("Report generated successfully:", result.data);
 
         if (result.data.failedFiles.length > 0) {
           setShowRectifyButton(true);
           const failedFiles = result.data.failedFiles.map((file_path) => {
-            return file_path.split("\\").pop();
+            // Get the filename from the path and remove the timestamp
+            const filename = file_path.split("\\").pop(); // Get filename from path
+            const filenameWithoutTimestamp = filename.substring(
+              filename.indexOf("-") + 1
+            ); // Remove everything before first hyphen
+            return filenameWithoutTimestamp;
           });
           setFailedStatements(failedFiles || []); // Store failed
+
+          // setShowRectifyButton(true);
+          const successfulFiles = result.data.successfulFiles.map(
+            (file_path) => {
+              // Get the filename from the path and remove the timestamp
+              const filename = file_path.split("\\").pop(); // Get filename from path
+              const filenameWithoutTimestamp = filename.substring(
+                filename.indexOf("-") + 1
+              ); // Remove everything before first hyphen
+              return filenameWithoutTimestamp;
+            }
+          );
+          setSuccessfulStatements(successfulFiles || []); // Store successful
+
+          toast({
+            title: "Failed",
+            description: `${caseName} report had some issues!`,
+            duration: 3000,
+            variant: "destructive",
+          });
+        } else {
+          // setShowRectifyButton(true);
+          const successfulFiles = result.data.successfulFiles.map(
+            (file_path) => {
+              // Get the filename from the path and remove the timestamp
+              const filename = file_path.split("\\").pop(); // Get filename from path
+              const filenameWithoutTimestamp = filename.substring(
+                filename.indexOf("-") + 1
+              ); // Remove everything before first hyphen
+              return filenameWithoutTimestamp;
+            }
+          );
+          setSuccessfulStatements(successfulFiles || []); // Store successful
         }
 
-        if (result.data.totalTransactions) setShowAnalysisButton(true);
+        if (result.data.totalTransactions) {
+          toast({
+            title: "Success",
+            description: `${caseName} report generated successfully!`,
+            duration: 3000,
+            variant: "success",
+          });
+          setShowAnalysisButton(true);
+        }
 
         // setFailedStatements(result.pdf_paths_not_extracted || []); // Store failed
 
@@ -1234,7 +1353,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                     <TableCell>{report.createdAt}</TableCell>
                     <TableCell>{report.name}</TableCell>
                     <TableCell>
-                      {console.log({ report })}
                       <StatusBadge status={report.status} />
                     </TableCell>
                     <TableCell>
@@ -1484,7 +1602,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                       : -1;
                                   })
                                   .map((statement, index) => {
-                                    console.log({ statement });
                                     const isDone = statement.resolved;
                                     const hasError = Boolean(
                                       statement.respectiveReasonsForError
@@ -1513,10 +1630,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                           {/* {!hasError && ( */}
                                           {
                                             <div className="flex-1">
-                                              {console.log({
-                                                status: report.status,
-                                              })}
-
                                               {report.status === "Success" ||
                                               isDone ? (
                                                 <Button
@@ -1711,52 +1824,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         </div>
       )}
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Report Generated Successfully!</DialogTitle>
-            {console.log({ failedStatements })}
-            <DialogDescription className="flex items-end gap-x-4 pt-4 ">
-              {failedStatements.length === 0 ? (
-                <div className="flex items-center gap-x-4">
-                  <CheckCircle className="text-green-500 w-6 h-6 mt-2" />
-                  <p>Your report has been generated successfully.</p>
-                </div>
-              ) : failedStatements.length > 0 ? (
-                <div className="flex items-end gap-x-4">
-                  <AlertTriangle className="text-yellow-500 w-6 h-6 mt-2" />
-                  <p>Below Statements had some errors.</p>
-                </div>
-              ) : (
-                <XCircle className="text-red-500 w-6 h-6 mt-2" />
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          {failedStatements.length > 0 && (
-            <div className="mb-4">
-              <ul className="list-disc pl-5">
-                {failedStatements.map((statement, index) => (
-                  <li key={index}>{statement}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-          <div className="flex gap-4">
-            {showAnalsisButton && (
-              <Button onClick={() => viewAnalysis()} className="flex-1">
-                View Analysis
-              </Button>
-            )}
-
-            {showRectifyButton && (
-              <Button onClick={handleRectify} className="flex-1">
-                Rectify Now
-              </Button>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-
       {/* Category Update Confirmation Modal */}
       <Dialog
         open={categoryUpdateModalOpen}
@@ -1819,6 +1886,114 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
               Confirm Updates
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog for successful report generation */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen} className="">
+        <DialogContent className="max-h-[90vh] overflow-y-auto pb-0">
+          <DialogHeader>
+            {successfulStatements.length > 0 ? (
+              <DialogTitle>
+                Report {currentCaseName} Generated Successfully!
+              </DialogTitle>
+            ) : (
+              <DialogTitle className="flex items-end gap-x-2">
+                <AlertTriangle className="text-yellow-500 w-6 h-6 mt-2" />
+                Some statement had errors.
+              </DialogTitle>
+            )}
+            <DialogDescription className="flex items-end gap-x-4 pt-4">
+              {/* {failedStatements.length === 0 && (
+                      <div className="flex items-center gap-x-4">
+                        <CheckCircle className="text-green-500 w-6 h-6 mt-2" />
+                        <p>Your report has been generated successfully.</p>
+                      </div>
+                    )} */}
+            </DialogDescription>
+          </DialogHeader>
+
+          {(failedStatements.length > 0 || successfulStatements.length > 0) && (
+            <div className="mb-2">
+              <ul className="list-disc pl-5">
+                {failedStatements.map((statement, index) => (
+                  <li key={index} className="text-red-400">
+                    {statement}
+                  </li>
+                ))}
+                {successfulStatements.map((statement, index) => (
+                  <li key={index} className="text-green-700">
+                    {statement}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {/* Display Missing Months Section */}
+          {missingMonthsList.length > 0 && (
+            <div className="mb-4 mt-2">
+              <h3 className="text-md font-semibold flex items-center gap-x-2 mb-2">
+                <AlertCircle className="text-amber-500 w-5 h-5" />
+                Missing Months
+              </h3>
+              <Card className="p-3 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800">
+                <ul className="space-y-1">
+                  {missingMonthsList.map((month, index) => (
+                    <li
+                      key={index}
+                      className="text-amber-700 dark:text-amber-400 flex items-center"
+                    >
+                      <ChevronRight className="w-4 h-4 mr-1 flex-shrink-0" />
+                      <span>{month}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="text-sm text-amber-700 dark:text-amber-400 mt-3">
+                  These months are missing from your statements. You may want to
+                  add them for a complete analysis.
+                </p>
+              </Card>
+            </div>
+          )}
+
+          {/* display any other warning if any */}
+          {warning.length > 0 && (
+            <div className="mb-4 mt-2">
+              <h3 className="text-md font-semibold flex items-center gap-x-2 mb-2">
+                <AlertCircle className="text-red-500 w-5 h-5" />
+                Warning
+              </h3>
+              <Card className="p-3 bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800">
+                <ul className="space-y-1">
+                  {warning.map((month, index) => (
+                    <li
+                      key={index}
+                      className="text-red-700 dark:text-red-400 flex items-start"
+                    >
+                      • <span className="ml-1"> {month}</span>
+                    </li>
+                  ))}
+                </ul>
+                {/* <p className="text-sm text-amber-700 dark:text-amber-400 mt-3">
+                        These months are missing from your statements. You may want to
+                        add them for a complete analysis.
+                      </p> */}
+              </Card>
+            </div>
+          )}
+          <div className="flex gap-4 sticky w-full p-4  bottom-0 bg-white">
+            {showAnalsisButton && (
+              <Button onClick={() => viewAnalysis()} className="flex-1">
+                View Analysis
+              </Button>
+            )}
+
+            {showRectifyButton && (
+              <Button onClick={handleRectify} className="flex-1">
+                Rectify Now
+              </Button>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </Card>

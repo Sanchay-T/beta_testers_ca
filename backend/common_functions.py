@@ -313,7 +313,6 @@ def extraction_process(bank, pdf_path, pdf_password, start_date, end_date):
     try:
         if ext == ".pdf":
             idf, text, explicit_lines = extract_with_test_cases(bank, pdf_path, pdf_password, CA_ID)
-            a = validate_bank_statement_returns_error_message(idf)
             name_n_num = explicit_lines if idf.empty else extract_account_details(text)
 
         elif ext == ".csv":
@@ -331,7 +330,6 @@ def extraction_process(bank, pdf_path, pdf_password, start_date, end_date):
             ).idxmax()
             df = df.loc[start_index:] if start_index is not None else pd.DataFrame()
             idf, _ = model_for_pdf(df)
-            a = validate_bank_statement_returns_error_message(idf)
             name_n_num = extract_account_details(extract_text_from_file(pdf_path))
 
         else:
@@ -348,10 +346,10 @@ def extraction_process(bank, pdf_path, pdf_password, start_date, end_date):
             ).idxmax()
             df = df.loc[start_index:] if start_index is not None else pd.DataFrame()
             idf, _ = model_for_pdf(df)
-            a = validate_bank_statement_returns_error_message(idf)
             name_n_num = extract_account_details(extract_text_from_file(pdf_path))
 
         if not idf.empty:
+            a = validate_bank_statement_returns_error_message(idf)
             idf = add_start_n_end_date(idf, start_date, end_date, bank)
 
         return idf, name_n_num, a
@@ -388,16 +386,18 @@ def extraction_process_explicit_lines(bank, pdf_path, pdf_password, start_date, 
             df.index = df.index + 1  # Shift all indices by 1
             df.sort_index(inplace=True)  # Reorder the DataFrame to update the row positions
 
-        idf, _ = model_for_pdf(df)
-        a = validate_bank_statement_returns_error_message(idf)
-        name_n_num = extract_account_details(extract_text_from_pdf(pdf_path))
-
+        try:
+            idf, _ = model_for_pdf(df)
+        except Exception as e:
+            idf = empty_idf
+            
         # Add start and end date
         if idf.empty:
             df = extract_dataframe_from_pdf(pdf_path, table_settings={
                 "vertical_strategy": "explicit",
                 "explicit_vertical_lines": explicit_lines,
                 "horizontal_strategy": "text",
+                "intersection_x_tolerance": 120,
             })
 
             all_null = all(label[1] == "null" for label in labels)
@@ -414,46 +414,17 @@ def extraction_process_explicit_lines(bank, pdf_path, pdf_password, start_date, 
                 df.sort_index(inplace=True)  # Reorder the DataFrame to update the row positions
 
             idf, _ = model_for_pdf(df)
-            a = validate_bank_statement_returns_error_message(idf)
-            name_n_num = extract_account_details(extract_text_from_pdf(pdf_path))
 
         idf = add_start_n_end_date(idf, start_date, end_date, bank)
+        name_n_num = extract_account_details(extract_text_from_pdf(pdf_path))
+        a = validate_bank_statement_returns_error_message(idf)
 
         return idf, name_n_num, a
 
     except Exception as e:
-        
-        df = extract_dataframe_from_pdf(pdf_path, table_settings={
-            "vertical_strategy": "explicit",
-            "explicit_vertical_lines": explicit_lines,
-            "horizontal_strategy": "text",
-            "intersection_x_tolerance": 120,
-        })
-
-        all_null = all(label[1] == "null" for label in labels)
-
-        if not all_null:
-            new_row = [None] * len(df.columns)  # Create a blank row with the same number of columns
-            for index, label_type in labels:
-                if index < len(new_row):
-                    new_row[index] = label_type
-
-            # Insert the new row at the top of the DataFrame
-            df.loc[-1] = new_row  # Add the new row with a negative index to place it at the top
-            df.index = df.index + 1  # Shift all indices by 1
-            df.sort_index(inplace=True)  # Reorder the DataFrame to update the row positions
-
-        idf, _ = model_for_pdf(df)
-        a = validate_bank_statement_returns_error_message(idf)
-        name_n_num = extract_account_details(extract_text_from_pdf(pdf_path))
-
-        # Add start and end date
-        if not idf.empty:
-            idf = add_start_n_end_date(idf, start_date, end_date, bank)
-            return idf, name_n_num, a
-        else:
-            return empty_idf, default_name_n_num, str(e)
-
+        er = "There was an exception error, please contact sales team for help."
+        return empty_idf, default_name_n_num, er
+    
 ##EOD
 def monthly( df):
     # add a new row with the average of month values in each column
@@ -591,8 +562,7 @@ def eod(df_original):
     all_df = monthly(total_df)  # Assuming this function exists
     return all_df
 
-def opening_and_closing_bal(edf): 
-        import warnings
+def opening_and_closing_bal(edf, transactions_df):
         opening_bal = {}
         closing_bal = {}
         month_columns = [col for col in edf.columns if col != 'Day']
@@ -616,40 +586,48 @@ def opening_and_closing_bal(edf):
             except ValueError:
                 closing_bal[month_str] = np.nan
             except KeyError:
-                warnings.warn(f"Column '{month_str}' not found during closing balance calculation.", UserWarning)
+                # warnings.warn(f"Column '{month_str}' not found during closing balance calculation.", UserWarning)
                 closing_bal[month_str] = np.nan
             except Exception as e:
-                warnings.warn(f"An unexpected error occurred calculating closing balance for {month_str}: {e}", UserWarning)
+                # warnings.warn(f"An unexpected error occurred calculating closing balance for {month_str}: {e}",UserWarning)
                 closing_bal[month_str] = np.nan
+
         ordered_months = month_columns
         for i, month in enumerate(ordered_months):
             if i == 0:
-                warnings.warn(f"Using balance from Day 1 of month '{month}' in the input DataFrame "
-                              "as the Opening Balance for this first month. Ensure this value "
-                              "represents the start-of-day balance.", UserWarning)
                 try:
-                    first_day_balance_val = edf_data_only.iloc[0][month]
-                    opening_bal[month] = float(first_day_balance_val)
-                except (KeyError, IndexError):
-                    warnings.warn(f"Could not retrieve balance from input DataFrame for Day 1 of the first month ({month}). "
-                                  "Setting opening balance to NaN.", UserWarning)
-                    opening_bal[month] = np.nan
-                except (ValueError, TypeError):
-                    warnings.warn(f"Balance value ('{first_day_balance_val}') from input DataFrame for Day 1 "
-                                  f"of the first month ({month}) could not be converted to float. Setting opening balance to NaN.",
-                                   UserWarning)
-                    opening_bal[month] = np.nan
+                    if len(transactions_df) > 0:
+                        first_month_balance = transactions_df.iloc[0]['Balance']
+                        if isinstance(first_month_balance, str):
+                            first_month_balance = float(first_month_balance.replace(',', ''))
+                        opening_bal[month] = first_month_balance
+                        if 'Description' in transactions_df.columns:
+                            if str(transactions_df.iloc[0]['Description']).lower() != 'openingbalance':
+                                warnings.warn(f"First row description is not 'openingbalance', but using it anyway as instructed.",UserWarning)
+                    else:
+                        raise IndexError("transactions_df is empty")
+                except (KeyError, IndexError, ValueError, TypeError) as e:
+                    warnings.warn(
+                        f"Error retrieving opening balance from the first row of transactions DataFrame: {e}. "
+                        f"Falling back to using balance from Day 1 of month '{month}' in the input DataFrame.",
+                        UserWarning)
+
+                    try:
+                        first_day_balance_val = edf_data_only.iloc[0][month]
+                        opening_bal[month] = float(first_day_balance_val)
+                    except (KeyError, IndexError, ValueError, TypeError) as e2:
+                        # warnings.warn(f"Could not retrieve balance from input DataFrame for Day 1 of the first month ({month}): {e2}. " f"Setting opening balance to NaN.", UserWarning)
+                        opening_bal[month] = np.nan
             else:
                 prev_month = ordered_months[i - 1]
                 if prev_month in closing_bal and not pd.isna(closing_bal[prev_month]):
                     opening_bal[month] = closing_bal[prev_month]
                 else:
-                    warnings.warn(f"Could not find a valid closing balance for the previous month ({prev_month}) "
-                                  f"to use as opening balance for {month}. Setting opening balance to NaN.", UserWarning)
+                    # warnings.warn(f"Could not find a valid closing balance for the previous month ({prev_month}) "f"to use as opening balance for {month}. Setting opening balance to NaN.",UserWarning)
                     opening_bal[month] = np.nan
 
         return opening_bal, closing_bal
-    
+
 def avgs_df( df):
     # quarterly_avg
     if df.shape[1] > 3:
@@ -2379,6 +2357,10 @@ def append_to_excel(file_path, new_data):
     return file_path
 
 def make_summary_great_again(df1, opening_closing_balance, df2):
+
+
+
+
     def generate_summary(table, value_column, summary_name):
         # Create pivot table
         summary = table.pivot_table(

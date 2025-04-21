@@ -41,6 +41,8 @@ export default function Eligibility() {
   //   "General Insurance": "upto 10",
   // };
 
+  console.log("User Role:", user);
+
   useEffect(() => {
     async function fetchOpportunityData() {
       try {
@@ -102,17 +104,17 @@ export default function Eligibility() {
 
   const totals = opportunityData
     ? opportunityData.reduce(
-        (acc, data) => {
-          acc.eligibility += Object.values(data)
-            .filter((item) => item.type)
-            .reduce((sum, item) => sum + item.amount, 0);
-          acc.commission += Object.values(data)
-            .filter((item) => item.type)
-            .reduce((sum, item) => sum + item.value, 0);
-          return acc;
-        },
-        { eligibility: 0, commission: 0 }
-      )
+      (acc, data) => {
+        acc.eligibility += Object.values(data)
+          .filter((item) => item.type)
+          .reduce((sum, item) => sum + item.amount, 0);
+        acc.commission += Object.values(data)
+          .filter((item) => item.type)
+          .reduce((sum, item) => sum + item.value, 0);
+        return acc;
+      },
+      { eligibility: 0, commission: 0 }
+    )
     : { eligibility: 0, commission: 0 };
 
   const note = [

@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { Loader2 } from "lucide-react";
+import { Loader2, Settings, Info, ChevronDown } from "lucide-react";
 import TallyTable from "./TallyTable";
 import {
   Dialog,
@@ -35,6 +35,13 @@ import {
 import { Checkbox } from "../ui/checkbox";
 import { useNavigate, useLocation, matchPath } from "react-router-dom";
 import localForage, { clear } from "localforage";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 
 const defaultColumns = {
   "Payment Receipt Contra": [
@@ -258,6 +265,27 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
 
     return dateString;
   };
+  function convertEffectiveDateToTallyFormat(isoDateString) {
+    console.log({ isoDateString });
+
+    // If the date is null, empty, or invalid, return today's date in Tally format
+    if (!isoDateString || isoDateString === "") {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, "0");
+      const day = String(today.getDate()).padStart(2, "0");
+
+      return `${year}${month}${day}`;
+    }
+
+    // Otherwise process the given date
+    const date = new Date(isoDateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}${month}${day}`;
+  }
 
   const handleTallyUpload = async (txData) => {
     // “txData” is optional—ManualEntryTable might pass it.
@@ -307,7 +335,6 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
     //   return;
     // }
 
-
     // Prepare data for Tally
     const tallyData = txData
       .map((transaction) => {
@@ -315,33 +342,55 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
           // remove Already uploaded
           return null;
         }
+        let dr_ledger = "";
+        let cr_ledger = "";
+        console.log("transaction.effective_date", transaction.effective_date);
+
+        // if (transaction.voucher_type !== "Contra") {
+        dr_ledger =
+          transaction.type === "debit"
+            ? isEmptyLedgersSelected
+              ? "Suspense"
+              : transaction.ledger
+            : selectedBankLedger;
+
+        cr_ledger =
+          transaction.type === "credit"
+            ? isEmptyLedgersSelected
+              ? "Suspense"
+              : transaction.ledger
+            : selectedBankLedger;
+        // } else {
+        //   // Cr is present two times in buildxml, means the ledger will in cr and bank will be in dr for contra
+        // if(transaction.type === "debit"){
+        // }
+
+        if (isEmptyLedgersSelected) {
+          if (dr_ledger === selectedBankLedger) {
+            cr_ledger = "Suspense";
+          } else {
+            dr_ledger = "Suspense";
+          }
+        }
         const tempVoucherType =
           transaction.voucher_type === "Payment Voucher"
             ? "Payment"
             : transaction.voucher_type === "Receipt Voucher"
             ? "Receipt"
             : transaction.voucher_type || "Payment"; // fallback
-
-        const dr_ledger =
-          transaction.type === "debit"
-            ? transaction.ledger
-            : selectedBankLedger;
-
-        const cr_ledger =
-          transaction.type === "credit"
-            ? transaction.ledger
-            : selectedBankLedger;
         return {
           companyName: companyName,
           invoiceDate: formatDateForTally(
             transaction.date || transaction.invoice_date || ""
           ),
-          effectiveDate: formatDateForTally(transaction.effective_date || ""),
+          effectiveDate: convertEffectiveDateToTallyFormat(
+            transaction.effective_date || ""
+          ),
           // effectiveDate: 20240401,
           // referenceNumber: transaction.reference_number || null,
           billRefernce: transaction.bill_reference || "-",
-          DrLedger: isEmptyLedgersSelected ? "Suspense" : dr_ledger,
-          CrLedger: isEmptyLedgersSelected ? "Suspense" : cr_ledger,
+          DrLedger: dr_ledger,
+          CrLedger: cr_ledger,
           amount: transaction.amount,
           narration: transaction.narration,
           voucherName: tempVoucherType,
@@ -459,7 +508,6 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
         );
       }
 
-
       const newDataToRender = dataToRender.map((ledger) => {
         if (successIds.includes(ledger.id)) {
           return {
@@ -486,7 +534,6 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
       // Show summary
       setFailedTransactions(failedTransactions);
       setSuccessIds(successIds);
-
 
       // // Store failed reasons in localStorage
       // const storedReasons = JSON.parse(
@@ -635,7 +682,6 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
       return ledger;
     });
 
-
     // Sort the data so non-imported ledgers appear first
     updatedLedgersData.sort((a, b) => {
       // Sort by imported status first (false comes before true)
@@ -645,7 +691,6 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
       // If imported status is the same, sort alphabetically by ledger name
       return a.ledger_name.localeCompare(b.ledger_name);
     });
-
 
     // Check if all ledgers are imported
     const allLedgersImported = updatedLedgersData
@@ -964,69 +1009,10 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
   };
   return (
     <div className="p-8">
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle className="text-lg font-semibold">
-              {source === "manual"
-                ? "Manual Tally Import"
-                : `${selectedVoucher} Voucher`}
-            </CardTitle>
-
-            {/* Select voucher dropdown */}
-            {/* {source !== "manual" && (
-              <div className="flex gap-4">
-                <Select
-                  onValueChange={handleVoucherChange}
-                  value={selectedVoucher}
-                >
-                  <SelectTrigger className="w-98">
-                    <SelectValue placeholder="Select a Voucher" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {vouchers.map((voucher) => (
-                      <SelectItem key={voucher} value={voucher}>
-                        {voucher}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )} */}
-
-            {selectedVoucher === "Payment Receipt Contra" && (
-              <div className="text-sm text-gray-800 max-w-xl flex gap-x-4 items-center">
-                <Checkbox
-                  id="empty-ledger"
-                  checked={isEmptyLedgersSelected}
-                  onCheckedChange={setIsEmptyLedgersSelected}
-                  className=""
-                />
-                <label
-                  htmlFor="empty-ledger"
-                  className="whitespace-nowrap select-none"
-                >
-                  Upload Empty Ledgers
-                </label>
-              </div>
-            )}
-            <div className="text-sm text-gray-800 max-w-xl flex gap-x-4 items-center">
-              <label className="whitespace-nowrap select-none">
-                Please Enter Port Number:
-              </label>
-              <Input
-                type="number"
-                value={port}
-                onChange={handlePortChange}
-                placeholder="Enter Port Number"
-              />
-            </div>
-          </div>
-        </CardHeader>
-
-        <CardContent>
+      <Card className="shadow-none">
+        <CardContent className="p-0">
           {loading ? (
-            <div className="flex justify-center py-10">
+            <div className="flex justify-center ">
               <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
             </div>
           ) : (
@@ -1091,6 +1077,10 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
                   handleLedgerImport={handleLedgerImport}
                   selectedBankLedger={selectedBankLedger}
                   setSelectedBankLedger={setSelectedBankLedger}
+                  isEmptyLedgersSelected={isEmptyLedgersSelected}
+                  setIsEmptyLedgersSelected={setIsEmptyLedgersSelected}
+                  port={port}
+                  setPort={setPort}
                 />
               ) : (
                 // Fallback if not manual and no data

@@ -349,10 +349,9 @@ const GenerateReportForm = ({
   //   });
   // };
   const handlePreviewFile = (previewUrl, fileType) => {
-    if(fileType.includes("application/pdf")){
+    if (fileType.includes("application/pdf")) {
       window.open(previewUrl, "_blank");
-    }else{
-
+    } else {
       toast({
         title: "Alert",
         description: "File not supported for preview",
@@ -435,7 +434,7 @@ const GenerateReportForm = ({
       }
 
       // If report name is unique, proceed with report generation
-      handleReportSubmit(
+      const response = await handleReportSubmit(
         setProgress,
         setLoading,
         setToastId,
@@ -449,6 +448,13 @@ const GenerateReportForm = ({
         convertDateFormat,
         caseName || currentCaseName
       );
+
+      if (response) {
+        // reset form
+        setCaseName("");
+        setSelectedFiles([]);
+        setFileDetails([]);
+      }
     } catch (error) {
       console.error("Error checking report name:", error);
       toast({
@@ -747,18 +753,16 @@ const GenerateReportForm = ({
                   value={currentCaseName || caseName}
                   onChange={(e) => setCaseName(e.target.value)}
                   disabled={currentCaseName != null}
-                  className={`w-1/3 px-3 py-2 text-sm text-gray-500 dark:text-gray-400 focus:outline-none ${
-                    currentCaseName == null
+                  className={`w-1/3 px-3 py-2 text-sm text-gray-500 dark:text-gray-400 focus:outline-none ${currentCaseName == null
                       ? "focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-500"
                       : "cursor-not-allowed"
-                  } transition-all border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm`}
+                    } transition-all border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm`}
                 />
               </div>
 
               <div
-                className={`relative ${
-                  isDragging ? "ring-2 ring-[#3498db] dark:ring-blue-500" : ""
-                }`}
+                className={`relative ${isDragging ? "ring-2 ring-[#3498db] dark:ring-blue-500" : ""
+                  }`}
                 onDragEnter={handleDragEnter}
                 onDragLeave={handleDragLeave}
                 onDragOver={handleDragOver}

@@ -128,7 +128,7 @@ const storeTransactionsBatch = async (transformedTransactions) => {
       }
     }
 
-    log.info({ uniqueTransactions });
+    // log.info({ uniqueTransactions });
 
     if (uniqueTransactions.length === 0) {
       log.info("No new unique transactions to store");
@@ -465,7 +465,7 @@ const processStatementAndEOD = async (
 
 const processSummaryData = async (parsedData, caseName) => {
   log.info("Processing summary data for case:", caseName);
-  log.info("Parsed Data in summary:", parsedData);
+  // log.info("Parsed Data in summary:", parsedData);
   try {
     const validCaseId = await getOrCreateCase(caseName);
 
@@ -914,13 +914,20 @@ function generateReportIpc(tmpdir_path) {
             data: {
               caseId: caseId,
               processed: null,
-              errorMessage: response.data.message || "Unknown error",
+              warning:
+                [response.data.message] || [response?.message] ||
+                "Unknown error",
+              processing_times: response.data?.processing_times || [],
             },
           };
         }
 
-        log.info("API response received:", response.data.length);
+        log.info("API response received:", response.data);
         log.info("missing month list", response.data?.["missing_months_list"]);
+        log.info(
+          "pdf_paths_not_extracted",
+          response.data?.["pdf_paths_not_extracted"]
+        );
         log.info("time taken to process", response.data?.["processing_times"]);
 
         // Step 3: Handle failed extractions
@@ -977,11 +984,13 @@ function generateReportIpc(tmpdir_path) {
                 "Acc Number": [],
               },
               processing_times: response.data?.processing_times || [],
+              warning:
+                response.data?.["pdf_paths_not_extracted"][
+                "respective_reasons_for_error"
+                ] || null,
             },
           };
         }
-
-        console.log("parsedData transactions", parsedData.Transactions);
 
         const transactions_temp = (parsedData.Transactions || []).filter(
           (transaction) => {
@@ -1130,6 +1139,10 @@ function generateReportIpc(tmpdir_path) {
               "Acc Number": [],
             },
             missingMonthsList: response.data?.["missing_months_list"] || [],
+            warning:
+              response.data?.["pdf_paths_not_extracted"][
+              "respective_reasons_for_error"
+              ] || null,
             processing_times: response.data?.processing_times || [],
           },
         };
@@ -1234,18 +1247,8 @@ function generateReportIpc(tmpdir_path) {
           data: {
             caseId: caseId,
             processed: null,
-            errorMessage: response.data.message || "Unknown error",
-            // totalTransactions: 0,
-            // eodProcessed: false,
-            // summaryProcessed: false,
-            // failedStatements:
-            //   response.data["pdf_paths_not_extracted"] || null,
-            // failedFiles: Array.from(failedFiles),
-            // successfulFiles: Array.from(successfulFiles),
-            // nerResults: response.data?.ner_results || {
-            //   Name: [],
-            //   "Acc Number": [],
-            // },
+            warning: [response.data.message] || "Unknown error",
+            processing_times: response.data?.processing_times || [],
           },
         };
       }
@@ -1304,6 +1307,10 @@ function generateReportIpc(tmpdir_path) {
                 Name: [],
                 "Acc Number": [],
               },
+              warning:
+                response.data?.["pdf_paths_not_extracted"][
+                "respective_reasons_for_error"
+                ] || null,
               processing_times: response.data?.processing_times || [],
             },
           };
@@ -1447,6 +1454,10 @@ function generateReportIpc(tmpdir_path) {
           failedFiles: failedFiles,
           successfulFiles: successfulFiles,
           processing_times: response.data?.processing_times || [],
+          warning:
+            response.data?.["pdf_paths_not_extracted"][
+            "respective_reasons_for_error"
+            ] || null,
         },
       };
     } catch (error) {

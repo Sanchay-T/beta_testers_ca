@@ -11,7 +11,11 @@ import {
   Mail,
   Share2,
   Eye,
+  Users,
   ChevronDown,
+  Upload,
+  PenLine,
+  FilterX,
 } from "lucide-react";
 import {
   Card,
@@ -359,15 +363,21 @@ const DataTable = ({
         const modifiedRow = prevFilteredData.find(
           (prevRow) => prevRow.id === newRow.id
         );
-        return modifiedRow
-          ? {
-              ...newRow,
-              category: modifiedRow.category,
-              // entity: modifiedRow.entity,
-              ledger: modifiedRow.ledger,
-              entity: modifiedRow.entity,
-            }
-          : newRow;
+        if (modifiedRow) {
+          const update = {
+            ...newRow,
+            category: modifiedRow.category,
+          };
+          if (modifiedRow.ledger) {
+            update.ledger = modifiedRow.ledger;
+          }
+          if (modifiedRow.entity) {
+            update.entity = modifiedRow.entity;
+          }
+          return update;
+        } else {
+          return newRow;
+        }
       });
     });
 
@@ -446,6 +456,7 @@ const DataTable = ({
       });
     }
   }, [data, title]);
+
   const categoryOptions = useMemo(
     () => categoriesArray.map((cat) => cat.name),
     [categoriesArray]
@@ -516,30 +527,65 @@ const DataTable = ({
             (tx) => tx.id === row.Id
           );
           if (!existingTransaction) return null;
-          if (existingTransaction.category === row.Category) return null;
 
-          if (categoryOptions.includes(row.Category)) {
-            return {
-              date: row.Date,
-              credit: row.Credit,
-              debit: row.Debit,
-              description: row.Description,
-              id: row.Id,
-              oldCategory: existingTransaction.category,
-              newCategory: row.Category,
-            };
-          } else {
-            return {
-              date: row.Date,
-              credit: row.Credit,
-              debit: row.Debit,
-              description: row.Description,
-              id: row.Id,
-              oldCategory: existingTransaction.category,
-              newCategory: row.Category,
-              classification: row.Classification,
-            };
+          // if (existingTransaction.category === row.Category) return null;
+          // Check if either category or ledger has changed
+          const categoryChanged = existingTransaction.category !== row.Category;
+          const ledgerChanged =
+            existingTransaction.ledger !== row.Ledger &&
+            existingTransaction.entity !== row.Ledger;
+
+          console.log({ categoryChanged, ledgerChanged });
+          if (!categoryChanged && !ledgerChanged) return null;
+          const update = {
+            date: row.Date,
+            credit: row.Credit,
+            debit: row.Debit,
+            description: row.Description,
+            id: row.Id,
+            category: row.Category,
+          };
+
+          // Add category change details if category changed
+          if (categoryChanged) {
+            update.oldCategory = existingTransaction.category;
+            update.newCategory = row.Category;
+
+            if (!categoryOptions.includes(row.Category)) {
+              update.classification = row.Classification;
+            }
           }
+
+          // Add ledger change details if ledger changed
+          if (ledgerChanged) {
+            update.oldLedger =
+              existingTransaction.ledger || existingTransaction.entity;
+            update.newLedger = row.Ledger;
+          }
+
+          return update;
+          // if (categoryOptions.includes(row.Category)) {
+          //   return {
+          //     date: row.Date,
+          //     credit: row.Credit,
+          //     debit: row.Debit,
+          //     description: row.Description,
+          //     id: row.Id,
+          //     oldCategory: existingTransaction.category,
+          //     newCategory: row.Category,
+          //   };
+          // } else {
+          //   return {
+          //     date: row.Date,
+          //     credit: row.Credit,
+          //     debit: row.Debit,
+          //     description: row.Description,
+          //     id: row.Id,
+          //     oldCategory: existingTransaction.category,
+          //     newCategory: row.Category,
+          //     classification: row.Classification,
+          //   };
+          // }
         })
         .filter(Boolean); // Remove nulls
 
@@ -556,40 +602,66 @@ const DataTable = ({
     try {
       // Call API or Electron IPC to update database
       // await window.electron.updateSuspenseCategories(uploadedChanges);
-
-      // TODO - Apply changes locally in the table
+      const categoryUpdates = uploadedChanges.filter(
+        (change) => change.newCategory
+      );
+      const ledgerUpdates = uploadedChanges.filter(
+        (change) => change.newLedger
+      );
 
       const dataOnUi = filteredData.map((row) => ({ ...row }));
-      uploadedChanges.forEach((change) => {
+      categoryUpdates.forEach((change) => {
         const index = dataOnUi.findIndex((row) => row.id === change.id);
         if (index !== -1) {
           dataOnUi[index].category = change.newCategory;
         }
       });
+
+      // Apply ledger changes
+      ledgerUpdates.forEach((change) => {
+        const index = dataOnUi.findIndex((row) => row.id === change.id);
+        if (index !== -1) {
+          dataOnUi[index].ledger = change.newLedger;
+          dataOnUi[index].entity = change.newLedger;
+        }
+      });
       setFilteredData(dataOnUi);
 
-      const updatedTransactions = uploadedChanges.map((change) => {
-        const updatedTransaction = filteredData.find(
-          (tx) => tx.id === change.id
-        );
-        if (updatedTransaction) {
-          updatedTransaction.oldCategory = change.oldCategory;
-          updatedTransaction.category = change.newCategory;
-          updatedTransaction.classification = change.classification;
-          updatedTransaction.reasoning = "";
-          updatedTransaction.is_new = updatedTransaction.classification
-            ? true
-            : false;
-        }
-        return updatedTransaction;
-      });
+      if (categoryUpdates.length > 0) {
+        const updatedTransactions = categoryUpdates.map((change) => {
+          const updatedTransaction = filteredData.find(
+            (tx) => tx.id === change.id
+          );
+          if (updatedTransaction) {
+            updatedTransaction.oldCategory = change.oldCategory;
+            updatedTransaction.category = change.newCategory;
+            updatedTransaction.classification = change.classification;
+            updatedTransaction.reasoning = "";
+            updatedTransaction.is_new = updatedTransaction.classification
+              ? true
+              : false;
+          }
+          return updatedTransaction;
+        });
 
-      const payload = convertArrayToObject(updatedTransactions);
-      // console.log("Payload", payload);
-      const response = await window.electron.editCategory(
-        payload,
-        caseId || reportData.caseId
-      );
+        const categoryPayload = convertArrayToObject(updatedTransactions);
+        // console.log("Payload", payload);
+        await window.electron.editCategory(
+          categoryPayload,
+          caseId || reportData.caseId
+        );
+      }
+
+      // Handle ledger updates with API call
+      if (ledgerUpdates.length > 0) {
+        const ledgerPayload = ledgerUpdates.map((change) => ({
+          entity: change.newLedger,
+          transactionId: change.id,
+        }));
+
+        await window.electron.editEntity(ledgerPayload);
+      }
+
       setCategoryUpdateModalOpen(false);
       toast({
         title: "Categories Updated!",
@@ -800,53 +872,38 @@ const DataTable = ({
     setPendingCategoryChange(null);
     setReasoning("");
     setShowKeywordInput(false);
+    handleSaveChanges([...modifiedData, modifiedObject]);
   };
 
   // --- Bulk Update: Find each row by its id ---
   const handleBulkCategoryChange = (source) => {
-    // Create a shallow copy so we don’t mutate state directly.
-    // const dataOnUi = filteredData.map((row) => ({ ...row }));
-    const newModifiedData = [...modifiedData];
     const ids =
       source === "similarCategory"
         ? selectedCategorySimilarTransactions
         : globalSelectedRows;
+
     const newCategory =
       source === "similarCategory"
         ? pendingCategoryChange.newCategory
         : selectedBulkCategory === ""
         ? categorySearchTerm
         : selectedBulkCategory;
-    // ids.forEach((id) => {
-    //   const index = dataOnUi.findIndex((row) => row.id === id);
-    //   if (index !== -1) {
-    //     const oldCategory = dataOnUi[index].category;
-    //     dataOnUi[index].category = newCategory;
-    //     // If the new category is "Self transfer", update voucher_type
-    //     if (newCategory === "Self transfer" || selectedType === "Contra") {
-    //       dataOnUi[index].voucher_type = "Contra";
-    //     }
 
-    //     if (selectedType) {
-    //       dataOnUi[index].classification = selectedType;
-    //       dataOnUi[index].is_new = true;
-    //     }
-    //     newModifiedData.push({
-    //       ...dataOnUi[index],
-    //       oldCategory,
-    //       reasoning: bulkReasoning,
-    //     });
-    //   }
-    // });
+    const currentModifiedData = [...modifiedData];
 
-    setFilteredData((prevFilteredData) =>
-      prevFilteredData.map((row) => {
+    // Update filteredData and compute modifiedData in the same callback
+    setFilteredData((prevFilteredData) => {
+      const newlyModifiedItems = [];
+
+      const updatedData = prevFilteredData.map((row) => {
         if (ids.has(row.id)) {
           const oldCategory = row.category;
           let updatedRow = { ...row, category: newCategory };
+
           if (newCategory === "Self transfer" || selectedType === "Contra") {
             updatedRow.voucher_type = "Contra";
           }
+
           if (selectedType) {
             let newClassification = selectedType;
             if (selectedType === "Contra") {
@@ -857,21 +914,32 @@ const DataTable = ({
             updatedRow.classification = newClassification;
             updatedRow.is_new = true;
           }
-          newModifiedData.push({
+
+          const modifiedItem = {
             ...updatedRow,
             category: newCategory,
             oldCategory,
             reasoning: bulkReasoning,
             is_new: selectedType ? true : false,
-          });
+          };
+
+          newlyModifiedItems.push(modifiedItem);
           return updatedRow;
         }
-        return row;
-      })
-    );
 
-    // setFilteredData(dataOnUi);
-    setModifiedData((prevData) => [...prevData, ...newModifiedData]);
+        return row;
+      });
+
+      const allModifiedData = [...currentModifiedData, ...newlyModifiedItems];
+
+      // Now safely update modifiedData and save changes
+      setModifiedData(allModifiedData);
+      handleSaveChanges(allModifiedData);
+
+      return updatedData;
+    });
+
+    // Rest state updates — safe to keep outside
     setHasChanges(true);
     setGlobalSelectedRows(new Set());
     setBulkCategoryModalOpen(false);
@@ -1086,17 +1154,18 @@ const DataTable = ({
     }, {});
   };
 
-  const handleSaveChanges = async () => {
+  const handleSaveChanges = async (newModifiedData) => {
+    console.log({ newModifiedData });
     try {
       setIsLoading(true);
 
-      const payload = convertArrayToObject(modifiedData);
+      const payload = convertArrayToObject(newModifiedData);
       const response = await window.electron.editCategory(
         payload,
         caseId || reportData.caseId
       );
 
-      modifiedData.map((row) => {
+      newModifiedData.map((row) => {
         if (row.category === "Self transfer") {
           handleVoucherTypeChange(row, "Contra", "Self transfer");
         }
@@ -1283,6 +1352,7 @@ const DataTable = ({
   };
 
   const handleAddCategory = (newCategory, row) => {
+    console.log("Adding category", newCategory, row);
     if (
       newCategory &&
       !categoryOptions.includes(newCategory) &&
@@ -1347,12 +1417,33 @@ const DataTable = ({
       ? reportData.customerName
       : reportData.reportName;
     newTitle = `${tmpName} ${newTitle}`;
+    console.log("Filtered data", filteredData);
+
+    const formattedDataToDownload = filteredData.map((row) => {
+      const newRow = { ...row };
+
+      const categoryBackup = row.category;
+      const ledgerBackup = row.ledger || row.entity;
+      delete newRow.category;
+      delete newRow.ledger;
+      delete newRow.entity;
+
+      // Add the category and ledger back to the row
+      if (ledgerBackup) {
+        newRow.ledger = ledgerBackup;
+      }
+      newRow.category = categoryBackup;
+
+      return newRow;
+    });
 
     exportToExcel(
-      filteredData,
+      formattedDataToDownload,
       (title = newTitle),
       false,
-      ["suspense", "upi-dr", "upi-cr"].includes(source) ? categoryOptions : null
+      ["suspense", "upi-dr", "upi-cr", "transactions"].includes(source)
+        ? categoryOptions
+        : null
     );
   };
 
@@ -1367,7 +1458,9 @@ const DataTable = ({
       data,
       `${newTitle}.xlsx`,
       true,
-      ["suspense", "upi-dr", "upi-cr"].includes(source) ? categoryOptions : null
+      ["suspense", "upi-dr", "upi-cr", "transactions"].includes(source)
+        ? categoryOptions
+        : null
     );
     if (!fileName) return alert("File saving was canceled.");
 
@@ -1393,7 +1486,9 @@ const DataTable = ({
       data,
       `${newTitle}.xlsx`,
       true,
-      ["suspense", "upi-dr", "upi-cr"].includes(source) ? categoryOptions : null
+      ["suspense", "upi-dr", "upi-cr", "transactions"].includes(source)
+        ? categoryOptions
+        : null
     );
     if (!fileName) return alert("File saving was canceled.");
 
@@ -1670,145 +1765,163 @@ const DataTable = ({
     // if source is equal to lifo or fifo then show the table
     <Card className="min-w-full max-w-[0]">
       <CardHeader className="w-full">
-        <div className="flex flex-col md:flex-row justify-between gap-4">
-          {/* Title and description */}
-          <div className="space-y-2 whitespace-nowrap">
-            <CardTitle className="dark:text-slate-300">
-              {title || "Data Table"}
-            </CardTitle>
-            <CardDescription>
-              {subtitle || "View and manage your data"}
-            </CardDescription>
-          </div>
-
-          {/* Controls section */}
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Search input */}
-            <div className="relative min-w-[200px] md:w-[200px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search..."
-                className="pl-10 w-full"
-                value={searchTerm}
-                onChange={(e) => handleSearch(e.target.value)}
-              />
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-wrap justify-between items-center">
+            <div>
+              <CardTitle className="dark:text-slate-300">
+                {title || "Data Table"}
+              </CardTitle>
+              <CardDescription>
+                {subtitle || "View and manage your data"}
+              </CardDescription>
             </div>
+            <div className="flex flex-wrap items-center gap-2 ml-auto">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 gap-1"
+                onClick={clearFilters}
+              >
+                <FilterX className="h-4 w-4" />
+                <span>Clear Filters</span>
+              </Button>
 
-            {/* Rows per page */}
-            <select
-              className="p-2 border rounded-md text-sm dark:bg-slate-800 dark:border-slate-700 w-[120px]"
-              value={rowsPerPage}
-              onChange={(e) => {
-                const value = e.target.value;
-                setRowsPerPage(Number(value));
-                setCurrentPage(1);
-              }}
-            >
-              <option value="10">10 rows</option>
-              <option value="20">20 rows</option>
-              <option value="50">50 rows</option>
-            </select>
+              {source === "transactions" &&
+                reportData?.individualId &&
+                reportData?.individualId !== "combined" && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-9 w-9"
+                          onClick={() => handlePreviewFile(reportData.filePath)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Preview Statement</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
 
-            {/* Clear filters button */}
-            <Button
-              variant="outline"
-              className="px-3 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-600 
-                  bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
-                  transition-all rounded-md shadow-sm hover:shadow-md"
-              onClick={clearFilters}
-            >
-              Clear Filters
-            </Button>
-
-            {/* Conditional preview button */}
-            {source === "transactions" &&
-              reportData?.individualId &&
-              reportData?.individualId !== "combined" && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
-                      transition-all shadow-sm hover:shadow-md"
-                      onClick={() => handlePreviewFile(reportData.filePath)}
-                    >
-                      <Eye className="w-4 h-4 text-blue-500" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Preview Statement</TooltipContent>
-                </Tooltip>
-              )}
-
-            {/* Conditional upload button */}
-            {["suspense", "upi-dr", "upi-cr"].includes(source) && (
-              <>
+              {["suspense", "upi-dr", "upi-cr", "transactions"].includes(
+                source
+              ) && (
                 <Button
                   onClick={() => fileInputRef.current.click()}
                   variant="outline"
-                  className="px-3 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-600 
-                  bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
-                  transition-all rounded-md shadow-sm hover:shadow-md"
+                  size="sm"
+                  className="h-9 gap-1"
                 >
-                  Upload Modified Excel
+                  <Upload className="h-4 w-4" />
+                  <span>Upload Excel</span>
+                  <input
+                    type="file"
+                    accept=".xlsx, .xls"
+                    ref={fileInputRef}
+                    onChange={handleExcelFileUpload}
+                    className="hidden"
+                  />
                 </Button>
-                <input
-                  type="file"
-                  accept=".xlsx, .xls"
-                  ref={fileInputRef}
-                  onChange={handleExcelFileUpload}
-                  className="hidden"
+              )}
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 gap-1"
+                onClick={handleDownload}
+              >
+                <Download className="h-4 w-4" />
+                <span>Download</span>
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 gap-1"
+                onClick={handleShare}
+              >
+                <Share2 className="h-4 w-4" />
+                <span>Share</span>
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            {/* Left side - Search and pagination */}
+            <div className="flex items-center gap-2 flex-grow max-w-md">
+              <div className="relative flex-grow">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search..."
+                  className="pl-10 h-9"
+                  value={searchTerm}
+                  onChange={(e) => handleSearch(e.target.value)}
                 />
-              </>
-            )}
+              </div>
 
-            {/* Download and share buttons */}
-            <div className="flex gap-2">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
-                        transition-all shadow-sm hover:shadow-md"
-                    onClick={handleDownload}
-                  >
-                    <Download className="w-4 h-4 text-blue-500" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Download</TooltipContent>
-              </Tooltip>
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 
-                        transition-all shadow-sm hover:shadow-md"
-                    onClick={handleShare}
-                  >
-                    <Share2 className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Share</TooltipContent>
-              </Tooltip>
+              <Select
+                value={rowsPerPage.toString()}
+                onValueChange={(value) => {
+                  setRowsPerPage(Number(value));
+                  setCurrentPage(1);
+                }}
+              >
+                <SelectTrigger className="w-[100px] h-9">
+                  <SelectValue placeholder="Rows" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10 rows</SelectItem>
+                  <SelectItem value="20">20 rows</SelectItem>
+                  <SelectItem value="50">50 rows</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
-            {/* Bulk edit button */}
-            {hasEntity && (
+            {/* Right side - Actions */}
+
+            <div className="flex gap-x-5 ml-auto">
               <Button
-                variant="default"
-                className="min-w-[150px]"
+                variant={globalSelectedRows.size > 0 ? "default" : "outline"}
+                size="sm"
+                className="mt-2 sm:mt-0"
                 disabled={globalSelectedRows.size === 0}
-                onClick={() => setBatchModalOpen(true)}
+                onClick={() => openBulkCategoryModal()}
               >
-                Bulk Edit Ledger Name
+                <div className="flex items-center gap-1.5">
+                  <PenLine className="h-3.5 w-3.5" />
+                  Bulk Edit Category
+                  {globalSelectedRows.size > 0 && (
+                    <Badge variant="secondary">{globalSelectedRows.size}</Badge>
+                  )}
+                </div>
               </Button>
-            )}
+              {hasEntity && (
+                <Button
+                  variant={globalSelectedRows.size > 0 ? "default" : "outline"}
+                  size="sm"
+                  className="mt-2 sm:mt-0"
+                  disabled={globalSelectedRows.size === 0}
+                  onClick={() => setBatchModalOpen(true)}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <PenLine className="h-3.5 w-3.5" />
+                    Bulk Edit Ledger
+                    {globalSelectedRows.size > 0 && (
+                      <Badge variant="secondary">
+                        {globalSelectedRows.size}
+                      </Badge>
+                    )}
+                  </div>
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </CardHeader>
+
       <CardContent>
         <div className="w-full overflow-x-auto">
           <Table className="w-full min-w-[800px]">
@@ -1966,9 +2079,15 @@ const DataTable = ({
                                 >
                                   {/* Trigger button styled like a Select */}
                                   <div
-                                    className="flex items-center justify-between w-full h-10 px-3 py-2 text-sm border rounded-md border-input bg-background cursor-pointer"
+                                    className={`flex items-center justify-between w-full h-10 px-3 py-2 text-sm border rounded-md ${
+                                      globalSelectedRows.has(row.id)
+                                        ? "bg-gray-100 text-gray-500 cursor-not-allowed opacity-70 border-slate-200"
+                                        : "bg-background cursor-pointer border-input"
+                                    }`}
                                     onClick={() => {
-                                      handleCategorySelectOpenChange(row.id);
+                                      if (!globalSelectedRows.has(row.id)) {
+                                        handleCategorySelectOpenChange(row.id);
+                                      }
                                     }}
                                   >
                                     <span
@@ -2024,6 +2143,15 @@ const DataTable = ({
                                                     handleCategorySelectOpenChange(
                                                       null
                                                     );
+                                                  } else {
+                                                    toast({
+                                                      title:
+                                                        "Category already exists",
+                                                      description:
+                                                        "Category name already exists for other transactions types.",
+                                                      variant: "destructive",
+                                                      duration: 3000,
+                                                    });
                                                   }
                                                 }
                                               }}
@@ -2514,6 +2642,7 @@ const DataTable = ({
                             className="h-8 px-2 absolute right-0 top-1/2 transform -translate-y-1/2"
                             onClick={(e) => {
                               e.stopPropagation();
+                              console.log("clicked", categorySearchTerm);
                               if (categorySearchTerm.trim()) {
                                 const added = handleAddCategory(
                                   categorySearchTerm.trim()
@@ -2524,6 +2653,14 @@ const DataTable = ({
                                   );
                                   setCategorySearchTerm("");
                                   setIsOpen(false);
+                                } else {
+                                  toast({
+                                    title: "Category already exists",
+                                    description:
+                                      "Category name already exists for other transactions types.",
+                                    variant: "destructive",
+                                    duration: 3000,
+                                  });
                                 }
                               }
                             }}
@@ -2742,7 +2879,7 @@ const DataTable = ({
 
       {/* Reasoning Modal for Single Category Change */}
       <Dialog open={reasoningModalOpen} onOpenChange={setReasoningModalOpen}>
-        <DialogContent className="max-w-[80%] max-h-[90vh] overflow-auto pb-0">
+        <DialogContent className="max-w-[90%] max-h-[90vh] overflow-auto pb-0">
           <DialogHeader>
             <DialogTitle className="mb-2">
               Category Change Reasoning
@@ -2861,7 +2998,7 @@ const DataTable = ({
                         <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
                           Date
                         </TableHead>
-                        <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300 w-[400px]">
                           Description
                         </TableHead>
                         <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -2907,7 +3044,7 @@ const DataTable = ({
                           <TableCell className="p-3">
                             {transaction.date}
                           </TableCell>
-                          <TableCell className="p-3 max-w-[400px] overflow-hidden">
+                          <TableCell className="p-3 w-[400px] overflow-hidden ellipsis whitespace-nowrap">
                             {transaction.description}
                           </TableCell>
                           <TableCell className="p-3">
@@ -3025,7 +3162,7 @@ const DataTable = ({
         open={categoryUpdateModalOpen}
         onOpenChange={setCategoryUpdateModalOpen}
       >
-        <DialogContent className="max-w-[80%]">
+        <DialogContent className="max-w-[90%]">
           <DialogHeader>
             <DialogTitle>Confirm Category Updates</DialogTitle>
             <DialogDescription>
@@ -3049,6 +3186,12 @@ const DataTable = ({
                   <TableHead className="whitespace-nowrap">
                     New Category
                   </TableHead>
+                  <TableHead className="whitespace-nowrap">
+                    Old Ledger
+                  </TableHead>
+                  <TableHead className="whitespace-nowrap">
+                    New Ledger
+                  </TableHead>
                   <TableHead>Classification</TableHead>
                 </TableRow>
               </TableHeader>
@@ -3056,18 +3199,36 @@ const DataTable = ({
                 {uploadedChanges.map((change) => (
                   <TableRow key={change.id}>
                     <TableCell>{change.date}</TableCell>
-                    <TableCell>{change.description}</TableCell>
+                    <TableCell className="p-3 relative group">
+                      <div
+                        className="truncate max-w-xs"
+                        title={change.description}
+                      >
+                        {change.description}
+                      </div>
+                      <div className="absolute z-50 hidden group-hover:block bg-gray-900 text-white p-2 rounded shadow-lg max-w-md whitespace-normal left-0 transform -translate-y-full">
+                        {change.description}
+                      </div>
+                    </TableCell>{" "}
                     <TableCell>{change.credit}</TableCell>
                     <TableCell>{change.debit}</TableCell>
-                    <TableCell>{change.oldCategory}</TableCell>
-                    <TableCell className="text-blue-600">
-                      {change.newCategory}
+                    <TableCell>
+                      {change.oldCategory || change.category}
                     </TableCell>
-                    {change.classification && (
-                      <TableCell className="text-blue-600">
-                        {change.classification}
-                      </TableCell>
-                    )}
+                    <TableCell
+                      className={change.newCategory ? "text-blue-600" : ""}
+                    >
+                      {change.newCategory || change.category}
+                    </TableCell>
+                    <TableCell>{change.oldLedger || "—"}</TableCell>
+                    <TableCell
+                      className={change.newLedger ? "text-blue-600" : ""}
+                    >
+                      {change.newLedger || "—"}
+                    </TableCell>
+                    <TableCell className="text-blue-600">
+                      {change.classification || "—"}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -3075,6 +3236,9 @@ const DataTable = ({
           </div>
 
           <DialogFooter>
+            <div className="text-sm text-gray-500 mb-2 mr-auto">
+              Blue highlight indicates category or ledger has been updated.
+            </div>
             <Button
               variant="ghost"
               onClick={() => {
@@ -3100,7 +3264,7 @@ const DataTable = ({
       )}
 
       {/* Fixed Bottom Actions Bar */}
-      {(hasChanges || globalSelectedRows.size > 0) && (
+      {/* {(hasChanges || globalSelectedRows.size > 0) && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-lg flex justify-end gap-2 z-50">
           {globalSelectedRows.size > 0 && (
             <Button
@@ -3126,7 +3290,7 @@ const DataTable = ({
             </Button>
           )}
         </div>
-      )}
+      )} */}
     </Card>
   );
 };

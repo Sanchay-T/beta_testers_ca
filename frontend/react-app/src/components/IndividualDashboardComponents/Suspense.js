@@ -36,28 +36,32 @@ const Suspense = () => {
 
   const processData = (transactions) => {
     return transactions.map((transaction) => {
-      if(transaction.description.toLowerCase().includes("openingbal")||transaction.description.toLowerCase().includes("closingbal")){
+      if (
+        transaction.description.toLowerCase().includes("openingbal") ||
+        transaction.description.toLowerCase().includes("closingbal")
+      ) {
         return null;
-      
-      }else{
-      return {
-      date: new Date(transaction.date).toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      }),
-      description: transaction.description,
-      credit:
-        transaction.type.toLowerCase() === "credit" ? transaction.amount : 0,
-      debit:
-        transaction.type.toLowerCase() === "debit" ? transaction.amount : 0,
-      balance: transaction.balance,
-      category: transaction.category,
-      id: transaction.id,
-      monthKey: getMonthKey(transaction.date),
-    }
-  }
-  });
+      } else {
+        return {
+          date: new Date(transaction.date).toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          }),
+          description: transaction.description,
+          credit:
+            transaction.type.toLowerCase() === "credit"
+              ? transaction.amount
+              : 0,
+          debit:
+            transaction.type.toLowerCase() === "debit" ? transaction.amount : 0,
+          balance: transaction.balance,
+          category: transaction.category,
+          id: transaction.id,
+          monthKey: getMonthKey(transaction.date),
+        };
+      }
+    });
   };
 
   const fetchData = async () => {
@@ -74,7 +78,6 @@ const Suspense = () => {
 
       // ṛemove null values
       transformedSuspenseData = transformedSuspenseData.filter((item) => item);
-
 
       // console.log("transformedSuspenseData", transformedSuspenseData);
 
