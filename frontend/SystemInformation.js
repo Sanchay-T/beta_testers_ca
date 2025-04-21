@@ -57,7 +57,7 @@ class SystemInformation {
                 // this.userSID = await this.computeWindowsUserSID(userDataPath);
                 this.userSID = "Windows3";
             } else {
-                this.userSID = "SIDWindows2";
+                this.userSID = "SIDWindows3";
             }
             log.info("System information loaded successfully.");
         } catch (error) {
