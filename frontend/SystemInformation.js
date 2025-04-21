@@ -54,8 +54,8 @@ class SystemInformation {
 
             // Load Windows User SID if on Windows, else set as null.
             if (process.platform === "win32") {
-                // this.userSID = await this.computeWindowsUserSID(userDataPath);
-                this.userSID = "Windows3";
+                this.userSID = await this.computeWindowsUserSID(userDataPath);
+                // this.userSID = "Windows3";
             } else {
                 this.userSID = "SIDWindows2";
             }
