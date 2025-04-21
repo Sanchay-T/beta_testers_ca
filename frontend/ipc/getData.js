@@ -10,7 +10,7 @@ function getdata() {
   const db = databaseManager.getInstance().getDatabase();
 
   ipcMain.handle("get-Report-Name", async (event, caseId) => {
-    log.info("Case ID : ", caseId);
+    //log.info("Case ID : ", caseId);
     try {
       const reportName = await db
         .select({
@@ -20,7 +20,7 @@ function getdata() {
         .where(eq(cases.id, caseId));
       return reportName[0].name;
     } catch (error) {
-      log.error("Failed to get report name:", error);
+      //log.error("Failed to get report name:", error);
       return "";
     }
   });
@@ -37,7 +37,7 @@ function getdata() {
 
       return result?.customerName || null; // Return just the name or null if not found
     } catch (error) {
-      log.error("Failed to get customer name:", error);
+      //log.error("Failed to get customer name:", error);
       return null;
     }
   });
@@ -71,7 +71,7 @@ function getdata() {
         error: false,
       };
     } catch (error) {
-      log.error("Failed to check report name:", error);
+      // log.error("Failed to check report name:", error);
       return {
         exists: false,
         message: "Failed to check report name",

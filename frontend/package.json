@@ -31,6 +31,7 @@
     "cross-env": "^7.0.3",
     "electron": "^33.3.1",
     "electron-builder": "^24.13.3",
+    "electron-rebuild": "^3.2.9",
     "mocha": "^11.1.0",
     "rimraf": "^5.0.5",
     "wait-on": "^7.2.0"
@@ -79,6 +80,14 @@
       {
         "from": "drizzle.config.js",
         "to": "drizzle.config.js"
+      },
+      {
+        "from": "gatewayServer/appsettings.json",
+        "to": "appsettings.json"
+      },
+      {
+        "from": "gatewayServer/gatewayService.exe",
+        "to": "gatewayService.exe"
       }
     ],
     "extraMetadata": {
@@ -150,6 +159,7 @@
     "electron-updater": "^6.3.9",
     "fast-xml-parser": "^4.5.1",
     "fs": "^0.0.1-security",
+    "ip": "^2.0.1",
     "is-elevated": "^4.0.0",
     "keytar": "^7.9.0",
     "node-fetch": "^3.3.2",

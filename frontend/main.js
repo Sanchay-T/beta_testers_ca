@@ -19,7 +19,7 @@ const { registerReportHandlers } = require("./ipc/reportHandlers.js");
 const { registerAuthHandlers } = require("./ipc/authHandlers.js");
 const { registerEditReportHandlers } = require("./ipc/editReportHandlers.js");
 const sessionManager = require("./SessionManager");
-// const licenseManager = require("./LicenseManager");
+const licenseManager = require("./LicenseManager");
 const { generateReportIpc } = require("./ipc/generateReport");
 const { registerOpportunityToEarnIpc } = require("./ipc/opportunityToEarn");
 const { registerTallyIpc } = require("./ipc/tallyHandlers.js");
@@ -33,10 +33,8 @@ const portscanner = require("portscanner"); // Import portscanner
 const { autoUpdater } = require("electron-updater");
 const { getdata } = require("./ipc/getData.js");
 const bonjour = require('bonjour')();
-const systemInfo = require("./SystemInformation.js");
-const axios = require("axios");
-const licenseManager = require("./LicenseManager");
-const gatewayServer = require("./InitiateGatewayServer")
+const gatewayServer = require("./InitiateGatewayServer.js")
+const systemInfo = require("./SystemInformation");
 
 function discoverMdnsServices(serviceType = '', callback) {
   bonjour.find({ type: serviceType }, (service) => {
@@ -44,8 +42,7 @@ function discoverMdnsServices(serviceType = '', callback) {
       name: service.name,
       host: service.host,
       ip: service.referer.address,
-      port: service.port,
-      additional: service.txt || {}
+      port: service.port
     };
 
     // console.log('🔍 Found service:', serviceInfo);
@@ -214,8 +211,111 @@ let pythonProcess = null;
 
 const BACKEND_PORT = 5000; // Replace with the port your backend is listening to
 
-const LICENSE_EXECUTABLE_DIR = isDev ? __dirname : app.getPath("userData");
-console.log("LICENSE_SERVE EXECUTABLE DIR:", LICENSE_EXECUTABLE_DIR);
+// frontend\license-server.exe
+const SERVICE_NAME = "LicensingServer";
+const LICENSE_SERVER_EXECUTABLE = path.join(__dirname, "license-server.exe");
+console.log("LICENSE_SERVE EXECUTABLE: ", LICENSE_SERVER_EXECUTABLE);
+
+// const RUST_EXECUTABLE = "C:\\path\\to\\rust.exe"; // Change this to your actual path
+
+// Function to check if service exists
+async function checkServiceExists(callback) {
+  exec(`sc query ${SERVICE_NAME}`, (error, stdout, stderr) => {
+    if (error || stderr) {
+      log.error("ERROR checking service existence:");
+      if (error) {
+        let extendedErrorMessage;
+        try {
+          extendedErrorMessage = execSync(`net helpmsg ${error.code}`, { encoding: 'utf8' }).trim();
+        } catch (syncError) {
+          extendedErrorMessage = 'Could not retrieve extended error message';
+        }
+        log.error("Error Message:", error.message);
+        log.error("Error Code:", error.code);
+        log.error("Extended Error Message:", extendedErrorMessage);
+        log.error("Error Signal:", error.signal);
+        log.error("Executed Command:", error.cmd);
+        log.error("Full Error Object:", JSON.stringify(error, null, 2));
+      }
+      log.error("STDERR checking service existence:", stderr || "None");
+      callback(false);
+    }
+    if (stdout.includes("FAILED") || stdout.includes("does not exist")) {
+      log.info("Service existence error: ", stdout);
+      callback(false);
+    } else {
+      log.info("Service probably exists: ", stdout);
+      callback(true);
+    }
+  });
+}
+
+
+async function createAndStartService() {
+  const createServiceCommand = `sc create ${SERVICE_NAME} binPath= "${RUST_EXECUTABLE}" start= auto`;
+
+  exec(createServiceCommand, (error, stdout, stderr) => {
+    if (error || stderr) {
+      let extendedErrorMessage = '';
+      if (error) {
+        try {
+          extendedErrorMessage = execSync(`net helpmsg ${error.code}`, { encoding: 'utf8' }).trim();
+        } catch (syncError) {
+          extendedErrorMessage = 'Could not retrieve extended error message';
+        }
+        log.error("Error creating service:");
+        log.error("Error Message:", error.message);
+        log.error("Error Code:", error.code);
+        log.error("Extended Error Message:", extendedErrorMessage);
+        log.error("Error Signal:", error.signal);
+        log.error("Executed Command:", error.cmd);
+        log.error("Full Error Object:", JSON.stringify(error, null, 2));
+      }
+      if (stderr) {
+        log.error("STDERR:", stderr);
+      }
+      return;
+    }
+    log.info("Service created successfully.");
+
+    // Start the service
+    exec(`sc start ${SERVICE_NAME}`, (err, out, errOut) => {
+      if (err || errOut) {
+        let extendedErrorMessage2 = '';
+        if (err) {
+          try {
+            extendedErrorMessage2 = execSync(`net helpmsg ${err.code}`, { encoding: 'utf8' }).trim();
+          } catch (syncError) {
+            extendedErrorMessage2 = 'Could not retrieve extended error message';
+          }
+          log.error("Error starting service:");
+          log.error("Error Message:", err.message);
+          log.error("Error Code:", err.code);
+          log.error("Extended Error Message:", extendedErrorMessage2);
+          log.error("Error Signal:", err.signal);
+          log.error("Executed Command:", err.cmd);
+          log.error("Full Error Object:", JSON.stringify(err, null, 2));
+        }
+        if (errOut) {
+          log.error("STDERR:", errOut);
+        }
+        return;
+      }
+      log.info("Rust Licensing Server started successfully.");
+    });
+  });
+}
+
+
+// const LICENSE_EXECUTABLE_DIR = isDev ? __dirname : app.getPath("userData");
+const isPackaged = app.isPackaged;
+
+// When packaged, resources are unpacked to a different location
+const GATEWAY_EXECUTABLE_DIR = isPackaged
+  ? process.resourcesPath // Electron's resources dir in packaged mode
+  : path.join(__dirname, "./gatewayServer")
+
+console.log("GATEWAY EXECUTABLE DIR:", GATEWAY_EXECUTABLE_DIR);
 
 // const RUST_EXECUTABLE = "C:\\path\\to\\rust.exe"; // Change this to your actual path
 
@@ -309,9 +409,10 @@ async function createAndStartService() {
 
 
 // Listen for remaining seconds updates
-// sessionManager.on('remainingSecondsUpdated', (seconds) => {
-//   console.log(`Remaining seconds: ${seconds}`);
-// });
+sessionManager.on('remainingSecondsUpdated', (seconds) => {
+  console.log(`Remaining seconds: ${seconds}`);
+  win.webContents.send('remainingSecondsUpdated', seconds);
+});
 
 // Listen for license expiration
 sessionManager.on("licenseExpired", () => {
@@ -351,14 +452,17 @@ function getProductionExecutablePath() {
     // Log the contents of the resources directory
     try {
       const resourcesContents = fs.readdirSync(process.resourcesPath);
+      log.info("Contents of resources directory:", resourcesContents);
 
       const backendPath = path.join(process.resourcesPath, "backend");
       if (fs.existsSync(backendPath)) {
         const backendContents = fs.readdirSync(backendPath);
+        log.info("Contents of backend directory:", backendContents);
 
         const mainPath = path.join(backendPath, "main");
         if (fs.existsSync(mainPath)) {
           const mainContents = fs.readdirSync(mainPath);
+          log.info("Contents of main directory:", mainContents);
         }
       }
     } catch (err) {
@@ -431,6 +535,7 @@ async function startPythonExecutable() {
 
       // Set working directory to the executable's directory
       options.cwd = path.dirname(executablePath);
+      log.info("Setting working directory to:", options.cwd);
     }
 
     try {
@@ -786,29 +891,75 @@ async function createWindow() {
 
 app.setName("CypherSol Dev");
 
-async function fetchLicenseStatus() {
-  try {
-    const res = await axios.get("http://localhost:7890/license/status/all/");
-    if (res.data.success) {
-      console.log("🧾 Current License Sessions:");
-      console.table(res.data.sessions);
-    } else {
-      console.error("Failed to fetch license sessions:", res.data);
-    }
-  } catch (err) {
-    console.error("Error fetching license status:", err.message);
-  }
-}
-
 app.whenReady().then(async () => {
   log.info("App is ready", app.getPath("userData"));
-  // await fetchLicenseStatus();
 
-  createSplashWindow(); // Show immediately
+  createSplashWindow();
+  // Example usage
+  log.info("📡 Discovering services...");
+  discoverMdnsServices('license-server', async (service) => {
+    log.info('📡 Service Found:', service);
 
+    // Using host (e.g., 'DESKTOP-85MU4TU.license-server.local')
+    const healthUrl = `http://${service.name}:${service.port}/api/health`;
+    try {
+      const response = await fetch(healthUrl, {
+        headers: {
+          Accept: 'text/html' // Explicitly request HTML
+        }
+      });
+
+      const html = await response.text();
+
+      console.log("✅ Health Check Response:\n", html);
+    } catch (err) {
+      console.error("❌ Error fetching health check:", err.message);
+    }
+
+
+    log.info("\n*********************************************\n");
+  });
+
+  // return;
+
+
+  // await checkServiceExists(async (exists) => {
+  //   if (!exists) {
+  //     log.info("Service does not exist. Creating...");
+  //     await createAndStartService();
+  //   } else {
+  //     log.info("Service already exists. Starting...");
+  //     exec(`sc start ${SERVICE_NAME}`, (error, stdout, stderr) => {
+  //       log.info("Service start output:", stdout);
+  //       if (error || stderr) {
+  //         let extendedErrorMessage = '';
+  //         if (error) {
+  //           try {
+  //             extendedErrorMessage = execSync(`net helpmsg ${error.code}`, { encoding: 'utf8' }).trim();
+  //           } catch (syncError) {
+  //             extendedErrorMessage = 'Could not retrieve extended error message';
+  //           }
+  //           log.error("Error starting service:");
+  //           log.error("Error Message:", error.message);
+  //           log.error("Error Code:", error.code);
+  //           log.error("Extended Error Message:", extendedErrorMessage);
+  //           log.error("Error Signal:", error.signal);
+  //           log.error("Executed Command:", error.cmd);
+  //           log.error("Full Error Object:", JSON.stringify(error, null, 2));
+  //         }
+  //         if (stderr) {
+  //           log.error("STDERR:", stderr);
+  //         }
+  //         return;
+  //       }
+  //       log.info("Rust service started.");
+  //     });
+  //   }
+  // });
+
+  // return;
 
   try {
-
     try {
       const dbManager = databaseManager.getInstance();
       await dbManager.initialize(app.getPath("userData"));
@@ -836,7 +987,7 @@ app.whenReady().then(async () => {
     }
 
     try {
-      gatewayServer.init(LICENSE_EXECUTABLE_DIR)
+      gatewayServer.init(GATEWAY_EXECUTABLE_DIR)
     }
     catch (error) {
       log.error("GatewayServer initialization failed:", error);
@@ -883,7 +1034,6 @@ app.whenReady().then(async () => {
 
     // Initial update check after 1 minute
     if (!isDev) {
-      gatewayServer
       setTimeout(() => {
         autoUpdater.checkForUpdates().catch((err) => {
           log.error("Error in initial update check:", err);

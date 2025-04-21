@@ -27,6 +27,7 @@ import TallyPrimeDirect from "../components/ImportTally/TallyDirectImport";
 import TallyPrime from "../components/ImportTally/TallyPrime";
 import { useReportContext } from "../contexts/ReportContext";
 import { useAuth } from "../contexts/AuthContext";
+import TimerDisplay from "../components/TimerDisplay";
 
 const Dashboard = () => {
   const { breadcrumbs, setMainDashboard } = useBreadcrumb();
@@ -137,6 +138,12 @@ const Dashboard = () => {
         <ScrollArea className="w-full">
           <BreadcrumbDynamic items={breadcrumbs} />
           <div className="flex-1 flex flex-col overflow-hidden">
+
+            {/* Timer Display */}
+            <div className="mb-4 px-4 sm:px-6">
+              <TimerDisplay />
+            </div>
+
             <main className="flex-1">
               {activeTab === "Dashboard" && (
                 <MainDashboard handleTabChange={handleTabChange} />

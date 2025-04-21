@@ -102,7 +102,8 @@ function registerTallyIpc() {
       const voucherName = row.voucherName;
       // const isContra = voucherName === "Contra";
       let xmlContent = null;
-      // tallyUploadData[i].invoiceDate = "20250401"; // Hardcoded date for now
+      // console.log({ row });
+      // tallyUploadData[i].invoiceDate = "20220401"; // Hardcoded date for now
 
       if (voucherName === "Payment") {
         xmlContent = buildTallyXmlPayment(row);
@@ -111,6 +112,8 @@ function registerTallyIpc() {
       } else if (voucherName === "Contra") {
         xmlContent = buildTallyXmlContra(row);
       }
+
+      // log.info({ xmlContent });
 
       try {
         const response = await axios.post(tallyPath, xmlContent, {
@@ -123,6 +126,8 @@ function registerTallyIpc() {
 
         if (lineError) {
           console.error(`Transaction ${row.id} Failed: ${lineError}`);
+          log.info({ xmlContent });
+          
           failedTransactions.push({ id: row.id, error: lineError });
         } else {
           console.log(`Transaction ${row.id} Successful`);
@@ -132,6 +137,8 @@ function registerTallyIpc() {
         console.error(
           `Transaction ${row.id} Failed (Server Error): ${error.message}`
         );
+        log.info({ xmlContent });
+
         if (error.message == "") {
           failedTransactions.push({
             id: row.id,
@@ -198,6 +205,7 @@ function registerTallyIpc() {
           if (lineError) {
             console.error(`Transaction ${row.id} Failed: ${lineError}`);
             failedTransactions.push({ [row.id]: lineError });
+            console.log({ xmlContent });
           } else {
             console.log(`Transaction ${row.id} Successful`);
             successIds.push(row.id);
@@ -206,6 +214,7 @@ function registerTallyIpc() {
           console.error(
             `Transaction ${row.id} Failed (Server Error): ${error.message}`
           );
+          console.log({ xmlContent });
           failedTransactions.push({ id: row.id, error: error.message });
         }
       }

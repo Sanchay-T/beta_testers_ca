@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from "react"
-import { Button } from "../ui/button"
-import { Card, CardHeader, CardTitle, CardContent } from "../ui/card"
+import React, { useState, useRef, useEffect } from "react";
+import { Button } from "../ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import {
   X,
   ZoomIn,
@@ -11,10 +11,16 @@ import {
   GripVertical,
   Undo2,
   Redo2,
-} from "lucide-react"
-import { pdfjs, Document, Page } from "react-pdf"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
-import { Tabs, TabsList, TabsTrigger } from "../ui/tabs"
+} from "lucide-react";
+import { pdfjs, Document, Page } from "react-pdf";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
 import { useToast } from "../../hooks/use-toast";
 
 // pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString()
@@ -29,7 +35,7 @@ const COLUMN_TYPES = [
   { id: "dr/cr", label: "💶 DR/CR" },
   { id: "amount", label: "🪙 Amount" },
   { id: "Skip", label: "⏩ Skip" },
-]
+];
 
 const COLUMN_COLORS = [
   { bg: "bg-blue-200", text: "text-blue-700", border: "border-blue-400" },
@@ -37,7 +43,7 @@ const COLUMN_COLORS = [
   { bg: "bg-purple-200", text: "text-purple-700", border: "border-purple-400" },
   { bg: "bg-orange-200", text: "text-orange-700", border: "border-orange-400" },
   { bg: "bg-pink-200", text: "text-pink-700", border: "border-pink-400" },
-]
+];
 const initialConfigTest = {
   lines: [
     // { x: 71.70364379882812 },
@@ -49,41 +55,44 @@ const initialConfigTest = {
     // { x: 19.830726623535156 },
     // { x: 582.7577514648438 },
   ],
+};
+const PDFColumnMarker = ({
+  addColsToStatementData,
+  pdfPath,
+  initialConfig = initialConfigTest,
+}) => {
+  const [columnLines, setColumnLines] = useState([]);
+  const [columnLabels, setColumnLabels] = useState([]);
+  const [pdfFile, setPdfFile] = useState(null);
+  const [numPages, setNumPages] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [scale, setScale] = useState(1);
+  const [editingLabelIndex, setEditingLabelIndex] = useState(null);
+  const [draggingLineIndex, setDraggingLineIndex] = useState(null);
+  const [draggingLabelIndex, setDraggingLabelIndex] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [currentStep, setCurrentStep] = useState("lines");
+  const [usedColumnTypes, setUsedColumnTypes] = useState([]);
+  const [history, setHistory] = useState([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [labelSelectorOpen, setLabelSelectorOpen] = useState(true);
+  const [pdfBlob, setPdfBlob] = useState(null);
 
-}
-const PDFColumnMarker = ({ addColsToStatementData, pdfPath, initialConfig = initialConfigTest }) => {
-  const [columnLines, setColumnLines] = useState([])
-  const [columnLabels, setColumnLabels] = useState([])
-  const [pdfFile, setPdfFile] = useState(null)
-  const [numPages, setNumPages] = useState(null)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [scale, setScale] = useState(1)
-  const [editingLabelIndex, setEditingLabelIndex] = useState(null)
-  const [draggingLineIndex, setDraggingLineIndex] = useState(null)
-  const [draggingLabelIndex, setDraggingLabelIndex] = useState(null)
-  const [isDragging, setIsDragging] = useState(false)
-  const [currentStep, setCurrentStep] = useState("lines")
-  const [usedColumnTypes, setUsedColumnTypes] = useState([])
-  const [history, setHistory] = useState([])
-  const [historyIndex, setHistoryIndex] = useState(-1)
-  const [labelSelectorOpen, setLabelSelectorOpen] = useState(true)
-  const [pdfBlob, setPdfBlob] = useState(null)
-
-  const pdfContainerRef = useRef(null)
+  const pdfContainerRef = useRef(null);
   const { toast } = useToast();
 
-
   useEffect(() => {
-
     if (initialConfig && pdfBlob) {
       if (initialConfig.lines) {
         // sort the lines
-        const sortedInitialLines = initialConfig.lines.map((line) => ({
-          id: Date.now() + Math.random(),
-          x: line.x,
-        })).sort((a, b) => a.x - b.x)
+        const sortedInitialLines = initialConfig.lines
+          .map((line) => ({
+            id: Date.now() + Math.random(),
+            x: line.x,
+          }))
+          .sort((a, b) => a.x - b.x);
         // console.log({ sortedInitialLines })
-        setColumnLines(sortedInitialLines)
+        setColumnLines(sortedInitialLines);
       }
 
       if (initialConfig.labels) {
@@ -92,25 +101,29 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath, initialConfig = init
             id: Date.now() + Math.random(),
             x: label.x,
             type: label.type,
-            label: label.label || COLUMN_TYPES.find((t) => t.id === label.type)?.label || "",
+            label:
+              label.label ||
+              COLUMN_TYPES.find((t) => t.id === label.type)?.label ||
+              "",
             colorIndex: index % COLUMN_COLORS.length,
-          })),
-        )
+          }))
+        );
         // setCurrentStep("labels")
       }
     }
-  }, [initialConfig, pdfBlob])
+  }, [initialConfig, pdfBlob]);
 
   useEffect(() => {
     // console.log({ OpeningPDf: pdfPath })
-    window.electron.fetchPdfContent(pdfPath)
-      .then(base64 => {
-        const blob = base64StringToBlob(base64, 'application/pdf');
+    window.electron
+      .fetchPdfContent(pdfPath)
+      .then((base64) => {
+        const blob = base64StringToBlob(base64, "application/pdf");
         // console.log("Blob : ", { blob })
         setPdfBlob(URL.createObjectURL(blob));
         // console.log('Fetched PDF:', blob);
       })
-      .catch(err => console.error('Failed to fetch PDF:', err));
+      .catch((err) => console.error("Failed to fetch PDF:", err));
   }, []);
 
   const base64StringToBlob = (base64, type) => {
@@ -123,28 +136,29 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath, initialConfig = init
     return new Blob([bytes], { type: type });
   };
 
-
   const handleClick = (e) => {
     // if (!pdfFile || isDragging) return
-    if (!pdfBlob || isDragging) return
+    if (!pdfBlob || isDragging) return;
 
     if (draggingLineIndex !== null || draggingLabelIndex !== null) {
-      return
+      return;
     }
 
-    const rect = pdfContainerRef.current.getBoundingClientRect()
-    const x = (e.clientX - rect.left) / scale
-    const y = (e.clientY - rect.top) / scale
+    const rect = pdfContainerRef.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / scale;
+    const y = (e.clientY - rect.top) / scale;
 
     if (currentStep === "lines") {
-      const newColumnLines = [...columnLines, { id: Date.now(), x }].sort((a, b) => a.x - b.x)
-      setColumnLines(newColumnLines)
+      const newColumnLines = [...columnLines, { id: Date.now(), x }].sort(
+        (a, b) => a.x - b.x
+      );
+      setColumnLines(newColumnLines);
 
       // Automatically show dropdown between two lines
       if (newColumnLines.length >= 2) {
         for (let i = 0; i < newColumnLines.length; i++) {
           if (newColumnLines[i].x === x) {
-            const midX = (newColumnLines[i].x + newColumnLines[i - 1].x) / 2
+            const midX = (newColumnLines[i].x + newColumnLines[i - 1].x) / 2;
             // if (!columnLabels.some((label) => label.x === midX)) {
             setColumnLabels((prev) => [
               ...prev,
@@ -155,9 +169,9 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath, initialConfig = init
                 label: "",
                 colorIndex: prev.length % COLUMN_COLORS.length,
               },
-            ])
-            setEditingLabelIndex(columnLabels.length)
-            break
+            ]);
+            setEditingLabelIndex(columnLabels.length);
+            break;
             // }
           }
         }
@@ -168,8 +182,7 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath, initialConfig = init
         return line.x > x;
       });
       const colStart = colEnd - 1;
-      if (colStart === -1 || colEnd === -1) return
-
+      if (colStart === -1 || colEnd === -1) return;
 
       // columnLabels.map((label,index)=>{
       //   if(label.x > columnLines[colStart].x && label.x < columnLines[colEnd].x){
@@ -184,70 +197,80 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath, initialConfig = init
 
       const newColumnLabels = [
         ...columnLabels,
-        { id: Date.now(), x, y, type: "", label: "", colorIndex: columnLabels.length % COLUMN_COLORS.length },
-      ]
-      setColumnLabels(newColumnLabels)
-      setEditingLabelIndex(newColumnLabels.length - 1)
-      setLabelSelectorOpen(true)
+        {
+          id: Date.now(),
+          x,
+          y,
+          type: "",
+          label: "",
+          colorIndex: columnLabels.length % COLUMN_COLORS.length,
+        },
+      ];
+      setColumnLabels(newColumnLabels);
+      setEditingLabelIndex(newColumnLabels.length - 1);
+      setLabelSelectorOpen(true);
     }
-    updateHistory(columnLines, columnLabels)
-  }
+    updateHistory(columnLines, columnLabels);
+  };
 
   const handleDragStart = (e, index, type) => {
-    e.preventDefault()
-    e.stopPropagation()
+    e.preventDefault();
+    e.stopPropagation();
     if (type === "line") {
-      setDraggingLineIndex(index)
+      setDraggingLineIndex(index);
     } else {
-      setDraggingLabelIndex(index)
+      setDraggingLabelIndex(index);
     }
-    setIsDragging(true)
-  }
+    setIsDragging(true);
+  };
 
   const handleDrag = (e) => {
-    if ((draggingLineIndex === null && draggingLabelIndex === null) || !pdfContainerRef.current) return
+    if (
+      (draggingLineIndex === null && draggingLabelIndex === null) ||
+      !pdfContainerRef.current
+    )
+      return;
 
-    e.preventDefault()
-    e.stopPropagation()
+    e.preventDefault();
+    e.stopPropagation();
 
-    const rect = pdfContainerRef.current.getBoundingClientRect()
-    const currentX = (e.clientX - rect.left) / scale
-
+    const rect = pdfContainerRef.current.getBoundingClientRect();
+    const currentX = (e.clientX - rect.left) / scale;
 
     if (draggingLineIndex !== null) {
       setColumnLines((prev) =>
         prev.map((line, i) => {
           if (i === draggingLineIndex) {
-            return { ...line, x: currentX }
+            return { ...line, x: currentX };
           }
-          return line
-        }),
-      )
+          return line;
+        })
+      );
     } else if (draggingLabelIndex !== null) {
       setColumnLabels((prev) =>
         prev.map((label, i) => {
           if (i === draggingLabelIndex) {
-            return { ...label, x: currentX }
+            return { ...label, x: currentX };
           }
-          return label
-        }),
-      )
+          return label;
+        })
+      );
     }
-  }
+  };
 
   const handleDragEnd = (e) => {
     if (e) {
-      e.preventDefault()
-      e.stopPropagation()
+      e.preventDefault();
+      e.stopPropagation();
     }
 
     setTimeout(() => {
-      setIsDragging(false)
-    }, 100)
+      setIsDragging(false);
+    }, 100);
 
-    setDraggingLineIndex(null)
-    setDraggingLabelIndex(null)
-  }
+    setDraggingLineIndex(null);
+    setDraggingLabelIndex(null);
+  };
 
   const handleColumnTypeSelect = (labelIndex, typeId) => {
     setColumnLabels((prev) => {
@@ -258,85 +281,89 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath, initialConfig = init
             type: typeId,
             label: COLUMN_TYPES.find((t) => t.id === typeId)?.label || "",
           }
-          : label,
-      )
-      updateHistory(columnLines, newLabels)
-      return newLabels
-    })
-    if (typeId !== "Skip")
-      setUsedColumnTypes((prev) => [...prev, typeId])
-    setEditingLabelIndex(null)
-  }
+          : label
+      );
+      updateHistory(columnLines, newLabels);
+      return newLabels;
+    });
+    if (typeId !== "Skip") setUsedColumnTypes((prev) => [...prev, typeId]);
+    setEditingLabelIndex(null);
+  };
 
   const removeColumnLine = (index) => {
-    setColumnLines((prev) => prev.filter((_, i) => i !== index))
+    setColumnLines((prev) => prev.filter((_, i) => i !== index));
     updateHistory(
       columnLines.filter((_, i) => i !== index),
-      columnLabels,
-    )
-  }
+      columnLabels
+    );
+  };
 
   const removeColumnLabel = (index) => {
-    setColumnLabels((prev) => prev.filter((_, i) => i !== index))
-    setUsedColumnTypes((prev) => prev.filter((type) => type !== columnLabels[index].type))
+    setColumnLabels((prev) => prev.filter((_, i) => i !== index));
+    setUsedColumnTypes((prev) =>
+      prev.filter((type) => type !== columnLabels[index].type)
+    );
     updateHistory(
       columnLines,
-      columnLabels.filter((_, i) => i !== index),
-    )
-  }
+      columnLabels.filter((_, i) => i !== index)
+    );
+  };
 
   const handleFileChange = (event) => {
-    const file = event.target.files[0]
+    const file = event.target.files[0];
     if (file) {
-      setPdfFile(file)
+      setPdfFile(file);
 
       if (!initialConfig) {
-        setColumnLines([])
-        setColumnLabels([])
+        setColumnLines([]);
+        setColumnLabels([]);
         // setTableBounds({ start: null, end: null })
-        setCurrentStep("lines")
+        setCurrentStep("lines");
       }
 
-      setCurrentPage(1)
+      setCurrentPage(1);
     }
-  }
+  };
 
   const onDocumentLoadSuccess = ({ numPages }) => {
-    setNumPages(numPages)
-  }
+    setNumPages(numPages);
+  };
 
   const getInstructionText = () => {
     // if (currentStep === "lines") {
-    return "Click to add column dividers and table boundaries - make sure to mark both edges of the table!"
+    return "Click to add column dividers and table boundaries - make sure to mark both edges of the table!";
     // }
     // return "Click between the lines to add column labels"
-  }
+  };
 
   const handleSubmit = () => {
-    const requiredTypes = ["balance", "date", "description"]
+    const requiredTypes = ["balance", "date", "description"];
     // console.log({columnLabels})
-    const selectedTypes = columnLabels.map((label) => label.type)
+    const selectedTypes = columnLabels.map((label) => label.type);
 
     if (!requiredTypes.every((type) => selectedTypes.includes(type))) {
       // alert("Please select Balance, Date, and Description columns before submitting.")
       toast({
-        title: "Please select Balance, Date, and Description columns before submitting.",
+        title:
+          "Please select Balance, Date, and Description columns before submitting.",
         type: "error",
-        variant:"solid",
+        variant: "destructive",
         duration: 5000,
         isClosable: true,
-      })
-      return
+      });
+      return;
     }
 
-    const sortedLines = [...columnLines].sort((a, b) => a.x - b.x)
+    const sortedLines = [...columnLines].sort((a, b) => a.x - b.x);
 
-    const columns = []
+    const columns = [];
     for (let i = 0; i < sortedLines.length - 1; i++) {
-      const startX = sortedLines[i].x
-      const endX = sortedLines[i + 1].x
+      const startX = sortedLines[i].x;
+      const endX = sortedLines[i + 1].x;
 
-      const label = columnLabels.find((label) => label.x >= startX && label.x <= endX)
+      const label = columnLabels.find(
+        (label) => label.x >= startX && label.x <= endX
+      );
 
       columns.push({
         index: i,
@@ -345,59 +372,61 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath, initialConfig = init
           end: endX,
         },
         type: label?.type || null,
-      })
+      });
     }
 
     const config = {
       columns,
-    }
+    };
 
     // console.log({ pdfPath, config })
-    addColsToStatementData(pdfPath, config.columns)
-  }
+    addColsToStatementData(pdfPath, config.columns);
+  };
 
   const updateHistory = (lines, labels) => {
-    const newHistory = history.slice(0, historyIndex + 1)
-    newHistory.push({ lines: [...lines], labels: [...labels] })
-    setHistory(newHistory)
-    setHistoryIndex(newHistory.length - 1)
-  }
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push({ lines: [...lines], labels: [...labels] });
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  };
 
   const undo = () => {
     if (historyIndex > 0) {
-      setHistoryIndex(historyIndex - 1)
-      const { lines, labels } = history[historyIndex - 1]
-      setColumnLines(lines)
-      setColumnLabels(labels)
+      setHistoryIndex(historyIndex - 1);
+      const { lines, labels } = history[historyIndex - 1];
+      setColumnLines(lines);
+      setColumnLabels(labels);
     }
-  }
+  };
 
   const redo = () => {
     if (historyIndex < history.length - 1) {
-      setHistoryIndex(historyIndex + 1)
-      const { lines, labels } = history[historyIndex + 1]
-      setColumnLines(lines)
-      setColumnLabels(labels)
+      setHistoryIndex(historyIndex + 1);
+      const { lines, labels } = history[historyIndex + 1];
+      setColumnLines(lines);
+      setColumnLabels(labels);
     }
-  }
+  };
 
   const renderColoredColumns = () => {
     return columnLabels.map((label, index) => {
-      if (!label.type || label.type === "Skip") return null
-      const x = label.x
+      if (!label.type || label.type === "Skip") return null;
+      const x = label.x;
       const endIndex = columnLines.findIndex((line) => {
         return line.x > x;
       });
       const startIndex = endIndex - 1;
-      const startX = columnLines[startIndex]?.x || 0
-      const endX = columnLines[endIndex]?.x || 0
+      const startX = columnLines[startIndex]?.x || 0;
+      const endX = columnLines[endIndex]?.x || 0;
 
       // const startX = columnLines[index]?.x || 0
       // const endX = columnLines[index + 1]?.x || 0
-      const width = endX - startX
+      const width = endX - startX;
 
       // console.log({startIndex,endIndex,startX, endX, width, label})
-      const colorIndex = COLUMN_TYPES.findIndex((type) => type.id === label.type) % COLUMN_COLORS.length
+      const colorIndex =
+        COLUMN_TYPES.findIndex((type) => type.id === label.type) %
+        COLUMN_COLORS.length;
       return (
         <div
           key={label.id}
@@ -407,11 +436,9 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath, initialConfig = init
             width: `${width * scale}px`,
           }}
         />
-      )
-    })
-  }
-
-
+      );
+    });
+  };
 
   return (
     <Card className="w-full max-w-4xl mx-auto ">
@@ -451,9 +478,9 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath, initialConfig = init
               variant="outline"
               onClick={() => {
                 // setTableBounds({ start: null, end: null })
-                setColumnLines([])
-                setColumnLabels([])
-                setUsedColumnTypes([])
+                setColumnLines([]);
+                setColumnLabels([]);
+                setUsedColumnTypes([]);
               }}
             >
               Start Over
@@ -464,10 +491,20 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath, initialConfig = init
           </div>
           <div className="flex items-center justify-between bg-gray-50 p-2 rounded-lg  ">
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={undo} disabled={historyIndex <= 0}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={undo}
+                disabled={historyIndex <= 0}
+              >
                 <Undo2 className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" onClick={redo} disabled={historyIndex >= history.length - 1}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={redo}
+                disabled={historyIndex >= history.length - 1}
+              >
                 <Redo2 className="h-4 w-4" />
               </Button>
             </div>
@@ -486,7 +523,9 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath, initialConfig = init
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, numPages || prev))}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, numPages || prev))
+                }
                 disabled={currentPage >= (numPages || 1)}
               >
                 <ChevronRight className="h-4 w-4" />
@@ -494,11 +533,19 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath, initialConfig = init
             </div>
 
             <div className="flex items-center gap-2 text-nowrap">
-              <Button variant="ghost" size="icon" onClick={() => setScale((prev) => Math.max(0.1, prev - 0.1))}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setScale((prev) => Math.max(0.1, prev - 0.1))}
+              >
                 <ZoomOut className="h-4 w-4" />
               </Button>
               <span>{Math.round(scale * 100)}%</span>
-              <Button variant="ghost" size="icon" onClick={() => setScale((prev) => prev + 0.1)}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setScale((prev) => prev + 0.1)}
+              >
                 <ZoomIn className="h-4 w-4" />
               </Button>
             </div>
@@ -513,8 +560,18 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath, initialConfig = init
             onMouseUp={handleDragEnd}
             onMouseLeave={handleDragEnd}
           >
-            <Document className={"overflow-auto"} style={{ overflow: "auto" }} file={pdfBlob} onLoadSuccess={onDocumentLoadSuccess}>
-              <Page pageNumber={currentPage} scale={scale} renderTextLayer={false} renderAnnotationLayer={false} />
+            <Document
+              className={"overflow-auto"}
+              style={{ overflow: "auto" }}
+              file={pdfBlob}
+              onLoadSuccess={onDocumentLoadSuccess}
+            >
+              <Page
+                pageNumber={currentPage}
+                scale={scale}
+                renderTextLayer={false}
+                renderAnnotationLayer={false}
+              />
               {/* 
             <div
               ref={pdfContainerRef}
@@ -552,7 +609,11 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath, initialConfig = init
                 )} */}
 
               {columnLines.map((line, index) => (
-                <div key={line.id} className="absolute top-0 h-full" style={{ left: `${line.x * scale}px`, zIndex: 99 }}>
+                <div
+                  key={line.id}
+                  className="absolute top-0 h-full"
+                  style={{ left: `${line.x * scale}px`, zIndex: 99 }}
+                >
                   <div className="h-full bg-gray-400 border-l-2 border-gray-500" />
 
                   <div className="absolute top-2  items-center">
@@ -569,8 +630,8 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath, initialConfig = init
                       size="icon"
                       className="h-6 w-6"
                       onClick={(e) => {
-                        e.stopPropagation()
-                        removeColumnLine(index)
+                        e.stopPropagation();
+                        removeColumnLine(index);
                       }}
                     >
                       <X className="h-4 w-4" />
@@ -606,8 +667,8 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath, initialConfig = init
                         size="icon"
                         className="h-6 w-6"
                         onClick={(e) => {
-                          e.stopPropagation()
-                          removeColumnLabel(index)
+                          e.stopPropagation();
+                          removeColumnLabel(index);
                         }}
                       >
                         <X className="h-4 w-4" />
@@ -615,15 +676,21 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath, initialConfig = init
                     </div>
 
                     {editingLabelIndex === index ? (
-                      <Select style={{ zIndex: 999 }} open={labelSelectorOpen} value={label.type} onValueChange={(value) => handleColumnTypeSelect(index, value)}>
-
+                      <Select
+                        style={{ zIndex: 999 }}
+                        open={labelSelectorOpen}
+                        value={label.type}
+                        onValueChange={(value) =>
+                          handleColumnTypeSelect(index, value)
+                        }
+                      >
                         <SelectTrigger className="w-48">
                           <SelectValue placeholder="Select column type" />
                         </SelectTrigger>
-                        <SelectContent style={{ zIndex: 999 }}
-
-                        >
-                          {COLUMN_TYPES.filter((type) => !usedColumnTypes.includes(type.id)).map((type) => (
+                        <SelectContent style={{ zIndex: 999 }}>
+                          {COLUMN_TYPES.filter(
+                            (type) => !usedColumnTypes.includes(type.id)
+                          ).map((type) => (
                             <SelectItem key={type.id} value={type.id}>
                               {type.label}
                             </SelectItem>
@@ -633,11 +700,12 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath, initialConfig = init
                     ) : (
                       <div
                         className={`px-2 py-1 rounded cursor-pointer
-                            ${COLUMN_COLORS[label.colorIndex].bg} ${COLUMN_COLORS[label.colorIndex].text}
+                            ${COLUMN_COLORS[label.colorIndex].bg} ${COLUMN_COLORS[label.colorIndex].text
+                          }
                             text-sm font-medium whitespace-nowrap`}
                         onClick={(e) => {
-                          e.stopPropagation()
-                          setEditingLabelIndex(index)
+                          e.stopPropagation();
+                          setEditingLabelIndex(index);
                         }}
                       >
                         {label.label || "Click to label"}
@@ -649,8 +717,6 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath, initialConfig = init
               {renderColoredColumns()}
             </Document>
           </div>
-
-
 
           {/* right - side tabs */}
           <div
@@ -672,13 +738,19 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath, initialConfig = init
             />
           </div> */}
 
-                <TabsTrigger value="lines" className="w-full flex items-center justify-center p-2 hover:bg-gray-100">
+                <TabsTrigger
+                  value="lines"
+                  className="w-full flex items-center justify-center p-2 hover:bg-gray-100"
+                >
                   {/* <BookmarkIcon size={20} /> */}
                   Line
                   {/* {isOpen && <span className="ml-2">Place Line</span>} */}
                 </TabsTrigger>
 
-                <TabsTrigger value="labels" className="w-full flex items-center justify-center p-2 hover:bg-gray-100">
+                <TabsTrigger
+                  value="labels"
+                  className="w-full flex items-center justify-center p-2 hover:bg-gray-100"
+                >
                   Labels
                   {/* <BookmarkIcon size={20} /> */}
                   {/* {isOpen && <span className="ml-2">Place Labels</span>} */}
@@ -690,8 +762,7 @@ const PDFColumnMarker = ({ addColsToStatementData, pdfPath, initialConfig = init
         {/* )} */}
       </CardContent>
     </Card>
-  )
-}
+  );
+};
 
-export default PDFColumnMarker
-
+export default PDFColumnMarker;

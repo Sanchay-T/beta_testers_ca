@@ -176,6 +176,14 @@ contextBridge.exposeInMainWorld("electron", {
   getFailedStatements: (referenceId) =>
     ipcRenderer.invoke("get-failed-statements", referenceId),
 
+
+  onRemainingSecondsUpdated: (callback) =>
+    ipcRenderer.on("remainingSecondsUpdated", (_event, seconds) =>
+      callback(seconds)
+    ),
+  offRemainingSecondsUpdated: (callback) =>
+    ipcRenderer.removeListener("remainingSecondsUpdated", callback),
+
   onLicenseExpired: (callback) => ipcRenderer.on("navigateToLogin", callback),
   removeLicenseExpiredListener: () =>
     ipcRenderer.removeAllListeners("navigateToLogin"),

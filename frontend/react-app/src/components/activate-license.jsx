@@ -196,11 +196,17 @@ export function LicenseActivationForm({ className, ...props }) {
         localStorage.setItem("role", credentials.role);
       } else {
         // Check for inactive licenses in the result
+        console.log("REsult : ", result)
         if (result.inactiveLicenses && result.inactiveLicenses.length > 0) {
           setLicenses(result.inactiveLicenses);
-        } else if (result.activateLicenses && result.activateLicenses.length > 0) {
-          setLicenses(result.activateLicenses);
+          setActivationStatus("inactive-licenses")
+        } else if (result.activeLicenses && result.activeLicenses.length > 0) {
+          console.log("Activate licenses found:", result.activeLicenses);
+          setLicenses(result.activeLicenses);
+          setActivationStatus("active-licenses")
         }
+        setIsModalOpen(true)
+
       }
     } catch (error) {
       console.error("Error connecting to network license:", error);
@@ -374,7 +380,7 @@ export function LicenseActivationForm({ className, ...props }) {
 
 
   // New function to render inactive licenses UI
-  const renderLicenses = (licenseStatus = "inactive") => {
+  const renderLicenses = () => {
     if (licenses.length === 0) return null;
 
     return (
@@ -406,7 +412,7 @@ export function LicenseActivationForm({ className, ...props }) {
           <Alert className="mb-4 bg-amber-50 border-amber-200">
             <AlertTriangle className="h-4 w-4 text-amber-700 mr-2" />
             <AlertDescription className="text-amber-700">
-              {licenseStatus === 'active'
+              {activationStatus === 'active-licenses'
                 ? `You currently have an active license session on ${licenses.length} device${licenses.length > 1 ? 's' : ''}. Please logout from one to proceed.`
                 : `Your device has inactive license session${licenses.length > 1 ? 's' : ''} that need to be revoked before activating a new one. Please revoke any unused session below.`}
             </AlertDescription>
@@ -427,27 +433,27 @@ export function LicenseActivationForm({ className, ...props }) {
                       </p>
                     </div>
 
-                    (licenseStatus === 'active') &&
-                    {<Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleRevokeLicense(license.sessionKey)}
-                      disabled={revokingLicense === license.sessionKey}
-                      className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
-                    >
-                      {revokingLicense === license.sessionKey ? (
-                        <>
-                          <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
-                          Revoking...
-                        </>
-                      ) : (
-                        <>
-                          <X className="h-3 w-3 mr-1" />
-                          Revoke
-                        </>
+                    {(activationStatus === 'active-licenses') &&
+                      (<Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRevokeLicense(license.sessionKey)}
+                        disabled={revokingLicense === license.sessionKey}
+                        className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                      >
+                        {revokingLicense === license.sessionKey ? (
+                          <>
+                            <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                            Revoking...
+                          </>
+                        ) : (
+                          <>
+                            <X className="h-3 w-3 mr-1" />
+                            Revoke
+                          </>
+                        )}
+                      </Button>
                       )}
-                    </Button>
-                    }
                   </div>
                   <div className="text-sm text-gray-700">
                     <span className="font-medium">Last Used:</span>{" "}
@@ -474,9 +480,11 @@ export function LicenseActivationForm({ className, ...props }) {
                     <th className="px-4 py-3 text-left text-sm font-medium text-amber-800">
                       Last Used
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-amber-800">
-                      Actions
-                    </th>
+                    {(activationStatus === 'inactive-licenses') && (
+                      <th className="px-4 py-3 text-left text-sm font-medium text-amber-800">
+                        Actions
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-amber-100">
@@ -500,7 +508,7 @@ export function LicenseActivationForm({ className, ...props }) {
                           hour12: true,
                         })}
                       </td>
-                      (licenseStatus === 'inactive') &&{
+                      {(activationStatus === 'inactive-licenses') && (
                         <td className="px-4 py-3 text-sm">
                           <Button
                             variant="outline"
@@ -522,7 +530,7 @@ export function LicenseActivationForm({ className, ...props }) {
                             )}
                           </Button>
                         </td>
-                      }
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -643,7 +651,7 @@ export function LicenseActivationForm({ className, ...props }) {
             {renderStatusAlert()}
 
             {/* Render inactive licenses if present */}
-            {activationStatus === "inactive-licenses" && isModalOpen && renderLicenses("active")}
+            {(activationStatus === "inactive-licenses" || activationStatus === "active-licenses") && isModalOpen && renderLicenses()}
 
             {activationStep === 1 && (
               <Tabs
