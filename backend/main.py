@@ -1,4 +1,16 @@
+import sys
+import io
 import os
+
+
+# Respect the PYTHONIOENCODING env if set, or fallback to utf-8
+preferred_encoding = os.environ.get("PYTHONIOENCODING", "utf-8")
+
+# Force stdout/stderr to use UTF-8
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding=preferred_encoding)
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding=preferred_encoding)
+
+
 import uvicorn
 import logging
 from fastapi import FastAPI, HTTPException,Request
@@ -27,6 +39,9 @@ logger = logging.getLogger(__name__)
 app = FastAPI(title="Bank Statement Analyzer API")
 logger.info(f"Temp directory python : {TEMP_SAVED_PDF_DIR}")
 
+
+logger.info(f"Encoding In Python: {sys.stdout.encoding}")
+logger.info(f"stderr encoding: {sys.stderr.encoding}")
 
 
 class Transaction(BaseModel):
@@ -206,7 +221,7 @@ async def analyze_bank_statements(request: BankStatementRequest):
 
         print("RESULT GENERATED")
         logger.info("Extraction completed successfully")
-        logger.info("Result = ", result)
+        # logger.info("Result = ", result)
         return {
             "status": "success",
             "message": "Bank statements analyzed successfully",
