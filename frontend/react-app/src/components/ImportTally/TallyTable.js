@@ -1219,9 +1219,9 @@ const TallyTable = ({
         </div>
 
         {/* Company selection and quick actions */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+        <div className="flex gap-4">
           {/* Company selection - takes 4 columns on desktop */}
-          <div className="md:col-span-4">
+          <div className="w-full md:col-span-4">
             <div className="space-y-1.5">
               <label
                 htmlFor="companyName"
@@ -1264,7 +1264,7 @@ const TallyTable = ({
 
           {/* Bank ledger selection - takes 3 columns on desktop */}
           {selectedVoucher === "Payment Receipt Contra" && (
-            <div className="md:col-span-3">
+            <div className="w-full  md:col-span-3">
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-slate-500 dark:text-slate-400">
                   Bank Ledger
@@ -1293,7 +1293,7 @@ const TallyTable = ({
 
           {/* Search field - takes 3 or 4 columns on desktop */}
           <div
-            className={`md:col-span-${
+            className={`w-full  md:col-span-${
               selectedVoucher === "Payment Receipt Contra" ? "3" : "4"
             }`}
           >
@@ -1314,7 +1314,7 @@ const TallyTable = ({
           </div>
 
           {/* Rows per page - takes 2 columns on desktop */}
-          <div className="md:col-span-2">
+          <div className="w-full  md:col-span-2">
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-slate-500 dark:text-slate-400">
                 Rows

@@ -1560,7 +1560,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                             </AlertDialogTrigger>
                           </TooltipTrigger>
                           <TooltipContent>
-                            View Failed Statements
+                            Info
                           </TooltipContent>
                         </Tooltip>
                         <AlertDialogContent className="max-w-2xl bg-white shadow-lg border-0 dark:bg-slate-950">

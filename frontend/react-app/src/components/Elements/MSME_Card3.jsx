@@ -43,7 +43,7 @@ const MSME_Card3 = ({
 
   const contactInfo = {
     phone: "+91 8108108800",
-    email: "support@cyphersol.com",
+    email: "support@cyphersol.co.in",
     whatsapp: "+91 8108108800",
   };
 
