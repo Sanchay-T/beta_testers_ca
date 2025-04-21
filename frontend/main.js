@@ -19,7 +19,7 @@ const { registerReportHandlers } = require("./ipc/reportHandlers.js");
 const { registerAuthHandlers } = require("./ipc/authHandlers.js");
 const { registerEditReportHandlers } = require("./ipc/editReportHandlers.js");
 const sessionManager = require("./SessionManager");
-// const licenseManager = require("./LicenseManager");
+const licenseManager = require("./LicenseManager");
 const { generateReportIpc } = require("./ipc/generateReport");
 const { registerOpportunityToEarnIpc } = require("./ipc/opportunityToEarn");
 const { registerTallyIpc } = require("./ipc/tallyHandlers.js");
@@ -28,29 +28,30 @@ const { registerExcelDownloadHandlers } = require("./ipc/excelDownloadHandler");
 const { registerAppLevelIPCHandlers } = require("./ipc/appLevelIPC");
 const databaseManager = require("./db/db");
 const { spawn, execFile, exec, execSync } = require("child_process");
-const { spawn, execFile, exec, execSync } = require("child_process");
 const log = require("electron-log");
 const portscanner = require("portscanner"); // Import portscanner
 const { autoUpdater } = require("electron-updater");
 const { getdata } = require("./ipc/getData.js");
-// const bonjour = require('bonjour')();
+const bonjour = require('bonjour')();
+const gatewayServer = require("./InitiateGatewayServer.js")
+const systemInfo = require("./SystemInformation");
 
-// function discoverMdnsServices(serviceType = '', callback) {
-//   bonjour.find({ type: serviceType }, (service) => {
-//     const serviceInfo = {
-//       name: service.name,
-//       host: service.host,
-//       ip: service.referer.address,
-//       port: service.port
-//     };
+function discoverMdnsServices(serviceType = '', callback) {
+  bonjour.find({ type: serviceType }, (service) => {
+    const serviceInfo = {
+      name: service.name,
+      host: service.host,
+      ip: service.referer.address,
+      port: service.port
+    };
 
-//     // console.log('🔍 Found service:', serviceInfo);
+    // console.log('🔍 Found service:', serviceInfo);
 
-//     if (callback && typeof callback === 'function') {
-//       callback(serviceInfo);
-//     }
-//   });
-// }
+    if (callback && typeof callback === 'function') {
+      callback(serviceInfo);
+    }
+  });
+}
 
 
 
@@ -306,8 +307,15 @@ async function createAndStartService() {
 }
 
 
-const LICENSE_EXECUTABLE_DIR = isDev ? __dirname : app.getPath("userData");
-console.log("LICENSE_SERVE EXECUTABLE DIR:", LICENSE_EXECUTABLE_DIR);
+// const LICENSE_EXECUTABLE_DIR = isDev ? __dirname : app.getPath("userData");
+const isPackaged = app.isPackaged;
+
+// When packaged, resources are unpacked to a different location
+const GATEWAY_EXECUTABLE_DIR = isPackaged
+  ? process.resourcesPath // Electron's resources dir in packaged mode
+  : path.join(__dirname, "./gatewayServer")
+
+console.log("GATEWAY EXECUTABLE DIR:", GATEWAY_EXECUTABLE_DIR);
 
 // const RUST_EXECUTABLE = "C:\\path\\to\\rust.exe"; // Change this to your actual path
 
@@ -885,9 +893,11 @@ app.setName("CypherSol Dev");
 
 app.whenReady().then(async () => {
   log.info("App is ready", app.getPath("userData"));
+
+  createSplashWindow();
   // Example usage
   log.info("📡 Discovering services...");
-  discoverMdnsServices('', async (service) => {
+  discoverMdnsServices('license-server', async (service) => {
     log.info('📡 Service Found:', service);
 
     // Using host (e.g., 'DESKTOP-85MU4TU.license-server.local')
@@ -977,7 +987,7 @@ app.whenReady().then(async () => {
     }
 
     try {
-      gatewayServer.init(LICENSE_EXECUTABLE_DIR)
+      gatewayServer.init(GATEWAY_EXECUTABLE_DIR)
     }
     catch (error) {
       log.error("GatewayServer initialization failed:", error);
@@ -1024,7 +1034,6 @@ app.whenReady().then(async () => {
 
     // Initial update check after 1 minute
     if (!isDev) {
-      gatewayServer
       setTimeout(() => {
         autoUpdater.checkForUpdates().catch((err) => {
           log.error("Error in initial update check:", err);

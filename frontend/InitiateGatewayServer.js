@@ -15,8 +15,8 @@ class GatewayServerService {
       return GatewayServerService.instance;
     }
     this.serviceName = "LicensingServer";
-    this.executableName = "MyLanService.exe";
-    this.userDataPath = null;
+    this.executableName = "gatewayService.exe";
+    this.gatewayExecutableDir = null;
     this.gatewayServerExecutablePath = null;
     GatewayServerService.instance = this;
   }
@@ -36,9 +36,9 @@ class GatewayServerService {
   }
 
 
-  init(userDataPath) {
-    this.userDataPath = userDataPath;
-    this.gatewayServerExecutablePath = path.join(userDataPath, this.executableName);
+  init(gatewayExecutableDir) {
+    this.gatewayExecutableDir = gatewayExecutableDir;
+    this.gatewayServerExecutablePath = path.join(gatewayExecutableDir, this.executableName);
     log.info("Gateway Executable Path: ", this.gatewayServerExecutablePath);
   }
 

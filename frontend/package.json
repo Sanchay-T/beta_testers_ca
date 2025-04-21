@@ -80,6 +80,14 @@
       {
         "from": "drizzle.config.js",
         "to": "drizzle.config.js"
+      },
+      {
+        "from": "gatewayServer/appsettings.json",
+        "to": "appsettings.json"
+      },
+      {
+        "from": "gatewayServer/gatewayService.exe",
+        "to": "gatewayService.exe"
       }
     ],
     "extraMetadata": {
@@ -151,6 +159,7 @@
     "electron-updater": "^6.3.9",
     "fast-xml-parser": "^4.5.1",
     "fs": "^0.0.1-security",
+    "ip": "^2.0.1",
     "is-elevated": "^4.0.0",
     "keytar": "^7.9.0",
     "node-fetch": "^3.3.2",

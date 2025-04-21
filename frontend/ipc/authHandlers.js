@@ -476,7 +476,7 @@ function registerAuthHandlers(userDataPath) {
   ipcMain.handle("license:search-network-licenses", async (event, networkLicense) => {
     try {
       // Determine service type (default to "license" if not provided)
-      const serviceType = networkLicense?.serviceType || "license";
+      const serviceType = networkLicense?.serviceType || "license-server";
       // Discover services via mDNS
       const discoveredServices = await discoverMdnsServices(serviceType, 5000);
       log.info("Discovered services:", discoveredServices);
