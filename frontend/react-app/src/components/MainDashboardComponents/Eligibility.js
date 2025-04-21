@@ -41,6 +41,8 @@ export default function Eligibility() {
   //   "General Insurance": "upto 10",
   // };
 
+  console.log("User Role:", user);
+
   useEffect(() => {
     async function fetchOpportunityData() {
       try {
@@ -256,7 +258,7 @@ export default function Eligibility() {
         ) : (
           <>
             <div className="grid gap-4 md:grid-cols-2 mb-6">
-              {user.role === "MSME" && (
+              {user.role === "CA" && (
                 <Card className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-2 border-green-100 dark:border-green-800">
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-green-50 rounded-lg dark:bg-green-800">
@@ -391,12 +393,12 @@ export default function Eligibility() {
                               <TableHead className="text-center font-semibold">
                                 Amount
                               </TableHead>
-                              {user.role === "MSME" && (
+                              {user.role === "CA" && (
                                 <TableHead className="text-center font-semibold">
                                   Commission %
                                 </TableHead>
                               )}
-                              {user.role === "MSME" && (
+                              {user.role === "CA" && (
                                 <TableHead className="text-right font-semibold">
                                   Commission (₹)
                                 </TableHead>
@@ -426,12 +428,12 @@ export default function Eligibility() {
                                       maximumFractionDigits: 2,
                                     })}
                                   </TableCell>
-                                  {user.role === "MSME" && (
+                                  {user.role === "CA" && (
                                     <TableCell className="text-center">
                                       {item.rate}
                                     </TableCell>
                                   )}
-                                  {user.role === "MSME" && (
+                                  {user.role === "CA" && (
                                     <TableCell className="text-right font-semibold">
                                       ₹
                                       {item.value.toLocaleString("en-IN", {

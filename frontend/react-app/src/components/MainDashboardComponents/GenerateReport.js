@@ -128,6 +128,10 @@ export default function GenerateReport() {
 
       setFailedStatements([]);
       setSuccessfulStatements([]);
+      setShowRectifyButton(false);
+      setShowAnalysisButton(false);
+      setMissingMonthsList([]);
+      setWarning([]);
 
       const result = await window.electron.generateReportIpc(
         {
