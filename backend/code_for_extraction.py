@@ -1603,14 +1603,21 @@ def is_pdf_encoded(pdf_path):
         # Select up to 3 unique random page numbers
         random_pages = random.sample(range(total_pages), min(3, total_pages))
 
+        readable_count = 0
+
         for page_number in random_pages:
             page = reader.pages[page_number]
             text = page.extract_text()
             if text:
                 printable_chars = sum(char.isprintable() for char in text)
                 if printable_chars / len(text) >= 0.5:
-                    return "PDF text is readable and not encoded."
-        return "PDF appears encoded or obfuscated."
+                    readable_count += 1
+
+        if readable_count >= 2:
+            return "PDF text is readable and not encoded."
+        else:
+            return "PDF appears encoded or obfuscated."
+
     except Exception as e:
         return f"An unexpected error occurred: {e}"
 

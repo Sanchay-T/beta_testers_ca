@@ -823,13 +823,15 @@ function generateReportIpc(tmpdir_path) {
             data: {
               caseId: caseId,
               processed: null,
-              warning: [response.data.message] || "Unknown error",
+              warning:
+                [response.data.message] || [response?.message] ||
+                "Unknown error",
               processing_times: response.data?.processing_times || [],
             },
           };
         }
 
-        log.info("API response received:", response);
+        log.info("API response received:", response.data);
         log.info("missing month list", response.data?.["missing_months_list"]);
         log.info(
           "pdf_paths_not_extracted",
@@ -892,7 +894,7 @@ function generateReportIpc(tmpdir_path) {
               processing_times: response.data?.processing_times || [],
               warning:
                 response.data?.["pdf_paths_not_extracted"][
-                  "respective_reasons_for_error"
+                "respective_reasons_for_error"
                 ] || null,
             },
           };
@@ -1033,7 +1035,7 @@ function generateReportIpc(tmpdir_path) {
             missingMonthsList: response.data?.["missing_months_list"] || [],
             warning:
               response.data?.["pdf_paths_not_extracted"][
-                "respective_reasons_for_error"
+              "respective_reasons_for_error"
               ] || null,
             processing_times: response.data?.processing_times || [],
           },
@@ -1201,7 +1203,7 @@ function generateReportIpc(tmpdir_path) {
               },
               warning:
                 response.data?.["pdf_paths_not_extracted"][
-                  "respective_reasons_for_error"
+                "respective_reasons_for_error"
                 ] || null,
               processing_times: response.data?.processing_times || [],
             },
@@ -1348,7 +1350,7 @@ function generateReportIpc(tmpdir_path) {
           processing_times: response.data?.processing_times || [],
           warning:
             response.data?.["pdf_paths_not_extracted"][
-              "respective_reasons_for_error"
+            "respective_reasons_for_error"
             ] || null,
         },
       };

@@ -41,6 +41,8 @@ export default function Eligibility() {
   //   "General Insurance": "upto 10",
   // };
 
+  console.log("User Role:", user);
+
   useEffect(() => {
     async function fetchOpportunityData() {
       try {
