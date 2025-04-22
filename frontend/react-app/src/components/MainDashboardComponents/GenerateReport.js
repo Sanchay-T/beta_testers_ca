@@ -257,9 +257,6 @@ export default function GenerateReport() {
         }
 
         // setFailedStatements(result.pdf_paths_not_extracted || []); // Store failed
-
-        setDialogOpen(true); // Open the Dialog
-
         setSelectedFiles([]);
         setFileDetails([]);
 
@@ -275,6 +272,7 @@ export default function GenerateReport() {
         throw new Error(errorMessage);
       }
     } catch (error) {
+      console.log({ error });
       if (typeof error === "object" && error !== null) {
         console.error("Detailed error:", JSON.stringify(error, null, 2));
       }
@@ -307,6 +305,8 @@ export default function GenerateReport() {
       localStorage.removeItem("dashboardData");
       // refreshPage();
       progressIntervalRef.current = null;
+      setDialogOpen(true); // Open the Dialog
+
       return true;
     }
   };

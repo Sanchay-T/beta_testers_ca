@@ -877,75 +877,131 @@ const DataTable = ({
 
   // --- Bulk Update: Find each row by its id ---
   const handleBulkCategoryChange = (source) => {
-    const ids =
-      source === "similarCategory"
-        ? selectedCategorySimilarTransactions
-        : globalSelectedRows;
-
-    const newCategory =
-      source === "similarCategory"
-        ? pendingCategoryChange.newCategory
-        : selectedBulkCategory === ""
-        ? categorySearchTerm
-        : selectedBulkCategory;
-
-    const currentModifiedData = [...modifiedData];
-
-    // Update filteredData and compute modifiedData in the same callback
-    setFilteredData((prevFilteredData) => {
-      const newlyModifiedItems = [];
-
-      const updatedData = prevFilteredData.map((row) => {
-        if (ids.has(row.id)) {
-          const oldCategory = row.category;
-          let updatedRow = { ...row, category: newCategory };
-
-          if (newCategory === "Self transfer" || selectedType === "Contra") {
-            updatedRow.voucher_type = "Contra";
-          }
-
-          if (selectedType) {
-            let newClassification = selectedType;
-            if (selectedType === "Contra") {
-              updatedRow.debit > 0
-                ? (newClassification = "Contra Debit")
-                : (newClassification = "Contra Credit");
-            }
-            updatedRow.classification = newClassification;
-            updatedRow.is_new = true;
-          }
-
-          const modifiedItem = {
-            ...updatedRow,
-            category: newCategory,
-            oldCategory,
-            reasoning: bulkReasoning,
-            is_new: selectedType ? true : false,
-          };
-
-          newlyModifiedItems.push(modifiedItem);
-          return updatedRow;
+    const ids = source === "similarCategory" 
+      ? selectedCategorySimilarTransactions 
+      : globalSelectedRows;
+  
+    const newCategory = source === "similarCategory"
+      ? pendingCategoryChange.newCategory
+      : selectedBulkCategory === "" ? categorySearchTerm : selectedBulkCategory;
+  
+    // Create deep copies of the data we're working with
+    const dataToUpdate = [...filteredData];
+    const newlyModifiedItems = [];
+  
+    // Update the data
+    dataToUpdate.forEach(row => {
+      if (ids.has(row.id)) {
+        const oldCategory = row.category;
+        // Update row in place
+        row.category = newCategory;
+        
+        if (newCategory === "Self transfer" || selectedType === "Contra") {
+          row.voucher_type = "Contra";
         }
-
+  
+        if (selectedType) {
+          let newClassification = selectedType;
+          if (selectedType === "Contra") {
+            row.debit > 0
+              ? (newClassification = "Contra Debit")
+              : (newClassification = "Contra Credit");
+          }
+          row.classification = newClassification;
+          row.is_new = true;
+        }
+  
+        // Create a modified item record
+        const modifiedItem = {
+          ...row,
+          oldCategory,
+          reasoning: bulkReasoning,
+          is_new: selectedType ? true : false,
+        };
+        
+        newlyModifiedItems.push(modifiedItem);
+      }
+    });
+  
+    // Set flag to prevent refreshFunction
+    // This is a key change - we'll use this to block refreshes during our update
+    window._bulkUpdateInProgress = true;
+    
+    // Update filteredData first
+    setFilteredData(dataToUpdate);
+    setTransactions(prev => {
+      return prev.map(row => {
+        if (ids.has(row.id)) {
+          return {
+            ...row,
+            category: newCategory,
+            // Copy other relevant changes as well
+            ...(selectedType && { classification: selectedType }),
+            ...(newCategory === "Self transfer" && { voucher_type: "Contra" })
+          };
+        }
         return row;
       });
-
-      const allModifiedData = [...currentModifiedData, ...newlyModifiedItems];
-
-      // Now safely update modifiedData and save changes
-      setModifiedData(allModifiedData);
-      handleSaveChanges(allModifiedData);
-
-      return updatedData;
     });
-
-    // Rest state updates — safe to keep outside
-    setHasChanges(true);
-    setGlobalSelectedRows(new Set());
-    setBulkCategoryModalOpen(false);
-    setConfirmationModalOpen(false);
-    setSelectedBulkCategory("");
-    setBulkReasoning("");
+    // Combine with existing modified data
+    const allModifiedData = [...modifiedData, ...newlyModifiedItems];
+    
+    // Save to backend
+    try {
+      setIsLoading(true);
+      
+      // Instead of calling handleSaveChanges, directly make the backend call here
+      const payload = convertArrayToObject(newlyModifiedItems);
+      window.electron.editCategory(payload, caseId || reportData.caseId)
+        .then(response => {
+          // Handle voucher types if needed (similar to handleSaveChanges)
+          newlyModifiedItems.forEach(row => {
+            if (row.category === "Self transfer") {
+              handleVoucherTypeChange(row, "Contra", "Self transfer");
+            }
+            if (row.voucher_type === "Contra") {
+              handleVoucherTypeChange(row, "Contra2", row.category);
+            }
+          });
+          
+          // Show success message
+          toast({
+            title: "Changes saved successfully",
+            description: "All category updates have been saved",
+          });
+          
+          // Clean up
+          setHasChanges(false);
+          setModifiedData([]);  // Reset modified data since it's been saved
+          
+          // Reset UI states
+          setGlobalSelectedRows(new Set());
+          setBulkCategoryModalOpen(false);
+          setConfirmationModalOpen(false);
+          setSelectedBulkCategory("");
+          setBulkReasoning("");
+          
+          // Allow refreshes again
+          setTimeout(() => {
+            window._bulkUpdateInProgress = false;
+            setIsLoading(false);
+          }, 500);
+        })
+        .catch(error => {
+          console.error("Error saving bulk changes:", error);
+          toast({
+            title: "Error saving changes",
+            description: error.message || "An unknown error occurred",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          window._bulkUpdateInProgress = false;
+        });
+    } catch (error) {
+      console.error("Error in bulk update:", error);
+      setIsLoading(false);
+      window._bulkUpdateInProgress = false;
+    }
   };
 
   // --- Now store selected rows as transaction IDs ---
@@ -1154,7 +1210,7 @@ const DataTable = ({
     }, {});
   };
 
-  const handleSaveChanges = async (newModifiedData) => {
+  const handleSaveChanges = async (newModifiedData, isBulkUpdate = false) => {
     console.log({ newModifiedData });
     try {
       setIsLoading(true);
@@ -1201,7 +1257,9 @@ const DataTable = ({
         title: "Changes saved successfully",
         description: "All category updates have been saved",
       });
-      if (refreshFunction) refreshFunction();
+      // Only refresh if not in the middle of a bulk update
+    if (refreshFunction && !isBulkUpdate) refreshFunction();
+      // if (refreshFunction) refreshFunction();
     } catch (error) {
       toast({
         title: "Error saving changes",
@@ -1534,18 +1592,58 @@ const DataTable = ({
   //   });
   // };
 
+  function editDistance(s1, s2) {
+    s1 = s1.toLowerCase();
+    s2 = s2.toLowerCase();
+
+    var costs = new Array();
+    for (var i = 0; i <= s1.length; i++) {
+      var lastValue = i;
+      for (var j = 0; j <= s2.length; j++) {
+        if (i == 0) costs[j] = j;
+        else {
+          if (j > 0) {
+            var newValue = costs[j - 1];
+            if (s1.charAt(i - 1) != s2.charAt(j - 1))
+              newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
+            costs[j - 1] = lastValue;
+            lastValue = newValue;
+          }
+        }
+      }
+      if (i > 0) costs[s2.length] = lastValue;
+    }
+    return costs[s2.length];
+  }
+
+  function similarity(s1, s2) {
+    var longer = s1;
+    var shorter = s2;
+    if (s1.length < s2.length) {
+      longer = s2;
+      shorter = s1;
+    }
+    var longerLength = longer.length;
+    if (longerLength === 0) {
+      return 1.0;
+    }
+    return (
+      (longerLength - editDistance(longer, shorter)) / parseFloat(longerLength)
+    );
+  }
+
   const processSimilarCategory = (
     transactions,
     descriptionToMatch,
     threshold
   ) => {
-    const similarity = (str1, str2) => {
-      if (!str1 || !str2) return 0;
-      const s1 = str1.toLowerCase();
-      const s2 = str2.toLowerCase();
-      const match = [...s1].filter((char) => s2.includes(char)).length;
-      return match / Math.max(s1.length, s2.length);
-    };
+    // const similarity = (str1, str2) => {
+    //   if (!str1 || !str2) return 0;
+    //   const s1 = str1.toLowerCase();
+    //   const s2 = str2.toLowerCase();
+    //   const match = [...s1].filter((char) => s2.includes(char)).length;
+    //   return match / Math.max(s1.length, s2.length);
+    // };
 
     const thresholdDecimal = threshold / 100;
 
@@ -1573,7 +1671,11 @@ const DataTable = ({
           currentTransaction.description,
           sliderValue
         );
-        setSimilarCategoryTransactions(similarTransactions);
+        // remove already selected one
+        const filteredSimilarTransactions = similarTransactions.filter(
+          (t) => t.id !== currentTransaction.id
+        )
+        setSimilarCategoryTransactions(filteredSimilarTransactions);
         setIsLoading(false);
       }, 500);
     }
@@ -2276,13 +2378,14 @@ const DataTable = ({
                             <TableCell
                               key={column}
                               className="max-w-[200px] group relative"
+                              title={row[column]}
                             >
                               <div className="truncate">
                                 {formatValue(row[column])}
                               </div>
-                              <div className="absolute left-0 top-10 hidden group-hover:block bg-black text-white text-sm rounded p-2 z-50 whitespace-normal min-w-[200px] max-w-[400px]">
+                              {/* <div className="absolute left-0 top-10 hidden group-hover:block bg-black text-white text-sm rounded p-2 z-50 whitespace-normal min-w-[200px] max-w-[400px]">
                                 {row[column]}
-                              </div>
+                              </div> */}
                             </TableCell>
                           );
                         } else {
@@ -2587,10 +2690,10 @@ const DataTable = ({
       >
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>Update Multiple Categories</DialogTitle>
+            <DialogTitle>Bulk Edit Categories</DialogTitle>
             <DialogDescription>
-              Select a new category for the {globalSelectedRows.size} selected
-              transactions
+              Select or create a new category for the {globalSelectedRows.size}{" "}
+              selected transactions
             </DialogDescription>
           </DialogHeader>
 
@@ -2929,7 +3032,7 @@ const DataTable = ({
               </div>
             )}
           </div>
-          {similarCategoryTransactions.length > 0 && (
+          { (
             <div className="mt-6 p-4 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900">
               <div className="mb-4 flex items-center justify-between">
                 <div>
@@ -2998,7 +3101,7 @@ const DataTable = ({
                         <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
                           Date
                         </TableHead>
-                        <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300 w-[400px]">
+                        <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300 max-w-[400px]">
                           Description
                         </TableHead>
                         <TableHead className="p-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -3044,7 +3147,10 @@ const DataTable = ({
                           <TableCell className="p-3">
                             {transaction.date}
                           </TableCell>
-                          <TableCell className="p-3 w-[400px] overflow-hidden ellipsis whitespace-nowrap">
+                          <TableCell
+                            className="p-3 w-[400px] max-w-[400px] truncate"
+                            title={transaction.description}
+                          >
                             {transaction.description}
                           </TableCell>
                           <TableCell className="p-3">

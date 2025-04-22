@@ -85,6 +85,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
   const [isEmptyLedgersSelected, setIsEmptyLedgersSelected] = useState(false);
   const [inititalLedgersData, setInititalLedgersData] = useState([]);
   const [initialPayRecContraData, setInitialPayRecContraData] = useState([]);
+  const [companyNameCheckbox, setCompanyNameCheckbox] = useState(false);
 
   useEffect(() => {
     const checkIsTallyStatus = async () => {
@@ -1081,6 +1082,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
                   setIsEmptyLedgersSelected={setIsEmptyLedgersSelected}
                   port={port}
                   setPort={setPort}
+                  setActiveTab={setActiveTab}
                 />
               ) : (
                 // Fallback if not manual and no data
@@ -1130,6 +1132,23 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
                     </SelectContent>
                   </Select>
                 )}
+
+                {/* Add company name confirmation checkbox */}
+                <div className="mt-6 flex items-center space-x-2">
+                  <Checkbox
+                    id="companyNameConfirm"
+                    checked={companyNameCheckbox}
+                    onCheckedChange={setCompanyNameCheckbox}
+                  />
+                  <label
+                    htmlFor="companyNameConfirm"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    I confirm that{" "}
+                    <span className="font-bold">{companyName}</span> is the
+                    correct company name
+                  </label>
+                </div>
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
@@ -1140,7 +1159,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
                 Cancel
               </Button>
               <Button
-                disabled={loading2}
+                disabled={loading2 || !companyNameCheckbox}
                 variant="default"
                 onClick={handleUploadAfterConfirmation}
               >

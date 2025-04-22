@@ -117,6 +117,7 @@ const TallyTable = ({
   setIsEmptyLedgersSelected,
   port,
   handlePortChange,
+  setActiveTab,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [transactions, setTransactions] = useState([]);
@@ -892,6 +893,8 @@ const TallyTable = ({
         const cr_ledger =
           row.type === "credit" ? row.ledger : selectedBankLedger;
 
+        console.log(row["imported"]);
+        const importedStatus=row["imported"]==false?"Not Yet Uploaded":row["imported"]
         return [
           companyName,
           row["date"],
@@ -902,7 +905,7 @@ const TallyTable = ({
           row["amount"],
           row["voucher_type"],
           row["narration"],
-          row["imported"],
+          importedStatus
         ].join("\t");
       });
       console.log({ rows });
@@ -1349,20 +1352,63 @@ const TallyTable = ({
               Refresh Imports
             </Button>
 
-            <Button
-              onClick={handleUploadToTally}
-              disabled={
-                selectedVoucher === "Payment Receipt Contra" &&
-                !isLedgersCreated &&
-                !isEmptyLedgersSelected
-              }
-              size="sm"
-              className="h-9 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200 hover:border-emerald-300 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800"
-            >
-              <UploadCloud className="w-4 h-4 mr-1.5" />
-              Upload to Tally
-            </Button>
-
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="relative inline-flex">
+                    <Button
+                      onClick={handleUploadToTally}
+                      disabled={
+                        selectedVoucher === "Payment Receipt Contra" &&
+                        !isLedgersCreated &&
+                        !isEmptyLedgersSelected
+                      }
+                      size="sm"
+                      className="h-9 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200 hover:border-emerald-300 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800"
+                    >
+                      <UploadCloud className="w-4 h-4 mr-1.5" />
+                      Upload to Tally
+                    </Button>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="bottom"
+                  className="max-w-xs p-3 bg-white dark:bg-gray-800 border shadow-lg rounded-md"
+                >
+                  {selectedVoucher === "Payment Receipt Contra" &&
+                  !isLedgersCreated &&
+                  !isEmptyLedgersSelected ? (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">
+                        Ledgers need to be created first
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Before uploading transactions, you must either:
+                      </p>
+                      <ul className="text-xs text-gray-500 dark:text-gray-400 space-y-1 pl-4 list-disc">
+                        <li>Create required ledgers in Tally</li>
+                        <li>Check "Upload without ledgers" to use Suspense</li>
+                      </ul>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full mt-2 h-7 text-xs"
+                        onClick={() => {
+                          // Redirect to Ledgers page or switch to Ledgers tab
+                          setActiveTab && setActiveTab("Ledgers");
+                        }}
+                      >
+                        Go to Ledgers Page
+                      </Button>
+                    </div>
+                  ) : (
+                    <p className="text-sm">
+                      Upload selected transactions to Tally
+                    </p>
+                  )}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             {selectedVoucher === "Ledgers" && (
               <Button
                 onClick={handleAddRow}
