@@ -531,7 +531,7 @@ const Summary = () => {
         />
         <SummaryTable
           data={incomeReceipts}
-          title="Income Receipts"
+          title="Income / Receipts"
           categoryKey="Income / Receipts"
         />
         <SummaryTable

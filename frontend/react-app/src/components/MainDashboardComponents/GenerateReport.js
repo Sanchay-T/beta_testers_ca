@@ -368,7 +368,7 @@ export default function GenerateReport() {
           Report Generator
         </h2>
         {/* <button onClick={handleTestEdit}>Test Excel download</button> */}
-        <div className="flex items-center space-x-4">
+        {/* <div className="flex items-center space-x-4">
           <button
             onClick={() => setNotificationsOpen(!notificationsOpen)}
             className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 
@@ -396,7 +396,7 @@ export default function GenerateReport() {
               </ul>
             </div>
           )}
-        </div>
+        </div> */}
       </div>
 
       <div>
@@ -437,13 +437,13 @@ export default function GenerateReport() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen} className="">
         <DialogContent className="max-h-[90vh] overflow-y-auto pb-0">
           <DialogHeader>
-            {failedStatements.length === 0 ? (
+            {successfulStatements.length > 0 ? (
               <DialogTitle>
                 Report {currentCaseName} Generated Successfully!
               </DialogTitle>
             ) : (
-              <DialogTitle className="flex items-end gap-x-2">
-                <AlertTriangle className="text-yellow-500 w-6 h-6 mt-2" />
+              <DialogTitle className="flex items-end gap-x-2 items-center">
+                <AlertTriangle className="text-yellow-500 w-6 h-6 " />
                 Some statement had errors.
               </DialogTitle>
             )}

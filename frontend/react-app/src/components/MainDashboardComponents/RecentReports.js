@@ -152,10 +152,12 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         }
 
         if (result.data.warning && result.data.warning.length > 0) {
-          const formattedWarnings = result.data.warning.filter((warn) => {
+          const nonEmptyWarnings = result.data.warning.filter((warn) => {
             return warn && warn.trim() !== ""; // Return true for non-empty warnings
           });
-          setWarning(formattedWarnings);
+          const uniqueWarningsSet = new Set(nonEmptyWarnings);
+
+          setWarning([...uniqueWarningsSet]);
         }
         setCurrentCaseId(result.data.caseId); // Store caseId
 
@@ -1559,9 +1561,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                               </Button>
                             </AlertDialogTrigger>
                           </TooltipTrigger>
-                          <TooltipContent>
-                            Info
-                          </TooltipContent>
+                          <TooltipContent>Info</TooltipContent>
                         </Tooltip>
                         <AlertDialogContent className="max-w-2xl bg-white shadow-lg border-0 dark:bg-slate-950">
                           <AlertDialogHeader>
@@ -1898,8 +1898,8 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                 Report {currentCaseName} Generated Successfully!
               </DialogTitle>
             ) : (
-              <DialogTitle className="flex items-end gap-x-2">
-                <AlertTriangle className="text-yellow-500 w-6 h-6 mt-2" />
+              <DialogTitle className="flex items-end gap-x-2 items-center">
+                <AlertTriangle className="text-yellow-500 w-6 h-6" />
                 Some statement had errors.
               </DialogTitle>
             )}
@@ -1981,6 +1981,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
               </Card>
             </div>
           )}
+
           <div className="flex gap-4 sticky w-full p-4  bottom-0 bg-white">
             {showAnalsisButton && (
               <Button onClick={() => viewAnalysis()} className="flex-1">
