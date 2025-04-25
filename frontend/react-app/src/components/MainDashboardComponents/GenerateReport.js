@@ -153,7 +153,9 @@ export default function GenerateReport() {
         const formattedWarnings = result.data.warning.filter((warn) => {
           return warn && warn.trim() !== ""; // Return true for non-empty warnings
         });
-        setWarning(formattedWarnings);
+
+        const uniqueWarnings = Array.from(new Set(formattedWarnings)); // Remove duplicates
+        setWarning(uniqueWarnings);
       }
 
       setCurrentCaseId(result.data.caseId); // Store caseId
