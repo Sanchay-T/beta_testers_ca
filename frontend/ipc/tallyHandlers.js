@@ -13,6 +13,7 @@ const {
   buildTallyERPLedgerXml,
 } = require("./utils/buildTallyXml");
 const { fetchLedgersForAllCompanies } = require("./utils/getComapnyAndLedgers");
+const { like, where } = require("drizzle-orm");
 
 const { XMLParser } = require("fast-xml-parser");
 const { tallyVoucher } = require("../db/schema/TallyVoucher");
@@ -111,10 +112,11 @@ function registerTallyIpc() {
       } else if (voucherName === "Receipt") {
         xmlContent = buildTallyXmlReceipt(row);
       } else if (voucherName === "Contra") {
+        console.log({ row });
         xmlContent = buildTallyXmlContra(row);
       }
 
-      // log.info({ xmlContent });
+      log.info({ xmlContent });
 
       try {
         const response = await axios.post(tallyPath, xmlContent, {
@@ -128,7 +130,7 @@ function registerTallyIpc() {
         if (lineError) {
           console.error(`Transaction ${row.id} Failed: ${lineError}`);
           log.info({ xmlContent });
-          
+
           failedTransactions.push({ id: row.id, error: lineError });
         } else {
           console.log(`Transaction ${row.id} Successful`);
@@ -414,6 +416,114 @@ function registerTallyIpc() {
       }
     }
   );
+
+  // get opening balance check desription === "Opening Balance"
+  ipcMain.handle("get-opening-balance", async (event, caseId, individualId) => {
+    log.info("heyyyy...", { caseId, individualId });
+    try {
+      let allTransactions = [];
+
+      // Get all transactions based on caseId or individualId
+      if (individualId !== "combined" && individualId) {
+        console.log("individualId", individualId);
+        allTransactions = await db
+          .select({
+            id: transactions.id,
+            ...transactions,
+          })
+          .from(transactions)
+          .where(
+            and(
+              eq(transactions.statementId, individualId.toString()),
+              like(transactions.description, "%openingbalance%") // Add description filter for opening balance
+            )
+          );
+        log.info({ openingBalanceTransactions: allTransactions.length });
+      } else {
+        const allStatements = await db
+          .select()
+          .from(statements)
+          .where(eq(statements.caseId, caseId));
+
+        if (allStatements.length === 0) {
+          log.info("No statements found for case:", caseId);
+          return [];
+        }
+
+        allTransactions = await db
+          .select({
+            id: transactions.id,
+            ...transactions,
+          })
+          .from(transactions)
+          .where(
+            and(
+              inArray(
+                transactions.statementId,
+                allStatements.map((stmt) => stmt.id.toString())
+              ),
+              like(transactions.description, "openingbalance") // Add description filter for opening balance
+            )
+          );
+      }
+
+      // Join with the tally_voucher table to get upload status information
+      const openingBalanceTransactions = await Promise.all(
+        allTransactions.map(async (transaction) => {
+          // Query the tally_voucher table for this transaction
+          const tallyData = await db
+            .select()
+            .from(tallyVoucher)
+            .where(eq(tallyVoucher.transactionId, transaction.id))
+            .limit(1);
+
+          // Determine if the transaction was successfully uploaded to Tally
+          const isImported =
+            tallyData.length > 0 && tallyData[0].result === true;
+          const failedReason =
+            tallyData.length > 0 ? tallyData[0].failed_reason : "";
+          const bankLedger =
+            tallyData.length > 0 ? tallyData[0].bank_ledger : "";
+          const effective_date =
+            tallyData.length > 0 ? tallyData[0].effective_date : null;
+          const bill_reference =
+            tallyData.length > 0 ? tallyData[0].bill_reference : "";
+
+          // Return transaction with the additional Tally status info
+          return {
+            ...transaction,
+            imported: isImported ? 1 : 0,
+            failed_reason: failedReason,
+            bank_ledger: bankLedger,
+            effective_date: effective_date
+              ? new Date(effective_date).toISOString()
+              : "",
+            bill_reference: bill_reference,
+          };
+        })
+      );
+
+      log.info(
+        `Found ${openingBalanceTransactions.length} opening balance transactions`
+      );
+      // log.info({ openingBalanceTransactions });
+      const arryOfOpeningBalances = openingBalanceTransactions.map((t) =>
+        t.balance.toFixed(2)
+      );
+      log.info({ arryOfOpeningBalances });
+      return {
+        success: true,
+        data: arryOfOpeningBalances,
+      };
+    } catch (error) {
+      log.error("Error fetching opening balance transactions:", error);
+      return {
+        success: false,
+        error: error.message,
+      };
+      throw error;
+    }
+  });
 }
 
 module.exports = { registerTallyIpc };

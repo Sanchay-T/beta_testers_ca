@@ -69,6 +69,12 @@ const validateAndTransformTransaction = (transaction, statementId) => {
     balance = parseFloat(transaction.Balance);
   }
 
+
+  // remove trailing . from entity name
+  if (transaction.Entity) {
+    transaction.Entity = transaction.Entity.replace(/\.$/, "");
+  }
+
   return {
     statementId,
     date: date,

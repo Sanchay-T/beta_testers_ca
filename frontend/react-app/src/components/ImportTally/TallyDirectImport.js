@@ -494,7 +494,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
         selectedBankLedger,
         tallyUploadData
       );
-
+      setCompanyNameCheckbox(false);
       if (dbStoreResponse.success) {
         // Handle successful database storage
         console.log(
