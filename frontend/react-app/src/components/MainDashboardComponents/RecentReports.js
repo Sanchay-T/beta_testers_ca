@@ -647,9 +647,13 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       ) {
         setMissingMonthsList(result.data.missingMonthsList);
       }
-
       if (result.data.warning && result.data.warning.length > 0) {
-        setWarning(result.data.warning);
+        const nonEmptyWarnings = result.data.warning.filter((warn) => {
+          return warn && warn.trim() !== ""; // Return true for non-empty warnings
+        });
+        const uniqueWarningsSet = new Set(nonEmptyWarnings);
+
+        setWarning([...uniqueWarningsSet]);
       }
 
       setCurrentCaseId(result.data.caseId); // Store caseId
@@ -1802,7 +1806,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       {/* Modal for GenerateReportForm & its changes */}
       {isAddPdfModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-          <div className="bg-white rounded-lg shadow-lg max-w-5xl w-full p-6">
+          <div className="bg-white rounded-lg shadow-lg max-w-5xl w-full p-6 max-h-[90%] overflow-y-auto">
             <header className="flex justify-between items-center">
               <h2 className="text-lg font-semibold">
                 Add Additional Statements

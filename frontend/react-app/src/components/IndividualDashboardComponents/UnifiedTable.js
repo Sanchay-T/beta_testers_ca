@@ -877,29 +877,33 @@ const DataTable = ({
 
   // --- Bulk Update: Find each row by its id ---
   const handleBulkCategoryChange = (source) => {
-    const ids = source === "similarCategory" 
-      ? selectedCategorySimilarTransactions 
-      : globalSelectedRows;
-  
-    const newCategory = source === "similarCategory"
-      ? pendingCategoryChange.newCategory
-      : selectedBulkCategory === "" ? categorySearchTerm : selectedBulkCategory;
-  
+    const ids =
+      source === "similarCategory"
+        ? selectedCategorySimilarTransactions
+        : globalSelectedRows;
+
+    const newCategory =
+      source === "similarCategory"
+        ? pendingCategoryChange.newCategory
+        : selectedBulkCategory === ""
+        ? categorySearchTerm
+        : selectedBulkCategory;
+
     // Create deep copies of the data we're working with
     const dataToUpdate = [...filteredData];
     const newlyModifiedItems = [];
-  
+
     // Update the data
-    dataToUpdate.forEach(row => {
+    dataToUpdate.forEach((row) => {
       if (ids.has(row.id)) {
         const oldCategory = row.category;
         // Update row in place
         row.category = newCategory;
-        
+
         if (newCategory === "Self transfer" || selectedType === "Contra") {
           row.voucher_type = "Contra";
         }
-  
+
         if (selectedType) {
           let newClassification = selectedType;
           if (selectedType === "Contra") {
@@ -910,7 +914,7 @@ const DataTable = ({
           row.classification = newClassification;
           row.is_new = true;
         }
-  
+
         // Create a modified item record
         const modifiedItem = {
           ...row,
@@ -918,26 +922,26 @@ const DataTable = ({
           reasoning: bulkReasoning,
           is_new: selectedType ? true : false,
         };
-        
+
         newlyModifiedItems.push(modifiedItem);
       }
     });
-  
+
     // Set flag to prevent refreshFunction
     // This is a key change - we'll use this to block refreshes during our update
     window._bulkUpdateInProgress = true;
-    
+
     // Update filteredData first
     setFilteredData(dataToUpdate);
-    setTransactions(prev => {
-      return prev.map(row => {
+    setTransactions((prev) => {
+      return prev.map((row) => {
         if (ids.has(row.id)) {
           return {
             ...row,
             category: newCategory,
             // Copy other relevant changes as well
             ...(selectedType && { classification: selectedType }),
-            ...(newCategory === "Self transfer" && { voucher_type: "Contra" })
+            ...(newCategory === "Self transfer" && { voucher_type: "Contra" }),
           };
         }
         return row;
@@ -945,17 +949,18 @@ const DataTable = ({
     });
     // Combine with existing modified data
     const allModifiedData = [...modifiedData, ...newlyModifiedItems];
-    
+
     // Save to backend
     try {
       setIsLoading(true);
-      
+
       // Instead of calling handleSaveChanges, directly make the backend call here
       const payload = convertArrayToObject(newlyModifiedItems);
-      window.electron.editCategory(payload, caseId || reportData.caseId)
-        .then(response => {
+      window.electron
+        .editCategory(payload, caseId || reportData.caseId)
+        .then((response) => {
           // Handle voucher types if needed (similar to handleSaveChanges)
-          newlyModifiedItems.forEach(row => {
+          newlyModifiedItems.forEach((row) => {
             if (row.category === "Self transfer") {
               handleVoucherTypeChange(row, "Contra", "Self transfer");
             }
@@ -963,31 +968,31 @@ const DataTable = ({
               handleVoucherTypeChange(row, "Contra2", row.category);
             }
           });
-          
+
           // Show success message
           toast({
             title: "Changes saved successfully",
             description: "All category updates have been saved",
           });
-          
+
           // Clean up
           setHasChanges(false);
-          setModifiedData([]);  // Reset modified data since it's been saved
-          
+          setModifiedData([]); // Reset modified data since it's been saved
+
           // Reset UI states
           setGlobalSelectedRows(new Set());
           setBulkCategoryModalOpen(false);
           setConfirmationModalOpen(false);
           setSelectedBulkCategory("");
           setBulkReasoning("");
-          
+
           // Allow refreshes again
           setTimeout(() => {
             window._bulkUpdateInProgress = false;
             setIsLoading(false);
           }, 500);
         })
-        .catch(error => {
+        .catch((error) => {
           console.error("Error saving bulk changes:", error);
           toast({
             title: "Error saving changes",
@@ -1258,7 +1263,7 @@ const DataTable = ({
         description: "All category updates have been saved",
       });
       // Only refresh if not in the middle of a bulk update
-    if (refreshFunction && !isBulkUpdate) refreshFunction();
+      if (refreshFunction && !isBulkUpdate) refreshFunction();
       // if (refreshFunction) refreshFunction();
     } catch (error) {
       toast({
@@ -1674,7 +1679,7 @@ const DataTable = ({
         // remove already selected one
         const filteredSimilarTransactions = similarTransactions.filter(
           (t) => t.id !== currentTransaction.id
-        )
+        );
         setSimilarCategoryTransactions(filteredSimilarTransactions);
         setIsLoading(false);
       }, 500);
@@ -1697,7 +1702,7 @@ const DataTable = ({
     };
 
     // Similarity threshold
-    const threshold = 0.85;
+    const threshold = 0.75;
 
     // Filter transactions with similar descriptions and same category
     const similarTransactions = transactions.filter((transaction) => {
@@ -3032,7 +3037,7 @@ const DataTable = ({
               </div>
             )}
           </div>
-          { (
+          {
             <div className="mt-6 p-4 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900">
               <div className="mb-4 flex items-center justify-between">
                 <div>
@@ -3173,7 +3178,7 @@ const DataTable = ({
                 )}
               </div>
             </div>
-          )}
+          }
 
           <DialogFooter className="sticky bg-white  bottom-0 p-4">
             <Button

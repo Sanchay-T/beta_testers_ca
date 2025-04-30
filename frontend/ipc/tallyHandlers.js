@@ -419,7 +419,6 @@ function registerTallyIpc() {
 
   // get opening balance check desription === "Opening Balance"
   ipcMain.handle("get-opening-balance", async (event, caseId, individualId) => {
-    log.info("heyyyy...", { caseId, individualId });
     try {
       let allTransactions = [];
 
@@ -435,7 +434,7 @@ function registerTallyIpc() {
           .where(
             and(
               eq(transactions.statementId, individualId.toString()),
-              like(transactions.description, "%openingbalance%") // Add description filter for opening balance
+              like(transactions.description, "openingbalance") // Add description filter for opening balance
             )
           );
         log.info({ openingBalanceTransactions: allTransactions.length });
@@ -470,35 +469,15 @@ function registerTallyIpc() {
       // Join with the tally_voucher table to get upload status information
       const openingBalanceTransactions = await Promise.all(
         allTransactions.map(async (transaction) => {
-          // Query the tally_voucher table for this transaction
-          const tallyData = await db
-            .select()
-            .from(tallyVoucher)
-            .where(eq(tallyVoucher.transactionId, transaction.id))
-            .limit(1);
-
-          // Determine if the transaction was successfully uploaded to Tally
-          const isImported =
-            tallyData.length > 0 && tallyData[0].result === true;
-          const failedReason =
-            tallyData.length > 0 ? tallyData[0].failed_reason : "";
-          const bankLedger =
-            tallyData.length > 0 ? tallyData[0].bank_ledger : "";
-          const effective_date =
-            tallyData.length > 0 ? tallyData[0].effective_date : null;
-          const bill_reference =
-            tallyData.length > 0 ? tallyData[0].bill_reference : "";
-
-          // Return transaction with the additional Tally status info
           return {
-            ...transaction,
-            imported: isImported ? 1 : 0,
-            failed_reason: failedReason,
-            bank_ledger: bankLedger,
-            effective_date: effective_date
-              ? new Date(effective_date).toISOString()
-              : "",
-            bill_reference: bill_reference,
+            amount: transaction.balance,
+            id: transaction.id,
+            description: transaction.description,
+            date: new Date(transaction.date).toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            }),
           };
         })
       );
@@ -507,13 +486,13 @@ function registerTallyIpc() {
         `Found ${openingBalanceTransactions.length} opening balance transactions`
       );
       // log.info({ openingBalanceTransactions });
-      const arryOfOpeningBalances = openingBalanceTransactions.map((t) =>
-        t.balance.toFixed(2)
-      );
-      log.info({ arryOfOpeningBalances });
+      // const arryOfOpeningBalances = openingBalanceTransactions.map((t) =>
+      //   t.balance.toFixed(2)
+      // );
+      // log.info({ arryOfOpeningBalances });
       return {
         success: true,
-        data: arryOfOpeningBalances,
+        data: openingBalanceTransactions,
       };
     } catch (error) {
       log.error("Error fetching opening balance transactions:", error);

@@ -328,12 +328,6 @@ const TallyTable = ({
       );
 
       if (response.successIds && response.successIds.length > 0) {
-        toast({
-          title: "Success",
-          description: `Bank ledger "${newBankLedgerName.trim()}" created successfully`,
-          variant: "success",
-        });
-
         // Refresh ledger list
         await handleLedgerImport(true);
 
@@ -371,6 +365,11 @@ const TallyTable = ({
       });
     } finally {
       setIsCreatingBank(false);
+      toast({
+        title: "Success",
+        description: `Bank ledger "${newBankLedgerName.trim()}" created successfully`,
+        variant: "success",
+      });
     }
   };
 
@@ -396,17 +395,17 @@ const TallyTable = ({
 
           // If there's only one balance, select it automatically
           if (response.data.length === 1) {
-            setBankOpeningBalance(response.data[0].toString() || "0");
+            setBankOpeningBalance(response.data[0].amount.toString() || "0");
             setShowBalanceDropdown(false);
           } else {
             // If there are multiple balances, show dropdown and select first one by default
             setShowBalanceDropdown(true);
-            setBankOpeningBalance(response.data[0].toString() || "0");
+            setBankOpeningBalance(response.data[0].amount.toString() || "0");
 
             toast({
               title: "Multiple Opening Balances Found",
               description: "Please select the appropriate opening balance",
-              variant: "info",
+              variant: "default",
               duration: 4000,
             });
           }
@@ -415,7 +414,7 @@ const TallyTable = ({
           typeof response.data === "number"
         ) {
           // If it's a single value (not an array)
-          setBankOpeningBalance(response.data.toString());
+          setBankOpeningBalance(response.data.amount.toString());
           setShowBalanceDropdown(false);
           setOpeningBalanceOptions([]);
         } else {
@@ -1020,14 +1019,19 @@ const TallyTable = ({
   };
 
   const handleUploadToTally = async () => {
-    let data = filteredData;
-    // Check if any rows are selected
+    let data;
+
     if (selectedTransactions.length > 0) {
+      // User selected transactions manually → allow both imported & non-imported
       data = transactions.filter((tx) => selectedTransactions.includes(tx.id));
+    } else {
+      // User didn't select anything → upload only non-imported transactions
+      data = filteredData.filter((tx) => !tx.imported);
     }
 
     const res = await handleUpload(data);
     console.log("Upload response: ", { res });
+
     if (res) {
       setSelectedTransactions([]);
     }
@@ -1625,10 +1629,9 @@ const TallyTable = ({
                                           key={index}
                                           value={option.amount.toString()}
                                         >
-                                          {`${option.amount} (${
-                                            option.description ||
-                                            "Opening Balance"
-                                          } - ${
+                                          {`${
+                                            option.amount
+                                          } (${"Opening Balance"} - ${
                                             option.date || "Unknown date"
                                           })`}
                                         </SelectItem>

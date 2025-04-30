@@ -69,7 +69,6 @@ const validateAndTransformTransaction = (transaction, statementId) => {
     balance = parseFloat(transaction.Balance);
   }
 
-
   // remove trailing . from entity name
   if (transaction.Entity) {
     transaction.Entity = transaction.Entity.replace(/\.$/, "");
@@ -105,35 +104,13 @@ const isDuplicateTransaction = async (transaction, statementId) => {
 };
 
 const storeTransactionsBatch = async (transformedTransactions) => {
+  console.log("Inside storeTransactionsBatch", transformedTransactions.length);
   try {
     if (transformedTransactions.length === 0) return;
 
-    const uniqueTransactions = [];
-    for (const t of transformedTransactions) {
-      const isDuplicate = await isDuplicateTransaction(t, t.statementId);
-      if (!isDuplicate) {
-        uniqueTransactions.push({
-          statementId: t.statementId.toString(),
-          date: t.date,
-          description: t.description,
-          amount: t.amount,
-          category: t.category,
-          type: t.type,
-          balance: t.balance,
-          bank: t.bank,
-          entity: t.entity,
+    const uniqueTransactions = transformedTransactions;
 
-          voucher_type: t.voucher_type,
-          createdAt: new Date(),
-        });
-      } else {
-        log.info(
-          `Skipping duplicate transaction: ${t.description} on ${t.date}`
-        );
-      }
-    }
-
-    // log.info({ uniqueTransactions });
+    log.info({ uniqueTransactionsLength: uniqueTransactions.length });
 
     if (uniqueTransactions.length === 0) {
       log.info("No new unique transactions to store");
@@ -373,7 +350,8 @@ const processStatementAndEOD = async (
       statementId = statementResult[0].id;
       const finalTransactions = statementTransactions.map((transaction) => ({
         ...transaction,
-        statementId,
+        statementId: statementId.toString(),
+        createdAt: new Date(),
       }));
       await storeTransactionsBatch(finalTransactions);
       processedTransactions = finalTransactions.length;

@@ -339,10 +339,6 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
     // Prepare data for Tally
     const tallyData = txData
       .map((transaction) => {
-        if (transaction.imported) {
-          // remove Already uploaded
-          return null;
-        }
         let dr_ledger = "";
         let cr_ledger = "";
         console.log("transaction.effective_date", transaction.effective_date);
@@ -1082,6 +1078,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
                   setIsEmptyLedgersSelected={setIsEmptyLedgersSelected}
                   port={port}
                   setPort={setPort}
+                  handlePortChange={handlePortChange}
                   setActiveTab={setActiveTab}
                 />
               ) : (
