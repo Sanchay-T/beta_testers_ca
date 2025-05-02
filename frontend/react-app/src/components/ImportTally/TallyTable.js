@@ -15,7 +15,7 @@ import {
   Filter,
   FileSpreadsheet,
   Settings,
-  Info,
+  Info,ChevronDown
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import {
@@ -183,7 +183,9 @@ const TallyTable = ({
   const [isCreatingBank, setIsCreatingBank] = useState(false);
   const [openingBalanceOptions, setOpeningBalanceOptions] = useState([]);
   const [showBalanceDropdown, setShowBalanceDropdown] = useState(false);
-
+  const [balanceInput, setBalanceInput] = useState("");               // the text the user is typing
+  const [showBalanceList, setShowBalanceList] = useState(false);      // whether to show the dropdown list
+  
   const isFirstLoad = useRef(true);
 
   useEffect(() => {
@@ -402,12 +404,12 @@ const TallyTable = ({
             setShowBalanceDropdown(true);
             setBankOpeningBalance(response.data[0].amount.toString() || "0");
 
-            toast({
-              title: "Multiple Opening Balances Found",
-              description: "Please select the appropriate opening balance",
-              variant: "default",
-              duration: 4000,
-            });
+            // toast({
+            //   title: "Multiple Opening Balances Found",
+            //   description: "Please select the appropriate opening balance",
+            //   variant: "default",
+            //   duration: 4000,
+            // });
           }
         } else if (
           typeof response.data === "string" ||
@@ -1574,6 +1576,7 @@ const TallyTable = ({
                     <div
                       className="absolute z-50 top-full left-0 mt-1 w-80 p-0 bg-white dark:bg-gray-800 border shadow-lg rounded-md"
                       data-bank-tooltip
+                      onMouseDown={(e) => e.stopPropagation()}
                     >
                       <div className="space-y-3 p-4">
                         <div className="space-y-1">
@@ -1602,61 +1605,69 @@ const TallyTable = ({
                             />
                           </div>
 
-                          <div className="space-y-1">
-                            <label className="text-xs font-medium flex items-center justify-between text-slate-600 dark:text-slate-300">
-                              <div className="flex items-center">
-                                <span>Opening Balance</span>
-                                {isFetchingBalance && (
-                                  <Loader2 className="ml-2 h-3 w-3 animate-spin text-slate-400" />
-                                )}
-                              </div>
-                            </label>
 
-                            {showBalanceDropdown &&
-                            openingBalanceOptions.length > 1 ? (
-                              <div className="space-y-2">
-                                <Select
-                                  value={bankOpeningBalance}
-                                  onValueChange={setBankOpeningBalance}
-                                >
-                                  <SelectTrigger className="w-full h-8 text-sm">
-                                    <SelectValue placeholder="Select opening balance" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {openingBalanceOptions.map(
-                                      (option, index) => (
-                                        <SelectItem
-                                          key={index}
-                                          value={option.amount.toString()}
-                                        >
-                                          {`${
-                                            option.amount
-                                          } (${"Opening Balance"} - ${
-                                            option.date || "Unknown date"
-                                          })`}
-                                        </SelectItem>
-                                      )
-                                    )}
-                                  </SelectContent>
-                                </Select>
-                                <p className="text-xs text-slate-500">
-                                  Multiple opening balances found. Please select
-                                  one.
-                                </p>
-                              </div>
-                            ) : (
-                              <Input
-                                value={bankOpeningBalance}
-                                onChange={(e) =>
-                                  setBankOpeningBalance(e.target.value)
-                                }
-                                type="number"
-                                placeholder="0.00"
-                                className="h-8 text-sm"
-                                disabled={isCreatingBank || isFetchingBalance}
-                              />
-                            )}
-                          </div>
+<div className="space-y-1">
+  <label className="text-xs font-medium flex items-center justify-between text-slate-600 dark:text-slate-300">
+    <div className="flex items-center">
+      <span>Opening Balance</span>
+      {isFetchingBalance && (
+        <Loader2 className="ml-2 h-3 w-3 animate-spin text-slate-400" />
+      )}
+    </div>
+  </label>
+
+  <div className="relative">
+    {/* The free-form input */}
+    <Input
+      type="number"
+      value={balanceInput}
+      onChange={e => {
+        setBalanceInput(e.target.value);
+        setBankOpeningBalance(e.target.value);
+      }}
+      onFocus={() => openingBalanceOptions.length > 1 && setShowBalanceList(true)}
+      placeholder="0.00"
+      className="h-8 text-sm pr-8"
+      disabled={isCreatingBank || isFetchingBalance}
+    />
+
+    {/* Chevrons to toggle list */}
+    {openingBalanceOptions.length > 1 && (
+      <button
+        type="button"
+        onClick={() => setShowBalanceList(v => !v)}
+        className="absolute inset-y-0 right-2 flex items-center"
+      >
+        <ChevronDown className="h-4 w-4 text-gray-500" />
+      </button>
+    )}
+
+    {/* The dropdown list */}
+    {showBalanceList && (
+      <div
+        className="absolute z-10 mt-1 w-full max-h-40 overflow-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg"
+        onMouseLeave={() => setShowBalanceList(false)}
+      >
+        {openingBalanceOptions.map((opt, i) => (
+          <div
+            key={i}
+            className="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+            onMouseDown={e => {
+              e.preventDefault();        // prevent blur
+              const amt = opt.amount.toString();
+              setBalanceInput(amt);
+              setBankOpeningBalance(amt);
+              setShowBalanceList(false);
+            }}
+          >
+            {`${opt.amount}  (${opt.date || "Unknown date"})`}
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</div>
+
                         </div>
 
                         <div className="flex justify-end gap-2 mt-4">
@@ -2122,6 +2133,7 @@ const TallyTable = ({
                             <TableCell
                               key={column}
                               className="max-w-[500px] group relative"
+                              title={row[column]}
                             >
                               <Input
                                 type="text"
@@ -2153,9 +2165,9 @@ const TallyTable = ({
                                 placeholder="Enter Narration"
                                 className="w-full p-2 border border-gray-300  truncate rounded-md"
                               />
-                              <div className="absolute right-24 top-12 hidden group-hover:block bg-black text-white text-sm rounded p-2 z-50 whitespace-normal min-w-[200px] ">
+                              {/* <div className="absolute right-24 top-12 hidden group-hover:block bg-black text-white text-sm rounded p-2 z-50 whitespace-normal min-w-[200px] ">
                                 {row[column]}
-                              </div>
+                              </div> */}
                             </TableCell>
                           );
                         } else if (

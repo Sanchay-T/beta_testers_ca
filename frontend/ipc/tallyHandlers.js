@@ -278,45 +278,64 @@ function registerTallyIpc() {
     "store-tally-upload",
     async (event, uploadResponse, bankLedger, uploadData) => {
       try {
-        // Prepare the data to be inserted
-        const insertRecords = uploadData.map((transaction) => {
-          // Check if this transaction was successful
-          const isSuccessful = uploadResponse.successIds.includes(
-            transaction.id
-          );
+        const { successIds = [], failedTransactions = [] } = uploadResponse;
+
+        // Normalize failedTransactions into an array of {id,error}
+        const failures = Array.isArray(failedTransactions)
+          ? failedTransactions
+          : Object.entries(failedTransactions).map(([id, error]) => ({
+              id: Number(id),
+              error,
+            }));
+
+        // Helper: parse YYYYMMDD strings into a real JS Date
+        function parseYMD(str) {
+          if (/^\d{8}$/.test(str)) {
+            const y = +str.substring(0, 4);
+            const m = +str.substring(4, 6) - 1; // zero-based month
+            const d = +str.substring(6, 8);
+            return new Date(y, m, d);
+          }
+          return new Date();
+        }
+
+        // Build the bulk insert payload
+        const insertRecords = uploadData.map((tx) => {
+          const success = successIds.includes(tx.id);
+          const failureObj = failures.find((f) => f.id === tx.id);
 
           return {
-            transactionId: transaction.id,
-            effective_date: transaction.effectiveDate
-              ? new Date(transaction.effectiveDate)
-              : new Date(),
-            bill_reference: transaction.billRefernce || "",
-            failed_reason: isSuccessful
+            transactionId: tx.id,
+            effective_date: tx.effectiveDate
+              ? parseYMD(tx.effectiveDate)
+              : null,
+            bill_reference: tx.billRefernce || "",
+            failed_reason: success
               ? ""
-              : JSON.stringify(
-                  uploadResponse.failedTransactions.find(
-                    (failed) => failed.id === transaction.id
-                  ) || "Unknown failure"
-                ),
+              : failureObj?.error || "Unknown failure",
             bank_ledger: bankLedger || "",
-            result: isSuccessful ? 1 : 0,
+            result: success ? 1 : 0,
             createdAt: new Date(),
           };
         });
 
-        // Batch insert the records
-        const insertedRecords = [];
-        for (const record of insertRecords) {
-          const inserted = await db
-            .insert(tallyVoucher)
-            .values(record)
-            .returning();
-          insertedRecords.push(inserted[0]);
+        // Insert into tallyVoucher
+        const inserted = await db
+          .insert(tallyVoucher)
+          .values(insertRecords)
+          .returning();
+
+        // Now flip the imported flag in your master transactions table
+        if (successIds.length > 0) {
+          await db
+            .update(transactions)
+            .set({ imported: 1 })
+            .where(transactions.transactionId.in(successIds));
         }
 
         return {
           success: true,
-          insertedRecords: insertedRecords,
+          insertedRecords: inserted,
         };
       } catch (error) {
         console.error("Error storing Tally upload:", error);

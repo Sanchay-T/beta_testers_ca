@@ -291,7 +291,7 @@ const DataTable = ({
   const commandRef = useRef(null);
 
   const { reportData, updateReportData } = useReportContext();
-  const [sliderValue, setSliderValue] = useState(85);
+  const [sliderValue, setSliderValue] = useState(75);
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
