@@ -712,7 +712,7 @@ const DataTable = ({
 
     // Reset to original data if search value is empty
     if (searchValue === "") {
-      setFilteredData(data);
+      setFilteredData(transactions);
       setCurrentPage(1);
       return;
     }
@@ -831,10 +831,11 @@ const DataTable = ({
       modifiedObject = { ...modifiedObject, voucher_type: "Contra" };
     }
     if (selectedCategorySimilarTransactions.size > 0) {
+
       modifiedObject = { ...modifiedObject, is_new: false };
       setModifiedData((prevData) => [...prevData, modifiedObject]);
       setSelectedBulkCategory();
-      handleBulkCategoryChange("similarCategory");
+      handleBulkCategoryChange("similarCategory",transactionId);
     } else {
       let newClassification = selectedType;
       if (selectedType === "Contra") {
@@ -876,11 +877,15 @@ const DataTable = ({
   };
 
   // --- Bulk Update: Find each row by its id ---
-  const handleBulkCategoryChange = (source) => {
+  const handleBulkCategoryChange = (source,transactionId) => {
     const ids =
       source === "similarCategory"
         ? selectedCategorySimilarTransactions
         : globalSelectedRows;
+      
+    if(transactionId){
+      ids.add(transactionId);
+    }
 
     const newCategory =
       source === "similarCategory"
@@ -1065,7 +1070,7 @@ const DataTable = ({
     const dataToFilter = transactions;
     //   existingFilterData.length > 0 ? existingFilterData : data;
     if (selectedCategories.length === 0) {
-      setFilteredData(data);
+      setFilteredData(transactions);
     } else {
       const filtered = dataToFilter.filter((row) =>
         selectedCategories.includes(String(row[currentFilterColumn]))
@@ -1095,7 +1100,7 @@ const DataTable = ({
   // Improved date handling functions
   const handleDateFilter = (columnName, fromDate, toDate) => {
     const dataToFilter =
-      existingFilterData.length > 0 ? existingFilterData : data;
+      existingFilterData.length > 0 ? existingFilterData : transactions;
 
     const parseDate = (dateStr) => {
       if (!dateStr) return null;
@@ -1170,7 +1175,7 @@ const DataTable = ({
 
   const clearFilters = () => {
     setSearchTerm("");
-    setFilteredData(data);
+    setFilteredData(transactions);
     setCurrentPage(1);
     setFromDate("");
     setToDate("");
