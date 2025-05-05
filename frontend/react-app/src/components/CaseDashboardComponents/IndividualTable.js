@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, Search } from "lucide-react";
+import { Loader2, Search, Download } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -31,7 +31,13 @@ import {
   AlertDialogDescription,
 } from "../ui/alert-dialog";
 import { Checkbox } from "../ui/checkbox";
-
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../ui/tooltip";
+import { generateFinancialReport } from "../ReportExcel";
 const IndividualTable = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -227,6 +233,139 @@ const IndividualTable = () => {
     }
   };
 
+  const handleDownload = async (caseId, individualId) => {
+    try {
+      const success = await generateFinancialReport(caseId, individualId, null);
+
+      if (success) {
+      } else {
+        console.error("Failed to generate the financial report.");
+      }
+    } catch (error) {
+      console.error("Error in handleDownload:", error);
+    }
+
+    // const SummaryData = await window.electron.getSummary(caseid);
+    // const summaryObject = JSON.parse(SummaryData[0].data);
+    // const getStatements = await window.electron.getStatements(caseid);
+    // const accountNumber = getStatements[0].accountNumber;
+    // const customerName = getStatements[0].customerName;
+    // const bankName = getStatements[0].bankName;
+
+    // // Map the data to the required format
+    // const mappedData = mapDataForExcelGenerator(
+    //   accountNumber,
+    //   customerName,
+    //   bankName,
+    //   summaryObject
+    // );
+    // SummaryExcel(mappedData);
+
+    // const opportunityToEarnData =
+    //   await window.electron.getOpportunityToEarnForExcel(caseid);
+    // OpportunityToEarnExcel(opportunityToEarnData.data);
+
+    // const EodData = await window.electron.getEodBalance(caseid);
+    // const formattedEodData = EodformatData(EodData[0].data);
+    // EodBalanceExcel(formattedEodData);
+
+    // EodBalanceExcel(formattedEodData);
+
+    // const cashwithdrawal =
+    //   await window.electron.getTransactionsByCashWithdrawal(caseid);
+    // CashWithdrawalExcel(cashwithdrawal);
+
+    // const cashdeposit = await window.electron.getTransactionsByCashDeposit(
+    //   caseid
+    // );
+    // CashDepositExcel(cashdeposit);
+
+    // const ProbableEmi = await window.electron.getTransactionsByEmi(caseid);
+    // ProbableEmiExcel(ProbableEmi);
+
+    // const reversal = await window.electron.getTransactionsByReversal(caseid);
+    // ReversalExcel(reversal);
+
+    // const suspensecredit =
+    //   await window.electron.getTransactionsBySuspenseCredit(caseid);
+    // const transformData = processSuspenseData(suspensecredit);
+    // SuspenseCreditExcel(transformData);
+
+    // const suspensedebit = await window.electron.getTransactionsBySuspenseDebit(
+    //   caseid
+    // );
+    // const transformData = processSuspenseData(suspensedebit);
+    // SuspenseDebitExcel(transformData);
+
+    // let file_cretaed = false;
+    // try {
+    //   setIsExcelLoading(true); // Start loading
+
+    //   // Start the download process in the main process
+    //   window.electron.download.excelReportDownload(caseid);
+
+    //   let downloadedChunks = [];
+    //   // let totalFileSize = 0;
+    //   let downloadProgress = 0;
+
+    //   // Listen for file chunks from the main process
+    //   window.electron.download.onExcelDownloadChunk((chunk) => {
+    //     downloadedChunks.push(chunk);
+    //     downloadProgress += chunk.length;
+
+    //     // Update progress if needed (could add a progress bar)
+    //     // const progressPercentage = (downloadProgress / totalFileSize) * 100;
+    //     // setProgress(progressPercentage);
+    //   });
+
+    //   // Listen for download completion
+    //   window.electron.download.onExcelDownloadComplete((res) => {
+    //     if (!file_cretaed) {
+    //       file_cretaed = true;
+    //       const { message, fileName } = res;
+    //       setIsExcelLoading(false); // End loading state
+
+    //       const fileBlob = new Blob(downloadedChunks, {
+    //         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    //       });
+    //       const url = window.URL.createObjectURL(fileBlob);
+
+    //       // Trigger file download
+    //       const link = document.createElement("a");
+    //       link.href = url;
+    //       link.download = fileName;
+    //       link.click();
+
+    //       // Clean up URL
+    //       window.URL.revokeObjectURL(url);
+
+    //       toast({
+    //         title: "Success",
+    //         description: res.message || "Excel file downloaded successfully",
+    //       });
+    //     }
+    //   });
+
+    //   // Handle download error
+    //   window.electron.download.onExcelDownloadError((error) => {
+    //     setIsExcelLoading(false);
+
+    //     toast({
+    //       title: "Error",
+    //       description: `Failed to download Excel file: ${error}`,
+    //       variant: "destructive",
+    //     });
+    //   });
+    // } catch (error) {
+    //   setIsExcelLoading(false);
+    //   toast({
+    //     title: "Error",
+    //     description: `Failed to initiate download: ${error.message}`,
+    //     variant: "destructive",
+    //   });
+    // }
+  };
+
   return (
     <div className="p-8 space-y-8">
       <Card>
@@ -295,52 +434,64 @@ const IndividualTable = () => {
                         )
                       }
                     >
-                      <TableCell>{index + 1}</TableCell>
-                      <TableCell>
-                        <div
-                          className="truncate max-w-96"
-                          title={filenameWithoutTimestamp}
-                        >
-                          {filenameWithoutTimestamp}
-                        </div>
-                      </TableCell>
-                      <TableCell>{item.customerName}</TableCell>
-                      <TableCell>{item.accountNumber}</TableCell>
-                      <TableCell className="flex gap-2">
-                        <Button
-                          onClick={(e) => {
-                            e.stopPropagation(); // Prevent row click
-                            if (item.filePath.includes(".pdf")) {
-                              handleRectify(item.filePath);
-                            } else {
-                              toast({
-                                title: "Alert",
-                                description: "File not supported for rerun",
-                                variant: "destructive",
-                                duration: 3000,
-                              });
-                            }
-                          }}
-                          disabled={isProcessing}
-                        >
-                          {isProcessing ? (
-                            <>
-                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                              <span>Processing...</span>
-                            </>
-                          ) : (
-                            "Re-run"
-                          )}
-                        </Button>
-                        {/* <Button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            confirmDelete(item.id);
-                          }}
-                        >
-                          Delete
-                        </Button> */}
-                      </TableCell>
+                      <TooltipProvider delayDuration={800}>
+                        <TableCell>{index + 1}</TableCell>
+                        <TableCell>
+                          <div
+                            className="truncate max-w-96"
+                            title={filenameWithoutTimestamp}
+                          >
+                            {filenameWithoutTimestamp}
+                          </div>
+                        </TableCell>
+                        <TableCell>{item.customerName}</TableCell>
+                        <TableCell>{item.accountNumber}</TableCell>
+                        <TableCell className="flex gap-2">
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent row click
+                              if (item.filePath.includes(".pdf")) {
+                                handleRectify(item.filePath);
+                              } else {
+                                toast({
+                                  title: "Alert",
+                                  description: "File not supported for rerun",
+                                  variant: "destructive",
+                                  duration: 3000,
+                                });
+                              }
+                            }}
+                            disabled={isProcessing}
+                          >
+                            {isProcessing ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                <span>Processing...</span>
+                              </>
+                            ) : (
+                              "Re-run"
+                            )}
+                          </Button>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              {console.log({ item })}
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Prevent row click
+                                  handleDownload(caseId, item.id);
+                                }}
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              Download Report for this particular file
+                            </TooltipContent>
+                          </Tooltip>
+                        </TableCell>
+                      </TooltipProvider>
                     </TableRow>
                   );
                 })
