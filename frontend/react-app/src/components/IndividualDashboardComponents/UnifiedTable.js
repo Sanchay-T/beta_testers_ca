@@ -831,11 +831,10 @@ const DataTable = ({
       modifiedObject = { ...modifiedObject, voucher_type: "Contra" };
     }
     if (selectedCategorySimilarTransactions.size > 0) {
-
       modifiedObject = { ...modifiedObject, is_new: false };
       setModifiedData((prevData) => [...prevData, modifiedObject]);
       setSelectedBulkCategory();
-      handleBulkCategoryChange("similarCategory",transactionId);
+      handleBulkCategoryChange("similarCategory", transactionId);
     } else {
       let newClassification = selectedType;
       if (selectedType === "Contra") {
@@ -877,13 +876,13 @@ const DataTable = ({
   };
 
   // --- Bulk Update: Find each row by its id ---
-  const handleBulkCategoryChange = (source,transactionId) => {
+  const handleBulkCategoryChange = (source, transactionId) => {
     const ids =
       source === "similarCategory"
         ? selectedCategorySimilarTransactions
         : globalSelectedRows;
-      
-    if(transactionId){
+
+    if (transactionId) {
       ids.add(transactionId);
     }
 
@@ -1175,7 +1174,9 @@ const DataTable = ({
 
   const clearFilters = () => {
     setSearchTerm("");
-    setFilteredData(transactions);
+    // setFilteredData(transactions);
+    console.log("Clearing filters...");
+    refreshFunction();
     setCurrentPage(1);
     setFromDate("");
     setToDate("");

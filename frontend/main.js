@@ -31,6 +31,8 @@ const log = require("electron-log");
 const portscanner = require("portscanner"); // Import portscanner
 const { autoUpdater } = require("electron-updater");
 const { getdata } = require("./ipc/getData.js");
+const userDataDir = app.getPath("userData");
+
 // const bonjour = require('bonjour')();
 
 // function discoverMdnsServices(serviceType = '', callback) {
@@ -49,8 +51,6 @@ const { getdata } = require("./ipc/getData.js");
 //     }
 //   });
 // }
-
-
 
 // Configure electron-log
 log.transports.console.level = "debug"; // Set the log level
@@ -133,8 +133,9 @@ autoUpdater.on("update-available", (info) => {
     .showMessageBox({
       type: "info",
       title: "Update Available",
-      message: `A new version (${info.version
-        }) is available. Your current version is ${app.getVersion()}.\n\nWould you like to download it now?`,
+      message: `A new version (${
+        info.version
+      }) is available. Your current version is ${app.getVersion()}.\n\nWould you like to download it now?`,
       detail: info.releaseNotes
         ? `Release Notes:\n${info.releaseNotes}`
         : undefined,
@@ -226,9 +227,11 @@ async function checkServiceExists(callback) {
       if (error) {
         let extendedErrorMessage;
         try {
-          extendedErrorMessage = execSync(`net helpmsg ${error.code}`, { encoding: 'utf8' }).trim();
+          extendedErrorMessage = execSync(`net helpmsg ${error.code}`, {
+            encoding: "utf8",
+          }).trim();
         } catch (syncError) {
-          extendedErrorMessage = 'Could not retrieve extended error message';
+          extendedErrorMessage = "Could not retrieve extended error message";
         }
         log.error("Error Message:", error.message);
         log.error("Error Code:", error.code);
@@ -250,18 +253,19 @@ async function checkServiceExists(callback) {
   });
 }
 
-
 async function createAndStartService() {
   const createServiceCommand = `sc create ${SERVICE_NAME} binPath= "${RUST_EXECUTABLE}" start= auto`;
 
   exec(createServiceCommand, (error, stdout, stderr) => {
     if (error || stderr) {
-      let extendedErrorMessage = '';
+      let extendedErrorMessage = "";
       if (error) {
         try {
-          extendedErrorMessage = execSync(`net helpmsg ${error.code}`, { encoding: 'utf8' }).trim();
+          extendedErrorMessage = execSync(`net helpmsg ${error.code}`, {
+            encoding: "utf8",
+          }).trim();
         } catch (syncError) {
-          extendedErrorMessage = 'Could not retrieve extended error message';
+          extendedErrorMessage = "Could not retrieve extended error message";
         }
         log.error("Error creating service:");
         log.error("Error Message:", error.message);
@@ -281,12 +285,14 @@ async function createAndStartService() {
     // Start the service
     exec(`sc start ${SERVICE_NAME}`, (err, out, errOut) => {
       if (err || errOut) {
-        let extendedErrorMessage2 = '';
+        let extendedErrorMessage2 = "";
         if (err) {
           try {
-            extendedErrorMessage2 = execSync(`net helpmsg ${err.code}`, { encoding: 'utf8' }).trim();
+            extendedErrorMessage2 = execSync(`net helpmsg ${err.code}`, {
+              encoding: "utf8",
+            }).trim();
           } catch (syncError) {
-            extendedErrorMessage2 = 'Could not retrieve extended error message';
+            extendedErrorMessage2 = "Could not retrieve extended error message";
           }
           log.error("Error starting service:");
           log.error("Error Message:", err.message);
@@ -305,7 +311,6 @@ async function createAndStartService() {
     });
   });
 }
-
 
 // Listen for remaining seconds updates
 // sessionManager.on('remainingSecondsUpdated', (seconds) => {
@@ -430,7 +435,6 @@ async function startPythonExecutable() {
         // ...process.env,/
         PYTHONIOENCODING: "utf-8",
       };
-
     }
 
     try {
@@ -660,8 +664,8 @@ async function createWindow() {
     log.info("Update download requested");
     try {
       // Backup database before update
-      const dbPath = path.join(app.getPath("userData"), "database.sqlite");
-      const backupDir = path.join(app.getPath("userData"), "backups");
+      const dbPath = path.join(userDataDir, "database.sqlite");
+      const backupDir = path.join(userDataDir, "backups");
 
       log.info("Creating backup directory:", backupDir);
       if (!fs.existsSync(backupDir)) {
@@ -754,11 +758,25 @@ async function createWindow() {
 app.setName("CypherSol Dev");
 
 app.whenReady().then(async () => {
-  log.info("App is ready", app.getPath("userData"));
+  log.info("App is ready", userDataDir);
 
+  // Check if the user sheet exists in the user data directory
+  const userSheet = path.join(userDataDir, "Customer_category.xlsx");
+
+  if (!fs.existsSync(userSheet)) {
+    // when packaged, this resolves to “<app>/resources/app.asar/backend/Customer_category.xlsx”
+    const defaultSheet = path.join(
+      process.resourcesPath,
+      "backend",
+      "Customer_category.xlsx"
+    );
+    if (fs.existsSync(defaultSheet)) {
+      await fs.copy(defaultSheet, userSheet);
+      console.log("Initialized user sheet:", userSheet);
+    }
+  }
 
   // return;
-
 
   // await checkServiceExists(async (exists) => {
   //   if (!exists) {
@@ -799,7 +817,7 @@ app.whenReady().then(async () => {
   try {
     try {
       const dbManager = databaseManager.getInstance();
-      await dbManager.initialize(app.getPath("userData"));
+      await dbManager.initialize(userDataDir);
       log.info("Database initialized successfully");
     } catch (error) {
       log.error("Database initialization failed:", error);
@@ -895,11 +913,11 @@ function checkForUpdates() {
   log.info("Checking for updates...");
   autoUpdater.checkForUpdates().catch((err) => {
     log.error("Error checking for updates:", err);
-    dialog.showMessageBox({
-      type: "error",
-      title: "Update Error",
-      message: `Error checking for updates: ${err.message}`,
-      buttons: ["OK"],
-    });
+    // dialog.showMessageBox({
+    //   type: "error",
+    //   title: "Update Error",
+    //   message: `Error checking for updates: ${err.message}`,
+    //   buttons: ["OK"],
+    // });
   });
 }

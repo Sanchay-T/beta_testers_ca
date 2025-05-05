@@ -541,6 +541,13 @@ const processOpportunityToEarnData = async (
     //   JSON.stringify(opportunityToEarnData)
     // );
 
+    // Get the case ID for this specific report
+    const validCaseId = await getOrCreateCase(caseName);
+
+    await db
+      .delete(opportunityToEarn)
+      .where(eq(opportunityToEarn.caseId, validCaseId));
+
     // Extract the array from the object
     const opportunityToEarnArray = Array.isArray(opportunityToEarnData)
       ? opportunityToEarnData
@@ -550,9 +557,6 @@ const processOpportunityToEarnData = async (
       log.warn("No Opportunity to Earn data found");
       return false;
     }
-
-    // Get the case ID for this specific report
-    const validCaseId = await getOrCreateCase(caseName);
 
     // Initialize sums for each category
     let homeLoanValue = 0;
@@ -1052,9 +1056,29 @@ function generateReportIpc(tmpdir_path) {
     const tempDir = tmpdir_path;
     log.info("Temp Directory : ", tempDir);
     let caseId = result[0].caseId;
+    let statementId = result[0]?.id;
     console.log("CaseName backend edit pdf: ", caseName);
     console.log("Result backend edit pdf: ", result);
 
+    // delete the statement and transaction of this rerun statement id
+
+    try {
+      await db.transaction(async (trx) => {
+        // Step 1: Delete all related transactions
+        await trx
+          .delete(transactions)
+          .where(eq(transactions.statementId, statementId));
+
+        // Step 2: Delete the statement itself
+        await trx.delete(statements).where(eq(statements.id, statementId));
+      });
+
+      console.log(
+        `Statement ${statementId} and its related transactions deleted successfully`
+      );
+    } catch (error) {
+      log.error("Error deleting statement:", error);
+    }
     // Track successfully processed files to avoid deleting them
     const successfulFiles = [];
     const failedFiles = [];

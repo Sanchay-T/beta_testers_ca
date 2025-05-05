@@ -38,9 +38,9 @@ const PDFMarkerModal = ({
       if (result.success) {
         // console.log("result success", result.success);
         // delete the existing statement as new one is added
-        const response = await window.electron.deleteStatement(
-          modifiedSelectedFailedFile.id
-        );
+        // const response = await window.electron.deleteStatement(
+        //   modifiedSelectedFailedFile.id
+        // );
         // console.log({deleteResponse:response})
         toast({
           title: "Success",
