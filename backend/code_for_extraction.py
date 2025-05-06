@@ -274,11 +274,6 @@ def unlock_and_add_margins_to_pdf(pdf_path, pdf_password, timestamp, CA_ID):
         if not text or text == "CamScanner":
             raise ValueError("The PDF is of image-only (non-text) format. Please upload a text PDF.")
 
-        # SECOND CHECK: Check if PDF is encoded
-        encoding_result = is_pdf_encoded(pdf_path)
-        if encoding_result != "PDF text is readable and not encoded.":
-            raise ValueError("The PDF appears to be encoded or obfuscated. Please upload a readable PDF.")
-
         # Define the output path for the unlocked PDF
         unlocked_pdf_filename = f"{timestamp}-{CA_ID}_{uuid.uuid4().hex}.pdf"
         unlocked_pdf_path = os.path.join(TEMP_SAVED_PDF_DIR, unlocked_pdf_filename)
@@ -1593,21 +1588,21 @@ def run_test_output_on_whole_pdf(list_a, pdf_in_saved_pdf, bank_name, timestamp,
         df = pd.DataFrame()
         return df, explicit_lines
 
-import random
 
 def is_pdf_encoded(pdf_path):
     try:
         reader = PdfReader(pdf_path)
         total_pages = len(reader.pages)
-        if total_pages == 0:
-            return "PDF has no pages."
-
-        # Select up to 3 unique random page numbers
-        random_pages = random.sample(range(total_pages), min(3, total_pages))
+        
+        # Choose pages 0 to 3 if total_pages > 4, else all available pages
+        if total_pages > 4:
+            page_indices = [0, 1, 2, 3]
+        else:
+            page_indices = list(range(total_pages))
 
         readable_count = 0
 
-        for page_number in random_pages:
+        for page_number in page_indices:
             page = reader.pages[page_number]
             text = page.extract_text()
             if text:
@@ -1615,13 +1610,14 @@ def is_pdf_encoded(pdf_path):
                 if printable_chars / len(text) >= 0.5:
                     readable_count += 1
 
-        if readable_count >= 2:
+        if readable_count >= 1:
             return "PDF text is readable and not encoded."
         else:
             return "PDF appears encoded or obfuscated."
 
     except Exception as e:
         return f"An unexpected error occurred: {e}"
+
 
 # Main function to run test cases with optimizations
 def extract_with_test_cases(bank_name, pdf_path, pdf_password, CA_ID):
