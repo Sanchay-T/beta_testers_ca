@@ -124,6 +124,9 @@ export function LicenseActivationForm({ className, ...props }) {
 
       if (result.success) {
 
+        // 🕒 Add 500ms delay before connecting to the network license
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
         try {
           const result = await window.electron.auth.connectNetworkLicense({
             ip: "localhost",

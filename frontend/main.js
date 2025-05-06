@@ -408,21 +408,6 @@ async function createAndStartService() {
 }
 
 
-// Listen for remaining seconds updates
-sessionManager.on('remainingSecondsUpdated', (seconds) => {
-  console.log(`Remaining seconds: ${seconds}`);
-  win.webContents.send('remainingSecondsUpdated', seconds);
-});
-
-// Listen for license expiration
-sessionManager.on("licenseExpired", () => {
-  log.info("License expired");
-  // Optionally handle the license expiration, e.g., show a dialog or quit the app
-  sessionManager.logoutUser();
-
-  win.webContents.send("navigateToLogin");
-  // win?.destroy();
-});
 
 function checkPortAvailability(port) {
   return new Promise((resolve, reject) => {
@@ -641,6 +626,29 @@ function createSplashWindow() {
 }
 
 
+// Add this helper anywhere above createWindow():
+function setupEventListeners(win) {
+  log.info("event listener window: ", win)
+
+  // Listen for remaining seconds updates
+  sessionManager.on('remainingSecondsUpdated', (seconds) => {
+    console.log(`Remaining seconds: ${seconds}`);
+    win.webContents.send('remainingSecondsUpdated', seconds);
+  });
+
+  // Listen for license expiration
+  sessionManager.on("licenseExpired", () => {
+    log.info("License expired");
+    // Optionally handle the license expiration, e.g., show a dialog or quit the app
+    sessionManager.logoutUser();
+
+    win.webContents.send("navigateToLogin");
+    // win?.destroy();
+  });
+
+}
+
+
 async function createWindow() {
   win = new BrowserWindow({
     width: 1800,
@@ -668,6 +676,9 @@ async function createWindow() {
       log.error("Failed to load production build:", err);
     });
   }
+
+
+  setupEventListeners(win);
 
   win.on("close", (event) => {
     log.info("Close event triggered");
