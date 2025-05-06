@@ -694,6 +694,10 @@ def cleaning(new_df):
         ((df["Debit"].fillna(0) < 0) & (df["Credit"].fillna(0) < 0))
     )]
 
+    if (df["Debit"].dropna() < 0).all(): ###ONLY FOR A PARTICULAR KOTAK STATEMENT
+        print("All non-null Debit values are negative. Converting to positive.")
+        df["Debit"] = df["Debit"].abs()
+
     df = df[["Value Date", "Description", "Debit", "Credit", "Balance"]]
     # df = df.drop_duplicates()
     idf = df.reset_index(drop=True)
