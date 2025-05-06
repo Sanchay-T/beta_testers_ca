@@ -411,7 +411,7 @@ def extraction_process(bank, pdf_path, pdf_password, start_date, end_date):
         elif ext == ".csv":
             pdf_path = convert_csv_to_excel(pdf_path, CA_ID)
             df = pd.read_excel(pdf_path)
-            df.loc[0] = df.columns
+            df = pd.concat([pd.DataFrame([df.columns], columns=df.columns), df], ignore_index=True)
             df.columns = range(df.shape[1])
 
             start_index = df.apply(
@@ -427,7 +427,7 @@ def extraction_process(bank, pdf_path, pdf_password, start_date, end_date):
 
         else:
             df = pd.read_excel(pdf_path)
-            df.loc[0] = df.columns
+            df = pd.concat([pd.DataFrame([df.columns], columns=df.columns), df], ignore_index=True)
             df.columns = range(df.shape[1])
 
             start_index = df.apply(
