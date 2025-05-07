@@ -443,7 +443,7 @@ function setupEventListeners(win) {
 
   // Listen for remaining seconds updates
   sessionManager.on('remainingSecondsUpdated', (seconds) => {
-    console.log(`Remaining seconds: ${seconds}`);
+    // console.log(`Remaining seconds: ${seconds}`);
     win.webContents.send('remainingSecondsUpdated', seconds);
   });
 

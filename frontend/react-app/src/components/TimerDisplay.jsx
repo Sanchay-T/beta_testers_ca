@@ -57,7 +57,7 @@ const TimerDisplay = () => {
                     <p className="text-foreground font-medium">
                         {expiryTime ? (
                             <>
-                                <span className="text-sm">{expiryTime.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</span>
+                                <span className="text-sm">{expiryTime.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                                 <span className="mx-1">•</span>
                                 <span className="text-sm">{expiryTime.toLocaleTimeString('en-IN', {
                                     hour: '2-digit',
