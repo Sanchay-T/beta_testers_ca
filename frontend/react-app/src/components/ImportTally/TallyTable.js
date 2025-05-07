@@ -15,7 +15,7 @@ import {
   Filter,
   FileSpreadsheet,
   Settings,
-  Info,
+  Info,ChevronDown
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import {
@@ -117,6 +117,7 @@ const TallyTable = ({
   setIsEmptyLedgersSelected,
   port,
   handlePortChange,
+  setActiveTab,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [transactions, setTransactions] = useState([]);
@@ -174,6 +175,17 @@ const TallyTable = ({
   const [ledgerSelectDropdownOpen, setLedgerSelectDropdownOpen] = useState({});
   const [ledgerSearchTerms, setLedgerSearchTerms] = useState({});
 
+  // bank ledger creation states
+  const [showBankLedgerTooltip, setShowBankLedgerTooltip] = useState(false);
+  const [newBankLedgerName, setNewBankLedgerName] = useState("");
+  const [bankOpeningBalance, setBankOpeningBalance] = useState("");
+  const [isFetchingBalance, setIsFetchingBalance] = useState(false);
+  const [isCreatingBank, setIsCreatingBank] = useState(false);
+  const [openingBalanceOptions, setOpeningBalanceOptions] = useState([]);
+  const [showBalanceDropdown, setShowBalanceDropdown] = useState(false);
+  const [balanceInput, setBalanceInput] = useState("");               // the text the user is typing
+  const [showBalanceList, setShowBalanceList] = useState(false);      // whether to show the dropdown list
+  
   const isFirstLoad = useRef(true);
 
   useEffect(() => {
@@ -213,7 +225,255 @@ const TallyTable = ({
 
     // change ledger status if company is changed
   }, [reportData.importedLedgerData, companyName]);
+  // Auto-fetch balance when tooltip is opened
+  useEffect(() => {
+    if (!bankOpeningBalance || bankOpeningBalance === "") {
+      fetchBankOpeningBalance();
+    }
+  }, [showBankLedgerTooltip, companyName]);
 
+  // Add this useEffect to close the tooltip when clicking outside of it
+  useEffect(() => {
+    if (!showBankLedgerTooltip) return;
+
+    function handleClickOutside(event) {
+      // Check if the click is outside the tooltip
+      const tooltipElements = document.querySelectorAll("[data-bank-tooltip]");
+      let isOutside = true;
+
+      tooltipElements.forEach((element) => {
+        if (element.contains(event.target)) {
+          isOutside = false;
+        }
+      });
+
+      if (isOutside) {
+        setShowBankLedgerTooltip(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showBankLedgerTooltip]);
+
+  // Optionally, add this to handle pressing Escape key to close the tooltip
+  useEffect(() => {
+    if (!showBankLedgerTooltip) return;
+
+    function handleEscapeKey(event) {
+      if (event.key === "Escape") {
+        setShowBankLedgerTooltip(false);
+      }
+    }
+
+    document.addEventListener("keydown", handleEscapeKey);
+    return () => {
+      document.removeEventListener("keydown", handleEscapeKey);
+    };
+  }, [showBankLedgerTooltip]);
+
+  // Function to create the bank ledger
+  const quickCreateBankLedger = async () => {
+    if (!newBankLedgerName.trim()) {
+      toast({
+        title: "Error",
+        description: "Bank ledger name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!companyName) {
+      toast({
+        title: "Error",
+        description: "Please select a company first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsCreatingBank(true);
+    try {
+      // Prepare ledger data for Tally
+      const ledgerData = [
+        {
+          companyName: companyName,
+          id: `bank-${Date.now()}`,
+          ledgerName: newBankLedgerName.trim(),
+          ledgerGroup: "Bank Accounts", // This is fixed for bank ledgers
+          openingBalance: bankOpeningBalance || "0",
+          date: new Date()
+            .toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            })
+            .split("/")
+            .reverse()
+            .join(""),
+          // Other fields are intentionally left empty
+          GSTnum: "",
+          Address: "",
+          pincode: "",
+          state: "",
+          country: "",
+        },
+      ];
+
+      // Call your Electron API to create the ledger
+      const response = await window.electron.uploadLedgerToTally(
+        ledgerData,
+        port,
+        "TallyPrime" // or use a tallyVersion state if you have one
+      );
+
+      if (response.successIds && response.successIds.length > 0) {
+        // Refresh ledger list
+        await handleLedgerImport(true);
+
+        // Select the new ledger
+        setSelectedBankLedger(newBankLedgerName.trim());
+
+        // Reset and hide the form
+        setNewBankLedgerName("");
+        setBankOpeningBalance("");
+        setShowBankLedgerTooltip(false);
+        setOpeningBalanceOptions([]);
+        setShowBalanceDropdown(false);
+
+        // Update ledger status
+        const ledgerStatus = await getLedgerCreationStatus();
+        setIsLedgersCreated(ledgerStatus);
+      } else {
+        const errorMessage = response.failedTransactions
+          ? Object.values(response.failedTransactions)[0]
+          : "Failed to create bank ledger";
+
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error creating bank ledger:", error);
+      toast({
+        title: "Error",
+        description:
+          "Failed to create bank ledger: " + (error.message || "Unknown error"),
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreatingBank(false);
+      toast({
+        title: "Success",
+        description: `Bank ledger "${newBankLedgerName.trim()}" created successfully`,
+        variant: "success",
+      });
+    }
+  };
+
+  // Function to fetch bank opening balance
+  const fetchBankOpeningBalance = async () => {
+    console.log("Fetching bank opening balance...");
+    if (!companyName) return;
+
+    setIsFetchingBalance(true);
+    try {
+      // Call the Electron API with both case ID and individualId if available
+      const response = await window.electron.getBankOpeningBalance(
+        caseId,
+        reportData.individualId || null
+      );
+      console.log("Bank opening balance response:", response);
+
+      if (response.success) {
+        // Check if we have multiple opening balance transactions
+        if (Array.isArray(response.data) && response.data.length > 0) {
+          // Store all balance options for selection
+          setOpeningBalanceOptions(response.data);
+
+          // If there's only one balance, select it automatically
+          if (response.data.length === 1) {
+            setBankOpeningBalance(response.data[0].amount.toString() || "0");
+            setShowBalanceDropdown(false);
+          } else {
+            // If there are multiple balances, show dropdown and select first one by default
+            setShowBalanceDropdown(true);
+            setBankOpeningBalance(response.data[0].amount.toString() || "0");
+
+            // toast({
+            //   title: "Multiple Opening Balances Found",
+            //   description: "Please select the appropriate opening balance",
+            //   variant: "default",
+            //   duration: 4000,
+            // });
+          }
+        } else if (
+          typeof response.data === "string" ||
+          typeof response.data === "number"
+        ) {
+          // If it's a single value (not an array)
+          setBankOpeningBalance(response.data.amount.toString());
+          setShowBalanceDropdown(false);
+          setOpeningBalanceOptions([]);
+        } else {
+          // Fallback if no data or unknown format
+          setBankOpeningBalance("0");
+          setShowBalanceDropdown(false);
+          setOpeningBalanceOptions([]);
+        }
+
+        // Show a subtle toast if we had to use a fallback method
+        if (response.message) {
+          toast({
+            title: "Note",
+            description: response.message,
+            variant: "default",
+            duration: 3000,
+          });
+        }
+      } else {
+        setBankOpeningBalance("0"); // Default to 0 if retrieval fails
+        setShowBalanceDropdown(false);
+        setOpeningBalanceOptions([]);
+
+        toast({
+          title: "Warning",
+          description: "Could not fetch opening balance, using zero as default",
+          variant: "warning",
+          duration: 3000,
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching opening balance:", error);
+      setBankOpeningBalance("0"); // Default to 0 if request fails
+      setShowBalanceDropdown(false);
+      setOpeningBalanceOptions([]);
+    } finally {
+      setIsFetchingBalance(false);
+    }
+  };
+
+  // Function to handle explicitly opening the tooltip
+  const handleOpenBankLedgerCreate = (e) => {
+    // Prevent any parent click events (like the select dropdown) from triggering
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    // Reset states
+    setNewBankLedgerName("");
+    setBankOpeningBalance("");
+    setOpeningBalanceOptions([]);
+    setShowBalanceDropdown(false);
+
+    // Open the tooltip
+    setShowBankLedgerTooltip(true);
+  };
   const handleLedgerSelectOpenChange = (rowId, open) => {
     setLedgerSelectDropdownOpen((prev) => ({ ...prev, [rowId]: open }));
   };
@@ -761,14 +1021,19 @@ const TallyTable = ({
   };
 
   const handleUploadToTally = async () => {
-    let data = filteredData;
-    // Check if any rows are selected
+    let data;
+
     if (selectedTransactions.length > 0) {
+      // User selected transactions manually → allow both imported & non-imported
       data = transactions.filter((tx) => selectedTransactions.includes(tx.id));
+    } else {
+      // User didn't select anything → upload only non-imported transactions
+      data = filteredData.filter((tx) => !tx.imported);
     }
 
     const res = await handleUpload(data);
     console.log("Upload response: ", { res });
+
     if (res) {
       setSelectedTransactions([]);
     }
@@ -892,6 +1157,9 @@ const TallyTable = ({
         const cr_ledger =
           row.type === "credit" ? row.ledger : selectedBankLedger;
 
+        console.log(row["imported"]);
+        const importedStatus =
+          row["imported"] == false ? "Not Yet Uploaded" : row["imported"];
         return [
           companyName,
           row["date"],
@@ -902,7 +1170,7 @@ const TallyTable = ({
           row["amount"],
           row["voucher_type"],
           row["narration"],
-          row["imported"],
+          importedStatus,
         ].join("\t");
       });
       console.log({ rows });
@@ -1219,9 +1487,9 @@ const TallyTable = ({
         </div>
 
         {/* Company selection and quick actions */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+        <div className="flex gap-4">
           {/* Company selection - takes 4 columns on desktop */}
-          <div className="md:col-span-4">
+          <div className="w-full md:col-span-4">
             <div className="space-y-1.5">
               <label
                 htmlFor="companyName"
@@ -1264,36 +1532,211 @@ const TallyTable = ({
 
           {/* Bank ledger selection - takes 3 columns on desktop */}
           {selectedVoucher === "Payment Receipt Contra" && (
-            <div className="md:col-span-3">
+            <div className="w-full md:col-span-3">
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-slate-500 dark:text-slate-400">
                   Bank Ledger
                 </label>
-                <Select
-                  value={selectedBankLedger}
-                  onValueChange={setSelectedBankLedger}
-                >
-                  <SelectTrigger className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                    <SelectValue placeholder="Select Bank Ledger" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="select-bank">
-                      Select Bank Ledger
-                    </SelectItem>
-                    {bankLedgers.map((ledger, key) => (
-                      <SelectItem key={key} value={ledger}>
-                        {ledger}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+
+                <div className="relative">
+                  {/* The bank ledger dropdown */}
+                  <div className="relative inline-flex w-full">
+                    <Select
+                      value={selectedBankLedger}
+                      onValueChange={setSelectedBankLedger}
+                    >
+                      <SelectTrigger className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                        <SelectValue placeholder="Select Bank Ledger" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="select-bank">
+                          Select Bank Ledger
+                        </SelectItem>
+                        {bankLedgers.map((ledger, key) => (
+                          <SelectItem key={key} value={ledger}>
+                            {ledger}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    {/* Plus button to explicitly open the tooltip */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-10 top-0 h-full px-2 text-xs text-blue-600 dark:text-blue-400 hover:bg-transparent"
+                      onClick={handleOpenBankLedgerCreate}
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
+
+                  {/* Bank ledger creation tooltip/popover - only visible when showBankLedgerTooltip is true */}
+                  {showBankLedgerTooltip && (
+                    <div
+                      className="absolute z-50 top-full left-0 mt-1 w-80 p-0 bg-white dark:bg-gray-800 border shadow-lg rounded-md"
+                      data-bank-tooltip
+                      onMouseDown={(e) => e.stopPropagation()}
+                    >
+                      <div className="space-y-3 p-4">
+                        <div className="space-y-1">
+                          <h3 className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                            Quick Create Bank Ledger
+                          </h3>
+                          {/* <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Create a bank ledger with pre-filled opening balance
+                </p> */}
+                        </div>
+
+                        <div className="space-y-3">
+                          <div className="space-y-1">
+                            <label className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                              Bank Name
+                            </label>
+                            <Input
+                              value={newBankLedgerName}
+                              onChange={(e) =>
+                                setNewBankLedgerName(e.target.value)
+                              }
+                              placeholder="Enter bank ledger name"
+                              className="h-8 text-sm"
+                              disabled={isCreatingBank}
+                              autoFocus
+                            />
+                          </div>
+
+
+<div className="space-y-1">
+  <label className="text-xs font-medium flex items-center justify-between text-slate-600 dark:text-slate-300">
+    <div className="flex items-center">
+      <span>Opening Balance</span>
+      {isFetchingBalance && (
+        <Loader2 className="ml-2 h-3 w-3 animate-spin text-slate-400" />
+      )}
+    </div>
+  </label>
+
+  <div className="relative">
+    {/* The free-form input */}
+    <Input
+      type="number"
+      value={balanceInput}
+      onChange={e => {
+        setBalanceInput(e.target.value);
+        setBankOpeningBalance(e.target.value);
+      }}
+      onFocus={() => openingBalanceOptions.length > 1 && setShowBalanceList(true)}
+      placeholder="0.00"
+      className="h-8 text-sm pr-8"
+      disabled={isCreatingBank || isFetchingBalance}
+    />
+
+    {/* Chevrons to toggle list */}
+    {openingBalanceOptions.length > 1 && (
+      <button
+        type="button"
+        onClick={() => setShowBalanceList(v => !v)}
+        className="absolute inset-y-0 right-2 flex items-center"
+      >
+        <ChevronDown className="h-4 w-4 text-gray-500" />
+      </button>
+    )}
+
+    {/* The dropdown list */}
+    {showBalanceList && (
+      <div
+        className="absolute z-10 mt-1 w-full max-h-40 overflow-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg"
+        onMouseLeave={() => setShowBalanceList(false)}
+      >
+        {openingBalanceOptions.map((opt, i) => (
+          <div
+            key={i}
+            className="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+            onMouseDown={e => {
+              e.preventDefault();        // prevent blur
+              const amt = opt.amount.toString();
+              setBalanceInput(amt);
+              setBankOpeningBalance(amt);
+              setShowBalanceList(false);
+            }}
+          >
+            {`${opt.amount}  (${opt.date || "Unknown date"})`}
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</div>
+
+                        </div>
+
+                        <div className="flex justify-end gap-2 mt-4">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs"
+                            onClick={() => setShowBankLedgerTooltip(false)}
+                            disabled={isCreatingBank}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={quickCreateBankLedger}
+                            disabled={
+                              isCreatingBank ||
+                              !newBankLedgerName.trim() ||
+                              !companyName ||
+                              !bankOpeningBalance
+                            }
+                            className="h-8 text-xs bg-blue-600 hover:bg-blue-700 text-white"
+                          >
+                            {isCreatingBank ? (
+                              <>
+                                <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                                Creating...
+                              </>
+                            ) : (
+                              "Create Ledger"
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {bankLedgers.length === 0 && (
+                  <div className="text-sm text-amber-600 dark:text-amber-400 p-2.5 bg-amber-50 dark:bg-amber-900/20 rounded-md border border-amber-200 dark:border-amber-800 flex items-center mt-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="w-5 h-5 mr-2"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    No bank ledgers found.
+                    <Button
+                      size="sm"
+                      variant="link"
+                      className="text-amber-800 dark:text-amber-300 text-xs underline ml-1"
+                      onClick={handleOpenBankLedgerCreate}
+                    >
+                      Create a bank ledger
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           )}
-
           {/* Search field - takes 3 or 4 columns on desktop */}
           <div
-            className={`md:col-span-${
+            className={`w-full  md:col-span-${
               selectedVoucher === "Payment Receipt Contra" ? "3" : "4"
             }`}
           >
@@ -1314,7 +1757,7 @@ const TallyTable = ({
           </div>
 
           {/* Rows per page - takes 2 columns on desktop */}
-          <div className="md:col-span-2">
+          <div className="w-full  md:col-span-2">
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-slate-500 dark:text-slate-400">
                 Rows
@@ -1349,20 +1792,63 @@ const TallyTable = ({
               Refresh Imports
             </Button>
 
-            <Button
-              onClick={handleUploadToTally}
-              disabled={
-                selectedVoucher === "Payment Receipt Contra" &&
-                !isLedgersCreated &&
-                !isEmptyLedgersSelected
-              }
-              size="sm"
-              className="h-9 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200 hover:border-emerald-300 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800"
-            >
-              <UploadCloud className="w-4 h-4 mr-1.5" />
-              Upload to Tally
-            </Button>
-
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="relative inline-flex">
+                    <Button
+                      onClick={handleUploadToTally}
+                      disabled={
+                        selectedVoucher === "Payment Receipt Contra" &&
+                        !isLedgersCreated &&
+                        !isEmptyLedgersSelected
+                      }
+                      size="sm"
+                      className="h-9 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200 hover:border-emerald-300 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800"
+                    >
+                      <UploadCloud className="w-4 h-4 mr-1.5" />
+                      Upload to Tally
+                    </Button>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="bottom"
+                  className="max-w-xs p-3 bg-white dark:bg-gray-800 border shadow-lg rounded-md"
+                >
+                  {selectedVoucher === "Payment Receipt Contra" &&
+                  !isLedgersCreated &&
+                  !isEmptyLedgersSelected ? (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">
+                        Ledgers need to be created first
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Before uploading transactions, you must either:
+                      </p>
+                      <ul className="text-xs text-gray-500 dark:text-gray-400 space-y-1 pl-4 list-disc">
+                        <li>Create required ledgers in Tally</li>
+                        <li>Check "Upload without ledgers" to use Suspense</li>
+                      </ul>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full mt-2 h-7 text-xs"
+                        onClick={() => {
+                          // Redirect to Ledgers page or switch to Ledgers tab
+                          setActiveTab && setActiveTab("Ledgers");
+                        }}
+                      >
+                        Go to Ledgers Page
+                      </Button>
+                    </div>
+                  ) : (
+                    <p className="text-sm">
+                      Upload selected transactions to Tally
+                    </p>
+                  )}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             {selectedVoucher === "Ledgers" && (
               <Button
                 onClick={handleAddRow}
@@ -1647,6 +2133,7 @@ const TallyTable = ({
                             <TableCell
                               key={column}
                               className="max-w-[500px] group relative"
+                              title={row[column]}
                             >
                               <Input
                                 type="text"
@@ -1678,9 +2165,9 @@ const TallyTable = ({
                                 placeholder="Enter Narration"
                                 className="w-full p-2 border border-gray-300  truncate rounded-md"
                               />
-                              <div className="absolute right-24 top-12 hidden group-hover:block bg-black text-white text-sm rounded p-2 z-50 whitespace-normal min-w-[200px] ">
+                              {/* <div className="absolute right-24 top-12 hidden group-hover:block bg-black text-white text-sm rounded p-2 z-50 whitespace-normal min-w-[200px] ">
                                 {row[column]}
-                              </div>
+                              </div> */}
                             </TableCell>
                           );
                         } else if (

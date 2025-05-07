@@ -28,8 +28,8 @@ pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.vers
 const COLUMN_TYPES = [
   { id: "date", label: "📅 Date" },
   { id: "description", label: "📝 Description" },
-  { id: "credit", label: "💵 Credit" },
-  { id: "debit", label: "💷 Debit" },
+  { id: "credit", label: "💵 Credit / Deposit" },
+  { id: "debit", label: "💷 Debit / Withdrawal" },
   { id: "amount (dr/cr)", label: "💰 Amount (DR/CR)" },
   { id: "balance", label: "🏦 Balance" },
   { id: "dr/cr", label: "💶 DR/CR" },

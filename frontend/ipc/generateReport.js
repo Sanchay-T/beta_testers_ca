@@ -58,15 +58,20 @@ const validateAndTransformTransaction = (transaction, statementId) => {
   } else if (
     transaction.Debit !== null &&
     !isNaN(transaction.Debit) &&
-    transaction.Debit > 0
+    transaction.Debit != 0
   ) {
-    amount = Math.abs(transaction.Debit);
+    amount = transaction.Debit;
     type = "debit";
   }
 
   let balance = 0;
   if (transaction.Balance !== null && !isNaN(transaction.Balance)) {
     balance = parseFloat(transaction.Balance);
+  }
+
+  // remove trailing . from entity name
+  if (transaction.Entity) {
+    transaction.Entity = transaction.Entity.replace(/\.$/, "");
   }
 
   return {
@@ -99,35 +104,13 @@ const isDuplicateTransaction = async (transaction, statementId) => {
 };
 
 const storeTransactionsBatch = async (transformedTransactions) => {
+  console.log("Inside storeTransactionsBatch", transformedTransactions.length);
   try {
     if (transformedTransactions.length === 0) return;
 
-    const uniqueTransactions = [];
-    for (const t of transformedTransactions) {
-      const isDuplicate = await isDuplicateTransaction(t, t.statementId);
-      if (!isDuplicate) {
-        uniqueTransactions.push({
-          statementId: t.statementId.toString(),
-          date: t.date,
-          description: t.description,
-          amount: t.amount,
-          category: t.category,
-          type: t.type,
-          balance: t.balance,
-          bank: t.bank,
-          entity: t.entity,
+    const uniqueTransactions = transformedTransactions;
 
-          voucher_type: t.voucher_type,
-          createdAt: new Date(),
-        });
-      } else {
-        log.info(
-          `Skipping duplicate transaction: ${t.description} on ${t.date}`
-        );
-      }
-    }
-
-    // log.info({ uniqueTransactions });
+    log.info({ uniqueTransactionsLength: uniqueTransactions.length });
 
     if (uniqueTransactions.length === 0) {
       log.info("No new unique transactions to store");
@@ -334,12 +317,16 @@ const processStatementAndEOD = async (
 
     // Process Statement and Transactions
     try {
-      const [day1, month1, year1] = fileDetail["start_date"].split("-");
-      const start_date = new Date(year1, month1 - 1, day1);
-
-      const [day2, month2, year2] = fileDetail["end_date"].split("-");
-      const end_date = new Date(year2, month2 - 1, day2);
-
+      let start_date = "";
+      let end_date = "";
+      if (fileDetail.start_date) {
+        const [day1, month1, year1] = fileDetail["start_date"].split("-");
+        start_date = new Date(year1, month1 - 1, day1);
+      }
+      if (fileDetail.end_date) {
+        const [day2, month2, year2] = fileDetail["end_date"].split("-");
+        end_date = new Date(year2, month2 - 1, day2);
+      }
       const statementData = {
         caseId: validCaseId,
         accountNumber: accountNumber,
@@ -348,8 +335,8 @@ const processStatementAndEOD = async (
         bankName: fileDetail.bankName,
         filePath: fileDetail.pdf_paths,
         createdAt: new Date(),
-        startDate: start_date,
-        endDate: end_date,
+        startDate: start_date === "" ? null : start_date,
+        endDate: end_date === "" ? null : end_date,
         password: fileDetail.passwords,
       };
 
@@ -367,7 +354,8 @@ const processStatementAndEOD = async (
       statementId = statementResult[0].id;
       const finalTransactions = statementTransactions.map((transaction) => ({
         ...transaction,
-        statementId,
+        statementId: statementId.toString(),
+        createdAt: new Date(),
       }));
       await storeTransactionsBatch(finalTransactions);
       processedTransactions = finalTransactions.length;
@@ -557,6 +545,13 @@ const processOpportunityToEarnData = async (
     //   JSON.stringify(opportunityToEarnData)
     // );
 
+    // Get the case ID for this specific report
+    const validCaseId = await getOrCreateCase(caseName);
+
+    await db
+      .delete(opportunityToEarn)
+      .where(eq(opportunityToEarn.caseId, validCaseId));
+
     // Extract the array from the object
     const opportunityToEarnArray = Array.isArray(opportunityToEarnData)
       ? opportunityToEarnData
@@ -566,9 +561,6 @@ const processOpportunityToEarnData = async (
       log.warn("No Opportunity to Earn data found");
       return false;
     }
-
-    // Get the case ID for this specific report
-    const validCaseId = await getOrCreateCase(caseName);
 
     // Initialize sums for each category
     let homeLoanValue = 0;
@@ -856,6 +848,7 @@ function generateReportIpc(tmpdir_path) {
             )?.pdf_paths;
 
             if (fullPath) {
+              log.info("Added failedFiles aq 1");
               failedFiles.add(fullPath);
               successfulFiles.delete(fullPath);
             }
@@ -894,7 +887,7 @@ function generateReportIpc(tmpdir_path) {
               processing_times: response.data?.processing_times || [],
               warning:
                 response.data?.["pdf_paths_not_extracted"][
-                "respective_reasons_for_error"
+                  "respective_reasons_for_error"
                 ] || null,
             },
           };
@@ -951,6 +944,8 @@ function generateReportIpc(tmpdir_path) {
               successfulFiles.add(fileDetail.pdf_paths);
             }
           } catch (error) {
+            log.info("Added failedFiles aq 2");
+
             failedFiles.add(fileDetail.pdf_paths);
             successfulFiles.delete(fileDetail.pdf_paths);
             log.error(
@@ -1035,7 +1030,7 @@ function generateReportIpc(tmpdir_path) {
             missingMonthsList: response.data?.["missing_months_list"] || [],
             warning:
               response.data?.["pdf_paths_not_extracted"][
-              "respective_reasons_for_error"
+                "respective_reasons_for_error"
               ] || null,
             processing_times: response.data?.processing_times || [],
           },
@@ -1067,9 +1062,29 @@ function generateReportIpc(tmpdir_path) {
     const tempDir = tmpdir_path;
     log.info("Temp Directory : ", tempDir);
     let caseId = result[0].caseId;
+    let statementId = result[0]?.id;
     console.log("CaseName backend edit pdf: ", caseName);
     console.log("Result backend edit pdf: ", result);
 
+    // delete the statement and transaction of this rerun statement id
+
+    try {
+      await db.transaction(async (trx) => {
+        // Step 1: Delete all related transactions
+        await trx
+          .delete(transactions)
+          .where(eq(transactions.statementId, statementId));
+
+        // Step 2: Delete the statement itself
+        await trx.delete(statements).where(eq(statements.id, statementId));
+      });
+
+      console.log(
+        `Statement ${statementId} and its related transactions deleted successfully`
+      );
+    } catch (error) {
+      log.error("Error deleting statement:", error);
+    }
     // Track successfully processed files to avoid deleting them
     const successfulFiles = [];
     const failedFiles = [];
@@ -1141,7 +1156,8 @@ function generateReportIpc(tmpdir_path) {
           data: {
             caseId: caseId,
             processed: null,
-            warning: [response.data.message] || "Unknown error",
+            warning:
+              [response.data.message] || [response?.message] || "Unknown error",
             processing_times: response.data?.processing_times || [],
           },
         };
@@ -1203,7 +1219,7 @@ function generateReportIpc(tmpdir_path) {
               },
               warning:
                 response.data?.["pdf_paths_not_extracted"][
-                "respective_reasons_for_error"
+                  "respective_reasons_for_error"
                 ] || null,
               processing_times: response.data?.processing_times || [],
             },
@@ -1350,7 +1366,7 @@ function generateReportIpc(tmpdir_path) {
           processing_times: response.data?.processing_times || [],
           warning:
             response.data?.["pdf_paths_not_extracted"][
-            "respective_reasons_for_error"
+              "respective_reasons_for_error"
             ] || null,
         },
       };

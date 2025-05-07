@@ -85,6 +85,8 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
   const [isEmptyLedgersSelected, setIsEmptyLedgersSelected] = useState(false);
   const [inititalLedgersData, setInititalLedgersData] = useState([]);
   const [initialPayRecContraData, setInitialPayRecContraData] = useState([]);
+  const [companyNameCheckbox, setCompanyNameCheckbox] = useState(false);
+  const [confirmReupload, setConfirmReupload] = useState(false);
 
   useEffect(() => {
     const checkIsTallyStatus = async () => {
@@ -270,12 +272,13 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
 
     // If the date is null, empty, or invalid, return today's date in Tally format
     if (!isoDateString || isoDateString === "") {
-      const today = new Date();
-      const year = today.getFullYear();
-      const month = String(today.getMonth() + 1).padStart(2, "0");
-      const day = String(today.getDate()).padStart(2, "0");
+      // const today = new Date();
+      // const year = today.getFullYear();
+      // const month = String(today.getMonth() + 1).padStart(2, "0");
+      // const day = String(today.getDate()).padStart(2, "0");
 
-      return `${year}${month}${day}`;
+      // return `${year}${month}${day}`;
+      return null;
     }
 
     // Otherwise process the given date
@@ -338,10 +341,6 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
     // Prepare data for Tally
     const tallyData = txData
       .map((transaction) => {
-        if (transaction.imported) {
-          // remove Already uploaded
-          return null;
-        }
         let dr_ledger = "";
         let cr_ledger = "";
         console.log("transaction.effective_date", transaction.effective_date);
@@ -395,6 +394,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
           narration: transaction.narration,
           voucherName: tempVoucherType,
           id: transaction.id,
+          imported: transaction.imported,
         };
       })
       .filter(Boolean);
@@ -493,7 +493,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
         selectedBankLedger,
         tallyUploadData
       );
-
+      setCompanyNameCheckbox(false);
       if (dbStoreResponse.success) {
         // Handle successful database storage
         console.log(
@@ -507,18 +507,22 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
           dbStoreResponse.error
         );
       }
-
+      console.log({ failedTransactions, successIds });
       const newDataToRender = dataToRender.map((ledger) => {
+        const failure = failedTransactions.find((ft) => ft.id === ledger.id);
+        console.log({ failure });
         if (successIds.includes(ledger.id)) {
           return {
             ...ledger,
             imported: true,
           };
-        } else if (Object.keys(failedTransactions).includes(ledger.id)) {
+        } else if (failure) {
+          console.log({ aq: ledger });
+
           return {
             ...ledger,
             imported: false,
-            failed_reason: failedTransactions[ledger.id],
+            failed_reason: failure.error,
           };
         } else {
           return ledger;
@@ -732,7 +736,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
         let errorCategory = "Other Errors";
 
         if (
-          errorMessage.includes("Ledgers") &&
+          errorMessage.includes("ledger") &&
           errorMessage.includes("does not exist")
         ) {
           errorCategory = "Ledger Not Found";
@@ -1081,6 +1085,8 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
                   setIsEmptyLedgersSelected={setIsEmptyLedgersSelected}
                   port={port}
                   setPort={setPort}
+                  handlePortChange={handlePortChange}
+                  setActiveTab={setActiveTab}
                 />
               ) : (
                 // Fallback if not manual and no data
@@ -1130,6 +1136,40 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
                     </SelectContent>
                   </Select>
                 )}
+                {tallyUploadData.some((tx) => tx.imported) && (
+                  <div className="mt-6 flex items-center space-x-2">
+                    <div className=" flex items-center space-x-2">
+                      <Checkbox
+                        id="reuploadConfirm"
+                        checked={confirmReupload}
+                        onCheckedChange={setConfirmReupload}
+                      />
+                      <label
+                        htmlFor="reuploadConfirm"
+                        className="text-sm leading-none cursor-pointer"
+                      >
+                        I understand some of these transactions were already
+                        uploaded
+                      </label>
+                    </div>
+                  </div>
+                )}
+                {/* Add company name confirmation checkbox */}
+                <div className="mt-6 flex items-center space-x-2">
+                  <Checkbox
+                    id="companyNameConfirm"
+                    checked={companyNameCheckbox}
+                    onCheckedChange={setCompanyNameCheckbox}
+                  />
+                  <label
+                    htmlFor="companyNameConfirm"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    I confirm that{" "}
+                    <span className="font-bold">{companyName}</span> is the
+                    correct company name
+                  </label>
+                </div>
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
@@ -1140,7 +1180,12 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
                 Cancel
               </Button>
               <Button
-                disabled={loading2}
+                disabled={
+                  loading2 ||
+                  !companyNameCheckbox ||
+                  (tallyUploadData.some((tx) => tx.imported) &&
+                    !confirmReupload)
+                }
                 variant="default"
                 onClick={handleUploadAfterConfirmation}
               >

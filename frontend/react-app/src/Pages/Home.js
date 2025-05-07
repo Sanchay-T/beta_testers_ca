@@ -141,7 +141,7 @@ const Dashboard = () => {
               {activeTab === "Dashboard" && (
                 <MainDashboard handleTabChange={handleTabChange} />
               )}
-              {activeTab === "Generate Report" && <ReportGenerator />}
+              {activeTab === "Generate Report" && <ReportGenerator activeTab={activeTab} />}
               {activeTab ===
                 (user.role === "MSME"
                   ? "Loan Eligibility"

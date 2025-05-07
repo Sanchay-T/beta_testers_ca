@@ -136,6 +136,9 @@ contextBridge.exposeInMainWorld("electron", {
   importLedgers: (companyName, port) =>
     ipcRenderer.invoke("import-ledgers", companyName, port),
   checkTallyRunning: (port) => ipcRenderer.invoke("check-tally-running", port),
+  getBankOpeningBalance: (caseId, individualId) =>
+    ipcRenderer.invoke("get-opening-balance", caseId, individualId),
+
   user: {
     getData: (userId) => ipcRenderer.invoke("user:get-data", userId),
     updateData: (userData) => ipcRenderer.send("user:update-data", userData),
