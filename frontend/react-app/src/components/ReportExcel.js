@@ -199,19 +199,20 @@ const generateFinancialReport = async (
   summaryOnly = false
 ) => {
   try {
+    console.log({ caseid, individualId, caseName, summaryOnly });
     const workbook = new ExcelJS.Workbook();
 
     // Fetch all required data
     let summaryData;
     if (individualId) {
       summaryData = await window.electron.getSummary(caseid, individualId);
-      console.log("summaryData idnividual", summaryData[0].data);
+      // console.log("summaryData idnividual", summaryData[0].data);
     } else {
       summaryData = await window.electron.getSummary(caseid);
-      console.log("summaryData combined", summaryData[0].data);
+      // console.log("summaryData combined", summaryData[0].data);
     }
     const summaryObject = JSON.parse(summaryData[0].data);
-    console.log("summaryObject", summaryObject);
+    // console.log("summaryObject", summaryObject);
     let getStatements;
     let accountsData;
     if (individualId) {

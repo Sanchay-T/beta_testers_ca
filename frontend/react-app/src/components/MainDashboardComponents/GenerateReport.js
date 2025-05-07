@@ -16,7 +16,7 @@ import { Card } from "../ui/card";
 import { AlertCircle, ChevronRight } from "lucide-react";
 import { useReportContext } from "../../contexts/ReportContext";
 
-export default function GenerateReport() {
+export default function GenerateReport({ activeTab }) {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false); // State to control Dialog visibility
   const [failedStatements, setFailedStatements] = useState([]); // State to store failed statements
@@ -153,7 +153,9 @@ export default function GenerateReport() {
         const formattedWarnings = result.data.warning.filter((warn) => {
           return warn && warn.trim() !== ""; // Return true for non-empty warnings
         });
-        setWarning(formattedWarnings);
+
+        const uniqueWarnings = Array.from(new Set(formattedWarnings)); // Remove duplicates
+        setWarning(uniqueWarnings);
       }
 
       setCurrentCaseId(result.data.caseId); // Store caseId
@@ -207,12 +209,12 @@ export default function GenerateReport() {
             recentReportsData: [newData, ...reportData.recentReportsData],
           });
 
-          toast({
-            title: "Failed",
-            description: `${caseName} report had some issues!`,
-            duration: 3000,
-            variant: "destructive",
-          });
+          if (activeTab !== "Generate Report")
+            toast({
+              title: "Failed",
+              description: `${caseName} report had some issues!`,
+              variant: "destructive",
+            });
         } else {
           // setShowRectifyButton(true);
           const successfulFiles = result.data.successfulFiles.map(
@@ -246,20 +248,17 @@ export default function GenerateReport() {
           });
         }
 
-        if (result.data.totalTransactions) {
+        if (result.data.totalTransactions && activeTab !== "Generate Report") {
           toast({
             title: "Success",
             description: `${caseName} report generated successfully!`,
-            duration: 3000,
+            duration: Infinity,
             variant: "success",
           });
-          setShowAnalysisButton(true);
         }
+        setShowAnalysisButton(true);
 
         // setFailedStatements(result.pdf_paths_not_extracted || []); // Store failed
-
-        setDialogOpen(true); // Open the Dialog
-
         setSelectedFiles([]);
         setFileDetails([]);
 
@@ -275,6 +274,7 @@ export default function GenerateReport() {
         throw new Error(errorMessage);
       }
     } catch (error) {
+      console.log({ error });
       if (typeof error === "object" && error !== null) {
         console.error("Detailed error:", JSON.stringify(error, null, 2));
       }
@@ -293,12 +293,13 @@ export default function GenerateReport() {
       if (showAnalsisButton || showRectifyButton) {
         setDialogOpen(true);
       }
-      toast({
-        title: "Error",
-        description: "Failed to generate report",
-        variant: "destructive",
-        duration: 5000,
-      });
+      if (activeTab !== "Generate Report") {
+        toast({
+          title: "Error",
+          description: "Failed to generate report",
+          variant: "destructive",
+        });
+      }
       // refreshPage();
       const updatedRecentReportData = reportData.recentReportsData;
       updateReportData({ recentReportsData: updatedRecentReportData });
@@ -307,6 +308,8 @@ export default function GenerateReport() {
       localStorage.removeItem("dashboardData");
       // refreshPage();
       progressIntervalRef.current = null;
+      setDialogOpen(true); // Open the Dialog
+
       return true;
     }
   };
@@ -368,7 +371,7 @@ export default function GenerateReport() {
           Report Generator
         </h2>
         {/* <button onClick={handleTestEdit}>Test Excel download</button> */}
-        <div className="flex items-center space-x-4">
+        {/* <div className="flex items-center space-x-4">
           <button
             onClick={() => setNotificationsOpen(!notificationsOpen)}
             className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 
@@ -396,7 +399,7 @@ export default function GenerateReport() {
               </ul>
             </div>
           )}
-        </div>
+        </div> */}
       </div>
 
       <div>
@@ -437,13 +440,13 @@ export default function GenerateReport() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen} className="">
         <DialogContent className="max-h-[90vh] overflow-y-auto pb-0">
           <DialogHeader>
-            {failedStatements.length === 0 ? (
+            {successfulStatements.length > 0 ? (
               <DialogTitle>
                 Report {currentCaseName} Generated Successfully!
               </DialogTitle>
             ) : (
-              <DialogTitle className="flex items-end gap-x-2">
-                <AlertTriangle className="text-yellow-500 w-6 h-6 mt-2" />
+              <DialogTitle className="flex items-end gap-x-2 items-center">
+                <AlertTriangle className="text-yellow-500 w-6 h-6 " />
                 Some statement had errors.
               </DialogTitle>
             )}

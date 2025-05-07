@@ -52,8 +52,7 @@ function App() {
 
 
   return (
-    // <ThemeProvider defaultTheme="system" storageKey="app-theme">
-    <ThemeProvider defaultTheme="light" storageKey={null}>
+    <ThemeProvider defaultTheme="light" storageKey="app-theme">
       {showIntro && <ElectronIntro onComplete={() => setShowIntro(false)} />}
       {/* <UpdateNotification /> */}
       <SidebarProvider>

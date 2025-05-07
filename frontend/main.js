@@ -35,6 +35,9 @@ const { getdata } = require("./ipc/getData.js");
 const bonjour = require('bonjour')();
 const gatewayServer = require("./InitiateGatewayServer.js")
 const systemInfo = require("./SystemInformation");
+const userDataDir = app.getPath("userData");
+
+// const bonjour = require('bonjour')();
 
 function discoverMdnsServices(serviceType = '', callback) {
   bonjour.find({ type: serviceType }, (service) => {
@@ -52,8 +55,6 @@ function discoverMdnsServices(serviceType = '', callback) {
     }
   });
 }
-
-
 
 // Configure electron-log
 log.transports.console.level = "debug"; // Set the log level
@@ -136,8 +137,9 @@ autoUpdater.on("update-available", (info) => {
     .showMessageBox({
       type: "info",
       title: "Update Available",
-      message: `A new version (${info.version
-        }) is available. Your current version is ${app.getVersion()}.\n\nWould you like to download it now?`,
+      message: `A new version (${
+        info.version
+      }) is available. Your current version is ${app.getVersion()}.\n\nWould you like to download it now?`,
       detail: info.releaseNotes
         ? `Release Notes:\n${info.releaseNotes}`
         : undefined,
@@ -210,202 +212,6 @@ let splashWindow = null;
 let pythonProcess = null;
 
 const BACKEND_PORT = 5000; // Replace with the port your backend is listening to
-
-// frontend\license-server.exe
-const SERVICE_NAME = "LicensingServer";
-const LICENSE_SERVER_EXECUTABLE = path.join(__dirname, "license-server.exe");
-console.log("LICENSE_SERVE EXECUTABLE: ", LICENSE_SERVER_EXECUTABLE);
-
-// const RUST_EXECUTABLE = "C:\\path\\to\\rust.exe"; // Change this to your actual path
-
-// Function to check if service exists
-async function checkServiceExists(callback) {
-  exec(`sc query ${SERVICE_NAME}`, (error, stdout, stderr) => {
-    if (error || stderr) {
-      log.error("ERROR checking service existence:");
-      if (error) {
-        let extendedErrorMessage;
-        try {
-          extendedErrorMessage = execSync(`net helpmsg ${error.code}`, { encoding: 'utf8' }).trim();
-        } catch (syncError) {
-          extendedErrorMessage = 'Could not retrieve extended error message';
-        }
-        log.error("Error Message:", error.message);
-        log.error("Error Code:", error.code);
-        log.error("Extended Error Message:", extendedErrorMessage);
-        log.error("Error Signal:", error.signal);
-        log.error("Executed Command:", error.cmd);
-        log.error("Full Error Object:", JSON.stringify(error, null, 2));
-      }
-      log.error("STDERR checking service existence:", stderr || "None");
-      callback(false);
-    }
-    if (stdout.includes("FAILED") || stdout.includes("does not exist")) {
-      log.info("Service existence error: ", stdout);
-      callback(false);
-    } else {
-      log.info("Service probably exists: ", stdout);
-      callback(true);
-    }
-  });
-}
-
-
-async function createAndStartService() {
-  const createServiceCommand = `sc create ${SERVICE_NAME} binPath= "${RUST_EXECUTABLE}" start= auto`;
-
-  exec(createServiceCommand, (error, stdout, stderr) => {
-    if (error || stderr) {
-      let extendedErrorMessage = '';
-      if (error) {
-        try {
-          extendedErrorMessage = execSync(`net helpmsg ${error.code}`, { encoding: 'utf8' }).trim();
-        } catch (syncError) {
-          extendedErrorMessage = 'Could not retrieve extended error message';
-        }
-        log.error("Error creating service:");
-        log.error("Error Message:", error.message);
-        log.error("Error Code:", error.code);
-        log.error("Extended Error Message:", extendedErrorMessage);
-        log.error("Error Signal:", error.signal);
-        log.error("Executed Command:", error.cmd);
-        log.error("Full Error Object:", JSON.stringify(error, null, 2));
-      }
-      if (stderr) {
-        log.error("STDERR:", stderr);
-      }
-      return;
-    }
-    log.info("Service created successfully.");
-
-    // Start the service
-    exec(`sc start ${SERVICE_NAME}`, (err, out, errOut) => {
-      if (err || errOut) {
-        let extendedErrorMessage2 = '';
-        if (err) {
-          try {
-            extendedErrorMessage2 = execSync(`net helpmsg ${err.code}`, { encoding: 'utf8' }).trim();
-          } catch (syncError) {
-            extendedErrorMessage2 = 'Could not retrieve extended error message';
-          }
-          log.error("Error starting service:");
-          log.error("Error Message:", err.message);
-          log.error("Error Code:", err.code);
-          log.error("Extended Error Message:", extendedErrorMessage2);
-          log.error("Error Signal:", err.signal);
-          log.error("Executed Command:", err.cmd);
-          log.error("Full Error Object:", JSON.stringify(err, null, 2));
-        }
-        if (errOut) {
-          log.error("STDERR:", errOut);
-        }
-        return;
-      }
-      log.info("Rust Licensing Server started successfully.");
-    });
-  });
-}
-
-
-// const LICENSE_EXECUTABLE_DIR = isDev ? __dirname : app.getPath("userData");
-const isPackaged = app.isPackaged;
-
-// When packaged, resources are unpacked to a different location
-const GATEWAY_EXECUTABLE_DIR = isPackaged
-  ? process.resourcesPath // Electron's resources dir in packaged mode
-  : path.join(__dirname, "./gatewayServer")
-
-console.log("GATEWAY EXECUTABLE DIR:", GATEWAY_EXECUTABLE_DIR);
-
-// const RUST_EXECUTABLE = "C:\\path\\to\\rust.exe"; // Change this to your actual path
-
-// Function to check if service exists
-async function checkServiceExists(callback) {
-  exec(`sc query ${SERVICE_NAME}`, (error, stdout, stderr) => {
-    if (error || stderr) {
-      log.error("ERROR checking service existence:");
-      if (error) {
-        let extendedErrorMessage;
-        try {
-          extendedErrorMessage = execSync(`net helpmsg ${error.code}`, { encoding: 'utf8' }).trim();
-        } catch (syncError) {
-          extendedErrorMessage = 'Could not retrieve extended error message';
-        }
-        log.error("Error Message:", error.message);
-        log.error("Error Code:", error.code);
-        log.error("Extended Error Message:", extendedErrorMessage);
-        log.error("Error Signal:", error.signal);
-        log.error("Executed Command:", error.cmd);
-        log.error("Full Error Object:", JSON.stringify(error, null, 2));
-      }
-      log.error("STDERR checking service existence:", stderr || "None");
-      callback(false);
-    }
-    if (stdout.includes("FAILED") || stdout.includes("does not exist")) {
-      log.info("Service existence error: ", stdout);
-      callback(false);
-    } else {
-      log.info("Service probably exists: ", stdout);
-      callback(true);
-    }
-  });
-}
-
-
-async function createAndStartService() {
-  const createServiceCommand = `sc create ${SERVICE_NAME} binPath= "${RUST_EXECUTABLE}" start= auto`;
-
-  exec(createServiceCommand, (error, stdout, stderr) => {
-    if (error || stderr) {
-      let extendedErrorMessage = '';
-      if (error) {
-        try {
-          extendedErrorMessage = execSync(`net helpmsg ${error.code}`, { encoding: 'utf8' }).trim();
-        } catch (syncError) {
-          extendedErrorMessage = 'Could not retrieve extended error message';
-        }
-        log.error("Error creating service:");
-        log.error("Error Message:", error.message);
-        log.error("Error Code:", error.code);
-        log.error("Extended Error Message:", extendedErrorMessage);
-        log.error("Error Signal:", error.signal);
-        log.error("Executed Command:", error.cmd);
-        log.error("Full Error Object:", JSON.stringify(error, null, 2));
-      }
-      if (stderr) {
-        log.error("STDERR:", stderr);
-      }
-      return;
-    }
-    log.info("Service created successfully.");
-
-    // Start the service
-    exec(`sc start ${SERVICE_NAME}`, (err, out, errOut) => {
-      if (err || errOut) {
-        let extendedErrorMessage2 = '';
-        if (err) {
-          try {
-            extendedErrorMessage2 = execSync(`net helpmsg ${err.code}`, { encoding: 'utf8' }).trim();
-          } catch (syncError) {
-            extendedErrorMessage2 = 'Could not retrieve extended error message';
-          }
-          log.error("Error starting service:");
-          log.error("Error Message:", err.message);
-          log.error("Error Code:", err.code);
-          log.error("Extended Error Message:", extendedErrorMessage2);
-          log.error("Error Signal:", err.signal);
-          log.error("Executed Command:", err.cmd);
-          log.error("Full Error Object:", JSON.stringify(err, null, 2));
-        }
-        if (errOut) {
-          log.error("STDERR:", errOut);
-        }
-        return;
-      }
-      log.info("Rust Licensing Server started successfully.");
-    });
-  });
-}
 
 
 
@@ -521,6 +327,11 @@ async function startPythonExecutable() {
       // Set working directory to the executable's directory
       options.cwd = path.dirname(executablePath);
       log.info("Setting working directory to:", options.cwd);
+
+      options.env = {
+        // ...process.env,/
+        PYTHONIOENCODING: "utf-8",
+      };
     }
 
     try {
@@ -809,8 +620,8 @@ async function createWindow() {
     log.info("Update download requested");
     try {
       // Backup database before update
-      const dbPath = path.join(app.getPath("userData"), "database.sqlite");
-      const backupDir = path.join(app.getPath("userData"), "backups");
+      const dbPath = path.join(userDataDir, "database.sqlite");
+      const backupDir = path.join(userDataDir, "backups");
 
       log.info("Creating backup directory:", backupDir);
       if (!fs.existsSync(backupDir)) {
@@ -903,7 +714,7 @@ async function createWindow() {
 app.setName("CypherSol Dev");
 
 app.whenReady().then(async () => {
-  log.info("App is ready", app.getPath("userData"));
+  log.info("App is ready", userDataDir);
 
   createSplashWindow();
   // Example usage
@@ -930,50 +741,28 @@ app.whenReady().then(async () => {
 
     log.info("\n*********************************************\n");
   });
+  // Check if the user sheet exists in the user data directory
+  const userSheet = path.join(userDataDir, "Customer_category.xlsx");
 
-  // return;
+  if (!fs.existsSync(userSheet)) {
+    const defaultSheet = path.join(
+      process.resourcesPath,
+      "backend",
+      "main",
+      "_internal",
+      "Customer_category.xlsx"
+    );
+    if (fs.existsSync(defaultSheet)) {
+      await fs.copy(defaultSheet, userSheet);
+      console.log("Initialized user sheet:", userSheet);
+    }
+  }
 
-
-  // await checkServiceExists(async (exists) => {
-  //   if (!exists) {
-  //     log.info("Service does not exist. Creating...");
-  //     await createAndStartService();
-  //   } else {
-  //     log.info("Service already exists. Starting...");
-  //     exec(`sc start ${SERVICE_NAME}`, (error, stdout, stderr) => {
-  //       log.info("Service start output:", stdout);
-  //       if (error || stderr) {
-  //         let extendedErrorMessage = '';
-  //         if (error) {
-  //           try {
-  //             extendedErrorMessage = execSync(`net helpmsg ${error.code}`, { encoding: 'utf8' }).trim();
-  //           } catch (syncError) {
-  //             extendedErrorMessage = 'Could not retrieve extended error message';
-  //           }
-  //           log.error("Error starting service:");
-  //           log.error("Error Message:", error.message);
-  //           log.error("Error Code:", error.code);
-  //           log.error("Extended Error Message:", extendedErrorMessage);
-  //           log.error("Error Signal:", error.signal);
-  //           log.error("Executed Command:", error.cmd);
-  //           log.error("Full Error Object:", JSON.stringify(error, null, 2));
-  //         }
-  //         if (stderr) {
-  //           log.error("STDERR:", stderr);
-  //         }
-  //         return;
-  //       }
-  //       log.info("Rust service started.");
-  //     });
-  //   }
-  // });
-
-  // return;
 
   try {
     try {
       const dbManager = databaseManager.getInstance();
-      await dbManager.initialize(app.getPath("userData"));
+      await dbManager.initialize(userDataDir);
       log.info("Database initialized successfully");
     } catch (error) {
       log.error("Database initialization failed:", error);
@@ -1105,11 +894,11 @@ function checkForUpdates() {
   log.info("Checking for updates...");
   autoUpdater.checkForUpdates().catch((err) => {
     log.error("Error checking for updates:", err);
-    dialog.showMessageBox({
-      type: "error",
-      title: "Update Error",
-      message: `Error checking for updates: ${err.message}`,
-      buttons: ["OK"],
-    });
+    // dialog.showMessageBox({
+    //   type: "error",
+    //   title: "Update Error",
+    //   message: `Error checking for updates: ${err.message}`,
+    //   buttons: ["OK"],
+    // });
   });
 }

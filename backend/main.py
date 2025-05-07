@@ -199,7 +199,9 @@ async def analyze_bank_statements(request: BankStatementRequest):
         logger.info("Starting extraction")
         whole_transaction_sheet = request.whole_transaction_sheet or None
         temp_aiyaz_array_of_array = []
+
         if(request.aiyazs_array_of_array):
+            logger.info("aiyazs_array_of_array is not None")
             for statement in request.aiyazs_array_of_array:
                 temp_aiyaz_array = []
                 for col in statement:
@@ -207,12 +209,14 @@ async def analyze_bank_statements(request: BankStatementRequest):
                 temp_aiyaz_array_of_array.append(temp_aiyaz_array)
 
         if whole_transaction_sheet is not None:
+            logger.info("whole_transaction_sheet is not None")
             whole_transaction_sheet = pd.DataFrame(whole_transaction_sheet)
             print("whole_transaction_sheet", whole_transaction_sheet.head())
             whole_transaction_sheet["Value Date"] = pd.to_datetime(whole_transaction_sheet["Value Date"], format="%d-%m-%Y")
 
                 
         result = start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_date, end_date, CA_ID, progress_data,whole_transaction_sheet=whole_transaction_sheet,aiyazs_array_of_array=temp_aiyaz_array_of_array)
+        
         end_extraction = time.time()
         end_total = time.time()
         total_time = end_total - start_total
