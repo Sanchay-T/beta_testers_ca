@@ -317,12 +317,16 @@ const processStatementAndEOD = async (
 
     // Process Statement and Transactions
     try {
-      const [day1, month1, year1] = fileDetail["start_date"].split("-");
-      const start_date = new Date(year1, month1 - 1, day1);
-
-      const [day2, month2, year2] = fileDetail["end_date"].split("-");
-      const end_date = new Date(year2, month2 - 1, day2);
-
+      let start_date = "";
+      let end_date = "";
+      if (fileDetail.start_date) {
+        const [day1, month1, year1] = fileDetail["start_date"].split("-");
+        start_date = new Date(year1, month1 - 1, day1);
+      }
+      if (fileDetail.end_date) {
+        const [day2, month2, year2] = fileDetail["end_date"].split("-");
+        end_date = new Date(year2, month2 - 1, day2);
+      }
       const statementData = {
         caseId: validCaseId,
         accountNumber: accountNumber,
@@ -331,8 +335,8 @@ const processStatementAndEOD = async (
         bankName: fileDetail.bankName,
         filePath: fileDetail.pdf_paths,
         createdAt: new Date(),
-        startDate: start_date,
-        endDate: end_date,
+        startDate: start_date === "" ? null : start_date,
+        endDate: end_date === "" ? null : end_date,
         password: fileDetail.passwords,
       };
 
@@ -845,6 +849,7 @@ function generateReportIpc(tmpdir_path) {
             )?.pdf_paths;
 
             if (fullPath) {
+              log.info("Added failedFiles aq 1");
               failedFiles.add(fullPath);
               successfulFiles.delete(fullPath);
             }
@@ -940,6 +945,8 @@ function generateReportIpc(tmpdir_path) {
               successfulFiles.add(fileDetail.pdf_paths);
             }
           } catch (error) {
+            log.info("Added failedFiles aq 2");
+
             failedFiles.add(fileDetail.pdf_paths);
             successfulFiles.delete(fileDetail.pdf_paths);
             log.error(

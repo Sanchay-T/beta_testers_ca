@@ -1,5 +1,5 @@
 {
-  "name": "cyphersol-ats-electron-app",
+  "name": "cyphersol-electron-app",
   "version": "1.0.1",
   "description": "CA OFFLINE APP",
   "main": "main.js",
