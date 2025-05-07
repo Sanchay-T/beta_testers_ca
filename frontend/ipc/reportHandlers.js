@@ -3,13 +3,13 @@ const fs = require("fs");
 const path = require("path");
 const log = require("electron-log");
 const axios = require("axios");
-const databaseManager = require('../db/db');
+const databaseManager = require("../db/db");
 const { transactions } = require("../db/schema/Transactions");
 const { statements } = require("../db/schema/Statement");
 const { cases } = require("../db/schema/Cases");
 const { failedStatements } = require("../db/schema/FailedStatements");
 const { eq, and } = require("drizzle-orm");
-const { updateCaseStatus } = require("./generateReport")
+const { updateCaseStatus } = require("./generateReport");
 
 let db = null;
 
@@ -208,11 +208,16 @@ const createStatement = async (fileDetail, caseId) => {
 };
 
 // Helper function to process transactions
-const processTransactions = async (transactions, fileDetail, statementId,index) => {
+const processTransactions = async (
+  transactions,
+  fileDetail,
+  statementId,
+  index
+) => {
   try {
     // Transform and validate transactions for this statement
     const statementTransactions = transactions
-      .filter((t) => t.Bank === fileDetail.bankName+index)
+      .filter((t) => t.Bank === fileDetail.bankName + index)
       .map((transaction) => {
         try {
           return validateAndTransformTransaction(transaction, statementId);
@@ -250,7 +255,6 @@ async function getModifiedTransactions() {
 }
 
 function registerReportHandlers(tmpdir_path) {
-
   db = databaseManager.getInstance().getDatabase();
   log.info("Database instance : ", db);
 
@@ -261,7 +265,7 @@ function registerReportHandlers(tmpdir_path) {
         .select()
         .from(cases)
         .orderBy(cases.createdAt, "DESC")
-        .leftJoin(statements, eq(cases.id, statements.caseId))
+        .leftJoin(statements, eq(cases.id, statements.caseId));
       // .limit(10);
 
       log.info("Reports fetched successfully, processing data...");
@@ -317,12 +321,9 @@ function registerReportHandlers(tmpdir_path) {
     const successfulFiles = new Set();
     const failedFiles = new Set();
     const allProcessedFiles = new Set();
-    const uploadedFiles = new Map()
+    const uploadedFiles = new Map();
     // fetch case name
-    const caseData = await db
-      .select()
-      .from(cases)
-      .where(eq(cases.id, caseId));
+    const caseData = await db.select().from(cases).where(eq(cases.id, caseId));
     const caseName = caseData.name;
     log.info("Case Name : ", caseName);
     try {
@@ -492,7 +493,7 @@ function registerReportHandlers(tmpdir_path) {
             transactions,
             fileDetail,
             statementId,
-            fileDetails.indexOf(fileDetail),
+            fileDetails.indexOf(fileDetail)
           );
 
           processedData.push({
@@ -589,8 +590,18 @@ function registerReportHandlers(tmpdir_path) {
 
   ipcMain.handle("delete-report", async (event, caseId) => {
     try {
-      const result = await db.delete(cases).where(eq(cases.id, caseId));
+      // const result = await db.delete(cases).where(eq(cases.id, caseId));
+      // delete all statements of this case
+      const deleteStatements = await db
+        .delete(statements)
+        .where(eq(statements.caseId, caseId));
 
+      log.info("Deleted statements:", deleteStatements);
+
+      const result = await db
+        .update(cases)
+        .set({ deleted: 1, status: "Deleted" })
+        .where(eq(cases.id, caseId));
       return result;
     } catch (error) {
       log.error("Error deleting report:", error);

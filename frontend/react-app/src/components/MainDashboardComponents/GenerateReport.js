@@ -16,7 +16,7 @@ import { Card } from "../ui/card";
 import { AlertCircle, ChevronRight } from "lucide-react";
 import { useReportContext } from "../../contexts/ReportContext";
 
-export default function GenerateReport() {
+export default function GenerateReport({ activeTab }) {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false); // State to control Dialog visibility
   const [failedStatements, setFailedStatements] = useState([]); // State to store failed statements
@@ -209,12 +209,12 @@ export default function GenerateReport() {
             recentReportsData: [newData, ...reportData.recentReportsData],
           });
 
-          toast({
-            title: "Failed",
-            description: `${caseName} report had some issues!`,
-            duration: 3000,
-            variant: "destructive",
-          });
+          if (activeTab !== "Generate Report")
+            toast({
+              title: "Failed",
+              description: `${caseName} report had some issues!`,
+              variant: "destructive",
+            });
         } else {
           // setShowRectifyButton(true);
           const successfulFiles = result.data.successfulFiles.map(
@@ -248,15 +248,15 @@ export default function GenerateReport() {
           });
         }
 
-        if (result.data.totalTransactions) {
+        if (result.data.totalTransactions && activeTab !== "Generate Report") {
           toast({
             title: "Success",
             description: `${caseName} report generated successfully!`,
-            duration: 3000,
+            duration: Infinity,
             variant: "success",
           });
-          setShowAnalysisButton(true);
         }
+        setShowAnalysisButton(true);
 
         // setFailedStatements(result.pdf_paths_not_extracted || []); // Store failed
         setSelectedFiles([]);
@@ -293,12 +293,13 @@ export default function GenerateReport() {
       if (showAnalsisButton || showRectifyButton) {
         setDialogOpen(true);
       }
-      toast({
-        title: "Error",
-        description: "Failed to generate report",
-        variant: "destructive",
-        duration: 5000,
-      });
+      if (activeTab !== "Generate Report") {
+        toast({
+          title: "Error",
+          description: "Failed to generate report",
+          variant: "destructive",
+        });
+      }
       // refreshPage();
       const updatedRecentReportData = reportData.recentReportsData;
       updateReportData({ recentReportsData: updatedRecentReportData });

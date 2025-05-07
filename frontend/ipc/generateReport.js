@@ -58,9 +58,9 @@ const validateAndTransformTransaction = (transaction, statementId) => {
   } else if (
     transaction.Debit !== null &&
     !isNaN(transaction.Debit) &&
-    transaction.Debit > 0
+    transaction.Debit != 0
   ) {
-    amount = Math.abs(transaction.Debit);
+    amount = transaction.Debit;
     type = "debit";
   }
 

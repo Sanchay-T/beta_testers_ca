@@ -5,7 +5,7 @@ const { statements } = require("../db/schema/Statement");
 const { transactions } = require("../db/schema/Transactions");
 const { eod } = require("../db/schema/EodSchema");
 const { summary } = require("../db/schema/Summary");
-const { eq, gt, and, inArray, or } = require("drizzle-orm"); // Add this import
+const { eq, gt, and, inArray, or, asc } = require("drizzle-orm"); // Add this import
 const axios = require("axios");
 
 const formatDate = (dateString) => {
@@ -144,9 +144,9 @@ function registerIndividualDashboardIpc() {
             ...transactions,
           })
           .from(transactions)
-          .where(and(eq(transactions.statementId, individualId.toString())));
+          .where(and(eq(transactions.statementId, individualId.toString())))
+          .orderBy(asc(transactions.id));
 
-        log.info({ allTransactions: allTransactions.length });
         return allTransactions;
       } else {
         const allStatements = await db
@@ -171,8 +171,8 @@ function registerIndividualDashboardIpc() {
               transactions.statementId,
               allStatements.map((stmt) => stmt.id.toString()) // Convert integer ID to string
             )
-          );
-        // log.info("Transactions fetched successfully:", allTransactions.length);
+          )
+          .orderBy(asc(transactions.id));
         return allTransactions;
       }
     } catch (error) {
@@ -201,7 +201,8 @@ function registerIndividualDashboardIpc() {
             eq(transactions.type, "credit"), // Filter by type,
             gt(transactions.amount, 0) // Filter for amount greater than 0
           )
-        ); // Apply both filters
+        )
+        .orderBy(asc(transactions.id));
 
       const debitTransactions = await db
         .select()
@@ -212,7 +213,8 @@ function registerIndividualDashboardIpc() {
             eq(transactions.type, "debit"), // Filter by type
             gt(transactions.amount, 0) // Filter for amount greater than 0
           )
-        ); // Apply both filters
+        )
+        .orderBy(asc(transactions.id));
 
       return {
         credit: creditTransactions.length,
@@ -240,7 +242,9 @@ function registerIndividualDashboardIpc() {
                 eq(transactions.statementId, individualId.toString()),
                 eq(transactions.category, "Debtor")
               )
-            );
+            )
+            .orderBy(asc(transactions.id));
+
           return result;
         } else {
           const allStatements = await db
@@ -261,7 +265,8 @@ function registerIndividualDashboardIpc() {
                 inArray(transactions.statementId, statementIds),
                 eq(transactions.category, "Debtor")
               )
-            );
+            )
+            .orderBy(asc(transactions.id));
           return result;
         }
       } catch (error) {
@@ -288,7 +293,8 @@ function registerIndividualDashboardIpc() {
                 eq(transactions.statementId, individualId.toString()),
                 eq(transactions.category, "Creditor")
               )
-            );
+            )
+            .orderBy(asc(transactions.id));
           return result;
         } else {
           const allStatements = await db
@@ -309,7 +315,8 @@ function registerIndividualDashboardIpc() {
                 inArray(transactions.statementId, statementIds),
                 eq(transactions.category, "Creditor")
               )
-            );
+            )
+            .orderBy(asc(transactions.id));
           return result;
         }
       } catch (error) {
@@ -336,7 +343,8 @@ function registerIndividualDashboardIpc() {
                 eq(transactions.statementId, individualId.toString()),
                 eq(transactions.category, "Cash Withdrawal")
               )
-            );
+            )
+            .orderBy(asc(transactions.id));
           return result;
         } else {
           const allStatements = await db
@@ -354,7 +362,8 @@ function registerIndividualDashboardIpc() {
                 inArray(transactions.statementId, statementIds),
                 eq(transactions.category, "Cash Withdrawal")
               )
-            );
+            )
+            .orderBy(asc(transactions.id));
           return result;
         }
       } catch (error) {
@@ -381,7 +390,8 @@ function registerIndividualDashboardIpc() {
                 eq(transactions.statementId, individualId.toString()),
                 eq(transactions.category, "Cash Deposits")
               )
-            );
+            )
+            .orderBy(asc(transactions.id));
           return result;
         } else {
           const allStatements = await db
@@ -399,7 +409,8 @@ function registerIndividualDashboardIpc() {
                 inArray(transactions.statementId, statementIds),
                 eq(transactions.category, "Cash Deposits")
               )
-            );
+            )
+            .orderBy(asc(transactions.id));
           return result;
         }
       } catch (error) {
@@ -428,7 +439,8 @@ function registerIndividualDashboardIpc() {
                 eq(transactions.statementId, individualId.toString()),
                 eq(transactions.category, "UPI-Cr")
               )
-            );
+            )
+            .orderBy(asc(transactions.id));
           return result;
         } else {
           const allStatements = await db
@@ -449,7 +461,8 @@ function registerIndividualDashboardIpc() {
                 inArray(transactions.statementId, statementIds),
                 eq(transactions.category, "UPI-Cr")
               )
-            );
+            )
+            .orderBy(asc(transactions.id));
           // log.info("UPI-Cr transactions fetched successfully:", result);
           return result;
         }
@@ -476,7 +489,8 @@ function registerIndividualDashboardIpc() {
                 eq(transactions.statementId, individualId.toString()),
                 eq(transactions.category, "UPI-Dr")
               )
-            );
+            )
+            .orderBy(asc(transactions.id));
           return result;
         } else {
           const allStatements = await db
@@ -497,7 +511,8 @@ function registerIndividualDashboardIpc() {
                 inArray(transactions.statementId, statementIds),
                 eq(transactions.category, "UPI-Dr")
               )
-            );
+            )
+            .orderBy(asc(transactions.id));
           // log.info("UPI-Dr transactions fetched successfully:", result);
           return result;
         }
@@ -523,7 +538,8 @@ function registerIndividualDashboardIpc() {
                 eq(transactions.category, "Suspense"),
                 eq(transactions.type, "credit")
               )
-            );
+            )
+            .orderBy(asc(transactions.id));
           return result;
         } else {
           const allStatements = await db
@@ -542,7 +558,8 @@ function registerIndividualDashboardIpc() {
                 eq(transactions.category, "Suspense"),
                 eq(transactions.type, "credit")
               )
-            );
+            )
+            .orderBy(asc(transactions.id));
           return result;
         }
       } catch (error) {
@@ -565,7 +582,8 @@ function registerIndividualDashboardIpc() {
                 eq(transactions.statementId, individualId.toString()),
                 eq(transactions.category, "Suspense")
               )
-            );
+            )
+            .orderBy(asc(transactions.id));
           return result;
         } else {
           const allStatements = await db
@@ -583,7 +601,8 @@ function registerIndividualDashboardIpc() {
                 inArray(transactions.statementId, statementIds),
                 eq(transactions.category, "Suspense")
               )
-            );
+            )
+            .orderBy(asc(transactions.id));
           return result;
         }
       } catch (error) {
@@ -608,7 +627,8 @@ function registerIndividualDashboardIpc() {
                 eq(transactions.category, "Suspense"),
                 eq(transactions.type, "debit")
               )
-            );
+            )
+            .orderBy(asc(transactions.id));
           return result;
         } else {
           const allStatements = await db
@@ -627,7 +647,8 @@ function registerIndividualDashboardIpc() {
                 eq(transactions.category, "Suspense"),
                 eq(transactions.type, "debit")
               )
-            );
+            )
+            .orderBy(asc(transactions.id));
           return result;
         }
       } catch (error) {
@@ -653,7 +674,8 @@ function registerIndividualDashboardIpc() {
                 gt(transactions.amount, 0),
                 eq(transactions.type, "debit")
               )
-            );
+            )
+            .orderBy(asc(transactions.id));
           return result;
         } else {
           const allStatements = await db
@@ -673,7 +695,8 @@ function registerIndividualDashboardIpc() {
                 gt(transactions.amount, 0),
                 eq(transactions.type, "debit")
               )
-            );
+            )
+            .orderBy(asc(transactions.id));
           return result;
         }
       } catch (error) {
@@ -697,7 +720,8 @@ function registerIndividualDashboardIpc() {
                 eq(transactions.statementId, individualId.toString()),
                 eq(transactions.category, "Investment")
               )
-            );
+            )
+            .orderBy(asc(transactions.id));
           return result;
         } else {
           const allStatements = await db
@@ -715,7 +739,8 @@ function registerIndividualDashboardIpc() {
                 inArray(transactions.statementId, statementIds),
                 eq(transactions.category, "Investment")
               )
-            );
+            )
+            .orderBy(asc(transactions.id));
           return result;
         }
       } catch (error) {
@@ -742,7 +767,8 @@ function registerIndividualDashboardIpc() {
                 eq(transactions.statementId, individualId.toString()),
                 eq(transactions.category, "Refund/Reversal")
               )
-            );
+            )
+            .orderBy(asc(transactions.id));
           return result;
         } else {
           const allStatements = await db
@@ -760,7 +786,8 @@ function registerIndividualDashboardIpc() {
                 inArray(transactions.statementId, statementIds),
                 eq(transactions.category, "Refund/Reversal")
               )
-            );
+            )
+            .orderBy(asc(transactions.id));
           return result;
         }
       } catch (error) {
@@ -798,7 +825,8 @@ function registerIndividualDashboardIpc() {
                 eq(transactions.statementId, individualId.toString()),
                 inArray(transactions.category, categories)
               )
-            );
+            )
+            .orderBy(asc(transactions.id));
           return result;
         } else {
           // Query for all statements in the case
@@ -822,7 +850,8 @@ function registerIndividualDashboardIpc() {
                 inArray(transactions.statementId, statementIds),
                 inArray(transactions.category, categories)
               )
-            );
+            )
+            .orderBy(asc(transactions.id));
           return result;
         }
       } catch (error) {
@@ -849,7 +878,8 @@ function registerIndividualDashboardIpc() {
                   eq(transactions.voucher_type, "Contra")
                 )
               )
-            );
+            )
+            .orderBy(asc(transactions.id));
           // log.info("Contra transactions fetched successfully:", result);
           return result;
         } else {
@@ -871,7 +901,8 @@ function registerIndividualDashboardIpc() {
                   eq(transactions.voucher_type, "Contra")
                 )
               )
-            );
+            )
+            .orderBy(asc(transactions.id));
           // log.info("Contra transactions fetched successfully:", result);
 
           return result;
@@ -896,7 +927,8 @@ function registerIndividualDashboardIpc() {
                 eq(transactions.statementId, individualId.toString()),
                 eq(transactions.category, "Redemption, Dividend & Interest")
               )
-            );
+            )
+            .orderBy(asc(transactions.id));
           return result;
         } else {
           const allStatements = await db
@@ -914,7 +946,8 @@ function registerIndividualDashboardIpc() {
                 inArray(transactions.statementId, statementIds),
                 eq(transactions.category, "Redemption, Dividend & Interest")
               )
-            );
+            )
+            .orderBy(asc(transactions.id));
           return result;
         }
       } catch (error) {

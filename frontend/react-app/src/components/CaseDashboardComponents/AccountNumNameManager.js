@@ -214,7 +214,7 @@ const AccountNumNameManager = () => {
             <div>
               <CardTitle>Account Number & Name Manager</CardTitle>
               <CardDescription>
-                Manage statement details for case #{caseId}
+                Manage statement details for report - {reportData.reportName}
               </CardDescription>
             </div>
             <div className="relative">

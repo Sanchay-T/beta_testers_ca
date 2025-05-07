@@ -12,6 +12,7 @@ const cases = sqliteTable("cases", {
   status: text("status").notNull(),
   pages: integer("pages").notNull().default(0),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(), // Timestamp of creation
+  deleted: integer("deleted").notNull().default(0),
 });
 
 module.exports = { cases };

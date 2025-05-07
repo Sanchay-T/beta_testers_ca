@@ -447,7 +447,26 @@ const IndividualTable = () => {
                         <TableCell>{item.customerName}</TableCell>
                         <TableCell>{item.accountNumber}</TableCell>
                         <TableCell className="flex gap-2">
+                          <Tooltip>
+                            <TooltipTrigger>
+                              {console.log({ item })}
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Prevent row click
+                                  handleDownload(caseId, item.id);
+                                }}
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              Download Report for this particular file
+                            </TooltipContent>
+                          </Tooltip>
                           <Button
+                            variant="outline"
                             onClick={(e) => {
                               e.stopPropagation(); // Prevent row click
                               if (item.filePath.includes(".pdf")) {
@@ -472,24 +491,6 @@ const IndividualTable = () => {
                               "Re-run"
                             )}
                           </Button>
-                          <Tooltip>
-                            <TooltipTrigger>
-                              {console.log({ item })}
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={(e) => {
-                                  e.stopPropagation(); // Prevent row click
-                                  handleDownload(caseId, item.id);
-                                }}
-                              >
-                                <Download className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              Download Report for this particular file
-                            </TooltipContent>
-                          </Tooltip>
                         </TableCell>
                       </TooltipProvider>
                     </TableRow>
