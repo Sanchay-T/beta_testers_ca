@@ -174,3 +174,6 @@ new_output.json
 new_output.json
 frontend/ats_db.sqlite3
 frontend/ats_db.sqlite3
+
+frontend/logs/
+gatewayServer/
