@@ -711,6 +711,15 @@ async function createWindow() {
   });
 }
 
+const isPackaged = app.isPackaged;
+
+// When packaged, resources are unpacked to a different location
+const GATEWAY_EXECUTABLE_DIR = isPackaged
+  ? process.resourcesPath // Electron's resources dir in packaged mode
+  : path.join(__dirname, "./gatewayServer")
+
+console.log("GATEWAY EXECUTABLE DIR:", GATEWAY_EXECUTABLE_DIR);
+
 app.setName("CypherSol Dev");
 
 app.whenReady().then(async () => {
