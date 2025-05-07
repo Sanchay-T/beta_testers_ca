@@ -155,7 +155,7 @@ local_settings.py
 *.com
 *.class
 *.dll
-*.exe
+# *.exe
 *.o
 *.out
 
@@ -176,4 +176,4 @@ frontend/ats_db.sqlite3
 frontend/ats_db.sqlite3
 
 frontend/logs/
-# gatewayServer/
+gatewayServer/logs/
