@@ -2640,7 +2640,11 @@ def summary_sheet(idf, open_bal, close_bal, new_tran_df, new_categories = None):
     opening_closing_balance = {month: [open_bal[month], close_bal[month]] for month in open_bal}
 
     excel_file_path = os.path.join(BASE_DIR, "Final_Category.xlsx")
+
+    logger.info("excel_file_path - ",excel_file_path)
     user_created = os.path.join(BASE_DIR, "Customer_category.xlsx")
+    logger.info("user_created_excel - ",user_created)
+    
     # print("excel_file_path_bruh -",excel_file_path)
         # excel_file_path+user_created
     df2 = pd.read_excel(excel_file_path)

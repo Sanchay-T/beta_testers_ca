@@ -764,10 +764,11 @@ app.whenReady().then(async () => {
   const userSheet = path.join(userDataDir, "Customer_category.xlsx");
 
   if (!fs.existsSync(userSheet)) {
-    // when packaged, this resolves to “<app>/resources/app.asar/backend/Customer_category.xlsx”
     const defaultSheet = path.join(
       process.resourcesPath,
       "backend",
+      "main",
+      "_internal",
       "Customer_category.xlsx"
     );
     if (fs.existsSync(defaultSheet)) {
