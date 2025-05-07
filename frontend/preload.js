@@ -247,4 +247,19 @@ contextBridge.exposeInMainWorld("electron", {
   shell: {
     openExternal: (url) => shell.openExternal(url),
   },
+
+  // Database connection and configuration
+  db: {
+    checkConnection: () => ipcRenderer.invoke("db:checkConnection"),
+    saveConfig: (config) => ipcRenderer.invoke("db:saveConfig", config),
+    checkPrerequisites: () => ipcRenderer.invoke("db:checkPrerequisites"),
+    discover: () => ipcRenderer.invoke("db:discover"),
+    downloadBinaries: (data) => ipcRenderer.invoke("db:downloadBinaries", data),
+    getProvisionStatus: () => ipcRenderer.invoke("db:getProvisionStatus"),
+    extractBinaries: (data) => ipcRenderer.invoke("db:extractBinaries", data),
+    initCluster: (data) => ipcRenderer.invoke("db:initCluster", data),
+    startPostgres: (data) => ipcRenderer.invoke("db:startPostgres", data),
+    advertiseMdns: (data) => ipcRenderer.invoke("db:advertiseMdns", data),
+    validateConnection: (data) => ipcRenderer.invoke("db:validateConnection", data),
+  },
 });

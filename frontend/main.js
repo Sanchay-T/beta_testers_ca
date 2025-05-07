@@ -18,6 +18,7 @@ const { registerCaseDashboardIpc } = require("./ipc/caseDashboard.js");
 const { registerReportHandlers } = require("./ipc/reportHandlers.js");
 const { registerAuthHandlers } = require("./ipc/authHandlers.js");
 const { registerEditReportHandlers } = require("./ipc/editReportHandlers.js");
+const { registerDbHandlers } = require("./ipc/dbHandlers.js");
 const sessionManager = require("./SessionManager");
 const licenseManager = require("./LicenseManager");
 const { generateReportIpc } = require("./ipc/generateReport");
@@ -779,6 +780,7 @@ async function createWindow() {
   registerOpenFileIpc(BASE_DIR);
   registerReportHandlers(TMP_DIR);
   registerAuthHandlers(app.getPath("userData"));
+  registerDbHandlers(win);
   registerOpportunityToEarnIpc();
   registerTallyIpc();
   registerVoucherIpc();

@@ -13,7 +13,7 @@ class LicenseManager {
         }
 
         this.userDataPath = null;
-        this.isActivated = false;
+        this.isActivated = true;
         this.licenseFileName = "clientLicense.enc";
         this.licenseData = null; // <-- Field to hold decrypted license info
         LicenseManager.instance = this;
