@@ -75,7 +75,7 @@ const IndividualDashboard = () => {
           icon: Plus,
         },
         {
-          title: "Upload to Tally",
+          title: "Upload Transactions",
           url: "#",
           icon: Upload,
         },
@@ -204,7 +204,7 @@ const IndividualDashboard = () => {
               {activeTab === "Reversal" && <Reversal />}
               {activeTab === "Insurance" && <Insurance />}
               {activeTab === "Contra" && <Contra />}
-              {activeTab === "Upload to Tally" && (
+              {activeTab === "Upload Transactions" && (
                 <TallyDirectImport
                   defaultVoucher={"Payment Receipt Contra"}
                   setActiveTab={setActiveTab}

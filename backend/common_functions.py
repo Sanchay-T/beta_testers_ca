@@ -36,6 +36,7 @@ import openpyxl
 from openpyxl.styles import Alignment
 from .utils import get_base_dir
 import fitz
+import warnings
 bold_font = Font(bold=True)
 pd.options.display.float_format = "{:,.2f}".format
 pd.set_option("display.max_columns", None)
@@ -46,7 +47,7 @@ BASE_DIR = get_base_dir()
 logger.info("Base Dir : ", BASE_DIR)
 #from old_bank_extractions import CustomStatement
 import json
-from .code_for_extraction import extract_text_from_pdf, extract_with_test_cases, model_for_pdf, extract_dataframe_from_pdf, validate_bank_statement_returns_error_message
+from .code_for_extraction import extract_text_from_pdf, extract_with_test_cases, model_for_pdf, extract_dataframe_from_pdf, validate_bank_statement_returns_error_message, is_pdf_encoded
 
 ##EXTRACTION PROCESS
 def extract_text_from_file(file_path):
@@ -63,67 +64,152 @@ def extract_text_from_file(file_path):
 
     return text
 
-def add_start_n_end_date( df, start_date, end_date, bank):
-    df["Balance"] = pd.to_numeric(df["Balance"], errors="coerce")
-    df["Debit"] = pd.to_numeric(df["Debit"], errors="coerce")
-    df["Credit"] = pd.to_numeric(df["Credit"], errors="coerce")
+# def add_start_n_end_date( df, start_date, end_date, bank):
+#     df["Balance"] = pd.to_numeric(df["Balance"], errors="coerce")
+#     df["Debit"] = pd.to_numeric(df["Debit"], errors="coerce")
+#     df["Credit"] = pd.to_numeric(df["Credit"], errors="coerce")
 
-    # Check if the period falls within the start and end dates
-    start_date_sd = pd.to_datetime(start_date, format="%d-%m-%Y", errors="coerce")
-    end_date_ed = pd.to_datetime(end_date, format="%d-%m-%Y", errors="coerce")
-    period_start = pd.to_datetime(
-        df["Value Date"].iloc[0], format="%d-%m-%Y", errors="coerce"
+#     # Check if the period falls within the start and end dates
+#     start_date_sd = pd.to_datetime(start_date, format="%d-%m-%Y", errors="coerce")
+#     end_date_ed = pd.to_datetime(end_date, format="%d-%m-%Y", errors="coerce")
+#     period_start = pd.to_datetime(
+#         df["Value Date"].iloc[0], format="%d-%m-%Y", errors="coerce"
+#     )
+#     period_end = pd.to_datetime(
+#         df["Value Date"].iloc[-1], format="%d-%m-%Y", errors="coerce"
+#     )
+
+#     if (start_date_sd - timedelta(days=1)) <= period_start <= (
+#         end_date_ed + timedelta(days=1)
+#     ) and (start_date_sd - timedelta(days=1)) <= period_end <= (
+#         end_date_ed + timedelta(days=1)
+#     ):
+#         print("The period falls within the start and end dates.")
+#     else:
+#         raise Exception(
+#             f"Error: The period for Bank: {bank} ({period_start} to {period_end}), "
+#             f"does not fall within the start and end dates ({start_date_sd} to {end_date_ed}), provided by the user."
+#         )
+
+#     # add opening and closing balance
+#     start_bal = (
+#         df.iloc[0]["Balance"] - df.iloc[0]["Credit"]
+#         if df.iloc[0]["Credit"] > 0
+#         else df.iloc[0]["Balance"] + df.iloc[0]["Debit"]
+#     )
+#     end_bal = df.iloc[-1]["Balance"]
+
+#     start_row = pd.DataFrame(
+#         [
+#             {
+#                 "Value Date": start_date,
+#                 "Description": "Opening Balance",
+#                 "Debit": 0,
+#                 "Credit": 0,
+#                 "Balance": start_bal,
+#             }
+#         ]
+#     )
+#     end_row = pd.DataFrame(
+#         [
+#             {
+#                 "Value Date": end_date,
+#                 "Description": "Closing Balance",
+#                 "Debit": 0,
+#                 "Credit": 0,
+#                 "Balance": end_bal,
+#             }
+#         ]
+#     )
+
+#     idf = pd.concat([start_row, df, end_row], ignore_index=True)
+#     idf["Bank"] = f"{bank}"
+#     return idf
+
+
+def _wrap(slice_df, bank, open_date, close_date):
+    first, last = slice_df.iloc[0], slice_df.iloc[-1]
+
+    opening_bal = (
+        first["Balance"] - first["Credit"]
+        if first["Credit"] > 0
+        else first["Balance"] + first["Debit"]
     )
-    period_end = pd.to_datetime(
-        df["Value Date"].iloc[-1], format="%d-%m-%Y", errors="coerce"
+    closing_bal = last["Balance"]
+
+    # default dates if not overridden
+    open_dt  = pd.to_datetime(open_date,  format="%d-%m-%Y") if open_date  else first["Value Date"]
+    close_dt = pd.to_datetime(close_date, format="%d-%m-%Y") if close_date else last["Value Date"]
+
+    rows = [
+        {
+            "Value Date": open_dt,
+            "Description": "Opening Balance",
+            "Debit": 0.0,
+            "Credit": 0.0,
+            "Balance": opening_bal,
+        },
+        *slice_df.to_dict("records"),
+        {
+            "Value Date": close_dt,
+            "Description": "Closing Balance",
+            "Debit": 0.0,
+            "Credit": 0.0,
+            "Balance": closing_bal,
+        },
+    ]
+    out = pd.DataFrame(rows)
+    out["Value Date"] = pd.to_datetime(out["Value Date"]).dt.strftime("%d-%m-%Y")
+    out["Bank"] = bank
+    return out
+
+
+def add_start_n_end_date_v2(df, start_date, end_date, bank):
+
+    def _missing(s):
+        return s is None or str(s).strip().lower() in {"", "null", "none"}
+
+    df = df.copy()
+
+    # 1. Coerce numeric columns ------------------------------------------------
+    for col in ["Balance", "Debit", "Credit"]:
+        df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
+
+    # 2. Parse the Value Date column once -------------------------------------
+    df["Value Date"] = pd.to_datetime(
+        df["Value Date"],
+        format="%d-%m-%Y",
+        errors="coerce",
     )
 
-    if (start_date_sd - timedelta(days=1)) <= period_start <= (
-        end_date_ed + timedelta(days=1)
-    ) and (start_date_sd - timedelta(days=1)) <= period_end <= (
-        end_date_ed + timedelta(days=1)
-    ):
-        print("The period falls within the start and end dates.")
-    else:
+    period_start, period_end = df["Value Date"].iloc[[0, -1]]
+
+    # ── Scenario A: no dates supplied ────────────────────────────────────────
+    if _missing(start_date) and _missing(end_date):
+        return _wrap(df, bank, open_date=start_date, close_date=end_date)            # synthetic rows get real first/last dates
+
+    # ── Scenario B: dates supplied ───────────────────────────────────────────
+    sd = datetime.strptime(start_date, "%d-%m-%Y")
+    ed = datetime.strptime(end_date,   "%d-%m-%Y")
+
+    # 3. Range check (±1 day tolerance, matches original behaviour) ----------
+    # if [sd, ed] sits entirely before or after [period_start, period_end]:
+    if ed < period_start or sd > period_end:
         raise Exception(
-            f"Error: The period for Bank: {bank} ({period_start} to {period_end}), "
-            f"does not fall within the start and end dates ({start_date_sd} to {end_date_ed}), provided by the user."
+            f"Error: The period for Bank: {bank} "
+            f"({period_start:%d-%m-%Y} to {period_end:%d-%m-%Y}), "
+            f"does not overlap with the user‐provided dates "
+            f"({sd:%d-%m-%Y} to {ed:%d-%m-%Y})."
         )
 
-    # add opening and closing balance
-    start_bal = (
-        df.iloc[0]["Balance"] - df.iloc[0]["Credit"]
-        if df.iloc[0]["Credit"] > 0
-        else df.iloc[0]["Balance"] + df.iloc[0]["Debit"]
-    )
-    end_bal = df.iloc[-1]["Balance"]
+    # 4. Slice from first ≥ start_date to last ≤ end_date ---------------------
+    idx_start = df.index[df["Value Date"] >= pd.Timestamp(sd)].min()
+    idx_end   = df.index[df["Value Date"] <= pd.Timestamp(ed)].max()
 
-    start_row = pd.DataFrame(
-        [
-            {
-                "Value Date": start_date,
-                "Description": "Opening Balance",
-                "Debit": 0,
-                "Credit": 0,
-                "Balance": start_bal,
-            }
-        ]
-    )
-    end_row = pd.DataFrame(
-        [
-            {
-                "Value Date": end_date,
-                "Description": "Closing Balance",
-                "Debit": 0,
-                "Credit": 0,
-                "Balance": end_bal,
-            }
-        ]
-    )
+    trimmed = df.loc[idx_start:idx_end].reset_index(drop=True)
 
-    idf = pd.concat([start_row, df, end_row], ignore_index=True)
-    idf["Bank"] = f"{bank}"
-    return idf
+    # 5. Build final frame with user‑supplied open/close dates ---------------
+    return _wrap(trimmed, bank, open_date=start_date, close_date=end_date)
 
 
 # Function to extract account number and IFSC code from text
@@ -313,12 +399,19 @@ def extraction_process(bank, pdf_path, pdf_password, start_date, end_date):
     try:
         if ext == ".pdf":
             idf, text, explicit_lines = extract_with_test_cases(bank, pdf_path, pdf_password, CA_ID)
+
+            if idf.empty:
+                # SECOND CHECK: Check if PDF is encoded
+                encoding_result = is_pdf_encoded(pdf_path)
+                if encoding_result != "PDF text is readable and not encoded.":
+                    raise Exception("The PDF appears to be encoded or obfuscated. Please upload a readable PDF.")
+
             name_n_num = explicit_lines if idf.empty else extract_account_details(text)
 
         elif ext == ".csv":
             pdf_path = convert_csv_to_excel(pdf_path, CA_ID)
             df = pd.read_excel(pdf_path)
-            df.loc[0] = df.columns
+            df = pd.concat([pd.DataFrame([df.columns], columns=df.columns), df], ignore_index=True)
             df.columns = range(df.shape[1])
 
             start_index = df.apply(
@@ -334,7 +427,7 @@ def extraction_process(bank, pdf_path, pdf_password, start_date, end_date):
 
         else:
             df = pd.read_excel(pdf_path)
-            df.loc[0] = df.columns
+            df = pd.concat([pd.DataFrame([df.columns], columns=df.columns), df], ignore_index=True)
             df.columns = range(df.shape[1])
 
             start_index = df.apply(
@@ -350,7 +443,7 @@ def extraction_process(bank, pdf_path, pdf_password, start_date, end_date):
 
         if not idf.empty:
             a = validate_bank_statement_returns_error_message(idf)
-            idf = add_start_n_end_date(idf, start_date, end_date, bank)
+            idf = add_start_n_end_date_v2(idf, start_date, end_date, bank)
 
         return idf, name_n_num, a
 
@@ -415,7 +508,7 @@ def extraction_process_explicit_lines(bank, pdf_path, pdf_password, start_date, 
 
             idf, _ = model_for_pdf(df)
 
-        idf = add_start_n_end_date(idf, start_date, end_date, bank)
+        idf = add_start_n_end_date_v2(idf, start_date, end_date, bank)
         name_n_num = extract_account_details(extract_text_from_pdf(pdf_path))
         a = validate_bank_statement_returns_error_message(idf)
 
@@ -2523,12 +2616,10 @@ def make_summary_great_again(df1, opening_closing_balance, df2):
     def filter_non_defaulters(df1, df2):
         for row_number, row in df1.iterrows():
             if row['Total'] == 0:
-                print("FOUND a")
                 category = row.iloc[0]  # Extract Category from first column
                 preference = df2.loc[df2['Category'] == category, 'Preferences'].values
 
                 if len(preference) > 0 and 'non_default' in preference:
-                    print("FOUND z")
                     df1.drop(index=row_number, inplace=True)
 
         df1.reset_index(drop=True, inplace=True)
@@ -2549,7 +2640,11 @@ def summary_sheet(idf, open_bal, close_bal, new_tran_df, new_categories = None):
     opening_closing_balance = {month: [open_bal[month], close_bal[month]] for month in open_bal}
 
     excel_file_path = os.path.join(BASE_DIR, "Final_Category.xlsx")
+
+    logger.info("excel_file_path - ",excel_file_path)
     user_created = os.path.join(BASE_DIR, "Customer_category.xlsx")
+    logger.info("user_created_excel - ",user_created)
+    
     # print("excel_file_path_bruh -",excel_file_path)
         # excel_file_path+user_created
     df2 = pd.read_excel(excel_file_path)

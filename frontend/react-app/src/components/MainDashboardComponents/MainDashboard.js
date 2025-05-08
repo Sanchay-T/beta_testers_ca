@@ -1,22 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { ScrollArea } from "../ui/scroll-area";
 import { Button } from "../ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+
 import RecentReports from "./RecentReports";
-import { Bell, Moon, Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { useTheme } from "../theme-provider";
-import StatsMetricCard from "../Elements/StatsCard";
 import Card1 from "../Elements/Card1";
 import Card2 from "../Elements/Card2";
 import Card3 from "../Elements/Card3";
-import { ResponsiveContainer } from "recharts";
 import { useAuth } from "../../contexts/AuthContext";
 import MSME_Card3 from "../Elements/MSME_Card3";
 import CustomContainer from "./CustomContainer";
@@ -69,26 +60,26 @@ const MainDashboard = ({ handleTabChange }) => {
   //   duration: "all",
   // });
 
-  const notifications = [
-    // {
-    //   id: 1,
-    //   title: "New Message",
-    //   message: "You have a new message from the team.",
-    //   time: "5m ago",
-    // },
-    // {
-    //   id: 2,
-    //   title: "Report Ready",
-    //   message: "Your report is ready to download.",
-    //   time: "10m ago",
-    // },
-    // {
-    //   id: 3,
-    //   title: "Update Available",
-    //   message: "A new version is available.",
-    //   time: "1h ago",
-    // },
-  ];
+  // const notifications = [
+  // {
+  //   id: 1,
+  //   title: "New Message",
+  //   message: "You have a new message from the team.",
+  //   time: "5m ago",
+  // },
+  // {
+  //   id: 2,
+  //   title: "Report Ready",
+  //   message: "Your report is ready to download.",
+  //   time: "10m ago",
+  // },
+  // {
+  //   id: 3,
+  //   title: "Update Available",
+  //   message: "A new version is available.",
+  //   time: "1h ago",
+  // },
+  // ];
 
   const filterPagesDataByDuration = (pagesData, duration) => {
     const endDate = new Date();
@@ -789,7 +780,7 @@ const MainDashboard = ({ handleTabChange }) => {
             </p>
           </div>
           <div className="flex items-center space-x-4">
-            <DropdownMenu>
+            {/* <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="icon" className="relative">
                   <Bell className="h-4 w-4" />
@@ -816,7 +807,7 @@ const MainDashboard = ({ handleTabChange }) => {
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
-            </DropdownMenu>
+            </DropdownMenu> */}
 
             <Button
               variant="ghost"

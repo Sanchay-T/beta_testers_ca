@@ -1,6 +1,6 @@
 {
-  "name": "cyphersol-ats-electron-app",
-  "version": "1.0.1",
+  "name": "cyphersol-electron-app",
+  "version": "1.0.2",
   "description": "CA OFFLINE APP",
   "main": "main.js",
   "icon": "./assets/cyphersol-icon.png",
@@ -128,7 +128,7 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Cyphersol",
-      "deleteAppDataOnUninstall": true,
+      "deleteAppDataOnUninstall": false,
       "artifactName": "${productName}-Setup-${version}.${ext}",
       "uninstallDisplayName": "${productName}",
       "differentialPackage": true,
@@ -173,6 +173,7 @@
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "uuid": "^11.0.5",
-    "xmldom": "^0.6.0"
+    "xmldom": "^0.6.0",
+    "sqlite3": "^5.1.7"
   }
 }

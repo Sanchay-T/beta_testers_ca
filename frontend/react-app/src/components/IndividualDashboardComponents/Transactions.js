@@ -139,7 +139,7 @@ const Transactions = () => {
       const dailyData = processDailyData(monthsData[month]);
       return Object.values(dailyData);
     })
-    .sort((a, b) => new Date(a.date) - new Date(b.date));
+    .sort((a, b) => a.id - b.id);
 
   // useEffect(() => {
   //   console.log({ filteredData });

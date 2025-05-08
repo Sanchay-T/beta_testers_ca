@@ -46,6 +46,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
+  AlertDialogAction,
 } from "../ui/alert-dialog";
 
 import {
@@ -152,10 +153,12 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         }
 
         if (result.data.warning && result.data.warning.length > 0) {
-          const formattedWarnings = result.data.warning.filter((warn) => {
+          const nonEmptyWarnings = result.data.warning.filter((warn) => {
             return warn && warn.trim() !== ""; // Return true for non-empty warnings
           });
-          setWarning(formattedWarnings);
+          const uniqueWarningsSet = new Set(nonEmptyWarnings);
+
+          setWarning([...uniqueWarningsSet]);
         }
         setCurrentCaseId(result.data.caseId); // Store caseId
 
@@ -385,6 +388,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       "In Progress":
         "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100",
       Failed: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100",
+      Deleted: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100",
     };
 
     return (
@@ -401,11 +405,19 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
     try {
       await window.electron.deleteReport(reportId);
 
-      const updatedReports = reportData.recentReportsData.filter(
-        (report) => report.id !== reportId
+      // const updatedReports = reportData.recentReportsData.filter(
+      //   (report) => report.id !== reportId
+      // );
+      // updateReportData({ recentReportsData: updatedReports });
+      const updatedReports = reportData.recentReportsData.map((report) =>
+        report.id === reportId
+          ? { ...report, deleted: 1, status: "Deleted" }
+          : report
       );
-      updateReportData({ recentReportsData: updatedReports });
-
+      updateReportData({
+        ...reportData,
+        recentReportsData: updatedReports,
+      });
       toast({
         title: "Success",
         description: "Report deleted successfully.",
@@ -645,9 +657,13 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       ) {
         setMissingMonthsList(result.data.missingMonthsList);
       }
-
       if (result.data.warning && result.data.warning.length > 0) {
-        setWarning(result.data.warning);
+        const nonEmptyWarnings = result.data.warning.filter((warn) => {
+          return warn && warn.trim() !== ""; // Return true for non-empty warnings
+        });
+        const uniqueWarningsSet = new Set(nonEmptyWarnings);
+
+        setWarning([...uniqueWarningsSet]);
       }
 
       setCurrentCaseId(result.data.caseId); // Store caseId
@@ -1345,344 +1361,370 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {currentReports.map((report, index) => (
-                <TableRow key={report.id}>
-                  <TooltipProvider delayDuration={800}>
-                    {" "}
-                    {/* Reduces delay to 100ms */}
-                    <TableCell>{report.createdAt}</TableCell>
-                    <TableCell>{report.name}</TableCell>
-                    <TableCell>
-                      <StatusBadge status={report.status} />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => handleView(report.id)}
-                              className="h-8 w-8"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>View Report</TooltipContent>
-                        </Tooltip>
+              {currentReports.map((report, index) => {
+                const isDeleted = report.deleted === 1;
 
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() =>
-                                handleAddReport(report.name, report.id)
-                              }
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Add Statements</TooltipContent>
-                        </Tooltip>
+                return (
+                  <TableRow
+                    key={report.id}
+                    className={cn(
+                      isDeleted && "opacity-50 pointer-events-none"
+                    )}
+                  >
+                    <TooltipProvider delayDuration={800}>
+                      {" "}
+                      {/* Reduces delay to 100ms */}
+                      <TableCell>{report.createdAt}</TableCell>
+                      <TableCell>
+                        {/* For deleted reports show only first 3 chars */}
+                        {isDeleted
+                          ? report.name.slice(0, 3) + "***"
+                          : report.name}
+                        {/* {isDeleted && (
+                          <Badge variant="destructive" className="ml-2">
+                            Deleted
+                          </Badge>
+                        )} */}
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge status={report.status} />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => handleView(report.id)}
+                                className="h-8 w-8"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>View Report</TooltipContent>
+                          </Tooltip>
 
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => toggleEdit(report.id, report.name)}
-                              className="h-8 w-8"
-                            >
-                              <Edit2 className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Edit Categories</TooltipContent>
-                        </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() =>
+                                  handleAddReport(report.name, report.id)
+                                }
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Add Statements</TooltipContent>
+                          </Tooltip>
 
-                        <AlertDialog>
-                          <Tooltip key={report.id}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() =>
+                                  toggleEdit(report.id, report.name)
+                                }
+                                className="h-8 w-8"
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Edit Categories</TooltipContent>
+                          </Tooltip>
+
+                          <AlertDialog>
+                            <Tooltip key={report.id}>
+                              <TooltipTrigger asChild>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    onClick={() => setReportToDelete(report.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                              </TooltipTrigger>
+                              <TooltipContent>Delete Report</TooltipContent>
+                            </Tooltip>
+                            <AlertDialogContent className="bg-white dark:bg-slate-950">
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  Delete Report
+                                </AlertDialogTitle>
+                              </AlertDialogHeader>
+                              <div className="py-4 flex gap-3 items-center">
+                                <Checkbox
+                                  id="delete-report"
+                                  checked={isChecked}
+                                  onCheckedChange={(checked) =>
+                                    setIsChecked(checked)
+                                  }
+                                  className="mb-5"
+                                ></Checkbox>
+                                <label
+                                  htmlFor="delete-report"
+                                  className="select-none"
+                                >
+                                  Are you sure you want to delete this report?
+                                  This action cannot be undone.
+                                </label>
+                              </div>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction asChild>
+                                  <Button
+                                    variant="destructive"
+                                    onClick={() => {
+                                      handleDeleteReport(report.id);
+                                      setReportToDelete(null);
+                                    }}
+                                    disabled={!isChecked}
+                                  >
+                                    Delete
+                                  </Button>
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+
+                          <DropdownMenu>
+                            <Tooltip>
+                              <DropdownMenuTrigger asChild>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className={cn(
+                                      "h-8 w-8",
+                                      report.status === "In Progress" &&
+                                        "opacity-50 cursor-not-allowed"
+                                    )}
+                                    disabled={report.status === "In Progress"}
+                                  >
+                                    <Download className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                              </DropdownMenuTrigger>
+                              <TooltipContent>
+                                {report.status === "Pending"
+                                  ? "Download not available while processing"
+                                  : "Download Excel"}
+                              </TooltipContent>
+                            </Tooltip>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                className="cursor-pointer"
+                                onClick={() =>
+                                  handleDownload(
+                                    report.id,
+                                    report.status,
+                                    report.name
+                                  )
+                                }
+                              >
+                                Download Report
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="cursor-pointer"
+                                onClick={() =>
+                                  handleSuspenseDownload(report.id, report.name)
+                                }
+                              >
+                                Download Suspense
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="cursor-pointer"
+                                onClick={() =>
+                                  handleSummaryDownload(
+                                    report.id,
+                                    report.status,
+                                    report.name
+                                  )
+                                }
+                              >
+                                Download Summary
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+
+                          {/* Upload Button */}
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => handleUploadClick(report.id)}
+                                className={cn(
+                                  "h-8 w-8",
+                                  report.status === "In Progress" &&
+                                    "opacity-50 cursor-not-allowed"
+                                )}
+                                disabled={report.status === "In Progress"}
+                              >
+                                <Upload className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              Upload Modified Suspense
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <AlertDialog
+                          open={isHandleDetailsOpenForThisId(report.id)}
+                          onOpenChange={() =>
+                            handleChangeForHandleDetails(report.id)
+                          }
+                        >
+                          <Tooltip>
                             <TooltipTrigger asChild>
                               <AlertDialogTrigger asChild>
                                 <Button
-                                  variant="outline"
+                                  variant="ghost"
                                   size="icon"
-                                  className="h-8 w-8"
-                                  onClick={() => setReportToDelete(report.id)}
+                                  className="h-8 w-8 hover:bg-black/5"
+                                  onClick={() =>
+                                    handleDetails(report.id, report.name)
+                                  }
                                 >
-                                  <Trash2 className="h-4 w-4" />
+                                  <Info className="h-4 w-4" />
                                 </Button>
                               </AlertDialogTrigger>
                             </TooltipTrigger>
-                            <TooltipContent>Delete Report</TooltipContent>
+                            <TooltipContent>Info</TooltipContent>
                           </Tooltip>
-                          <AlertDialogContent className="bg-white dark:bg-slate-950">
+                          <AlertDialogContent className="max-w-2xl bg-white shadow-lg border-0 dark:bg-slate-950">
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Report</AlertDialogTitle>
+                              <AlertDialogTitle className="text-xl font-medium text-black bg-black/[0.03] -mx-6 -mt-6 p-4 border-b border-black/10 dark:bg-slate-900 dark:text-slate-300">
+                                Report Details
+                              </AlertDialogTitle>
                             </AlertDialogHeader>
-                            <div className="py-4 flex gap-3 items-center">
-                              <Checkbox
-                                id="delete-report"
-                                checked={isChecked}
-                                onCheckedChange={(checked) =>
-                                  setIsChecked(checked)
-                                }
-                                className="mb-5"
-                              ></Checkbox>
-                              <label
-                                htmlFor="delete-report"
-                                className="select-none"
-                              >
-                                Are you sure you want to delete this report?
-                                This action cannot be undone.
-                              </label>
-                            </div>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <Button
-                                variant="destructive"
-                                onClick={() => {
-                                  handleDeleteReport(report.id);
-                                  setReportToDelete(null);
-                                }}
-                                disabled={!isChecked}
-                              >
-                                Delete
-                              </Button>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-
-                        <DropdownMenu>
-                          <Tooltip>
-                            <DropdownMenuTrigger asChild>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  className={cn(
-                                    "h-8 w-8",
-                                    report.status === "In Progress" &&
-                                      "opacity-50 cursor-not-allowed"
-                                  )}
-                                  disabled={report.status === "In Progress"}
-                                >
-                                  <Download className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                            </DropdownMenuTrigger>
-                            <TooltipContent>
-                              {report.status === "Pending"
-                                ? "Download not available while processing"
-                                : "Download Excel"}
-                            </TooltipContent>
-                          </Tooltip>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              className="cursor-pointer"
-                              onClick={() =>
-                                handleDownload(
-                                  report.id,
-                                  report.status,
-                                  report.name
-                                )
-                              }
-                            >
-                              Download Report
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="cursor-pointer"
-                              onClick={() =>
-                                handleSuspenseDownload(report.id, report.name)
-                              }
-                            >
-                              Download Suspense
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="cursor-pointer"
-                              onClick={() =>
-                                handleSummaryDownload(
-                                  report.id,
-                                  report.status,
-                                  report.name
-                                )
-                              }
-                            >
-                              Download Summary
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-
-                        {/* Upload Button */}
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => handleUploadClick(report.id)}
-                              className={cn(
-                                "h-8 w-8",
-                                report.status === "In Progress" &&
-                                  "opacity-50 cursor-not-allowed"
-                              )}
-                              disabled={report.status === "In Progress"}
-                            >
-                              <Upload className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            Upload Modified Suspense
-                          </TooltipContent>
-                        </Tooltip>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <AlertDialog
-                        open={isHandleDetailsOpenForThisId(report.id)}
-                        onOpenChange={() =>
-                          handleChangeForHandleDetails(report.id)
-                        }
-                      >
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 hover:bg-black/5"
-                                onClick={() =>
-                                  handleDetails(report.id, report.name)
-                                }
-                              >
-                                <Info className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            View Failed Statements
-                          </TooltipContent>
-                        </Tooltip>
-                        <AlertDialogContent className="max-w-2xl bg-white shadow-lg border-0 dark:bg-slate-950">
-                          <AlertDialogHeader>
-                            <AlertDialogTitle className="text-xl font-medium text-black bg-black/[0.03] -mx-6 -mt-6 p-4 border-b border-black/10 dark:bg-slate-900 dark:text-slate-300">
-                              Report Details
-                            </AlertDialogTitle>
-                          </AlertDialogHeader>
-                          <div className="p-6 overflow-auto max-h-[400px]">
-                            {!failedDatasOfCurrentReport ? (
-                              <div className="text-center py-4">
-                                <Loader2 className="w-8 h-8 animate-spin mx-auto text-gray-400" />
-                                <p className="text-gray-600 mt-2">
-                                  Loading report details...
-                                </p>
-                              </div>
-                            ) : failedDatasOfCurrentReport.length === 0 &&
-                              !report.hasFailedStatements ? (
-                              <div className="text-center py-4">
-                                <div className="text-green-600 font-semibold mb-2">
-                                  Report Processed Successfully
+                            <div className="p-6 overflow-auto max-h-[400px]">
+                              {!failedDatasOfCurrentReport ? (
+                                <div className="text-center py-4">
+                                  <Loader2 className="w-8 h-8 animate-spin mx-auto text-gray-400" />
+                                  <p className="text-gray-600 mt-2">
+                                    Loading report details...
+                                  </p>
                                 </div>
-                                <CheckCircle className="w-8 h-8 text-green-600 mx-auto" />
-                              </div>
-                            ) : (
-                              <div>
-                                {[...failedDatasOfCurrentReport]
-                                  .sort((a, b) => {
-                                    const aHasError = Boolean(
-                                      a.respectiveReasonsForError
-                                    );
-                                    const bHasError = Boolean(
-                                      b.respectiveReasonsForError
-                                    );
-                                    return aHasError === bHasError
-                                      ? 0
-                                      : aHasError
-                                      ? 1
-                                      : -1;
-                                  })
-                                  .map((statement, index) => {
-                                    const isDone = statement.resolved;
-                                    const hasError = Boolean(
-                                      statement.respectiveReasonsForError
-                                    );
-                                    return (
-                                      <div
-                                        key={`statement-${
-                                          statement.id || index
-                                        }`}
-                                        className="mb-4 border-b pb-4 last:border-b-0"
-                                      >
-                                        <h3 className="font-semibold mb-2">
-                                          Failed Statement {index + 1}
-                                        </h3>
-                                        <div className="flex gap-2 items-center">
-                                          <p className="flex-[4.5]">
-                                            <strong>File Name:</strong>{" "}
-                                            {statement.pdfName
-                                              ? statement.pdfName.substring(
-                                                  statement.pdfName.indexOf(
-                                                    "-"
-                                                  ) + 1
-                                                )
-                                              : ""}
-                                          </p>
-                                          {/* {!hasError && ( */}
-                                          {
-                                            <div className="flex-1">
-                                              {report.status === "Success" ||
-                                              isDone ? (
-                                                <Button
-                                                  size="sm"
-                                                  disabled
-                                                  className="w-full bg-green-600 hover:bg-green-700 text-white transition-colors"
-                                                >
-                                                  <CheckCircle className="w-4 h-4 mr-2" />
-                                                  Done
-                                                </Button>
-                                              ) : (
-                                                <Button
-                                                  variant="secondary"
-                                                  size="sm"
-                                                  className="w-full hover:bg-primary hover:text-primary-foreground transition-colors"
-                                                  onClick={() => {
-                                                    setIsMarkerModalOpen(true);
-                                                    setSelectedFailedFile(
-                                                      statement
-                                                    );
-                                                  }}
-                                                >
-                                                  Rectify
-                                                </Button>
-                                              )}
-                                            </div>
-                                          }
-                                        </div>
-                                        {hasError && (
-                                          <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
-                                            <p className="text-red-600 text-sm">
-                                              <strong>Error:</strong>{" "}
-                                              {
-                                                statement.respectiveReasonsForError
-                                              }
+                              ) : failedDatasOfCurrentReport.length === 0 &&
+                                !report.hasFailedStatements ? (
+                                <div className="text-center py-4">
+                                  <div className="text-green-600 font-semibold mb-2">
+                                    Report Processed Successfully
+                                  </div>
+                                  <CheckCircle className="w-8 h-8 text-green-600 mx-auto" />
+                                </div>
+                              ) : (
+                                <div>
+                                  {[...failedDatasOfCurrentReport]
+                                    .sort((a, b) => {
+                                      const aHasError = Boolean(
+                                        a.respectiveReasonsForError
+                                      );
+                                      const bHasError = Boolean(
+                                        b.respectiveReasonsForError
+                                      );
+                                      return aHasError === bHasError
+                                        ? 0
+                                        : aHasError
+                                        ? 1
+                                        : -1;
+                                    })
+                                    .map((statement, index) => {
+                                      const isDone = statement.resolved;
+                                      const hasError = Boolean(
+                                        statement.respectiveReasonsForError
+                                      );
+                                      return (
+                                        <div
+                                          key={`statement-${
+                                            statement.id || index
+                                          }`}
+                                          className="mb-4 border-b pb-4 last:border-b-0"
+                                        >
+                                          <h3 className="font-semibold mb-2">
+                                            Failed Statement {index + 1}
+                                          </h3>
+                                          <div className="flex gap-2 items-center">
+                                            <p className="flex-[4.5]">
+                                              <strong>File Name:</strong>{" "}
+                                              {statement.pdfName
+                                                ? statement.pdfName.substring(
+                                                    statement.pdfName.indexOf(
+                                                      "-"
+                                                    ) + 1
+                                                  )
+                                                : ""}
                                             </p>
-                                            <p className="text-red-500 text-xs mt-1">
-                                              {statement.respectiveReasonsForError
-                                                .toLowerCase()
-                                                .includes("start and end date")
-                                                ? "Please Re-run this statement with correct dates."
-                                                : "Please contact sales for assistance with this issue."}
-                                            </p>
+                                            {/* {!hasError && ( */}
+                                            {
+                                              <div className="flex-1">
+                                                {report.status === "Success" ||
+                                                isDone ? (
+                                                  <Button
+                                                    size="sm"
+                                                    disabled
+                                                    className="w-full bg-green-600 hover:bg-green-700 text-white transition-colors"
+                                                  >
+                                                    <CheckCircle className="w-4 h-4 mr-2" />
+                                                    Done
+                                                  </Button>
+                                                ) : (
+                                                  <Button
+                                                    variant="secondary"
+                                                    size="sm"
+                                                    className="w-full hover:bg-primary hover:text-primary-foreground transition-colors"
+                                                    onClick={() => {
+                                                      setIsMarkerModalOpen(
+                                                        true
+                                                      );
+                                                      setSelectedFailedFile(
+                                                        statement
+                                                      );
+                                                    }}
+                                                  >
+                                                    Rectify
+                                                  </Button>
+                                                )}
+                                              </div>
+                                            }
                                           </div>
-                                        )}
-                                      </div>
-                                    );
-                                  })}
-                              </div>
-                            )}
-                          </div>
-                          <AlertDialogFooter className="border-t border-black/10 pt-6">
-                            {/* {failedDatasOfCurrentReport?.length > 0 &&
+                                          {hasError && (
+                                            <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
+                                              <p className="text-red-600 text-sm">
+                                                <strong>Error:</strong>{" "}
+                                                {
+                                                  statement.respectiveReasonsForError
+                                                }
+                                              </p>
+                                              <p className="text-red-500 text-xs mt-1">
+                                                {statement.respectiveReasonsForError
+                                                  .toLowerCase()
+                                                  .includes(
+                                                    "start and end date"
+                                                  )
+                                                  ? "Please Re-run this statement with correct dates."
+                                                  : "Please contact sales for assistance with this issue."}
+                                              </p>
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                </div>
+                              )}
+                            </div>
+                            <AlertDialogFooter className="border-t border-black/10 pt-6">
+                              {/* {failedDatasOfCurrentReport?.length > 0 &&
                               !report.resolved && (
                                 <div className="flex justify-center">
                                   {report.status === "Success" &&
@@ -1709,40 +1751,43 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                   )}
                                 </div>
                               )} */}
-                            {failedDatasOfCurrentReport?.length > 0 &&
-                              !report.hasFailedStatements &&
-                              report.status === "Failed" && (
-                                <div className="flex justify-center">
-                                  <Button
-                                    type="submit"
-                                    disabled={pdfEditLoading}
-                                    onClick={handleSubmitEditPdf}
-                                    className="relative inline-flex items-center px-4 py-2"
-                                  >
-                                    {pdfEditLoading ? (
-                                      <>
-                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                        <span>Processing...</span>
-                                      </>
-                                    ) : (
-                                      "Submit"
-                                    )}
-                                  </Button>
-                                </div>
-                              )}
-                            <AlertDialogCancel
-                              onClick={() => setIsHandleDetailsDialogOpen(null)}
-                              className="px-8 bg-black text-white hover:bg-black/90 hover:text-white dark:bg-white dark:text-black"
-                            >
-                              Close
-                            </AlertDialogCancel>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </TableCell>
-                  </TooltipProvider>
-                </TableRow>
-              ))}
+                              {failedDatasOfCurrentReport?.length > 0 &&
+                                !report.hasFailedStatements &&
+                                report.status === "Failed" && (
+                                  <div className="flex justify-center">
+                                    <Button
+                                      type="submit"
+                                      disabled={pdfEditLoading}
+                                      onClick={handleSubmitEditPdf}
+                                      className="relative inline-flex items-center px-4 py-2"
+                                    >
+                                      {pdfEditLoading ? (
+                                        <>
+                                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                          <span>Processing...</span>
+                                        </>
+                                      ) : (
+                                        "Submit"
+                                      )}
+                                    </Button>
+                                  </div>
+                                )}
+                              <AlertDialogCancel
+                                onClick={() =>
+                                  setIsHandleDetailsDialogOpen(null)
+                                }
+                                className="px-8 bg-black text-white hover:bg-black/90 hover:text-white dark:bg-white dark:text-black"
+                              >
+                                Close
+                              </AlertDialogCancel>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </TableCell>
+                    </TooltipProvider>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         ) : isLoading ? (
@@ -1802,7 +1847,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       {/* Modal for GenerateReportForm & its changes */}
       {isAddPdfModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-          <div className="bg-white rounded-lg shadow-lg max-w-5xl w-full p-6">
+          <div className="bg-white rounded-lg shadow-lg max-w-5xl w-full p-6 max-h-[90%] overflow-y-auto">
             <header className="flex justify-between items-center">
               <h2 className="text-lg font-semibold">
                 Add Additional Statements
@@ -1898,8 +1943,8 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                 Report {currentCaseName} Generated Successfully!
               </DialogTitle>
             ) : (
-              <DialogTitle className="flex items-end gap-x-2">
-                <AlertTriangle className="text-yellow-500 w-6 h-6 mt-2" />
+              <DialogTitle className="flex items-end gap-x-2 items-center">
+                <AlertTriangle className="text-yellow-500 w-6 h-6" />
                 Some statement had errors.
               </DialogTitle>
             )}
@@ -1981,6 +2026,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
               </Card>
             </div>
           )}
+
           <div className="flex gap-4 sticky w-full p-4  bottom-0 bg-white">
             {showAnalsisButton && (
               <Button onClick={() => viewAnalysis()} className="flex-1">

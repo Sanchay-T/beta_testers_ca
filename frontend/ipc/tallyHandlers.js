@@ -13,6 +13,7 @@ const {
   buildTallyERPLedgerXml,
 } = require("./utils/buildTallyXml");
 const { fetchLedgersForAllCompanies } = require("./utils/getComapnyAndLedgers");
+const { like, where } = require("drizzle-orm");
 
 const { XMLParser } = require("fast-xml-parser");
 const { tallyVoucher } = require("../db/schema/TallyVoucher");
@@ -110,10 +111,11 @@ function registerTallyIpc() {
       } else if (voucherName === "Receipt") {
         xmlContent = buildTallyXmlReceipt(row);
       } else if (voucherName === "Contra") {
+        console.log({ row });
         xmlContent = buildTallyXmlContra(row);
       }
 
-      // log.info({ xmlContent });
+      log.info({ xmlContent });
 
       try {
         const response = await axios.post(tallyPath, xmlContent, {
@@ -127,7 +129,7 @@ function registerTallyIpc() {
         if (lineError) {
           console.error(`Transaction ${row.id} Failed: ${lineError}`);
           log.info({ xmlContent });
-          
+
           failedTransactions.push({ id: row.id, error: lineError });
         } else {
           console.log(`Transaction ${row.id} Successful`);
@@ -275,45 +277,64 @@ function registerTallyIpc() {
     "store-tally-upload",
     async (event, uploadResponse, bankLedger, uploadData) => {
       try {
-        // Prepare the data to be inserted
-        const insertRecords = uploadData.map((transaction) => {
-          // Check if this transaction was successful
-          const isSuccessful = uploadResponse.successIds.includes(
-            transaction.id
-          );
+        const { successIds = [], failedTransactions = [] } = uploadResponse;
+
+        // Normalize failedTransactions into an array of {id,error}
+        const failures = Array.isArray(failedTransactions)
+          ? failedTransactions
+          : Object.entries(failedTransactions).map(([id, error]) => ({
+              id: Number(id),
+              error,
+            }));
+
+        // Helper: parse YYYYMMDD strings into a real JS Date
+        function parseYMD(str) {
+          if (/^\d{8}$/.test(str)) {
+            const y = +str.substring(0, 4);
+            const m = +str.substring(4, 6) - 1; // zero-based month
+            const d = +str.substring(6, 8);
+            return new Date(y, m, d);
+          }
+          return new Date();
+        }
+
+        // Build the bulk insert payload
+        const insertRecords = uploadData.map((tx) => {
+          const success = successIds.includes(tx.id);
+          const failureObj = failures.find((f) => f.id === tx.id);
 
           return {
-            transactionId: transaction.id,
-            effective_date: transaction.effectiveDate
-              ? new Date(transaction.effectiveDate)
-              : new Date(),
-            bill_reference: transaction.billRefernce || "",
-            failed_reason: isSuccessful
+            transactionId: tx.id,
+            effective_date: tx.effectiveDate
+              ? parseYMD(tx.effectiveDate)
+              : null,
+            bill_reference: tx.billRefernce || "",
+            failed_reason: success
               ? ""
-              : JSON.stringify(
-                uploadResponse.failedTransactions.find(
-                  (failed) => failed.id === transaction.id
-                ) || "Unknown failure"
-              ),
+              : failureObj?.error || "Unknown failure",
             bank_ledger: bankLedger || "",
-            result: isSuccessful ? 1 : 0,
+            result: success ? 1 : 0,
             createdAt: new Date(),
           };
         });
 
-        // Batch insert the records
-        const insertedRecords = [];
-        for (const record of insertRecords) {
-          const inserted = await db
-            .insert(tallyVoucher)
-            .values(record)
-            .returning();
-          insertedRecords.push(inserted[0]);
+        // Insert into tallyVoucher
+        const inserted = await db
+          .insert(tallyVoucher)
+          .values(insertRecords)
+          .returning();
+
+        // Now flip the imported flag in your master transactions table
+        if (successIds.length > 0) {
+          await db
+            .update(transactions)
+            .set({ imported: 1 })
+            .where(transactions.transactionId.in(successIds));
         }
 
         return {
           success: true,
-          insertedRecords: insertedRecords,
+          insertedRecords: inserted,
         };
       } catch (error) {
         console.error("Error storing Tally upload:", error);
@@ -413,6 +434,93 @@ function registerTallyIpc() {
       }
     }
   );
+
+  // get opening balance check desription === "Opening Balance"
+  ipcMain.handle("get-opening-balance", async (event, caseId, individualId) => {
+    try {
+      let allTransactions = [];
+
+      // Get all transactions based on caseId or individualId
+      if (individualId !== "combined" && individualId) {
+        console.log("individualId", individualId);
+        allTransactions = await db
+          .select({
+            id: transactions.id,
+            ...transactions,
+          })
+          .from(transactions)
+          .where(
+            and(
+              eq(transactions.statementId, individualId.toString()),
+              like(transactions.description, "openingbalance") // Add description filter for opening balance
+            )
+          );
+        log.info({ openingBalanceTransactions: allTransactions.length });
+      } else {
+        const allStatements = await db
+          .select()
+          .from(statements)
+          .where(eq(statements.caseId, caseId));
+
+        if (allStatements.length === 0) {
+          log.info("No statements found for case:", caseId);
+          return [];
+        }
+
+        allTransactions = await db
+          .select({
+            id: transactions.id,
+            ...transactions,
+          })
+          .from(transactions)
+          .where(
+            and(
+              inArray(
+                transactions.statementId,
+                allStatements.map((stmt) => stmt.id.toString())
+              ),
+              like(transactions.description, "openingbalance") // Add description filter for opening balance
+            )
+          );
+      }
+
+      // Join with the tally_voucher table to get upload status information
+      const openingBalanceTransactions = await Promise.all(
+        allTransactions.map(async (transaction) => {
+          return {
+            amount: transaction.balance,
+            id: transaction.id,
+            description: transaction.description,
+            date: new Date(transaction.date).toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            }),
+          };
+        })
+      );
+
+      log.info(
+        `Found ${openingBalanceTransactions.length} opening balance transactions`
+      );
+      // log.info({ openingBalanceTransactions });
+      // const arryOfOpeningBalances = openingBalanceTransactions.map((t) =>
+      //   t.balance.toFixed(2)
+      // );
+      // log.info({ arryOfOpeningBalances });
+      return {
+        success: true,
+        data: openingBalanceTransactions,
+      };
+    } catch (error) {
+      log.error("Error fetching opening balance transactions:", error);
+      return {
+        success: false,
+        error: error.message,
+      };
+      throw error;
+    }
+  });
 }
 
 module.exports = { registerTallyIpc };

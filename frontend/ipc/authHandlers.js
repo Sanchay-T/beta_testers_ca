@@ -570,6 +570,7 @@ function registerAuthHandlers(userDataPath) {
           } else {
             log.info("License file saved successfully at:", filePath);
             licenseManager.setLicenseInfo(enrichedLicenseData);
+            licenseManager.isActivated = true;
           }
         });
         return { success: true, data: enrichedLicenseData };

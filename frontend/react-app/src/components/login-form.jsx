@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { Checkbox } from "./ui/checkbox";
 
 export function LoginForm({ className, ...props }) {
   const { login, loading, error, isActivated, signUp } = useAuth();
@@ -37,6 +38,7 @@ export function LoginForm({ className, ...props }) {
     role: "CA",
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   // useEffect(() => {
   //   const checkLicenseStatus = async () => {
@@ -46,9 +48,31 @@ export function LoginForm({ className, ...props }) {
 
   //   checkLicenseStatus();
   // }, []);
+  // On mount: load remembered credentials, if any
+  useEffect(() => {
+    const saved = localStorage.getItem("rememberedCredentials");
+    if (saved) {
+      const { email, password } = JSON.parse(saved);
+      setCredentials((c) => ({ ...c, email, password }));
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Save or clear from localStorage
+    if (rememberMe) {
+      localStorage.setItem(
+        "rememberedCredentials",
+        JSON.stringify({
+          email: credentials.email,
+          password: credentials.password,
+        })
+      );
+    } else {
+      localStorage.removeItem("rememberedCredentials");
+    }
 
     let success = false;
     if (!isActivated) {
@@ -157,7 +181,7 @@ export function LoginForm({ className, ...props }) {
                 <Input
                   id="email"
                   type="text"
-                  placeholder="johndoe@example.com"
+                  placeholder="Enter your User Name"
                   required
                   value={credentials.email}
                   onChange={handleInputChange}
@@ -181,6 +205,7 @@ export function LoginForm({ className, ...props }) {
                     required
                     value={credentials.password}
                     onChange={handleInputChange}
+                    placeholder="Enter your password"
                   />
                   <button
                     type="button"
@@ -190,6 +215,17 @@ export function LoginForm({ className, ...props }) {
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="rememberMe"
+                  checked={rememberMe}
+                  onCheckedChange={(checked) => setRememberMe(!!checked)}
+                />
+                <Label htmlFor="rememberMe" className="cursor-pointer">
+                  Remember me
+                </Label>
               </div>
 
               <Button type="submit" className="w-full" disabled={loading}>

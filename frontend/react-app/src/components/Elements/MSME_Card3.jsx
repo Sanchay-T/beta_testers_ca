@@ -43,7 +43,7 @@ const MSME_Card3 = ({
 
   const contactInfo = {
     phone: "+91 8108108800",
-    email: "support@cyphersol.com",
+    email: "support@cyphersol.co.in",
     whatsapp: "+91 8108108800",
   };
 
@@ -56,9 +56,8 @@ const MSME_Card3 = ({
     const subject = "Inquiry about Eligible Cases";
     const body =
       "Hello CypherSOL Team,\n\nI would like to get more information about my eligible cases.\n\nThank you.";
-    window.location.href = `mailto:${
-      contactInfo.email
-    }?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = `mailto:${contactInfo.email
+      }?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
 
   const handleWhatsAppClick = () => {
