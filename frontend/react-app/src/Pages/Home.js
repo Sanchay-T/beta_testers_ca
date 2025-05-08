@@ -138,17 +138,18 @@ const Dashboard = () => {
         <ScrollArea className="w-full">
           <BreadcrumbDynamic items={breadcrumbs} />
           <div className="flex-1 flex flex-col overflow-hidden">
-
             {/* Timer Display */}
-            <div className="mb-4 px-4 sm:px-6">
+            {/* <div className="mb-4 px-4 sm:px-6">
               <TimerDisplay />
-            </div>
+            </div> */}
 
             <main className="flex-1">
               {activeTab === "Dashboard" && (
                 <MainDashboard handleTabChange={handleTabChange} />
               )}
-              {activeTab === "Generate Report" && <ReportGenerator activeTab={activeTab} />}
+              {activeTab === "Generate Report" && (
+                <ReportGenerator activeTab={activeTab} />
+              )}
               {activeTab ===
                 (user.role === "MSME"
                   ? "Loan Eligibility"

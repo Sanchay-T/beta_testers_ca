@@ -1376,7 +1376,10 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                       {/* Reduces delay to 100ms */}
                       <TableCell>{report.createdAt}</TableCell>
                       <TableCell>
-                        {report.name}
+                        {/* For deleted reports show only first 3 chars */}
+                        {isDeleted
+                          ? report.name.slice(0, 3) + "***"
+                          : report.name}
                         {/* {isDeleted && (
                           <Badge variant="destructive" className="ml-2">
                             Deleted

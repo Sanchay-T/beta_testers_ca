@@ -1,12 +1,12 @@
 {
   "name": "cyphersol-electron-app",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "CA OFFLINE APP",
   "main": "main.js",
   "icon": "./assets/cyphersol-icon.png",
   "scripts": {
-    "start": "powershell -Command \"Start-Process cmd -ArgumentList '/k cd /d \\\"C:\\Users\\admin\\Desktop\\CA-Offline\\frontend\\\" && npm run electron' -Verb runAs\"",
-    "start_": "npm run electron",
+    "start_": "powershell -Command \"Start-Process cmd -ArgumentList '/k cd /d \\\"C:\\Users\\admin\\Desktop\\CA-Offline\\frontend\\\" && npm run electron' -Verb runAs\"",
+    "start": "npm run electron",
     "electron": "electron main.js",
     "start:fastapi": "cd ../ && uvicorn backend.main:app --reload --port 7500",
     "start:react": "cd react-app && npm start",

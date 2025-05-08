@@ -17,7 +17,7 @@ import {
 } from "recharts";
 import { TrendingUp, Clock, FileText, ClipboardList } from "lucide-react";
 import clsx from "clsx";
-
+import TimerDisplay from "../TimerDisplay";
 // Loader component: a simple animated spinner using Tailwind classes
 const Loader = () => (
   <div className="flex items-center justify-center h-full">
@@ -108,6 +108,52 @@ const Card2 = ({
   });
   const [localDuration, setLocalDuration] = useState(initialDuration);
   const [isLoading, setIsLoading] = useState(true);
+  const [remainingSeconds, setRemainingSeconds] = useState(null);
+  const [expiryTime, setExpiryTime] = useState(null);
+
+  useEffect(() => {
+    console.log("TimerDisplay mounted");
+    const handleUpdate = (seconds) => {
+      console.log(`Remaining seconds: ${seconds}`);
+      setRemainingSeconds(seconds);
+
+      // Calculate expiry time in local timezone
+      const expiry = new Date(Date.now() + seconds * 1000);
+      console.log(`Expiry time: ${expiry.toLocaleString()}`);
+
+      setExpiryTime(expiry);
+    };
+
+    window.electron?.onRemainingSecondsUpdated(handleUpdate);
+
+    return () => {
+      window.electron?.offRemainingSecondsUpdated(handleUpdate);
+    };
+  }, []);
+
+  useEffect(() => {
+    calculateProgress();
+  }, [userProgress, expiryTime]);
+
+  const calculateProgress = () => {
+    if (userProgress.dateJoined && expiryTime) {
+      const joined = new Date(userProgress.dateJoined);
+      const now = new Date();
+      const totalMs = expiryTime - joined;
+      const elapsedMs = now - joined;
+      const remainingMs = expiryTime - now;
+
+      const totalDays = totalMs / (1000 * 60 * 60 * 24);
+      const remainingDays = Math.ceil(remainingMs / (1000 * 60 * 60 * 24));
+      const progress = Math.min(100, Math.max(0, (elapsedMs / totalMs) * 100));
+
+      setUserProgress((prev) => ({
+        ...prev,
+        remainingDays,
+        progress: Math.round(progress),
+      }));
+    }
+  };
 
   useEffect(() => {
     const fetchUserProgress = async () => {
@@ -118,7 +164,11 @@ const Card2 = ({
           const progress = await window.electron.getProgressed();
           console.log("User Progress:", progress); // Debugging line
           if (!progress.error) {
-            setUserProgress(progress);
+            setUserProgress((prev) => ({
+              ...prev,
+              dateJoined: progress.dateJoined,
+            }));
+            // setUserProgress(progress);
           }
         } catch (error) {
           console.error("Error fetching user progress:", error);
