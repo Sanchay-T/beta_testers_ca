@@ -32,7 +32,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { motion } from "framer-motion";
 import { AdminPermissionPrompt } from "./AdminPermissionPrompt";
-import { CentralDbSetupWizard } from "./CentralDbSetupWizard";
 // import { set } from "react-datepicker/dist/date_utils";
 
 export function LicenseActivationForm({ className, ...props }) {
@@ -64,10 +63,6 @@ export function LicenseActivationForm({ className, ...props }) {
   // Track modal open state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showAdminPrompt, setShowAdminPrompt] = useState(false);
-  // State to control when to show the DB setup wizard
-  const [showDbWizard, setShowDbWizard] = useState(false);
-  // State to track if database connection is activated
-  const [dbActivated, setDbActivated] = useState(false);
 
 
   // Function to close the modal
@@ -83,30 +78,6 @@ export function LicenseActivationForm({ className, ...props }) {
     }
   }, [licenses]);
 
-
-  // Check database connection when component mounts
-  useEffect(() => {
-    const checkDatabaseConnection = async () => {
-      try {
-        // Call to electron to check PostgreSQL connection
-        const dbStatus = await window.electron.db.checkConnection();
-        setDbActivated(dbStatus.connected);
-        
-        // Show DB wizard if DB is not connected, even before login/signup
-        if (!dbStatus.connected) {
-          setShowDbWizard(true);
-        }
-      } catch (err) {
-        console.error("Error checking database connection:", err);
-        setDbActivated(false);
-        
-        // Show DB wizard if there's an error with DB connection
-        setShowDbWizard(true);
-      }
-    };
-    
-    checkDatabaseConnection();
-  }, []); // Run only once at component mount
 
   useEffect(() => {
     if (isActivated) {
@@ -286,12 +257,6 @@ export function LicenseActivationForm({ className, ...props }) {
 
   const handleAccountSetup = async (e) => {
     e.preventDefault();
-    
-    // If DB wizard is already showing, we shouldn't proceed with signup
-    if (showDbWizard) {
-      return;
-    }
-    
     try {
       const success = await signUp({
         email: credentials.email,
@@ -299,10 +264,7 @@ export function LicenseActivationForm({ className, ...props }) {
         role: localStorage.getItem("role") || credentials.role,
       });
       if (success) {
-        // If DB is active, proceed to login step, otherwise the wizard is showing
-        if (dbActivated) {
-          setActivationStep(3);
-        }
+        setActivationStep(3);
       }
     } catch (error) {
       console.error("Account setup failed:", error);
@@ -312,29 +274,22 @@ export function LicenseActivationForm({ className, ...props }) {
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    // If DB wizard is already showing, we shouldn't proceed with login
-    if (showDbWizard) {
-      return;
-    }
-
     try {
-      const result = await login({
+      // console.log("Inside Login");
+      let result = await login({
         email: credentials.email,
         password: credentials.password,
         role: localStorage.getItem("role") || credentials.role,
       });
 
+
+      // console.log("License activation result:", success);
       if (result) {
-        // DB is already checked at component mount, so just navigate if DB is active
-        if (dbActivated) {
-          // Both license and DB are active, navigate to dashboard
-          const from = location.state?.from?.pathname || "/dashboard";
-          navigate(from, { replace: true });
-        }
-        // Otherwise the DB wizard is already showing
+        const from = location.state?.from?.pathname || "/";
+        navigate(from, { replace: true });
       }
-    } catch (err) {
-      console.error("Login error:", err);
+    } catch (error) {
+      console.error("Login failed:", error);
     }
   };
 
@@ -658,34 +613,10 @@ export function LicenseActivationForm({ className, ...props }) {
   // JSX
   // ------------------
 
-  // If DB wizard should be shown, render it instead of the license activation form
-  if (showDbWizard) {
-    return (
-      <CentralDbSetupWizard
-        onComplete={() => {
-          // After DB setup is complete, show the activation form again
-          setDbActivated(true);
-          setShowDbWizard(false);
-          
-          // If user is already authenticated, navigate to dashboard
-          if (isActivated && isSignedUp) {
-            const from = location.state?.from?.pathname || "/dashboard";
-            navigate(from, { replace: true });
-          }
-          // Otherwise, stay on the activation form
-        }}
-      />
-    );
-  }
-  
-  // Otherwise show the normal license activation form
   return (
     <>
       {showAdminPrompt && (
-        <AdminPermissionPrompt
-          onClose={() => setShowAdminPrompt(false)}
-          onRestartAsAdmin={handleRestartAsAdmin}
-        />
+        <AdminPermissionPrompt onRestartAsAdmin={handleRestartAsAdmin} />
       )}
       <motion.div
         className={cn("flex flex-col gap-6 max-w-md mx-auto", className)}
