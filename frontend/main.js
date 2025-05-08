@@ -32,25 +32,25 @@ const log = require("electron-log");
 const portscanner = require("portscanner"); // Import portscanner
 const { autoUpdater } = require("electron-updater");
 const { getdata } = require("./ipc/getData.js");
-const bonjour = require('bonjour')();
-const gatewayServer = require("./InitiateGatewayServer.js")
+const bonjour = require("bonjour")();
+const gatewayServer = require("./InitiateGatewayServer.js");
 const systemInfo = require("./SystemInformation");
 const userDataDir = app.getPath("userData");
 
 // const bonjour = require('bonjour')();
 
-function discoverMdnsServices(serviceType = '', callback) {
+function discoverMdnsServices(serviceType = "", callback) {
   bonjour.find({ type: serviceType }, (service) => {
     const serviceInfo = {
       name: service.name,
       host: service.host,
       ip: service.referer.address,
-      port: service.port
+      port: service.port,
     };
 
     // console.log('🔍 Found service:', serviceInfo);
 
-    if (callback && typeof callback === 'function') {
+    if (callback && typeof callback === "function") {
       callback(serviceInfo);
     }
   });
@@ -204,7 +204,6 @@ autoUpdater.on("error", (err) => {
   win?.webContents.send("update-error", err.message);
 });
 
-
 const BASE_DIR = isDev ? __dirname : process.resourcesPath;
 
 let win = null;
@@ -212,8 +211,6 @@ let splashWindow = null;
 let pythonProcess = null;
 
 const BACKEND_PORT = 5000; // Replace with the port your backend is listening to
-
-
 
 function checkPortAvailability(port) {
   return new Promise((resolve, reject) => {
@@ -234,7 +231,6 @@ function getProductionExecutablePath() {
   };
 
   const executablePath = platformExecutables[process.platform];
-
 
   if (!executablePath || !fs.existsSync(executablePath)) {
     const errorMessage = `Executable not found for platform: ${process.platform}. Path: ${executablePath}`;
@@ -404,7 +400,6 @@ function createProtocol() {
   });
 }
 
-
 function createSplashWindow() {
   splashWindow = new BrowserWindow({
     width: 400,
@@ -422,29 +417,28 @@ function createSplashWindow() {
     },
   });
 
-  const splashPath = path.join(__dirname, '/react-app/splash.html');
+  const splashPath = path.join(__dirname, "/react-app/splash.html");
   splashWindow.loadFile(splashPath);
 
-  splashWindow.once('ready-to-show', () => {
-    log.info("Splashscreen ready to show")
+  splashWindow.once("ready-to-show", () => {
+    log.info("Splashscreen ready to show");
     splashWindow.show();
   });
 
-  splashWindow.on('closed', () => {
-    log.info("Splashscreen closed")
+  splashWindow.on("closed", () => {
+    log.info("Splashscreen closed");
     splashWindow = null;
   });
 }
 
-
 // Add this helper anywhere above createWindow():
 function setupEventListeners(win) {
-  log.info("event listener window: ", win)
+  log.info("event listener window: ", win);
 
   // Listen for remaining seconds updates
-  sessionManager.on('remainingSecondsUpdated', (seconds) => {
+  sessionManager.on("remainingSecondsUpdated", (seconds) => {
     // console.log(`Remaining seconds: ${seconds}`);
-    win.webContents.send('remainingSecondsUpdated', seconds);
+    win.webContents.send("remainingSecondsUpdated", seconds);
   });
 
   // Listen for license expiration
@@ -456,9 +450,7 @@ function setupEventListeners(win) {
     win.webContents.send("navigateToLogin");
     // win?.destroy();
   });
-
 }
-
 
 async function createWindow() {
   win = new BrowserWindow({
@@ -487,7 +479,6 @@ async function createWindow() {
       log.error("Failed to load production build:", err);
     });
   }
-
 
   setupEventListeners(win);
 
@@ -716,7 +707,7 @@ const isPackaged = app.isPackaged;
 // When packaged, resources are unpacked to a different location
 const GATEWAY_EXECUTABLE_DIR = isPackaged
   ? process.resourcesPath // Electron's resources dir in packaged mode
-  : path.join(__dirname, "./gatewayServer")
+  : path.join(__dirname, "./gatewayServer");
 
 console.log("GATEWAY EXECUTABLE DIR:", GATEWAY_EXECUTABLE_DIR);
 
@@ -728,16 +719,16 @@ app.whenReady().then(async () => {
   createSplashWindow();
   // Example usage
   log.info("📡 Discovering services...");
-  discoverMdnsServices('license-server', async (service) => {
-    log.info('📡 Service Found:', service);
+  discoverMdnsServices("license-server", async (service) => {
+    log.info("📡 Service Found:", service);
 
     // Using host (e.g., 'DESKTOP-85MU4TU.license-server.local')
     const healthUrl = `http://${service.name}:${service.port}/api/health`;
     try {
       const response = await fetch(healthUrl, {
         headers: {
-          Accept: 'text/html' // Explicitly request HTML
-        }
+          Accept: "text/html", // Explicitly request HTML
+        },
       });
 
       const html = await response.text();
@@ -747,32 +738,30 @@ app.whenReady().then(async () => {
       console.error("❌ Error fetching health check:", err.message);
     }
 
-
     log.info("\n*********************************************\n");
   });
   // Check if the user sheet exists in the user data directory
   const userSheet = path.join(userDataDir, "Customer_category.xlsx");
-
-  if (!fs.existsSync(userSheet)) {
-    const defaultSheet = path.join(
-      process.resourcesPath,
-      "backend",
-      "main",
-      "_internal",
-      "Customer_category.xlsx"
-    );
-    if (fs.existsSync(defaultSheet)) {
-      await fs.copy(defaultSheet, userSheet);
-      console.log("Initialized user sheet:", userSheet);
-    }
-  }
-
 
   try {
     try {
       const dbManager = databaseManager.getInstance();
       await dbManager.initialize(userDataDir);
       log.info("Database initialized successfully");
+
+      if (!fs.existsSync(userSheet)) {
+        const defaultSheet = path.join(
+          process.resourcesPath,
+          "backend",
+          "main",
+          "_internal",
+          "Customer_category.xlsx"
+        );
+        if (fs.existsSync(defaultSheet)) {
+          await fs.copy(defaultSheet, userSheet);
+          console.log("Initialized user sheet:", userSheet);
+        }
+      }
     } catch (error) {
       log.error("Database initialization failed:", error);
       throw error;
@@ -781,9 +770,8 @@ app.whenReady().then(async () => {
     try {
       const isLicenseValid = await licenseManager.init(app.getPath("userData"));
       log.info("License status: ", isLicenseValid);
-      log.info("License Info Data: ", licenseManager.licenseData)
-    }
-    catch (error) {
+      log.info("License Info Data: ", licenseManager.licenseData);
+    } catch (error) {
       log.error("License initialization failed:", error);
       throw error;
     }
@@ -796,13 +784,11 @@ app.whenReady().then(async () => {
     }
 
     try {
-      gatewayServer.init(GATEWAY_EXECUTABLE_DIR)
-    }
-    catch (error) {
+      gatewayServer.init(GATEWAY_EXECUTABLE_DIR);
+    } catch (error) {
       log.error("GatewayServer initialization failed:", error);
       throw error;
     }
-
 
     // try {
     //   await licenseManager.init();
@@ -811,12 +797,14 @@ app.whenReady().then(async () => {
     //   throw error;
     // }
 
-
     try {
       await systemInfo.loadData(app.getPath("userData"));
       log.info("SystemInfo loaded successfully");
-      log.info("SystemInfo data:", systemInfo.getHostname(), systemInfo.getWindowsUserSID());
-
+      log.info(
+        "SystemInfo data:",
+        systemInfo.getHostname(),
+        systemInfo.getWindowsUserSID()
+      );
     } catch (error) {
       log.error("SystemInfo initialization failed:", error);
       throw error;
@@ -827,8 +815,7 @@ app.whenReady().then(async () => {
     createProtocol();
     createWindow();
 
-
-    win.once('ready-to-show', () => {
+    win.once("ready-to-show", () => {
       splashWindow.close();
       win.show();
     });
@@ -839,7 +826,6 @@ app.whenReady().then(async () => {
       log.error("Python initialization failed:", error);
       throw error;
     }
-
 
     // Initial update check after 1 minute
     if (!isDev) {
