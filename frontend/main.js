@@ -138,9 +138,8 @@ autoUpdater.on("update-available", (info) => {
     .showMessageBox({
       type: "info",
       title: "Update Available",
-      message: `A new version (${
-        info.version
-      }) is available. Your current version is ${app.getVersion()}.\n\nWould you like to download it now?`,
+      message: `A new version (${info.version
+        }) is available. Your current version is ${app.getVersion()}.\n\nWould you like to download it now?`,
       detail: info.releaseNotes
         ? `Release Notes:\n${info.releaseNotes}`
         : undefined,
@@ -434,7 +433,6 @@ function createSplashWindow() {
 
 // Add this helper anywhere above createWindow():
 function setupEventListeners(win) {
-  log.info("event listener window: ", win);
 
   // Listen for remaining seconds updates
   sessionManager.on("remainingSecondsUpdated", (seconds) => {
