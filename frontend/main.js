@@ -717,29 +717,7 @@ app.whenReady().then(async () => {
   log.info("App is ready", userDataDir);
 
   createSplashWindow();
-  // Example usage
-  log.info("📡 Discovering services...");
-  discoverMdnsServices("license-server", async (service) => {
-    log.info("📡 Service Found:", service);
 
-    // Using host (e.g., 'DESKTOP-85MU4TU.license-server.local')
-    const healthUrl = `http://${service.name}:${service.port}/api/health`;
-    try {
-      const response = await fetch(healthUrl, {
-        headers: {
-          Accept: "text/html", // Explicitly request HTML
-        },
-      });
-
-      const html = await response.text();
-
-      console.log("✅ Health Check Response:\n", html);
-    } catch (err) {
-      console.error("❌ Error fetching health check:", err.message);
-    }
-
-    log.info("\n*********************************************\n");
-  });
   // Check if the user sheet exists in the user data directory
   const userSheet = path.join(userDataDir, "Customer_category.xlsx");
 
