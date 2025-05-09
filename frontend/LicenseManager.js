@@ -87,20 +87,38 @@ class LicenseManager {
             const response = await axios.post(
                 `http://${gatewayIp}:${gatewayPort}/api/license/validate-session`,
                 payload,
-                { headers: { "Content-Type": "application/json" } }
+                { headers: { "Content-Type": "application/json" }, timeout: 3000 },
             );
             const result = response.data;
             log.info("Session validation result:", result);
             return result;
         } catch (err) {
-            log.error("Failed to validate session:", err.message);
-            // If the error does not include a response (e.g. network error), log and fallback.
-            if (!err.response) {
-                log.warn("Server not reachable. Fallback activated: Not activating license due to unreachable validation server.");
-                return { success: false, message: "Server not reachable. Please try again later." };
+            if (err.code === 'ECONNABORTED') {
+                log.error("Request timed out while validating session.", err.code);
+                return {
+                    success: false,
+                    message: "Request timed out. Please ensure the validation server is responsive."
+                };
             }
-            // Otherwise, return the error details.
-            return { success: false, message: "Session validation error: " + err.response.statusText };
+
+            if (!err.response) {
+                log.error("Network error during session validation:", err.code);
+                log.warn("Fallback activated: Not activating license due to unreachable validation server.");
+                return {
+                    success: false,
+                    message: "Validation server is not reachable. Please try again later."
+                };
+            }
+
+            // Server responded with a status code outside the 2xx range
+            const statusCode = err.response.status;
+            const statusText = err.response.statusText || 'Unknown error';
+            log.error(`Server returned an error during session validation: [${statusCode}] ${statusText}`);
+
+            return {
+                success: false,
+                message: `Session validation failed with status ${statusCode}: ${statusText}`
+            };
         }
     }
 
