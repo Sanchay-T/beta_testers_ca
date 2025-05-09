@@ -1,0 +1,94 @@
+2025-05-09 10:05:38.650 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:05:38.743 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:06:08.814 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:06:08.814 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:06:39.915 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:06:39.915 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:07:09.967 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:07:09.967 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:07:40.036 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:07:40.036 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:08:10.166 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:08:10.166 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:08:42.273 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:08:42.273 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:09:12.332 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:09:12.332 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:09:42.407 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:09:42.407 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:10:12.437 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:10:12.437 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:10:42.482 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:10:42.482 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:11:12.525 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:11:12.525 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:11:42.607 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:11:42.607 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:12:12.689 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:12:12.689 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:12:42.741 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:12:42.741 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:13:12.798 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:13:12.798 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:13:42.839 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:13:42.839 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:14:13.038 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:14:13.038 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:14:43.071 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:14:43.071 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:15:14.218 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:15:14.218 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:15:44.314 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:15:44.314 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:16:14.425 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:16:14.425 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:16:44.474 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:16:44.474 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:17:14.611 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:17:14.612 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:17:44.652 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:17:44.652 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:18:14.871 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:18:14.871 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:18:44.937 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:18:44.938 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:19:15.827 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:19:15.827 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:19:45.911 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:19:45.911 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:20:16.040 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:20:16.040 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:20:46.079 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:20:46.079 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:21:16.188 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:21:16.188 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:21:46.327 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:21:46.327 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:22:16.377 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:22:16.378 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:22:46.463 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:22:46.463 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:23:16.507 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:23:16.507 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:23:46.584 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:23:46.584 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:24:16.635 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:24:16.636 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:24:46.707 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:24:46.707 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:25:16.747 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:25:16.748 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:25:47.838 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:25:47.838 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:26:17.887 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:26:17.887 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:26:48.994 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:26:48.994 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:27:19.081 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:27:19.081 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:27:49.140 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:27:49.140 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:28:19.213 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:28:19.213 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-05-09 10:28:50.338 +05:30 [WRN] [License Polling] Status: NotFound
+2025-05-09 10:28:50.338 +05:30 [WRN] [License Polling] Failed to resync license.
