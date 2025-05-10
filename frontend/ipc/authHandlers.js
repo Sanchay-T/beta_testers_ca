@@ -83,6 +83,7 @@ function discoverMdnsServices(serviceType = '', timeout = 5000) {
     // Handle possible errors
     browser.on('error', (err) => {
       browser.stop();
+      log.error("Error in DiscoverMdnsServices : ", err)
       reject(err);
     });
 

@@ -157,6 +157,7 @@ export function LicenseActivationForm({ className, ...props }) {
   };
 
   const handleNetworkLicenseSearch = async (e) => {
+    setActivationStatus("processing");  
     e.preventDefault();
     setIsNetworkSearching(true);
 
