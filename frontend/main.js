@@ -734,7 +734,7 @@ app.whenReady().then(async () => {
           "Customer_category.xlsx"
         );
         if (fs.existsSync(defaultSheet)) {
-          await fs.copy(defaultSheet, userSheet);
+          fs.copyFileSync(defaultSheet, userSheet);
           console.log("Initialized user sheet:", userSheet);
         }
       }
