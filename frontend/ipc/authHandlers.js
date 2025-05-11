@@ -14,6 +14,7 @@ const path = require("path");
 const { encryptData, decryptData } = require("../CryptoHandler"); // your crypto module
 const fs = require("fs");
 const gatewayServer = require("../InitiateGatewayServer")
+const dgram = require('dgram');
 
 
 log.info("License manager process.env.NODE_ENV", process.env.NODE_ENV);
@@ -50,6 +51,57 @@ async function waitUntilServerIsReady(url, timeout = 10000, interval = 500) {
 }
 
 
+
+/**
+ * Discover license servers using UDP broadcast as a fallback.
+ * @param {number} timeout - Time in milliseconds to wait for responses (default: 3000).
+ * @returns {Promise<Array>} - Resolves with an array of discovered services.
+ */
+function discoverUdpBroadcastServices(timeout = 3000) {
+  return new Promise((resolve) => {
+    const BROADCAST_PORT = 41234;
+    const BROADCAST_MESSAGE = Buffer.from("DISCOVER_LICENSE_SERVER");
+    const discoveredServices = [];
+    const client = dgram.createSocket('udp4');
+
+    client.bind(() => {
+      client.setBroadcast(true);
+
+      // Listen for responses
+      client.on('message', (msg, rinfo) => {
+        try {
+          const data = JSON.parse(msg.toString());
+
+          const serviceInfo = {
+            name: data.host || "Unknown",
+            host: data.host,
+            ip: data.ip,
+            port: data.port
+          };
+
+          // Deduplicate services based on IP and port
+          if (!discoveredServices.some(s => s.ip === serviceInfo.ip && s.port === serviceInfo.port)) {
+            discoveredServices.push(serviceInfo);
+          }
+        } catch (err) {
+          log.error("Invalid UDP response format:", err);
+        }
+      });
+
+      // Send broadcast message
+      client.send(BROADCAST_MESSAGE, 0, BROADCAST_MESSAGE.length, BROADCAST_PORT, '255.255.255.255');
+
+      // Wait for responses then close
+      setTimeout(() => {
+        client.close();
+        resolve(discoveredServices);
+      }, timeout);
+    });
+  });
+}
+
+
+
 /**
  * Discover mDNS services by type.
  * @param {string} serviceType - The type of service to discover (required).
@@ -82,6 +134,7 @@ function discoverMdnsServices(serviceType = '', timeout = 5000) {
 
     // Handle possible errors
     browser.on('error', (err) => {
+
       browser.stop();
       log.error("Error in DiscoverMdnsServices : ", err)
       reject(err);
@@ -478,8 +531,13 @@ function registerAuthHandlers(userDataPath) {
     try {
       // Determine service type (default to "license" if not provided)
       const serviceType = networkLicense?.serviceType || "license-server";
+      let discoveredServices = [];
+
       // Discover services via mDNS
-      const discoveredServices = await discoverMdnsServices(serviceType, 5000);
+      // discoveredServices = await discoverMdnsServices(serviceType, 5000);
+      if (discoveredServices.length === 0) {
+        discoveredServices = await discoverUdpBroadcastServices(3000);
+      }
       log.info("Discovered services:", discoveredServices);
       const validatedServices = [];
       const now = Date.now() / 1000; // current time in seconds
