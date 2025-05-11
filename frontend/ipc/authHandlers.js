@@ -75,7 +75,7 @@ function discoverUdpBroadcastServices(timeout = 3000) {
           const serviceInfo = {
             name: data.host || "Unknown",
             host: data.host,
-            ip: data.ip,
+            ip: rinfo.address,
             port: data.port
           };
 
