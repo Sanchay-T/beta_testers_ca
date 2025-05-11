@@ -15,6 +15,8 @@ const { encryptData, decryptData } = require("../CryptoHandler"); // your crypto
 const fs = require("fs");
 const gatewayServer = require("../InitiateGatewayServer")
 const dgram = require('dgram');
+const os = require('os');
+const ip = require('ip'); // You need to install this via: npm install ip
 
 
 log.info("License manager process.env.NODE_ENV", process.env.NODE_ENV);
@@ -49,6 +51,26 @@ async function waitUntilServerIsReady(url, timeout = 10000, interval = 500) {
   }
   throw new Error("Gateway server did not respond in time.");
 }
+
+
+function getBroadcastAddress() {
+  const interfaces = os.networkInterfaces();
+
+  for (const name in interfaces) {
+    for (const iface of interfaces[name]) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        const localIP = iface.address;
+        const subnetMask = iface.netmask;
+        const broadcastIP = ip.subnet(localIP, subnetMask).broadcastAddress;
+
+        return broadcastIP;
+      }
+    }
+  }
+
+  throw new Error('No active network interface found.');
+}
+
 
 
 
@@ -88,9 +110,14 @@ function discoverUdpBroadcastServices(timeout = 3000) {
         }
       });
 
-      // Send broadcast message
-      client.send(BROADCAST_MESSAGE, 0, BROADCAST_MESSAGE.length, BROADCAST_PORT, '255.255.255.255');
 
+      // Send broadcast message
+      try {
+        const broadcastIP = getBroadcastAddress();
+        client.send(BROADCAST_MESSAGE, 0, BROADCAST_MESSAGE.length, BROADCAST_PORT, broadcastIP);
+      } catch (err) {
+        console.error("Error calculating broadcast address:", err);
+      }
       // Wait for responses then close
       setTimeout(() => {
         client.close();
