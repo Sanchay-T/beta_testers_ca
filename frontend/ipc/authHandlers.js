@@ -490,7 +490,7 @@ function registerAuthHandlers(userDataPath) {
           // Construct the validation URL (assuming the endpoint is /api/validate-license)
           const url = `http://${service.ip}:${service.port}/api/validate-license`;
           // Send a POST request (empty body or you can add required data)
-          const response = await axios.post(url, {});
+          const response = await axios.post(url, { timeout: 3000 });
 
           // Check response validity:
           // Assume a valid response has response.data.status === "OK"
