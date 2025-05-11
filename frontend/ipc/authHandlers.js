@@ -17,6 +17,9 @@ const gatewayServer = require("../InitiateGatewayServer")
 const dgram = require('dgram');
 const os = require('os');
 const ip = require('ip'); // You need to install this via: npm install ip
+// const { gateway } = require('default-gateway');
+const si = require('systeminformation');
+
 
 
 log.info("License manager process.env.NODE_ENV", process.env.NODE_ENV);
@@ -53,24 +56,38 @@ async function waitUntilServerIsReady(url, timeout = 10000, interval = 500) {
 }
 
 
-function getBroadcastAddress() {
-  const interfaces = os.networkInterfaces();
 
-  for (const name in interfaces) {
-    for (const iface of interfaces[name]) {
-      if (iface.family === 'IPv4' && !iface.internal) {
-        const localIP = iface.address;
-        const subnetMask = iface.netmask;
-        const broadcastIP = ip.subnet(localIP, subnetMask).broadcastAddress;
+async function getBroadcastAddress() {
+  try {
+    // Get network interface details
+    const networkInterfaces = await si.networkInterfaces();
 
-        return broadcastIP;
-      }
+    // Find the default interface (the one with 'default: true')
+    const defaultInterface = networkInterfaces.find(iface => iface.default);
+
+    if (!defaultInterface) {
+      throw new Error('No default interface found.');
     }
+
+    // Log the default interface details for debugging
+    console.log(`Default Interface: ${defaultInterface.ifaceName}`);
+    console.log(`IP: ${defaultInterface.ip4}`);
+    console.log(`Subnet: ${defaultInterface.ip4subnet}`);
+
+    // Calculate the broadcast address based on the default interface's IP and subnet mask
+    const localIP = defaultInterface.ip4;
+    const subnetMask = defaultInterface.ip4subnet;
+
+    // Calculate the broadcast address using the 'ip' package
+    const broadcastIP = ip.subnet(localIP, subnetMask).broadcastAddress;
+
+    console.log(`Broadcast Address: ${broadcastIP}`);
+    return broadcastIP;
+
+  } catch (error) {
+    console.error('Error calculating broadcast address:', error);
   }
-
-  throw new Error('No active network interface found.');
 }
-
 
 
 
@@ -112,12 +129,14 @@ function discoverUdpBroadcastServices(timeout = 3000) {
 
 
       // Send broadcast message
-      try {
-        const broadcastIP = getBroadcastAddress();
+      getBroadcastAddress().then((broadcastIP) => {
+        log.info("Broadcast IP : ", broadcastIP);
         client.send(BROADCAST_MESSAGE, 0, BROADCAST_MESSAGE.length, BROADCAST_PORT, broadcastIP);
-      } catch (err) {
-        console.error("Error calculating broadcast address:", err);
-      }
+
+      }).catch((err) => {
+        log.error("Error calculating broadcast address:", err);
+      });
+
       // Wait for responses then close
       setTimeout(() => {
         client.close();
