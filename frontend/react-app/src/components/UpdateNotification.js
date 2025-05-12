@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { toast } from '../hooks/use-toast';
+import React, { useEffect, useState } from "react";
+import { toast } from "../hooks/use-toast";
 
 const UpdateNotification = () => {
-  const [updateStatus, setUpdateStatus] = useState('idle');
+  const [updateStatus, setUpdateStatus] = useState("idle");
   const [progress, setProgress] = useState(0);
   const { updates } = window.electron;
 
@@ -11,10 +11,12 @@ const UpdateNotification = () => {
     updates.onUpdateStatus((status, info) => {
       // console.log('Update status:', status, info);
       setUpdateStatus(status);
-      if (status === 'available') {
+      if (status === "available") {
         toast({
           title: "Update Available",
-          description: `A new version (${info?.version || 'unknown'}) is available. Would you like to download it?`,
+          description: `A new version (${
+            info?.version || "unknown"
+          }) is available. Would you like to download it?`,
           action: (
             <button
               onClick={() => updates.downloadUpdate()}
@@ -39,10 +41,12 @@ const UpdateNotification = () => {
     });
     updates.onUpdateDownloaded((info) => {
       // console.log('Update downloaded:', info);
-      setUpdateStatus('ready');
+      setUpdateStatus("ready");
       toast({
         title: "Update Ready",
-        description: `Version ${info?.version || 'unknown'} has been downloaded and will be installed on restart`,
+        description: `Version ${
+          info?.version || "unknown"
+        } has been downloaded and will be installed on restart`,
         action: (
           <button
             onClick={() => updates.installUpdate()}
@@ -56,12 +60,12 @@ const UpdateNotification = () => {
     });
 
     updates.onUpdateError((error) => {
-      setUpdateStatus('error');
-      toast({
-        title: "Update Error",
-        description: error,
-        variant: "destructive",
-      });
+      setUpdateStatus("error");
+      // toast({
+      //   title: "Update Error",
+      //   description: error,
+      //   variant: "destructive",
+      // });
     });
 
     // Check for updates initially
@@ -71,11 +75,11 @@ const UpdateNotification = () => {
     return () => updates.removeUpdateListeners();
   }, []);
 
-  if (updateStatus === 'idle' || updateStatus === 'checking') {
+  if (updateStatus === "idle" || updateStatus === "checking") {
     return null;
   }
 
-  if (updateStatus === 'downloading') {
+  if (updateStatus === "downloading") {
     return (
       <div className="fixed bottom-4 right-4 bg-background border rounded-lg shadow-lg p-4 max-w-sm">
         <h3 className="text-sm font-medium">Downloading Update</h3>
@@ -85,7 +89,9 @@ const UpdateNotification = () => {
             style={{ width: `${progress}%` }}
           />
         </div>
-        <p className="mt-1 text-xs text-muted-foreground">{progress.toFixed(1)}%</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {progress.toFixed(1)}%
+        </p>
       </div>
     );
   }
