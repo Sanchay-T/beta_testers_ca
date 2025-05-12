@@ -354,7 +354,7 @@ async function startPythonExecutable() {
       log.info("Setting working directory to:", options.cwd);
 
       options.env = {
-        // ...process.env,/
+        ...process.env,
         PYTHONIOENCODING: "utf-8",
       };
     }
