@@ -137,8 +137,9 @@ autoUpdater.on("update-available", (info) => {
     .showMessageBox({
       type: "info",
       title: "Update Available",
-      message: `A new version (${info.version
-        }) is available. Your current version is ${app.getVersion()}.\n\nWould you like to download it now?`,
+      message: `A new version (${
+        info.version
+      }) is available. Your current version is ${app.getVersion()}.\n\nWould you like to download it now?`,
       detail: info.releaseNotes
         ? `Release Notes:\n${info.releaseNotes}`
         : undefined,
@@ -432,7 +433,6 @@ function createSplashWindow() {
 
 // Add this helper anywhere above createWindow():
 function setupEventListeners(win) {
-
   // Listen for remaining seconds updates
   sessionManager.on("remainingSecondsUpdated", (seconds) => {
     // console.log(`Remaining seconds: ${seconds}`);
@@ -718,7 +718,10 @@ app.whenReady().then(async () => {
 
   // Check if the user sheet exists in the user data directory
   const userSheet = path.join(userDataDir, "Customer_category.xlsx");
-
+  options.env = {
+    ...process.env,
+    CUSTOMER_SHEET_PATH: userSheet,
+  };
   try {
     try {
       const dbManager = databaseManager.getInstance();
@@ -733,9 +736,18 @@ app.whenReady().then(async () => {
           "_internal",
           "Customer_category.xlsx"
         );
-        if (fs.existsSync(defaultSheet)) {
-          fs.copyFileSync(defaultSheet, userSheet);
-          console.log("Initialized user sheet:", userSheet);
+
+        if (!fs.existsSync(userSheet)) {
+          if (fs.existsSync(defaultSheet)) {
+            // Make sure the folder exists
+            fs.mkdirSync(path.dirname(userSheet), { recursive: true });
+
+            // Copy the default into userData
+            fs.copyFileSync(defaultSheet, userSheet);
+            console.log("Copied default user sheet to userData:", userSheet);
+          } else {
+            console.error("Bundled sheet not found at:", defaultSheet);
+          }
         }
       }
     } catch (error) {
