@@ -271,6 +271,35 @@ async function startPythonExecutable() {
       stdio: "pipe",
     };
 
+    // Check if the user sheet exists in the user data directory
+    const userSheet = path.join(userDataDir, "Customer_category.xlsx");
+    options.env = {
+      ...process.env,
+      CUSTOMER_SHEET_PATH: userSheet,
+    };
+    if (!fs.existsSync(userSheet)) {
+      const defaultSheet = path.join(
+        process.resourcesPath,
+        "backend",
+        "main",
+        "_internal",
+        "Customer_category.xlsx"
+      );
+
+      if (!fs.existsSync(userSheet)) {
+        if (fs.existsSync(defaultSheet)) {
+          // Make sure the folder exists
+          fs.mkdirSync(path.dirname(userSheet), { recursive: true });
+
+          // Copy the default into userData
+          fs.copyFileSync(defaultSheet, userSheet);
+          console.log("Copied default user sheet to userData:", userSheet);
+        } else {
+          console.error("Bundled sheet not found at:", defaultSheet);
+        }
+      }
+    }
+
     if (isDev) {
       // Development mode code remains the same
       const venvPythonPath =
@@ -716,40 +745,11 @@ app.whenReady().then(async () => {
 
   createSplashWindow();
 
-  // Check if the user sheet exists in the user data directory
-  const userSheet = path.join(userDataDir, "Customer_category.xlsx");
-  options.env = {
-    ...process.env,
-    CUSTOMER_SHEET_PATH: userSheet,
-  };
   try {
     try {
       const dbManager = databaseManager.getInstance();
       await dbManager.initialize(userDataDir);
       log.info("Database initialized successfully");
-
-      if (!fs.existsSync(userSheet)) {
-        const defaultSheet = path.join(
-          process.resourcesPath,
-          "backend",
-          "main",
-          "_internal",
-          "Customer_category.xlsx"
-        );
-
-        if (!fs.existsSync(userSheet)) {
-          if (fs.existsSync(defaultSheet)) {
-            // Make sure the folder exists
-            fs.mkdirSync(path.dirname(userSheet), { recursive: true });
-
-            // Copy the default into userData
-            fs.copyFileSync(defaultSheet, userSheet);
-            console.log("Copied default user sheet to userData:", userSheet);
-          } else {
-            console.error("Bundled sheet not found at:", defaultSheet);
-          }
-        }
-      }
     } catch (error) {
       log.error("Database initialization failed:", error);
       throw error;
