@@ -54,10 +54,10 @@ def load_new_first_page_function(pdf_document):
     are found together downwards. If not found on the first page, checks the second and third pages,
     then terminates if not found. Keeps some distance above the line containing the keywords.
     """
-    date_pattern = re.compile(r'\b(date|value date|value)\b', re.IGNORECASE)
-    balance_pattern = re.compile(r'\b(balance|total amount)\b', re.IGNORECASE)
+    date_pattern = re.compile(r'\b(date|value date|value|transaction date)\b', re.IGNORECASE)
+    balance_pattern = re.compile(r'\b(balance|total amount|bal)\b', re.IGNORECASE)
 
-    for page_num in range(min(4, len(pdf_document))):  # Check up to the first three pages
+    for page_num in range(min(11, len(pdf_document))):  # Check up to the first three pages
         page = pdf_document[page_num]  # Load the page
         text_blocks = page.get_text("blocks")  # Extract text blocks
 
@@ -478,7 +478,7 @@ def parse_date(date_string):
 def extract_date_col_from_df(df):
     date_col = []
     for column in df.columns:
-        for index, value in df[column].head(60).items():
+        for index, value in df[column].head(200).items():
             parsed_date = parse_date(str(value))
             if parsed_date:
                 date_col.append(column)
@@ -500,10 +500,11 @@ def find_desc_column(df, date_cols):
         "narration", "arration", "rration", "narrati", "narrat",
         "particular", "articular", "rticular", "particul",
         "detail", "remark", "remar", "emark", "naration",
+        "transaction reference", "transaction ref", "references"
     ]
 
     # Iterate over each row
-    for index, row in df.head(60).iterrows():
+    for index, row in df.head(90).iterrows():
         # Iterate over each column in the row
         for column_number, cell in enumerate(row):
             if column_number in date_cols:
@@ -521,7 +522,7 @@ def find_debit_column(df, desc_col, date_col, bal_column):
     keywords = ["withdraw", "debit", "dr amount", "withdr", "dr", "withdrawal"]
 
     # Iterate over each row
-    for index, row in df.head(60).iterrows():
+    for index, row in df.head(90).iterrows():
         # Iterate over each column in the row
         for column_number, cell in enumerate(row):
             if column_number in desc_col or column_number in date_col or column_number in bal_column:
@@ -541,7 +542,7 @@ def find_credit_column(df, desc_col, date_col, bal_column):
     keywords = ["deposit", "credit", "cr amount", "depo", "cr"]
 
     # Iterate over each row
-    for index, row in df.head(60).iterrows():
+    for index, row in df.head(90).iterrows():
         # Iterate over each column in the row
         for column_number, cell in enumerate(row):
             if column_number in desc_col or column_number in date_col or column_number in bal_column:
@@ -561,7 +562,7 @@ def find_balance_column(df, desc_col, date_col):
     keywords = ["balance", "total amount", "ance", "bal", "bala"]
 
     # Iterate over each row
-    for index, row in df.head(60).iterrows():
+    for index, row in df.head(90).iterrows():
         # Iterate over each column in the row
         for column_number, cell in enumerate(row):
             if column_number in desc_col or column_number in date_col:
@@ -785,8 +786,8 @@ def credit_debit(df, description_column, date_column, bal_column, same_column):
 
 def crdr_to_credit_debit_columns(df, description_column, date_column, bal_column, amount_column, keyword_column):
     # Vectorized assignment of Debit and Credit columns|\+|\-
-    debit_keywords = r'(?i)^(DR|Debit|dr|debit|D|\-|D\.)$'
-    credit_keywords = r'(?i)^(CR|Credit|cr|credit|C|\+|C\.)$'
+    debit_keywords = r'(?i)^(DR|DR.|Debit|dr|dr.|debit|D|\-|D\.)$'
+    credit_keywords = r'(?i)^(CR|CR.|Credit|cr|cr.|credit|C|\+|C\.)$'
 
     # Update the Debit and Credit columns
     df['Debit'] = np.where(df[keyword_column].str.contains(debit_keywords, regex=True, na=False), df[amount_column], 0)
