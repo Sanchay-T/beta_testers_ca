@@ -256,11 +256,11 @@ function registerAuthHandlers(userDataPath) {
 
       if (error.response && error.response.data.errorCode === "session-not-available") {
         log.info("Login error:", error.message, error.response.data);
-        return { success: false, message: "Your session has expired. Please use a license from the network." };
+        return { success: false, error: "Your session has expired. Please use a license from the network.", errorCode: "session-not-available" };
       }
       else {
         log.info("Login error:", error.message, error.response.data);
-        return { success: false, message: "An unexpected error occurred" };
+        return { success: false, error: "An unexpected error occurred" };
       }
     }
   });
@@ -579,12 +579,27 @@ function registerAuthHandlers(userDataPath) {
       const serviceType = networkLicense?.serviceType || "license-server";
       let discoveredServices = [];
 
-      // Discover services via mDNS
-      // discoveredServices = await discoverMdnsServices(serviceType, 5000);
-      if (discoveredServices.length === 0) {
-        discoveredServices = await discoverUdpBroadcastServices(3000);
+      // Run both discoveries in parallel
+      const [mdnsServices, udpServices] = await Promise.all([
+        discoverMdnsServices(serviceType, 5000),
+        discoverUdpBroadcastServices(5000)
+      ]);
+
+
+      if (mdnsServices.length >= udpServices.length) {
+        discoveredServices = mdnsServices;
+        if (mdnsServices.length === 0) {
+          log.info("No services found via either mDNS or UDP.");
+        } else {
+          log.info(`Using mDNS results (${mdnsServices.length} services).`);
+        }
+      } else {
+        discoveredServices = udpServices;
+        log.info(`Using UDP broadcast results (${udpServices.length} services).`);
       }
-      log.info("Discovered services:", discoveredServices);
+      log.info("Final discovered services:", discoveredServices);
+
+      // log.info("Discovered services:", discoveredServices);
       const validatedServices = [];
       const now = Date.now() / 1000; // current time in seconds
 

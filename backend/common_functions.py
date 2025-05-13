@@ -49,6 +49,10 @@ logger.info("Base Dir : ", BASE_DIR)
 import json
 from .code_for_extraction import extract_text_from_pdf, extract_with_test_cases, model_for_pdf, extract_dataframe_from_pdf, validate_bank_statement_returns_error_message, is_pdf_encoded
 
+CUSTOMER_SHEET_PATH = os.environ.get(
+    "CUSTOMER_SHEET_PATH",
+    os.path.join(BASE_DIR, "Customer_category.xlsx"),
+)
 ##EXTRACTION PROCESS
 def extract_text_from_file(file_path):
 
@@ -468,7 +472,7 @@ def extraction_process_explicit_lines(bank, pdf_path, pdf_password, start_date, 
 
         all_null = all(label[1] == "null" for label in labels)
 
-        if not all_null:
+        if not all_null and not df.empty:
             new_row = [None] * len(df.columns)  # Create a blank row with the same number of columns
             for index, label_type in labels:
                 if index < len(new_row):
@@ -1245,7 +1249,9 @@ def category_add_ca(df):
             df[col] = df[col].str.lower()
     df["Description"] = df["Description"].str.replace(" ", "")
     excel_file_path = os.path.join(BASE_DIR, "Final_Category.xlsx")
-    excel2 = os.path.join(BASE_DIR, "Customer_category.xlsx")
+    print("CUSTOMER_SHEET_PATH from common_function category_add_ca - ",CUSTOMER_SHEET_PATH)
+    excel2 = CUSTOMER_SHEET_PATH
+    # excel2 = os.path.join(BASE_DIR, "Customer_category.xlsx")
     df1 = pd.read_excel(excel_file_path)
     df2_additional = pd.read_excel(excel2)
     df2 = pd.concat([df1, df2_additional], ignore_index=True)
@@ -2642,7 +2648,10 @@ def summary_sheet(idf, open_bal, close_bal, new_tran_df, new_categories = None):
     excel_file_path = os.path.join(BASE_DIR, "Final_Category.xlsx")
 
     logger.info("excel_file_path - ",excel_file_path)
-    user_created = os.path.join(BASE_DIR, "Customer_category.xlsx")
+    print("CUSTOMER_SHEET_PATH from common_function summary_sheet - ",CUSTOMER_SHEET_PATH)
+    
+    # user_created = os.path.join(BASE_DIR, "Customer_category.xlsx")
+    user_created = CUSTOMER_SHEET_PATH
     logger.info("user_created_excel - ",user_created)
     
     # print("excel_file_path_bruh -",excel_file_path)

@@ -137,8 +137,9 @@ autoUpdater.on("update-available", (info) => {
     .showMessageBox({
       type: "info",
       title: "Update Available",
-      message: `A new version (${info.version
-        }) is available. Your current version is ${app.getVersion()}.\n\nWould you like to download it now?`,
+      message: `A new version (${
+        info.version
+      }) is available. Your current version is ${app.getVersion()}.\n\nWould you like to download it now?`,
       detail: info.releaseNotes
         ? `Release Notes:\n${info.releaseNotes}`
         : undefined,
@@ -270,6 +271,35 @@ async function startPythonExecutable() {
       stdio: "pipe",
     };
 
+    // Check if the user sheet exists in the user data directory
+    const userSheet = path.join(userDataDir, "Customer_category.xlsx");
+    options.env = {
+      ...process.env,
+      CUSTOMER_SHEET_PATH: userSheet,
+    };
+    if (!fs.existsSync(userSheet)) {
+      const defaultSheet = path.join(
+        process.resourcesPath,
+        "backend",
+        "main",
+        "_internal",
+        "Customer_category.xlsx"
+      );
+
+      if (!fs.existsSync(userSheet)) {
+        if (fs.existsSync(defaultSheet)) {
+          // Make sure the folder exists
+          fs.mkdirSync(path.dirname(userSheet), { recursive: true });
+
+          // Copy the default into userData
+          fs.copyFileSync(defaultSheet, userSheet);
+          console.log("Copied default user sheet to userData:", userSheet);
+        } else {
+          console.error("Bundled sheet not found at:", defaultSheet);
+        }
+      }
+    }
+
     if (isDev) {
       // Development mode code remains the same
       const venvPythonPath =
@@ -324,7 +354,7 @@ async function startPythonExecutable() {
       log.info("Setting working directory to:", options.cwd);
 
       options.env = {
-        // ...process.env,/
+        ...process.env,
         PYTHONIOENCODING: "utf-8",
       };
     }
@@ -432,7 +462,6 @@ function createSplashWindow() {
 
 // Add this helper anywhere above createWindow():
 function setupEventListeners(win) {
-
   // Listen for remaining seconds updates
   sessionManager.on("remainingSecondsUpdated", (seconds) => {
     // console.log(`Remaining seconds: ${seconds}`);
@@ -716,28 +745,11 @@ app.whenReady().then(async () => {
 
   createSplashWindow();
 
-  // Check if the user sheet exists in the user data directory
-  const userSheet = path.join(userDataDir, "Customer_category.xlsx");
-
   try {
     try {
       const dbManager = databaseManager.getInstance();
       await dbManager.initialize(userDataDir);
       log.info("Database initialized successfully");
-
-      if (!fs.existsSync(userSheet)) {
-        const defaultSheet = path.join(
-          process.resourcesPath,
-          "backend",
-          "main",
-          "_internal",
-          "Customer_category.xlsx"
-        );
-        if (fs.existsSync(defaultSheet)) {
-          fs.copyFileSync(defaultSheet, userSheet);
-          console.log("Initialized user sheet:", userSheet);
-        }
-      }
     } catch (error) {
       log.error("Database initialization failed:", error);
       throw error;
