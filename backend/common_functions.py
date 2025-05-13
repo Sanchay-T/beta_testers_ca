@@ -487,7 +487,7 @@ def extraction_process_explicit_lines(bank, pdf_path, pdf_password, start_date, 
 
         all_null = all(label[1] == "null" for label in labels)
 
-        if not all_null:
+        if not all_null and not df.empty:
             new_row = [None] * len(df.columns)  # Create a blank row with the same number of columns
             for index, label_type in labels:
                 if index < len(new_row):
