@@ -271,35 +271,6 @@ async function startPythonExecutable() {
       stdio: "pipe",
     };
 
-    // Check if the user sheet exists in the user data directory
-    const userSheet = path.join(userDataDir, "Customer_category.xlsx");
-    options.env = {
-      ...process.env,
-      CUSTOMER_SHEET_PATH: userSheet,
-    };
-    if (!fs.existsSync(userSheet)) {
-      const defaultSheet = path.join(
-        process.resourcesPath,
-        "backend",
-        "main",
-        "_internal",
-        "Customer_category.xlsx"
-      );
-
-      if (!fs.existsSync(userSheet)) {
-        if (fs.existsSync(defaultSheet)) {
-          // Make sure the folder exists
-          fs.mkdirSync(path.dirname(userSheet), { recursive: true });
-
-          // Copy the default into userData
-          fs.copyFileSync(defaultSheet, userSheet);
-          console.log("Copied default user sheet to userData:", userSheet);
-        } else {
-          console.error("Bundled sheet not found at:", defaultSheet);
-        }
-      }
-    }
-
     if (isDev) {
       // Development mode code remains the same
       const venvPythonPath =
@@ -347,15 +318,42 @@ async function startPythonExecutable() {
       }
 
       command = executablePath;
-      args = [];
 
       // Set working directory to the executable's directory
       options.cwd = path.dirname(executablePath);
       log.info("Setting working directory to:", options.cwd);
 
+      // Check if the user sheet exists in the user data directory
+      const userSheet = path.join(userDataDir, "Customer_category.xlsx");
+      args = ["--customer-sheet-path", userSheet];
+
+      if (!fs.existsSync(userSheet)) {
+        const defaultSheet = path.join(
+          process.resourcesPath,
+          "backend",
+          "main",
+          "_internal",
+          "Customer_category.xlsx"
+        );
+
+        if (!fs.existsSync(userSheet)) {
+          if (fs.existsSync(defaultSheet)) {
+            // Make sure the folder exists
+            fs.mkdirSync(path.dirname(userSheet), { recursive: true });
+
+            // Copy the default into userData
+            fs.copyFileSync(defaultSheet, userSheet);
+            console.log("Copied default user sheet to userData:", userSheet);
+          } else {
+            console.error("Bundled sheet not found at:", defaultSheet);
+          }
+        }
+      }
+
       options.env = {
-        ...process.env,
+        ...options.env,
         PYTHONIOENCODING: "utf-8",
+        CUSTOMER_SHEET_PATH: userSheet,
       };
     }
 

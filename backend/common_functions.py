@@ -48,11 +48,26 @@ logger.info("Base Dir : ", BASE_DIR)
 #from old_bank_extractions import CustomStatement
 import json
 from .code_for_extraction import extract_text_from_pdf, extract_with_test_cases, model_for_pdf, extract_dataframe_from_pdf, validate_bank_statement_returns_error_message, is_pdf_encoded
+import  argparse
 
-CUSTOMER_SHEET_PATH = os.environ.get(
-    "CUSTOMER_SHEET_PATH",
-    os.path.join(BASE_DIR, "Customer_category.xlsx"),
+p = argparse.ArgumentParser()
+p.add_argument(
+    "--customer-sheet-path",
+    default=os.path.join(BASE_DIR, "Customer_category.xlsx"),
 )
+args = p.parse_args()
+
+# CUSTOMER_SHEET_PATH = os.environ.get(
+#     "CUSTOMER_SHEET_PATH",
+#     os.path.join(BASE_DIR, "Customer_category.xlsx"),
+# )
+CUSTOMER_SHEET_PATH = args.customer_sheet_path
+
+print("aiyaz CUSTOMER_SHEET_PATH from env = ",os.environ.get(
+    "CUSTOMER_SHEET_PATH") )
+
+
+print("aiyaz CUSTOMER_SHEET_PATH from ARG = ",CUSTOMER_SHEET_PATH) 
 ##EXTRACTION PROCESS
 def extract_text_from_file(file_path):
 
