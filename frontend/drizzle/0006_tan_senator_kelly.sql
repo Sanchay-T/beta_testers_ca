@@ -1,0 +1,1 @@
+ALTER TABLE `cases` ADD `name` text NOT NULL;

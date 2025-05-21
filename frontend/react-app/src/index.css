@@ -1,0 +1,160 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 47.4% 11.2%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 47.4% 11.2%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 210 40% 98%;
+    --ring: 215 20.2% 65.1%;
+    --radius: 0.5rem;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+    --chart-1: 217.2 91.2% 59.8%; /* blue-500 */
+    --chart-2: 0 90.6% 70.8%; /* red-400 */
+    --chart-3: 215 20.2% 65.1%; /* slate-400 */
+    --chart-4: 45.9 96.7% 64.5%; /* amber-300 */
+    --chart-5: 158.1 64.4% 51.6%; /* emerald-400 */
+    --chart-6: 328.6 85.5% 70.2%; /* pink-400 */
+    --chart-7: 270 95.2% 75.3%; /* purple-400 */
+    --chart-8: 27 96% 61%; /* orange-400 */
+    --chart-9: 187.9 85.7% 53.3%; /* cyan-400 */
+    --chart-10: 82.7 78% 55.5%; /* lime-400 */
+    --chart-11: 292 91.4% 72.5% /* fuchsia-400 */;
+    --chart-12: 174.7 83.9% 31.6% /* teal-600 */;
+  }
+
+  .dark {
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
+    --muted: 223 47% 11%;
+    --muted-foreground: 215.4 16.3% 56.9%;
+    --accent: 216 34% 17%;
+    --accent-foreground: 210 40% 98%;
+    --popover: 224 71% 4%;
+    --popover-foreground: 215 20.2% 65.1%;
+    --border: 216 34% 17%;
+    --input: 216 34% 17%;
+    --card: 224 71% 4%;
+    --card-foreground: 213 31% 91%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 1.2%;
+    --secondary: 222.2 47.4% 11.2%;
+    --secondary-foreground: 210 40% 98%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+    --ring: 216 34% 17%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+    --chart-2: 0 84.2% 60.2%; /* red-500 */
+    --chart-1: 188.7 94.5% 42.7%; /* cyan-500 */
+    --chart-3: 215.4 16.3% 46.9%; /* slate-500 */
+    --chart-4: 43.3 96.4% 56.3%; /* amber-400 */
+    --chart-8: 160.1 84.1% 39.4%; /* emerald-500 */
+    --chart-6: 330.4 81.2% 60.4%; /* pink-500 */
+    --chart-7: 270.7 91% 65.1%; /* purple-500 */
+    --chart-5: 24.6 95% 53.1%; /* orange-500 */
+    --chart-9: 217.2 91.2% 59.8%; /* blue-500 */
+    --chart-10: 83.7 80.5% 44.3%; /* lime-500 */
+    --chart-11: 292.2 84.1% 60.6% /* fuchsia-500 */;
+    --chart-12: 174.7 83.9% 31.6% /* teal-600 */;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply font-sans;
+  }
+}
+
+@keyframes wave {
+  0% {
+    transform: translateX(-50%) translateY(0) rotate(0deg);
+    border-radius: 50%;
+  }
+  50% {
+    transform: translateX(-30%) translateY(-2%) rotate(180deg);
+    border-radius: 45%;
+  }
+  100% {
+    transform: translateX(-50%) translateY(0) rotate(360deg);
+    border-radius: 50%;
+  }
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-wave {
+  animation: wave 8s linear infinite;
+}
+.animate-wave-slow {
+  animation: wave 12s linear infinite;
+}
+.animate-wave-slower {
+  animation: wave 15s linear infinite;
+}
+.animate-fadeIn {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+@keyframes scale-check {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-scale-check {
+  animation: scale-check 0.3s ease-in-out;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
