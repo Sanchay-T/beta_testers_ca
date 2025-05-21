@@ -973,7 +973,7 @@ def extract_dataframe_from_pdf(page_path, table_settings):
         df_total = df_total._append(table, ignore_index=True)
         df_total.replace({r"\n": " "}, regex=True, inplace=True)
         print(f"on page:{i}/{len(pdf.pages)}")
-    w = df_total.drop_duplicates()
+    w = df_total.copy()
     # rage_path = pdf_path.split(".")[0]
     # w.to_excel(f"raw_dataframe_{rage_path}.xlsx")
     return w
