@@ -10,6 +10,7 @@ const fs = require("fs");
 const { registerOpenFileIpc } = require("./ipc/fileHandler.js");
 require("dotenv").config();
 const path = require("path");
+const { v4: uuidv4 } = require("uuid");
 const {
   registerIndividualDashboardIpc,
 } = require("./ipc/individualDashboard.js");
@@ -39,6 +40,9 @@ const userDataDir = app.getPath("userData");
 
 // const bonjour = require('bonjour')();
 
+// Add this variable for the progress window
+let progressWindow = null;
+
 function discoverMdnsServices(serviceType = "", callback) {
   bonjour.find({ type: serviceType }, (service) => {
     const serviceInfo = {
@@ -59,6 +63,17 @@ function discoverMdnsServices(serviceType = "", callback) {
 // Configure electron-log
 log.transports.console.level = "debug"; // Set the log level
 log.transports.file.level = "info"; // Only log info level and above in the log file
+
+// Set up detailed logging for updates
+log.transports.file.fileName = 'cyphersol.log';
+log.info('===========================================');
+log.info(`Application starting - Version ${app.getVersion()}`);
+log.info(`User data directory: ${userDataDir}`);
+log.info(`Platform: ${process.platform}`);
+log.info(`Arch: ${process.arch}`);
+log.info(`Node version: ${process.versions.node}`);
+log.info(`Electron version: ${process.versions.electron}`);
+log.info('===========================================');
 
 // Configure autoUpdater logging
 autoUpdater.logger = log;
@@ -106,9 +121,16 @@ autoUpdater.allowPrerelease = false;
 autoUpdater.setFeedURL({
   provider: "github",
   owner: "Shama-Cyphersol",
-  repo: "ca-offline-suite",
+  repo: "beta_testers_ca",
   token: process.env.GH_TOKEN,
 });
+
+// Log token status (without exposing the token)
+if (!process.env.GH_TOKEN) {
+  log.error("GH_TOKEN is not set! Updates will not work properly.");
+} else {
+  log.info("GH_TOKEN is configured properly for updates.");
+}
 
 // Add version tracking
 let lastCheckedVersion = null;
@@ -139,25 +161,61 @@ autoUpdater.on("update-available", (info) => {
       title: "Update Available",
       message: `A new version (${
         info.version
-      }) is available. Your current version is ${app.getVersion()}.\n\nWould you like to download it now?`,
+      }) is available. Your current version is ${app.getVersion()}.`,
       detail: info.releaseNotes
         ? `Release Notes:\n${info.releaseNotes}`
         : undefined,
-      buttons: ["Download Now", "Later"],
+      buttons: ["Update Now", "Later"],
       defaultId: 0,
     })
     .then(({ response }) => {
       if (response === 0) {
         log.info("User accepted download");
-        autoUpdater.downloadUpdate();
-
-        // Show progress dialog
-        dialog.showMessageBox({
-          type: "info",
-          title: "Downloading Update",
-          message: "The update is being downloaded",
-          buttons: ["OK"],
+        
+        // Create progress window
+        progressWindow = new BrowserWindow({
+          width: 400,
+          height: 100,
+          frame: false,
+          resizable: false,
+          center: true,
+          alwaysOnTop: true,
+          show: true,
+          webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false
+          }
         });
+        
+        progressWindow.loadURL(`data:text/html,
+          <html>
+            <body style="margin:0;padding:10px;font-family:Arial;background:#f5f5f5;">
+              <h3 style="margin:5px 0;">Downloading Update...</h3>
+              <div style="width:100%;background:#ddd;height:20px;border-radius:10px;">
+                <div id="progress" style="width:0%;background:#4CAF50;height:20px;border-radius:10px;"></div>
+              </div>
+              <p id="percent" style="text-align:center;">0%</p>
+            </body>
+          </html>
+        `);
+        
+        // Backup database before update
+        const dbPath = path.join(userDataDir, "database.sqlite");
+        const backupDir = path.join(userDataDir, "backups");
+        
+        if (!fs.existsSync(backupDir)) {
+          fs.mkdirSync(backupDir, { recursive: true });
+        }
+        
+        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+        const backupPath = path.join(backupDir, `db-backup-${timestamp}.sqlite`);
+        
+        if (fs.existsSync(dbPath)) {
+          fs.copyFileSync(dbPath, backupPath);
+          log.info("Database backup created successfully");
+        }
+        
+        autoUpdater.downloadUpdate();
       }
     });
 });
@@ -171,6 +229,13 @@ autoUpdater.on("update-not-available", (info) => {
 autoUpdater.on("download-progress", (progress) => {
   log.info(`Download progress: ${progress.percent}%`);
   win?.setProgressBar(progress.percent / 100);
+  
+  if (progressWindow) {
+    progressWindow.webContents.executeJavaScript(`
+      document.getElementById('progress').style.width = '${progress.percent}%';
+      document.getElementById('percent').innerText = '${Math.round(progress.percent)}%';
+    `).catch(err => log.error('Error updating progress:', err));
+  }
 });
 
 // Add flag for tracking update status
@@ -179,22 +244,32 @@ let isUpdating = false;
 autoUpdater.on("update-downloaded", (info) => {
   log.info("Update downloaded. Version:", info.version);
   win?.setProgressBar(-1); // Remove progress bar
+  
+  if (progressWindow) {
+    progressWindow.close();
+    progressWindow = null;
+  }
 
   dialog
     .showMessageBox({
       type: "info",
       title: "Update Ready",
-      message: "The update has been downloaded successfully.",
-      detail: "The application will restart to install the update.",
-      buttons: ["Restart Now", "Later"],
+      message: "Update downloaded successfully!",
+      detail: "The application will restart now to apply the update.",
+      buttons: ["Restart Now"],
       defaultId: 0,
     })
-    .then(({ response }) => {
-      if (response === 0) {
-        log.info("User accepted install");
-        isUpdating = true; // Set flag before restart
-        autoUpdater.quitAndInstall(false, true);
-      }
+    .then(() => {
+      // Set updating flag BEFORE calling quitAndInstall 
+      // This ensures session confirmation dialog is skipped
+      isUpdating = true;
+      sessionManager.logoutUser(); // Properly logout the user
+      
+      // Create a file flag to check if update succeeded
+      const updateFlagPath = path.join(app.getPath("userData"), "update-success.txt");
+      fs.writeFileSync(updateFlagPath, info.version);
+      
+      autoUpdater.quitAndInstall(true, true);
     });
 });
 
@@ -489,7 +564,7 @@ async function createWindow() {
     },
     icon: path.join(__dirname, "assets", "cyphersol-icon.png"),
     autoHideMenuBar: true,
-    title: isDev ? "CypherSol Dev" : "CypherSol",
+    title: isDev ? `CypherSol Dev v${app.getVersion()}` : `CypherSol v${app.getVersion()}`,
   });
   if (isDev) {
     win.loadURL("http://localhost:3000");
@@ -751,6 +826,27 @@ app.whenReady().then(async () => {
     } catch (error) {
       log.error("Database initialization failed:", error);
       throw error;
+    }
+
+    // Check if we just updated
+    const updateFlagPath = path.join(app.getPath("userData"), "update-success.txt");
+    if (fs.existsSync(updateFlagPath)) {
+      try {
+        const version = fs.readFileSync(updateFlagPath, 'utf8');
+        fs.unlinkSync(updateFlagPath); // Remove the flag file
+        
+        // Show success message after app fully loads
+        setTimeout(() => {
+          dialog.showMessageBox({
+            type: "info",
+            title: "Update Successful",
+            message: `Successfully updated to version ${app.getVersion()}`,
+            buttons: ["OK"]
+          });
+        }, 2000);
+      } catch (err) {
+        log.error("Error reading update flag:", err);
+      }
     }
 
     try {

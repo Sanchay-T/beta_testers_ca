@@ -1,6 +1,6 @@
 {
   "name": "cyphersol-electron-app",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "CA OFFLINE APP",
   "main": "main.js",
   "icon": "./assets/cyphersol-icon.png",
@@ -49,7 +49,7 @@
     "publish": {
       "provider": "github",
       "owner": "Shama-Cyphersol",
-      "repo": "ca-offline-suite",
+      "repo": "beta_testers_ca",
       "private": true,
       "releaseType": "release"
     },
