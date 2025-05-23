@@ -4,10 +4,25 @@ const path = require("path");
 const { exec } = require("child_process");
 require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
 
-const isDev = process.env.NODE_ENV === "development";
+// Use the global AppConfig object if available
+const getIsDev = () => {
+  if (global.AppConfig && global.AppConfig.isDev !== undefined) {
+    return global.AppConfig.isDev;
+  }
+  return process.env.NODE_ENV === "development";
+};
+
+const getBaseDir = () => {
+  if (global.AppConfig && global.AppConfig.baseDir !== undefined) {
+    return global.AppConfig.baseDir;
+  }
+  return getIsDev() ? __dirname : process.resourcesPath;
+};
+
+const isDev = getIsDev();
 log.info("process.env.NODE_ENV", process.env.NODE_ENV);
 // log.info("DB App userData path : ", app.getPath("userData"));
-const BASE_DIR = isDev ? __dirname : process.resourcesPath;
+const BASE_DIR = getBaseDir();
 const drizzleConfigPath = path.resolve(__dirname, "../drizzle.config.js");
 log.info("drizzleConfigPath", drizzleConfigPath);
 

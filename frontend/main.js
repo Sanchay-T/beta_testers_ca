@@ -38,7 +38,25 @@ const gatewayServer = require("./InitiateGatewayServer.js");
 const systemInfo = require("./SystemInformation");
 const userDataDir = app.getPath("userData");
 
-// const bonjour = require('bonjour')();
+// -------------------------------------------------------------
+// Initialise global configuration EARLY so all subsequently
+// required local modules can rely on it without throwing
+// ReferenceError (e.g. "isDev is not defined").
+// -------------------------------------------------------------
+
+global.AppConfig = {
+  // Flag that indicates whether we are running in development
+  // or inside the packaged application.
+  isDev: process.env.NODE_ENV === "development",
+
+  // Resolve the base directory based on the environment.
+  get baseDir() {
+    return this.isDev ? __dirname : process.resourcesPath;
+  },
+
+  // Expose Electron's user-data directory for convenient reuse.
+  userDataDir,
+};
 
 // Add this variable for the progress window
 let progressWindow = null;
@@ -79,9 +97,6 @@ log.info('===========================================');
 autoUpdater.logger = log;
 autoUpdater.logger.transports.file.level = "info";
 
-// Instead of electron-is-dev, we'll use this simple check
-const isDev = process.env.NODE_ENV === "development";
-
 // Configure autoUpdater for testing without code signing
 autoUpdater.autoDownload = false;
 autoUpdater.disableWebInstaller = true;
@@ -109,7 +124,7 @@ log.info("Update Configuration:", {
 log.info("process.env.NODE_ENV", process.env.NODE_ENV);
 
 // Allow updates without code signing in development
-if (isDev) {
+if (global.AppConfig.isDev) {
   autoUpdater.forceDevUpdateConfig = true;
 }
 
@@ -172,32 +187,96 @@ autoUpdater.on("update-available", (info) => {
       if (response === 0) {
         log.info("User accepted download");
         
-        // Create progress window
+        // Create progress window - FIXING THE BLANK WINDOW ISSUE
+        if (progressWindow) {
+          progressWindow.close();
+          progressWindow = null;
+        }
+        
         progressWindow = new BrowserWindow({
           width: 400,
-          height: 100,
+          height: 120,
           frame: false,
           resizable: false,
           center: true,
           alwaysOnTop: true,
-          show: true,
+          show: false, // Don't show until loaded
           webPreferences: {
             nodeIntegration: true,
             contextIsolation: false
           }
         });
         
-        progressWindow.loadURL(`data:text/html,
+        // Use a more reliable way to load the progress UI
+        const progressHtml = `
+          <!DOCTYPE html>
           <html>
-            <body style="margin:0;padding:10px;font-family:Arial;background:#f5f5f5;">
-              <h3 style="margin:5px 0;">Downloading Update...</h3>
-              <div style="width:100%;background:#ddd;height:20px;border-radius:10px;">
-                <div id="progress" style="width:0%;background:#4CAF50;height:20px;border-radius:10px;"></div>
+            <head>
+              <meta charset="UTF-8">
+              <title>Downloading Update</title>
+              <style>
+                body {
+                  font-family: Arial, sans-serif;
+                  margin: 0;
+                  padding: 15px;
+                  background-color: #f5f5f5;
+                  user-select: none;
+                  -webkit-user-select: none;
+                }
+                h3 {
+                  margin: 5px 0 10px 0;
+                  font-size: 14px;
+                }
+                .container {
+                  width: 100%;
+                  background: #ddd;
+                  height: 20px;
+                  border-radius: 10px;
+                  overflow: hidden;
+                  margin-bottom: 10px;
+                }
+                #progress-bar {
+                  width: 0%;
+                  height: 100%;
+                  background: linear-gradient(90deg, #0072ff, #00c6ff);
+                  border-radius: 10px;
+                  transition: width 0.3s ease;
+                }
+                #percent-text {
+                  text-align: center;
+                  font-size: 12px;
+                }
+                .status {
+                  color: #666;
+                  font-size: 12px;
+                  text-align: center;
+                }
+              </style>
+            </head>
+            <body>
+              <h3>Downloading Update...</h3>
+              <div class="container">
+                <div id="progress-bar"></div>
               </div>
-              <p id="percent" style="text-align:center;">0%</p>
+              <div id="percent-text">0%</div>
+              <div class="status">This window will close when download completes</div>
+              <script>
+                // Function that can be called from the main process
+                window.updateProgress = function(percent) {
+                  document.getElementById('progress-bar').style.width = percent + '%';
+                  document.getElementById('percent-text').innerText = Math.round(percent) + '%';
+                };
+              </script>
             </body>
           </html>
-        `);
+        `;
+        
+        // Load directly using data URL instead of temp file to avoid file system issues
+        progressWindow.loadURL("data:text/html;charset=utf-8," + encodeURIComponent(progressHtml));
+        
+        progressWindow.once('ready-to-show', () => {
+          progressWindow.show();
+        });
         
         // Backup database before update
         const dbPath = path.join(userDataDir, "database.sqlite");
@@ -230,11 +309,20 @@ autoUpdater.on("download-progress", (progress) => {
   log.info(`Download progress: ${progress.percent}%`);
   win?.setProgressBar(progress.percent / 100);
   
-  if (progressWindow) {
-    progressWindow.webContents.executeJavaScript(`
-      document.getElementById('progress').style.width = '${progress.percent}%';
-      document.getElementById('percent').innerText = '${Math.round(progress.percent)}%';
-    `).catch(err => log.error('Error updating progress:', err));
+  if (progressWindow && !progressWindow.isDestroyed()) {
+    try {
+      // Use the more reliable method to update progress
+      progressWindow.webContents.executeJavaScript(`
+        if (window.updateProgress) {
+          window.updateProgress(${progress.percent});
+        } else {
+          document.getElementById('progress-bar').style.width = '${progress.percent}%';
+          document.getElementById('percent-text').innerText = '${Math.round(progress.percent)}%';
+        }
+      `).catch(err => log.error('Error updating progress:', err));
+    } catch (err) {
+      log.error('Error updating progress window:', err);
+    }
   }
 });
 
@@ -245,7 +333,7 @@ autoUpdater.on("update-downloaded", (info) => {
   log.info("Update downloaded. Version:", info.version);
   win?.setProgressBar(-1); // Remove progress bar
   
-  if (progressWindow) {
+  if (progressWindow && !progressWindow.isDestroyed()) {
     progressWindow.close();
     progressWindow = null;
   }
@@ -255,11 +343,78 @@ autoUpdater.on("update-downloaded", (info) => {
       type: "info",
       title: "Update Ready",
       message: "Update downloaded successfully!",
-      detail: "The application will restart now to apply the update.",
+      detail: "The application will restart now to apply the update. This may take a moment, please wait.",
       buttons: ["Restart Now"],
       defaultId: 0,
     })
     .then(() => {
+      // Show installation in progress dialog to prevent multiple clicks
+      const installingWindow = new BrowserWindow({
+        width: 400,
+        height: 120,
+        frame: false,
+        resizable: false,
+        center: true,
+        alwaysOnTop: true,
+        show: false,
+        webPreferences: {
+          nodeIntegration: true,
+          contextIsolation: false
+        }
+      });
+      
+      const installHtml = `
+        <html>
+          <head>
+            <meta charset="UTF-8">
+            <title>Installing Update</title>
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 15px;
+                background-color: #f5f5f5;
+                user-select: none;
+              }
+              h3 {
+                margin: 5px 0;
+                font-size: 14px;
+              }
+              .loader {
+                border: 4px solid #f3f3f3;
+                border-top: 4px solid #3498db;
+                border-radius: 50%;
+                width: 30px;
+                height: 30px;
+                margin: 15px auto;
+                animation: spin 2s linear infinite;
+              }
+              @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+              }
+              .message {
+                text-align: center;
+                font-size: 12px;
+                color: #666;
+                margin-top: 10px;
+              }
+            </style>
+          </head>
+          <body>
+            <h3>Installing Update...</h3>
+            <div class="loader"></div>
+            <div class="message">Please wait while the application restarts</div>
+          </body>
+        </html>
+      `;
+      
+      installingWindow.loadURL("data:text/html;charset=utf-8," + encodeURIComponent(installHtml));
+      
+      installingWindow.once('ready-to-show', () => {
+        installingWindow.show();
+      });
+      
       // Set updating flag BEFORE calling quitAndInstall 
       // This ensures session confirmation dialog is skipped
       isUpdating = true;
@@ -269,7 +424,15 @@ autoUpdater.on("update-downloaded", (info) => {
       const updateFlagPath = path.join(app.getPath("userData"), "update-success.txt");
       fs.writeFileSync(updateFlagPath, info.version);
       
-      autoUpdater.quitAndInstall(true, true);
+      // Give the installing window time to show before quitting
+      setTimeout(() => {
+        try {
+          autoUpdater.quitAndInstall(true, true);
+        } catch (err) {
+          log.error("Error during update installation:", err);
+          app.quit();
+        }
+      }, 1500);
     });
 });
 
@@ -277,9 +440,22 @@ autoUpdater.on("error", (err) => {
   log.error("Auto-updater error:", err.message);
   log.error("Error details:", err);
   win?.webContents.send("update-error", err.message);
+  
+  // Close progress window if it exists
+  if (progressWindow && !progressWindow.isDestroyed()) {
+    progressWindow.close();
+    progressWindow = null;
+  }
+  
+  // Show error to user
+  dialog.showMessageBox({
+    type: "error",
+    title: "Update Error",
+    message: "There was a problem updating the application.",
+    detail: "You can try again later or contact support if the problem persists.",
+    buttons: ["OK"]
+  });
 });
-
-const BASE_DIR = isDev ? __dirname : process.resourcesPath;
 
 let win = null;
 let splashWindow = null;
@@ -338,15 +514,14 @@ function getProductionExecutablePath() {
   return executablePath;
 }
 
-async function startPythonExecutable() {
-  return new Promise((resolve, reject) => {
+async function startPythonExecutable() {  return new Promise((resolve, reject) => {
     let command, args;
     let options = {
       detached: false,
       stdio: "pipe",
     };
 
-    if (isDev) {
+    if (global.AppConfig.isDev) {
       // Development mode code remains the same
       const venvPythonPath =
         process.platform === "win32"
@@ -564,9 +739,9 @@ async function createWindow() {
     },
     icon: path.join(__dirname, "assets", "cyphersol-icon.png"),
     autoHideMenuBar: true,
-    title: isDev ? `CypherSol Dev v${app.getVersion()}` : `CypherSol v${app.getVersion()}`,
+    title: global.AppConfig.isDev ? `CypherSol Dev v${app.getVersion()}` : `CypherSol v${app.getVersion()}`,
   });
-  if (isDev) {
+  if (global.AppConfig.isDev) {
     win.loadURL("http://localhost:3000");
   } else {
     const prodPath = path.resolve(
@@ -623,7 +798,7 @@ async function createWindow() {
 
   const createTempDirectory = () => {
     let tempDir = "";
-    if (isDev) {
+    if (global.AppConfig.isDev) {
       tempDir = path.join(__dirname, "tmp");
     } else {
       tempDir = path.join(app.getPath("temp"), "statements");
@@ -678,7 +853,7 @@ async function createWindow() {
   registerMainDashboardIpc(TMP_DIR);
   registerCaseDashboardIpc();
   generateReportIpc(TMP_DIR);
-  registerOpenFileIpc(BASE_DIR);
+  registerOpenFileIpc(global.AppConfig.baseDir);
   registerReportHandlers(TMP_DIR);
   registerAuthHandlers(app.getPath("userData"));
   registerOpportunityToEarnIpc();
@@ -687,12 +862,12 @@ async function createWindow() {
   getdata();
   registerEditReportHandlers();
   registerExcelDownloadHandlers(app.getPath("downloads"));
-  registerAppLevelIPCHandlers(app, win, BASE_DIR);
+  registerAppLevelIPCHandlers(app, win, global.AppConfig.baseDir);
 
   // Auto-update IPC handlers with detailed logging
   ipcMain.handle("check-for-updates", async () => {
     log.info("Manual update check requested");
-    if (isDev) {
+    if (global.AppConfig.isDev) {
       const msg = "Skip update check in dev mode";
       log.info(msg);
       return msg;
@@ -792,7 +967,7 @@ async function createWindow() {
 
   // Check for updates after window is ready
   win.webContents.on("did-finish-load", () => {
-    if (!isDev) {
+    if (!global.AppConfig.isDev) {
       // Initial check after 3 seconds
       setTimeout(checkForUpdates, 3000);
 
@@ -846,6 +1021,27 @@ app.whenReady().then(async () => {
         }, 2000);
       } catch (err) {
         log.error("Error reading update flag:", err);
+      }
+    }
+    
+    // Check for update failure flag
+    const updateFailurePath = path.join(app.getPath("userData"), "update-failure.txt");
+    if (fs.existsSync(updateFailurePath)) {
+      try {
+        fs.unlinkSync(updateFailurePath); // Remove the flag file
+        
+        // Show failure recovery message
+        setTimeout(() => {
+          dialog.showMessageBox({
+            type: "warning",
+            title: "Update Recovery",
+            message: "The application recovered from a failed update attempt.",
+            detail: "You can try updating again later.",
+            buttons: ["OK"]
+          });
+        }, 2000);
+      } catch (err) {
+        log.error("Error reading update failure flag:", err);
       }
     }
 
@@ -910,7 +1106,7 @@ app.whenReady().then(async () => {
     }
 
     // Initial update check after 1 minute
-    if (!isDev) {
+    if (!global.AppConfig.isDev) {
       setTimeout(() => {
         autoUpdater.checkForUpdates().catch((err) => {
           log.error("Error in initial update check:", err);
@@ -955,7 +1151,7 @@ ipcMain.handle("quit-and-install", () => {
 
 // Modify the update check function
 function checkForUpdates() {
-  if (isDev) {
+  if (global.AppConfig.isDev) {
     log.info("Skipping update check in development mode");
     return;
   }

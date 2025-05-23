@@ -1,0 +1,164 @@
+2025-05-23 10:12:34.788 +05:30 [INF] Starting service...
+2025-05-23 10:12:34.834 +05:30 [INF] Actual log path: D:\CA\ca-offline-suite\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-05-23 10:12:34.854 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-05-23 10:12:35.017 +05:30 [INF] [DeviceInfo Init] UUID: 4C4C4544-0051-4A10-804B-B8C04F595932
+2025-05-23 10:12:35.017 +05:30 [INF] [DeviceInfo Init] MAC Address: 4C:1D:96:1F:5A:59
+2025-05-23 10:12:35.018 +05:30 [INF] [DeviceInfo Init] Hostname: AQ
+2025-05-23 10:12:35.018 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-18
+2025-05-23 10:12:35.018 +05:30 [INF] [DeviceInfo Init] Username: AQ$
+2025-05-23 10:12:35.022 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-05-23 10:12:35.032 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 224 bytes
+2025-05-23 10:12:35.038 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-05-23 10:12:35.193 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting6",
+  "current_timestamp": 1747631539.85835,
+  "expiry_timestamp": 1750223539.85835,
+  "number_of_users": 1,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 345033906
+}
+2025-05-23 10:12:35.193 +05:30 [INF] LicenseInfoProvider initialized.
+2025-05-23 10:12:35.194 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting6",
+  "current_timestamp": 1747631539.85835,
+  "expiry_timestamp": 1750223539.85835,
+  "number_of_users": 1,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 345033906
+}
+2025-05-23 10:12:35.194 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 1
+2025-05-23 10:12:35.194 +05:30 [INF] No previous session cache found.
+2025-05-23 10:12:35.200 +05:30 [INF] Worker initialized.
+2025-05-23 10:12:35.206 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-05-23 10:12:35.207 +05:30 [INF] Waiting for network to be ready...
+2025-05-23 10:12:35.270 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.13
+2025-05-23 10:12:35.270 +05:30 [INF] Network is ready with IP: 192.168.1.13
+2025-05-23 10:12:35.314 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.13
+2025-05-23 10:12:35.325 +05:30 [INF] Django base URL: https://cyphersol.co.in
+2025-05-23 10:12:35.328 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-05-23 10:12:35.381 +05:30 [INF] License Loaded: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting6",
+  "current_timestamp": 1747631539.85835,
+  "expiry_timestamp": 1750223539.85835,
+  "number_of_users": 1,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 345033906
+}
+2025-05-23 10:12:35.456 +05:30 [INF] Starting license polling...
+2025-05-23 10:12:35.494 +05:30 [INF] HTTP API Server started on port 7890
+2025-05-23 10:12:35.495 +05:30 [INF] UDP broadcast listener started on port 41234.
+2025-05-23 10:12:35.499 +05:30 [INF] IP address: 192.168.1.13
+2025-05-23 10:12:35.629 +05:30 [INF] mDNS advertisement started using hostname: AQ and IP: 192.168.1.13:7890
+2025-05-23 10:12:35.631 +05:30 [INF] Re-advertising mDNS service...
+2025-05-23 10:12:35.632 +05:30 [INF] Application started. Hosting environment: Production; Content root path: D:\CA\ca-offline-suite\frontend\gatewayServer\
+2025-05-23 10:12:36.795 +05:30 [INF] [License Polling] Expiry: 1750223539.85835
+2025-05-23 10:12:36.795 +05:30 [INF] [SetExpiry] Updating license expiry from 1750223539.85835 to 1750223539.85835
+2025-05-23 10:12:36.795 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1747631539.85835 to 1747975356.865931
+2025-05-23 10:12:36.796 +05:30 [INF] [SetSystemUpTime] Updating license system up time from 345033906 to 345035531
+2025-05-23 10:12:36.797 +05:30 [INF] [License Polling] LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting6",
+  "current_timestamp": 1747975356.865931,
+  "expiry_timestamp": 1750223539.85835,
+  "number_of_users": 1,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 345035531
+}
+2025-05-23 10:12:36.798 +05:30 [INF] [License Polling] LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting6",
+  "current_timestamp": 1747975356.865931,
+  "expiry_timestamp": 1750223539.85835,
+  "number_of_users": 1,
+  "number_of_statements": 10,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 345035531
+}
+2025-05-23 10:12:36.798 +05:30 [INF] [License Polling] License resynced successfully.
+2025-05-23 10:12:36.814 +05:30 [INF] Django API response: {"detail":"License key is already in use."}
+2025-05-23 10:12:36.814 +05:30 [ERR] Django API returned error: {"detail":"License key is already in use."}
+2025-05-23 10:12:46.328 +05:30 [INF] Django API response: {"detail":"License key is already in use."}
+2025-05-23 10:12:46.328 +05:30 [ERR] Django API returned error: {"detail":"License key is already in use."}
+2025-05-23 10:12:47.967 +05:30 [INF] Django API response: {"detail":"License key is already in use."}
+2025-05-23 10:12:47.967 +05:30 [ERR] Django API returned error: {"detail":"License key is already in use."}
+2025-05-23 10:12:48.813 +05:30 [INF] Django API response: {"detail":"License key is already in use."}
+2025-05-23 10:12:48.814 +05:30 [ERR] Django API returned error: {"detail":"License key is already in use."}
+2025-05-23 10:12:49.942 +05:30 [INF] Django API response: {"detail":"License key is already in use."}
+2025-05-23 10:12:49.942 +05:30 [ERR] Django API returned error: {"detail":"License key is already in use."}
+2025-05-23 10:12:51.040 +05:30 [INF] Django API response: {"detail":"License key is already in use."}
+2025-05-23 10:12:51.040 +05:30 [ERR] Django API returned error: {"detail":"License key is already in use."}
+2025-05-23 10:12:52.512 +05:30 [INF] Django API response: ["Invalid license key"]
+2025-05-23 10:12:52.513 +05:30 [ERR] Django API returned error: ["Invalid license key"]
+2025-05-23 10:12:55.565 +05:30 [INF] Django API response: {"detail":"License key is already in use."}
+2025-05-23 10:12:55.567 +05:30 [ERR] Django API returned error: {"detail":"License key is already in use."}
+2025-05-23 10:13:35.651 +05:30 [INF] Re-advertising mDNS service...
+2025-05-23 10:14:35.652 +05:30 [INF] Re-advertising mDNS service...
+2025-05-23 10:15:35.668 +05:30 [INF] Re-advertising mDNS service...
+2025-05-23 10:15:49.164 +05:30 [INF] Django API response: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting2","current_timestamp":1747975549.222452,"expiry_timestamp":1750567549.222452,"number_of_users":1,"number_of_statements":100}
+2025-05-23 10:15:49.173 +05:30 [INF] Final JSON before encryption: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting2","current_timestamp":1747975549.222452,"expiry_timestamp":1750567549.222452,"number_of_users":1,"number_of_statements":100,"role":"CA"}
+2025-05-23 10:15:49.174 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-05-23 10:15:49.475 +05:30 [INF] Successfully encrypted license JSON: 192 bytes
+2025-05-23 10:15:49.476 +05:30 [INF] Writing async license file to C:\ProgramData\Cyphersol\license.enc
+2025-05-23 10:15:49.480 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-05-23 10:15:49.497 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-05-23 10:15:49.813 +05:30 [INF] Decrypted JSON for validation: 192
+2025-05-23 10:15:49.816 +05:30 [INF] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-05-23 10:15:49.822 +05:30 [INF] While Activation License info : {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting2",
+  "current_timestamp": 1747975549.222452,
+  "expiry_timestamp": 1750567549.222452,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 345227890
+}
+2025-05-23 10:15:50.335 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting2",
+  "current_timestamp": 1747975549.222452,
+  "expiry_timestamp": 1750567549.222452,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 345227890
+}
+2025-05-23 10:15:50.348 +05:30 [INF] License assign request: {"clientId":"S-1-5-21-3078838854-999866614-3559894054-1001","uuid":"4c4c4544-0051-4a10-804b-b8c04f595932","hostname":"AQ","username":"aiyaz","macAddress":"4c:1d:96:1f:5a:59"}
+2025-05-23 10:15:50.350 +05:30 [INF] License assign request: S-1-5-21-3078838854-999866614-3559894054-1001, 4c4c4544-0051-4a10-804b-b8c04f595932, 4c:1d:96:1f:5a:59, AQ, aiyaz
+2025-05-23 10:15:50.351 +05:30 [INF] License info: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting2",
+  "current_timestamp": 1747975549.222452,
+  "expiry_timestamp": 1750567549.222452,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 345227890
+}
+2025-05-23 10:15:50.351 +05:30 [INF] License manager active count: 0 / 1
+2025-05-23 10:15:57.112 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting2",
+  "current_timestamp": 1747975549.222452,
+  "expiry_timestamp": 1750567549.222452,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 345227890
+}
+2025-05-23 10:15:57.149 +05:30 [INF] Session activation logged to Django.
+2025-05-23 10:16:35.680 +05:30 [INF] Re-advertising mDNS service...
+2025-05-23 10:17:35.689 +05:30 [INF] Re-advertising mDNS service...
+2025-05-23 10:18:35.709 +05:30 [INF] Re-advertising mDNS service...
+2025-05-23 10:19:35.726 +05:30 [INF] Re-advertising mDNS service...
+2025-05-23 10:20:35.737 +05:30 [INF] Re-advertising mDNS service...
+2025-05-23 10:21:35.750 +05:30 [INF] Re-advertising mDNS service...
+2025-05-23 10:22:35.768 +05:30 [INF] Re-advertising mDNS service...
+2025-05-23 10:23:35.813 +05:30 [INF] Re-advertising mDNS service...
