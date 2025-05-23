@@ -227,9 +227,6 @@ const TallyTable = ({
   }, [reportData.importedLedgerData, companyName]);
   // Auto-fetch balance when tooltip is opened
   useEffect(() => {
-    setBankOpeningBalance("0");
-    setOpeningBalanceOptions([]);
-    setBalanceInput("");
     if (!bankOpeningBalance || bankOpeningBalance === "") {
       fetchBankOpeningBalance();
     }
