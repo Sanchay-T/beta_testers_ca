@@ -27,7 +27,7 @@ const { registerTallyIpc } = require("./ipc/tallyHandlers.js");
 const { registerVoucherIpc } = require("./ipc/VoucherHandlers.js");
 const { registerExcelDownloadHandlers } = require("./ipc/excelDownloadHandler");
 const { registerAppLevelIPCHandlers } = require("./ipc/appLevelIPC");
-const databaseManager = require("./db/db");
+// Moved database require to after AppConfig initialization
 const { spawn, execFile, exec, execSync } = require("child_process");
 const log = require("electron-log");
 const portscanner = require("portscanner"); // Import portscanner
@@ -44,10 +44,21 @@ const userDataDir = app.getPath("userData");
 // ReferenceError (e.g. "isDev is not defined").
 // -------------------------------------------------------------
 
+// Determine if we're in development mode
+const appIsPackaged = app.isPackaged;
+const nodeEnv = process.env.NODE_ENV;
+const isDevelopment = !appIsPackaged || nodeEnv === "development";
+
+console.log("=== AppConfig Initialization ===");
+console.log("app.isPackaged:", appIsPackaged);
+console.log("process.env.NODE_ENV:", nodeEnv);
+console.log("Determined isDev:", isDevelopment);
+
 global.AppConfig = {
   // Flag that indicates whether we are running in development
   // or inside the packaged application.
-  isDev: process.env.NODE_ENV === "development",
+  // Use app.isPackaged as primary check, fallback to NODE_ENV
+  isDev: isDevelopment,
 
   // Resolve the base directory based on the environment.
   get baseDir() {
@@ -57,6 +68,16 @@ global.AppConfig = {
   // Expose Electron's user-data directory for convenient reuse.
   userDataDir,
 };
+
+// Log the final configuration
+console.log("=== Final AppConfig ===");
+console.log("isDev:", global.AppConfig.isDev);
+console.log("baseDir:", global.AppConfig.baseDir);
+console.log("userDataDir:", global.AppConfig.userDataDir);
+console.log("========================");
+
+// NOW it's safe to require database after AppConfig is set
+const databaseManager = require("./db/db");
 
 // Add this variable for the progress window
 let progressWindow = null;
