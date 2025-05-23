@@ -773,6 +773,7 @@ const DataTable = ({
       oldCategory,
       transaction,
     });
+
     setCurrentTransaction(transaction);
     setReasoningModalOpen(true);
   };
@@ -873,6 +874,9 @@ const DataTable = ({
     setReasoning("");
     setShowKeywordInput(false);
     handleSaveChanges([...modifiedData, modifiedObject]);
+    setSimilarCategoryTransactions([]);
+    setSelectedCategorySimilarTransactions(new Set());
+    
   };
 
   // --- Bulk Update: Find each row by its id ---
@@ -989,6 +993,8 @@ const DataTable = ({
           setConfirmationModalOpen(false);
           setSelectedBulkCategory("");
           setBulkReasoning("");
+    setSimilarCategoryTransactions([]);
+    setSelectedCategorySimilarTransactions(new Set());
 
           // Allow refreshes again
           setTimeout(() => {

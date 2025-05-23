@@ -1426,6 +1426,7 @@ def run_test_case_D(page_with_rows_n_columns_added, explicit_lines):
         model_df = validate_bank_statement(model_df)
         return model_df, lists  # Return coordinates for Test Case C
     except Exception as e:
+        print(e)
         print(f"Test Case D failed: {e}")
         return None, None
 
