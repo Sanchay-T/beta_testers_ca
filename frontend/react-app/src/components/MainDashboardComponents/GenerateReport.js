@@ -517,7 +517,7 @@ export default function GenerateReport({ activeTab }) {
                       key={index}
                       className="text-red-700 dark:text-red-400 flex items-start"
                     >
-                      • <span className="ml-1"> {month}</span>
+                      • <span className="ml-1 break-all"> {month}</span>
                     </li>
                   ))}
                 </ul>

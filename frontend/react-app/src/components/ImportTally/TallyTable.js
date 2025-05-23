@@ -15,7 +15,7 @@ import {
   Filter,
   FileSpreadsheet,
   Settings,
-  Info,ChevronDown
+  Info, ChevronDown
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import {
@@ -59,7 +59,7 @@ import {
 } from "../ui/select";
 import { useReportContext } from "../../contexts/ReportContext";
 import { AiFillFileExcel } from "react-icons/ai"; // Install react-icons using npm install react-icons
-import { debounce } from "lodash"; // or write a small debounce of your own
+import { debounce, set } from "lodash"; // or write a small debounce of your own
 import localForage, { clear } from "localforage";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -185,7 +185,7 @@ const TallyTable = ({
   const [showBalanceDropdown, setShowBalanceDropdown] = useState(false);
   const [balanceInput, setBalanceInput] = useState("");               // the text the user is typing
   const [showBalanceList, setShowBalanceList] = useState(false);      // whether to show the dropdown list
-  
+
   const isFirstLoad = useRef(true);
 
   useEffect(() => {
@@ -227,6 +227,9 @@ const TallyTable = ({
   }, [reportData.importedLedgerData, companyName]);
   // Auto-fetch balance when tooltip is opened
   useEffect(() => {
+    setBankOpeningBalance("0");
+    setOpeningBalanceOptions([]);
+    setBalanceInput("");
     if (!bankOpeningBalance || bankOpeningBalance === "") {
       fetchBankOpeningBalance();
     }
@@ -378,7 +381,14 @@ const TallyTable = ({
   // Function to fetch bank opening balance
   const fetchBankOpeningBalance = async () => {
     console.log("Fetching bank opening balance...");
-    if (!companyName) return;
+    if (!companyName) {
+      //   toast({
+      //   title: "Error",
+      //   description: "Please Select a company first, to check if bank ledger exists",
+      //   variant: "destructive",
+      // });
+      return
+    }
 
     setIsFetchingBalance(true);
     try {
@@ -393,16 +403,28 @@ const TallyTable = ({
         // Check if we have multiple opening balance transactions
         if (Array.isArray(response.data) && response.data.length > 0) {
           // Store all balance options for selection
-          setOpeningBalanceOptions(response.data);
+          const formattedData = response.data.map((item) => ({
+            amount:Number(item.amount).toFixed(2),
+            date: item.date,
+            description: item.description, 
+            id: item.id
+          }));
+
+          console.log("Formatted data:", formattedData);
+
+          setOpeningBalanceOptions(formattedData);
 
           // If there's only one balance, select it automatically
           if (response.data.length === 1) {
-            setBankOpeningBalance(response.data[0].amount.toString() || "0");
+            const amount = response.data[0].amount.toFixed(2) || "0";
+
+            console.log({ aiyaz: amount });
+            setBankOpeningBalance(amount);
             setShowBalanceDropdown(false);
           } else {
             // If there are multiple balances, show dropdown and select first one by default
             setShowBalanceDropdown(true);
-            setBankOpeningBalance(response.data[0].amount.toString() || "0");
+            setBankOpeningBalance(response.data[0].amount.toFixed(2) || "0");
 
             // toast({
             //   title: "Multiple Opening Balances Found",
@@ -416,7 +438,7 @@ const TallyTable = ({
           typeof response.data === "number"
         ) {
           // If it's a single value (not an array)
-          setBankOpeningBalance(response.data.amount.toString());
+          setBankOpeningBalance(response.data.amount.toFixed(2));
           setShowBalanceDropdown(false);
           setOpeningBalanceOptions([]);
         } else {
@@ -1606,67 +1628,67 @@ const TallyTable = ({
                           </div>
 
 
-<div className="space-y-1">
-  <label className="text-xs font-medium flex items-center justify-between text-slate-600 dark:text-slate-300">
-    <div className="flex items-center">
-      <span>Opening Balance</span>
-      {isFetchingBalance && (
-        <Loader2 className="ml-2 h-3 w-3 animate-spin text-slate-400" />
-      )}
-    </div>
-  </label>
+                          <div className="space-y-1">
+                            <label className="text-xs font-medium flex items-center justify-between text-slate-600 dark:text-slate-300">
+                              <div className="flex items-center">
+                                <span>Opening Balance</span>
+                                {isFetchingBalance && (
+                                  <Loader2 className="ml-2 h-3 w-3 animate-spin text-slate-400" />
+                                )}
+                              </div>
+                            </label>
 
-  <div className="relative">
-    {/* The free-form input */}
-    <Input
-      type="number"
-      value={balanceInput}
-      onChange={e => {
-        setBalanceInput(e.target.value);
-        setBankOpeningBalance(e.target.value);
-      }}
-      onFocus={() => openingBalanceOptions.length > 1 && setShowBalanceList(true)}
-      placeholder="0.00"
-      className="h-8 text-sm pr-8"
-      disabled={isCreatingBank || isFetchingBalance}
-    />
+                            <div className="relative">
+                              {/* The free-form input */}
+                              <Input
+                                type="number"
+                                value={balanceInput || bankOpeningBalance}
+                                onChange={e => {
+                                  setBalanceInput(e.target.value);
+                                  setBankOpeningBalance(e.target.value);
+                                }}
+                                onFocus={() => openingBalanceOptions.length > 1 && setShowBalanceList(true)}
+                                placeholder="0.00"
+                                className="h-8 text-sm pr-8"
+                                disabled={isCreatingBank || isFetchingBalance}
+                              />
 
-    {/* Chevrons to toggle list */}
-    {openingBalanceOptions.length > 1 && (
-      <button
-        type="button"
-        onClick={() => setShowBalanceList(v => !v)}
-        className="absolute inset-y-0 right-2 flex items-center"
-      >
-        <ChevronDown className="h-4 w-4 text-gray-500" />
-      </button>
-    )}
+                              {/* Chevrons to toggle list */}
+                              {openingBalanceOptions.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => setShowBalanceList(v => !v)}
+                                  className="absolute inset-y-0 right-2 flex items-center"
+                                >
+                                  <ChevronDown className="h-4 w-4 text-gray-500" />
+                                </button>
+                              )}
 
-    {/* The dropdown list */}
-    {showBalanceList && (
-      <div
-        className="absolute z-10 mt-1 w-full max-h-40 overflow-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg"
-        onMouseLeave={() => setShowBalanceList(false)}
-      >
-        {openingBalanceOptions.map((opt, i) => (
-          <div
-            key={i}
-            className="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
-            onMouseDown={e => {
-              e.preventDefault();        // prevent blur
-              const amt = opt.amount.toString();
-              setBalanceInput(amt);
-              setBankOpeningBalance(amt);
-              setShowBalanceList(false);
-            }}
-          >
-            {`${opt.amount}  (${opt.date || "Unknown date"})`}
-          </div>
-        ))}
-      </div>
-    )}
-  </div>
-</div>
+                              {/* The dropdown list */}
+                              {showBalanceList && (
+                                <div
+                                  className="absolute z-10 mt-1 w-full max-h-40 overflow-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg"
+                                  onMouseLeave={() => setShowBalanceList(false)}
+                                >
+                                  {openingBalanceOptions.map((opt, i) => (
+                                    <div
+                                      key={i}
+                                      className="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                                      onMouseDown={e => {
+                                        e.preventDefault();        // prevent blur
+                                        const amt = opt.amount.toString();
+                                        setBalanceInput(amt);
+                                        setBankOpeningBalance(amt);
+                                        setShowBalanceList(false);
+                                      }}
+                                    >
+                                      {`${opt.amount}  (${opt.date || "Unknown date"})`}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
 
                         </div>
 
@@ -1736,9 +1758,8 @@ const TallyTable = ({
           )}
           {/* Search field - takes 3 or 4 columns on desktop */}
           <div
-            className={`w-full  md:col-span-${
-              selectedVoucher === "Payment Receipt Contra" ? "3" : "4"
-            }`}
+            className={`w-full  md:col-span-${selectedVoucher === "Payment Receipt Contra" ? "3" : "4"
+              }`}
           >
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-slate-500 dark:text-slate-400">
@@ -1816,8 +1837,8 @@ const TallyTable = ({
                   className="max-w-xs p-3 bg-white dark:bg-gray-800 border shadow-lg rounded-md"
                 >
                   {selectedVoucher === "Payment Receipt Contra" &&
-                  !isLedgersCreated &&
-                  !isEmptyLedgersSelected ? (
+                    !isLedgersCreated &&
+                    !isEmptyLedgersSelected ? (
                     <div className="space-y-2">
                       <p className="text-sm font-medium">
                         Ledgers need to be created first
@@ -1968,14 +1989,13 @@ const TallyTable = ({
                 {columns.map((column) => (
                   <TableHead
                     key={column}
-                    className={`whitespace-nowrap ${
-                      ["bill_reference", "dr_ledger", "cr_ledger"].includes(
-                        column
-                      )
-                        ? "min-w-[180px]"
-                        : "min-w-[150px]"
-                    } ${column === "narration" && "min-w-[300px]"}`}
-                    // className={source === "summary" ? "bg-gray-900 dark:bg-slate-800 text-white" : ""}
+                    className={`whitespace-nowrap ${["bill_reference", "dr_ledger", "cr_ledger"].includes(
+                      column
+                    )
+                      ? "min-w-[180px]"
+                      : "min-w-[150px]"
+                      } ${column === "narration" && "min-w-[300px]"}`}
+                  // className={source === "summary" ? "bg-gray-900 dark:bg-slate-800 text-white" : ""}
                   >
                     <div className="flex items-center gap-2">
                       {[
@@ -1986,10 +2006,10 @@ const TallyTable = ({
                         "date",
                         "ledger",
                       ].includes(column) && (
-                        <p className="text-lg text-gray-500 dark:text-gray-400">
-                          *
-                        </p>
-                      )}
+                          <p className="text-lg text-gray-500 dark:text-gray-400">
+                            *
+                          </p>
+                        )}
                       {makeReadable(column)}
 
                       {[
@@ -2004,31 +2024,31 @@ const TallyTable = ({
                         "country",
                         "opening_balance",
                       ].includes(column.toLowerCase()) === false && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0"
-                          onClick={() => {
-                            if (column.toLowerCase() === "date") {
-                              setCurrentFilterColumn(column);
-                              setCurrentDateColumn(column);
-                              setDateFilterModalOpen(true);
-                            } else if (column.toLowerCase() === "amount") {
-                              setCurrentNumericColumn(column);
-                              setNumericFilterModalOpen(true);
-                              setDateFilterModalOpen(false);
-                            } else {
-                              setCurrentFilterColumn(column);
-                              // setSelectedCategories([]);
-                              setCategorySearchTerm("");
-                              setFilterModalOpen(true);
-                              setDateFilterModalOpen(false);
-                            }
-                          }}
-                        >
-                          ▼
-                        </Button>
-                      )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={() => {
+                              if (column.toLowerCase() === "date") {
+                                setCurrentFilterColumn(column);
+                                setCurrentDateColumn(column);
+                                setDateFilterModalOpen(true);
+                              } else if (column.toLowerCase() === "amount") {
+                                setCurrentNumericColumn(column);
+                                setNumericFilterModalOpen(true);
+                                setDateFilterModalOpen(false);
+                              } else {
+                                setCurrentFilterColumn(column);
+                                // setSelectedCategories([]);
+                                setCategorySearchTerm("");
+                                setFilterModalOpen(true);
+                                setDateFilterModalOpen(false);
+                              }
+                            }}
+                          >
+                            ▼
+                          </Button>
+                        )}
                     </div>
                   </TableHead>
                 ))}
@@ -2049,12 +2069,11 @@ const TallyTable = ({
                   return (
                     <TableRow
                       key={row.id}
-                      className={`group ${
-                        row.imported
-                          ? "bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800"
-                          : "hover:bg-gray-100 dark:hover:bg-gray-800"
-                      }`}
-                      // className={source === "summary" ? "even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200" : ""}
+                      className={`group ${row.imported
+                        ? "bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800"
+                        : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                        }`}
+                    // className={source === "summary" ? "even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200" : ""}
                     >
                       <TableCell className={`sticky left-0 bg-white z-10`}>
                         <Checkbox
@@ -2178,9 +2197,9 @@ const TallyTable = ({
                             <TableCell
                               key={column}
                               className={`w-[250px] group relative `}
-                              // ${
-                              //   selectedVoucher === "Ledgers" && "z-[200]"
-                              // }
+                            // ${
+                            //   selectedVoucher === "Ledgers" && "z-[200]"
+                            // }
                             >
                               <DatePicker
                                 selected={
@@ -2248,8 +2267,8 @@ const TallyTable = ({
                                 {row[column] === true
                                   ? "Success"
                                   : row.failed_reason === ""
-                                  ? "Not Uploaded Yet"
-                                  : "Failed"}
+                                    ? "Not Uploaded Yet"
+                                    : "Failed"}
                               </div>
                             </TableCell>
                           );
@@ -2408,14 +2427,14 @@ const TallyTable = ({
                                     />
                                     {editedEntities[row.id] !== undefined &&
                                       editedEntities[row.id] !==
-                                        row[column] && (
+                                      row[column] && (
                                         <Check
                                           className="ml-2 cursor-pointer text-green-500"
                                           onClick={() => {
                                             // For manual typing, pass the new value explicitly
                                             const updatedValue =
                                               editedEntities[row.id] !==
-                                              undefined
+                                                undefined
                                                 ? editedEntities[row.id]
                                                 : row[column];
                                             handleEntityUpdateConfirm(
@@ -2430,7 +2449,7 @@ const TallyTable = ({
                                   {ledgerSelectDropdownOpen[row.id] && (
                                     <div className="absolute z-10 top-full mt-[-10px] w-full max-h-60 overflow-auto rounded-md bg-white border shadow-sm">
                                       {rowFilteredLedgers.length === 0 &&
-                                      currentSearchTerm.trim() !== "" ? (
+                                        currentSearchTerm.trim() !== "" ? (
                                         <div
                                           className="cursor-pointer select-none p-2 hover:bg-gray-100 flex items-center gap-1"
                                           onMouseDown={(e) => {
@@ -2651,7 +2670,7 @@ const TallyTable = ({
                     className={cn(
                       "cursor-pointer",
                       currentPage === totalPages &&
-                        "pointer-events-none opacity-50"
+                      "pointer-events-none opacity-50"
                     )}
                   />
                 </PaginationItem>
@@ -2742,7 +2761,7 @@ const TallyTable = ({
                         ).toLowerCase()
                       )
                   ).length === 0 &&
-                  (ledgerSearchTerms["bulkEditLedger"] || "").trim() !== "" ? (
+                    (ledgerSearchTerms["bulkEditLedger"] || "").trim() !== "" ? (
                     <div
                       className="cursor-pointer select-none p-2 hover:bg-gray-100 flex items-center gap-1"
                       onMouseDown={(e) => {
