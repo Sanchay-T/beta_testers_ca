@@ -133,7 +133,7 @@ const Card2 = ({
 
   useEffect(() => {
     calculateProgress();
-  }, [userProgress, expiryTime]);
+  }, [userProgress.dateJoined, expiryTime]);
 
   const calculateProgress = () => {
     if (userProgress.dateJoined && expiryTime) {
