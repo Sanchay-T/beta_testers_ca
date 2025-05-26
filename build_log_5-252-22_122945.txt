@@ -1,0 +1,2 @@
+Build process started at 22-05-25 12:29:45.42 
+ERROR: Administrator privileges required. Please run as administrator. 

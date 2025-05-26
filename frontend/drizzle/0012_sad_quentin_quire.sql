@@ -1,0 +1,1 @@
+ALTER TABLE `transactions` ADD `bank` text DEFAULT 'unknown' NOT NULL;

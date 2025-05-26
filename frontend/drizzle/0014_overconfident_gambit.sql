@@ -1,0 +1,1 @@
+ALTER TABLE `transactions` ADD `imported` integer DEFAULT 0;

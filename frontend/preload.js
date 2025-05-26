@@ -1,0 +1,268 @@
+const { contextBridge, ipcRenderer, shell } = require("electron");
+// const { generateReportIpc } = require("./ipc/generateReport");
+const log = require("electron-log");
+
+// Expose a secure API for opening files to the renderer process
+contextBridge.exposeInMainWorld("electron", {
+  openFile: (filePath) => ipcRenderer.invoke("open-file", filePath),
+  fetchPdfContent: (filePath, caseName) =>
+    ipcRenderer.invoke("fetch-pdf-content", filePath, caseName),
+
+  getReportsProcessed: () => ipcRenderer.invoke("get-reports-processed"),
+  getStatementsProcessed: () => ipcRenderer.invoke("get-statements-processed"),
+  getTransactionsProcessed: () =>
+    ipcRenderer.invoke("get-transaction-processed"),
+
+  getPages: () => ipcRenderer.invoke("get-total-pages"),
+
+  app: {
+    checkAdminRights: () => ipcRenderer.invoke('app:check-admin-rights'),
+    relaunchAsAdmin: () => ipcRenderer.send("app:relaunchAsAdmin"),
+
+  },
+  // getProgressed: () => ipcRenderer.invoke("get-user-progress"),
+
+  getTransactions: (caseId, individualId) =>
+    ipcRenderer.invoke("get-transactions", caseId, individualId),
+
+  getTransactionsCount: (caseId) =>
+    ipcRenderer.invoke("get-transactions-count", caseId),
+  getEodBalance: (caseId) => ipcRenderer.invoke("get-eod-balance", caseId),
+  getSummary: (caseId, individualId) =>
+    ipcRenderer.invoke("get-summary", caseId, individualId),
+  getTransactionsByDebtor: (caseId, individualId) =>
+    ipcRenderer.invoke("get-transactions-by-debtor", caseId, individualId),
+
+  getTransactionsByCreditor: (caseId, individualId) =>
+    ipcRenderer.invoke("get-transactions-by-creditor", caseId, individualId),
+
+  getTransactionsByCashWithdrawal: (caseId, individualId) =>
+    ipcRenderer.invoke(
+      "get-transactions-by-cashwithdrawal",
+      caseId,
+      individualId
+    ),
+
+  getTransactionsByCashDeposit: (caseId, individualId) =>
+    ipcRenderer.invoke("get-transactions-by-cashdeposit", caseId, individualId),
+
+  getTransactionsByUpiCr: (caseId, individualId) =>
+    ipcRenderer.invoke("get-transactions-by-upi-cr", caseId, individualId),
+
+  getTransactionsByUpiDr: (caseId, individualId) =>
+    ipcRenderer.invoke("get-transactions-by-upi-dr", caseId, individualId),
+
+  getTransactionsBySuspenseCredit: (caseId, individualId) =>
+    ipcRenderer.invoke(
+      "get-transactions-by-suspensecredit",
+      caseId,
+      individualId
+    ),
+
+  getTransactionsBySuspenseDebit: (caseId, individualId) =>
+    ipcRenderer.invoke(
+      "get-transactions-by-suspensedebit",
+      caseId,
+      individualId
+    ),
+
+  getTransactionsBySuspense: (caseId, individualId) =>
+    ipcRenderer.invoke(
+      "get-transactions-by-suspense-all",
+      caseId,
+      individualId
+    ),
+
+  getOpportunityToEarnForExcel: (case_id) =>
+    ipcRenderer.invoke("getOpportunityToEarnForExcel", case_id),
+
+  getTransactionsByEmi: (caseId, individualId) =>
+    ipcRenderer.invoke("get-transactions-by-emi", caseId, individualId),
+  getTransactionsByInvestment: (caseId, individualId) =>
+    ipcRenderer.invoke("get-transactions-by-investment", caseId, individualId),
+  getTransactionsByReversal: (caseId, individualId) =>
+    ipcRenderer.invoke("get-transactions-by-reversal", caseId, individualId),
+  getTransactionsByInsurance: (caseId, individualId, categories) =>
+    ipcRenderer.invoke("get-transactions-by-insurance", caseId, individualId),
+  getTransactionsByContra: (caseId, individualId) =>
+    ipcRenderer.invoke("get-transactions-by-contra", caseId, individualId),
+  getTransactionsByRedemption: (caseId, individualId) =>
+    ipcRenderer.invoke("get-transactions-by-redemption", caseId, individualId),
+
+  getStatements: (case_id) => ipcRenderer.invoke("get-statements", case_id),
+
+  getSingleStatement: (statementId) =>
+    ipcRenderer.invoke("get-single-statement", statementId),
+
+  updateStatement: ({ id, customerName, accountNumber }) =>
+    ipcRenderer.invoke("update-statement", { id, customerName, accountNumber }),
+
+  getCombinedStatements: (case_id) =>
+    ipcRenderer.invoke("get-combine-statements", case_id),
+
+  saveFileToTemp: (fileBuffer) =>
+    ipcRenderer.invoke("save-file-to-temp", fileBuffer),
+  cleanupTempFiles: () => ipcRenderer.invoke("cleanup-temp-files"),
+
+  checkStatementLimit: () => ipcRenderer.invoke("check-statement-limit"),
+  generateReportIpc: (result, reportName, source) =>
+    ipcRenderer.invoke("generate-report", result, reportName, source),
+
+  getOpportunityToEarn: () => ipcRenderer.invoke("getOpportunityToEarn"),
+  getOpportunityToEarnForExcel: (case_id) =>
+    ipcRenderer.invoke("getOpportunityToEarnForExcel", case_id),
+
+  addPdfIpc: (data, caseId) => ipcRenderer.invoke("add-pdf", data, caseId),
+
+  deleteReport: (caseId) => ipcRenderer.invoke("delete-report", caseId),
+
+  getReportName: (caseId) => ipcRenderer.invoke("get-Report-Name", caseId),
+
+  getCustomerName: (individualId) =>
+    ipcRenderer.invoke("get-Customer-Name", individualId),
+
+  getReportNameExists: (reportName) =>
+    ipcRenderer.invoke("check-Report-Name-Exists", reportName),
+
+  downloadExcelReport: (data) =>
+    ipcRenderer.invoke("download-excel-report", data),
+
+  getTallyVoucherTransactions: (caseId, voucherType) =>
+    ipcRenderer.invoke("get-tally-voucher-transactions", caseId, voucherType),
+
+  updateTransactionStatus: (transactionIds) =>
+    ipcRenderer.invoke("update-transaction-status", transactionIds),
+  deleteStatement: (statementId) =>
+    ipcRenderer.invoke("delete-statement", statementId),
+  deleteStatement: (statementId) =>
+    ipcRenderer.invoke("delete-statement", statementId),
+
+  editVoucherType: (data) => ipcRenderer.invoke("update-voucher", data),
+  uploadLedgerToTally: (data, port, tallyVersion) =>
+    ipcRenderer.invoke("ledger-create", data, port, tallyVersion),
+  importLedgers: (companyName, port) =>
+    ipcRenderer.invoke("import-ledgers", companyName, port),
+  checkTallyRunning: (port) => ipcRenderer.invoke("check-tally-running", port),
+  getBankOpeningBalance: (caseId, individualId) =>
+    ipcRenderer.invoke("get-opening-balance", caseId, individualId),
+
+  user: {
+    getData: (userId) => ipcRenderer.invoke("user:get-data", userId),
+    updateData: (userData) => ipcRenderer.send("user:update-data", userData),
+  },
+
+  file: {
+    open: (filePath) => ipcRenderer.send("file:open", filePath),
+    save: (fileContent) => ipcRenderer.invoke("file:save", fileContent),
+    getData: (filePath) => ipcRenderer.invoke("file:get-data", filePath),
+  },
+
+  auth: {
+    signUp: (credentials) => ipcRenderer.invoke("auth:signUp", credentials),
+    login: (userData) => ipcRenderer.invoke("auth:login", userData),
+    logout: () => ipcRenderer.invoke("auth:logout"),
+    resetPassword: (data) => ipcRenderer.invoke("auth:reset-password", data),
+    getUser: () => ipcRenderer.invoke("auth:getUser"),
+    checkAccountStatus: () => ipcRenderer.invoke("auth:check-account-status"),
+    // updateUser: (userData) => ipcRenderer.invoke('auth:updateUser', userData)
+    checkLicense: () => ipcRenderer.invoke("license:check"),
+    searchnNetworkLicenses: (networkLicense) => ipcRenderer.invoke("license:search-network-licenses", networkLicense),
+    activateLicense: (credentials) =>
+      ipcRenderer.invoke("license:activate", credentials),
+    connectNetworkLicense: (credentials) =>
+      ipcRenderer.invoke("license:connect-network-license", credentials),
+    revokeSession: (credentials) =>
+      ipcRenderer.invoke("license:revoke-session", credentials),
+  },
+
+  getRecentReports: () => ipcRenderer.invoke("get-recent-reports"),
+  getFailedStatements: (referenceId) =>
+    ipcRenderer.invoke("get-failed-statements", referenceId),
+
+
+  onRemainingSecondsUpdated: (callback) =>
+    ipcRenderer.on("remainingSecondsUpdated", (_event, seconds) =>
+      callback(seconds)
+    ),
+  offRemainingSecondsUpdated: (callback) =>
+    ipcRenderer.removeListener("remainingSecondsUpdated", callback),
+
+  onLicenseExpired: (callback) => ipcRenderer.on("navigateToLogin", callback),
+  removeLicenseExpiredListener: () =>
+    ipcRenderer.removeAllListeners("navigateToLogin"),
+  editCategory: (data, caseId) =>
+    ipcRenderer.invoke("edit-category", data, caseId),
+  excelFileDownload: (caseId) =>
+    ipcRenderer.invoke("excel-report-download", caseId),
+  editPdf: (result, reportName) =>
+    ipcRenderer.invoke("edit-pdf", result, reportName),
+  editEntity: (payload) => ipcRenderer.invoke("edit-entity", payload),
+  uploadToTally: (data, port) => ipcRenderer.invoke("tally-upload", data, port),
+  storeTallyUpload: (uploadResponse, bankLedger, uploadData) =>
+    ipcRenderer.invoke(
+      "store-tally-upload",
+      uploadResponse,
+      bankLedger,
+      uploadData
+    ),
+
+  getTallyTransactions: (caseId) =>
+    ipcRenderer.invoke("get-tally-transactions", caseId),
+  getTallyVouchers: () => ipcRenderer.invoke("get-tally-vouchers"),
+  getProgressed: () => ipcRenderer.invoke("get-user-progress"),
+
+  // Add auto-update related methods
+  updates: {
+    checkForUpdates: () => ipcRenderer.invoke("check-for-updates", () => { }),
+    // downloadUpdate: () => ipcRenderer.invoke('download-update'),
+    // installUpdate: () => ipcRenderer.invoke('install-update'),
+    onUpdateStatus: (callback) =>
+      ipcRenderer.on("update-status", (_, status) => callback(status)),
+    onUpdateProgress: (callback) =>
+      ipcRenderer.on("update-progress", (_, progress) => callback(progress)),
+    onUpdateDownloaded: (callback) =>
+      ipcRenderer.on("update-downloaded", () => callback()),
+    onUpdateError: (callback) =>
+      ipcRenderer.on("update-error", (_, error) => callback(error)),
+    // Remove event listeners when component unmounts
+
+    removeUpdateListeners: () => {
+      ipcRenderer.removeAllListeners("update-status");
+      ipcRenderer.removeAllListeners("update-progress");
+      ipcRenderer.removeAllListeners("update-downloaded");
+      ipcRenderer.removeAllListeners("update-error");
+    },
+  },
+
+  download: {
+    excelReportDownload: (caseId) =>
+      ipcRenderer.invoke("excel-report-download", caseId),
+    onExcelDownloadChunk: (callback) =>
+      ipcRenderer.on("excel-report-chunk", (event, chunk) => callback(chunk)),
+    onExcelDownloadComplete: (callback) =>
+      ipcRenderer.on("excel-report-complete", (event, message) =>
+        callback(message)
+      ),
+    onExcelDownloadError: (callback) =>
+      ipcRenderer.on("excel-report-error", (event, error) => callback(error)),
+  },
+
+  shell: {
+    openExternal: (url) => shell.openExternal(url),
+  },
+
+  // Database connection and configuration
+  db: {
+    checkConnection: () => ipcRenderer.invoke("db:checkConnection"),
+    saveConfig: (config) => ipcRenderer.invoke("db:saveConfig", config),
+    checkPrerequisites: () => ipcRenderer.invoke("db:checkPrerequisites"),
+    discover: () => ipcRenderer.invoke("db:discover"),
+    downloadBinaries: (data) => ipcRenderer.invoke("db:downloadBinaries", data),
+    getProvisionStatus: () => ipcRenderer.invoke("db:getProvisionStatus"),
+    extractBinaries: (data) => ipcRenderer.invoke("db:extractBinaries", data),
+    initCluster: (data) => ipcRenderer.invoke("db:initCluster", data),
+    startPostgres: (data) => ipcRenderer.invoke("db:startPostgres", data),
+    advertiseMdns: (data) => ipcRenderer.invoke("db:advertiseMdns", data),
+    validateConnection: (data) => ipcRenderer.invoke("db:validateConnection", data),
+  },
+});
