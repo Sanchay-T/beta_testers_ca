@@ -9,6 +9,7 @@ develop-eggs/
 /backend/dist/
 /backend/downloads/
 /backend/eggs/
+*.bat
 .eggs/
 /backend/lib/
 /backend/lib64/

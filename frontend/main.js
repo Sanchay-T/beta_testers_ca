@@ -661,7 +661,8 @@ autoUpdater.on("update-downloaded", (info) => {
             logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Application will restart with new version');
             
             performanceTracker.end('installation-process');
-          autoUpdater.quitAndInstall(true, true);
+            autoUpdater.autoInstallOnAppQuit = false;
+            autoUpdater.quitAndInstall(true, true);
         } catch (err) {
             performanceTracker.end('installation-process');
             const installError = {
@@ -1528,7 +1529,7 @@ function checkForUpdates() {
 log.transports.file.fileName = 'cyphersol.log';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
-// 🚀 COMPREHENSIVE AUTO-UPDATE LOGGING SYSTEM v1.0.15
+// 🚀 COMPREHENSIVE AUTO-UPDATE LOGGING SYSTEM v1.0.14
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // Created for: Backend Team Analysis & Software Improvement
 // Purpose: Detailed tracking of update process, user behavior, and system performance
@@ -1603,7 +1604,7 @@ const logSystemInfo = () => {
 
 // Initialize comprehensive logging
 log.info('═══════════════════════════════════════════════════════════════════════════════════════');
-log.info('🚀 CYPHERSOL AUTO-UPDATE LOGGING SYSTEM v1.0.15 INITIALIZED');
+log.info('🚀 CYPHERSOL AUTO-UPDATE LOGGING SYSTEM v1.0.14 INITIALIZED');
 log.info('═══════════════════════════════════════════════════════════════════════════════════════');
 log.info(`📅 Session Start Time: ${new Date().toISOString()}`);
 log.info(`🏷️ Application Version: ${app.getVersion()}`);

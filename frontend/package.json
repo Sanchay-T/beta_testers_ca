@@ -1,4 +1,4 @@
-{  "name": "cyphersol-electron-app",  "version": "1.0.15",  "description": "CA OFFLINE APP",
+{  "name": "cyphersol-electron-app",  "version": "1.0.14",  "description": "CA OFFLINE APP",
   "main": "main.js",
   "icon": "./assets/cyphersol-icon.png",
   "scripts": {
@@ -121,12 +121,16 @@
       "warningsAsErrors": false,
       "perMachine": false,
       "allowElevation": false,
-      "runAfterFinish": true
+      "runAfterFinish": true,
+      "include": "build/installer.nsh"
     },
     "linux": {
-      "target": "AppImage",
-      "icon": "assets/cyphersol-icon.png"
-    }
+      "target": [
+        "AppImage"
+      ],
+      "category": "Utility"
+    },
+    "beforePack": "./scripts/beforePack.js"
   },
   "dependencies": {
     "@libsql/client": "^0.14.0",
