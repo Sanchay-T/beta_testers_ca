@@ -1,7 +1,4 @@
-{
-  "name": "cyphersol-electron-app",
-  "version": "1.0.2",
-  "description": "CA OFFLINE APP",
+{  "name": "cyphersol-electron-app",  "version": "1.0.4",  "description": "CA OFFLINE APP",
   "main": "main.js",
   "icon": "./assets/cyphersol-icon.png",
   "scripts": {
@@ -49,7 +46,7 @@
     "publish": {
       "provider": "github",
       "owner": "Shama-Cyphersol",
-      "repo": "ca-offline-suite",
+      "repo": "beta_testers_ca",
       "private": true,
       "releaseType": "release"
     },
@@ -63,20 +60,7 @@
       "!backend/__pycache__",
       "!env/bin/python3",
       "package.json",
-      "media/**/*"
-    ],
-    "extraResources": [
-      {
-        "from": "../dist/main",
-        "to": "backend/main"
-      },
-      {
-        "from": "media",
-        "to": "media",
-        "filter": [
-          "**/*"
-        ]
-      },
+              "media/**/*"      ],    "extraResources": [      {        "from": "../dist/main",        "to": "backend/main"      },      {        "from": "media",        "to": "media",        "filter": [          "**/*"        ]      },
       {
         "from": "drizzle.config.js",
         "to": "drizzle.config.js"

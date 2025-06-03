@@ -13,7 +13,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: radial-gradient(circle at center, #0f172a, #0e1e32, #0a172b);
+            background: radial-gradient(circle at center, #0a2a58, #0e244f, #091f42);
             color: white;
             height: 100vh;
             display: flex;
@@ -27,13 +27,13 @@
         .logo-container {
             width: 170px;
             height: 100px;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
             display: flex;
             justify-content: center;
             align-items: center;
             margin-bottom: 30px;
-            box-shadow: 0 0 25px rgba(59, 130, 246, 0.2);
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.4);
             animation: float 3s ease-in-out infinite;
         }
 
@@ -48,7 +48,7 @@
         .tagline h1 {
             font-size: 1.5rem;
             font-weight: bold;
-            background: linear-gradient(to right, #3b82f6, #8b5cf6);
+            background: linear-gradient(to right, #3bddff, #3b82f6);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             text-align: center;
@@ -68,9 +68,10 @@
             position: relative;
             width: 180px;
             height: 25px;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.1);
             border-radius: 16px;
             overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .loading-bar {
@@ -79,7 +80,7 @@
             left: 0;
             height: 100%;
             width: 30%;
-            background: linear-gradient(90deg, rgba(59, 130, 246, 0.6), rgba(139, 92, 246, 0.8));
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
             border-radius: 16px;
             animation: loading 2s infinite;
         }
@@ -97,6 +98,17 @@
             font-weight: 500;
             color: white;
             letter-spacing: 0.5px;
+        }
+
+        .version-badge {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 5px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            color: #94c5ff;
         }
 
         @keyframes float {
@@ -136,14 +148,16 @@
     </div>
 
     <div class="tagline">
-        <h1>Be intelligently lazy</h1>
+        <h1>CA Offline Suite</h1>
         <p>Work smarter, not harder</p>
     </div>
 
     <div class="loading-container">
         <div class="loading-bar"></div>
-        <div class="loading-text">Initializing...</div>
+        <div class="loading-text">Loading...</div>
     </div>
+
+    <div class="version-badge">Version 1.0.4</div>
 </body>
 
 </html>

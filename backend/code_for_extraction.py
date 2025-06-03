@@ -973,7 +973,7 @@ def extract_dataframe_from_pdf(page_path, table_settings):
         df_total = df_total._append(table, ignore_index=True)
         df_total.replace({r"\n": " "}, regex=True, inplace=True)
         print(f"on page:{i}/{len(pdf.pages)}")
-    w = df_total.drop_duplicates()
+    w = df_total.copy()
     # rage_path = pdf_path.split(".")[0]
     # w.to_excel(f"raw_dataframe_{rage_path}.xlsx")
     return w
@@ -1426,6 +1426,7 @@ def run_test_case_D(page_with_rows_n_columns_added, explicit_lines):
         model_df = validate_bank_statement(model_df)
         return model_df, lists  # Return coordinates for Test Case C
     except Exception as e:
+        print(e)
         print(f"Test Case D failed: {e}")
         return None, None
 

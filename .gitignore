@@ -24,9 +24,9 @@ develop-eggs/
 /backend/env/
 /backend/ENV/
 /backend/saved_pdf/
-/backend/.env
-/backend/.venv
-/backend/.env.*
+# /backend/.env
+# /backend/.venv
+# /backend/.env.*
 /backend/models
 .venv/
 
@@ -54,11 +54,11 @@ yarn-error.log*
 /frontend/react-app/.pnp.js
 /frontend/react-app/coverage
 /frontend/react-app/build
-/frontend/react-app/.env
-/frontend/react-app/.env.local
-/frontend/react-app/.env.development.local
-/frontend/react-app/.env.test.local
-/frontend/react-app/.env.production.local
+# /frontend/react-app/.env
+# /frontend/react-app/.env.local
+# /frontend/react-app/.env.development.local
+# /frontend/react-app/.env.test.local
+# /frontend/react-app/.env.production.local
 /frontend/react-app/npm-debug.log*
 /frontend/react-app/yarn-debug.log*
 /frontend/react-app/yarn-error.log*

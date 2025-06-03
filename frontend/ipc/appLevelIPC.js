@@ -3,6 +3,12 @@ const sudo = require('sudo-prompt')
 const log = require('electron-log');
 const path = require('path');
 
+const getIsDev = () => {
+  if (global.AppConfig && global.AppConfig.isDev !== undefined) {
+    return global.AppConfig.isDev;
+  }
+  return !appInstance.isPackaged;
+};
 
 function registerAppLevelIPCHandlers(appInstance, appWindow, base_dir) {
 
@@ -17,7 +23,7 @@ function registerAppLevelIPCHandlers(appInstance, appWindow, base_dir) {
 
     ipcMain.on("app:relaunchAsAdmin", () => {
 
-        const isDev = !appInstance.isPackaged;
+        const isDev = getIsDev();
 
         const electronPath = path.join(base_dir, 'node_modules', 'electron', 'dist', 'electron.exe');
 
