@@ -1,8 +1,11 @@
-{  "name": "cyphersol-electron-app",  "version": "1.0.4",  "description": "CA OFFLINE APP",
+{
+  "name": "cyphersol-electron-app",
+  "version": "1.0.4",
+  "description": "CA OFFLINE APP",
   "main": "main.js",
   "icon": "./assets/cyphersol-icon.png",
   "scripts": {
-    "start": "powershell -Command \"Start-Process cmd -ArgumentList '/k cd /d \\\"D:\\CA\\ca-offline-suite\\frontend\\\" && npm run electron' -Verb runAs\"",
+    "start": "powershell -Command \"Start-Process cmd -ArgumentList '/k cd /d \\\"C:\\Users\\admin\\Desktop\\CA-Offline\\frontend\\\" && npm run electron' -Verb runAs\"",
     "start_": "npm run electron",
     "electron": "electron main.js",
     "start:fastapi": "cd ../ && uvicorn backend.main:app --reload --port 7500",
@@ -60,7 +63,20 @@
       "!backend/__pycache__",
       "!env/bin/python3",
       "package.json",
-              "media/**/*"      ],    "extraResources": [      {        "from": "../dist/main",        "to": "backend/main"      },      {        "from": "media",        "to": "media",        "filter": [          "**/*"        ]      },
+      "media/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../dist/main",
+        "to": "backend/main"
+      },
+      {
+        "from": "media",
+        "to": "media",
+        "filter": [
+          "**/*"
+        ]
+      },
       {
         "from": "drizzle.config.js",
         "to": "drizzle.config.js"
