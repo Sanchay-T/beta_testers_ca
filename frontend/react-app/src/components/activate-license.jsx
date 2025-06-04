@@ -14,6 +14,8 @@ import { Label } from "./ui/label";
 import { useAuth } from "../contexts/AuthContext";
 import { Alert, AlertDescription } from "./ui/alert";
 import Logo from "../data/assets/logo.png";
+import { Checkbox } from "./ui/checkbox";
+
 import {
   Eye,
   EyeOff,
@@ -38,6 +40,7 @@ export function LicenseActivationForm({ className, ...props }) {
   const { login, loading, error, isActivated, isSignedUp, signUp, setIsActivated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [rememberMe, setRememberMe] = useState(false);
 
   const [activationMethod, setActivationMethod] = useState("direct");
   const [activationStep, setActivationStep] = useState(1);
@@ -64,6 +67,15 @@ export function LicenseActivationForm({ className, ...props }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showAdminPrompt, setShowAdminPrompt] = useState(false);
 
+
+    useEffect(() => {
+      const saved = localStorage.getItem("rememberedCredentials");
+      if (saved) {
+        const { email, password } = JSON.parse(saved);
+        setCredentials((c) => ({ ...c, email, password }));
+        setRememberMe(true);
+      }
+    }, []);
 
   // Function to close the modal
   const handleCloseModal = () => {
@@ -274,7 +286,18 @@ export function LicenseActivationForm({ className, ...props }) {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-
+ // Save or clear from localStorage
+    if (rememberMe) {
+      localStorage.setItem(
+        "rememberedCredentials",
+        JSON.stringify({
+          email: credentials.email,
+          password: credentials.password,
+        })
+      );
+    } else {
+      localStorage.removeItem("rememberedCredentials");
+    }
     try {
       // console.log("Inside Login");
       let result = await login({
@@ -922,6 +945,16 @@ export function LicenseActivationForm({ className, ...props }) {
                         {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                       </button>
                     </div>
+                     <div className="flex items-center space-x-2 mt-2">
+                                    <Checkbox
+                                      id="rememberMe"
+                                      checked={rememberMe}
+                                      onCheckedChange={(checked) => setRememberMe(!!checked)}
+                                    />
+                                    <Label htmlFor="rememberMe" className="cursor-pointer">
+                                      Remember me
+                                    </Label>
+                                  </div>
                   </motion.div>
 
                   <motion.div custom={2} variants={itemVariants}>
