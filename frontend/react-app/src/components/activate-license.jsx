@@ -77,7 +77,7 @@ export function LicenseActivationForm({ className, ...props }) {
       setIsModalOpen(true);
     }
   }, [licenses]);
-  
+
   // Error messages auto-clear after 5 seconds through AuthContext
   // Success messages remain visible until explicitly cleared
 
@@ -134,7 +134,7 @@ export function LicenseActivationForm({ className, ...props }) {
         setActivationStep(2);
         localStorage.setItem("role", credentials.role);
         setSuccessMessage("License successfully activated! Please continue to set up your account.");
-        
+
         // 🕒 Add 500ms delay before connecting to the network license
         await new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -144,7 +144,7 @@ export function LicenseActivationForm({ className, ...props }) {
             port: "7890",
           });
           console.log("Network License Result:", networkResult);
-          
+
           if (!networkResult.success) {
             // Handle network license connection errors but still proceed
             console.warn("Network license connection issue:", networkResult.error);
@@ -162,14 +162,14 @@ export function LicenseActivationForm({ className, ...props }) {
         // Detailed error handling for activation failure
         console.error("Activation failed:", result.error);
         setActivationStatus("failed");
-        
+
         // Set detailed error message if available
         if (result.error) {
           setError(result.error);
         } else {
           setError("License activation failed. Please check your license key and try again.");
         }
-        
+
         // Log detailed error information for debugging
         if (result.errorDetails) {
           console.error("Error details:", result.errorDetails);
@@ -183,22 +183,27 @@ export function LicenseActivationForm({ className, ...props }) {
   };
 
   const handleNetworkLicenseSearch = async (e) => {
-    setActivationStatus("processing");  
+    setActivationStatus("processing");
+    setError(null);
     e.preventDefault();
     setIsNetworkSearching(true);
 
     try {
-      const result = await window.electron.auth.searchnNetworkLicenses({ serviceType: "license-server" });
+      const result = await window.electron.auth.searchNetworkLicenses({ serviceType: "license-server" });
 
       if (result.success && result.licenses && result.licenses.length > 0) {
         console.log("Network Licenses Found:", result.licenses);
         setNetworkLicenses(result.licenses);
       } else {
         setNetworkLicenses([]);
-        setActivationStatus("network-not-found");
+        console.log("No network licenses found.");
+        setError("No network licenses found");
+        // setActivationStatus("network-not-found");
       }
     } catch (error) {
-      setActivationStatus("network-error");
+      console.error("Error searching network licenses:", error);
+      setError("An unexpected error occurred while searching for network licenses.");
+      // setActivationStatus("network-error");
     } finally {
       setIsNetworkSearching(false);
     }
@@ -230,7 +235,7 @@ export function LicenseActivationForm({ className, ...props }) {
         handleCloseModal();
       } else {
         console.error("Network license connection failed:", result);
-        
+
         // Set activation status first based on result
         if (result.inactiveLicenses && result.inactiveLicenses.length > 0) {
           // Update licenses list with inactive licenses
@@ -243,7 +248,7 @@ export function LicenseActivationForm({ className, ...props }) {
           // Generic error case
           setActivationStatus("failed");
         }
-        
+
         // Set only one error message - prioritize the server's error message
         if (result.error) {
           setError(result.error);
@@ -254,7 +259,7 @@ export function LicenseActivationForm({ className, ...props }) {
         } else {
           setError("Failed to connect to network license.");
         }
-        
+
         // Log detailed error information for debugging
         if (result.errorDetails) {
           console.error("Error details:", result.errorDetails);
@@ -322,6 +327,7 @@ export function LicenseActivationForm({ className, ...props }) {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setError(null); // Clear previous error
 
     try {
       // console.log("Inside Login");
@@ -336,9 +342,12 @@ export function LicenseActivationForm({ className, ...props }) {
       if (result) {
         const from = location.state?.from?.pathname || "/";
         navigate(from, { replace: true });
+      } else if (result?.error) {
+        setError(result.error);
       }
     } catch (error) {
       console.error("Login failed:", error);
+      setError(error.message || "An unexpected error occurred during login. Please try again.");
     }
   };
 
@@ -391,7 +400,7 @@ export function LicenseActivationForm({ className, ...props }) {
       return (
         <Alert className="mb-4 bg-green-50 border-green-200">
           <div className="flex items-center">
-            <CheckCircle className="h-4 w-4 text-green-700 mr-2" />
+            <CheckCircle className="h-4 text-green-700 mr-2" />
             <AlertDescription className="text-green-700">
               {successMessage}
             </AlertDescription>
@@ -399,13 +408,13 @@ export function LicenseActivationForm({ className, ...props }) {
         </Alert>
       );
     }
-    
+
     // Show explicit error message if available - this is highest priority
     if (error) {
       return (
         <Alert variant="destructive" className="mb-4">
           <div className="flex items-center">
-            <AlertTriangle className="h-4 w-4 mr-2" />
+            <AlertTriangle className="h-4 mr-2" />
             <AlertDescription>
               {error}
             </AlertDescription>
@@ -413,7 +422,7 @@ export function LicenseActivationForm({ className, ...props }) {
         </Alert>
       );
     }
-    
+
     // Only show status-based alerts if no explicit error message exists
     if (!activationStatus) return null;
 

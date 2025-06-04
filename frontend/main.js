@@ -195,9 +195,8 @@ autoUpdater.on("update-available", (info) => {
     .showMessageBox({
       type: "info",
       title: "Update Available",
-      message: `A new version (${
-        info.version
-      }) is available. Your current version is ${app.getVersion()}.`,
+      message: `A new version (${info.version
+        }) is available. Your current version is ${app.getVersion()}.`,
       detail: info.releaseNotes
         ? `Release Notes:\n${info.releaseNotes}`
         : undefined,
@@ -207,13 +206,13 @@ autoUpdater.on("update-available", (info) => {
     .then(({ response }) => {
       if (response === 0) {
         log.info("User accepted download");
-        
+
         // Create progress window - FIXING THE BLANK WINDOW ISSUE
         if (progressWindow) {
           progressWindow.close();
           progressWindow = null;
         }
-        
+
         progressWindow = new BrowserWindow({
           width: 400,
           height: 120,
@@ -227,7 +226,7 @@ autoUpdater.on("update-available", (info) => {
             contextIsolation: false
           }
         });
-        
+
         // Use a more reliable way to load the progress UI
         const progressHtml = `
           <!DOCTYPE html>
@@ -291,30 +290,30 @@ autoUpdater.on("update-available", (info) => {
             </body>
           </html>
         `;
-        
+
         // Load directly using data URL instead of temp file to avoid file system issues
         progressWindow.loadURL("data:text/html;charset=utf-8," + encodeURIComponent(progressHtml));
-        
+
         progressWindow.once('ready-to-show', () => {
           progressWindow.show();
         });
-        
+
         // Backup database before update
         const dbPath = path.join(userDataDir, "database.sqlite");
         const backupDir = path.join(userDataDir, "backups");
-        
+
         if (!fs.existsSync(backupDir)) {
           fs.mkdirSync(backupDir, { recursive: true });
         }
-        
+
         const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
         const backupPath = path.join(backupDir, `db-backup-${timestamp}.sqlite`);
-        
+
         if (fs.existsSync(dbPath)) {
           fs.copyFileSync(dbPath, backupPath);
           log.info("Database backup created successfully");
         }
-        
+
         autoUpdater.downloadUpdate();
       }
     });
@@ -329,7 +328,7 @@ autoUpdater.on("update-not-available", (info) => {
 autoUpdater.on("download-progress", (progress) => {
   log.info(`Download progress: ${progress.percent}%`);
   win?.setProgressBar(progress.percent / 100);
-  
+
   if (progressWindow && !progressWindow.isDestroyed()) {
     try {
       // Use the more reliable method to update progress
@@ -353,7 +352,7 @@ let isUpdating = false;
 autoUpdater.on("update-downloaded", (info) => {
   log.info("Update downloaded. Version:", info.version);
   win?.setProgressBar(-1); // Remove progress bar
-  
+
   if (progressWindow && !progressWindow.isDestroyed()) {
     progressWindow.close();
     progressWindow = null;
@@ -383,7 +382,7 @@ autoUpdater.on("update-downloaded", (info) => {
           contextIsolation: false
         }
       });
-      
+
       const installHtml = `
         <html>
           <head>
@@ -429,22 +428,22 @@ autoUpdater.on("update-downloaded", (info) => {
           </body>
         </html>
       `;
-      
+
       installingWindow.loadURL("data:text/html;charset=utf-8," + encodeURIComponent(installHtml));
-      
+
       installingWindow.once('ready-to-show', () => {
         installingWindow.show();
       });
-      
+
       // Set updating flag BEFORE calling quitAndInstall 
       // This ensures session confirmation dialog is skipped
       isUpdating = true;
       sessionManager.logoutUser(); // Properly logout the user
-      
+
       // Create a file flag to check if update succeeded
       const updateFlagPath = path.join(app.getPath("userData"), "update-success.txt");
       fs.writeFileSync(updateFlagPath, info.version);
-      
+
       // Give the installing window time to show before quitting
       setTimeout(() => {
         try {
@@ -461,13 +460,13 @@ autoUpdater.on("error", (err) => {
   log.error("Auto-updater error:", err.message);
   log.error("Error details:", err);
   win?.webContents.send("update-error", err.message);
-  
+
   // Close progress window if it exists
   if (progressWindow && !progressWindow.isDestroyed()) {
     progressWindow.close();
     progressWindow = null;
   }
-  
+
   // Show error to user
   dialog.showMessageBox({
     type: "error",
@@ -535,7 +534,8 @@ function getProductionExecutablePath() {
   return executablePath;
 }
 
-async function startPythonExecutable() {  return new Promise((resolve, reject) => {
+async function startPythonExecutable() {
+  return new Promise((resolve, reject) => {
     let command, args;
     let options = {
       detached: false,
@@ -734,7 +734,9 @@ function setupEventListeners(win) {
   // Listen for remaining seconds updates
   sessionManager.on("remainingSecondsUpdated", (seconds) => {
     // console.log(`Remaining seconds: ${seconds}`);
-    win.webContents.send("remainingSecondsUpdated", seconds);
+    if (win && !win.isDestroyed()) {
+      win.webContents.send("remainingSecondsUpdated", seconds);
+    }
   });
 
   // Listen for license expiration
@@ -743,7 +745,10 @@ function setupEventListeners(win) {
     // Optionally handle the license expiration, e.g., show a dialog or quit the app
     sessionManager.logoutUser();
 
-    win.webContents.send("navigateToLogin");
+    if (win && !win.isDestroyed()) {
+      win.webContents.send("navigateToLogin");
+    }
+
     // win?.destroy();
   });
 }
@@ -812,6 +817,8 @@ async function createWindow() {
   // }, 5000)
 
   win.on("closed", () => {
+    sessionManager.stopLicenseCountdown();
+    sessionManager.removeAllListeners();
     win = null;
     log.info("Window closed");
     app.quit();
@@ -1030,7 +1037,7 @@ app.whenReady().then(async () => {
       try {
         const version = fs.readFileSync(updateFlagPath, 'utf8');
         fs.unlinkSync(updateFlagPath); // Remove the flag file
-        
+
         // Show success message after app fully loads
         setTimeout(() => {
           dialog.showMessageBox({
@@ -1044,13 +1051,13 @@ app.whenReady().then(async () => {
         log.error("Error reading update flag:", err);
       }
     }
-    
+
     // Check for update failure flag
     const updateFailurePath = path.join(app.getPath("userData"), "update-failure.txt");
     if (fs.existsSync(updateFailurePath)) {
       try {
         fs.unlinkSync(updateFailurePath); // Remove the flag file
-        
+
         // Show failure recovery message
         setTimeout(() => {
           dialog.showMessageBox({

@@ -53,6 +53,7 @@ class SessionManager extends EventEmitter {
             if (remainingSeconds <= 0) {
                 clearInterval(this.interval);
                 this.remainingSeconds = 0;
+                // this.stopLicenseCountdown();           // clears + nulls interval
                 this.emit('licenseExpired');
             } else {
                 this.setRemainingSeconds(remainingSeconds);
@@ -129,7 +130,7 @@ class SessionManager extends EventEmitter {
             });
 
             if (response.data?.success) {
-                // this.stopLicenseCountdown();
+                this.stopLicenseCountdown();
 
                 return {
                     success: true,
@@ -152,4 +153,4 @@ class SessionManager extends EventEmitter {
 
 // Create and export singleton instance
 // const sessionManager = new SessionManager();
-module.exports = SessionManager.getInstance();
+module.exports = SessionManager.getInstance();  

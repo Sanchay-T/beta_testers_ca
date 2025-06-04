@@ -3,6 +3,7 @@ const sessionManager = require("../SessionManager");
 const log = require("electron-log");
 const licenseManager = require("../LicenseManager");
 const { users } = require("../db/schema/User");
+const AuthError = require("./utils/AuthError");
 const bcrypt = require("bcrypt");
 const databaseManager = require("../db/db");
 const { eq, exists, sql } = require("drizzle-orm");
@@ -208,7 +209,7 @@ function registerAuthHandlers(userDataPath) {
 
       console.log("User login present: ", user);
       if (!user) {
-        throw new Error("Invalid email or password"); // User not found
+        throw new AuthError("Invalid email or password");
       }
 
       // Use bcrypt to compare the plain-text password with the hashed password
@@ -259,7 +260,11 @@ function registerAuthHandlers(userDataPath) {
         return { success: false, error: "Your session has expired. Please use a license from the network.", errorCode: "session-not-available" };
       }
       else {
-        log.info("Login error:", error.message, error.response.data);
+        if (error instanceof AuthError) {
+          log.info("Login error:", error.message);
+          return { success: false, error: error.message, errorCode: "auth-error" };
+        }
+        log.info("Login error:", error.message);
         return { success: false, error: "An unexpected error occurred" };
       }
     }
