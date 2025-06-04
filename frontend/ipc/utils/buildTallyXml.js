@@ -388,6 +388,7 @@ function buildTallyERPLedgerXml({
   Address = Address ? Address.replace(/&/g, "&amp;") : Address;
   country = country ? country.replace(/&/g, "&amp;") : country;
   GSTnum = GSTnum ? GSTnum.replace(/&/g, "&amp;") : GSTnum;
+  ledgerName = ledgerName.trim();
 
   return `
 
