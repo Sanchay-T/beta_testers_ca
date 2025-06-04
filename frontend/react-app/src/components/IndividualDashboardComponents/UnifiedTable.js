@@ -1088,7 +1088,8 @@ const DataTable = ({
   };
 
   const handleNumericFilter = (columnName, min, max) => {
-    const dataToFilter = transactions;
+    const dataToFilter =
+      existingFilterData.length > 0 ? existingFilterData : transactions;
     // existingFilterData.length > 0 ? existingFilterData : data;
     const filtered = dataToFilter.filter((row) => {
       const value = parseFloat(row[columnName]);
