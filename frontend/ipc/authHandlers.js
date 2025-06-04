@@ -561,12 +561,48 @@ function registerAuthHandlers(userDataPath) {
         log.info("License activated successfully:", response.data);
         return { success: true, data: response.data };
       } else {
-        log.error("License activation failed:", response.data.message);
-        return { success: false, error: response.data.message || "Invalid license" };
+        log.error("License activation failed:", response.data);
+        return {
+          success: false,
+          error: response.data.message || response.data.error || "Invalid license",
+          errorDetails: response.data
+        };
       }
     } catch (err) {
-      log.error("Error activating license:", err.message);
-      return { success: false, error: "License service not reachable." };
+      log.error("Error activating license:", err.response.data.detail, err.message);
+
+      // Log the full error structure for debugging
+      if (err.response) {
+        log.error("Response data:", err.response.data);
+        log.error("Response status:", err.response.status);
+        log.error("Response headers:", err.response.headers);
+      }
+
+      // Check if the error has a response from the server
+      if (err.response && err.response.data) {
+        // Extract the most specific error message available
+        const errorMessage =
+          err.response.data.detail ||
+          err.response.data.error ||
+          (typeof err.response.data === 'string' ? err.response.data : null) ||
+          err.message ||
+          "Unknown error from gateway server";
+
+        return {
+          success: false,
+          error: errorMessage,
+          errorDetails: err.response.data,
+          statusCode: err.response.status
+        };
+      }
+
+      // If there's no response at all (network error, timeout, etc.)
+      return {
+        success: false,
+        error: err.message || "Gateway server did not respond in time.",
+        errorCode: err.code,
+        errorType: "connection"
+      };
     }
   });
 
@@ -697,29 +733,70 @@ function registerAuthHandlers(userDataPath) {
       }
       else {
         log.error("License assignment failed:", response.data.message);
-        return { success: false, error: "License assignment failed. An unexpected error occurred." };
+        // Return the actual error message from the server response
+        return {
+          success: false,
+          error: response.data.message || response.data.error || "License assignment failed",
+          errorDetails: response.data
+        };
       }
 
     } catch (error) {
+      // Log the complete error for debugging
+      log.error("License assignment error:", error);
+
+      // Log the full error structure for debugging
       if (error.response) {
-        log.error("License assignment error:", error.response.data, error.message);
+        log.error("Response data:", JSON.stringify(error.response.data));
+        log.error("Response status:", error.response.status);
+        log.error("Response headers:", error.response.headers);
+      }
+
+      if (error.response) {
+        // Handle specific response formats
         if (error.response.data.inactiveLicenses) {
           return {
             success: false,
-            error: error.response.data.error,
+            error: error.response.data.error || error.response.data.message || "Found inactive licenses. Please revoke an existing license.",
             inactiveLicenses: error.response.data.inactiveLicenses,
+            errorDetails: error.response.data,
+            statusCode: error.response.status
           };
         } else if (error.response.data.activeLicenses) {
           return {
             success: false,
-            error: error.response.data.error,
-            activeLicenses: error.response.data.activeLicenses
+            error: error.response.data.error || error.response.data.message || "License is active on another device.",
+            activeLicenses: error.response.data.activeLicenses,
+            errorDetails: error.response.data,
+            statusCode: error.response.status
+          };
+        } else {
+          // Extract the most specific error message available
+          const errorMessage =
+            error.response.data.error ||
+            error.response.data.message ||
+            (typeof error.response.data === 'string' ? error.response.data : null) ||
+            error.message ||
+            "Unknown error from gateway server";
+
+          // Handle any other error response format from the gateway
+          return {
+            success: false,
+            error: errorMessage,
+            errorDetails: error.response.data,
+            statusCode: error.response.status
           };
         }
       }
       else {
+        // If there's no response at all (network error, timeout, etc.)
         log.error("License connection error:", error.message);
-        return { success: false, error: "License connection failed. An unexpected error occurred." };
+        return {
+          success: false,
+          error: error.message || "Gateway server did not respond in time.",
+          errorCode: error.code,
+          errorType: "connection"
+        };
       }
     }
   });
