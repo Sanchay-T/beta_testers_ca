@@ -114,12 +114,12 @@ const Card2 = ({
   useEffect(() => {
     console.log("TimerDisplay mounted");
     const handleUpdate = (seconds) => {
-      console.log(`Remaining seconds: ${seconds}`);
+      // console.log(`Remaining seconds: ${seconds}`);
       setRemainingSeconds(seconds);
 
       // Calculate expiry time in local timezone
       const expiry = new Date(Date.now() + seconds * 1000);
-      console.log(`Expiry time: ${expiry.toLocaleString()}`);
+      // console.log(`Expiry time: ${expiry.toLocaleString()}`);
 
       setExpiryTime(expiry);
     };
