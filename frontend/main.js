@@ -154,7 +154,7 @@ if (global.AppConfig.isDev) {
 autoUpdater.setFeedURL({
   provider: "github",
   owner: "Shama-Cyphersol",
-  repo: "beta_testers_ca",
+  repo: "ca-offline-suite",
   token: process.env.GH_TOKEN,
 });
 
@@ -1529,7 +1529,7 @@ function checkForUpdates() {
 log.transports.file.fileName = 'cyphersol.log';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
-// 🚀 COMPREHENSIVE AUTO-UPDATE LOGGING SYSTEM v1.0.14
+// 🚀 COMPREHENSIVE AUTO-UPDATE LOGGING SYSTEM v2.0.0
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // Created for: Backend Team Analysis & Software Improvement
 // Purpose: Detailed tracking of update process, user behavior, and system performance
@@ -1604,7 +1604,7 @@ const logSystemInfo = () => {
 
 // Initialize comprehensive logging
 log.info('═══════════════════════════════════════════════════════════════════════════════════════');
-log.info('🚀 CYPHERSOL AUTO-UPDATE LOGGING SYSTEM v1.0.14 INITIALIZED');
+log.info('🚀 CYPHERSOL AUTO-UPDATE LOGGING SYSTEM v2.0.0 INITIALIZED');
 log.info('═══════════════════════════════════════════════════════════════════════════════════════');
 log.info(`📅 Session Start Time: ${new Date().toISOString()}`);
 log.info(`🏷️ Application Version: ${app.getVersion()}`);
