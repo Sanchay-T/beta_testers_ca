@@ -47,7 +47,7 @@ async function fetchCompanyList(port) {
     });
 
     const xmlOutput = await response.text();
-    console.log("Raw Company XML:\n", xmlOutput);
+    // console.log("Raw Company XML:\n", xmlOutput);
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(xmlOutput, "text/xml");
 

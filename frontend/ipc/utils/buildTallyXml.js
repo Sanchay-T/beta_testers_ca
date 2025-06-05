@@ -306,7 +306,7 @@ function buildTallyPrimeLedgerXml({
 }) {
   companyName = companyName ? companyName.replace(/&/g, "&amp;") : companyName;
   ledgerName = ledgerName ? ledgerName.replace(/&/g, "&amp;") : ledgerName;
-  ledgerGroup = ledgerGroup ? ledgerGroup.replace(/&/g, "&amp;") : ledgerGroup;
+  // ledgerGroup = ledgerGroup ? ledgerGroup.replace(/&/g, "&amp;") : ledgerGroup;
   state = state ? state.replace(/&/g, "&amp;") : state;
   Address = Address ? Address.replace(/&/g, "&amp;") : Address;
   country = country ? country.replace(/&/g, "&amp;") : country;
@@ -388,6 +388,7 @@ function buildTallyERPLedgerXml({
   Address = Address ? Address.replace(/&/g, "&amp;") : Address;
   country = country ? country.replace(/&/g, "&amp;") : country;
   GSTnum = GSTnum ? GSTnum.replace(/&/g, "&amp;") : GSTnum;
+  ledgerName = ledgerName.trim();
 
   return `
 
