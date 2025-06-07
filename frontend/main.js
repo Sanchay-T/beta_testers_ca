@@ -27,6 +27,7 @@ const { registerTallyIpc } = require("./ipc/tallyHandlers.js");
 const { registerVoucherIpc } = require("./ipc/VoucherHandlers.js");
 const { registerExcelDownloadHandlers } = require("./ipc/excelDownloadHandler");
 const { registerAppLevelIPCHandlers } = require("./ipc/appLevelIPC");
+const DatabaseMigration = require('./utils/databaseMigration');
 // Moved database require to after AppConfig initialization
 const { spawn, execFile, exec, execSync } = require("child_process");
 const log = require("electron-log");
@@ -151,10 +152,11 @@ if (global.AppConfig.isDev) {
 // Removed redundant settings - configured above
 
 // Configure autoUpdater for GitHub repository
+// BETA TESTING: Using beta-testers repo for testing migration changes
 autoUpdater.setFeedURL({
   provider: "github",
   owner: "Shama-Cyphersol",
-  repo: "ca-offline-suite",
+  repo: "beta_testers_ca", // TODO: Change back to "ca-offline-suite" after testing
   token: process.env.GH_TOKEN,
 });
 
@@ -1326,13 +1328,164 @@ console.log("GATEWAY EXECUTABLE DIR:", GATEWAY_EXECUTABLE_DIR);
 
 app.setName("CypherSol Dev");
 
+// Add this function before app.whenReady()
+async function performUserDataMigration() {
+  const migrationStartTime = Date.now();
+  
+  try {
+    log.info("🚀 [USER-DATA-MIGRATION] === STARTING MIGRATION PROCESS ===");
+    log.info("[USER-DATA-MIGRATION] SYSTEM CONTEXT", {
+      appVersion: app.getVersion(),
+      appName: app.getName(),
+      platform: process.platform,
+      arch: process.arch,
+      isPackaged: app.isPackaged,
+      userDataDir: app.getPath('userData'),
+      tempDir: app.getPath('temp'),
+      processId: process.pid,
+      startTime: new Date().toISOString()
+    });
+    
+    const migration = new DatabaseMigration();
+    
+    // Get initial status
+    const initialStatus = migration.getMigrationStatus();
+    log.info("[USER-DATA-MIGRATION] INITIAL STATUS", initialStatus);
+    
+    // Perform migration
+    log.info("[USER-DATA-MIGRATION] CALLING MIGRATION FUNCTION");
+    const result = await migration.performMigration();
+    
+    const migrationEndTime = Date.now();
+    const totalDuration = migrationEndTime - migrationStartTime;
+    
+    // Log results based on outcome
+    if (result.alreadyCompleted) {
+      log.info("✅ [USER-DATA-MIGRATION] ALREADY COMPLETED", { 
+        totalDurationMs: totalDuration 
+      });
+    } else if (result.freshInstall) {
+      log.info("ℹ️ [USER-DATA-MIGRATION] FRESH INSTALLATION DETECTED", { 
+        totalDurationMs: totalDuration 
+      });
+    } else if (result.success) {
+      log.info("🎉 [USER-DATA-MIGRATION] MIGRATION SUCCESSFUL!", {
+        oldApp: result.oldAppName,
+        totalItems: result.totalItems,
+        successfulMigrations: result.successfulMigrations,
+        failedMigrations: result.failedMigrations,
+        preservedOriginal: result.preservedOriginal,
+        migrationDurationMs: result.migrationDurationMs,
+        totalProcessDurationMs: totalDuration
+      });
+      
+      // Log detailed success information
+      if (result.successfulMigrations > 0) {
+        const migratedFiles = result.migratedItems
+          .filter(item => item.migrationSuccess)
+          .map(item => ({
+            name: item.fileName,
+            type: item.type,
+            description: item.description || 'No description',
+            size: item.size || 'Unknown',
+            durationMs: item.migrationDurationMs || 'Unknown'
+          }));
+          
+        log.info("📋 [USER-DATA-MIGRATION] SUCCESSFULLY MIGRATED ITEMS", {
+          count: migratedFiles.length,
+          items: migratedFiles,
+          note: "Original files preserved in old app directory"
+        });
+      }
+      
+      // Log any failures for debugging
+      if (result.failedMigrations > 0) {
+        const failedFiles = result.migratedItems
+          .filter(item => !item.migrationSuccess)
+          .map(item => ({
+            name: item.fileName,
+            type: item.type,
+            description: item.description || 'No description'
+          }));
+          
+        log.warn("⚠️ [USER-DATA-MIGRATION] FAILED MIGRATIONS", {
+          count: failedFiles.length,
+          items: failedFiles
+        });
+      }
+    } else {
+      log.error("❌ [USER-DATA-MIGRATION] MIGRATION FAILED", {
+        totalItems: result.totalItems || 'Unknown',
+        successful: result.successfulMigrations || 0,
+        failed: result.failedMigrations || 'Unknown',
+        error: result.error || 'Unknown error',
+        totalDurationMs: totalDuration
+      });
+    }
+    
+    // Get final status for comparison
+    const finalStatus = migration.getMigrationStatus();
+    log.info("[USER-DATA-MIGRATION] FINAL STATUS", finalStatus);
+    
+    log.info("🏁 [USER-DATA-MIGRATION] === MIGRATION PROCESS COMPLETED ===", {
+      totalDurationMs: totalDuration,
+      totalDurationSeconds: (totalDuration / 1000).toFixed(2)
+    });
+    
+    return result;
+    
+  } catch (error) {
+    const migrationEndTime = Date.now();
+    const totalDuration = migrationEndTime - migrationStartTime;
+    
+    log.error("💥 [USER-DATA-MIGRATION] CRITICAL MIGRATION ERROR", {
+      error: error.message,
+      stack: error.stack,
+      totalDurationMs: totalDuration,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Try to log to a backup location
+    try {
+      const errorLogPath = path.join(app.getPath('temp'), 'cyphersol-migration-error.log');
+      const errorInfo = {
+        timestamp: new Date().toISOString(),
+        error: error.message,
+        stack: error.stack,
+        appVersion: app.getVersion(),
+        platform: process.platform
+      };
+      fs.writeFileSync(errorLogPath, JSON.stringify(errorInfo, null, 2));
+      log.info("[USER-DATA-MIGRATION] Error details saved to:", errorLogPath);
+    } catch (backupError) {
+      log.error("[USER-DATA-MIGRATION] Failed to save error backup:", backupError);
+    }
+    
+    return { success: false, error: error.message, criticalError: true };
+  }
+}
+
 app.whenReady().then(async () => {
-  log.info("App is ready", userDataDir);
+  log.info("🚀 APP READY - STARTING INITIALIZATION SEQUENCE", {
+    userDataDir: userDataDir,
+    appVersion: app.getVersion(),
+    timestamp: new Date().toISOString()
+  });
 
   createSplashWindow();
 
   try {
-    // 🗄️ Initialize Database FIRST (Core Requirement)
+    // 🔄 MIGRATE USER DATA FROM OLD APP (Critical first step)
+    log.info("📋 INITIALIZATION STEP 1: USER DATA MIGRATION");
+    const migrationResult = await performUserDataMigration();
+    
+    if (migrationResult.criticalError) {
+      log.error("💥 CRITICAL MIGRATION ERROR - CONTINUING WITH CAUTION");
+      // Continue with app initialization even if migration fails
+    }
+    
+    // 🗄️ Initialize Database AFTER migration (so it uses the migrated data)
+    log.info("📋 INITIALIZATION STEP 2: DATABASE INITIALIZATION");
     try {
       const dbManager = databaseManager.getInstance();
       await dbManager.initialize(userDataDir);
