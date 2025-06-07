@@ -811,11 +811,11 @@ export function LicenseActivationForm({ className, ...props }) {
               >
                 <div className="flex flex-col gap-4">
                   <motion.div className="grid gap-2" custom={0} variants={itemVariants}>
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">Username / Email</Label>
                     <Input
                       id="email"
-                      type="email"
-                      placeholder="johndoe@example.com"
+                      type="text"
+                      placeholder="Enter your username or email"
                       required
                       value={credentials.email}
                       onChange={handleInputChange}
@@ -885,11 +885,11 @@ export function LicenseActivationForm({ className, ...props }) {
               >
                 <div className="flex flex-col gap-4">
                   <motion.div className="grid gap-2" custom={0} variants={itemVariants}>
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">Username / Email</Label>
                     <Input
                       id="email"
-                      type="email"
-                      placeholder="johndoe@example.com"
+                      type="text"
+                      placeholder="Enter your username or email"
                       required
                       value={credentials.email}
                       onChange={handleInputChange}
