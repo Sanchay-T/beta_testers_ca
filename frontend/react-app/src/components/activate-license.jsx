@@ -814,7 +814,7 @@ export function LicenseActivationForm({ className, ...props }) {
                     <Label htmlFor="email">Username / Email</Label>
                     <Input
                       id="email"
-                      type="email"
+                      type="text"
                       placeholder="Enter your username or email"
                       required
                       value={credentials.email}
@@ -888,7 +888,7 @@ export function LicenseActivationForm({ className, ...props }) {
                     <Label htmlFor="email">Username / Email</Label>
                     <Input
                       id="email"
-                      type="email"
+                      type="text"
                       placeholder="Enter your username or email"
                       required
                       value={credentials.email}
