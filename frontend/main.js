@@ -1288,7 +1288,6 @@ async function startPythonExecutable() {
         }
       }
 
-   
       options.env = {
         ...options.env,
         PYTHONIOENCODING: "utf-8",
@@ -1353,41 +1352,32 @@ async function startPythonExecutable() {
   });
 }
 
-   const XLSM_SOURCE_DIR = path.join(
-        __dirname,
-        "media",
-        "vouchers",
-        "tallyprime"
-      ); // Bundled location
-      const XLSM_USERDATA_DIR = path.join(
-        app.getPath("userData"),
-        "tallyprime"
-      );
+const XLSM_SOURCE_DIR = path.join(__dirname, "media", "vouchers", "tallyprime"); // Bundled location
+const XLSM_USERDATA_DIR = path.join(app.getPath("userData"), "tallyprime");
 
-      // Copies all .xlsm files from sourceDir to destDir, replacing old files with new ones.
-      function syncTallyprimeFilesToUserData() {
-        if (!fs.existsSync(XLSM_SOURCE_DIR)) {
-          log.error("Source .xlsm directory not found:", XLSM_SOURCE_DIR);
-          return;
-        }
-        if (!fs.existsSync(XLSM_USERDATA_DIR)) {
-          fs.mkdirSync(XLSM_USERDATA_DIR, { recursive: true });
-        }
-        const xlsmFiles = fs
-          .readdirSync(XLSM_SOURCE_DIR)
-          .filter((f) => f.endsWith(".xlsm"));
+// Copies all .xlsm files from sourceDir to destDir, replacing old files with new ones.
+function syncTallyprimeFilesToUserData() {
+  if (!fs.existsSync(XLSM_SOURCE_DIR)) {
+    log.error("Source .xlsm directory not found:", XLSM_SOURCE_DIR);
+    return;
+  }
+  if (!fs.existsSync(XLSM_USERDATA_DIR)) {
+    fs.mkdirSync(XLSM_USERDATA_DIR, { recursive: true });
+  }
+  const xlsmFiles = fs
+    .readdirSync(XLSM_SOURCE_DIR)
+    .filter((f) => f.endsWith(".xlsm"));
 
-        log.info({ xlsmFiles });
-        xlsmFiles.forEach((file) => {
-          const src = path.join(XLSM_SOURCE_DIR, file);
-          const dest = path.join(XLSM_USERDATA_DIR, file);
-          log.info({src,dest})
-          // Always overwrite to ensure latest is shipped on update
-          fs.copyFileSync(src, dest);
-          log.info(`Synced tallyprime file: ${file}`);
-        });
-      }
-
+  log.info({ xlsmFiles });
+  xlsmFiles.forEach((file) => {
+    const src = path.join(XLSM_SOURCE_DIR, file);
+    const dest = path.join(XLSM_USERDATA_DIR, file);
+    log.info({ src, dest });
+    // Always overwrite to ensure latest is shipped on update
+    fs.copyFileSync(src, dest);
+    log.info(`Synced tallyprime file: ${file}`);
+  });
+}
 
 // Add this function to handle file protocol
 function createProtocol() {
@@ -1580,7 +1570,7 @@ async function createWindow() {
   registerMainDashboardIpc(TMP_DIR);
   registerCaseDashboardIpc();
   generateReportIpc(TMP_DIR);
-  registerOpenFileIpc(global.AppConfig.baseDir,global.AppConfig.userDataDir);
+  registerOpenFileIpc(global.AppConfig.baseDir, global.AppConfig.userDataDir);
   registerReportHandlers(TMP_DIR);
   registerAuthHandlers(app.getPath("userData"));
   registerOpportunityToEarnIpc();
