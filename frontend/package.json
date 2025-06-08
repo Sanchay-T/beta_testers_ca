@@ -1,8 +1,11 @@
-{  "name": "cyphersol-electron-app",  "version": "2.0.0",  "description": "CA OFFLINE APP",
+{
+  "name": "CypherEdge",
+  "version": "2.0.0",
+  "description": "CA OFFLINE APP",
   "main": "main.js",
   "icon": "./assets/cyphersol-icon.png",
   "scripts": {
-    "start": "powershell -Command \"Start-Process cmd -ArgumentList '/k cd /d \\\"D:\\CA\\ca-offline-suite\\frontend\\\" && npm run electron' -Verb runAs\"",
+    "start": "powershell -Command \"Start-Process cmd -ArgumentList '/k cd /d \\\"D:\\CA\\beta_testers_ca\\frontend\\\" && npm run electron' -Verb runAs\"",
     "start_": "npm run electron",
     "electron": "electron main.js",
     "start:fastapi": "cd ../ && uvicorn backend.main:app --reload --port 7500",
@@ -36,7 +39,7 @@
   },
   "build": {
     "appId": "com.electron.electronapp",
-    "productName": "Cyphersol",
+    "productName": "CypherEdge",
     "icon": "assets/cyphersol-icon.ico",
     "asarUnpack": [
       "**/*.node"
@@ -47,7 +50,7 @@
     "publish": {
       "provider": "github",
       "owner": "Shama-Cyphersol",
-      "repo": "ca-offline-suite",
+      "repo": "beta_testers_ca",
       "private": true,
       "releaseType": "release"
     },
@@ -61,7 +64,20 @@
       "!backend/__pycache__",
       "!env/bin/python3",
       "package.json",
-              "media/**/*"      ],    "extraResources": [      {        "from": "../dist/main",        "to": "backend/main"      },      {        "from": "media",        "to": "media",        "filter": [          "**/*"        ]      },
+      "media/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../dist/main",
+        "to": "backend/main"
+      },
+      {
+        "from": "media",
+        "to": "media",
+        "filter": [
+          "**/*"
+        ]
+      },
       {
         "from": "drizzle.config.js",
         "to": "drizzle.config.js"
@@ -105,7 +121,7 @@
       ],
       "artifactName": "${productName}-Setup-${version}.${ext}",
       "verifyUpdateCodeSignature": false,
-      "publisherName": "Cyphersol",
+      "publisherName": "CypherEdge",
       "requestedExecutionLevel": "requireAdministrator"
     },
     "nsis": {
@@ -113,7 +129,7 @@
       "allowToChangeInstallationDirectory": false,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Cyphersol",
+      "shortcutName": "CypherEdge",
       "deleteAppDataOnUninstall": false,
       "artifactName": "${productName}-Setup-${version}.${ext}",
       "uninstallDisplayName": "${productName}",
