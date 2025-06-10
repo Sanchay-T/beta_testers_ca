@@ -209,7 +209,7 @@ function registerAuthHandlers(userDataPath) {
 
       console.log("User login present: ", user);
       if (!user) {
-        throw new AuthError("Invalid email or password");
+        throw new AuthError("No account found with that email address.");
       }
 
       // Use bcrypt to compare the plain-text password with the hashed password
@@ -219,7 +219,7 @@ function registerAuthHandlers(userDataPath) {
       );
 
       if (!isPasswordValid) {
-        return { success: false, message: "Invalid email or password" };
+        throw new AuthError("Password is incorrect.");
       }
 
 
