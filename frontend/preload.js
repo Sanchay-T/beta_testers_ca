@@ -198,6 +198,8 @@ contextBridge.exposeInMainWorld("electron", {
     ipcRenderer.invoke("edit-pdf", result, reportName),
   editEntity: (payload) => ipcRenderer.invoke("edit-entity", payload),
   uploadToTally: (data, port) => ipcRenderer.invoke("tally-upload", data, port),
+    onUploadProgress: (cb) => ipcRenderer.on("upload-progress", cb),
+
   storeTallyUpload: (uploadResponse, bankLedger, uploadData) =>
     ipcRenderer.invoke(
       "store-tally-upload",
