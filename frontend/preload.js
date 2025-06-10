@@ -166,7 +166,7 @@ contextBridge.exposeInMainWorld("electron", {
     checkAccountStatus: () => ipcRenderer.invoke("auth:check-account-status"),
     // updateUser: (userData) => ipcRenderer.invoke('auth:updateUser', userData)
     checkLicense: () => ipcRenderer.invoke("license:check"),
-    searchnNetworkLicenses: (networkLicense) => ipcRenderer.invoke("license:search-network-licenses", networkLicense),
+    searchNetworkLicenses: (networkLicense) => ipcRenderer.invoke("license:search-network-licenses", networkLicense),
     activateLicense: (credentials) =>
       ipcRenderer.invoke("license:activate", credentials),
     connectNetworkLicense: (credentials) =>

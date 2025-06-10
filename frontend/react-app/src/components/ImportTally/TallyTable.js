@@ -401,9 +401,9 @@ const TallyTable = ({
         if (Array.isArray(response.data) && response.data.length > 0) {
           // Store all balance options for selection
           const formattedData = response.data.map((item) => ({
-            amount:Number(item.amount).toFixed(2),
+            amount: Number(item.amount).toFixed(2),
             date: item.date,
-            description: item.description, 
+            description: item.description,
             id: item.id
           }));
 

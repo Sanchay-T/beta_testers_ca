@@ -385,8 +385,8 @@ autoUpdater.on("download-progress", (progress) => {
     timeRemaining:
       progress.total && progress.bytesPerSecond
         ? Math.round(
-            (progress.total - progress.transferred) / progress.bytesPerSecond
-          )
+          (progress.total - progress.transferred) / progress.bytesPerSecond
+        )
         : "Unknown",
     timestamp: new Date().toISOString(),
   };
@@ -1428,7 +1428,9 @@ function setupEventListeners(win) {
   // Listen for remaining seconds updates
   sessionManager.on("remainingSecondsUpdated", (seconds) => {
     // console.log(`Remaining seconds: ${seconds}`);
-    win.webContents.send("remainingSecondsUpdated", seconds);
+    if (win && !win.isDestroyed()) {
+      win.webContents.send("remainingSecondsUpdated", seconds);
+    }
   });
 
   // Listen for license expiration
@@ -1437,7 +1439,10 @@ function setupEventListeners(win) {
     // Optionally handle the license expiration, e.g., show a dialog or quit the app
     sessionManager.logoutUser();
 
-    win.webContents.send("navigateToLogin");
+    if (win && !win.isDestroyed()) {
+      win.webContents.send("navigateToLogin");
+    }
+
     // win?.destroy();
   });
 }
@@ -1508,6 +1513,8 @@ async function createWindow() {
   // }, 5000)
 
   win.on("closed", () => {
+    sessionManager.stopLicenseCountdown();
+    sessionManager.removeAllListeners();
     win = null;
     log.info("Window closed");
     app.quit();

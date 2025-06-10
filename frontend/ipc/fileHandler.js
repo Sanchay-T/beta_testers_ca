@@ -5,7 +5,7 @@ const databaseManager = require('../db/db');
 const { users } = require('../db/schema/User');
 // console.log("Users : ", users)
 
-async function registerOpenFileIpc(BASE_DIR,userDataDir) {
+async function registerOpenFileIpc(BASE_DIR, userDataDir) {
 
     const db = databaseManager.getInstance().getDatabase();
 

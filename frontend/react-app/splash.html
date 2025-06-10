@@ -1,163 +1,165 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
+  <head>
     <meta charset="UTF-8" />
     <title>Cyphersol | Initializing...</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: radial-gradient(
+          circle at center,
+          #0a2a58,
+          #0e244f,
+          #091f42
+        );
+        color: white;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        overflow: hidden;
+        padding: 20px;
+      }
+
+      .logo-container {
+        width: 170px;
+        height: 100px;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 30px;
+        box-shadow: 0 0 25px rgba(59, 130, 246, 0.4);
+        animation: float 3s ease-in-out infinite;
+      }
+
+      .logo {
+        width: 180px;
+        height: 180px;
+        object-fit: contain;
+        transform: translateX(-10px);
+        /* No filters applied to keep the logo plain */
+      }
+
+      .tagline h1 {
+        font-size: 1.5rem;
+        font-weight: bold;
+        background: linear-gradient(to right, #3bddff, #3b82f6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-align: center;
+        margin-bottom: 10px;
+        letter-spacing: -0.015em;
+      }
+
+      .tagline p {
+        color: #cbd5e1;
+        font-size: 0.8rem;
+        text-align: center;
+        opacity: 0.9;
+        margin-bottom: 25px;
+      }
+
+      .loading-container {
+        position: relative;
+        width: 180px;
+        height: 25px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .loading-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 30%;
+        background: linear-gradient(90deg, #00c6ff, #0072ff);
+        border-radius: 16px;
+        animation: loading 2s infinite;
+      }
+
+      .loading-text {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 12px;
+        font-weight: 500;
+        color: white;
+        letter-spacing: 0.5px;
+      }
+
+      .version-badge {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 5px 10px;
+        border-radius: 10px;
+        font-size: 12px;
+        color: #94c5ff;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0px);
         }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: radial-gradient(circle at center, #0a2a58, #0e244f, #091f42);
-            color: white;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            overflow: hidden;
-            padding: 20px;
+        50% {
+          transform: translateY(-10px);
+        }
+      }
+
+      @keyframes loading {
+        0% {
+          width: 0%;
+          left: 0;
         }
 
-        .logo-container {
-            width: 170px;
-            height: 100px;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 30px;
-            box-shadow: 0 0 25px rgba(59, 130, 246, 0.4);
-            animation: float 3s ease-in-out infinite;
+        50% {
+          width: 30%;
+          left: 70%;
         }
 
-        .logo {
-            width: 180px;
-            height: 180px;
-            object-fit: contain;
-            transform: translateX(-10px)
-                /* No filters applied to keep the logo plain */
+        100% {
+          width: 0%;
+          left: 0;
         }
-
-        .tagline h1 {
-            font-size: 1.5rem;
-            font-weight: bold;
-            background: linear-gradient(to right, #3bddff, #3b82f6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-align: center;
-            margin-bottom: 10px;
-            letter-spacing: -0.015em;
-        }
-
-        .tagline p {
-            color: #cbd5e1;
-            font-size: 0.8rem;
-            text-align: center;
-            opacity: 0.9;
-            margin-bottom: 25px;
-        }
-
-        .loading-container {
-            position: relative;
-            width: 180px;
-            height: 25px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .loading-bar {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: 30%;
-            background: linear-gradient(90deg, #00c6ff, #0072ff);
-            border-radius: 16px;
-            animation: loading 2s infinite;
-        }
-
-        .loading-text {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 12px;
-            font-weight: 500;
-            color: white;
-            letter-spacing: 0.5px;
-        }
-
-        .version-badge {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.3);
-            padding: 5px 10px;
-            border-radius: 10px;
-            font-size: 12px;
-            color: #94c5ff;
-        }
-
-        @keyframes float {
-
-            0%,
-            100% {
-                transform: translateY(0px);
-            }
-
-            50% {
-                transform: translateY(-10px);
-            }
-        }
-
-        @keyframes loading {
-            0% {
-                width: 0%;
-                left: 0;
-            }
-
-            50% {
-                width: 30%;
-                left: 70%;
-            }
-
-            100% {
-                width: 0%;
-                left: 0;
-            }
-        }
+      }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
     <div class="logo-container">
-        <img src="./src/data/assets/logo.png" alt="Cyphersol" class="logo" />
+      <img src="./src/data/assets/logo.png" alt="Cyphersol" class="logo" />
     </div>
 
     <div class="tagline">
-        <h1>CA Offline Suite</h1>
-        <p>Work smarter, not harder</p>
+      <h1>CA Offline Suite</h1>
+      <p>Work smarter, not harder</p>
     </div>
 
     <div class="loading-container">
-        <div class="loading-bar"></div>
-        <div class="loading-text">Loading...</div>
+      <div class="loading-bar"></div>
+      <div class="loading-text">Loading...</div>
     </div>
 
-            <div class="version-badge">Version 1.0.16</div>
-</body>
-
+    <div class="version-badge">Version 1.0.16</div>
+  </body>
 </html>

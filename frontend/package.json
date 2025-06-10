@@ -1,4 +1,7 @@
-{  "name": "cyphersol-electron-app",  "version": "1.0.16",  "description": "CA OFFLINE APP",
+{
+  "name": "cyphersol-electron-app",
+  "version": "1.0.16",
+  "description": "CA OFFLINE APP",
   "main": "main.js",
   "icon": "./assets/cyphersol-icon.png",
   "scripts": {
@@ -61,7 +64,20 @@
       "!backend/__pycache__",
       "!env/bin/python3",
       "package.json",
-              "media/**/*"      ],    "extraResources": [      {        "from": "../dist/main",        "to": "backend/main"      },      {        "from": "media",        "to": "media",        "filter": [          "**/*"        ]      },
+      "media/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../dist/main",
+        "to": "backend/main"
+      },
+      {
+        "from": "media",
+        "to": "media",
+        "filter": [
+          "**/*"
+        ]
+      },
       {
         "from": "drizzle.config.js",
         "to": "drizzle.config.js"

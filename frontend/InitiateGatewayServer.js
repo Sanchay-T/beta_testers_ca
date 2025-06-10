@@ -21,7 +21,7 @@ class GatewayServerService {
 
   async initialize() {
     log.info("🚀 GATEWAY INITIALIZATION STARTING...");
-    
+
     try {
       // Step 1: Check if gateway is already responding
       log.info("📡 Checking if gateway is already responding on port 7890...");
@@ -34,7 +34,7 @@ class GatewayServerService {
       // Step 2: Try Windows Service approach first
       log.info("🔧 Attempting Windows Service approach...");
       const serviceSuccess = await this.tryServiceApproach();
-      
+
       if (serviceSuccess) {
         // Wait for service to actually respond
         log.info("⏳ Waiting for service to respond on port 7890...");
@@ -50,7 +50,7 @@ class GatewayServerService {
       // Step 3: Fallback - run as regular process
       log.info("🔄 Windows Service failed - attempting process fallback...");
       const processSuccess = await this.runAsProcess();
-      
+
       if (processSuccess) {
         log.info("✅ Gateway started as process and responding");
         return true;
@@ -68,7 +68,7 @@ class GatewayServerService {
   async tryServiceApproach() {
     try {
       const exists = await this.checkServiceExists();
-      
+
       if (!exists) {
         log.info("📦 Service doesn't exist - creating...");
         return await this.createAndStartService();
@@ -91,7 +91,7 @@ class GatewayServerService {
   async startServiceWithRetry() {
     for (let attempt = 1; attempt <= 3; attempt++) {
       log.info(`🔄 Service start attempt ${attempt}/3...`);
-      
+
       const success = await this.startService();
       if (success) {
         // Even if sc start succeeds, verify it's actually running
@@ -104,13 +104,13 @@ class GatewayServerService {
           log.warn("⚠️ Service start reported success but service not running");
         }
       }
-      
+
       if (attempt < 3) {
         log.info("⏳ Waiting before retry...");
         await new Promise(resolve => setTimeout(resolve, 3000));
       }
     }
-    
+
     log.error("❌ Service start failed after 3 attempts");
     return false;
   }
@@ -119,9 +119,9 @@ class GatewayServerService {
     try {
       // Kill any existing gateway processes
       await this.killExistingProcesses();
-      
+
       log.info(`🚀 Starting gateway as process: ${this.gatewayServerExecutablePath}`);
-      
+
       // Start the gateway as a detached process
       this.gatewayProcess = spawn(this.gatewayServerExecutablePath, [], {
         detached: true,
@@ -165,7 +165,7 @@ class GatewayServerService {
   async checkGatewayHealth() {
     try {
       const axios = require('axios');
-      const response = await axios.get('http://localhost:7890/api/health', { 
+      const response = await axios.get('http://localhost:7890/api/health', {
         timeout: 3000,
         headers: { 'User-Agent': 'Cyphersol-HealthCheck' }
       });
@@ -180,7 +180,7 @@ class GatewayServerService {
     const checkInterval = 1000;
     let attempts = 0;
 
-    log.info(`⏳ Waiting up to ${timeout/1000}s for gateway to respond...`);
+    log.info(`⏳ Waiting up to ${timeout / 1000}s for gateway to respond...`);
 
     while (Date.now() - startTime < timeout) {
       attempts++;
@@ -189,15 +189,15 @@ class GatewayServerService {
         log.info(`✅ Gateway responding after ${attempts} attempts`);
         return true;
       }
-      
+
       if (attempts % 5 === 0) {
         log.info(`⏳ Still waiting... attempt ${attempts}`);
       }
-      
+
       await new Promise(resolve => setTimeout(resolve, checkInterval));
     }
 
-    log.error(`❌ Gateway not responding after ${timeout/1000}s timeout`);
+    log.error(`❌ Gateway not responding after ${timeout / 1000}s timeout`);
     return false;
   }
 

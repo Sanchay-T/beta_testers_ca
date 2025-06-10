@@ -191,8 +191,8 @@ const Card2 = ({
     userProgress.progress < 40
       ? "bg-green-500"
       : userProgress.progress < 70
-      ? "bg-yellow-500"
-      : "bg-red-500"
+        ? "bg-yellow-500"
+        : "bg-red-500"
   );
 
   const handleDurationClick = (newDuration) => {
