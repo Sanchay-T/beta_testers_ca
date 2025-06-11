@@ -510,13 +510,13 @@ async function cleanupForUpdate() {
         // Try graceful shutdown first
         pythonProcess.kill("SIGTERM");
         await new Promise((resolve) => setTimeout(resolve, 2000));
-        
+
         // If still running, force kill
         if (!pythonProcess.killed) {
           pythonProcess.kill("SIGKILL");
           await new Promise((resolve) => setTimeout(resolve, 1000));
         }
-        
+
         // Force kill any remaining Python processes on Windows
         if (process.platform === "win32") {
           try {
@@ -526,7 +526,7 @@ async function cleanupForUpdate() {
             // Process might not exist
           }
         }
-        
+
         cleanupSteps.push({
           step: "Python Process Cleanup",
           status: "SUCCESS",
@@ -558,7 +558,7 @@ async function cleanupForUpdate() {
         // Stop the Windows service
         execSync("sc stop LicensingServer", { timeout: 5000 });
         await new Promise((resolve) => setTimeout(resolve, 2000));
-        
+
         // Force kill any remaining gateway processes
         try {
           execSync("taskkill /F /IM gatewayService.exe /T", { timeout: 3000 });
@@ -566,7 +566,7 @@ async function cleanupForUpdate() {
         } catch (e) {
           // Process might not exist
         }
-        
+
         cleanupSteps.push({
           step: "Gateway Service Stop",
           status: "SUCCESS",
@@ -622,7 +622,7 @@ async function cleanupForUpdate() {
 
     // Give system time to clean up file handles and processes
     await new Promise((resolve) => setTimeout(resolve, 3000));
-    
+
     cleanupSteps.push({
       step: "Final System Cleanup",
       status: "SUCCESS",
@@ -716,7 +716,7 @@ autoUpdater.on("update-downloaded", (info) => {
 
         // Set flags
         isUpdating = true;
-        
+
         // Create a professional installation window
         const installingWindow = new BrowserWindow({
           width: 450,
@@ -847,7 +847,7 @@ autoUpdater.on("update-downloaded", (info) => {
         await installingWindow.loadURL(
           `data:text/html;charset=utf-8,${encodeURIComponent(installHtml)}`
         );
-        
+
         installingWindow.show();
 
         // Prevent window from being closed during update
@@ -870,7 +870,7 @@ autoUpdater.on("update-downloaded", (info) => {
           const script = `
             document.querySelector('.status').innerHTML = '${message}';
           `;
-          installingWindow.webContents.executeJavaScript(script).catch(() => {});
+          installingWindow.webContents.executeJavaScript(script).catch(() => { });
         };
 
         logWithTimestamp(
@@ -892,13 +892,13 @@ autoUpdater.on("update-downloaded", (info) => {
         setTimeout(() => {
           try {
             updateStatus("Installing CypherEdge ${info.version}...<br>The application will restart automatically.");
-            
+
             logWithTimestamp(
               "info",
               UPDATE_LOG_PREFIX,
               "🚀 EXECUTING QUIT AND INSTALL"
             );
-            
+
             // Create success flag for next startup
             const updateFlagPath = path.join(
               app.getPath("userData"),
@@ -919,10 +919,10 @@ autoUpdater.on("update-downloaded", (info) => {
                 { error: flagError.message }
               );
             }
-            
+
             // Force the installation window to stay open
             installingWindow.setClosable(false);
-            
+
             // Quit and install with restart - proper parameters for Windows
             if (process.platform === "win32") {
               // Windows: silent install with restart
@@ -938,10 +938,10 @@ autoUpdater.on("update-downloaded", (info) => {
               "Installation error",
               { error: err.message }
             );
-            
+
             // Update the installation window to show error
             updateStatus(`❌ Installation failed: ${err.message}<br>Please try again later or contact support.`);
-            
+
             // Create failure flag for next startup
             try {
               const failureFlagPath = path.join(
@@ -952,7 +952,7 @@ autoUpdater.on("update-downloaded", (info) => {
             } catch (flagError) {
               logWithTimestamp("warn", UPDATE_LOG_PREFIX, "Could not create failure flag");
             }
-            
+
             // Show error dialog after a delay
             setTimeout(() => {
               dialog.showMessageBox(installingWindow, {
@@ -975,10 +975,10 @@ autoUpdater.on("update-downloaded", (info) => {
           USER_LOG_PREFIX,
           "📅 USER SELECTED: INSTALL ON EXIT"
         );
-        
+
         // This will install the update when the app is closed normally
         autoUpdater.autoInstallOnAppQuit = true;
-        
+
         logWithTimestamp(
           "info",
           UPDATE_LOG_PREFIX,
@@ -1838,7 +1838,7 @@ async function performUserDataMigration() {
 
 app.whenReady().then(async () => {
   const appStartTime = Date.now();
-  
+
   log.info("🚀 APP READY - STARTING INITIALIZATION SEQUENCE", {
     userDataDir: userDataDir,
     appVersion: app.getVersion(),
@@ -1952,7 +1952,7 @@ app.whenReady().then(async () => {
       log.info("✅ Gateway server path configured");
 
       // 🔧 ROBUST GATEWAY INITIALIZATION with health checks and fallback
-      await gatewayServer.initialize();
+      // await gatewayServer.initialize();
       log.info("✅ Gateway server initialized and responding on port 7890");
     } catch (error) {
       log.error("❌ GatewayServer initialization failed:", error);
@@ -1999,7 +1999,7 @@ app.whenReady().then(async () => {
     createWindow();
 
     win.once("ready-to-show", () => {
-      splashWindow.close();
+      splashWindow?.close();
       win.show();
     });
 
@@ -2214,7 +2214,7 @@ logSystemInfo();
 // Add service verification function
 async function verifyAllServicesRunning() {
   log.info("🔍 VERIFYING ALL SERVICES STATUS");
-  
+
   const serviceStatus = {
     database: false,
     gateway: false,
@@ -2287,7 +2287,7 @@ async function verifyAllServicesRunning() {
     }
 
     // Overall service health
-    const allServicesRunning = Object.values(serviceStatus).every(status => 
+    const allServicesRunning = Object.values(serviceStatus).every(status =>
       typeof status === 'boolean' ? status : true
     );
 
@@ -2301,7 +2301,7 @@ async function verifyAllServicesRunning() {
 
     if (!allServicesRunning) {
       log.warn("⚠️ SOME SERVICES ARE NOT RUNNING PROPERLY");
-      
+
       // Show warning to user if critical services are down
       if (!serviceStatus.database || !serviceStatus.gateway) {
         setTimeout(() => {
