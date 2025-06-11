@@ -188,6 +188,7 @@ function registerTallyIpc() {
 
       log.info({ tallyUploadData });
       const end = tallyUploadData.length;
+      const total = tallyUploadData.length;
 
       // const end = 2;
       const isPrime = tallyVersion === "TallyPrime";
@@ -199,6 +200,11 @@ function registerTallyIpc() {
           ? buildTallyPrimeLedgerXml(row)
           : buildTallyERPLedgerXml(row);
         // const xmlContent = buildTallyLedgerXml(row);
+
+         event.sender.send("upload-progress", {
+        current: i + 1,
+        total,
+      });
 
         try {
           const response = await axios.post(
