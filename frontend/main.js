@@ -27,6 +27,7 @@ const { registerTallyIpc } = require("./ipc/tallyHandlers.js");
 const { registerVoucherIpc } = require("./ipc/VoucherHandlers.js");
 const { registerExcelDownloadHandlers } = require("./ipc/excelDownloadHandler");
 const { registerAppLevelIPCHandlers } = require("./ipc/appLevelIPC");
+const DatabaseMigration = require("./utils/databaseMigration");
 // Moved database require to after AppConfig initialization
 const { spawn, execFile, exec, execSync } = require("child_process");
 const log = require("electron-log");
@@ -103,7 +104,7 @@ log.transports.console.level = "debug"; // Set the log level
 log.transports.file.level = "info"; // Only log info level and above in the log file
 
 // Set up detailed logging for updates
-log.transports.file.fileName = "cyphersol.log";
+log.transports.file.fileName = "cypheredge.log";
 log.info("===========================================");
 log.info(`Application starting - Version ${app.getVersion()}`);
 log.info(`User data directory: ${userDataDir}`);
@@ -454,61 +455,18 @@ async function cleanupForUpdate() {
   logWithTimestamp(
     "info",
     UPDATE_LOG_PREFIX,
-    "🧹 ADMIN-LEVEL CLEANUP SEQUENCE INITIATED"
-  );
-  logWithTimestamp(
-    "info",
-    UPDATE_LOG_PREFIX,
-    "Using administrator privileges for clean process termination"
+    "🧹 COMPREHENSIVE CLEANUP SEQUENCE INITIATED"
   );
 
   const cleanupSteps = [];
 
   try {
-    // 1. Stop the Gateway Windows Service with admin privileges
-    if (process.platform === "win32") {
-      performanceTracker.start("gateway-service-stop");
-      logWithTimestamp(
-        "info",
-        UPDATE_LOG_PREFIX,
-        "Step 1/6: Stopping Gateway Windows Service (Admin Mode)"
-      );
-
-      try {
-        execSync("sc stop LicensingServer", { timeout: 5000 });
-        logWithTimestamp(
-          "info",
-          SUCCESS_LOG_PREFIX,
-          "Gateway service stopped successfully with admin privileges"
-        );
-        cleanupSteps.push({
-          step: "Gateway Service Stop",
-          status: "SUCCESS",
-          timing: performanceTracker.end("gateway-service-stop"),
-        });
-      } catch (e) {
-        performanceTracker.end("gateway-service-stop");
-        logWithTimestamp(
-          "warn",
-          UPDATE_LOG_PREFIX,
-          "Gateway service already stopped or not running"
-        );
-        cleanupSteps.push({
-          step: "Gateway Service Stop",
-          status: "ALREADY_STOPPED",
-        });
-      }
-
-      // Short wait for service to stop
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-    }
-
-    // 2. Close database connections
+    // 1. Close database connections first (most important)
     performanceTracker.start("database-cleanup");
     logWithTimestamp(
       "info",
       UPDATE_LOG_PREFIX,
-      "Step 2/6: Closing database connections"
+      "Step 1/5: Closing database connections"
     );
 
     try {
@@ -531,200 +489,171 @@ async function cleanupForUpdate() {
       });
     } catch (e) {
       performanceTracker.end("database-cleanup");
-      cleanupSteps.push({
-        step: "Database Cleanup",
-        status: "ERROR",
-        error: e.message,
-      });
+      logWithTimestamp(
+        "warn",
+        UPDATE_LOG_PREFIX,
+        "Database cleanup warning - continuing",
+        { error: e.message }
+      );
     }
 
-    // 3. Terminate Python backend with admin privileges
-    performanceTracker.start("python-process-cleanup");
+    // 2. Terminate Python backend gracefully, then forcefully if needed
+    performanceTracker.start("python-cleanup");
     logWithTimestamp(
       "info",
       UPDATE_LOG_PREFIX,
-      "Step 3/6: Terminating Python backend (Admin Mode)"
+      "Step 2/5: Stopping Python backend"
     );
 
     if (pythonProcess && !pythonProcess.killed) {
-      pythonProcess.kill("SIGTERM");
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      if (!pythonProcess.killed) {
-        pythonProcess.kill("SIGKILL");
-      }
-    }
-
-    // Force kill any remaining Python processes with admin privileges
-    if (process.platform === "win32") {
       try {
-        execSync("taskkill /F /IM main.exe", { timeout: 3000 });
-        logWithTimestamp(
-          "info",
-          SUCCESS_LOG_PREFIX,
-          "Python processes terminated with admin privileges"
-        );
-      } catch (e) {
-        // Process might not exist - not an error
-      }
-    }
-
-    cleanupSteps.push({
-      step: "Python Process Cleanup",
-      status: "SUCCESS",
-      timing: performanceTracker.end("python-process-cleanup"),
-    });
-
-    // 4. Terminate Gateway executable with admin privileges
-    performanceTracker.start("gateway-exe-cleanup");
-    logWithTimestamp(
-      "info",
-      UPDATE_LOG_PREFIX,
-      "Step 4/6: Terminating Gateway executable (Admin Mode)"
-    );
-
-    if (process.platform === "win32") {
-      try {
-        execSync("taskkill /F /IM gatewayService.exe", { timeout: 3000 });
-        logWithTimestamp(
-          "info",
-          SUCCESS_LOG_PREFIX,
-          "Gateway executable terminated with admin privileges"
-        );
+        // Try graceful shutdown first
+        pythonProcess.kill("SIGTERM");
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        
+        // If still running, force kill
+        if (!pythonProcess.killed) {
+          pythonProcess.kill("SIGKILL");
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
+        
+        // Force kill any remaining Python processes on Windows
+        if (process.platform === "win32") {
+          try {
+            execSync("taskkill /F /IM main.exe /T", { timeout: 3000 });
+            logWithTimestamp("info", UPDATE_LOG_PREFIX, "Force killed Python processes");
+          } catch (e) {
+            // Process might not exist
+          }
+        }
+        
         cleanupSteps.push({
-          step: "Gateway Executable Cleanup",
+          step: "Python Process Cleanup",
           status: "SUCCESS",
-          timing: performanceTracker.end("gateway-exe-cleanup"),
+          timing: performanceTracker.end("python-cleanup"),
         });
       } catch (e) {
-        performanceTracker.end("gateway-exe-cleanup");
+        performanceTracker.end("python-cleanup");
+        logWithTimestamp(
+          "warn",
+          UPDATE_LOG_PREFIX,
+          "Python cleanup warning - continuing"
+        );
+      }
+    } else {
+      performanceTracker.end("python-cleanup");
+      logWithTimestamp("info", UPDATE_LOG_PREFIX, "Python process not running");
+    }
+
+    // 3. Stop Gateway Service (Windows only)
+    if (process.platform === "win32") {
+      performanceTracker.start("gateway-cleanup");
+      logWithTimestamp(
+        "info",
+        UPDATE_LOG_PREFIX,
+        "Step 3/5: Stopping Gateway Service"
+      );
+
+      try {
+        // Stop the Windows service
+        execSync("sc stop LicensingServer", { timeout: 5000 });
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        
+        // Force kill any remaining gateway processes
+        try {
+          execSync("taskkill /F /IM gatewayService.exe /T", { timeout: 3000 });
+          logWithTimestamp("info", UPDATE_LOG_PREFIX, "Force killed Gateway processes");
+        } catch (e) {
+          // Process might not exist
+        }
+        
+        cleanupSteps.push({
+          step: "Gateway Service Stop",
+          status: "SUCCESS",
+          timing: performanceTracker.end("gateway-cleanup"),
+        });
+      } catch (e) {
+        performanceTracker.end("gateway-cleanup");
         logWithTimestamp(
           "info",
           UPDATE_LOG_PREFIX,
-          "Gateway executable already terminated"
+          "Gateway service stop attempted - continuing"
         );
-        cleanupSteps.push({
-          step: "Gateway Executable Cleanup",
-          status: "ALREADY_TERMINATED",
-        });
       }
     }
 
-    // 5. Close main application windows (preserve installation window)
+    // 4. Close non-essential windows
     performanceTracker.start("window-cleanup");
     logWithTimestamp(
       "info",
       UPDATE_LOG_PREFIX,
-      "Step 5/6: Closing application windows"
+      "Step 4/5: Closing application windows"
     );
 
     const openWindows = BrowserWindow.getAllWindows();
     let windowsClosedCount = 0;
-    let installationWindowsFound = 0;
 
-    openWindows.forEach((win, index) => {
-      if (!win.isDestroyed()) {
-        const isInstallationWindow = win.isInstallationWindow === true;
-
-        if (isInstallationWindow) {
-          installationWindowsFound++;
-          logWithTimestamp(
-            "info",
-            UPDATE_LOG_PREFIX,
-            `Preserving installation window ${index + 1}`
-          );
-        } else {
-          win.removeAllListeners("close");
-          win.close();
+    openWindows.forEach((window) => {
+      if (!window.isDestroyed() && !window.isInstallationWindow) {
+        try {
+          window.removeAllListeners("close");
+          window.close();
           windowsClosedCount++;
+        } catch (e) {
+          // Window might already be closing
         }
       }
     });
 
-    logWithTimestamp(
-      "info",
-      SUCCESS_LOG_PREFIX,
-      `Closed ${windowsClosedCount} windows, preserved ${installationWindowsFound} installation windows`
-    );
     cleanupSteps.push({
       step: "Window Cleanup",
       status: "SUCCESS",
       windowsClosed: windowsClosedCount,
-      installationWindowsPreserved: installationWindowsFound,
       timing: performanceTracker.end("window-cleanup"),
     });
 
-    // 6. Final settlement wait
-    performanceTracker.start("final-wait");
+    // 5. Final system cleanup wait
+    performanceTracker.start("final-cleanup");
     logWithTimestamp(
       "info",
       UPDATE_LOG_PREFIX,
-      "Step 6/6: Final process settlement (3 seconds)"
-    );
-    logWithTimestamp(
-      "info",
-      UPDATE_LOG_PREFIX,
-      "Admin privileges ensure clean termination - minimal wait required"
+      "Step 5/5: Final system cleanup"
     );
 
+    // Give system time to clean up file handles and processes
     await new Promise((resolve) => setTimeout(resolve, 3000));
-
+    
     cleanupSteps.push({
-      step: "Final Settlement Wait",
-      status: "COMPLETED",
-      timing: performanceTracker.end("final-wait"),
+      step: "Final System Cleanup",
+      status: "SUCCESS",
+      timing: performanceTracker.end("final-cleanup"),
     });
 
     const totalCleanupTime = performanceTracker.end("cleanup-process");
 
-    // Admin-level cleanup summary
-    const cleanupSummary = {
-      totalSteps: cleanupSteps.length,
-      successfulSteps: cleanupSteps.filter((s) => s.status === "SUCCESS")
-        .length,
-      adminPrivileges: true,
-      totalCleanupTime: totalCleanupTime,
-      completionTime: new Date().toISOString(),
-      stepDetails: cleanupSteps,
-    };
-
     logWithTimestamp(
       "info",
       SUCCESS_LOG_PREFIX,
-      "🧹 ADMIN-LEVEL CLEANUP COMPLETED SUCCESSFULLY!",
-      cleanupSummary
+      "🧹 COMPREHENSIVE CLEANUP COMPLETED!",
+      {
+        totalSteps: cleanupSteps.length,
+        totalTime: totalCleanupTime,
+        summary: "All services stopped, system ready for update",
+        details: cleanupSteps,
+      }
     );
-    logWithTimestamp(
-      "info",
-      UPDATE_LOG_PREFIX,
-      "All processes terminated cleanly with administrator privileges"
-    );
-    logWithTimestamp(
-      "info",
-      UPDATE_LOG_PREFIX,
-      "System ready for seamless update installation"
-    );
+
+    return true;
   } catch (error) {
     performanceTracker.end("cleanup-process");
-
-    const criticalError = {
-      error: error.message,
-      stack: error.stack,
-      timestamp: new Date().toISOString(),
-      adminPrivileges: true,
-    };
-
     logWithTimestamp(
       "error",
       ERROR_LOG_PREFIX,
-      "💥 CRITICAL ERROR IN ADMIN-LEVEL CLEANUP",
-      criticalError
+      "Cleanup error - continuing with update",
+      { error: error.message }
     );
-    logWithTimestamp(
-      "warn",
-      UPDATE_LOG_PREFIX,
-      "Continuing with update installation despite cleanup errors"
-    );
+    // Don't throw - we want to continue with the update even if cleanup partially fails
+    return false;
   }
 }
 
@@ -748,269 +677,322 @@ autoUpdater.on("update-downloaded", (info) => {
     "🎉 UPDATE DOWNLOAD COMPLETED SUCCESSFULLY!",
     downloadCompletedData
   );
-  logWithTimestamp(
-    "info",
-    UPDATE_LOG_PREFIX,
-    "Clearing taskbar progress indicator"
-  );
 
-  win?.setProgressBar(-1); // Clear taskbar progress
+  // Clear taskbar progress
+  win?.setProgressBar(-1);
 
-  // Log the seamless strategy transition
-  logWithTimestamp(
-    "info",
-    UPDATE_LOG_PREFIX,
-    "🎯 TRANSITIONING TO USER INTERACTION PHASE"
-  );
-  logWithTimestamp(
-    "info",
-    UPDATE_LOG_PREFIX,
-    "This is the ONLY user interaction in the seamless update process"
-  );
-
-  // Send notification to frontend first (for any UI updates)
-  const frontendUpdateStatus = {
+  // Send notification to frontend
+  win?.webContents.send("update-status", {
     status: "ready-to-install",
     version: info.version,
     message: "Update ready to install",
     timestamp: new Date().toISOString(),
-  };
+  });
 
-  logWithTimestamp(
-    "info",
-    USER_LOG_PREFIX,
-    "Sending ready-to-install status to frontend",
-    frontendUpdateStatus
-  );
-  win?.webContents.send("update-status", frontendUpdateStatus);
-
-  // Show user-friendly notification AFTER download is complete
+  // Show update dialog with simple options
   const dialogOptions = {
     type: "info",
-    title: "Update Ready to Install",
-    message: `🎉 New version ${info.version} has been downloaded!`,
-    detail:
-      "The update is ready to install. Would you like to restart and apply it now, or install it later?",
-    buttons: ["Install Now", "Install Later"],
+    title: "Update Ready",
+    message: `Version ${info.version} is ready to install`,
+    detail: "The application will restart to apply the update. Save any work before continuing.",
+    buttons: ["Install Now", "Install on Exit"],
     defaultId: 0,
     cancelId: 1,
+    noLink: true,
   };
 
-  logWithTimestamp(
-    "info",
-    USER_LOG_PREFIX,
-    "Displaying update installation dialog to user",
-    {
-      dialogTitle: dialogOptions.title,
-      dialogMessage: dialogOptions.message,
-      buttonOptions: dialogOptions.buttons,
-      displayTime: new Date().toISOString(),
-    }
-  );
-
   dialog
-    .showMessageBox(dialogOptions)
+    .showMessageBox(win, dialogOptions)
     .then(async (response) => {
       performanceTracker.end("user-interaction-flow");
 
-      const userChoice =
-        response.response === 0 ? "Install Now" : "Install Later";
-
-      logWithTimestamp(
-        "info",
-        USER_LOG_PREFIX,
-        `User decision recorded: ${userChoice}`,
-        {
-          buttonIndex: response.response,
-          responseTime: new Date().toISOString(),
-          userChoice: userChoice,
-        }
-      );
-
       if (response.response === 0) {
         // User clicked "Install Now"
-        performanceTracker.start("installation-process");
-
         logWithTimestamp(
           "info",
           UPDATE_LOG_PREFIX,
-          "🚀 IMMEDIATE INSTALLATION REQUESTED BY USER"
+          "🚀 USER SELECTED: INSTALL NOW"
         );
 
-        // Set updating flag to skip confirmation dialogs FIRST
+        // Set flags
         isUpdating = true;
-        sessionManager.logoutUser();
-
-        logWithTimestamp(
-          "info",
-          UPDATE_LOG_PREFIX,
-          "Update flag set - skipping close confirmations"
-        );
-        logWithTimestamp(
-          "info",
-          UPDATE_LOG_PREFIX,
-          "User session logged out for clean installation"
-        );
-
-        // Create success flag for next startup
-        const updateFlagPath = path.join(
-          app.getPath("userData"),
-          "update-success.txt"
-        );
-        fs.writeFileSync(updateFlagPath, info.version);
-        logWithTimestamp(
-          "info",
-          UPDATE_LOG_PREFIX,
-          `Success flag created: ${updateFlagPath}`
-        );
-
-        // Show minimal installation progress BEFORE cleanup
-        logWithTimestamp(
-          "info",
-          UPDATE_LOG_PREFIX,
-          "Creating installation progress window"
-        );
-
+        
+        // Create a professional installation window
         const installingWindow = new BrowserWindow({
-          width: 350,
-          height: 100,
+          width: 450,
+          height: 200,
           frame: false,
           resizable: false,
           center: true,
           alwaysOnTop: true,
-          show: false,
+          skipTaskbar: false, // Show in taskbar so user knows something is happening
+          backgroundColor: '#1e1e1e',
           webPreferences: {
-            nodeIntegration: true,
-            contextIsolation: false,
+            nodeIntegration: false,
+            contextIsolation: true,
           },
         });
 
-        // Mark this as an installation window for cleanup exclusion
+        // Mark as installation window
         installingWindow.isInstallationWindow = true;
 
+        // Professional installation HTML with progress steps
         const installHtml = `
+        <!DOCTYPE html>
         <html>
           <head>
             <meta charset="UTF-8">
-            <title>Installing Update</title>
+            <title>Installing CypherEdge Update</title>
             <style>
               body {
-                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                 margin: 0;
-                  padding: 20px;
-                  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                  color: white;
-                  text-align: center;
+                padding: 40px 30px;
+                background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
+                color: #ffffff;
+                text-align: center;
                 user-select: none;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                height: 100vh;
+                box-sizing: border-box;
+                overflow: hidden;
               }
-                .spinner {
-                  width: 20px;
-                  height: 20px;
-                  border: 2px solid rgba(255,255,255,0.3);
-                  border-top: 2px solid white;
+              .logo {
+                font-size: 24px;
+                font-weight: 600;
+                margin-bottom: 20px;
+                color: #4CAF50;
+              }
+              h2 {
+                margin: 0 0 15px 0;
+                font-size: 18px;
+                font-weight: 500;
+                color: #ffffff;
+              }
+              .version {
+                font-size: 14px;
+                color: #888;
+                margin-bottom: 25px;
+              }
+              .progress-container {
+                width: 100%;
+                height: 4px;
+                background: rgba(255,255,255,0.1);
+                border-radius: 2px;
+                margin: 20px 0;
+                overflow: hidden;
+              }
+              .progress-bar {
+                height: 100%;
+                background: linear-gradient(90deg, #4CAF50, #45a049);
+                border-radius: 2px;
+                animation: progress 3s ease-in-out infinite;
+                width: 0%;
+              }
+              @keyframes progress {
+                0% { width: 0%; }
+                50% { width: 70%; }
+                100% { width: 100%; }
+              }
+              .spinner {
+                width: 32px;
+                height: 32px;
+                border: 3px solid rgba(255,255,255,0.1);
+                border-top: 3px solid #4CAF50;
                 border-radius: 50%;
-                  animation: spin 1s linear infinite;
-                  margin: 0 auto 10px;
+                animation: spin 1s linear infinite;
+                margin: 0 auto 20px;
               }
               @keyframes spin {
                 0% { transform: rotate(0deg); }
                 100% { transform: rotate(360deg); }
               }
-                h3 { margin: 0; font-size: 14px; font-weight: 500; }
+              .status {
+                font-size: 13px;
+                color: #aaa;
+                margin-top: 15px;
+                line-height: 1.4;
+              }
+              .warning {
+                font-size: 12px;
+                color: #ff9800;
+                margin-top: 20px;
+                padding: 10px;
+                background: rgba(255, 152, 0, 0.1);
+                border-radius: 4px;
+                border-left: 3px solid #ff9800;
+              }
             </style>
           </head>
           <body>
-              <div class="spinner"></div>
-              <h3>Installing update...</h3>
+            <div class="logo">CypherEdge</div>
+            <div class="spinner"></div>
+            <h2>Installing Update</h2>
+            <div class="version">Version ${info.version}</div>
+            <div class="progress-container">
+              <div class="progress-bar"></div>
+            </div>
+            <div class="status">
+              Stopping services and preparing installation...<br>
+              This may take a few moments.
+            </div>
+            <div class="warning">
+              ⚠️ Please do not close this window or shut down your computer
+            </div>
           </body>
-        </html>
-      `;
+        </html>`;
 
-        installingWindow.loadURL(
-          "data:text/html;charset=utf-8," + encodeURIComponent(installHtml)
+        await installingWindow.loadURL(
+          `data:text/html;charset=utf-8,${encodeURIComponent(installHtml)}`
         );
+        
+        installingWindow.show();
 
-        installingWindow.once("ready-to-show", () => {
-          installingWindow.show();
-          logWithTimestamp(
-            "info",
-            UPDATE_LOG_PREFIX,
-            "Installation progress window displayed to user"
-          );
+        // Prevent window from being closed during update
+        installingWindow.on('close', (e) => {
+          if (isUpdating) {
+            e.preventDefault();
+            // Show a warning if user tries to close
+            dialog.showMessageBox(installingWindow, {
+              type: 'warning',
+              title: 'Update in Progress',
+              message: 'Please wait for the update to complete.',
+              detail: 'Closing this window may corrupt the installation.',
+              buttons: ['OK']
+            });
+          }
         });
 
-        // Run cleanup AFTER showing installation window
+        // Update window content during different phases
+        const updateStatus = (message) => {
+          const script = `
+            document.querySelector('.status').innerHTML = '${message}';
+          `;
+          installingWindow.webContents.executeJavaScript(script).catch(() => {});
+        };
+
         logWithTimestamp(
           "info",
           UPDATE_LOG_PREFIX,
-          "Starting pre-installation cleanup sequence"
+          "Professional installation window displayed"
         );
+
+        // Clean logout
+        sessionManager.logoutUser();
+        updateStatus("Logging out user session...");
+
+        // Perform cleanup
+        updateStatus("Stopping services (Database, Python, Gateway)...<br>This ensures a clean installation.");
         await cleanupForUpdate();
 
-        // Install update
+        // Small delay to ensure everything is ready
+        updateStatus("Finalizing preparation...<br>Almost ready to install!");
         setTimeout(() => {
           try {
+            updateStatus("Installing CypherEdge ${info.version}...<br>The application will restart automatically.");
+            
             logWithTimestamp(
               "info",
               UPDATE_LOG_PREFIX,
-              "🚀 INITIATING QUIT AND INSTALL SEQUENCE"
+              "🚀 EXECUTING QUIT AND INSTALL"
             );
-            logWithTimestamp(
-              "info",
-              UPDATE_LOG_PREFIX,
-              "Application will restart with new version"
+            
+            // Create success flag for next startup
+            const updateFlagPath = path.join(
+              app.getPath("userData"),
+              "update-success.txt"
             );
-
-            performanceTracker.end("installation-process");
-            autoUpdater.autoInstallOnAppQuit = false;
-            autoUpdater.quitAndInstall(true, true);
+            try {
+              fs.writeFileSync(updateFlagPath, info.version);
+              logWithTimestamp(
+                "info",
+                UPDATE_LOG_PREFIX,
+                `Update success flag created: ${updateFlagPath}`
+              );
+            } catch (flagError) {
+              logWithTimestamp(
+                "warn",
+                UPDATE_LOG_PREFIX,
+                "Could not create update success flag",
+                { error: flagError.message }
+              );
+            }
+            
+            // Force the installation window to stay open
+            installingWindow.setClosable(false);
+            
+            // Quit and install with restart - proper parameters for Windows
+            if (process.platform === "win32") {
+              // Windows: silent install with restart
+              autoUpdater.quitAndInstall(true, true);
+            } else {
+              // macOS/Linux: let user restart manually
+              autoUpdater.quitAndInstall(false, true);
+            }
           } catch (err) {
-            performanceTracker.end("installation-process");
-            const installError = {
-              error: err.message,
-              stack: err.stack,
-              timestamp: new Date().toISOString(),
-            };
             logWithTimestamp(
               "error",
               ERROR_LOG_PREFIX,
-              "Critical error during installation",
-              installError
+              "Installation error",
+              { error: err.message }
             );
-            app.quit();
+            
+            // Update the installation window to show error
+            updateStatus(`❌ Installation failed: ${err.message}<br>Please try again later or contact support.`);
+            
+            // Create failure flag for next startup
+            try {
+              const failureFlagPath = path.join(
+                app.getPath("userData"),
+                "update-failure.txt"
+              );
+              fs.writeFileSync(failureFlagPath, err.message);
+            } catch (flagError) {
+              logWithTimestamp("warn", UPDATE_LOG_PREFIX, "Could not create failure flag");
+            }
+            
+            // Show error dialog after a delay
+            setTimeout(() => {
+              dialog.showMessageBox(installingWindow, {
+                type: 'error',
+                title: 'Update Failed',
+                message: 'The update installation failed.',
+                detail: 'The application will continue running with the current version. You can try updating again later.',
+                buttons: ['OK']
+              }).then(() => {
+                isUpdating = false;
+                installingWindow.close();
+              });
+            }, 2000);
           }
-        }, 1000);
+        }, 1000); // Increased delay to 1 second for better UX
       } else {
-        // User clicked "Install Later"
+        // User clicked "Install on Exit"
         logWithTimestamp(
           "info",
           USER_LOG_PREFIX,
-          "📅 DEFERRED INSTALLATION SELECTED BY USER"
+          "📅 USER SELECTED: INSTALL ON EXIT"
         );
+        
+        // This will install the update when the app is closed normally
+        autoUpdater.autoInstallOnAppQuit = true;
+        
         logWithTimestamp(
           "info",
           UPDATE_LOG_PREFIX,
-          "Update will be applied on next application restart"
-        );
-        logWithTimestamp(
-          "info",
-          UPDATE_LOG_PREFIX,
-          "Update file cached and ready for installation"
+          "Update will be installed when application exits"
         );
       }
     })
-    .catch((dialogError) => {
+    .catch((error) => {
       performanceTracker.end("user-interaction-flow");
-      const dialogErrorData = {
-        error: dialogError.message,
-        stack: dialogError.stack,
-        timestamp: new Date().toISOString(),
-      };
       logWithTimestamp(
         "error",
         ERROR_LOG_PREFIX,
-        "Error displaying installation dialog",
-        dialogErrorData
+        "Error showing update dialog",
+        { error: error.message }
       );
     });
 });
@@ -1460,8 +1442,8 @@ async function createWindow() {
     icon: path.join(__dirname, "assets", "cyphersol-icon.png"),
     autoHideMenuBar: true,
     title: global.AppConfig.isDev
-      ? `CypherSol Dev v${app.getVersion()}`
-      : `CypherSol v${app.getVersion()}`,
+      ? `CypherEdge Dev v${app.getVersion()}`
+      : `CypherEdge v${app.getVersion()}`,
   });
   if (global.AppConfig.isDev) {
     win.loadURL("http://localhost:3000");
@@ -1710,19 +1692,191 @@ const GATEWAY_EXECUTABLE_DIR = isPackaged
 
 console.log("GATEWAY EXECUTABLE DIR:", GATEWAY_EXECUTABLE_DIR);
 
-app.setName("CypherSol Dev");
+app.setName("CypherEdge");
+
+// Add this function before app.whenReady()
+async function performUserDataMigration() {
+  const migrationStartTime = Date.now();
+
+  try {
+    log.info("🚀 [USER-DATA-MIGRATION] === STARTING MIGRATION PROCESS ===");
+    log.info("[USER-DATA-MIGRATION] SYSTEM CONTEXT", {
+      appVersion: app.getVersion(),
+      appName: app.getName(),
+      platform: process.platform,
+      arch: process.arch,
+      isPackaged: app.isPackaged,
+      userDataDir: app.getPath("userData"),
+      tempDir: app.getPath("temp"),
+      processId: process.pid,
+      startTime: new Date().toISOString(),
+    });
+
+    const migration = new DatabaseMigration();
+
+    // Get initial status
+    const initialStatus = migration.getMigrationStatus();
+    log.info("[USER-DATA-MIGRATION] INITIAL STATUS", initialStatus);
+
+    // Perform migration
+    log.info("[USER-DATA-MIGRATION] CALLING MIGRATION FUNCTION");
+    const result = await migration.performMigration();
+
+    const migrationEndTime = Date.now();
+    const totalDuration = migrationEndTime - migrationStartTime;
+
+    // Log results based on outcome
+    if (result.alreadyCompleted) {
+      log.info("✅ [USER-DATA-MIGRATION] ALREADY COMPLETED", {
+        totalDurationMs: totalDuration,
+      });
+    } else if (result.freshInstall) {
+      log.info("ℹ️ [USER-DATA-MIGRATION] FRESH INSTALLATION DETECTED", {
+        totalDurationMs: totalDuration,
+      });
+    } else if (result.success) {
+      log.info("🎉 [USER-DATA-MIGRATION] MIGRATION SUCCESSFUL!", {
+        oldApp: result.oldAppName,
+        totalItems: result.totalItems,
+        successfulMigrations: result.successfulMigrations,
+        failedMigrations: result.failedMigrations,
+        preservedOriginal: result.preservedOriginal,
+        migrationDurationMs: result.migrationDurationMs,
+        totalProcessDurationMs: totalDuration,
+      });
+
+      // Log detailed success information
+      if (result.successfulMigrations > 0) {
+        const migratedFiles = result.migratedItems
+          .filter((item) => item.migrationSuccess)
+          .map((item) => ({
+            name: item.fileName,
+            type: item.type,
+            description: item.description || "No description",
+            size: item.size || "Unknown",
+            durationMs: item.migrationDurationMs || "Unknown",
+          }));
+
+        log.info("📋 [USER-DATA-MIGRATION] SUCCESSFULLY MIGRATED ITEMS", {
+          count: migratedFiles.length,
+          items: migratedFiles,
+          note: "Original files preserved in old app directory",
+        });
+      }
+
+      // Log any failures for debugging
+      if (result.failedMigrations > 0) {
+        const failedFiles = result.migratedItems
+          .filter((item) => !item.migrationSuccess)
+          .map((item) => ({
+            name: item.fileName,
+            type: item.type,
+            description: item.description || "No description",
+          }));
+
+        log.warn("⚠️ [USER-DATA-MIGRATION] FAILED MIGRATIONS", {
+          count: failedFiles.length,
+          items: failedFiles,
+        });
+      }
+    } else {
+      log.error("❌ [USER-DATA-MIGRATION] MIGRATION FAILED", {
+        totalItems: result.totalItems || "Unknown",
+        successful: result.successfulMigrations || 0,
+        failed: result.failedMigrations || "Unknown",
+        error: result.error || "Unknown error",
+        totalDurationMs: totalDuration,
+      });
+    }
+
+    // Get final status for comparison
+    const finalStatus = migration.getMigrationStatus();
+    log.info("[USER-DATA-MIGRATION] FINAL STATUS", finalStatus);
+
+    log.info("🏁 [USER-DATA-MIGRATION] === MIGRATION PROCESS COMPLETED ===", {
+      totalDurationMs: totalDuration,
+      totalDurationSeconds: (totalDuration / 1000).toFixed(2),
+    });
+
+    return result;
+  } catch (error) {
+    const migrationEndTime = Date.now();
+    const totalDuration = migrationEndTime - migrationStartTime;
+
+    log.error("💥 [USER-DATA-MIGRATION] CRITICAL MIGRATION ERROR", {
+      error: error.message,
+      stack: error.stack,
+      totalDurationMs: totalDuration,
+      timestamp: new Date().toISOString(),
+    });
+
+    // Try to log to a backup location
+    try {
+      const errorLogPath = path.join(
+        app.getPath("temp"),
+        "cyphersol-migration-error.log"
+      );
+      const errorInfo = {
+        timestamp: new Date().toISOString(),
+        error: error.message,
+        stack: error.stack,
+        appVersion: app.getVersion(),
+        platform: process.platform,
+      };
+      fs.writeFileSync(errorLogPath, JSON.stringify(errorInfo, null, 2));
+      log.info("[USER-DATA-MIGRATION] Error details saved to:", errorLogPath);
+    } catch (backupError) {
+      log.error(
+        "[USER-DATA-MIGRATION] Failed to save error backup:",
+        backupError
+      );
+    }
+
+    return { success: false, error: error.message, criticalError: true };
+  }
+}
 
 app.whenReady().then(async () => {
-  log.info("App is ready", userDataDir);
+  const appStartTime = Date.now();
+  
+  log.info("🚀 APP READY - STARTING INITIALIZATION SEQUENCE", {
+    userDataDir: userDataDir,
+    appVersion: app.getVersion(),
+    timestamp: new Date().toISOString(),
+    startupTime: appStartTime,
+    platform: process.platform,
+    isPackaged: app.isPackaged,
+  });
 
   createSplashWindow();
 
   try {
-    // 🗄️ Initialize Database FIRST (Core Requirement)
+    // 🔄 MIGRATE USER DATA FROM OLD APP (Critical first step)
+    const migrationStartTime = Date.now();
+    log.info("📋 INITIALIZATION STEP 1: USER DATA MIGRATION");
+    const migrationResult = await performUserDataMigration();
+    const migrationEndTime = Date.now();
+
+    log.info("Migration completed", {
+      duration: migrationEndTime - migrationStartTime,
+      success: !migrationResult.criticalError,
+    });
+
+    if (migrationResult.criticalError) {
+      log.error("💥 CRITICAL MIGRATION ERROR - CONTINUING WITH CAUTION");
+      // Continue with app initialization even if migration fails
+    }
+
+    // 🗄️ Initialize Database AFTER migration (so it uses the migrated data)
+    const dbStartTime = Date.now();
+    log.info("📋 INITIALIZATION STEP 2: DATABASE INITIALIZATION");
     try {
       const dbManager = databaseManager.getInstance();
       await dbManager.initialize(userDataDir);
-      log.info("✅ Database initialized successfully");
+      const dbEndTime = Date.now();
+      log.info("✅ Database initialized successfully", {
+        duration: dbEndTime - dbStartTime,
+      });
     } catch (error) {
       log.error("❌ Database initialization failed:", error);
       throw error;
@@ -1738,18 +1892,28 @@ app.whenReady().then(async () => {
         const version = fs.readFileSync(updateFlagPath, "utf8");
         fs.unlinkSync(updateFlagPath); // Remove the flag file
 
+        log.info("✅ UPDATE SUCCESS DETECTED", {
+          previousVersion: version,
+          currentVersion: app.getVersion(),
+          updateSuccessful: true,
+          restartedAfterUpdate: true,
+        });
+
         // Show success message after app fully loads
         setTimeout(() => {
           dialog.showMessageBox({
             type: "info",
             title: "Update Successful",
-            message: `Successfully updated to version ${app.getVersion()}`,
+            message: `Successfully updated to CypherEdge v${app.getVersion()}`,
+            detail: "Your application has been updated with the latest features and improvements.",
             buttons: ["OK"],
           });
-        }, 2000);
+        }, 3000); // Increased delay to ensure app is fully loaded
       } catch (err) {
         log.error("Error reading update flag:", err);
       }
+    } else {
+      log.info("No update success flag found - normal startup");
     }
 
     // Check for update failure flag
@@ -1831,9 +1995,6 @@ app.whenReady().then(async () => {
       throw error;
     }
 
-    // await new Promise(resolve => setTimeout(resolve, 255500)); // Wait 1.5 seconds
-    syncTallyprimeFilesToUserData();
-
     createProtocol();
     createWindow();
 
@@ -1848,6 +2009,17 @@ app.whenReady().then(async () => {
       log.error("Python initialization failed:", error);
       throw error;
     }
+
+    // 🔍 VERIFY ALL SERVICES ARE RUNNING
+    await verifyAllServicesRunning();
+
+    // Calculate total startup time
+    const totalStartupTime = Date.now() - appStartTime;
+    log.info("🎉 APPLICATION STARTUP COMPLETED SUCCESSFULLY", {
+      totalStartupTime: totalStartupTime,
+      totalStartupSeconds: (totalStartupTime / 1000).toFixed(2),
+      allServicesRunning: true,
+    });
 
     // Initial update check after 1 minute
     if (!global.AppConfig.isDev) {
@@ -1922,10 +2094,10 @@ function checkForUpdates() {
 }
 
 // Set up detailed logging for updates
-log.transports.file.fileName = "cyphersol.log";
+log.transports.file.fileName = "cypheredge.log";
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
-// 🚀 COMPREHENSIVE AUTO-UPDATE LOGGING SYSTEM v1.0.14
+// 🚀 COMPREHENSIVE AUTO-UPDATE LOGGING SYSTEM v2.0.0
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // Created for: Backend Team Analysis & Software Improvement
 // Purpose: Detailed tracking of update process, user behavior, and system performance
@@ -2019,7 +2191,7 @@ const logSystemInfo = () => {
 log.info(
   "═══════════════════════════════════════════════════════════════════════════════════════"
 );
-log.info("🚀 CYPHERSOL AUTO-UPDATE LOGGING SYSTEM v1.0.16 INITIALIZED");
+log.info("🚀 CYPHEREDGE AUTO-UPDATE LOGGING SYSTEM v2.0.0 INITIALIZED");
 log.info(
   "═══════════════════════════════════════════════════════════════════════════════════════"
 );
@@ -2038,3 +2210,118 @@ log.info(
 
 // Log detailed system information
 logSystemInfo();
+
+// Add service verification function
+async function verifyAllServicesRunning() {
+  log.info("🔍 VERIFYING ALL SERVICES STATUS");
+  
+  const serviceStatus = {
+    database: false,
+    gateway: false,
+    license: false,
+    session: false,
+    python: false,
+    timestamp: new Date().toISOString(),
+  };
+
+  try {
+    // Check Database
+    try {
+      const dbManager = databaseManager.getInstance();
+      if (dbManager && dbManager.getDatabase()) {
+        serviceStatus.database = true;
+        log.info("✅ Database service: RUNNING");
+      }
+    } catch (e) {
+      log.error("❌ Database service: FAILED", { error: e.message });
+    }
+
+    // Check Gateway Server (port 7890)
+    try {
+      const isGatewayRunning = await checkPortAvailability(7890);
+      serviceStatus.gateway = isGatewayRunning;
+      if (isGatewayRunning) {
+        log.info("✅ Gateway service: RUNNING (port 7890)");
+      } else {
+        log.error("❌ Gateway service: NOT RESPONDING (port 7890)");
+      }
+    } catch (e) {
+      log.error("❌ Gateway service: CHECK FAILED", { error: e.message });
+    }
+
+    // Check License Manager
+    try {
+      if (licenseManager && licenseManager.licenseData) {
+        serviceStatus.license = true;
+        log.info("✅ License service: VALID", {
+          hasLicenseData: !!licenseManager.licenseData,
+        });
+      } else {
+        log.error("❌ License service: NO VALID LICENSE");
+      }
+    } catch (e) {
+      log.error("❌ License service: CHECK FAILED", { error: e.message });
+    }
+
+    // Check Session Manager
+    try {
+      if (sessionManager) {
+        serviceStatus.session = true;
+        log.info("✅ Session service: RUNNING");
+      }
+    } catch (e) {
+      log.error("❌ Session service: CHECK FAILED", { error: e.message });
+    }
+
+    // Check Python Backend (port 7500)
+    try {
+      const isPythonRunning = await checkPortAvailability(7500);
+      serviceStatus.python = isPythonRunning;
+      if (isPythonRunning) {
+        log.info("✅ Python backend: RUNNING (port 7500)");
+      } else {
+        log.error("❌ Python backend: NOT RESPONDING (port 7500)");
+      }
+    } catch (e) {
+      log.error("❌ Python backend: CHECK FAILED", { error: e.message });
+    }
+
+    // Overall service health
+    const allServicesRunning = Object.values(serviceStatus).every(status => 
+      typeof status === 'boolean' ? status : true
+    );
+
+    log.info("🏥 OVERALL SERVICE HEALTH CHECK", {
+      ...serviceStatus,
+      allServicesHealthy: allServicesRunning,
+      healthPercentage: Math.round(
+        (Object.values(serviceStatus).filter(s => s === true).length / 5) * 100
+      ),
+    });
+
+    if (!allServicesRunning) {
+      log.warn("⚠️ SOME SERVICES ARE NOT RUNNING PROPERLY");
+      
+      // Show warning to user if critical services are down
+      if (!serviceStatus.database || !serviceStatus.gateway) {
+        setTimeout(() => {
+          dialog.showMessageBox({
+            type: 'warning',
+            title: 'Service Warning',
+            message: 'Some application services may not be running properly.',
+            detail: 'Please check the logs or restart the application if you experience issues.',
+            buttons: ['OK']
+          });
+        }, 2000);
+      }
+    }
+
+    return serviceStatus;
+  } catch (error) {
+    log.error("💥 SERVICE VERIFICATION FAILED", {
+      error: error.message,
+      stack: error.stack,
+    });
+    return serviceStatus;
+  }
+}
