@@ -1952,7 +1952,7 @@ app.whenReady().then(async () => {
       log.info("✅ Gateway server path configured");
 
       // 🔧 ROBUST GATEWAY INITIALIZATION with health checks and fallback
-      // await gatewayServer.initialize();
+      await gatewayServer.initialize();
       log.info("✅ Gateway server initialized and responding on port 7890");
     } catch (error) {
       log.error("❌ GatewayServer initialization failed:", error);
