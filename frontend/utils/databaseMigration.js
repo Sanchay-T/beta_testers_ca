@@ -5,6 +5,8 @@ const log = require("electron-log");
 
 class DatabaseMigration {
   constructor() {
+    // Migration from old app names to new "CypherEdge" app
+    // This handles the company-wide rebranding from Cyphersol to CypherEdge
     this.currentUserDataDir = app.getPath("userData");
     this.migrationLogFile = path.join(
       this.currentUserDataDir,
@@ -729,4 +731,4 @@ class DatabaseMigration {
   }
 }
 
-module.exports = DatabaseMigration;
+module.exports = DatabaseMigration; 
