@@ -83,7 +83,7 @@ class DatabaseMigration {
       });
 
       if (fs.existsSync(possibleDir)) {
-        // Check if this directory has critical files (database or license)
+        // Check if this directory has critical files (database AND license - both required)
         const dbPath = path.join(possibleDir, "db.sqlite3");
         const licensePath = path.join(possibleDir, "clientLicense.enc");
 
@@ -98,8 +98,8 @@ class DatabaseMigration {
           licensePath: licensePath,
         });
 
-        // If it has at least one critical file, use this directory
-        if (hasDb || hasLicense) {
+        // Both critical files are required - database AND license must both exist
+        if (hasDb && hasLicense) {
           this.oldAppName = possibleName;
           this.oldAppDirectory = possibleDir;
 
@@ -108,16 +108,18 @@ class DatabaseMigration {
             detectedOldAppDirectory: this.oldAppDirectory,
             hasDatabase: hasDb,
             hasLicense: hasLicense,
-            priorityReason: hasDb ? "Contains database" : "Contains license",
+            validationReason: "Contains both database and license files",
           });
 
           return this.oldAppDirectory;
         } else {
           this.logMigration(
-            `⚠️ DIRECTORY EXISTS BUT NO CRITICAL FILES: ${possibleName}`,
+            `⚠️ DIRECTORY EXISTS BUT MISSING CRITICAL FILES: ${possibleName}`,
             {
               path: possibleDir,
-              note: "Skipping - no db.sqlite3 or clientLicense.enc found",
+              hasDatabase: hasDb,
+              hasLicense: hasLicense,
+              note: "Skipping - requires BOTH db.sqlite3 AND clientLicense.enc",
             }
           );
         }
@@ -640,13 +642,25 @@ class DatabaseMigration {
 
       // Step 5: Complete migration
       this.logMigration("📋 STEP 5: COMPLETING MIGRATION PROCESS");
-      this.markMigrationCompleted(migrationResults);
+      
+      // ONLY mark migration as complete if ALL critical files were successfully migrated
+      if (successCount === oldUserData.length && failureCount === 0) {
+        this.markMigrationCompleted(migrationResults);
+        this.logMigration("✅ ALL FILES MIGRATED - MARKING AS COMPLETE");
+      } else {
+        this.logMigration("⚠️ PARTIAL MIGRATION - NOT MARKING AS COMPLETE", {
+          totalFiles: oldUserData.length,
+          successCount: successCount,
+          failureCount: failureCount,
+          willRetryOnNextStart: true
+        });
+      }
 
       const migrationEndTime = Date.now();
       const totalMigrationTime = migrationEndTime - migrationStartTime;
 
       const finalResult = {
-        success: successCount > 0,
+        success: successCount === oldUserData.length && failureCount === 0,  // Fixed: ALL files must succeed
         totalItems: oldUserData.length,
         successfulMigrations: successCount,
         failedMigrations: failureCount,

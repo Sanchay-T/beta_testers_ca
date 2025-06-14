@@ -1,6 +1,8 @@
 ; Cyphersol Custom NSIS Installer Script
 ; This file handles firewall rules during install/uninstall
 
+!include LogicLib.nsh
+
 !macro customHeader
   ; Force showing installation details
   ShowInstDetails show
@@ -40,6 +42,19 @@
   ${EndIf}
   
   DetailPrint "Firewall configuration completed"
+  
+  ; Always show update progress to user
+  ${If} ${Silent}
+    ; Auto-update detected - show a message box so user knows what's happening
+    MessageBox MB_OK|MB_ICONINFORMATION "CypherEdge is being updated. The application will restart automatically after installation." /SD IDOK
+    DetailPrint "Auto-update in progress..."
+  ${EndIf}
+  
+  ; Launch app after install
+  ${If} ${Silent}
+    DetailPrint "Launching CypherEdge after update..."
+    Exec "$INSTDIR\CypherEdge.exe"
+  ${EndIf}
 !macroend
 
 !macro customUnInstall

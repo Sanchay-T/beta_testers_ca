@@ -1,0 +1,7 @@
+version: 1.1.9
+files:
+  - url: CypherEdge-Setup-1.1.9.exe
+    # sha512: yKSY7eVPZHWoC1ma45hOUcw6neK4vVlZA8KwagPwbp3A9Ib8hrIQYPq04y/xtxEFpPd77V/ROX9hojK4hIyzOg==
+path: CypherEdge-Setup-1.1.9.exe
+# sha512: yKSY7eVPZHWoC1ma45hOUcw6neK4vVlZA8KwagPwbp3A9Ib8hrIQYPq04y/xtxEFpPd77V/ROX9hojK4hIyzOg==
+releaseDate: '2025-06-13T18:35:13.305Z' 
