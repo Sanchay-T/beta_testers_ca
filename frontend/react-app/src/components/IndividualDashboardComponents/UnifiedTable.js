@@ -434,13 +434,19 @@ const DataTable = ({
 
       // Update categoriesArray with transaction data
       setCategoriesArray((prevArray) => {
-        const categoryMap = new Map(prevArray.map((cat) => [cat.name, cat]));
+        const categoryKey = (name, type) => `${name.toLowerCase()}__${type}`;
+        const categoryMap = new Map(
+          prevArray.map((cat) => [categoryKey(cat.name, cat.type), cat])
+        );
 
         // Add any new categories from transactions
         let hasNewCategories = false || storedCategoriesArray === null;
         for (const [name, type] of txCategories.entries()) {
-          if (!categoryMap.has(name) && name && name.trim()) {
-            categoryMap.set(name, { name, type });
+          const key = `${name.toLowerCase()}__${type}`;
+
+          if (!categoryMap.has(key) && name && name.trim()) {
+            categoryMap.set(categoryKey(name, type), { name, type });
+
             hasNewCategories = true;
           }
         }
@@ -876,7 +882,6 @@ const DataTable = ({
     handleSaveChanges([...modifiedData, modifiedObject]);
     setSimilarCategoryTransactions([]);
     setSelectedCategorySimilarTransactions(new Set());
-
   };
 
   // --- Bulk Update: Find each row by its id ---
@@ -894,8 +899,8 @@ const DataTable = ({
       source === "similarCategory"
         ? pendingCategoryChange.newCategory
         : selectedBulkCategory === ""
-          ? categorySearchTerm
-          : selectedBulkCategory;
+        ? categorySearchTerm
+        : selectedBulkCategory;
 
     // Create deep copies of the data we're working with
     const dataToUpdate = [...filteredData];
@@ -1058,7 +1063,10 @@ const DataTable = ({
         : [...prev, category]
     );
   };
-  const allCategoryOptions = [...categoryOptions, ...pendingCategories];
+  const allCategoryOptions = Array.from(
+    new Set([...categoryOptions, ...pendingCategories])
+  );
+
   const filteredCategories = allCategoryOptions.filter((category) => {
     return category.toLowerCase().includes(categorySearchTerm.toLowerCase());
   });
@@ -1929,23 +1937,23 @@ const DataTable = ({
               {["suspense", "upi-dr", "upi-cr", "transactions"].includes(
                 source
               ) && (
-                  <Button
-                    onClick={() => fileInputRef.current.click()}
-                    variant="outline"
-                    size="sm"
-                    className="h-9 gap-1"
-                  >
-                    <Upload className="h-4 w-4" />
-                    <span>Upload Excel</span>
-                    <input
-                      type="file"
-                      accept=".xlsx, .xls"
-                      ref={fileInputRef}
-                      onChange={handleExcelFileUpload}
-                      className="hidden"
-                    />
-                  </Button>
-                )}
+                <Button
+                  onClick={() => fileInputRef.current.click()}
+                  variant="outline"
+                  size="sm"
+                  className="h-9 gap-1"
+                >
+                  <Upload className="h-4 w-4" />
+                  <span>Upload Excel</span>
+                  <input
+                    type="file"
+                    accept=".xlsx, .xls"
+                    ref={fileInputRef}
+                    onChange={handleExcelFileUpload}
+                    className="hidden"
+                  />
+                </Button>
+              )}
 
               <Button
                 variant="outline"
@@ -2049,36 +2057,36 @@ const DataTable = ({
               <TableRow>
                 {(columns.includes("category") ||
                   columns.includes("entity")) && (
-                    <TableHead className="w-10 sticky left-0 bg-white z-10">
-                      <Checkbox
-                        checked={
-                          currentData.length > 0 &&
-                          currentData.every((row) =>
-                            globalSelectedRows.has(row.id)
-                          )
-                        }
-                        onCheckedChange={toggleSelectAll}
-                      />
-                    </TableHead>
-                  )}
+                  <TableHead className="w-10 sticky left-0 bg-white z-10">
+                    <Checkbox
+                      checked={
+                        currentData.length > 0 &&
+                        currentData.every((row) =>
+                          globalSelectedRows.has(row.id)
+                        )
+                      }
+                      onCheckedChange={toggleSelectAll}
+                    />
+                  </TableHead>
+                )}
 
                 {columns.map((column) => (
                   <TableHead
                     key={column}
                     className="whitespace-nowrap"
-                  // className={source === "summary" ? "bg-gray-900 dark:bg-slate-800 text-white" : ""}
+                    // className={source === "summary" ? "bg-gray-900 dark:bg-slate-800 text-white" : ""}
                   >
                     <div className="flex items-center gap-2 ">
                       {["ledger", "entity"].includes(column)
                         ? "Ledger / Party Name "
                         : column
-                          .split("_") // Split by underscore
-                          .map(
-                            (word) =>
-                              word.charAt(0).toUpperCase() +
-                              word.slice(1).toLowerCase()
-                          ) // Capitalize
-                          .join(" ")}
+                            .split("_") // Split by underscore
+                            .map(
+                              (word) =>
+                                word.charAt(0).toUpperCase() +
+                                word.slice(1).toLowerCase()
+                            ) // Capitalize
+                            .join(" ")}
                       {column.toLowerCase() !== "description" && (
                         <Button
                           variant="ghost"
@@ -2141,17 +2149,17 @@ const DataTable = ({
                   return (
                     <TableRow
                       key={row.id}
-                    // className={source === "summary" ? "even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200" : ""}
+                      // className={source === "summary" ? "even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200" : ""}
                     >
                       {(columns.includes("category") ||
                         columns.includes("entity", "ledger")) && (
-                          <TableCell className="w-10 sticky left-0 bg-white z-10">
-                            <Checkbox
-                              checked={globalSelectedRows.has(row.id)}
-                              onCheckedChange={() => toggleRowSelection(row.id)}
-                            />
-                          </TableCell>
-                        )}
+                        <TableCell className="w-10 sticky left-0 bg-white z-10">
+                          <Checkbox
+                            checked={globalSelectedRows.has(row.id)}
+                            onCheckedChange={() => toggleRowSelection(row.id)}
+                          />
+                        </TableCell>
+                      )}
                       {columns.map((column) => {
                         if (["ledger", "entity"].includes(column)) {
                           return (
@@ -2199,10 +2207,11 @@ const DataTable = ({
                                 >
                                   {/* Trigger button styled like a Select */}
                                   <div
-                                    className={`flex items-center justify-between w-full h-10 px-3 py-2 text-sm border rounded-md ${globalSelectedRows.has(row.id)
+                                    className={`flex items-center justify-between w-full h-10 px-3 py-2 text-sm border rounded-md ${
+                                      globalSelectedRows.has(row.id)
                                         ? "bg-gray-100 text-gray-500 cursor-not-allowed opacity-70 border-slate-200"
                                         : "bg-background cursor-pointer border-input"
-                                      }`}
+                                    }`}
                                     onClick={() => {
                                       if (!globalSelectedRows.has(row.id)) {
                                         handleCategorySelectOpenChange(row.id);
@@ -2480,7 +2489,7 @@ const DataTable = ({
                     className={cn(
                       "cursor-pointer",
                       currentPage === totalPages &&
-                      "pointer-events-none opacity-50"
+                        "pointer-events-none opacity-50"
                     )}
                   />
                 </PaginationItem>
@@ -3137,10 +3146,11 @@ const DataTable = ({
                       {similarCategoryTransactions.map((transaction, index) => (
                         <TableRow
                           key={transaction.id}
-                          className={`transition-all ${index % 2 === 0
+                          className={`transition-all ${
+                            index % 2 === 0
                               ? "bg-white dark:bg-gray-900"
                               : "bg-gray-50 dark:bg-gray-800"
-                            } hover:bg-gray-200 dark:hover:bg-gray-700`}
+                          } hover:bg-gray-200 dark:hover:bg-gray-700`}
                         >
                           <TableCell className="p-3 ">
                             <Checkbox
