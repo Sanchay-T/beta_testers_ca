@@ -621,7 +621,7 @@ def individual_summary(transactions_df):
     return json_output
     
 
-def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_dates, CA_ID, progress_data,
+def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_dates, CA_ID, progress_data,is_ocr=False,
                              whole_transaction_sheet=None, aiyazs_array_of_array=None):
     account_number = ""
     dfs = {}
@@ -659,7 +659,7 @@ def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_
 
         else:
             dfs[bank], name_dfs[bank], errorz[bank] = extraction_process(bank, pdf_path, pdf_password, start_date,
-                                                                         end_date)
+                                                                         end_date,is_ocr)
 
         print(f"Extracted {bank} bank statement successfully")
       
