@@ -2070,7 +2070,7 @@ def returns_doc_according_to_columns(images_path, detected_original_bboxs, verti
       image_path = images_path[i]  # Use the first page image directly
     #   print("pdf to images:", image_path)
       enhanced_image = new_enhance_image_contrast(image_path)
-      enhanced_path = f"temp_enhanced_{i}_is_{uuid.uuid4().hex}.jpg"
+      enhanced_path = os.path.join(TEMP_SAVED_PDF_DIR, f"temp_enhanced_{i}_is_{uuid.uuid4().hex}.jpg")
       cv2.imwrite(enhanced_path, enhanced_image)
       print(f"Enhanced image {i} saved at:", enhanced_path)
       enhanced_new_path = save_first_page_numpy_to_image(enhanced_image)
