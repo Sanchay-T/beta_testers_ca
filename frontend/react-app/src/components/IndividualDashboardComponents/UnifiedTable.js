@@ -480,7 +480,7 @@ const DataTable = ({
 
     return categoriesArray
       .filter(
-        (cat) => cat.type === transactionType || cat.name === "Self transfer"
+        (cat) => cat.type === transactionType
       )
       .map((cat) => cat.name)
       .filter((name) =>
