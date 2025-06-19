@@ -386,8 +386,8 @@ autoUpdater.on("download-progress", (progress) => {
     timeRemaining:
       progress.total && progress.bytesPerSecond
         ? Math.round(
-          (progress.total - progress.transferred) / progress.bytesPerSecond
-        )
+            (progress.total - progress.transferred) / progress.bytesPerSecond
+          )
         : "Unknown",
     timestamp: new Date().toISOString(),
   };
@@ -521,7 +521,11 @@ async function cleanupForUpdate() {
         if (process.platform === "win32") {
           try {
             execSync("taskkill /F /IM main.exe /T", { timeout: 3000 });
-            logWithTimestamp("info", UPDATE_LOG_PREFIX, "Force killed Python processes");
+            logWithTimestamp(
+              "info",
+              UPDATE_LOG_PREFIX,
+              "Force killed Python processes"
+            );
           } catch (e) {
             // Process might not exist
           }
@@ -562,7 +566,11 @@ async function cleanupForUpdate() {
         // Force kill any remaining gateway processes
         try {
           execSync("taskkill /F /IM gatewayService.exe /T", { timeout: 3000 });
-          logWithTimestamp("info", UPDATE_LOG_PREFIX, "Force killed Gateway processes");
+          logWithTimestamp(
+            "info",
+            UPDATE_LOG_PREFIX,
+            "Force killed Gateway processes"
+          );
         } catch (e) {
           // Process might not exist
         }
@@ -694,7 +702,8 @@ autoUpdater.on("update-downloaded", (info) => {
     type: "info",
     title: "Update Ready",
     message: `Version ${info.version} is ready to install`,
-    detail: "The application will restart to apply the update. Save any work before continuing.",
+    detail:
+      "The application will restart to apply the update. Save any work before continuing.",
     buttons: ["Install Now", "Install on Exit"],
     defaultId: 0,
     cancelId: 1,
@@ -726,7 +735,7 @@ autoUpdater.on("update-downloaded", (info) => {
           center: true,
           alwaysOnTop: true,
           skipTaskbar: false, // Show in taskbar so user knows something is happening
-          backgroundColor: '#1e1e1e',
+          backgroundColor: "#1e1e1e",
           webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
@@ -851,16 +860,16 @@ autoUpdater.on("update-downloaded", (info) => {
         installingWindow.show();
 
         // Prevent window from being closed during update
-        installingWindow.on('close', (e) => {
+        installingWindow.on("close", (e) => {
           if (isUpdating) {
             e.preventDefault();
             // Show a warning if user tries to close
             dialog.showMessageBox(installingWindow, {
-              type: 'warning',
-              title: 'Update in Progress',
-              message: 'Please wait for the update to complete.',
-              detail: 'Closing this window may corrupt the installation.',
-              buttons: ['OK']
+              type: "warning",
+              title: "Update in Progress",
+              message: "Please wait for the update to complete.",
+              detail: "Closing this window may corrupt the installation.",
+              buttons: ["OK"],
             });
           }
         });
@@ -870,7 +879,9 @@ autoUpdater.on("update-downloaded", (info) => {
           const script = `
             document.querySelector('.status').innerHTML = '${message}';
           `;
-          installingWindow.webContents.executeJavaScript(script).catch(() => { });
+          installingWindow.webContents
+            .executeJavaScript(script)
+            .catch(() => {});
         };
 
         logWithTimestamp(
@@ -884,14 +895,18 @@ autoUpdater.on("update-downloaded", (info) => {
         updateStatus("Logging out user session...");
 
         // Perform cleanup
-        updateStatus("Stopping services (Database, Python, Gateway)...<br>This ensures a clean installation.");
+        updateStatus(
+          "Stopping services (Database, Python, Gateway)...<br>This ensures a clean installation."
+        );
         await cleanupForUpdate();
 
         // Small delay to ensure everything is ready
         updateStatus("Finalizing preparation...<br>Almost ready to install!");
         setTimeout(() => {
           try {
-            updateStatus("Installing CypherEdge ${info.version}...<br>The application will restart automatically.");
+            updateStatus(
+              "Installing CypherEdge ${info.version}...<br>The application will restart automatically."
+            );
 
             logWithTimestamp(
               "info",
@@ -932,15 +947,14 @@ autoUpdater.on("update-downloaded", (info) => {
               autoUpdater.quitAndInstall(false, true);
             }
           } catch (err) {
-            logWithTimestamp(
-              "error",
-              ERROR_LOG_PREFIX,
-              "Installation error",
-              { error: err.message }
-            );
+            logWithTimestamp("error", ERROR_LOG_PREFIX, "Installation error", {
+              error: err.message,
+            });
 
             // Update the installation window to show error
-            updateStatus(`❌ Installation failed: ${err.message}<br>Please try again later or contact support.`);
+            updateStatus(
+              `❌ Installation failed: ${err.message}<br>Please try again later or contact support.`
+            );
 
             // Create failure flag for next startup
             try {
@@ -950,21 +964,28 @@ autoUpdater.on("update-downloaded", (info) => {
               );
               fs.writeFileSync(failureFlagPath, err.message);
             } catch (flagError) {
-              logWithTimestamp("warn", UPDATE_LOG_PREFIX, "Could not create failure flag");
+              logWithTimestamp(
+                "warn",
+                UPDATE_LOG_PREFIX,
+                "Could not create failure flag"
+              );
             }
 
             // Show error dialog after a delay
             setTimeout(() => {
-              dialog.showMessageBox(installingWindow, {
-                type: 'error',
-                title: 'Update Failed',
-                message: 'The update installation failed.',
-                detail: 'The application will continue running with the current version. You can try updating again later.',
-                buttons: ['OK']
-              }).then(() => {
-                isUpdating = false;
-                installingWindow.close();
-              });
+              dialog
+                .showMessageBox(installingWindow, {
+                  type: "error",
+                  title: "Update Failed",
+                  message: "The update installation failed.",
+                  detail:
+                    "The application will continue running with the current version. You can try updating again later.",
+                  buttons: ["OK"],
+                })
+                .then(() => {
+                  isUpdating = false;
+                  installingWindow.close();
+                });
             }, 2000);
           }
         }, 1000); // Increased delay to 1 second for better UX
@@ -1905,7 +1926,8 @@ app.whenReady().then(async () => {
             type: "info",
             title: "Update Successful",
             message: `Successfully updated to CypherEdge v${app.getVersion()}`,
-            detail: "Your application has been updated with the latest features and improvements.",
+            detail:
+              "Your application has been updated with the latest features and improvements.",
             buttons: ["OK"],
           });
         }, 3000); // Increased delay to ensure app is fully loaded
@@ -2192,7 +2214,7 @@ log.info(
   "═══════════════════════════════════════════════════════════════════════════════════════"
 );
 
-log.info("🚀 CYPHEREDGE AUTO-UPDATE LOGGING SYSTEM v2.0.1 INITIALIZED");
+log.info("🚀 CYPHEREDGE AUTO-UPDATE LOGGING SYSTEM v2.0.3 INITIALIZED");
 
 log.info(
   "═══════════════════════════════════════════════════════════════════════════════════════"
@@ -2289,15 +2311,16 @@ async function verifyAllServicesRunning() {
     }
 
     // Overall service health
-    const allServicesRunning = Object.values(serviceStatus).every(status =>
-      typeof status === 'boolean' ? status : true
+    const allServicesRunning = Object.values(serviceStatus).every((status) =>
+      typeof status === "boolean" ? status : true
     );
 
     log.info("🏥 OVERALL SERVICE HEALTH CHECK", {
       ...serviceStatus,
       allServicesHealthy: allServicesRunning,
       healthPercentage: Math.round(
-        (Object.values(serviceStatus).filter(s => s === true).length / 5) * 100
+        (Object.values(serviceStatus).filter((s) => s === true).length / 5) *
+          100
       ),
     });
 
@@ -2308,11 +2331,12 @@ async function verifyAllServicesRunning() {
       if (!serviceStatus.database || !serviceStatus.gateway) {
         setTimeout(() => {
           dialog.showMessageBox({
-            type: 'warning',
-            title: 'Service Warning',
-            message: 'Some application services may not be running properly.',
-            detail: 'Please check the logs or restart the application if you experience issues.',
-            buttons: ['OK']
+            type: "warning",
+            title: "Service Warning",
+            message: "Some application services may not be running properly.",
+            detail:
+              "Please check the logs or restart the application if you experience issues.",
+            buttons: ["OK"],
           });
         }, 2000);
       }
