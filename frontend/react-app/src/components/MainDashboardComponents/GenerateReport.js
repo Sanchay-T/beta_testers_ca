@@ -262,6 +262,9 @@ export default function GenerateReport({ activeTab }) {
         setSelectedFiles([]);
         setFileDetails([]);
 
+        // Handle Scanned and encoded files
+        console.log({ aiyaz: result.data.failedStatements });
+
         // Trigger a page refresh
         // refreshPage();
       } else {

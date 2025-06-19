@@ -889,6 +889,7 @@ function generateReportIpc(tmpdir_path) {
           end_date: fileDetails.map((d) => d.end_date || ""),
           ca_id: caseName || "DEFAULT_CASE",
           whole_transaction_sheet,
+          is_ocr: false,
         };
 
         log.info("Sending API request with payload:", payload);
