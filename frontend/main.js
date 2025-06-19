@@ -2019,7 +2019,7 @@ const logSystemInfo = () => {
 log.info(
   "═══════════════════════════════════════════════════════════════════════════════════════"
 );
-log.info("🚀 CYPHERSOL AUTO-UPDATE LOGGING SYSTEM v1.0.16 INITIALIZED");
+log.info("🚀 CYPHERSOL AUTO-UPDATE LOGGING SYSTEM v1.0.17 INITIALIZED");
 log.info(
   "═══════════════════════════════════════════════════════════════════════════════════════"
 );

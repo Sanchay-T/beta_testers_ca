@@ -1,0 +1,33 @@
+2025-06-19 15:29:28.124 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:30:28.135 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:31:28.141 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:32:28.146 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:33:28.502 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:34:28.512 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:35:28.521 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:36:28.150 +05:30 [INF] [License Polling] Expiry: 1755322921.629761
+2025-06-19 15:36:28.150 +05:30 [INF] [SetExpiry] Updating license expiry from 1755322921.629761 to 1755322921.629761
+2025-06-19 15:36:28.150 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1750246815.806064 to 1750327588.607414
+2025-06-19 15:36:28.151 +05:30 [INF] [SetSystemUpTime] Updating license system up time from 21897187 to 102670062
+2025-06-19 15:36:28.156 +05:30 [INF] [License Polling] LicenseInfo: {
+  "license_key": "046322900c3f375d8ceb46e258f128455ed5216c44fab5359816ab0983943531",
+  "current_timestamp": 1750327588.607414,
+  "expiry_timestamp": 1755322921.629761,
+  "number_of_users": 1,
+  "number_of_statements": 20000000,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 102670062
+}
+2025-06-19 15:36:28.156 +05:30 [INF] [License Polling] LicenseInfo: {
+  "license_key": "046322900c3f375d8ceb46e258f128455ed5216c44fab5359816ab0983943531",
+  "current_timestamp": 1750327588.607414,
+  "expiry_timestamp": 1755322921.629761,
+  "number_of_users": 1,
+  "number_of_statements": 20000000,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 102670062
+}
+2025-06-19 15:36:28.156 +05:30 [INF] [License Polling] License resynced successfully.
+2025-06-19 15:36:28.530 +05:30 [INF] Re-advertising mDNS service...
