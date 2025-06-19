@@ -233,9 +233,9 @@ const IndividualTable = () => {
     }
   };
 
-  const handleDownload = async (caseId, individualId) => {
+  const handleDownload = async (caseId, individualId,customerName) => {
     try {
-      const success = await generateFinancialReport(caseId, individualId, null);
+      const success = await generateFinancialReport(caseId, individualId, customerName);
 
       if (success) {
       } else {
@@ -455,7 +455,7 @@ const IndividualTable = () => {
                                 size="icon"
                                 onClick={(e) => {
                                   e.stopPropagation(); // Prevent row click
-                                  handleDownload(caseId, item.id);
+                                  handleDownload(caseId, item.id,item.customerName);
                                 }}
                               >
                                 <Download className="h-4 w-4" />

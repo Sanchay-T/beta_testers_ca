@@ -2191,7 +2191,9 @@ const logSystemInfo = () => {
 log.info(
   "═══════════════════════════════════════════════════════════════════════════════════════"
 );
-log.info("🚀 CYPHEREDGE AUTO-UPDATE LOGGING SYSTEM v2.0.0 INITIALIZED");
+
+log.info("🚀 CYPHEREDGE AUTO-UPDATE LOGGING SYSTEM v2.0.1 INITIALIZED");
+
 log.info(
   "═══════════════════════════════════════════════════════════════════════════════════════"
 );

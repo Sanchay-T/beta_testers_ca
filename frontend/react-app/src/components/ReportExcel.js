@@ -43,9 +43,9 @@ function mapDataForExcelGenerator(accountsData, summaryObject, individualId) {
 
       // Add all month data and "Total" column
       Object.keys(item).forEach((key) => {
-        if (key.includes("-202") || key === "Total") {
-          newItem[key] = item[key];
-        }
+      if (/^[A-Za-z]{3}-\d{4}$/.test(key) || key === "Total") {
+        newItem[key] = item[key];
+      }
       });
 
       return newItem;
