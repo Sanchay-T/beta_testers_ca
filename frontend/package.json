@@ -1,5 +1,7 @@
 
-{  "name": "cyphersol-electron-app",  "version": "1.0.17",  "description": "CA OFFLINE APP",
+
+{  "name": "cyphersol-electron-app",  "version": "2.0.1",  "description": "CA OFFLINE APP",
+
   "main": "main.js",
   "icon": "./assets/cyphersol-icon.png",
   "scripts": {
@@ -37,7 +39,7 @@
   },
   "build": {
     "appId": "com.electron.electronapp",
-    "productName": "Cyphersol",
+    "productName": "CypherEdge",
     "icon": "assets/cyphersol-icon.ico",
     "asarUnpack": [
       "**/*.node"
@@ -127,7 +129,7 @@
       "allowToChangeInstallationDirectory": false,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Cyphersol",
+      "shortcutName": "CypherEdge",
       "deleteAppDataOnUninstall": false,
       "artifactName": "${productName}-Setup-${version}.${ext}",
       "uninstallDisplayName": "${productName}",
