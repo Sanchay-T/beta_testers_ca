@@ -6,6 +6,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
   const [isActivated, setIsActivated] = useState(null);
   const [isSignedUp, setIsSignedUp] = useState(false);
 
@@ -50,7 +51,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Clear error after 5 seconds
+  // Clear error after 5 seconds but keep success messages visible indefinitely
   useEffect(() => {
     if (error) {
       const timer = setTimeout(() => {
@@ -59,6 +60,8 @@ export const AuthProvider = ({ children }) => {
       return () => clearTimeout(timer);
     }
   }, [error]);
+
+  // Success messages don't auto-clear, they remain visible until explicitly cleared or user performs another action
 
   useEffect(() => {
     // Listen for the 'navigateToLogin' event from the main process via preload.js
@@ -180,6 +183,7 @@ export const AuthProvider = ({ children }) => {
     user,
     loading,
     error,
+    successMessage,
     isActivated,
     isSignedUp,
     signUp,
@@ -190,6 +194,7 @@ export const AuthProvider = ({ children }) => {
     setIsActivated,
     setIsSignedUp,
     setError,
+    setSuccessMessage,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

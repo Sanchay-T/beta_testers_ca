@@ -42,7 +42,7 @@ import {
   TooltipTrigger,
 } from "../ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-
+import { Progress } from "../ui/progress";
 const defaultColumns = {
   "Payment Receipt Contra": [
     "invoice_date",
@@ -87,6 +87,15 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
   const [initialPayRecContraData, setInitialPayRecContraData] = useState([]);
   const [companyNameCheckbox, setCompanyNameCheckbox] = useState(false);
   const [confirmReupload, setConfirmReupload] = useState(false);
+  const [progress, setProgress] = useState({ current: 0, total: 0 });
+
+  useEffect(() => {
+    // Overall %:
+    window.electron.onUploadProgress((_, { current, total }) => {
+      console.log("Progress", { current, total });
+      setProgress({ current, total });
+    });
+  }, []);
 
   useEffect(() => {
     const checkIsTallyStatus = async () => {
@@ -494,6 +503,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
         tallyUploadData
       );
       setCompanyNameCheckbox(false);
+      setConfirmReupload(false);
       if (dbStoreResponse.success) {
         // Handle successful database storage
         console.log(
@@ -978,6 +988,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
   };
 
   const handleUploadClick = async (transactions = null) => {
+    setProgress({ current: 0, total: 0 });
     if (selectedVoucher === "Payment Receipt Contra") {
       return await handleTallyUpload(transactions);
     } else if (selectedVoucher === "Ledgers") {
@@ -1102,9 +1113,9 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
 
         {/* Confirmation Modal */}
         <Dialog open={confirmationModal} onOpenChange={setConfirmationModal}>
-          <DialogContent className="min-w-[500px] max-w-[40%]">
+          <DialogContent className="min-w-[500px] max-w-[45%]">
             <DialogHeader>
-              <DialogTitle>Confirm Tally Import</DialogTitle>
+              <DialogTitle>Confirm Import To Tally </DialogTitle>
               <DialogDescription>
                 <p className="mt-4 text-lg">
                   {`You are about to import ${tallyUploadData.length} ${
@@ -1170,6 +1181,33 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
                     correct company name
                   </label>
                 </div>
+
+                {loading2 && (
+                  <Card className="mt-6 bg-gray-50 dark:bg-gray-800 shadow-sm">
+                    <CardHeader>
+                      <CardTitle className="text-sm font-medium">
+                        Import Progress
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center space-x-2">
+                        <Progress
+                          value={(progress.current / progress.total) * 100 || 0}
+                          className="flex-1 h-2 rounded-full"
+                        />
+                        <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                          {Math.round(
+                            (progress.current / progress.total) * 100
+                          )}
+                          %
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {progress.current} of {progress.total} processed
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>

@@ -385,8 +385,8 @@ autoUpdater.on("download-progress", (progress) => {
     timeRemaining:
       progress.total && progress.bytesPerSecond
         ? Math.round(
-            (progress.total - progress.transferred) / progress.bytesPerSecond
-          )
+          (progress.total - progress.transferred) / progress.bytesPerSecond
+        )
         : "Unknown",
     timestamp: new Date().toISOString(),
   };
@@ -1288,7 +1288,6 @@ async function startPythonExecutable() {
         }
       }
 
-   
       options.env = {
         ...options.env,
         PYTHONIOENCODING: "utf-8",
@@ -1353,41 +1352,32 @@ async function startPythonExecutable() {
   });
 }
 
-   const XLSM_SOURCE_DIR = path.join(
-        __dirname,
-        "media",
-        "vouchers",
-        "tallyprime"
-      ); // Bundled location
-      const XLSM_USERDATA_DIR = path.join(
-        app.getPath("userData"),
-        "tallyprime"
-      );
+const XLSM_SOURCE_DIR = path.join(__dirname, "media", "vouchers", "tallyprime"); // Bundled location
+const XLSM_USERDATA_DIR = path.join(app.getPath("userData"), "tallyprime");
 
-      // Copies all .xlsm files from sourceDir to destDir, replacing old files with new ones.
-      function syncTallyprimeFilesToUserData() {
-        if (!fs.existsSync(XLSM_SOURCE_DIR)) {
-          log.error("Source .xlsm directory not found:", XLSM_SOURCE_DIR);
-          return;
-        }
-        if (!fs.existsSync(XLSM_USERDATA_DIR)) {
-          fs.mkdirSync(XLSM_USERDATA_DIR, { recursive: true });
-        }
-        const xlsmFiles = fs
-          .readdirSync(XLSM_SOURCE_DIR)
-          .filter((f) => f.endsWith(".xlsm"));
+// Copies all .xlsm files from sourceDir to destDir, replacing old files with new ones.
+function syncTallyprimeFilesToUserData() {
+  if (!fs.existsSync(XLSM_SOURCE_DIR)) {
+    log.error("Source .xlsm directory not found:", XLSM_SOURCE_DIR);
+    return;
+  }
+  if (!fs.existsSync(XLSM_USERDATA_DIR)) {
+    fs.mkdirSync(XLSM_USERDATA_DIR, { recursive: true });
+  }
+  const xlsmFiles = fs
+    .readdirSync(XLSM_SOURCE_DIR)
+    .filter((f) => f.endsWith(".xlsm"));
 
-        log.info({ xlsmFiles });
-        xlsmFiles.forEach((file) => {
-          const src = path.join(XLSM_SOURCE_DIR, file);
-          const dest = path.join(XLSM_USERDATA_DIR, file);
-          log.info({src,dest})
-          // Always overwrite to ensure latest is shipped on update
-          fs.copyFileSync(src, dest);
-          log.info(`Synced tallyprime file: ${file}`);
-        });
-      }
-
+  log.info({ xlsmFiles });
+  xlsmFiles.forEach((file) => {
+    const src = path.join(XLSM_SOURCE_DIR, file);
+    const dest = path.join(XLSM_USERDATA_DIR, file);
+    log.info({ src, dest });
+    // Always overwrite to ensure latest is shipped on update
+    fs.copyFileSync(src, dest);
+    log.info(`Synced tallyprime file: ${file}`);
+  });
+}
 
 // Add this function to handle file protocol
 function createProtocol() {
@@ -1438,7 +1428,9 @@ function setupEventListeners(win) {
   // Listen for remaining seconds updates
   sessionManager.on("remainingSecondsUpdated", (seconds) => {
     // console.log(`Remaining seconds: ${seconds}`);
-    win.webContents.send("remainingSecondsUpdated", seconds);
+    if (win && !win.isDestroyed()) {
+      win.webContents.send("remainingSecondsUpdated", seconds);
+    }
   });
 
   // Listen for license expiration
@@ -1447,7 +1439,10 @@ function setupEventListeners(win) {
     // Optionally handle the license expiration, e.g., show a dialog or quit the app
     sessionManager.logoutUser();
 
-    win.webContents.send("navigateToLogin");
+    if (win && !win.isDestroyed()) {
+      win.webContents.send("navigateToLogin");
+    }
+
     // win?.destroy();
   });
 }
@@ -1518,6 +1513,8 @@ async function createWindow() {
   // }, 5000)
 
   win.on("closed", () => {
+    sessionManager.stopLicenseCountdown();
+    sessionManager.removeAllListeners();
     win = null;
     log.info("Window closed");
     app.quit();
@@ -1580,7 +1577,7 @@ async function createWindow() {
   registerMainDashboardIpc(TMP_DIR);
   registerCaseDashboardIpc();
   generateReportIpc(TMP_DIR);
-  registerOpenFileIpc(global.AppConfig.baseDir,global.AppConfig.userDataDir);
+  registerOpenFileIpc(global.AppConfig.baseDir, global.AppConfig.userDataDir);
   registerReportHandlers(TMP_DIR);
   registerAuthHandlers(app.getPath("userData"));
   registerOpportunityToEarnIpc();
