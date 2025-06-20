@@ -2434,8 +2434,6 @@ def extract_with_test_cases_ocr(bank_name, pdf_path, pdf_password, CA_ID, encode
    text = extract_text_from_pdf_ocr(pdf_in_saved_pdf)
    return idf, text, explicit_lines
 
-
-
 def extraction_process_rectify(bank, pdf_path, pdf_password, only_lines, labels, encoded_pdf=False):
     
     only_lines = [360.12442452566955, 466.55299595424094, 277.2672816685267, 85.83871023995533, 567.2672816685266, 24.410138811383923]

@@ -674,15 +674,18 @@ const formatDate = (dateString) => {
   return `${day}-${month}-${year}`; // Format as dd-mm-yyyy
 };
 
-
-
 async function checkStatementLimit() {
   log.info("Checking statement limit...");
 
-  const { ip, port } = licenseManager.getLicenseInfo() || { ip: "localhost", port: 7890 }
+  const { ip, port } = licenseManager.getLicenseInfo() || {
+    ip: "localhost",
+    port: 7890,
+  };
 
   try {
-    const response = await axios.get(`http://${ip}:${port}/api/license/check-statement-limit`);
+    const response = await axios.get(
+      `http://${ip}:${port}/api/license/check-statement-limit`
+    );
 
     if (response.status === 200) {
       const { limitReached, remaining } = response.data;
@@ -691,8 +694,8 @@ async function checkStatementLimit() {
         success: true,
         data: {
           limitReached,
-          remaining
-        }
+          remaining,
+        },
       };
     } else {
       log.error("Unexpected response status:", response.statusText);
@@ -704,25 +707,31 @@ async function checkStatementLimit() {
   }
 }
 
-
 async function useStatement() {
   log.info("Requesting to use a statement...");
 
-  const { ip, port } = licenseManager.getLicenseInfo() || { ip: "localhost", port: 7890 };
+  const { ip, port } = licenseManager.getLicenseInfo() || {
+    ip: "localhost",
+    port: 7890,
+  };
 
   try {
-    const response = await axios.post(`http://${ip}:${port}/api/license/use-statement`);
+    const response = await axios.post(
+      `http://${ip}:${port}/api/license/use-statement`
+    );
 
     if (response.status === 200) {
       const { success, message, remaining, used } = response.data;
-      log.info(`Statement used successfully. Remaining: ${remaining}, Used: ${used}`);
+      log.info(
+        `Statement used successfully. Remaining: ${remaining}, Used: ${used}`
+      );
       return {
         success: true,
         data: {
           message,
           remaining,
-          used
-        }
+          used,
+        },
       };
     } else {
       log.error("Unexpected response status:", response.statusText);
@@ -731,14 +740,16 @@ async function useStatement() {
   } catch (err) {
     if (err.response && err.response.data) {
       const { error, remaining, used } = err.response.data;
-      log.warn(`Failed to use statement: ${error}. Remaining: ${remaining}, Used: ${used}`);
+      log.warn(
+        `Failed to use statement: ${error}. Remaining: ${remaining}, Used: ${used}`
+      );
       return {
         success: false,
         error,
         data: {
           remaining,
-          used
-        }
+          used,
+        },
       };
     } else {
       log.error("Error contacting license server:", err.message);
@@ -746,7 +757,6 @@ async function useStatement() {
     }
   }
 }
-
 
 function generateReportIpc(tmpdir_path) {
   db = databaseManager.getInstance().getDatabase();
@@ -757,8 +767,13 @@ function generateReportIpc(tmpdir_path) {
 
   ipcMain.handle(
     "generate-report",
-    async (event, receivedResult, caseName, source = "generate-report") => {
-
+    async (
+      event,
+      receivedResult,
+      caseName,
+      is_ocr,
+      source = "generate-report"
+    ) => {
       try {
         const { success, data } = await checkStatementLimit();
         if (!success) {
@@ -817,9 +832,16 @@ function generateReportIpc(tmpdir_path) {
 
           if (fileDetail.fileContent) {
             fs.writeFileSync(filePath, fileDetail.fileContent, "binary");
-            successfulFiles.add(filePath); // Initially assume success
+            successfulFiles.add(filePath);
+          } else if (fs.existsSync(fileDetail.pdf_paths)) {
+            // Reuse already saved file — just copy it again with a new name
+            fs.copyFileSync(fileDetail.pdf_paths, filePath);
+            successfulFiles.add(filePath);
+            log.info(`Reused existing file from ${fileDetail.pdf_paths}`);
           } else {
-            log.warn(`No file content for ${fileDetail.bankName}`);
+            log.warn(
+              `Missing file content and original file not found for: ${fileDetail.pdf_paths}`
+            );
             failedFiles.add(filePath);
           }
 
@@ -833,6 +855,7 @@ function generateReportIpc(tmpdir_path) {
 
         let whole_transaction_sheet = null;
         let transactionsForCase = null;
+        log.info({aqsource:source})
         if (source === "add-pdf") {
           try {
             transactionsForCase = await db
@@ -889,7 +912,7 @@ function generateReportIpc(tmpdir_path) {
           end_date: fileDetails.map((d) => d.end_date || ""),
           ca_id: caseName || "DEFAULT_CASE",
           whole_transaction_sheet,
-          is_ocr: false,
+          is_ocr,
         };
 
         log.info("Sending API request with payload:", payload);
@@ -1114,7 +1137,6 @@ function generateReportIpc(tmpdir_path) {
         } catch (err) {
           log.error("Error using statement:", err.message);
         }
-
 
         return {
           success: true,

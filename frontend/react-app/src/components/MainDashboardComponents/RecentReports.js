@@ -647,6 +647,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
           files: filesWithContent,
         },
         caseName,
+        false,
         "add-pdf"
       );
       console.log({ electronResponse: result });

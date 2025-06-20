@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { Bell, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
 import GenerateReportForm from "../Elements/ReportForm";
 import RecentReports from "./RecentReports";
@@ -30,6 +30,14 @@ export default function GenerateReport({ activeTab }) {
   const { reportData, updateReportData } = useReportContext();
   const [missingMonthsList, setMissingMonthsList] = useState([]);
   const [warning, setWarning] = useState("");
+
+  const hasScannedOrEncodedWarning = useMemo(() => {
+    if (!Array.isArray(warning)) return false;
+
+    return warning.some((msg) =>
+      /image-only|scanned|non-text|encoded/i.test(msg)
+    );
+  }, [warning]);
 
   const handleSubmit = async (
     setProgress,
@@ -138,6 +146,7 @@ export default function GenerateReport({ activeTab }) {
           files: filesWithContent,
         },
         caseName,
+        false,
         "generate-report"
       );
 
@@ -164,6 +173,14 @@ export default function GenerateReport({ activeTab }) {
         clearInterval(progressIntervalRef.current);
         setProgress(100);
         toast.dismiss(newToastId);
+
+        // open dialog and everything
+
+        setLoading(false);
+        localStorage.removeItem("dashboardData");
+        // refreshPage();
+        progressIntervalRef.current = null;
+        setDialogOpen(true); // Open the Dialog
 
         console.log("Report generated successfully:", result.data);
         if (result.data.failedFiles.length > 0) {
@@ -256,7 +273,10 @@ export default function GenerateReport({ activeTab }) {
             variant: "success",
           });
         }
-        setShowAnalysisButton(true);
+
+        if(result.data.totalTransactions>0) {
+          setShowAnalysisButton(true);
+        }
 
         // setFailedStatements(result.pdf_paths_not_extracted || []); // Store failed
         setSelectedFiles([]);
@@ -264,6 +284,81 @@ export default function GenerateReport({ activeTab }) {
 
         // Handle Scanned and encoded files
         console.log({ aiyaz: result.data.failedStatements });
+        const failedStatementsFromBackend = result.data.failedStatements || [];
+        console.log({ tyope: typeof failedStatementsFromBackend });
+
+        const paths = failedStatementsFromBackend.paths || [];
+        const reasons =
+          failedStatementsFromBackend.respective_reasons_for_error || [];
+        const bankNames = failedStatementsFromBackend.bank_names || [];
+        const passwords = failedStatementsFromBackend.passwords || [];
+        const startDates = failedStatementsFromBackend.start_dates || [];
+        const endDates = failedStatementsFromBackend.end_dates || [];
+
+        // Helper: Match OCR-triggering reasons
+        const isOcrCandidate = (reason = "") => {
+          const r = reason.toLowerCase();
+          return (
+            r.includes("image-only") ||
+            r.includes("scanned") ||
+            r.includes("non-text") ||
+            r.includes("encoded")
+          );
+        };
+
+        // ✅ Filter out null or undefined pdfs and match OCR-triggering reasons
+        const eligibleIndexes = reasons
+          .map((reason, idx) =>
+            isOcrCandidate(reason) && paths[idx] ? idx : null
+          )
+          .filter((i) => i !== null);
+        console.log({ eligibleIndexes });
+        const scannedOCRFiles = eligibleIndexes.map((i) => ({
+          bankName: bankNames[i],
+          pdf_paths: paths[i],
+          passwords: passwords[i],
+          start_date: startDates[i],
+          end_date: endDates[i],
+          ca_id: result.data.caseId,
+          is_ocr: true,
+        }));
+
+        // If any OCR-worthy files found
+        if (eligibleIndexes.length > 0) {
+          toast({
+            title: "OCR Triggered",
+            description: `Detected scanned or encoded PDFs.`,
+            variant: "default",
+            duration: 5000,
+          });
+
+          console.log( {files: scannedOCRFiles ,
+              caseName,
+              is_ocr:true,
+              soure:"add-pdf"});
+          try {
+            const ocrResult = await window.electron.generateReportIpc(
+              { files: scannedOCRFiles },
+              caseName,
+              true,
+              "add-pdf"
+            );
+
+            console.log("OCR Result:", ocrResult);
+
+            toast({
+              title: "OCR Completed",
+              variant: "success",
+            });
+          } catch (ocrErr) {
+            toast({
+              title: "OCR Failed",
+              description: "OCR retry failed for scanned/encoded PDFs.",
+              variant: "destructive",
+            });
+            console.error("OCR error:", ocrErr);
+          }
+        }
 
         // Trigger a page refresh
         // refreshPage();
@@ -307,12 +402,6 @@ export default function GenerateReport({ activeTab }) {
       const updatedRecentReportData = reportData.recentReportsData;
       updateReportData({ recentReportsData: updatedRecentReportData });
     } finally {
-      setLoading(false);
-      localStorage.removeItem("dashboardData");
-      // refreshPage();
-      progressIntervalRef.current = null;
-      setDialogOpen(true); // Open the Dialog
-
       return true;
     }
   };
@@ -441,7 +530,7 @@ export default function GenerateReport({ activeTab }) {
 
       {/* Dialog for successful report generation */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen} className="">
-        <DialogContent className="max-h-[90vh] overflow-y-auto pb-0">
+        <DialogContent className="max-h-[90vh] overflow-y-auto pb-0 border-none shadow-none">
           <DialogHeader>
             {successfulStatements.length > 0 ? (
               <DialogTitle>
@@ -463,6 +552,7 @@ export default function GenerateReport({ activeTab }) {
             </DialogDescription>
           </DialogHeader>
 
+                
           {(failedStatements.length > 0 || successfulStatements.length > 0) && (
             <div className="mb-2">
               <ul className="list-disc pl-5">
@@ -479,6 +569,23 @@ export default function GenerateReport({ activeTab }) {
               </ul>
             </div>
           )}
+ {hasScannedOrEncodedWarning && (
+            <div className="mb-4 mt-2">
+              <h3 className="text-md font-semibold flex items-center gap-x-2 mb-2">
+                <AlertCircle className="text-blue-500 w-5 h-5" />
+                OCR Processing Started
+              </h3>
+              <Card className="p-3 bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700">
+                <p className="text-blue-700 dark:text-blue-300 text-sm">
+                  We detected one or more scanned or encoded PDFs. We're
+                  processing them using OCR in the background. Please allow
+                  approximately 1 minute per page. You'll receive a notification
+                  once it's ready.
+                </p>
+              </Card>
+            </div>
+          )}
+
           {/* Display Missing Months Section */}
           {missingMonthsList.length > 0 && (
             <div className="mb-4 mt-2">
@@ -531,7 +638,8 @@ export default function GenerateReport({ activeTab }) {
               </Card>
             </div>
           )}
-          <div className="flex gap-4 sticky w-full p-4  bottom-0 bg-white">
+         
+          <div className="flex gap-4 sticky w-full p-4  bottom-0 bg-white ">
             {showAnalsisButton && (
               <Button onClick={() => viewAnalysis()} className="flex-1">
                 View Analysis
