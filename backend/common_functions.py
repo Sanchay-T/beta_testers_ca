@@ -2261,7 +2261,7 @@ def category_add_ca(df):
         BYCLG_DCB["Category"] = BYCLG_name
         df.update(BYCLG_DCB)
 
-    CASHDEP = df[df["Description"].str.contains("cashdep|bytransfer|byclearing/|atr/|chequedeposit", na=False)]
+    CASHDEP = df[df["Description"].str.contains("cashdep|atr/|chequedeposit", na=False)]
     if not CASHDEP.empty:
         extracted_names = [
             re.search(r"CASHDEP(.*?)-", s).group(1)

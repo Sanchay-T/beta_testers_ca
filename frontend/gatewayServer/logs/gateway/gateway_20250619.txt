@@ -1,0 +1,148 @@
+2025-06-19 15:29:28.124 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:30:28.135 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:31:28.141 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:32:28.146 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:33:28.502 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:34:28.512 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:35:28.521 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:36:28.150 +05:30 [INF] [License Polling] Expiry: 1755322921.629761
+2025-06-19 15:36:28.150 +05:30 [INF] [SetExpiry] Updating license expiry from 1755322921.629761 to 1755322921.629761
+2025-06-19 15:36:28.150 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1750246815.806064 to 1750327588.607414
+2025-06-19 15:36:28.151 +05:30 [INF] [SetSystemUpTime] Updating license system up time from 21897187 to 102670062
+2025-06-19 15:36:28.156 +05:30 [INF] [License Polling] LicenseInfo: {
+  "license_key": "046322900c3f375d8ceb46e258f128455ed5216c44fab5359816ab0983943531",
+  "current_timestamp": 1750327588.607414,
+  "expiry_timestamp": 1755322921.629761,
+  "number_of_users": 1,
+  "number_of_statements": 20000000,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 102670062
+}
+2025-06-19 15:36:28.156 +05:30 [INF] [License Polling] LicenseInfo: {
+  "license_key": "046322900c3f375d8ceb46e258f128455ed5216c44fab5359816ab0983943531",
+  "current_timestamp": 1750327588.607414,
+  "expiry_timestamp": 1755322921.629761,
+  "number_of_users": 1,
+  "number_of_statements": 20000000,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 102670062
+}
+2025-06-19 15:36:28.156 +05:30 [INF] [License Polling] License resynced successfully.
+2025-06-19 15:36:28.530 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:37:28.560 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:38:28.564 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:39:28.573 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:40:28.579 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:41:28.587 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:42:28.604 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:42:53.680 +05:30 [INF] got query for _license-server._tcp.local PTR
+2025-06-19 15:42:53.681 +05:30 [INF] got answer for _license-server._tcp.local PTR
+2025-06-19 15:42:56.716 +05:30 [INF] UDP broadcast received from 172.20.10.4:59977: DISCOVER_LICENSE_SERVER
+2025-06-19 15:42:56.728 +05:30 [INF] Responded to UDP discovery with: {"name":"LicenseServer","host":"DESKTOP-FC1RG82","ip":"0.0.0.0","port":7890}
+2025-06-19 15:42:58.712 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "046322900c3f375d8ceb46e258f128455ed5216c44fab5359816ab0983943531",
+  "current_timestamp": 1750327588.607414,
+  "expiry_timestamp": 1755322921.629761,
+  "number_of_users": 1,
+  "number_of_statements": 20000000,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 102670062
+}
+2025-06-19 15:42:58.730 +05:30 [INF] Reading async license file from C:\ProgramData\Cyphersol\license.enc
+2025-06-19 15:42:58.765 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc
+2025-06-19 15:42:58.769 +05:30 [INF] Fingerprint: DESKTOP-FC1RG82CypherSolS-1-5-21-1528785399-2081840107-184672005-1001B6D41988-B335-11E7-BD73-081DE402E0D1
+2025-06-19 15:43:02.759 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "046322900c3f375d8ceb46e258f128455ed5216c44fab5359816ab0983943531",
+  "current_timestamp": 1750327588.607414,
+  "expiry_timestamp": 1755322921.629761,
+  "number_of_users": 1,
+  "number_of_statements": 20000000,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 102670062
+}
+2025-06-19 15:43:02.802 +05:30 [INF] License assign request: {"clientId":"S-1-5-21-1528785399-2081840107-184672005-1001","uuid":"b6d41988-b335-11e7-bd73-081de402e0d1","hostname":"DESKTOP-FC1RG82","username":"CypherSol","macAddress":"f8:34:41:b7:f9:bc"}
+2025-06-19 15:43:02.803 +05:30 [INF] License assign request: S-1-5-21-1528785399-2081840107-184672005-1001, b6d41988-b335-11e7-bd73-081de402e0d1, f8:34:41:b7:f9:bc, DESKTOP-FC1RG82, CypherSol
+2025-06-19 15:43:02.803 +05:30 [INF] License info: {
+  "license_key": "046322900c3f375d8ceb46e258f128455ed5216c44fab5359816ab0983943531",
+  "current_timestamp": 1750327588.607414,
+  "expiry_timestamp": 1755322921.629761,
+  "number_of_users": 1,
+  "number_of_statements": 20000000,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 102670062
+}
+2025-06-19 15:43:02.803 +05:30 [INF] License manager active count: 1 / 1
+2025-06-19 15:43:05.067 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "046322900c3f375d8ceb46e258f128455ed5216c44fab5359816ab0983943531",
+  "current_timestamp": 1750327588.607414,
+  "expiry_timestamp": 1755322921.629761,
+  "number_of_users": 1,
+  "number_of_statements": 20000000,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 102670062
+}
+2025-06-19 15:43:20.308 +05:30 [INF] Session activation logged to Django.
+2025-06-19 15:43:28.621 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:43:45.485 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "046322900c3f375d8ceb46e258f128455ed5216c44fab5359816ab0983943531",
+  "current_timestamp": 1750327588.607414,
+  "expiry_timestamp": 1755322921.629761,
+  "number_of_users": 1,
+  "number_of_statements": 20000000,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 102670062
+}
+2025-06-19 15:43:45.491 +05:30 [INF] {
+  "license_key": "046322900c3f375d8ceb46e258f128455ed5216c44fab5359816ab0983943531",
+  "current_timestamp": 1750327588.607414,
+  "expiry_timestamp": 1755322921.629761,
+  "number_of_users": 1,
+  "number_of_statements": 20000000,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 102670062
+}
+2025-06-19 15:43:45.491 +05:30 [INF] [IsStatementLimitReached] Current used statements: 2, License limit: 20000000
+2025-06-19 15:44:28.622 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:44:36.246 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "046322900c3f375d8ceb46e258f128455ed5216c44fab5359816ab0983943531",
+  "current_timestamp": 1750327588.607414,
+  "expiry_timestamp": 1755322921.629761,
+  "number_of_users": 1,
+  "number_of_statements": 20000000,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 102670062
+}
+2025-06-19 15:44:36.252 +05:30 [INF] [TryUseStatement] Flushing 3 used statements to disk., last flush was at 18-06-2025 10:13:53, difference: 1.00:00:42.6427494
+2025-06-19 15:44:36.253 +05:30 [INF] [FlushToDisk] Flushing 3 used statements to disk.
+2025-06-19 15:44:36.253 +05:30 [INF] [FlushToDisk] Enriched JSON: {"license_key":"046322900c3f375d8ceb46e258f128455ed5216c44fab5359816ab0983943531","current_timestamp":1750327588.607414,"expiry_timestamp":1755322921.629761,"number_of_users":1,"number_of_statements":20000000,"role":"CA","UsedStatements":3,"SystemUpTime":102670062}
+2025-06-19 15:44:36.256 +05:30 [INF] Fingerprint: DESKTOP-FC1RG82CypherSolS-1-5-21-1528785399-2081840107-184672005-1001B6D41988-B335-11E7-BD73-081DE402E0D1
+2025-06-19 15:44:37.833 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-06-19 15:44:37.834 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-06-19 15:44:37.834 +05:30 [INF] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-06-19 15:45:28.631 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:46:28.646 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:47:28.656 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:48:28.658 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:49:28.666 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:50:28.791 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:51:28.798 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:52:28.802 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:53:28.811 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:54:28.821 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:55:29.012 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:56:29.022 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:57:29.026 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:58:29.035 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 15:59:29.045 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 16:00:29.047 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 16:01:29.055 +05:30 [INF] Re-advertising mDNS service...
+2025-06-19 16:02:29.061 +05:30 [INF] Re-advertising mDNS service...

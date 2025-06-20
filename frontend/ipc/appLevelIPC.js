@@ -3,16 +3,14 @@ const sudo = require('sudo-prompt')
 const log = require('electron-log');
 const path = require('path');
 
-const getIsDev = () => {
-  if (global.AppConfig && global.AppConfig.isDev !== undefined) {
-    return global.AppConfig.isDev;
-  }
-  return !appInstance.isPackaged;
-};
 
 function registerAppLevelIPCHandlers(appInstance, appWindow, base_dir) {
 
     ipcMain.handle('app:check-admin-rights', async () => {
+
+        if (process.platform === 'darwin') {
+            return { elevated: true };
+        }
 
         const isElevated = await import('is-elevated');
         const elevated = await isElevated.default();
@@ -22,33 +20,60 @@ function registerAppLevelIPCHandlers(appInstance, appWindow, base_dir) {
 
 
     ipcMain.on("app:relaunchAsAdmin", () => {
+        log.info("Relaunching as admin");
 
-        const isDev = getIsDev();
+        const isDev = !appInstance.isPackaged;
+        const platform = process.platform;
 
-        const electronPath = path.join(base_dir, 'node_modules', 'electron', 'dist', 'electron.exe');
+        let execCommand;
 
-        const entryPath = path.join(base_dir, 'main.js'); // Adjust this path to your actual entry file
+        if (platform === 'darwin') { // macOS
+            // macOS – use AppleScript via osascript for proper GUI context
+            // const electronPath = path.join(base_dir, 'node_modules', 'electron', 'dist', 'Electron.app', 'Contents', 'MacOS', 'Electron');
+            // const entryPath = path.join(base_dir, 'main.js');
+            const execPath = process.execPath;
 
-        log.info("Electron Binary Path: ", electronPath);
-        log.info("Entry Path: ", entryPath);
+            // const escapedPath = appPath.replace(/"/g, '\\"');
+            // const command = `do shell script "${electronPath} \\"${entryPath}\\"" with administrator privileges`;
+            execCommand = `${execPath}`;
 
-        const execCommand = isDev
-            ? `"${electronPath}" "${entryPath}"`
-            : `"${process.execPath}"`;
+        } else if (platform === 'win32') { // Windows
+            const winElectronPath = path.join(base_dir, 'node_modules', 'electron', 'dist', 'electron.exe');
+            const entryPath = path.join(base_dir, 'main.js');
+            execCommand = isDev
+                ? `"${winElectronPath}" "${entryPath}"`
+                : `"${process.execPath}"`;
+        } else { // Linux
+            const entryPath = path.join(base_dir, 'main.js');
+            execCommand = isDev
+                ? `"${process.execPath}" "${entryPath}"`
+                : `"${process.execPath}"`;
+        }
 
 
-        sudo.exec(execCommand, { name: "Cyphersol" }, (error, stdout, stderr) => {
+        log.info(`[Admin Relaunch] Platform: ${platform}`);
+        log.info(`[Admin Relaunch] Command: ${execCommand}`);
+
+
+        sudo.exec(execCommand, { name: "Cyphersol Relaunch" }, (error, stdout, stderr) => {
             if (error) {
                 log.error("Failed to relaunch as admin:", error);
-                throw error;
+                if (appWindow && !appWindow.isDestroyed()) {
+                    appWindow.webContents.send('admin-relaunch-failed', { error: error.message || error.toString() });
+                }
+                return;
             }
 
-            console.log('Relaunch Stdout: ' + stdout);
+            log.info('Relaunch Stdout: ' + stdout);
+            if (stderr) {
+                log.info('Relaunch Stderr: ' + stderr);
+            }
+            log.info('Successfully launched with elevated permissions');
         });
 
-        setTimeout(() => {
-            appInstance.exit(0);
-        }, 500); // 300ms is usually enough; tweak if needed    });
+        // setTimeout(() => {
+        //     appInstance.exit(0);
+        // }, 500); // 300ms is usually enough; tweak if needed    });
 
     })
 }

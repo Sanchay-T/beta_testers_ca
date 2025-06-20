@@ -434,13 +434,19 @@ const DataTable = ({
 
       // Update categoriesArray with transaction data
       setCategoriesArray((prevArray) => {
-        const categoryMap = new Map(prevArray.map((cat) => [cat.name, cat]));
+        const categoryKey = (name, type) => `${name.toLowerCase()}__${type}`;
+        const categoryMap = new Map(
+          prevArray.map((cat) => [categoryKey(cat.name, cat.type), cat])
+        );
 
         // Add any new categories from transactions
         let hasNewCategories = false || storedCategoriesArray === null;
         for (const [name, type] of txCategories.entries()) {
-          if (!categoryMap.has(name) && name && name.trim()) {
-            categoryMap.set(name, { name, type });
+          const key = `${name.toLowerCase()}__${type}`;
+
+          if (!categoryMap.has(key) && name && name.trim()) {
+            categoryMap.set(categoryKey(name, type), { name, type });
+
             hasNewCategories = true;
           }
         }
@@ -474,7 +480,7 @@ const DataTable = ({
 
     return categoriesArray
       .filter(
-        (cat) => cat.type === transactionType || cat.name === "Self transfer"
+        (cat) => cat.type === transactionType
       )
       .map((cat) => cat.name)
       .filter((name) =>
@@ -876,7 +882,6 @@ const DataTable = ({
     handleSaveChanges([...modifiedData, modifiedObject]);
     setSimilarCategoryTransactions([]);
     setSelectedCategorySimilarTransactions(new Set());
-    
   };
 
   // --- Bulk Update: Find each row by its id ---
@@ -993,8 +998,8 @@ const DataTable = ({
           setConfirmationModalOpen(false);
           setSelectedBulkCategory("");
           setBulkReasoning("");
-    setSimilarCategoryTransactions([]);
-    setSelectedCategorySimilarTransactions(new Set());
+          setSimilarCategoryTransactions([]);
+          setSelectedCategorySimilarTransactions(new Set());
 
           // Allow refreshes again
           setTimeout(() => {
@@ -1058,7 +1063,10 @@ const DataTable = ({
         : [...prev, category]
     );
   };
-  const allCategoryOptions = [...categoryOptions, ...pendingCategories];
+  const allCategoryOptions = Array.from(
+    new Set([...categoryOptions, ...pendingCategories])
+  );
+
   const filteredCategories = allCategoryOptions.filter((category) => {
     return category.toLowerCase().includes(categorySearchTerm.toLowerCase());
   });
@@ -1088,7 +1096,8 @@ const DataTable = ({
   };
 
   const handleNumericFilter = (columnName, min, max) => {
-    const dataToFilter = transactions;
+    const dataToFilter =
+      existingFilterData.length > 0 ? existingFilterData : transactions;
     // existingFilterData.length > 0 ? existingFilterData : data;
     const filtered = dataToFilter.filter((row) => {
       const value = parseFloat(row[columnName]);

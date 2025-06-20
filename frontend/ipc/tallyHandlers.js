@@ -92,6 +92,7 @@ function registerTallyIpc() {
     const successIds = [];
     const failedTransactions = [];
     const parser = new XMLParser(); // XML Parser for response
+    const total = tallyUploadData.length;
 
     log.info({ tallyUploadData, port });
     const end = tallyUploadData.length;
@@ -101,11 +102,18 @@ function registerTallyIpc() {
     for (let i = 0; i < end; i++) {
       const row = tallyUploadData[i];
       const voucherName = row.voucherName;
+
       // const isContra = voucherName === "Contra";
       let xmlContent = null;
       // console.log({ row });
       // tallyUploadData[i].invoiceDate = "20220401"; // Hardcoded date for now
 
+      // 1️⃣ Notify renderer of overall progress:
+      event.sender.send("upload-progress", {
+        current: i + 1,
+        total,
+      });
+      
       if (voucherName === "Payment") {
         xmlContent = buildTallyXmlPayment(row);
       } else if (voucherName === "Receipt") {
@@ -180,6 +188,7 @@ function registerTallyIpc() {
 
       log.info({ tallyUploadData });
       const end = tallyUploadData.length;
+      const total = tallyUploadData.length;
 
       // const end = 2;
       const isPrime = tallyVersion === "TallyPrime";
@@ -191,6 +200,11 @@ function registerTallyIpc() {
           ? buildTallyPrimeLedgerXml(row)
           : buildTallyERPLedgerXml(row);
         // const xmlContent = buildTallyLedgerXml(row);
+
+         event.sender.send("upload-progress", {
+        current: i + 1,
+        total,
+      });
 
         try {
           const response = await axios.post(

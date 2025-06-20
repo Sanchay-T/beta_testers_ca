@@ -83,7 +83,6 @@ class DatabaseMigration {
       });
 
       if (fs.existsSync(possibleDir)) {
-        // Check if this directory has critical files (database AND license - both required)
         const dbPath = path.join(possibleDir, "db.sqlite3");
         const licensePath = path.join(possibleDir, "clientLicense.enc");
 
@@ -109,6 +108,7 @@ class DatabaseMigration {
             hasDatabase: hasDb,
             hasLicense: hasLicense,
             validationReason: "Contains both database and license files",
+
           });
 
           return this.oldAppDirectory;
@@ -641,8 +641,7 @@ class DatabaseMigration {
       }
 
       // Step 5: Complete migration
-      this.logMigration("📋 STEP 5: COMPLETING MIGRATION PROCESS");
-      
+      this.logMigration("📋 STEP 5: COMPLETING MIGRATION PROCESS");      
       // ONLY mark migration as complete if ALL critical files were successfully migrated
       if (successCount === oldUserData.length && failureCount === 0) {
         this.markMigrationCompleted(migrationResults);

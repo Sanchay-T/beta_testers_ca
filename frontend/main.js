@@ -104,7 +104,7 @@ log.transports.console.level = "debug"; // Set the log level
 log.transports.file.level = "info"; // Only log info level and above in the log file
 
 // Set up detailed logging for updates
-log.transports.file.fileName = "cyphersol.log";
+log.transports.file.fileName = "cypheredge.log";
 log.info("===========================================");
 log.info(`Application starting - Version ${app.getVersion()}`);
 log.info(`User data directory: ${userDataDir}`);
@@ -460,6 +460,7 @@ async function cleanupForUpdate(progressCallback) {
   performanceTracker.start("cleanup-process");
   isPerformingCleanup = true;  // Set flag to prevent window-all-closed from quitting
 
+
   logWithTimestamp(
     "info",
     UPDATE_LOG_PREFIX,
@@ -783,6 +784,8 @@ async function cleanupForUpdate(progressCallback) {
           window.removeAllListeners("close");
           window.close();
           windowsClosedCount++;
+        } catch (e) {
+          // Window might already be closing
         }
       }
     });
@@ -792,6 +795,7 @@ async function cleanupForUpdate(progressCallback) {
       SUCCESS_LOG_PREFIX,
       `Closed ${windowsClosedCount} windows, preserved ${installationWindowsFound} installation windows${mainWindowSkipped ? ' and main window' : ''}`
     );
+
     cleanupSteps.push({
       step: "Window Cleanup",
       status: "SUCCESS",
@@ -961,9 +965,8 @@ autoUpdater.on("update-downloaded", (info) => {
       displayTime: new Date().toISOString(),
     }
   );
-
   dialog
-    .showMessageBox(dialogOptions)
+    .showMessageBox(win, dialogOptions)
     .then(async (response) => {
       performanceTracker.end("user-interaction-flow");
 
@@ -1051,7 +1054,7 @@ autoUpdater.on("update-downloaded", (info) => {
         <html>
           <head>
             <meta charset="UTF-8">
-            <title>Installing Update</title>
+            <title>Installing CypherEdge Update</title>
             <style>
               * {
                 margin: 0;
@@ -1213,7 +1216,6 @@ autoUpdater.on("update-downloaded", (info) => {
             });
           }
         });
-
         logWithTimestamp(
           "info",
           UPDATE_LOG_PREFIX,
@@ -1375,7 +1377,6 @@ autoUpdater.on("error", (err) => {
     performanceTracker.end("update-download-process");
   if (performanceTracker.timers.has("installation-process"))
     performanceTracker.end("installation-process");
-
   // Suppress 403 errors (GitHub authentication issues)
   if (err.message && (err.message.includes("403") || err.message.includes("AuthenticationFailed"))) {
     log.info("Update check skipped - GitHub authentication token expired (this is normal after updates)");
@@ -1383,7 +1384,6 @@ autoUpdater.on("error", (err) => {
     win?.setProgressBar(-1);
     return;
   }
-
   const errorData = {
     errorMessage: err.message,
     errorCode: err.code || "Unknown",
@@ -1713,6 +1713,33 @@ async function startPythonExecutable() {
   });
 }
 
+const XLSM_SOURCE_DIR = path.join(__dirname, "media", "vouchers", "tallyprime"); // Bundled location
+const XLSM_USERDATA_DIR = path.join(app.getPath("userData"), "tallyprime");
+
+// Copies all .xlsm files from sourceDir to destDir, replacing old files with new ones.
+function syncTallyprimeFilesToUserData() {
+  if (!fs.existsSync(XLSM_SOURCE_DIR)) {
+    log.error("Source .xlsm directory not found:", XLSM_SOURCE_DIR);
+    return;
+  }
+  if (!fs.existsSync(XLSM_USERDATA_DIR)) {
+    fs.mkdirSync(XLSM_USERDATA_DIR, { recursive: true });
+  }
+  const xlsmFiles = fs
+    .readdirSync(XLSM_SOURCE_DIR)
+    .filter((f) => f.endsWith(".xlsm"));
+
+  log.info({ xlsmFiles });
+  xlsmFiles.forEach((file) => {
+    const src = path.join(XLSM_SOURCE_DIR, file);
+    const dest = path.join(XLSM_USERDATA_DIR, file);
+    log.info({ src, dest });
+    // Always overwrite to ensure latest is shipped on update
+    fs.copyFileSync(src, dest);
+    log.info(`Synced tallyprime file: ${file}`);
+  });
+}
+
 // Add this function to handle file protocol
 function createProtocol() {
   protocol.registerFileProtocol("app", (request, callback) => {
@@ -1860,6 +1887,8 @@ async function createWindow() {
   // }, 5000)
 
   win.on("closed", () => {
+    sessionManager.stopLicenseCountdown();
+    sessionManager.removeAllListeners();
     win = null;
     log.info("Window closed");
     app.quit();
@@ -1922,7 +1951,7 @@ async function createWindow() {
   registerMainDashboardIpc(TMP_DIR);
   registerCaseDashboardIpc();
   generateReportIpc(TMP_DIR);
-  registerOpenFileIpc(global.AppConfig.baseDir);
+  registerOpenFileIpc(global.AppConfig.baseDir, global.AppConfig.userDataDir);
   registerReportHandlers(TMP_DIR);
   registerAuthHandlers(app.getPath("userData"));
   registerOpportunityToEarnIpc();
@@ -2055,7 +2084,7 @@ const GATEWAY_EXECUTABLE_DIR = isPackaged
 
 console.log("GATEWAY EXECUTABLE DIR:", GATEWAY_EXECUTABLE_DIR);
 
-app.setName("CypherEdge Dev");
+app.setName("CypherEdge");
 
 // Add this function before app.whenReady()
 async function performUserDataMigration() {
@@ -2200,6 +2229,7 @@ async function performUserDataMigration() {
 }
 
 app.whenReady().then(async () => {
+  const appStartTime = Date.now();
   log.info("🚀 APP READY - STARTING INITIALIZATION SEQUENCE", {
     userDataDir: userDataDir,
     appVersion: app.getVersion(),
@@ -2212,18 +2242,22 @@ app.whenReady().then(async () => {
     // 🔄 MIGRATE USER DATA FROM OLD APP (Critical first step)
     log.info("📋 INITIALIZATION STEP 1: USER DATA MIGRATION");
     const migrationResult = await performUserDataMigration();
-
     if (migrationResult.criticalError) {
       log.error("💥 CRITICAL MIGRATION ERROR - CONTINUING WITH CAUTION");
       // Continue with app initialization even if migration fails
     }
 
     // 🗄️ Initialize Database AFTER migration (so it uses the migrated data)
+
+    const dbStartTime = Date.now();
     log.info("📋 INITIALIZATION STEP 2: DATABASE INITIALIZATION");
     try {
       const dbManager = databaseManager.getInstance();
       await dbManager.initialize(userDataDir);
-      log.info("✅ Database initialized successfully");
+      const dbEndTime = Date.now();
+      log.info("✅ Database initialized successfully", {
+        duration: dbEndTime - dbStartTime,
+      });
     } catch (error) {
       log.error("❌ Database initialization failed:", error);
       throw error;
@@ -2239,18 +2273,29 @@ app.whenReady().then(async () => {
         const version = fs.readFileSync(updateFlagPath, "utf8");
         fs.unlinkSync(updateFlagPath); // Remove the flag file
 
+        log.info("✅ UPDATE SUCCESS DETECTED", {
+          previousVersion: version,
+          currentVersion: app.getVersion(),
+          updateSuccessful: true,
+          restartedAfterUpdate: true,
+        });
+
         // Show success message after app fully loads
         setTimeout(() => {
           dialog.showMessageBox({
             type: "info",
             title: "Update Successful",
-            message: `Successfully updated to version ${app.getVersion()}`,
+            message: `Successfully updated to CypherEdge v${app.getVersion()}`,
+            detail:
+              "Your application has been updated with the latest features and improvements.",
             buttons: ["OK"],
           });
-        }, 2000);
+        }, 3000); // Increased delay to ensure app is fully loaded
       } catch (err) {
         log.error("Error reading update flag:", err);
       }
+    } else {
+      log.info("No update success flag found - normal startup");
     }
 
     // Check for update failure flag
@@ -2332,13 +2377,11 @@ app.whenReady().then(async () => {
       throw error;
     }
 
-    // await new Promise(resolve => setTimeout(resolve, 255500)); // Wait 1.5 seconds
-
     createProtocol();
     createWindow();
 
     win.once("ready-to-show", () => {
-      splashWindow.close();
+      splashWindow?.close();
       win.show();
     });
 
@@ -2348,6 +2391,17 @@ app.whenReady().then(async () => {
       log.error("Python initialization failed:", error);
       throw error;
     }
+
+    // 🔍 VERIFY ALL SERVICES ARE RUNNING
+    await verifyAllServicesRunning();
+
+    // Calculate total startup time
+    const totalStartupTime = Date.now() - appStartTime;
+    log.info("🎉 APPLICATION STARTUP COMPLETED SUCCESSFULLY", {
+      totalStartupTime: totalStartupTime,
+      totalStartupSeconds: (totalStartupTime / 1000).toFixed(2),
+      allServicesRunning: true,
+    });
 
     // Initial update check after 1 minute
     if (!global.AppConfig.isDev) {
@@ -2783,3 +2837,120 @@ log.info(
 
 // Log detailed system information
 logSystemInfo();
+
+// Add service verification function
+async function verifyAllServicesRunning() {
+  log.info("🔍 VERIFYING ALL SERVICES STATUS");
+
+  const serviceStatus = {
+    database: false,
+    gateway: false,
+    license: false,
+    session: false,
+    python: false,
+    timestamp: new Date().toISOString(),
+  };
+
+  try {
+    // Check Database
+    try {
+      const dbManager = databaseManager.getInstance();
+      if (dbManager && dbManager.getDatabase()) {
+        serviceStatus.database = true;
+        log.info("✅ Database service: RUNNING");
+      }
+    } catch (e) {
+      log.error("❌ Database service: FAILED", { error: e.message });
+    }
+
+    // Check Gateway Server (port 7890)
+    try {
+      const isGatewayRunning = await checkPortAvailability(7890);
+      serviceStatus.gateway = isGatewayRunning;
+      if (isGatewayRunning) {
+        log.info("✅ Gateway service: RUNNING (port 7890)");
+      } else {
+        log.error("❌ Gateway service: NOT RESPONDING (port 7890)");
+      }
+    } catch (e) {
+      log.error("❌ Gateway service: CHECK FAILED", { error: e.message });
+    }
+
+    // Check License Manager
+    try {
+      if (licenseManager && licenseManager.licenseData) {
+        serviceStatus.license = true;
+        log.info("✅ License service: VALID", {
+          hasLicenseData: !!licenseManager.licenseData,
+        });
+      } else {
+        log.error("❌ License service: NO VALID LICENSE");
+      }
+    } catch (e) {
+      log.error("❌ License service: CHECK FAILED", { error: e.message });
+    }
+
+    // Check Session Manager
+    try {
+      if (sessionManager) {
+        serviceStatus.session = true;
+        log.info("✅ Session service: RUNNING");
+      }
+    } catch (e) {
+      log.error("❌ Session service: CHECK FAILED", { error: e.message });
+    }
+
+    // Check Python Backend (port 7500)
+    try {
+      const isPythonRunning = await checkPortAvailability(7500);
+      serviceStatus.python = isPythonRunning;
+      if (isPythonRunning) {
+        log.info("✅ Python backend: RUNNING (port 7500)");
+      } else {
+        log.error("❌ Python backend: NOT RESPONDING (port 7500)");
+      }
+    } catch (e) {
+      log.error("❌ Python backend: CHECK FAILED", { error: e.message });
+    }
+
+    // Overall service health
+    const allServicesRunning = Object.values(serviceStatus).every((status) =>
+      typeof status === "boolean" ? status : true
+    );
+
+    log.info("🏥 OVERALL SERVICE HEALTH CHECK", {
+      ...serviceStatus,
+      allServicesHealthy: allServicesRunning,
+      healthPercentage: Math.round(
+        (Object.values(serviceStatus).filter((s) => s === true).length / 5) *
+          100
+      ),
+    });
+
+    if (!allServicesRunning) {
+      log.warn("⚠️ SOME SERVICES ARE NOT RUNNING PROPERLY");
+
+      // Show warning to user if critical services are down
+      if (!serviceStatus.database || !serviceStatus.gateway) {
+        setTimeout(() => {
+          dialog.showMessageBox({
+            type: "warning",
+            title: "Service Warning",
+            message: "Some application services may not be running properly.",
+            detail:
+              "Please check the logs or restart the application if you experience issues.",
+            buttons: ["OK"],
+          });
+        }, 2000);
+      }
+    }
+
+    return serviceStatus;
+  } catch (error) {
+    log.error("💥 SERVICE VERIFICATION FAILED", {
+      error: error.message,
+      stack: error.stack,
+    });
+    return serviceStatus;
+  }
+}

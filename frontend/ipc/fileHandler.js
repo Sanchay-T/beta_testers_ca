@@ -5,7 +5,7 @@ const databaseManager = require('../db/db');
 const { users } = require('../db/schema/User');
 // console.log("Users : ", users)
 
-async function registerOpenFileIpc(BASE_DIR) {
+async function registerOpenFileIpc(BASE_DIR, userDataDir) {
 
     const db = databaseManager.getInstance().getDatabase();
 
@@ -22,7 +22,9 @@ async function registerOpenFileIpc(BASE_DIR) {
 
     ipcMain.handle('open-file', async (event, filePath) => {
         try {
-            const systemFilePath = path.join(BASE_DIR, 'media', 'vouchers', filePath);
+            // const systemFilePath = path.join(BASE_DIR, 'media', 'vouchers', filePath);
+            const systemFilePath = path.join(userDataDir, filePath);
+
             console.log('Opening file:', systemFilePath);
             log.info('Opening file:', systemFilePath);
 
