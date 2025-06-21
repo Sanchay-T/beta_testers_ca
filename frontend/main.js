@@ -2376,7 +2376,7 @@ app.whenReady().then(async () => {
       log.error("SystemInfo initialization failed:", error);
       throw error;
     }
-
+    syncTallyprimeFilesToUserData();
     createProtocol();
     createWindow();
 
