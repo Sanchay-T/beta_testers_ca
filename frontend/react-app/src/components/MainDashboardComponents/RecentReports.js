@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, Suspense } from "react";
+import React, { useState, useEffect, useRef, useMemo} from "react";
 import {
   Card,
   CardContent,
@@ -127,6 +127,14 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
   const [missingMonthsList, setMissingMonthsList] = useState([]);
   const [successfulStatements, setSuccessfulStatements] = useState([]);
 
+  const hasScannedOrEncodedWarning = useMemo(() => {
+    if (!Array.isArray(warning)) return false;
+
+    return warning.some((msg) =>
+      /image-only|scanned|non-text|encoded/i.test(msg)
+    );
+  }, [warning]);
+
   const handleSubmitEditPdf = async () => {
     setPdfEditLoading(true);
     setFailedStatements([]);
@@ -134,6 +142,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
     const allRectified = failedDatasOfCurrentReport.every(
       (statement) => statement.resolved
     );
+
 
     try {
       if (allRectified) {
@@ -736,6 +745,86 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
 
         setSelectedFiles([]);
         setFileDetails([]);
+
+        // Handle Scanned and encoded files
+        console.log({ aiyaz: result.data.failedStatements });
+        const failedStatementsFromBackend = result.data.failedStatements || [];
+        console.log({ tyope: typeof failedStatementsFromBackend });
+
+        const paths = failedStatementsFromBackend.paths || [];
+        const reasons =
+          failedStatementsFromBackend.respective_reasons_for_error || [];
+        const bankNames = failedStatementsFromBackend.bank_names || [];
+        const passwords = failedStatementsFromBackend.passwords || [];
+        const startDates = failedStatementsFromBackend.start_dates || [];
+        const endDates = failedStatementsFromBackend.end_dates || [];
+
+        // Helper: Match OCR-triggering reasons
+        const isOcrCandidate = (reason = "") => {
+          const r = reason.toLowerCase();
+          return (
+            r.includes("image-only") ||
+            r.includes("scanned") ||
+            r.includes("non-text") ||
+            r.includes("encoded")
+          );
+        };
+
+        // ✅ Filter out null or undefined pdfs and match OCR-triggering reasons
+        const eligibleIndexes = reasons
+          .map((reason, idx) =>
+            isOcrCandidate(reason) && paths[idx] ? idx : null
+          )
+          .filter((i) => i !== null);
+        console.log({ eligibleIndexes });
+        const scannedOCRFiles = eligibleIndexes.map((i) => ({
+          bankName: bankNames[i],
+          pdf_paths: paths[i],
+          passwords: passwords[i],
+          start_date: startDates[i],
+          end_date: endDates[i],
+          ca_id: result.data.caseId,
+          is_ocr: true,
+        }));
+
+        // If any OCR-worthy files found
+        if (eligibleIndexes.length > 0) {
+          toast({
+            title: "OCR Triggered",
+            description: `Detected scanned or encoded PDFs.`,
+            variant: "default",
+            duration: 5000,
+          });
+
+          console.log({
+            files: scannedOCRFiles,
+            caseName,
+            is_ocr: true,
+            soure: "add-pdf",
+          });
+          try {
+            const ocrResult = await window.electron.generateReportIpc(
+              { files: scannedOCRFiles },
+              caseName,
+              true,
+              "add-pdf"
+            );
+
+            console.log("OCR Result:", ocrResult);
+
+            toast({
+              title: "OCR Completed",
+              variant: "success",
+            });
+          } catch (ocrErr) {
+            toast({
+              title: "OCR Failed",
+              description: "OCR retry failed for scanned/encoded PDFs.",
+              variant: "destructive",
+            });
+            console.error("OCR error:", ocrErr);
+          }
+        }
 
         // Trigger a page refresh
       } else {
@@ -1973,6 +2062,23 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                   </li>
                 ))}
               </ul>
+            </div>
+          )}
+
+          {hasScannedOrEncodedWarning && (
+            <div className="mb-4 mt-2">
+              <h3 className="text-md font-semibold flex items-center gap-x-2 mb-2">
+                <AlertCircle className="text-blue-500 w-5 h-5" />
+                OCR Processing Started
+              </h3>
+              <Card className="p-3 bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700">
+                <p className="text-blue-700 dark:text-blue-300 text-sm">
+                  We detected one or more scanned or encoded PDFs. We're
+                  processing them using OCR in the background. Please allow
+                  approximately 1 minute per page. You'll receive a notification
+                  once it's ready.
+                </p>
+              </Card>
             </div>
           )}
           {/* Display Missing Months Section */}

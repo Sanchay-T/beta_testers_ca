@@ -320,7 +320,7 @@ export default function GenerateReport({ activeTab }) {
           start_date: startDates[i],
           end_date: endDates[i],
           ca_id: result.data.caseId,
-          is_ocr: true,
+          is_ocr: [true],
         }));
 
         // If any OCR-worthy files found

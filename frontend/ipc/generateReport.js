@@ -1266,6 +1266,7 @@ function generateReportIpc(tmpdir_path) {
         ca_id: caseId || "DEFAULT_CASE",
         aiyazs_array_of_array: result.map((d) => d.rectifiedColumns || ""),
         whole_transaction_sheet: whole_transaction_sheet,
+        is_ocr:[true]
         // whole_transaction_sheet:result.map((d) => d.whole_transaction_sheet || ""),
       };
 
