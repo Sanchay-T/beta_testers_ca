@@ -1,19 +1,20 @@
-
-
-{  "name": "cyphersol-electron-app",  "version": "2.0.3",  "description": "CA OFFLINE APP",
-
+{
+  "name": "CypherEdge",
+  "version": "2.0.0",
+  "description": "CA OFFLINE APP",
   "main": "main.js",
   "icon": "./assets/cyphersol-icon.png",
   "scripts": {
-    "start": "powershell -Command \"Start-Process cmd -ArgumentList '/k cd /d \\\"C:\\Users\\CypherSol\\OneDrive\\Desktop\\Testing\\beta_testers_ca\\frontend\\\" && npm run electron' -Verb runAs\"",
+    "start": "powershell -Command \"Start-Process cmd -ArgumentList '/k cd /d \\\"D:\\CA\\beta_testers_ca\\frontend\\\" && npm run electron' -Verb runAs\"",
     "start_": "npm run electron",
     "electron": "electron main.js",
     "start:fastapi": "cd ../ && uvicorn backend.main:app --reload --port 7500",
     "start:react": "cd react-app && npm start",
     "start:electron": "cross-env NODE_ENV=development wait-on http://localhost:3000 && electron main.js",
     "start-all": "cross-env NODE_ENV=development concurrently \"npm run start:fastapi\" \"npm run start:react\" \"npm run start\"",
-    "build": "npx rimraf dist && cross-env NODE_ENV=production npm run build:react && npm run build:electron",
-    "build:fast": "npx rimraf dist && cross-env NODE_ENV=production npm run build:react && electron-builder --config.compression=store",
+    "sync-version": "node -e \"delete require.cache[require.resolve('dotenv')];const fs=require('fs');const path=require('path');delete process.env.APP_VERSION;require('dotenv').config({path:'./.env'});const envPath=path.resolve('./.env');const envContent=fs.readFileSync(envPath,'utf8');console.log('📋 Raw .env file content shows APP_VERSION:',envContent.match(/APP_VERSION=(.+)/)?.[1] || 'NOT FOUND');const v=process.env.APP_VERSION;console.log('📋 APP_VERSION fetched from .env:',v);if(!v){console.error('❌ APP_VERSION not found in .env');process.exit(1);}const updateJson=(file,key)=>{const p=path.resolve(file);const d=JSON.parse(fs.readFileSync(p,'utf8'));d[key]=v;fs.writeFileSync(p,JSON.stringify(d,null,2));console.log('✅ Updated',file,'version to',v);};updateJson('./package.json','version');updateJson('./react-app/package.json','version');const splash=fs.readFileSync('./react-app/splash.html','utf8').replace(/Version \\d+\\.\\d+\\.\\d+/g,'Version '+v);fs.writeFileSync('./react-app/splash.html',splash);console.log('✅ Updated splash.html version to',v);const dash=fs.readFileSync('./react-app/src/components/MainDashboardComponents/MainDashboard.js','utf8').replace(/v\\d+\\.\\d+\\.\\d+/g,'v'+v);fs.writeFileSync('./react-app/src/components/MainDashboardComponents/MainDashboard.js',dash);console.log('✅ Updated MainDashboard.js version to',v);console.log('🎯 All versions synced to:',v);\"",
+    "build": "npm run sync-version && npx rimraf dist && cross-env NODE_ENV=production npm run build:react && npm run build:electron",
+    "build:fast": "npm run sync-version && npx rimraf dist && cross-env NODE_ENV=production npm run build:react && electron-builder --config.compression=store",
     "build:react": "cd react-app && npm run build",
     "build:electron": "electron-builder",
     "deploy": "electron-builder --publish always",
@@ -50,7 +51,7 @@
     "publish": {
       "provider": "github",
       "owner": "Shama-Cyphersol",
-      "repo": "beta_testers_ca",
+      "repo": "ca-offline-suite",
       "private": true,
       "releaseType": "release"
     },
@@ -136,7 +137,7 @@
       "differentialPackage": false,
       "warningsAsErrors": false,
       "perMachine": false,
-      "allowElevation": false,
+      "allowElevation": true,
       "runAfterFinish": true,
       "include": "build/installer.nsh"
     },

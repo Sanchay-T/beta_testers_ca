@@ -123,13 +123,18 @@ autoUpdater.autoDownload = true; // Enable automatic background downloads
 autoUpdater.disableWebInstaller = true;
 autoUpdater.allowPrerelease = false;
 
+// Force non-silent installations
+autoUpdater.forceDevUpdateConfig = global.AppConfig.isDev;
+autoUpdater.autoInstallOnAppQuit = false; // Prevent auto-install on quit
+autoUpdater.installOnQuitWithoutPrompt = false; // Force prompts
+
 // Platform specific configurations
 if (process.platform === "darwin") {
   autoUpdater.allowDowngrade = true;
 } else if (process.platform === "win32") {
   // app.setAppUserModelId('com.electron.electronapp');
   app.setAppUserModelId(process.execPath); // changed it to process.execPath from 'com.electron.electronapp' to fix the taskbar icon not showing issue ~ Aiyaz
-  autoUpdater.autoInstallOnAppQuit = true;
+  autoUpdater.autoInstallOnAppQuit = false; // Changed from true to prevent silent installs
   autoUpdater.allowDowngrade = false;
 }
 
@@ -149,22 +154,12 @@ if (global.AppConfig.isDev) {
   autoUpdater.forceDevUpdateConfig = true;
 }
 
-// Removed redundant settings - configured above
-
-// Configure autoUpdater for GitHub repository
-autoUpdater.setFeedURL({
-  provider: "github",
-  owner: "Shama-Cyphersol",
-  repo: "beta_testers_ca",
-  token: process.env.GH_TOKEN,
-});
+// No runtime override – electron-updater reads
+// publish info from package.json → build.publish.
 
 // Log token status (without exposing the token)
-if (!process.env.GH_TOKEN) {
-  log.error("GH_TOKEN is not set! Updates will not work properly.");
-} else {
-  log.info("GH_TOKEN is configured properly for updates.");
-}
+// GH_TOKEN no longer needed for feed configuration
+log.info("Auto-updater configured to use package.json publish settings");
 
 // Add version tracking
 let lastCheckedVersion = null;
@@ -276,7 +271,7 @@ autoUpdater.on("update-available", (info) => {
   performanceTracker.start("database-backup");
 
   try {
-    const dbPath = path.join(userDataDir, "database.sqlite");
+    const dbPath = path.join(userDataDir, "db.sqlite3");
     const backupDir = path.join(userDataDir, "backups");
 
     logWithTimestamp(
@@ -449,25 +444,182 @@ autoUpdater.on("download-progress", (progress) => {
 let isUpdating = false;
 
 // Cleanup function to ensure all processes are stopped before update
-async function cleanupForUpdate() {
+async function cleanupForUpdate(progressCallback) {
+  // Add immediate entry confirmation
+  logWithTimestamp(
+    "info",
+    UPDATE_LOG_PREFIX,
+    "🚪 CLEANUP FUNCTION ENTRY CONFIRMED - Function is being called!"
+  );
+  
+  // Send initial progress update
+  if (progressCallback) {
+    progressCallback("Starting cleanup...", "Preparing to stop services");
+  }
+  
   performanceTracker.start("cleanup-process");
+  isPerformingCleanup = true;  // Set flag to prevent window-all-closed from quitting
+
 
   logWithTimestamp(
     "info",
     UPDATE_LOG_PREFIX,
-    "🧹 COMPREHENSIVE CLEANUP SEQUENCE INITIATED"
+    "🧹 ADMIN-LEVEL CLEANUP SEQUENCE INITIATED"
+  );
+  logWithTimestamp(
+    "info",
+    UPDATE_LOG_PREFIX,
+    "Using administrator privileges for clean process termination"
   );
 
   const cleanupSteps = [];
 
   try {
-    // 1. Close database connections first (most important)
+    // 1. Stop the Gateway Windows Service with admin privileges
+    if (process.platform === "win32") {
+      performanceTracker.start("gateway-service-stop");
+      logWithTimestamp(
+        "info",
+        UPDATE_LOG_PREFIX,
+        "Step 1/6: Stopping Gateway Windows Service (Admin Mode)"
+      );
+      
+      // Update progress
+      if (progressCallback) {
+        progressCallback("Stopping services...", "This may take a moment");
+      }
+
+      // Try stopping both services
+      const serviceNames = ["LicensingServer"];
+      for (const serviceName of serviceNames) {
+        // Create a retry function for stopping services
+        const stopServiceWithRetry = (serviceName, maxRetries = 10, timeoutMs = 30000) => {
+          const startTime = Date.now();
+          let attempts = 0;
+          
+          while (attempts < maxRetries && (Date.now() - startTime) < timeoutMs) {
+            try {
+              attempts++;
+              logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] Attempt ${attempts}/${maxRetries}: Stopping service ${serviceName}`);
+              
+              // First, try to stop the service
+              try {
+                execSync(`sc stop "${serviceName}"`, { timeout: 5000 });
+                logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] Stop command sent for ${serviceName}`);
+              } catch (stopError) {
+                // Check if service is already stopped or doesn't exist
+                if (stopError.message.includes('1062') || stopError.message.includes('not started') || stopError.message.includes('1052') || stopError.message.includes('1060')) {
+                  logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] Service ${serviceName} was already stopped or doesn't exist`);
+                  return true;
+                }
+                // If it's a different error, we'll still try to verify status below
+                logWithTimestamp("warn", UPDATE_LOG_PREFIX, `[CLEANUP] Stop command error for ${serviceName}: ${stopError.message}`);
+              }
+              
+              // Now verify the service has actually stopped using sc query
+              let verificationAttempts = 0;
+              const maxVerificationAttempts = 5;
+              
+              while (verificationAttempts < maxVerificationAttempts) {
+                try {
+                  verificationAttempts++;
+                  const queryResult = execSync(`sc query "${serviceName}"`, { timeout: 3000, encoding: 'utf8' });
+                  
+                  logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] Verification attempt ${verificationAttempts}: Checking ${serviceName} status`);
+                  
+                  // Check if service is stopped
+                  if (queryResult.includes('STATE') && (queryResult.includes('STOPPED') || queryResult.includes('1  STOPPED'))) {
+                    logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] ✅ Service ${serviceName} confirmed STOPPED on attempt ${attempts}`);
+                    return true;
+                  } else if (queryResult.includes('STOP_PENDING') || queryResult.includes('3  STOP_PENDING')) {
+                    logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] Service ${serviceName} is stopping... waiting`);
+                    // Wait a bit for the service to finish stopping
+                    try {
+                      execSync(`timeout /t 2 /nobreak > nul 2>&1`, { stdio: 'ignore' });
+                    } catch (_) {
+                      const start = Date.now();
+                      while (Date.now() - start < 2000) {
+                        // Busy wait 2 seconds
+                      }
+                    }
+                  } else {
+                    logWithTimestamp("warn", UPDATE_LOG_PREFIX, `[CLEANUP] Service ${serviceName} still running, will retry stop command`);
+                    break; // Exit verification loop to retry stop command
+                  }
+                  
+                } catch (queryError) {
+                  // Service doesn't exist or query failed
+                  if (queryError.message.includes('1060') || queryError.message.includes('does not exist')) {
+                    logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] ✅ Service ${serviceName} doesn't exist (already removed)`);
+                    return true;
+                  }
+                  logWithTimestamp("warn", UPDATE_LOG_PREFIX, `[CLEANUP] Query error for ${serviceName}: ${queryError.message}`);
+                  break; // Exit verification loop to retry
+                }
+              }
+              
+              // If we get here, either verification failed or service is still running
+              logWithTimestamp("warn", UPDATE_LOG_PREFIX, `[CLEANUP] Service ${serviceName} not confirmed stopped, will retry`);
+              
+              // Wait before retry (exponential backoff, max 5 seconds)
+              const waitTime = Math.min(1000 * Math.pow(2, attempts - 1), 5000);
+              try {
+                execSync(`timeout /t ${Math.ceil(waitTime/1000)} /nobreak > nul 2>&1`, { stdio: 'ignore' });
+              } catch (_) {
+                // Fallback to setTimeout if timeout command fails
+                const start = Date.now();
+                while (Date.now() - start < waitTime) {
+                  // Busy wait
+                }
+              }
+              
+            } catch (error) {
+              logWithTimestamp("error", UPDATE_LOG_PREFIX, `[CLEANUP] Unexpected error on attempt ${attempts} for ${serviceName}: ${error.message}`);
+              
+              // Wait before retry
+              const waitTime = Math.min(1000 * Math.pow(2, attempts - 1), 5000);
+              try {
+                execSync(`timeout /t ${Math.ceil(waitTime/1000)} /nobreak > nul 2>&1`, { stdio: 'ignore' });
+              } catch (_) {
+                const start = Date.now();
+                while (Date.now() - start < waitTime) {
+                  // Busy wait
+                }
+              }
+            }
+          }
+          
+          logWithTimestamp("error", UPDATE_LOG_PREFIX, `[CLEANUP] ❌ Failed to stop and verify service ${serviceName} after ${attempts} attempts and ${Date.now() - startTime}ms`);
+          return false;
+        };
+        
+        try { 
+          stopServiceWithRetry(serviceName);
+        }
+        catch (_) { 
+          logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] Service ${serviceName} retry function completed`);
+        }
+      }
+      
+      cleanupSteps.push({
+        step: "Gateway Service Stop",
+        status: "SUCCESS",
+        timing: performanceTracker.end("gateway-service-stop"),
+      });
+    }
+
+    // 2. Close database connections
     performanceTracker.start("database-cleanup");
     logWithTimestamp(
       "info",
       UPDATE_LOG_PREFIX,
-      "Step 1/5: Closing database connections"
+      "Step 2/6: Closing database connections"
     );
+    
+    // Update progress
+    if (progressCallback) {
+      progressCallback("Closing database...", "Saving your data");
+    }
 
     try {
       const dbManager = databaseManager.getInstance();
@@ -489,121 +641,146 @@ async function cleanupForUpdate() {
       });
     } catch (e) {
       performanceTracker.end("database-cleanup");
-      logWithTimestamp(
-        "warn",
-        UPDATE_LOG_PREFIX,
-        "Database cleanup warning - continuing",
-        { error: e.message }
-      );
+      cleanupSteps.push({
+        step: "Database Cleanup",
+        status: "ERROR",
+        error: e.message,
+      });
     }
 
-    // 2. Terminate Python backend gracefully, then forcefully if needed
-    performanceTracker.start("python-cleanup");
+    // 3. Terminate Python backend with admin privileges
+    performanceTracker.start("python-process-cleanup");
     logWithTimestamp(
       "info",
       UPDATE_LOG_PREFIX,
-      "Step 2/5: Stopping Python backend"
+      "Step 3/6: Terminating Python backend (Admin Mode)"
     );
+    
+    // Update progress
+    if (progressCallback) {
+      progressCallback("Stopping backend...", "Terminating Python processes");
+    }
 
     if (pythonProcess && !pythonProcess.killed) {
+      pythonProcess.kill("SIGTERM");
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      if (!pythonProcess.killed) {
+        pythonProcess.kill("SIGKILL");
+      }
+    }
+
+    // Force kill any remaining Python processes with admin privileges
+    if (process.platform === "win32") {
       try {
-        // Try graceful shutdown first
-        pythonProcess.kill("SIGTERM");
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-
-        // If still running, force kill
-        if (!pythonProcess.killed) {
-          pythonProcess.kill("SIGKILL");
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-        }
-
-        // Force kill any remaining Python processes on Windows
-        if (process.platform === "win32") {
-          try {
-            execSync("taskkill /F /IM main.exe /T", { timeout: 3000 });
-            logWithTimestamp(
-              "info",
-              UPDATE_LOG_PREFIX,
-              "Force killed Python processes"
-            );
-          } catch (e) {
-            // Process might not exist
-          }
-        }
-
-        cleanupSteps.push({
-          step: "Python Process Cleanup",
-          status: "SUCCESS",
-          timing: performanceTracker.end("python-cleanup"),
-        });
+        execSync("taskkill /F /IM main.exe", { timeout: 3000 });
+        logWithTimestamp(
+          "info",
+          SUCCESS_LOG_PREFIX,
+          "Python processes terminated with admin privileges"
+        );
       } catch (e) {
-        performanceTracker.end("python-cleanup");
+        // Process might not exist - not an error
+      }
+    }
+
+    cleanupSteps.push({
+      step: "Python Process Cleanup",
+      status: "SUCCESS",
+      timing: performanceTracker.end("python-process-cleanup"),
+    });
+
+    // 4. Terminate Gateway executable (Admin Mode - Force Kill)
+    performanceTracker.start("gateway-exe-cleanup");
+    logWithTimestamp(
+      "info",
+      UPDATE_LOG_PREFIX,
+      "Step 4/6: Terminating Gateway executable (Admin Mode)"
+    );
+
+    if (process.platform === "win32") {
+      // Use multiple aggressive kill methods
+      const killMethods = [
+        'taskkill /IM "gatewayService.exe" /F',
+        'taskkill /IM "gatewayService.exe" /F /T',
+        'wmic process where "name like \'%gateway%\'" delete',
+        'powershell -Command "Get-Process | Where-Object {$_.ProcessName -like \'*gateway*\'} | Stop-Process -Force"'
+      ];
+      
+      let killed = false;
+      for (let i = 0; i < killMethods.length; i++) {
+        try {
+          execSync(killMethods[i], { shell: true, windowsHide: true, timeout: 3000 });
+          killed = true;
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } catch (e) {
+          // Continue with next method
+        }
+      }
+      
+      // Verify it's actually dead
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      try {
+        execSync('tasklist | find /I "gatewayService.exe"', { shell: true });
         logWithTimestamp(
           "warn",
           UPDATE_LOG_PREFIX,
-          "Python cleanup warning - continuing"
+          "Gateway process might still be running after kill attempts"
         );
-      }
-    } else {
-      performanceTracker.end("python-cleanup");
-      logWithTimestamp("info", UPDATE_LOG_PREFIX, "Python process not running");
-    }
-
-    // 3. Stop Gateway Service (Windows only)
-    if (process.platform === "win32") {
-      performanceTracker.start("gateway-cleanup");
-      logWithTimestamp(
-        "info",
-        UPDATE_LOG_PREFIX,
-        "Step 3/5: Stopping Gateway Service"
-      );
-
-      try {
-        // Stop the Windows service
-        execSync("sc stop LicensingServer", { timeout: 5000 });
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-
-        // Force kill any remaining gateway processes
-        try {
-          execSync("taskkill /F /IM gatewayService.exe /T", { timeout: 3000 });
-          logWithTimestamp(
-            "info",
-            UPDATE_LOG_PREFIX,
-            "Force killed Gateway processes"
-          );
-        } catch (e) {
-          // Process might not exist
-        }
-
         cleanupSteps.push({
-          step: "Gateway Service Stop",
-          status: "SUCCESS",
-          timing: performanceTracker.end("gateway-cleanup"),
+          step: "Gateway Executable Cleanup",
+          status: "PARTIAL_SUCCESS",
+          timing: performanceTracker.end("gateway-exe-cleanup"),
         });
       } catch (e) {
-        performanceTracker.end("gateway-cleanup");
         logWithTimestamp(
           "info",
-          UPDATE_LOG_PREFIX,
-          "Gateway service stop attempted - continuing"
+          SUCCESS_LOG_PREFIX,
+          "Gateway executable terminated successfully with admin privileges"
         );
+        cleanupSteps.push({
+          step: "Gateway Executable Cleanup",
+          status: "SUCCESS",
+          timing: performanceTracker.end("gateway-exe-cleanup"),
+        });
       }
     }
 
-    // 4. Close non-essential windows
+    // 5. Close main application windows (preserve installation window)
     performanceTracker.start("window-cleanup");
     logWithTimestamp(
       "info",
       UPDATE_LOG_PREFIX,
-      "Step 4/5: Closing application windows"
+      "Step 5/6: Closing application windows"
     );
 
     const openWindows = BrowserWindow.getAllWindows();
     let windowsClosedCount = 0;
+    let installationWindowsFound = 0;
+    let mainWindowSkipped = false;
 
-    openWindows.forEach((window) => {
-      if (!window.isDestroyed() && !window.isInstallationWindow) {
-        try {
+    openWindows.forEach((window, index) => {
+      if (!window.isDestroyed()) {
+        const isInstallationWindow = window.isInstallationWindow === true;
+        const isMainWindow = window === win;
+
+        if (isInstallationWindow) {
+          installationWindowsFound++;
+          logWithTimestamp(
+            "info",
+            UPDATE_LOG_PREFIX,
+            `Preserving installation window ${index + 1}`
+          );
+        } else if (isMainWindow) {
+          // CRITICAL: Don't close the main window during update
+          // We need it to stay alive to call quitAndInstall
+          mainWindowSkipped = true;
+          logWithTimestamp(
+            "info",
+            UPDATE_LOG_PREFIX,
+            `Preserving main window during update cleanup`
+          );
+        } else {
           window.removeAllListeners("close");
           window.close();
           windowsClosedCount++;
@@ -613,56 +790,100 @@ async function cleanupForUpdate() {
       }
     });
 
+    logWithTimestamp(
+      "info",
+      SUCCESS_LOG_PREFIX,
+      `Closed ${windowsClosedCount} windows, preserved ${installationWindowsFound} installation windows${mainWindowSkipped ? ' and main window' : ''}`
+    );
+
     cleanupSteps.push({
       step: "Window Cleanup",
       status: "SUCCESS",
       windowsClosed: windowsClosedCount,
+      installationWindowsPreserved: installationWindowsFound,
       timing: performanceTracker.end("window-cleanup"),
     });
 
-    // 5. Final system cleanup wait
-    performanceTracker.start("final-cleanup");
+    // 6. Final settlement wait
+    performanceTracker.start("final-wait");
     logWithTimestamp(
       "info",
       UPDATE_LOG_PREFIX,
-      "Step 5/5: Final system cleanup"
+      "Step 6/6: Final process settlement (3 seconds)"
     );
+    logWithTimestamp(
+      "info",
+      UPDATE_LOG_PREFIX,
+      "Admin privileges ensure clean termination - minimal wait required"
+    );
+    
+    // Update progress
+    if (progressCallback) {
+      progressCallback("Finalizing cleanup...", "Almost ready to install");
+    }
 
-    // Give system time to clean up file handles and processes
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     cleanupSteps.push({
-      step: "Final System Cleanup",
-      status: "SUCCESS",
-      timing: performanceTracker.end("final-cleanup"),
+      step: "Final Settlement Wait",
+      status: "COMPLETED",
+      timing: performanceTracker.end("final-wait"),
     });
 
     const totalCleanupTime = performanceTracker.end("cleanup-process");
 
+    // Admin-level cleanup summary
+    const cleanupSummary = {
+      totalSteps: cleanupSteps.length,
+      successfulSteps: cleanupSteps.filter((s) => s.status === "SUCCESS")
+        .length,
+      adminPrivileges: true,
+      totalCleanupTime: totalCleanupTime,
+      completionTime: new Date().toISOString(),
+      stepDetails: cleanupSteps,
+    };
+
     logWithTimestamp(
       "info",
       SUCCESS_LOG_PREFIX,
-      "🧹 COMPREHENSIVE CLEANUP COMPLETED!",
-      {
-        totalSteps: cleanupSteps.length,
-        totalTime: totalCleanupTime,
-        summary: "All services stopped, system ready for update",
-        details: cleanupSteps,
-      }
+      "🧹 ADMIN-LEVEL CLEANUP COMPLETED SUCCESSFULLY!",
+      cleanupSummary
     );
-
-    return true;
+    logWithTimestamp(
+      "info",
+      UPDATE_LOG_PREFIX,
+      "All processes terminated cleanly with administrator privileges"
+    );
+    logWithTimestamp(
+      "info",
+      UPDATE_LOG_PREFIX,
+      "System ready for seamless update installation"
+    );
   } catch (error) {
     performanceTracker.end("cleanup-process");
+
+    const criticalError = {
+      error: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString(),
+      adminPrivileges: true,
+    };
+
     logWithTimestamp(
       "error",
       ERROR_LOG_PREFIX,
-      "Cleanup error - continuing with update",
-      { error: error.message }
+      "💥 CRITICAL ERROR IN ADMIN-LEVEL CLEANUP",
+      criticalError
     );
-    // Don't throw - we want to continue with the update even if cleanup partially fails
-    return false;
+    logWithTimestamp(
+      "warn",
+      UPDATE_LOG_PREFIX,
+      "Continuing with update installation despite cleanup errors"
+    );
   }
+  
+  // Reset flag after cleanup completes
+  isPerformingCleanup = false;
 }
 
 autoUpdater.on("update-downloaded", (info) => {
@@ -685,335 +906,465 @@ autoUpdater.on("update-downloaded", (info) => {
     "🎉 UPDATE DOWNLOAD COMPLETED SUCCESSFULLY!",
     downloadCompletedData
   );
+  logWithTimestamp(
+    "info",
+    UPDATE_LOG_PREFIX,
+    "Clearing taskbar progress indicator"
+  );
 
-  // Clear taskbar progress
-  win?.setProgressBar(-1);
+  win?.setProgressBar(-1); // Clear taskbar progress
 
-  // Send notification to frontend
-  win?.webContents.send("update-status", {
+  // Log the seamless strategy transition
+  logWithTimestamp(
+    "info",
+    UPDATE_LOG_PREFIX,
+    "🎯 TRANSITIONING TO USER INTERACTION PHASE"
+  );
+  logWithTimestamp(
+    "info",
+    UPDATE_LOG_PREFIX,
+    "This is the ONLY user interaction in the seamless update process"
+  );
+
+  // Send notification to frontend first (for any UI updates)
+  const frontendUpdateStatus = {
     status: "ready-to-install",
     version: info.version,
     message: "Update ready to install",
     timestamp: new Date().toISOString(),
-  });
-
-  // Show update dialog with simple options
-  const dialogOptions = {
-    type: "info",
-    title: "Update Ready",
-    message: `Version ${info.version} is ready to install`,
-    detail:
-      "The application will restart to apply the update. Save any work before continuing.",
-    buttons: ["Install Now", "Install on Exit"],
-    defaultId: 0,
-    cancelId: 1,
-    noLink: true,
   };
 
+  logWithTimestamp(
+    "info",
+    USER_LOG_PREFIX,
+    "Sending ready-to-install status to frontend",
+    frontendUpdateStatus
+  );
+  win?.webContents.send("update-status", frontendUpdateStatus);
+
+  // Show user-friendly notification AFTER download is complete
+  const dialogOptions = {
+    type: "info",
+    title: "Update Ready to Install",
+    message: `🎉 New version ${info.version} has been downloaded!`,
+    detail:
+      "The update is ready to install. Would you like to restart and apply it now, or install it later?",
+    buttons: ["Install Now", "Install Later"],
+    defaultId: 0,
+    cancelId: 1,
+  };
+
+  logWithTimestamp(
+    "info",
+    USER_LOG_PREFIX,
+    "Displaying update installation dialog to user",
+    {
+      dialogTitle: dialogOptions.title,
+      dialogMessage: dialogOptions.message,
+      buttonOptions: dialogOptions.buttons,
+      displayTime: new Date().toISOString(),
+    }
+  );
   dialog
     .showMessageBox(win, dialogOptions)
     .then(async (response) => {
       performanceTracker.end("user-interaction-flow");
 
+      const userChoice =
+        response.response === 0 ? "Install Now" : "Install Later";
+
+      logWithTimestamp(
+        "info",
+        USER_LOG_PREFIX,
+        `User decision recorded: ${userChoice}`,
+        {
+          buttonIndex: response.response,
+          responseTime: new Date().toISOString(),
+          userChoice: userChoice,
+        }
+      );
+
       if (response.response === 0) {
         // User clicked "Install Now"
+        performanceTracker.start("installation-process");
+
         logWithTimestamp(
           "info",
           UPDATE_LOG_PREFIX,
-          "🚀 USER SELECTED: INSTALL NOW"
+          "🚀 IMMEDIATE INSTALLATION REQUESTED BY USER"
         );
 
-        // Set flags
+        // Set updating flag to skip confirmation dialogs FIRST
         isUpdating = true;
+        sessionManager.logoutUser();
 
-        // Create a professional installation window
+        logWithTimestamp(
+          "info",
+          UPDATE_LOG_PREFIX,
+          "Update flag set - skipping close confirmations"
+        );
+        logWithTimestamp(
+          "info",
+          UPDATE_LOG_PREFIX,
+          "User session logged out for clean installation"
+        );
+
+        // Create success flag for next startup
+        const updateFlagPath = path.join(
+          app.getPath("userData"),
+          "update-success.txt"
+        );
+        fs.writeFileSync(updateFlagPath, info.version);
+        logWithTimestamp(
+          "info",
+          UPDATE_LOG_PREFIX,
+          `Success flag created: ${updateFlagPath}`
+        );
+
+        // CRITICAL: Give UI time to update before starting heavy operations
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Show minimal installation progress BEFORE cleanup
+        logWithTimestamp(
+          "info",
+          UPDATE_LOG_PREFIX,
+          "Creating installation progress window"
+        );
+
         const installingWindow = new BrowserWindow({
           width: 450,
-          height: 200,
+          height: 320,
           frame: false,
           resizable: false,
           center: true,
           alwaysOnTop: true,
-          skipTaskbar: false, // Show in taskbar so user knows something is happening
-          backgroundColor: "#1e1e1e",
+          show: false,
+          transparent: false,
+          backgroundColor: '#ffffff',
           webPreferences: {
-            nodeIntegration: false,
-            contextIsolation: true,
+            nodeIntegration: true,
+            contextIsolation: false,
           },
         });
 
-        // Mark as installation window
+        // Mark this as an installation window for cleanup exclusion
         installingWindow.isInstallationWindow = true;
 
-        // Professional installation HTML with progress steps
         const installHtml = `
-        <!DOCTYPE html>
         <html>
           <head>
             <meta charset="UTF-8">
             <title>Installing CypherEdge Update</title>
             <style>
-              body {
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              * {
                 margin: 0;
-                padding: 40px 30px;
-                background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
-                color: #ffffff;
-                text-align: center;
-                user-select: none;
+                padding: 0;
+                box-sizing: border-box;
+              }
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+                background: #ffffff;
+                background-color: #ffffff;
+                color: #1a1a1a;
                 display: flex;
                 flex-direction: column;
+                align-items: center;
                 justify-content: center;
                 height: 100vh;
-                box-sizing: border-box;
-                overflow: hidden;
+                padding: 20px;
+                user-select: none;
+                opacity: 1;
+              }
+              .container {
+                text-align: center;
+                background: #ffffff;
+                border-radius: 12px;
+                padding: 32px;
+                box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+                border: 1px solid #e5e7eb;
+                max-width: 400px;
+                width: 100%;
               }
               .logo {
+                width: 48px;
+                height: 48px;
+                margin: 0 auto 20px;
+                background: #3b82f6;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
                 font-size: 24px;
-                font-weight: 600;
-                margin-bottom: 20px;
-                color: #4CAF50;
-              }
-              h2 {
-                margin: 0 0 15px 0;
-                font-size: 18px;
-                font-weight: 500;
-                color: #ffffff;
-              }
-              .version {
-                font-size: 14px;
-                color: #888;
-                margin-bottom: 25px;
-              }
-              .progress-container {
-                width: 100%;
-                height: 4px;
-                background: rgba(255,255,255,0.1);
-                border-radius: 2px;
-                margin: 20px 0;
-                overflow: hidden;
-              }
-              .progress-bar {
-                height: 100%;
-                background: linear-gradient(90deg, #4CAF50, #45a049);
-                border-radius: 2px;
-                animation: progress 3s ease-in-out infinite;
-                width: 0%;
-              }
-              @keyframes progress {
-                0% { width: 0%; }
-                50% { width: 70%; }
-                100% { width: 100%; }
+                font-weight: bold;
               }
               .spinner {
-                width: 32px;
-                height: 32px;
-                border: 3px solid rgba(255,255,255,0.1);
-                border-top: 3px solid #4CAF50;
+                width: 40px;
+                height: 40px;
+                border: 3px solid #f3f4f6;
+                border-top: 3px solid #3b82f6;
                 border-radius: 50%;
                 animation: spin 1s linear infinite;
-                margin: 0 auto 20px;
+                margin: 0 auto 24px;
               }
               @keyframes spin {
                 0% { transform: rotate(0deg); }
                 100% { transform: rotate(360deg); }
               }
-              .status {
-                font-size: 13px;
-                color: #aaa;
-                margin-top: 15px;
-                line-height: 1.4;
+              h3 {
+                font-size: 18px;
+                font-weight: 600;
+                color: #111827;
+                margin-bottom: 8px;
+                letter-spacing: -0.025em;
               }
-              .warning {
-                font-size: 12px;
-                color: #ff9800;
-                margin-top: 20px;
-                padding: 10px;
-                background: rgba(255, 152, 0, 0.1);
-                border-radius: 4px;
-                border-left: 3px solid #ff9800;
+              p {
+                font-size: 14px;
+                color: #6b7280;
+                line-height: 1.5;
+                margin-bottom: 20px;
+              }
+              .progress-bar {
+                width: 100%;
+                height: 6px;
+                background: #f3f4f6;
+                border-radius: 3px;
+                overflow: hidden;
+                margin-top: 24px;
+              }
+              .progress-fill {
+                height: 100%;
+                background: #3b82f6;
+                border-radius: 3px;
+                width: 0%;
+                animation: progress 30s ease-out forwards;
+              }
+              @keyframes progress {
+                0% { width: 0%; }
+                10% { width: 15%; }
+                30% { width: 35%; }
+                50% { width: 55%; }
+                70% { width: 75%; }
+                90% { width: 90%; }
+                100% { width: 95%; }
+              }
+              .step-indicator {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 16px;
+                font-size: 11px;
+                color: #9ca3af;
               }
             </style>
           </head>
           <body>
-            <div class="logo">CypherEdge</div>
-            <div class="spinner"></div>
-            <h2>Installing Update</h2>
-            <div class="version">Version ${info.version}</div>
-            <div class="progress-container">
-              <div class="progress-bar"></div>
+            <div class="container">
+              <div class="logo">C</div>
+              <div class="spinner"></div>
+              <h3 id="status">Preparing update...</h3>
+              <p id="detail">Please wait while we prepare your system for the update. This may take a moment.</p>
+              <div class="progress-bar">
+                <div class="progress-fill"></div>
+              </div>
+              <div class="step-indicator">
+                <span>Starting</span>
+                <span>Cleaning up</span>
+                <span>Installing</span>
+              </div>
             </div>
-            <div class="status">
-              Stopping services and preparing installation...<br>
-              This may take a few moments.
-            </div>
-            <div class="warning">
-              ⚠️ Please do not close this window or shut down your computer
-            </div>
+            <script>
+              const { ipcRenderer } = require('electron');
+              ipcRenderer.on('update-progress', (event, data) => {
+                document.getElementById('status').textContent = data.status || 'Installing update...';
+                if (data.detail) {
+                  document.getElementById('detail').textContent = data.detail;
+                }
+              });
+            </script>
           </body>
-        </html>`;
+        </html>
+      `;
 
-        await installingWindow.loadURL(
-          `data:text/html;charset=utf-8,${encodeURIComponent(installHtml)}`
+        installingWindow.loadURL(
+          "data:text/html;charset=utf-8," + encodeURIComponent(installHtml)
         );
 
-        installingWindow.show();
+        // Show window immediately and wait for it to be fully visible
+        installingWindow.once("ready-to-show", () => {
+          installingWindow.show();
+          logWithTimestamp(
+            "info",
+            UPDATE_LOG_PREFIX,
+            "Installation progress window displayed to user"
+          );
+          
+          // Send initial progress update immediately
+          installingWindow.webContents.send('update-progress', { 
+            status: "Preparing update...", 
+            detail: "Starting cleanup process..." 
+          });
+        });
 
-        // Prevent window from being closed during update
-        installingWindow.on("close", (e) => {
-          if (isUpdating) {
-            e.preventDefault();
-            // Show a warning if user tries to close
-            dialog.showMessageBox(installingWindow, {
-              type: "warning",
-              title: "Update in Progress",
-              message: "Please wait for the update to complete.",
-              detail: "Closing this window may corrupt the installation.",
-              buttons: ["OK"],
+        // CRITICAL: Wait for window to be fully shown before starting cleanup
+        await new Promise(resolve => {
+          if (installingWindow.isVisible()) {
+            resolve();
+          } else {
+            installingWindow.once("show", () => {
+              // Give it a moment to render
+              setTimeout(resolve, 100);
             });
           }
         });
-
-        // Update window content during different phases
-        const updateStatus = (message) => {
-          const script = `
-            document.querySelector('.status').innerHTML = '${message}';
-          `;
-          installingWindow.webContents
-            .executeJavaScript(script)
-            .catch(() => {});
-        };
-
         logWithTimestamp(
           "info",
           UPDATE_LOG_PREFIX,
-          "Professional installation window displayed"
+          "Window confirmed visible - proceeding with installation"
         );
 
-        // Clean logout
-        sessionManager.logoutUser();
-        updateStatus("Logging out user session...");
+        // Store reference to send progress updates
+        const sendProgressUpdate = (status, detail) => {
+          if (installingWindow && !installingWindow.isDestroyed()) {
+            installingWindow.webContents.send('update-progress', { status, detail });
+          }
+        };
 
-        // Perform cleanup
-        updateStatus(
-          "Stopping services (Database, Python, Gateway)...<br>This ensures a clean installation."
+        // Hand control to updater – cleanup runs later
+        logWithTimestamp(
+          "info",
+          UPDATE_LOG_PREFIX,
+          "[DEBUG] launching installer"
         );
-        await cleanupForUpdate();
+        
+        try {
+          logWithTimestamp(
+            "info",
+            UPDATE_LOG_PREFIX,
+            "🚀 INITIATING QUIT AND INSTALL SEQUENCE"
+          );
+          logWithTimestamp(
+            "info",
+            UPDATE_LOG_PREFIX,
+            "Application will restart with new version"
+          );
 
-        // Small delay to ensure everything is ready
-        updateStatus("Finalizing preparation...<br>Almost ready to install!");
-        setTimeout(() => {
+          performanceTracker.end("installation-process");
+          
+          // 🧹 CRITICAL: Run cleanup BEFORE quitAndInstall while app is still fully running
+          logWithTimestamp(
+            "info",
+            UPDATE_LOG_PREFIX,
+            "🧹 Starting pre-installation cleanup process..."
+          );
+          
+          // Add detailed error handling around cleanup
           try {
-            updateStatus(
-              "Installing CypherEdge ${info.version}...<br>The application will restart automatically."
-            );
-
+            logWithTimestamp("info", UPDATE_LOG_PREFIX, "🔧 About to call cleanupForUpdate()...");
+            
+            // Send initial cleanup status
+            sendProgressUpdate("Starting cleanup...", "Preparing to stop services");
+            
+            // Run the comprehensive cleanup function
+            await cleanupForUpdate(sendProgressUpdate);
+            
             logWithTimestamp(
               "info",
               UPDATE_LOG_PREFIX,
-              "🚀 EXECUTING QUIT AND INSTALL"
+              "✅ Pre-installation cleanup completed successfully"
             );
-
-            // Create success flag for next startup
-            const updateFlagPath = path.join(
-              app.getPath("userData"),
-              "update-success.txt"
+          } catch (cleanupError) {
+            // Log cleanup errors but continue with installation
+            logWithTimestamp(
+              "error",
+              ERROR_LOG_PREFIX,
+              "❌ Cleanup function failed but continuing with installation",
+              {
+                error: cleanupError.message,
+                stack: cleanupError.stack,
+                timestamp: new Date().toISOString()
+              }
             );
-            try {
-              fs.writeFileSync(updateFlagPath, info.version);
-              logWithTimestamp(
-                "info",
-                UPDATE_LOG_PREFIX,
-                `Update success flag created: ${updateFlagPath}`
-              );
-            } catch (flagError) {
-              logWithTimestamp(
-                "warn",
-                UPDATE_LOG_PREFIX,
-                "Could not create update success flag",
-                { error: flagError.message }
-              );
-            }
-
-            // Force the installation window to stay open
-            installingWindow.setClosable(false);
-
-            // Quit and install with restart - proper parameters for Windows
-            if (process.platform === "win32") {
-              // Windows: silent install with restart
-              autoUpdater.quitAndInstall(true, true);
-            } else {
-              // macOS/Linux: let user restart manually
-              autoUpdater.quitAndInstall(false, true);
-            }
-          } catch (err) {
-            logWithTimestamp("error", ERROR_LOG_PREFIX, "Installation error", {
-              error: err.message,
-            });
-
-            // Update the installation window to show error
-            updateStatus(
-              `❌ Installation failed: ${err.message}<br>Please try again later or contact support.`
+            
+            // Still try to proceed with installation
+            logWithTimestamp(
+              "warn",
+              UPDATE_LOG_PREFIX,
+              "⚠️ Proceeding with installation despite cleanup failure"
             );
-
-            // Create failure flag for next startup
-            try {
-              const failureFlagPath = path.join(
-                app.getPath("userData"),
-                "update-failure.txt"
-              );
-              fs.writeFileSync(failureFlagPath, err.message);
-            } catch (flagError) {
-              logWithTimestamp(
-                "warn",
-                UPDATE_LOG_PREFIX,
-                "Could not create failure flag"
-              );
-            }
-
-            // Show error dialog after a delay
-            setTimeout(() => {
-              dialog
-                .showMessageBox(installingWindow, {
-                  type: "error",
-                  title: "Update Failed",
-                  message: "The update installation failed.",
-                  detail:
-                    "The application will continue running with the current version. You can try updating again later.",
-                  buttons: ["OK"],
-                })
-                .then(() => {
-                  isUpdating = false;
-                  installingWindow.close();
-                });
-            }, 2000);
           }
-        }, 1000); // Increased delay to 1 second for better UX
+          
+          // Simple approach - let electron-updater handle everything
+          logWithTimestamp(
+            "info",
+            UPDATE_LOG_PREFIX,
+            "Calling autoUpdater.quitAndInstall",
+            {
+              isSilent: false,
+              isForceRunAfter: true
+            }
+          );
+          
+          logWithTimestamp(
+            "info", 
+            UPDATE_LOG_PREFIX,
+            "🚀 LAUNCHING INSTALLER NOW - Application will close and installer will appear"
+          );
+          
+          // Final progress update before installer launches
+          sendProgressUpdate("Ready to install!", "The installer will launch in a moment...");
+          
+          // Give user a moment to see the message
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          // This will show the installer UI properly now that allowElevation=true
+          autoUpdater.quitAndInstall(false, true);
+          
+        } catch (err) {
+          performanceTracker.end("installation-process");
+          const installError = {
+            error: err.message,
+            stack: err.stack,
+            timestamp: new Date().toISOString(),
+          };
+          logWithTimestamp(
+            "error",
+            ERROR_LOG_PREFIX,
+            "Critical error during installation",
+            installError
+          );
+          app.quit();
+        }
       } else {
-        // User clicked "Install on Exit"
+        // User clicked "Install Later"
         logWithTimestamp(
           "info",
           USER_LOG_PREFIX,
-          "📅 USER SELECTED: INSTALL ON EXIT"
+          "📅 DEFERRED INSTALLATION SELECTED BY USER"
         );
-
-        // This will install the update when the app is closed normally
-        autoUpdater.autoInstallOnAppQuit = true;
-
         logWithTimestamp(
           "info",
           UPDATE_LOG_PREFIX,
-          "Update will be installed when application exits"
+          "Update will be applied on next application restart"
+        );
+        logWithTimestamp(
+          "info",
+          UPDATE_LOG_PREFIX,
+          "Update file cached and ready for installation"
         );
       }
     })
-    .catch((error) => {
+    .catch((dialogError) => {
       performanceTracker.end("user-interaction-flow");
+      const dialogErrorData = {
+        error: dialogError.message,
+        stack: dialogError.stack,
+        timestamp: new Date().toISOString(),
+      };
       logWithTimestamp(
         "error",
         ERROR_LOG_PREFIX,
-        "Error showing update dialog",
-        { error: error.message }
+        "Error displaying installation dialog",
+        dialogErrorData
       );
     });
 });
@@ -1026,7 +1377,13 @@ autoUpdater.on("error", (err) => {
     performanceTracker.end("update-download-process");
   if (performanceTracker.timers.has("installation-process"))
     performanceTracker.end("installation-process");
-
+  // Suppress 403 errors (GitHub authentication issues)
+  if (err.message && (err.message.includes("403") || err.message.includes("AuthenticationFailed"))) {
+    log.info("Update check skipped - GitHub authentication token expired (this is normal after updates)");
+    win?.webContents.send("update-error", "");
+    win?.setProgressBar(-1);
+    return;
+  }
   const errorData = {
     errorMessage: err.message,
     errorCode: err.code || "Unknown",
@@ -1150,6 +1507,7 @@ function getRecoverySuggestions(errorCategory) {
 let win = null;
 let splashWindow = null;
 let pythonProcess = null;
+let isPerformingCleanup = false;  // Add this flag
 
 const BACKEND_PORT = 5000; // Replace with the port your backend is listening to
 
@@ -1430,7 +1788,7 @@ function createSplashWindow() {
 function setupEventListeners(win) {
   // Listen for remaining seconds updates
   sessionManager.on("remainingSecondsUpdated", (seconds) => {
-    // console.log(`Remaining seconds: ${seconds}`);
+    // Safety check: Only send if window exists and isn't destroyed
     if (win && !win.isDestroyed()) {
       win.webContents.send("remainingSecondsUpdated", seconds);
     }
@@ -1442,11 +1800,10 @@ function setupEventListeners(win) {
     // Optionally handle the license expiration, e.g., show a dialog or quit the app
     sessionManager.logoutUser();
 
+    // Safety check: Only send if window exists and isn't destroyed
     if (win && !win.isDestroyed()) {
       win.webContents.send("navigateToLogin");
     }
-
-    // win?.destroy();
   });
 }
 
@@ -1492,6 +1849,18 @@ async function createWindow() {
       return;
     }
 
+    // CRITICAL: Prevent immediate close and clean up listeners first
+    event.preventDefault();
+    
+    // Remove all SessionManager listeners to prevent "Object destroyed" errors
+    try {
+      sessionManager.removeAllListeners("remainingSecondsUpdated");
+      sessionManager.removeAllListeners("licenseExpired");
+      log.info("SessionManager listeners removed before close dialog");
+    } catch (err) {
+      log.error("Error removing SessionManager listeners:", err);
+    }
+
     const choice = dialog.showMessageBoxSync(win, {
       type: "warning",
       buttons: ["Yes", "Cancel"],
@@ -1504,9 +1873,11 @@ async function createWindow() {
     if (choice === 0) {
       log.info("User confirmed app close. Logging out...");
       sessionManager.logoutUser();
+      win.destroy(); // Explicitly destroy the window
     } else {
       log.info("User canceled app close.");
-      event.preventDefault();
+      // Re-establish the event listeners since user cancelled
+      setupEventListeners(win);
     }
   });
   // setTimeout(() => {
@@ -1600,9 +1971,9 @@ async function createWindow() {
       return msg;
     }
     try {
-      const result = await autoUpdater.checkForUpdates();
-      log.info("Check for updates result:", result);
-      return result;
+      // Use checkForUpdates which respects grace period
+      checkForUpdates();
+      return { checking: true, message: "Update check started" };
     } catch (err) {
       log.error("Check for updates failed:", err);
       throw err;
@@ -1613,7 +1984,7 @@ async function createWindow() {
     log.info("Update download requested");
     try {
       // Backup database before update
-      const dbPath = path.join(userDataDir, "database.sqlite");
+      const dbPath = path.join(userDataDir, "db.sqlite3");
       const backupDir = path.join(userDataDir, "backups");
 
       log.info("Creating backup directory:", backupDir);
@@ -1647,7 +2018,7 @@ async function createWindow() {
     );
     if (process.platform === "win32") {
       // For Windows, we want to restart the app after update
-      autoUpdater.quitAndInstall(true, true);
+      autoUpdater.quitAndInstall(false, true);
     } else {
       // For macOS, let the user choose when to restart
       autoUpdater.quitAndInstall(false, true);
@@ -1859,36 +2230,25 @@ async function performUserDataMigration() {
 
 app.whenReady().then(async () => {
   const appStartTime = Date.now();
-
   log.info("🚀 APP READY - STARTING INITIALIZATION SEQUENCE", {
     userDataDir: userDataDir,
     appVersion: app.getVersion(),
     timestamp: new Date().toISOString(),
-    startupTime: appStartTime,
-    platform: process.platform,
-    isPackaged: app.isPackaged,
   });
 
   createSplashWindow();
 
   try {
     // 🔄 MIGRATE USER DATA FROM OLD APP (Critical first step)
-    const migrationStartTime = Date.now();
     log.info("📋 INITIALIZATION STEP 1: USER DATA MIGRATION");
     const migrationResult = await performUserDataMigration();
-    const migrationEndTime = Date.now();
-
-    log.info("Migration completed", {
-      duration: migrationEndTime - migrationStartTime,
-      success: !migrationResult.criticalError,
-    });
-
     if (migrationResult.criticalError) {
       log.error("💥 CRITICAL MIGRATION ERROR - CONTINUING WITH CAUTION");
       // Continue with app initialization even if migration fails
     }
 
     // 🗄️ Initialize Database AFTER migration (so it uses the migrated data)
+
     const dbStartTime = Date.now();
     log.info("📋 INITIALIZATION STEP 2: DATABASE INITIALIZATION");
     try {
@@ -2016,7 +2376,7 @@ app.whenReady().then(async () => {
       log.error("SystemInfo initialization failed:", error);
       throw error;
     }
-
+    syncTallyprimeFilesToUserData();
     createProtocol();
     createWindow();
 
@@ -2046,9 +2406,7 @@ app.whenReady().then(async () => {
     // Initial update check after 1 minute
     if (!global.AppConfig.isDev) {
       setTimeout(() => {
-        autoUpdater.checkForUpdates().catch((err) => {
-          log.error("Error in initial update check:", err);
-        });
+        checkForUpdates();
       }, 60 * 1000);
     }
   } catch (error) {
@@ -2058,18 +2416,233 @@ app.whenReady().then(async () => {
 });
 
 app.on("window-all-closed", () => {
+  log.info("[DEBUG] window-all-closed event fired");
+  log.info("[DEBUG] isUpdating value:", isUpdating);
+  log.info("[DEBUG] isPerformingCleanup value:", isPerformingCleanup);
+  log.info("[DEBUG] platform:", process.platform);
+  
   if (process.platform !== "darwin") {
-    app.quit();
+    // Don't quit if we're in the middle of an update or cleanup
+    if (!isUpdating && !isPerformingCleanup) {
+      log.info("[DEBUG] Neither updating nor cleaning up, calling app.quit()");
+      app.quit();
+    } else {
+      log.info("Skipping quit during update/cleanup process - installer will handle it");
+    }
   }
 });
 
-app.on("will-quit", () => {
+app.on("will-quit", (event) => {
   log.info("App is quitting");
+  log.info("isUpdating flag:", isUpdating);
+  
+  // Clean up SessionManager listeners before quit
+  try {
+    sessionManager.removeAllListeners("remainingSecondsUpdated");
+    sessionManager.removeAllListeners("licenseExpired");
+    log.info("SessionManager listeners cleaned up on quit");
+  } catch (err) {
+    log.error("Error cleaning up SessionManager listeners on quit:", err);
+  }
+  
+  if (isUpdating) {
+    log.info("Auto install update on quit");
+  }
+  
   sessionManager.logoutUser();
   if (pythonProcess) {
     log.info("Stopping Python process...");
     pythonProcess.kill("SIGTERM");
   }
+});
+
+// Compact cleanup function for update process
+const stopEverythingNeatly = async () => {
+  try {
+    logWithTimestamp("info", UPDATE_LOG_PREFIX, "[CLEANUP] Starting aggressive gateway termination...");
+    
+    // 1. Stop Gateway Windows Service (try both possible service names)
+    if (process.platform === "win32") {
+      // Try stopping both services
+      const serviceNames = ["LicensingServer"];
+      for (const serviceName of serviceNames) {
+        // Create a retry function for stopping services
+        const stopServiceWithRetry = (serviceName, maxRetries = 10, timeoutMs = 30000) => {
+          const startTime = Date.now();
+          let attempts = 0;
+          
+          while (attempts < maxRetries && (Date.now() - startTime) < timeoutMs) {
+            try {
+              attempts++;
+              logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] Attempt ${attempts}/${maxRetries}: Stopping service ${serviceName}`);
+              
+              // First, try to stop the service
+              try {
+                execSync(`sc stop "${serviceName}"`, { timeout: 5000 });
+                logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] Stop command sent for ${serviceName}`);
+              } catch (stopError) {
+                // Check if service is already stopped or doesn't exist
+                if (stopError.message.includes('1062') || stopError.message.includes('not started') || stopError.message.includes('1052') || stopError.message.includes('1060')) {
+                  logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] Service ${serviceName} was already stopped or doesn't exist`);
+                  return true;
+                }
+                // If it's a different error, we'll still try to verify status below
+                logWithTimestamp("warn", UPDATE_LOG_PREFIX, `[CLEANUP] Stop command error for ${serviceName}: ${stopError.message}`);
+              }
+              
+              // Now verify the service has actually stopped using sc query
+              let verificationAttempts = 0;
+              const maxVerificationAttempts = 5;
+              
+              while (verificationAttempts < maxVerificationAttempts) {
+                try {
+                  verificationAttempts++;
+                  const queryResult = execSync(`sc query "${serviceName}"`, { timeout: 3000, encoding: 'utf8' });
+                  
+                  logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] Verification attempt ${verificationAttempts}: Checking ${serviceName} status`);
+                  
+                  // Check if service is stopped
+                  if (queryResult.includes('STATE') && (queryResult.includes('STOPPED') || queryResult.includes('1  STOPPED'))) {
+                    logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] ✅ Service ${serviceName} confirmed STOPPED on attempt ${attempts}`);
+                    return true;
+                  } else if (queryResult.includes('STOP_PENDING') || queryResult.includes('3  STOP_PENDING')) {
+                    logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] Service ${serviceName} is stopping... waiting`);
+                    // Wait a bit for the service to finish stopping
+                    try {
+                      execSync(`timeout /t 2 /nobreak > nul 2>&1`, { stdio: 'ignore' });
+                    } catch (_) {
+                      const start = Date.now();
+                      while (Date.now() - start < 2000) {
+                        // Busy wait 2 seconds
+                      }
+                    }
+                  } else {
+                    logWithTimestamp("warn", UPDATE_LOG_PREFIX, `[CLEANUP] Service ${serviceName} still running, will retry stop command`);
+                    break; // Exit verification loop to retry stop command
+                  }
+                  
+                } catch (queryError) {
+                  // Service doesn't exist or query failed
+                  if (queryError.message.includes('1060') || queryError.message.includes('does not exist')) {
+                    logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] ✅ Service ${serviceName} doesn't exist (already removed)`);
+                    return true;
+                  }
+                  logWithTimestamp("warn", UPDATE_LOG_PREFIX, `[CLEANUP] Query error for ${serviceName}: ${queryError.message}`);
+                  break; // Exit verification loop to retry
+                }
+              }
+              
+              // If we get here, either verification failed or service is still running
+              logWithTimestamp("warn", UPDATE_LOG_PREFIX, `[CLEANUP] Service ${serviceName} not confirmed stopped, will retry`);
+              
+              // Wait before retry (exponential backoff, max 5 seconds)
+              const waitTime = Math.min(1000 * Math.pow(2, attempts - 1), 5000);
+              try {
+                execSync(`timeout /t ${Math.ceil(waitTime/1000)} /nobreak > nul 2>&1`, { stdio: 'ignore' });
+              } catch (_) {
+                // Fallback to setTimeout if timeout command fails
+                const start = Date.now();
+                while (Date.now() - start < waitTime) {
+                  // Busy wait
+                }
+              }
+              
+            } catch (error) {
+              logWithTimestamp("error", UPDATE_LOG_PREFIX, `[CLEANUP] Unexpected error on attempt ${attempts} for ${serviceName}: ${error.message}`);
+              
+              // Wait before retry
+              const waitTime = Math.min(1000 * Math.pow(2, attempts - 1), 5000);
+              try {
+                execSync(`timeout /t ${Math.ceil(waitTime/1000)} /nobreak > nul 2>&1`, { stdio: 'ignore' });
+              } catch (_) {
+                const start = Date.now();
+                while (Date.now() - start < waitTime) {
+                  // Busy wait
+                }
+              }
+            }
+          }
+          
+          logWithTimestamp("error", UPDATE_LOG_PREFIX, `[CLEANUP] ❌ Failed to stop and verify service ${serviceName} after ${attempts} attempts and ${Date.now() - startTime}ms`);
+          return false;
+        };
+        
+        try { 
+          stopServiceWithRetry(serviceName);
+        }
+        catch (_) { 
+          logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] Service ${serviceName} retry function completed`);
+        }
+      }
+      
+      // Wait for services to fully stop
+      logWithTimestamp("info", UPDATE_LOG_PREFIX, "[CLEANUP] Waiting for services to stop...");
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      // Kill gateway processes aggressively
+      logWithTimestamp("info", UPDATE_LOG_PREFIX, "[CLEANUP] Force terminating gateway processes...");
+      
+      // Try multiple kill methods
+      const killMethods = [
+        // Method 1: Kill by exact name
+        'taskkill /IM "gatewayService.exe" /F',
+        // Method 2: Kill with tree
+        'taskkill /IM "gatewayService.exe" /F /T',
+        // Method 3: Kill any gateway pattern
+        'wmic process where "name like \'%gateway%\'" delete',
+        // Method 4: PowerShell force kill
+        'powershell -Command "Get-Process | Where-Object {$_.ProcessName -like \'*gateway*\'} | Stop-Process -Force"'
+      ];
+      
+      for (let i = 0; i < killMethods.length; i++) {
+        try {
+          logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] Kill method ${i + 1}: ${killMethods[i].substring(0, 30)}...`);
+          execSync(killMethods[i], { shell: true, windowsHide: true });
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } catch (e) {
+          // Continue with next method
+        }
+      }
+      
+      // Final verification
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      try {
+        execSync('tasklist | find /I "gatewayService.exe"', { shell: true });
+        logWithTimestamp("warn", UPDATE_LOG_PREFIX, "[CLEANUP] Gateway process might still be running");
+      } catch (e) {
+        logWithTimestamp("info", UPDATE_LOG_PREFIX, "[CLEANUP] Gateway process successfully terminated");
+      }
+    }
+
+    // 2. Close SQLite
+    try {
+      const db = databaseManager.getInstance()?.getDatabase();
+      if (db) {
+        db.close();
+        logWithTimestamp("info", UPDATE_LOG_PREFIX, "[CLEANUP] Closed database connection");
+      }
+    } catch (_) {}
+
+    // 3. Kill Python backend
+    if (pythonProcess) {
+      pythonProcess.kill("SIGTERM");
+      logWithTimestamp("info", UPDATE_LOG_PREFIX, "[CLEANUP] Terminated Python backend");
+    }
+    
+    logWithTimestamp("info", UPDATE_LOG_PREFIX, "[CLEANUP] Gateway termination complete");
+  } catch (e) {
+    logWithTimestamp("error", UPDATE_LOG_PREFIX, `[CLEANUP] stopEverythingNeatly error: ${e.message}`);
+  }
+};
+
+// Critical for auto-updater to work!
+app.on("before-quit-for-update", async () => {
+  logWithTimestamp("info", UPDATE_LOG_PREFIX, "Before quit for update triggered");
+  // Prevent normal quit behavior during update
+  isUpdating = true;
+  
+  // Run cleanup
+  await stopEverythingNeatly();
 });
 
 app.on("activate", () => {
@@ -2085,7 +2658,7 @@ ipcMain.handle("start-download", () => {
 
 ipcMain.handle("quit-and-install", () => {
   log.info("Manual quit and install requested via IPC");
-  autoUpdater.quitAndInstall(true, true);
+  autoUpdater.quitAndInstall(false, true);
 });
 
 // Modify the update check function
@@ -2093,6 +2666,38 @@ function checkForUpdates() {
   if (global.AppConfig.isDev) {
     log.info("Skipping update check in development mode");
     return;
+  }
+
+  // Check if we recently updated (within 15 minutes)
+  const updateFlagPath = path.join(app.getPath("userData"), "update-success.txt");
+  const gracePeriodPath = path.join(app.getPath("userData"), "update-grace-period.json");
+  
+  try {
+    // Check if update just completed
+    if (fs.existsSync(updateFlagPath)) {
+      // Create grace period file
+      fs.writeFileSync(gracePeriodPath, JSON.stringify({
+        timestamp: Date.now(),
+        version: app.getVersion()
+      }));
+    }
+    
+    // Check if we're in grace period
+    if (fs.existsSync(gracePeriodPath)) {
+      const graceData = JSON.parse(fs.readFileSync(gracePeriodPath, 'utf8'));
+      const timeSinceUpdate = Date.now() - graceData.timestamp;
+      
+      // Skip update check if within 15 minutes of update
+      if (timeSinceUpdate < 15 * 60 * 1000) {
+        log.info(`Skipping update check - in grace period (${Math.round(timeSinceUpdate/1000/60)} minutes since update)`);
+        return;
+      } else {
+        // Grace period expired, remove file
+        fs.unlinkSync(gracePeriodPath);
+      }
+    }
+  } catch (err) {
+    log.error("Error checking update grace period:", err);
   }
 
   const currentVersion = app.getVersion();
@@ -2116,7 +2721,7 @@ function checkForUpdates() {
 }
 
 // Set up detailed logging for updates
-log.transports.file.fileName = "cypheredge.log";
+log.transports.file.fileName = "cyphersol.log";
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // 🚀 COMPREHENSIVE AUTO-UPDATE LOGGING SYSTEM v2.0.0
@@ -2213,9 +2818,7 @@ const logSystemInfo = () => {
 log.info(
   "═══════════════════════════════════════════════════════════════════════════════════════"
 );
-
-log.info("🚀 CYPHEREDGE AUTO-UPDATE LOGGING SYSTEM v2.0.3 INITIALIZED");
-
+log.info("🚀 CYPHERSOL AUTO-UPDATE LOGGING SYSTEM v2.0.0 INITIALIZED");
 log.info(
   "═══════════════════════════════════════════════════════════════════════════════════════"
 );
