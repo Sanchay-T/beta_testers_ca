@@ -783,7 +783,7 @@ const MainDashboard = ({ handleTabChange }) => {
               </h2>{" "}
               <span className="bg-gradient-to-r from-blue-500 to-cyan-400 text-white text-xs px-2 py-1 rounded-full font-semibold animate-pulse">
                 {" "}
-                v2.0.100{" "}
+                v2.0.1{" "}
               </span>{" "}
             </div>{" "}
             <p className="text-muted-foreground">

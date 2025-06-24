@@ -7,21 +7,17 @@ const AuthError = require("./utils/AuthError");
 const bcrypt = require("bcrypt");
 const databaseManager = require("../db/db");
 const { eq, exists, sql } = require("drizzle-orm");
-const { uuid } = require("systeminformation");
 const systemInformation = require("../SystemInformation");
 const bonjour = require("bonjour")();
 const axios = require("axios");
 const path = require("path");
 const { encryptData, decryptData } = require("../CryptoHandler"); // your crypto module
 const fs = require("fs");
-const gatewayServer = require("../InitiateGatewayServer")
-const dgram = require('dgram');
-const os = require('os');
-const ip = require('ip'); // You need to install this via: npm install ip
+const gatewayServer = require("../InitiateGatewayServer");
+const dgram = require("dgram");
+const os = require("os");
+const ip = require("ip"); // You need to install this via: npm install ip
 // const { gateway } = require('default-gateway');
-const si = require('systeminformation');
-
-
 
 log.info("License manager process.env.NODE_ENV", process.env.NODE_ENV);
 
@@ -38,7 +34,6 @@ async function isServerRunning(url) {
   }
 }
 
-
 async function waitUntilServerIsReady(url, timeout = 10000, interval = 500) {
   const start = Date.now();
   while (Date.now() - start < timeout) {
@@ -49,48 +44,63 @@ async function waitUntilServerIsReady(url, timeout = 10000, interval = 500) {
       }
     } catch (_) {
       // wait and retry
-
     }
     await new Promise((r) => setTimeout(r, interval));
   }
   throw new Error("Gateway server did not respond in time.");
 }
 
-
-
 async function getBroadcastAddress() {
   try {
-    // Get network interface details
-    const networkInterfaces = await si.networkInterfaces();
+    // Use Node.js os.networkInterfaces() instead of systeminformation
+    const networkInterfaces = os.networkInterfaces();
 
-    // Find the default interface (the one with 'default: true')
-    const defaultInterface = networkInterfaces.find(iface => iface.default);
+    // Find the first non-internal IPv4 interface
+    let selectedInterface = null;
 
-    if (!defaultInterface) {
-      throw new Error('No default interface found.');
+    for (const [name, interfaces] of Object.entries(networkInterfaces)) {
+      if (interfaces) {
+        for (const iface of interfaces) {
+          if (
+            !iface.internal &&
+            iface.family === "IPv4" &&
+            iface.address !== "127.0.0.1"
+          ) {
+            selectedInterface = {
+              name: name,
+              address: iface.address,
+              netmask: iface.netmask,
+            };
+            break;
+          }
+        }
+        if (selectedInterface) break;
+      }
     }
 
-    // Log the default interface details for debugging
-    console.log(`Default Interface: ${defaultInterface.ifaceName}`);
-    console.log(`IP: ${defaultInterface.ip4}`);
-    console.log(`Subnet: ${defaultInterface.ip4subnet}`);
+    if (!selectedInterface) {
+      log.warn("No suitable network interface found, using fallback");
+      return "255.255.255.255"; // Fallback to general broadcast
+    }
 
-    // Calculate the broadcast address based on the default interface's IP and subnet mask
-    const localIP = defaultInterface.ip4;
-    const subnetMask = defaultInterface.ip4subnet;
+    // Log the selected interface details for debugging
+    log.info(`Selected Interface: ${selectedInterface.name}`);
+    log.info(`IP: ${selectedInterface.address}`);
+    log.info(`Netmask: ${selectedInterface.netmask}`);
 
     // Calculate the broadcast address using the 'ip' package
-    const broadcastIP = ip.subnet(localIP, subnetMask).broadcastAddress;
+    const broadcastIP = ip.subnet(
+      selectedInterface.address,
+      selectedInterface.netmask
+    ).broadcastAddress;
 
-    console.log(`Broadcast Address: ${broadcastIP}`);
+    log.info(`Broadcast Address: ${broadcastIP}`);
     return broadcastIP;
-
   } catch (error) {
-    console.error('Error calculating broadcast address:', error);
+    log.error("Error calculating broadcast address:", error);
+    return "255.255.255.255"; // Fallback to general broadcast
   }
 }
-
-
 
 /**
  * Discover license servers using UDP broadcast as a fallback.
@@ -102,13 +112,13 @@ function discoverUdpBroadcastServices(timeout = 3000) {
     const BROADCAST_PORT = 41234;
     const BROADCAST_MESSAGE = Buffer.from("DISCOVER_LICENSE_SERVER");
     const discoveredServices = [];
-    const client = dgram.createSocket('udp4');
+    const client = dgram.createSocket("udp4");
 
     client.bind(() => {
       client.setBroadcast(true);
 
       // Listen for responses
-      client.on('message', (msg, rinfo) => {
+      client.on("message", (msg, rinfo) => {
         try {
           const data = JSON.parse(msg.toString());
 
@@ -116,11 +126,15 @@ function discoverUdpBroadcastServices(timeout = 3000) {
             name: data.host || "Unknown",
             host: data.host,
             ip: rinfo.address,
-            port: data.port
+            port: data.port,
           };
 
           // Deduplicate services based on IP and port
-          if (!discoveredServices.some(s => s.ip === serviceInfo.ip && s.port === serviceInfo.port)) {
+          if (
+            !discoveredServices.some(
+              (s) => s.ip === serviceInfo.ip && s.port === serviceInfo.port
+            )
+          ) {
             discoveredServices.push(serviceInfo);
           }
         } catch (err) {
@@ -128,15 +142,21 @@ function discoverUdpBroadcastServices(timeout = 3000) {
         }
       });
 
-
       // Send broadcast message
-      getBroadcastAddress().then((broadcastIP) => {
-        log.info("Broadcast IP : ", broadcastIP);
-        client.send(BROADCAST_MESSAGE, 0, BROADCAST_MESSAGE.length, BROADCAST_PORT, broadcastIP);
-
-      }).catch((err) => {
-        log.error("Error calculating broadcast address:", err);
-      });
+      getBroadcastAddress()
+        .then((broadcastIP) => {
+          log.info("Broadcast IP : ", broadcastIP);
+          client.send(
+            BROADCAST_MESSAGE,
+            0,
+            BROADCAST_MESSAGE.length,
+            BROADCAST_PORT,
+            broadcastIP
+          );
+        })
+        .catch((err) => {
+          log.error("Error calculating broadcast address:", err);
+        });
 
       // Wait for responses then close
       setTimeout(() => {
@@ -147,15 +167,13 @@ function discoverUdpBroadcastServices(timeout = 3000) {
   });
 }
 
-
-
 /**
  * Discover mDNS services by type.
  * @param {string} serviceType - The type of service to discover (required).
  * @param {number} timeout - Time in milliseconds to wait for discovery (default: 5000).
  * @returns {Promise<Array>} - Resolves with an array of discovered services.
  */
-function discoverMdnsServices(serviceType = '', timeout = 5000) {
+function discoverMdnsServices(serviceType = "", timeout = 5000) {
   return new Promise((resolve, reject) => {
     if (!serviceType) {
       return reject(new Error("Service type is required for mDNS discovery."));
@@ -164,26 +182,32 @@ function discoverMdnsServices(serviceType = '', timeout = 5000) {
     const browser = bonjour.find({ type: serviceType });
 
     // Listen for each service as it comes online
-    browser.on('up', (service) => {
+    browser.on("up", (service) => {
       const serviceInfo = {
         name: service.name || "Unknown",
         host: service.host || "",
         // Try using the referer's address; fallback to addresses array if needed.
-        ip: (service.referer && service.referer.address) || (service.addresses && service.addresses[0]) || "",
-        port: service.port || ""
+        ip:
+          (service.referer && service.referer.address) ||
+          (service.addresses && service.addresses[0]) ||
+          "",
+        port: service.port || "",
       };
 
       // Deduplicate services based on IP and port
-      if (!discoveredServices.some(s => s.ip === serviceInfo.ip && s.port === serviceInfo.port)) {
+      if (
+        !discoveredServices.some(
+          (s) => s.ip === serviceInfo.ip && s.port === serviceInfo.port
+        )
+      ) {
         discoveredServices.push(serviceInfo);
       }
     });
 
     // Handle possible errors
-    browser.on('error', (err) => {
-
+    browser.on("error", (err) => {
       browser.stop();
-      log.error("Error in DiscoverMdnsServices : ", err)
+      log.error("Error in DiscoverMdnsServices : ", err);
       reject(err);
     });
 
@@ -222,18 +246,21 @@ function registerAuthHandlers(userDataPath) {
         throw new AuthError("Password is incorrect.");
       }
 
-
       // ✅ Get system info from your license manager
-      const { clientId, uuid, macAddress, hostname, username, ip, port } = licenseManager.getLicenseInfo(); // Ensure this function returns what you need
+      const { clientId, uuid, macAddress, hostname, username, ip, port } =
+        licenseManager.getLicenseInfo(); // Ensure this function returns what you need
 
       // ✅ Call the .NET licensing server API to activate session
-      const response = await axios.post(`http://${ip}:${port}/api/license/activate-session`, {
-        clientId,
-        uuid,
-        macAddress,
-        hostname,
-        username
-      });
+      const response = await axios.post(
+        `http://${ip}:${port}/api/license/activate-session`,
+        {
+          clientId,
+          uuid,
+          macAddress,
+          hostname,
+          username,
+        }
+      );
 
       const { data } = response;
 
@@ -241,7 +268,12 @@ function registerAuthHandlers(userDataPath) {
         throw new Error("Session activation failed");
       }
 
-      sessionManager.setUser({ userId: user.id, email: user.email, role: user.role, name: user.name });
+      sessionManager.setUser({
+        userId: user.id,
+        email: user.email,
+        role: user.role,
+        name: user.name,
+      });
       log.info("Login User session activated:", sessionManager.getUser());
 
       log.info("Login License session activated:", data);
@@ -251,18 +283,27 @@ function registerAuthHandlers(userDataPath) {
         sessionManager.startLicenseCountdown(data.remainingSeconds);
       }
 
-
       return { success: true, user: credentials };
     } catch (error) {
-
-      if (error.response && error.response.data.errorCode === "session-not-available") {
+      if (
+        error.response &&
+        error.response.data.errorCode === "session-not-available"
+      ) {
         log.info("Login error:", error.message, error.response.data);
-        return { success: false, error: "Your session has expired. Please use a license from the network.", errorCode: "session-not-available" };
-      }
-      else {
+        return {
+          success: false,
+          error:
+            "Your session has expired. Please use a license from the network.",
+          errorCode: "session-not-available",
+        };
+      } else {
         if (error instanceof AuthError) {
           log.info("Login error:", error.message);
-          return { success: false, error: error.message, errorCode: "auth-error" };
+          return {
+            success: false,
+            error: error.message,
+            errorCode: "auth-error",
+          };
         }
         log.info("Login error:", error.message);
         return { success: false, error: "An unexpected error occurred" };
@@ -300,8 +341,6 @@ function registerAuthHandlers(userDataPath) {
     let user;
 
     try {
-
-
       const userAlreadyExists = await db
         .select()
         .from(users)
@@ -493,8 +532,7 @@ function registerAuthHandlers(userDataPath) {
     }
   });
 
-
-  ipcMain.handle('auth:check-account-status', async () => {
+  ipcMain.handle("auth:check-account-status", async () => {
     try {
       // Query to select one user from the 'users' table
       const result = await db.select().from(users).limit(1);
@@ -503,14 +541,15 @@ function registerAuthHandlers(userDataPath) {
       console.log("Number of users found:", result.length);
 
       // Return "yes" if a user exists, false otherwise
-      return (result && result.length > 0) ? { "success": true, "message": "Users found" } : { "success": false, "message": "No users found" };
+      return result && result.length > 0
+        ? { success: true, message: "Users found" }
+        : { success: false, message: "No users found" };
     } catch (error) {
       // Log error details and return false in case of failure
       console.error("Error while checking account status:", error);
-      return { "success": false, "message": "Failed to check account status" };
+      return { success: false, message: "Failed to check account status" };
     }
   });
-
 
   ipcMain.handle("license:check", async () => {
     try {
@@ -526,9 +565,7 @@ function registerAuthHandlers(userDataPath) {
     }
   });
 
-
   ipcMain.handle("license:activate", async (event, args) => {
-
     const { licenseKey, role } = args;
     const uuid_hash = await systemInformation.getHashedUUID();
     console.log("UUID Hash:", uuid_hash);
@@ -554,12 +591,15 @@ function registerAuthHandlers(userDataPath) {
         hostname: systemInformation.getHostname(),
         windowsUserSID: systemInformation.getWindowsUserSID(),
         username: systemInformation.getUsername(),
-      }
-      const response = await axios.post("http://localhost:7890/api/activate-license", {
-        licenseKey,
-        role,
-        deviceInfo
-      });
+      };
+      const response = await axios.post(
+        "http://localhost:7890/api/activate-license",
+        {
+          licenseKey,
+          role,
+          deviceInfo,
+        }
+      );
 
       if (response.status === 200) {
         log.info("License activated successfully:", response.data);
@@ -568,12 +608,17 @@ function registerAuthHandlers(userDataPath) {
         log.error("License activation failed:", response.data);
         return {
           success: false,
-          error: response.data.message || response.data.error || "Invalid license",
-          errorDetails: response.data
+          error:
+            response.data.message || response.data.error || "Invalid license",
+          errorDetails: response.data,
         };
       }
     } catch (err) {
-      log.error("Error activating license:", err.response.data.detail, err.message);
+      log.error(
+        "Error activating license:",
+        err.response.data.detail,
+        err.message
+      );
 
       // Log the full error structure for debugging
       if (err.response) {
@@ -588,7 +633,7 @@ function registerAuthHandlers(userDataPath) {
         const errorMessage =
           err.response.data.detail ||
           err.response.data.error ||
-          (typeof err.response.data === 'string' ? err.response.data : null) ||
+          (typeof err.response.data === "string" ? err.response.data : null) ||
           err.message ||
           "Unknown error from gateway server";
 
@@ -596,7 +641,7 @@ function registerAuthHandlers(userDataPath) {
           success: false,
           error: errorMessage,
           errorDetails: err.response.data,
-          statusCode: err.response.status
+          statusCode: err.response.status,
         };
       }
 
@@ -605,206 +650,232 @@ function registerAuthHandlers(userDataPath) {
         success: false,
         error: err.message || "Gateway server did not respond in time.",
         errorCode: err.code,
-        errorType: "connection"
+        errorType: "connection",
       };
     }
   });
 
-
   // IPC Handler for searching network licenses using mDNS discovery,
   // then validating each discovered service via its /api/validate-license endpoint.
-  ipcMain.handle("license:search-network-licenses", async (event, networkLicense) => {
-    try {
-      // Determine service type (default to "license" if not provided)
-      const serviceType = networkLicense?.serviceType || "license-server";
-      let discoveredServices = [];
+  ipcMain.handle(
+    "license:search-network-licenses",
+    async (event, networkLicense) => {
+      try {
+        // Determine service type (default to "license" if not provided)
+        const serviceType = networkLicense?.serviceType || "license-server";
+        let discoveredServices = [];
 
-      // Run both discoveries in parallel
-      const [mdnsServices, udpServices] = await Promise.all([
-        discoverMdnsServices(serviceType, 5000),
-        discoverUdpBroadcastServices(5000)
-      ]);
+        // Run both discoveries in parallel
+        const [mdnsServices, udpServices] = await Promise.all([
+          discoverMdnsServices(serviceType, 5000),
+          discoverUdpBroadcastServices(5000),
+        ]);
 
-
-      if (mdnsServices.length >= udpServices.length) {
-        discoveredServices = mdnsServices;
-        if (mdnsServices.length === 0) {
-          log.info("No services found via either mDNS or UDP.");
-        } else {
-          log.info(`Using mDNS results (${mdnsServices.length} services).`);
-        }
-      } else {
-        discoveredServices = udpServices;
-        log.info(`Using UDP broadcast results (${udpServices.length} services).`);
-      }
-      log.info("Final discovered services:", discoveredServices);
-
-      // log.info("Discovered services:", discoveredServices);
-      const validatedServices = [];
-      const now = Date.now() / 1000; // current time in seconds
-
-      // Iterate over discovered services and validate each one
-      for (const service of discoveredServices) {
-        try {
-          // Construct the validation URL (assuming the endpoint is /api/validate-license)
-          const url = `http://${service.ip}:${service.port}/api/validate-license`;
-          // Send a POST request (empty body or you can add required data)
-          const response = await axios.post(url, { timeout: 3000 });
-
-          // Check response validity:
-          // Assume a valid response has response.data.status === "OK"
-          // and an expiry_timestamp greater than current time.
-          if (response.data && response.data.status === "OK" && response.data.expiry_timestamp > now) {
-            validatedServices.push({
-              ...service,
-              validation: response.data
-            });
-          }
-        } catch (err) {
-          log.error("Validation error for service", service, ":", err.message);
-          // Skip this service if validation fails.
-        }
-      }
-
-      return { success: true, licenses: validatedServices };
-    } catch (error) {
-      log.error("Error searching network licenses:", error);
-      return { success: false, error: error.message };
-    }
-  });
-
-
-  ipcMain.handle("license:connect-network-license", async (event, licenseData) => {
-    log.info("Connecting to network license:", licenseData);
-    try {
-      const { ip, port } = licenseData;
-      if (!ip || !port) throw new Error("An unexpected error occurred.");
-
-      const uuid = systemInformation.getUUID(); // assuming you defined this somewhere
-      const uuidHash = systemInformation.getHashedUUID(); // assuming you defined this somewhere
-      const macAddress = systemInformation.getMACAddress(); // assuming you defined this somewhere
-      const hostname = systemInformation.getHostname(); // assuming you defined this somewhere
-      const windowsUserSID = systemInformation.getWindowsUserSID(); // assuming you defined this somewhere
-      const username = systemInformation.getUsername(); // assuming you defined this somewhere
-
-      log.info("Details for license connection:",
-        uuid,
-        uuidHash,
-        macAddress,
-        windowsUserSID,
-        hostname,
-        username,
-      );
-
-      const response = await axios.post(`http://${ip}:${port}/api/license/assign`, {
-        clientId: windowsUserSID,
-        uuid: uuid,
-        hostname: hostname,
-        username: username,
-        macAddress: macAddress,
-      });
-
-      log.info("License assignment response:", response.data);
-
-      const { message, activeCount, maxUsers, ...data } = response.data;
-
-      if (response.data.success) {
-
-        const enrichedLicenseData = {
-          ...data,
-          clientId: windowsUserSID,
-          uuid,
-          hostname,
-          macAddress,
-          username,
-          ip,
-          port
-        };
-
-        const encryptedData = await encryptData(JSON.stringify(enrichedLicenseData));
-
-        const filePath = path.join(userDataPath, "clientLicense.enc");
-        fs.writeFile(filePath, encryptedData, (err) => {
-          if (err) {
-            log.error("Failed to write license file:", err);
+        if (mdnsServices.length >= udpServices.length) {
+          discoveredServices = mdnsServices;
+          if (mdnsServices.length === 0) {
+            log.info("No services found via either mDNS or UDP.");
           } else {
-            log.info("License file saved successfully at:", filePath);
-            licenseManager.setLicenseInfo(enrichedLicenseData);
-            licenseManager.isActivated = true;
+            log.info(`Using mDNS results (${mdnsServices.length} services).`);
           }
-        });
-        return { success: true, data: enrichedLicenseData };
-      }
-      else {
-        log.error("License assignment failed:", response.data.message);
-        // Return the actual error message from the server response
-        return {
-          success: false,
-          error: response.data.message || response.data.error || "License assignment failed",
-          errorDetails: response.data
-        };
-      }
-
-    } catch (error) {
-      // Log the complete error for debugging
-      log.error("License assignment error:", error);
-
-      // Log the full error structure for debugging
-      if (error.response) {
-        log.error("Response data:", JSON.stringify(error.response.data));
-        log.error("Response status:", error.response.status);
-        log.error("Response headers:", error.response.headers);
-      }
-
-      if (error.response) {
-        // Handle specific response formats
-        if (error.response.data.inactiveLicenses) {
-          return {
-            success: false,
-            error: error.response.data.error || error.response.data.message || "Found inactive licenses. Please revoke an existing license.",
-            inactiveLicenses: error.response.data.inactiveLicenses,
-            errorDetails: error.response.data,
-            statusCode: error.response.status
-          };
-        } else if (error.response.data.activeLicenses) {
-          return {
-            success: false,
-            error: error.response.data.error || error.response.data.message || "License is active on another device.",
-            activeLicenses: error.response.data.activeLicenses,
-            errorDetails: error.response.data,
-            statusCode: error.response.status
-          };
         } else {
-          // Extract the most specific error message available
-          const errorMessage =
-            error.response.data.error ||
-            error.response.data.message ||
-            (typeof error.response.data === 'string' ? error.response.data : null) ||
-            error.message ||
-            "Unknown error from gateway server";
+          discoveredServices = udpServices;
+          log.info(
+            `Using UDP broadcast results (${udpServices.length} services).`
+          );
+        }
+        log.info("Final discovered services:", discoveredServices);
 
-          // Handle any other error response format from the gateway
+        // log.info("Discovered services:", discoveredServices);
+        const validatedServices = [];
+        const now = Date.now() / 1000; // current time in seconds
+
+        // Iterate over discovered services and validate each one
+        for (const service of discoveredServices) {
+          try {
+            // Construct the validation URL (assuming the endpoint is /api/validate-license)
+            const url = `http://${service.ip}:${service.port}/api/validate-license`;
+            // Send a POST request (empty body or you can add required data)
+            const response = await axios.post(url, { timeout: 3000 });
+
+            // Check response validity:
+            // Assume a valid response has response.data.status === "OK"
+            // and an expiry_timestamp greater than current time.
+            if (
+              response.data &&
+              response.data.status === "OK" &&
+              response.data.expiry_timestamp > now
+            ) {
+              validatedServices.push({
+                ...service,
+                validation: response.data,
+              });
+            }
+          } catch (err) {
+            log.error(
+              "Validation error for service",
+              service,
+              ":",
+              err.message
+            );
+            // Skip this service if validation fails.
+          }
+        }
+
+        return { success: true, licenses: validatedServices };
+      } catch (error) {
+        log.error("Error searching network licenses:", error);
+        return { success: false, error: error.message };
+      }
+    }
+  );
+
+  ipcMain.handle(
+    "license:connect-network-license",
+    async (event, licenseData) => {
+      log.info("Connecting to network license:", licenseData);
+      try {
+        const { ip, port } = licenseData;
+        if (!ip || !port) throw new Error("An unexpected error occurred.");
+
+        const uuid = systemInformation.getUUID(); // assuming you defined this somewhere
+        const uuidHash = systemInformation.getHashedUUID(); // assuming you defined this somewhere
+        const macAddress = systemInformation.getMACAddress(); // assuming you defined this somewhere
+        const hostname = systemInformation.getHostname(); // assuming you defined this somewhere
+        const windowsUserSID = systemInformation.getWindowsUserSID(); // assuming you defined this somewhere
+        const username = systemInformation.getUsername(); // assuming you defined this somewhere
+
+        log.info(
+          "Details for license connection:",
+          uuid,
+          uuidHash,
+          macAddress,
+          windowsUserSID,
+          hostname,
+          username
+        );
+
+        const response = await axios.post(
+          `http://${ip}:${port}/api/license/assign`,
+          {
+            clientId: windowsUserSID,
+            uuid: uuid,
+            hostname: hostname,
+            username: username,
+            macAddress: macAddress,
+          }
+        );
+
+        log.info("License assignment response:", response.data);
+
+        const { message, activeCount, maxUsers, ...data } = response.data;
+
+        if (response.data.success) {
+          const enrichedLicenseData = {
+            ...data,
+            clientId: windowsUserSID,
+            uuid,
+            hostname,
+            macAddress,
+            username,
+            ip,
+            port,
+          };
+
+          const encryptedData = await encryptData(
+            JSON.stringify(enrichedLicenseData)
+          );
+
+          const filePath = path.join(userDataPath, "clientLicense.enc");
+          fs.writeFile(filePath, encryptedData, (err) => {
+            if (err) {
+              log.error("Failed to write license file:", err);
+            } else {
+              log.info("License file saved successfully at:", filePath);
+              licenseManager.setLicenseInfo(enrichedLicenseData);
+              licenseManager.isActivated = true;
+            }
+          });
+          return { success: true, data: enrichedLicenseData };
+        } else {
+          log.error("License assignment failed:", response.data.message);
+          // Return the actual error message from the server response
           return {
             success: false,
-            error: errorMessage,
-            errorDetails: error.response.data,
-            statusCode: error.response.status
+            error:
+              response.data.message ||
+              response.data.error ||
+              "License assignment failed",
+            errorDetails: response.data,
+          };
+        }
+      } catch (error) {
+        // Log the complete error for debugging
+        log.error("License assignment error:", error);
+
+        // Log the full error structure for debugging
+        if (error.response) {
+          log.error("Response data:", JSON.stringify(error.response.data));
+          log.error("Response status:", error.response.status);
+          log.error("Response headers:", error.response.headers);
+        }
+
+        if (error.response) {
+          // Handle specific response formats
+          if (error.response.data.inactiveLicenses) {
+            return {
+              success: false,
+              error:
+                error.response.data.error ||
+                error.response.data.message ||
+                "Found inactive licenses. Please revoke an existing license.",
+              inactiveLicenses: error.response.data.inactiveLicenses,
+              errorDetails: error.response.data,
+              statusCode: error.response.status,
+            };
+          } else if (error.response.data.activeLicenses) {
+            return {
+              success: false,
+              error:
+                error.response.data.error ||
+                error.response.data.message ||
+                "License is active on another device.",
+              activeLicenses: error.response.data.activeLicenses,
+              errorDetails: error.response.data,
+              statusCode: error.response.status,
+            };
+          } else {
+            // Extract the most specific error message available
+            const errorMessage =
+              error.response.data.error ||
+              error.response.data.message ||
+              (typeof error.response.data === "string"
+                ? error.response.data
+                : null) ||
+              error.message ||
+              "Unknown error from gateway server";
+
+            // Handle any other error response format from the gateway
+            return {
+              success: false,
+              error: errorMessage,
+              errorDetails: error.response.data,
+              statusCode: error.response.status,
+            };
+          }
+        } else {
+          // If there's no response at all (network error, timeout, etc.)
+          log.error("License connection error:", error.message);
+          return {
+            success: false,
+            error: error.message || "Gateway server did not respond in time.",
+            errorCode: error.code,
+            errorType: "connection",
           };
         }
       }
-      else {
-        // If there's no response at all (network error, timeout, etc.)
-        log.error("License connection error:", error.message);
-        return {
-          success: false,
-          error: error.message || "Gateway server did not respond in time.",
-          errorCode: error.code,
-          errorType: "connection"
-        };
-      }
     }
-  });
-
+  );
 
   ipcMain.handle("license:revoke-session", async (event, licenseData) => {
     log.info("Revoking license session:", licenseData);
@@ -812,9 +883,12 @@ function registerAuthHandlers(userDataPath) {
     const { sessionKey, ip, port } = licenseData;
 
     try {
-      const response = await axios.post(`http://${ip}:${port}/api/license/revoke-session`, {
-        sessionKey: sessionKey,
-      });
+      const response = await axios.post(
+        `http://${ip}:${port}/api/license/revoke-session`,
+        {
+          sessionKey: sessionKey,
+        }
+      );
 
       log.info("License revocation response:", response.data);
       if (response.data.success) {
@@ -827,8 +901,7 @@ function registerAuthHandlers(userDataPath) {
       log.error("License revocation error:", error.message);
       return { success: false, error: error.message };
     }
-  })
-
-};
+  });
+}
 
 module.exports = { registerAuthHandlers };

@@ -451,15 +451,14 @@ async function cleanupForUpdate(progressCallback) {
     UPDATE_LOG_PREFIX,
     "🚪 CLEANUP FUNCTION ENTRY CONFIRMED - Function is being called!"
   );
-  
+
   // Send initial progress update
   if (progressCallback) {
     progressCallback("Starting cleanup...", "Preparing to stop services");
   }
-  
-  performanceTracker.start("cleanup-process");
-  isPerformingCleanup = true;  // Set flag to prevent window-all-closed from quitting
 
+  performanceTracker.start("cleanup-process");
+  isPerformingCleanup = true; // Set flag to prevent window-all-closed from quitting
 
   logWithTimestamp(
     "info",
@@ -483,7 +482,7 @@ async function cleanupForUpdate(progressCallback) {
         UPDATE_LOG_PREFIX,
         "Step 1/6: Stopping Gateway Windows Service (Admin Mode)"
       );
-      
+
       // Update progress
       if (progressCallback) {
         progressCallback("Stopping services...", "This may take a moment");
@@ -493,49 +492,98 @@ async function cleanupForUpdate(progressCallback) {
       const serviceNames = ["LicensingServer"];
       for (const serviceName of serviceNames) {
         // Create a retry function for stopping services
-        const stopServiceWithRetry = (serviceName, maxRetries = 10, timeoutMs = 30000) => {
+        const stopServiceWithRetry = (
+          serviceName,
+          maxRetries = 10,
+          timeoutMs = 30000
+        ) => {
           const startTime = Date.now();
           let attempts = 0;
-          
-          while (attempts < maxRetries && (Date.now() - startTime) < timeoutMs) {
+
+          while (attempts < maxRetries && Date.now() - startTime < timeoutMs) {
             try {
               attempts++;
-              logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] Attempt ${attempts}/${maxRetries}: Stopping service ${serviceName}`);
-              
+              logWithTimestamp(
+                "info",
+                UPDATE_LOG_PREFIX,
+                `[CLEANUP] Attempt ${attempts}/${maxRetries}: Stopping service ${serviceName}`
+              );
+
               // First, try to stop the service
               try {
                 execSync(`sc stop "${serviceName}"`, { timeout: 5000 });
-                logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] Stop command sent for ${serviceName}`);
+                logWithTimestamp(
+                  "info",
+                  UPDATE_LOG_PREFIX,
+                  `[CLEANUP] Stop command sent for ${serviceName}`
+                );
               } catch (stopError) {
                 // Check if service is already stopped or doesn't exist
-                if (stopError.message.includes('1062') || stopError.message.includes('not started') || stopError.message.includes('1052') || stopError.message.includes('1060')) {
-                  logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] Service ${serviceName} was already stopped or doesn't exist`);
+                if (
+                  stopError.message.includes("1062") ||
+                  stopError.message.includes("not started") ||
+                  stopError.message.includes("1052") ||
+                  stopError.message.includes("1060")
+                ) {
+                  logWithTimestamp(
+                    "info",
+                    UPDATE_LOG_PREFIX,
+                    `[CLEANUP] Service ${serviceName} was already stopped or doesn't exist`
+                  );
                   return true;
                 }
                 // If it's a different error, we'll still try to verify status below
-                logWithTimestamp("warn", UPDATE_LOG_PREFIX, `[CLEANUP] Stop command error for ${serviceName}: ${stopError.message}`);
+                logWithTimestamp(
+                  "warn",
+                  UPDATE_LOG_PREFIX,
+                  `[CLEANUP] Stop command error for ${serviceName}: ${stopError.message}`
+                );
               }
-              
+
               // Now verify the service has actually stopped using sc query
               let verificationAttempts = 0;
               const maxVerificationAttempts = 5;
-              
+
               while (verificationAttempts < maxVerificationAttempts) {
                 try {
                   verificationAttempts++;
-                  const queryResult = execSync(`sc query "${serviceName}"`, { timeout: 3000, encoding: 'utf8' });
-                  
-                  logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] Verification attempt ${verificationAttempts}: Checking ${serviceName} status`);
-                  
+                  const queryResult = execSync(`sc query "${serviceName}"`, {
+                    timeout: 3000,
+                    encoding: "utf8",
+                  });
+
+                  logWithTimestamp(
+                    "info",
+                    UPDATE_LOG_PREFIX,
+                    `[CLEANUP] Verification attempt ${verificationAttempts}: Checking ${serviceName} status`
+                  );
+
                   // Check if service is stopped
-                  if (queryResult.includes('STATE') && (queryResult.includes('STOPPED') || queryResult.includes('1  STOPPED'))) {
-                    logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] ✅ Service ${serviceName} confirmed STOPPED on attempt ${attempts}`);
+                  if (
+                    queryResult.includes("STATE") &&
+                    (queryResult.includes("STOPPED") ||
+                      queryResult.includes("1  STOPPED"))
+                  ) {
+                    logWithTimestamp(
+                      "info",
+                      UPDATE_LOG_PREFIX,
+                      `[CLEANUP] ✅ Service ${serviceName} confirmed STOPPED on attempt ${attempts}`
+                    );
                     return true;
-                  } else if (queryResult.includes('STOP_PENDING') || queryResult.includes('3  STOP_PENDING')) {
-                    logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] Service ${serviceName} is stopping... waiting`);
+                  } else if (
+                    queryResult.includes("STOP_PENDING") ||
+                    queryResult.includes("3  STOP_PENDING")
+                  ) {
+                    logWithTimestamp(
+                      "info",
+                      UPDATE_LOG_PREFIX,
+                      `[CLEANUP] Service ${serviceName} is stopping... waiting`
+                    );
                     // Wait a bit for the service to finish stopping
                     try {
-                      execSync(`timeout /t 2 /nobreak > nul 2>&1`, { stdio: 'ignore' });
+                      execSync(`timeout /t 2 /nobreak > nul 2>&1`, {
+                        stdio: "ignore",
+                      });
                     } catch (_) {
                       const start = Date.now();
                       while (Date.now() - start < 2000) {
@@ -543,28 +591,51 @@ async function cleanupForUpdate(progressCallback) {
                       }
                     }
                   } else {
-                    logWithTimestamp("warn", UPDATE_LOG_PREFIX, `[CLEANUP] Service ${serviceName} still running, will retry stop command`);
+                    logWithTimestamp(
+                      "warn",
+                      UPDATE_LOG_PREFIX,
+                      `[CLEANUP] Service ${serviceName} still running, will retry stop command`
+                    );
                     break; // Exit verification loop to retry stop command
                   }
-                  
                 } catch (queryError) {
                   // Service doesn't exist or query failed
-                  if (queryError.message.includes('1060') || queryError.message.includes('does not exist')) {
-                    logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] ✅ Service ${serviceName} doesn't exist (already removed)`);
+                  if (
+                    queryError.message.includes("1060") ||
+                    queryError.message.includes("does not exist")
+                  ) {
+                    logWithTimestamp(
+                      "info",
+                      UPDATE_LOG_PREFIX,
+                      `[CLEANUP] ✅ Service ${serviceName} doesn't exist (already removed)`
+                    );
                     return true;
                   }
-                  logWithTimestamp("warn", UPDATE_LOG_PREFIX, `[CLEANUP] Query error for ${serviceName}: ${queryError.message}`);
+                  logWithTimestamp(
+                    "warn",
+                    UPDATE_LOG_PREFIX,
+                    `[CLEANUP] Query error for ${serviceName}: ${queryError.message}`
+                  );
                   break; // Exit verification loop to retry
                 }
               }
-              
+
               // If we get here, either verification failed or service is still running
-              logWithTimestamp("warn", UPDATE_LOG_PREFIX, `[CLEANUP] Service ${serviceName} not confirmed stopped, will retry`);
-              
+              logWithTimestamp(
+                "warn",
+                UPDATE_LOG_PREFIX,
+                `[CLEANUP] Service ${serviceName} not confirmed stopped, will retry`
+              );
+
               // Wait before retry (exponential backoff, max 5 seconds)
               const waitTime = Math.min(1000 * Math.pow(2, attempts - 1), 5000);
               try {
-                execSync(`timeout /t ${Math.ceil(waitTime/1000)} /nobreak > nul 2>&1`, { stdio: 'ignore' });
+                execSync(
+                  `timeout /t ${Math.ceil(
+                    waitTime / 1000
+                  )} /nobreak > nul 2>&1`,
+                  { stdio: "ignore" }
+                );
               } catch (_) {
                 // Fallback to setTimeout if timeout command fails
                 const start = Date.now();
@@ -572,14 +643,22 @@ async function cleanupForUpdate(progressCallback) {
                   // Busy wait
                 }
               }
-              
             } catch (error) {
-              logWithTimestamp("error", UPDATE_LOG_PREFIX, `[CLEANUP] Unexpected error on attempt ${attempts} for ${serviceName}: ${error.message}`);
-              
+              logWithTimestamp(
+                "error",
+                UPDATE_LOG_PREFIX,
+                `[CLEANUP] Unexpected error on attempt ${attempts} for ${serviceName}: ${error.message}`
+              );
+
               // Wait before retry
               const waitTime = Math.min(1000 * Math.pow(2, attempts - 1), 5000);
               try {
-                execSync(`timeout /t ${Math.ceil(waitTime/1000)} /nobreak > nul 2>&1`, { stdio: 'ignore' });
+                execSync(
+                  `timeout /t ${Math.ceil(
+                    waitTime / 1000
+                  )} /nobreak > nul 2>&1`,
+                  { stdio: "ignore" }
+                );
               } catch (_) {
                 const start = Date.now();
                 while (Date.now() - start < waitTime) {
@@ -588,19 +667,28 @@ async function cleanupForUpdate(progressCallback) {
               }
             }
           }
-          
-          logWithTimestamp("error", UPDATE_LOG_PREFIX, `[CLEANUP] ❌ Failed to stop and verify service ${serviceName} after ${attempts} attempts and ${Date.now() - startTime}ms`);
+
+          logWithTimestamp(
+            "error",
+            UPDATE_LOG_PREFIX,
+            `[CLEANUP] ❌ Failed to stop and verify service ${serviceName} after ${attempts} attempts and ${
+              Date.now() - startTime
+            }ms`
+          );
           return false;
         };
-        
-        try { 
+
+        try {
           stopServiceWithRetry(serviceName);
-        }
-        catch (_) { 
-          logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] Service ${serviceName} retry function completed`);
+        } catch (_) {
+          logWithTimestamp(
+            "info",
+            UPDATE_LOG_PREFIX,
+            `[CLEANUP] Service ${serviceName} retry function completed`
+          );
         }
       }
-      
+
       cleanupSteps.push({
         step: "Gateway Service Stop",
         status: "SUCCESS",
@@ -615,7 +703,7 @@ async function cleanupForUpdate(progressCallback) {
       UPDATE_LOG_PREFIX,
       "Step 2/6: Closing database connections"
     );
-    
+
     // Update progress
     if (progressCallback) {
       progressCallback("Closing database...", "Saving your data");
@@ -655,7 +743,7 @@ async function cleanupForUpdate(progressCallback) {
       UPDATE_LOG_PREFIX,
       "Step 3/6: Terminating Python backend (Admin Mode)"
     );
-    
+
     // Update progress
     if (progressCallback) {
       progressCallback("Stopping backend...", "Terminating Python processes");
@@ -703,23 +791,27 @@ async function cleanupForUpdate(progressCallback) {
       const killMethods = [
         'taskkill /IM "gatewayService.exe" /F',
         'taskkill /IM "gatewayService.exe" /F /T',
-        'wmic process where "name like \'%gateway%\'" delete',
-        'powershell -Command "Get-Process | Where-Object {$_.ProcessName -like \'*gateway*\'} | Stop-Process -Force"'
+        "wmic process where \"name like '%gateway%'\" delete",
+        "powershell -Command \"Get-Process | Where-Object {$_.ProcessName -like '*gateway*'} | Stop-Process -Force\"",
       ];
-      
+
       let killed = false;
       for (let i = 0; i < killMethods.length; i++) {
         try {
-          execSync(killMethods[i], { shell: true, windowsHide: true, timeout: 3000 });
+          execSync(killMethods[i], {
+            shell: true,
+            windowsHide: true,
+            timeout: 3000,
+          });
           killed = true;
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await new Promise((resolve) => setTimeout(resolve, 500));
         } catch (e) {
           // Continue with next method
         }
       }
-      
+
       // Verify it's actually dead
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       try {
         execSync('tasklist | find /I "gatewayService.exe"', { shell: true });
         logWithTimestamp(
@@ -781,11 +873,13 @@ async function cleanupForUpdate(progressCallback) {
             `Preserving main window during update cleanup`
           );
         } else {
-          window.removeAllListeners("close");
-          window.close();
-          windowsClosedCount++;
-        } catch (e) {
-          // Window might already be closing
+          try {
+            window.removeAllListeners("close");
+            window.close();
+            windowsClosedCount++;
+          } catch (e) {
+            // Window might already be closing
+          }
         }
       }
     });
@@ -793,7 +887,9 @@ async function cleanupForUpdate(progressCallback) {
     logWithTimestamp(
       "info",
       SUCCESS_LOG_PREFIX,
-      `Closed ${windowsClosedCount} windows, preserved ${installationWindowsFound} installation windows${mainWindowSkipped ? ' and main window' : ''}`
+      `Closed ${windowsClosedCount} windows, preserved ${installationWindowsFound} installation windows${
+        mainWindowSkipped ? " and main window" : ""
+      }`
     );
 
     cleanupSteps.push({
@@ -816,7 +912,7 @@ async function cleanupForUpdate(progressCallback) {
       UPDATE_LOG_PREFIX,
       "Admin privileges ensure clean termination - minimal wait required"
     );
-    
+
     // Update progress
     if (progressCallback) {
       progressCallback("Finalizing cleanup...", "Almost ready to install");
@@ -881,7 +977,7 @@ async function cleanupForUpdate(progressCallback) {
       "Continuing with update installation despite cleanup errors"
     );
   }
-  
+
   // Reset flag after cleanup completes
   isPerformingCleanup = false;
 }
@@ -1022,7 +1118,7 @@ autoUpdater.on("update-downloaded", (info) => {
         );
 
         // CRITICAL: Give UI time to update before starting heavy operations
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
         // Show minimal installation progress BEFORE cleanup
         logWithTimestamp(
@@ -1040,7 +1136,7 @@ autoUpdater.on("update-downloaded", (info) => {
           alwaysOnTop: true,
           show: false,
           transparent: false,
-          backgroundColor: '#ffffff',
+          backgroundColor: "#ffffff",
           webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
@@ -1197,16 +1293,16 @@ autoUpdater.on("update-downloaded", (info) => {
             UPDATE_LOG_PREFIX,
             "Installation progress window displayed to user"
           );
-          
+
           // Send initial progress update immediately
-          installingWindow.webContents.send('update-progress', { 
-            status: "Preparing update...", 
-            detail: "Starting cleanup process..." 
+          installingWindow.webContents.send("update-progress", {
+            status: "Preparing update...",
+            detail: "Starting cleanup process...",
           });
         });
 
         // CRITICAL: Wait for window to be fully shown before starting cleanup
-        await new Promise(resolve => {
+        await new Promise((resolve) => {
           if (installingWindow.isVisible()) {
             resolve();
           } else {
@@ -1225,7 +1321,10 @@ autoUpdater.on("update-downloaded", (info) => {
         // Store reference to send progress updates
         const sendProgressUpdate = (status, detail) => {
           if (installingWindow && !installingWindow.isDestroyed()) {
-            installingWindow.webContents.send('update-progress', { status, detail });
+            installingWindow.webContents.send("update-progress", {
+              status,
+              detail,
+            });
           }
         };
 
@@ -1235,7 +1334,7 @@ autoUpdater.on("update-downloaded", (info) => {
           UPDATE_LOG_PREFIX,
           "[DEBUG] launching installer"
         );
-        
+
         try {
           logWithTimestamp(
             "info",
@@ -1249,24 +1348,31 @@ autoUpdater.on("update-downloaded", (info) => {
           );
 
           performanceTracker.end("installation-process");
-          
+
           // 🧹 CRITICAL: Run cleanup BEFORE quitAndInstall while app is still fully running
           logWithTimestamp(
             "info",
             UPDATE_LOG_PREFIX,
             "🧹 Starting pre-installation cleanup process..."
           );
-          
+
           // Add detailed error handling around cleanup
           try {
-            logWithTimestamp("info", UPDATE_LOG_PREFIX, "🔧 About to call cleanupForUpdate()...");
-            
+            logWithTimestamp(
+              "info",
+              UPDATE_LOG_PREFIX,
+              "🔧 About to call cleanupForUpdate()..."
+            );
+
             // Send initial cleanup status
-            sendProgressUpdate("Starting cleanup...", "Preparing to stop services");
-            
+            sendProgressUpdate(
+              "Starting cleanup...",
+              "Preparing to stop services"
+            );
+
             // Run the comprehensive cleanup function
             await cleanupForUpdate(sendProgressUpdate);
-            
+
             logWithTimestamp(
               "info",
               UPDATE_LOG_PREFIX,
@@ -1281,10 +1387,10 @@ autoUpdater.on("update-downloaded", (info) => {
               {
                 error: cleanupError.message,
                 stack: cleanupError.stack,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
               }
             );
-            
+
             // Still try to proceed with installation
             logWithTimestamp(
               "warn",
@@ -1292,7 +1398,7 @@ autoUpdater.on("update-downloaded", (info) => {
               "⚠️ Proceeding with installation despite cleanup failure"
             );
           }
-          
+
           // Simple approach - let electron-updater handle everything
           logWithTimestamp(
             "info",
@@ -1300,25 +1406,27 @@ autoUpdater.on("update-downloaded", (info) => {
             "Calling autoUpdater.quitAndInstall",
             {
               isSilent: false,
-              isForceRunAfter: true
+              isForceRunAfter: true,
             }
           );
-          
+
           logWithTimestamp(
-            "info", 
+            "info",
             UPDATE_LOG_PREFIX,
             "🚀 LAUNCHING INSTALLER NOW - Application will close and installer will appear"
           );
-          
+
           // Final progress update before installer launches
-          sendProgressUpdate("Ready to install!", "The installer will launch in a moment...");
-          
+          sendProgressUpdate(
+            "Ready to install!",
+            "The installer will launch in a moment..."
+          );
+
           // Give user a moment to see the message
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+
           // This will show the installer UI properly now that allowElevation=true
           autoUpdater.quitAndInstall(false, true);
-          
         } catch (err) {
           performanceTracker.end("installation-process");
           const installError = {
@@ -1378,8 +1486,14 @@ autoUpdater.on("error", (err) => {
   if (performanceTracker.timers.has("installation-process"))
     performanceTracker.end("installation-process");
   // Suppress 403 errors (GitHub authentication issues)
-  if (err.message && (err.message.includes("403") || err.message.includes("AuthenticationFailed"))) {
-    log.info("Update check skipped - GitHub authentication token expired (this is normal after updates)");
+  if (
+    err.message &&
+    (err.message.includes("403") ||
+      err.message.includes("AuthenticationFailed"))
+  ) {
+    log.info(
+      "Update check skipped - GitHub authentication token expired (this is normal after updates)"
+    );
     win?.webContents.send("update-error", "");
     win?.setProgressBar(-1);
     return;
@@ -1507,7 +1621,7 @@ function getRecoverySuggestions(errorCategory) {
 let win = null;
 let splashWindow = null;
 let pythonProcess = null;
-let isPerformingCleanup = false;  // Add this flag
+let isPerformingCleanup = false; // Add this flag
 
 const BACKEND_PORT = 5000; // Replace with the port your backend is listening to
 
@@ -1754,34 +1868,48 @@ function createProtocol() {
 }
 
 function createSplashWindow() {
-  splashWindow = new BrowserWindow({
-    width: 400,
-    height: 300,
-    frame: false,
-    transparent: false,
-    resizable: false,
-    skipTaskbar: true,
-    show: false,
-    alwaysOnTop: true,
-    center: true,
-    webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
-    },
-  });
+  log.info("🎨 Creating splash window...");
 
-  const splashPath = path.join(__dirname, "/react-app/splash.html");
-  splashWindow.loadFile(splashPath);
+  try {
+    splashWindow = new BrowserWindow({
+      width: 400,
+      height: 300,
+      frame: false,
+      transparent: false,
+      resizable: false,
+      skipTaskbar: true,
+      show: false,
+      alwaysOnTop: true,
+      center: true,
+      webPreferences: {
+        nodeIntegration: true,
+        contextIsolation: false,
+      },
+    });
 
-  splashWindow.once("ready-to-show", () => {
-    log.info("Splashscreen ready to show");
-    splashWindow.show();
-  });
+    const splashPath = path.join(__dirname, "/react-app/splash.html");
+    log.info("🎨 Loading splash file:", splashPath);
 
-  splashWindow.on("closed", () => {
-    log.info("Splashscreen closed");
-    splashWindow = null;
-  });
+    splashWindow.loadFile(splashPath).catch((error) => {
+      log.error("❌ Failed to load splash file:", error);
+    });
+
+    splashWindow.once("ready-to-show", () => {
+      log.info("✅ Splash screen ready to show - displaying to user");
+      splashWindow.show();
+      log.info("✅ Splash screen is now visible");
+    });
+
+    splashWindow.on("closed", () => {
+      log.info("🔒 Splash screen closed");
+      splashWindow = null;
+    });
+
+    log.info("✅ Splash window instance created successfully");
+  } catch (error) {
+    log.error("❌ Failed to create splash window:", error);
+    throw error;
+  }
 }
 
 // Add this helper anywhere above createWindow():
@@ -1851,7 +1979,7 @@ async function createWindow() {
 
     // CRITICAL: Prevent immediate close and clean up listeners first
     event.preventDefault();
-    
+
     // Remove all SessionManager listeners to prevent "Object destroyed" errors
     try {
       sessionManager.removeAllListeners("remainingSecondsUpdated");
@@ -2230,25 +2358,64 @@ async function performUserDataMigration() {
 
 app.whenReady().then(async () => {
   const appStartTime = Date.now();
-  log.info("🚀 APP READY - STARTING INITIALIZATION SEQUENCE", {
+
+  // 🚀 ENHANCED STARTUP LOGGING
+  log.info("════════════════════════════════════════════════════════════════");
+  log.info("🚀 CYPHEREDGE APPLICATION STARTUP INITIATED");
+  log.info("════════════════════════════════════════════════════════════════");
+  log.info("📊 STARTUP ENVIRONMENT INFO", {
     userDataDir: userDataDir,
     appVersion: app.getVersion(),
     timestamp: new Date().toISOString(),
+    platform: process.platform,
+    arch: process.arch,
+    isPackaged: app.isPackaged,
+    execPath: process.execPath,
+    processId: process.pid,
+    nodeVersion: process.version,
+    electronVersion: process.versions.electron,
+    memoryUsage: process.memoryUsage(),
+    isElevated:
+      process.platform === "win32" ? "Checking..." : "N/A (Non-Windows)",
+    workingDirectory: process.cwd(),
+    commandLineArgs: process.argv,
   });
 
-  createSplashWindow();
+  // 🎯 STEP 0: CREATE SPLASH SCREEN FIRST
+  log.info("📋 INITIALIZATION STEP 0: SPLASH SCREEN CREATION");
+  try {
+    const splashStartTime = Date.now();
+    createSplashWindow();
+    const splashEndTime = Date.now();
+    log.info("✅ Splash screen created successfully", {
+      duration: splashEndTime - splashStartTime,
+      splashPath: path.join(__dirname, "/react-app/splash.html"),
+    });
+  } catch (error) {
+    log.error("❌ Splash screen creation failed:", error);
+    // Continue anyway - splash is not critical
+  }
 
   try {
     // 🔄 MIGRATE USER DATA FROM OLD APP (Critical first step)
     log.info("📋 INITIALIZATION STEP 1: USER DATA MIGRATION");
+    const migrationStartTime = Date.now();
     const migrationResult = await performUserDataMigration();
+    const migrationEndTime = Date.now();
+
     if (migrationResult.criticalError) {
-      log.error("💥 CRITICAL MIGRATION ERROR - CONTINUING WITH CAUTION");
-      // Continue with app initialization even if migration fails
+      log.error("💥 CRITICAL MIGRATION ERROR - CONTINUING WITH CAUTION", {
+        duration: migrationEndTime - migrationStartTime,
+        error: migrationResult,
+      });
+    } else {
+      log.info("✅ User data migration completed", {
+        duration: migrationEndTime - migrationStartTime,
+        result: migrationResult,
+      });
     }
 
     // 🗄️ Initialize Database AFTER migration (so it uses the migrated data)
-
     const dbStartTime = Date.now();
     log.info("📋 INITIALIZATION STEP 2: DATABASE INITIALIZATION");
     try {
@@ -2257,6 +2424,7 @@ app.whenReady().then(async () => {
       const dbEndTime = Date.now();
       log.info("✅ Database initialized successfully", {
         duration: dbEndTime - dbStartTime,
+        databasePath: path.join(userDataDir, "db.sqlite3"),
       });
     } catch (error) {
       log.error("❌ Database initialization failed:", error);
@@ -2264,6 +2432,7 @@ app.whenReady().then(async () => {
     }
 
     // 🏁 Check Update Success/Failure Flags
+    log.info("📋 CHECKING UPDATE FLAGS");
     const updateFlagPath = path.join(
       app.getPath("userData"),
       "update-success.txt"
@@ -2326,28 +2495,40 @@ app.whenReady().then(async () => {
     // 🚨 CRITICAL: Gateway server MUST start BEFORE license validation
 
     // 1. Start Gateway Server FIRST (needed for license validation)
+    log.info("📋 INITIALIZATION STEP 3: GATEWAY SERVER INITIALIZATION");
     try {
+      const gatewayStartTime = Date.now();
       log.info(
         "🚀 PHASE 1: Initializing Gateway Server (Required for License Validation)"
       );
       gatewayServer.init(GATEWAY_EXECUTABLE_DIR);
-      log.info("✅ Gateway server path configured");
+      log.info("✅ Gateway server path configured", {
+        executablePath: GATEWAY_EXECUTABLE_DIR,
+      });
 
       // 🔧 ROBUST GATEWAY INITIALIZATION with health checks and fallback
       await gatewayServer.initialize();
-      log.info("✅ Gateway server initialized and responding on port 7890");
+      const gatewayEndTime = Date.now();
+      log.info("✅ Gateway server initialized and responding on port 7890", {
+        duration: gatewayEndTime - gatewayStartTime,
+      });
     } catch (error) {
       log.error("❌ GatewayServer initialization failed:", error);
       throw error;
     }
 
     // 2. Initialize License Manager AFTER Gateway Server is ready
+    log.info("📋 INITIALIZATION STEP 4: LICENSE MANAGER INITIALIZATION");
     try {
+      const licenseStartTime = Date.now();
       log.info(
         "🚀 PHASE 2: Initializing License Manager (Gateway Server Available)"
       );
       const isLicenseValid = await licenseManager.init(app.getPath("userData"));
-      log.info("✅ License status:", isLicenseValid);
+      const licenseEndTime = Date.now();
+      log.info("✅ License status:", isLicenseValid, {
+        duration: licenseEndTime - licenseStartTime,
+      });
       log.info("✅ License Info Data:", licenseManager.licenseData);
     } catch (error) {
       log.error("❌ License initialization failed:", error);
@@ -2355,62 +2536,161 @@ app.whenReady().then(async () => {
     }
 
     // 3. Initialize Session Manager
+    log.info("📋 INITIALIZATION STEP 5: SESSION MANAGER INITIALIZATION");
     try {
+      const sessionStartTime = Date.now();
       log.info("🚀 PHASE 3: Initializing Session Manager");
       await sessionManager.init();
-      log.info("✅ SessionManager initialized successfully");
+      const sessionEndTime = Date.now();
+      log.info("✅ SessionManager initialized successfully", {
+        duration: sessionEndTime - sessionStartTime,
+      });
     } catch (error) {
       log.error("❌ SessionManager initialization failed:", error);
       throw error;
     }
 
+    // 4. Initialize System Information (POTENTIAL HANGING POINT - WATCH CLOSELY)
+    log.info("📋 INITIALIZATION STEP 6: SYSTEM INFORMATION GATHERING");
+    log.info(
+      "⚠️  CRITICAL STEP: This is where client machines might hang - monitoring closely..."
+    );
     try {
+      const systemInfoStartTime = Date.now();
+      log.info("🔍 Starting system information collection...");
+
       await systemInfo.loadData(app.getPath("userData"));
-      log.info("SystemInfo loaded successfully");
-      log.info(
-        "SystemInfo data:",
-        systemInfo.getHostname(),
-        systemInfo.getWindowsUserSID()
-      );
+
+      const systemInfoEndTime = Date.now();
+      log.info("✅ SystemInfo loaded successfully", {
+        duration: systemInfoEndTime - systemInfoStartTime,
+        hostname: systemInfo.getHostname(),
+        userSID: systemInfo.getWindowsUserSID(),
+        uuid: systemInfo.getUUID() ? "Present" : "Missing",
+        macAddress: systemInfo.getMACAddress(),
+      });
     } catch (error) {
-      log.error("SystemInfo initialization failed:", error);
+      log.error("❌ SystemInfo initialization failed:", error);
       throw error;
     }
-    syncTallyprimeFilesToUserData();
-    createProtocol();
-    createWindow();
 
+    // 5. File System Operations
+    log.info("📋 INITIALIZATION STEP 7: FILE SYSTEM SETUP");
+    try {
+      const fileSystemStartTime = Date.now();
+      syncTallyprimeFilesToUserData();
+      createProtocol();
+      const fileSystemEndTime = Date.now();
+      log.info("✅ File system operations completed", {
+        duration: fileSystemEndTime - fileSystemStartTime,
+      });
+    } catch (error) {
+      log.error("❌ File system setup failed:", error);
+      throw error;
+    }
+
+    // 6. Main Window Creation
+    log.info("📋 INITIALIZATION STEP 8: MAIN WINDOW CREATION");
+    try {
+      const windowStartTime = Date.now();
+      createWindow();
+      const windowEndTime = Date.now();
+      log.info("✅ Main window created successfully", {
+        duration: windowEndTime - windowStartTime,
+      });
+    } catch (error) {
+      log.error("❌ Main window creation failed:", error);
+      throw error;
+    }
+
+    // 7. Window Ready Event Setup
     win.once("ready-to-show", () => {
-      splashWindow?.close();
+      log.info("🎯 MAIN WINDOW READY TO SHOW - CLOSING SPLASH");
+      if (splashWindow) {
+        splashWindow.close();
+        log.info("✅ Splash window closed");
+      }
       win.show();
+      log.info("✅ Main window shown to user");
     });
 
+    // 8. Python Backend Initialization
+    log.info("📋 INITIALIZATION STEP 9: PYTHON BACKEND INITIALIZATION");
     try {
+      const pythonStartTime = Date.now();
       await startPythonExecutable();
+      const pythonEndTime = Date.now();
+      log.info("✅ Python backend initialized successfully", {
+        duration: pythonEndTime - pythonStartTime,
+      });
     } catch (error) {
-      log.error("Python initialization failed:", error);
+      log.error("❌ Python initialization failed:", error);
       throw error;
     }
 
     // 🔍 VERIFY ALL SERVICES ARE RUNNING
-    await verifyAllServicesRunning();
+    log.info("📋 INITIALIZATION STEP 10: SERVICES VERIFICATION");
+    try {
+      const verificationStartTime = Date.now();
+      await verifyAllServicesRunning();
+      const verificationEndTime = Date.now();
+      log.info("✅ All services verified as running", {
+        duration: verificationEndTime - verificationStartTime,
+      });
+    } catch (error) {
+      log.error("❌ Service verification failed:", error);
+      throw error;
+    }
 
     // Calculate total startup time
     const totalStartupTime = Date.now() - appStartTime;
-    log.info("🎉 APPLICATION STARTUP COMPLETED SUCCESSFULLY", {
+    log.info(
+      "════════════════════════════════════════════════════════════════"
+    );
+    log.info("🎉 APPLICATION STARTUP COMPLETED SUCCESSFULLY");
+    log.info(
+      "════════════════════════════════════════════════════════════════"
+    );
+    log.info("📊 STARTUP SUMMARY", {
       totalStartupTime: totalStartupTime,
       totalStartupSeconds: (totalStartupTime / 1000).toFixed(2),
       allServicesRunning: true,
+      timestamp: new Date().toISOString(),
     });
 
     // Initial update check after 1 minute
     if (!global.AppConfig.isDev) {
       setTimeout(() => {
+        log.info("🔄 Starting automatic update check");
         checkForUpdates();
       }, 60 * 1000);
     }
   } catch (error) {
-    log.error("Failed to initialize App:", error);
+    log.error(
+      "════════════════════════════════════════════════════════════════"
+    );
+    log.error("💥 CRITICAL STARTUP FAILURE");
+    log.error(
+      "════════════════════════════════════════════════════════════════"
+    );
+    log.error("❌ Failed to initialize App:", error);
+    log.error("🔍 Error details:", {
+      message: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString(),
+      totalTimeBeforeFailure: Date.now() - appStartTime,
+    });
+
+    // Show error dialog to user before quitting
+    if (splashWindow) {
+      splashWindow.close();
+    }
+
+    dialog.showErrorBox(
+      "CypherEdge Startup Error",
+      `Failed to start the application:\n\n${error.message}\n\nPlease check the logs for more details.`
+    );
+
     app.quit();
   }
 });
@@ -2420,14 +2700,16 @@ app.on("window-all-closed", () => {
   log.info("[DEBUG] isUpdating value:", isUpdating);
   log.info("[DEBUG] isPerformingCleanup value:", isPerformingCleanup);
   log.info("[DEBUG] platform:", process.platform);
-  
+
   if (process.platform !== "darwin") {
     // Don't quit if we're in the middle of an update or cleanup
     if (!isUpdating && !isPerformingCleanup) {
       log.info("[DEBUG] Neither updating nor cleaning up, calling app.quit()");
       app.quit();
     } else {
-      log.info("Skipping quit during update/cleanup process - installer will handle it");
+      log.info(
+        "Skipping quit during update/cleanup process - installer will handle it"
+      );
     }
   }
 });
@@ -2435,7 +2717,7 @@ app.on("window-all-closed", () => {
 app.on("will-quit", (event) => {
   log.info("App is quitting");
   log.info("isUpdating flag:", isUpdating);
-  
+
   // Clean up SessionManager listeners before quit
   try {
     sessionManager.removeAllListeners("remainingSecondsUpdated");
@@ -2444,11 +2726,11 @@ app.on("will-quit", (event) => {
   } catch (err) {
     log.error("Error cleaning up SessionManager listeners on quit:", err);
   }
-  
+
   if (isUpdating) {
     log.info("Auto install update on quit");
   }
-  
+
   sessionManager.logoutUser();
   if (pythonProcess) {
     log.info("Stopping Python process...");
@@ -2459,57 +2741,110 @@ app.on("will-quit", (event) => {
 // Compact cleanup function for update process
 const stopEverythingNeatly = async () => {
   try {
-    logWithTimestamp("info", UPDATE_LOG_PREFIX, "[CLEANUP] Starting aggressive gateway termination...");
-    
+    logWithTimestamp(
+      "info",
+      UPDATE_LOG_PREFIX,
+      "[CLEANUP] Starting aggressive gateway termination..."
+    );
+
     // 1. Stop Gateway Windows Service (try both possible service names)
     if (process.platform === "win32") {
       // Try stopping both services
       const serviceNames = ["LicensingServer"];
       for (const serviceName of serviceNames) {
         // Create a retry function for stopping services
-        const stopServiceWithRetry = (serviceName, maxRetries = 10, timeoutMs = 30000) => {
+        const stopServiceWithRetry = (
+          serviceName,
+          maxRetries = 10,
+          timeoutMs = 30000
+        ) => {
           const startTime = Date.now();
           let attempts = 0;
-          
-          while (attempts < maxRetries && (Date.now() - startTime) < timeoutMs) {
+
+          while (attempts < maxRetries && Date.now() - startTime < timeoutMs) {
             try {
               attempts++;
-              logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] Attempt ${attempts}/${maxRetries}: Stopping service ${serviceName}`);
-              
+              logWithTimestamp(
+                "info",
+                UPDATE_LOG_PREFIX,
+                `[CLEANUP] Attempt ${attempts}/${maxRetries}: Stopping service ${serviceName}`
+              );
+
               // First, try to stop the service
               try {
                 execSync(`sc stop "${serviceName}"`, { timeout: 5000 });
-                logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] Stop command sent for ${serviceName}`);
+                logWithTimestamp(
+                  "info",
+                  UPDATE_LOG_PREFIX,
+                  `[CLEANUP] Stop command sent for ${serviceName}`
+                );
               } catch (stopError) {
                 // Check if service is already stopped or doesn't exist
-                if (stopError.message.includes('1062') || stopError.message.includes('not started') || stopError.message.includes('1052') || stopError.message.includes('1060')) {
-                  logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] Service ${serviceName} was already stopped or doesn't exist`);
+                if (
+                  stopError.message.includes("1062") ||
+                  stopError.message.includes("not started") ||
+                  stopError.message.includes("1052") ||
+                  stopError.message.includes("1060")
+                ) {
+                  logWithTimestamp(
+                    "info",
+                    UPDATE_LOG_PREFIX,
+                    `[CLEANUP] Service ${serviceName} was already stopped or doesn't exist`
+                  );
                   return true;
                 }
                 // If it's a different error, we'll still try to verify status below
-                logWithTimestamp("warn", UPDATE_LOG_PREFIX, `[CLEANUP] Stop command error for ${serviceName}: ${stopError.message}`);
+                logWithTimestamp(
+                  "warn",
+                  UPDATE_LOG_PREFIX,
+                  `[CLEANUP] Stop command error for ${serviceName}: ${stopError.message}`
+                );
               }
-              
+
               // Now verify the service has actually stopped using sc query
               let verificationAttempts = 0;
               const maxVerificationAttempts = 5;
-              
+
               while (verificationAttempts < maxVerificationAttempts) {
                 try {
                   verificationAttempts++;
-                  const queryResult = execSync(`sc query "${serviceName}"`, { timeout: 3000, encoding: 'utf8' });
-                  
-                  logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] Verification attempt ${verificationAttempts}: Checking ${serviceName} status`);
-                  
+                  const queryResult = execSync(`sc query "${serviceName}"`, {
+                    timeout: 3000,
+                    encoding: "utf8",
+                  });
+
+                  logWithTimestamp(
+                    "info",
+                    UPDATE_LOG_PREFIX,
+                    `[CLEANUP] Verification attempt ${verificationAttempts}: Checking ${serviceName} status`
+                  );
+
                   // Check if service is stopped
-                  if (queryResult.includes('STATE') && (queryResult.includes('STOPPED') || queryResult.includes('1  STOPPED'))) {
-                    logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] ✅ Service ${serviceName} confirmed STOPPED on attempt ${attempts}`);
+                  if (
+                    queryResult.includes("STATE") &&
+                    (queryResult.includes("STOPPED") ||
+                      queryResult.includes("1  STOPPED"))
+                  ) {
+                    logWithTimestamp(
+                      "info",
+                      UPDATE_LOG_PREFIX,
+                      `[CLEANUP] ✅ Service ${serviceName} confirmed STOPPED on attempt ${attempts}`
+                    );
                     return true;
-                  } else if (queryResult.includes('STOP_PENDING') || queryResult.includes('3  STOP_PENDING')) {
-                    logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] Service ${serviceName} is stopping... waiting`);
+                  } else if (
+                    queryResult.includes("STOP_PENDING") ||
+                    queryResult.includes("3  STOP_PENDING")
+                  ) {
+                    logWithTimestamp(
+                      "info",
+                      UPDATE_LOG_PREFIX,
+                      `[CLEANUP] Service ${serviceName} is stopping... waiting`
+                    );
                     // Wait a bit for the service to finish stopping
                     try {
-                      execSync(`timeout /t 2 /nobreak > nul 2>&1`, { stdio: 'ignore' });
+                      execSync(`timeout /t 2 /nobreak > nul 2>&1`, {
+                        stdio: "ignore",
+                      });
                     } catch (_) {
                       const start = Date.now();
                       while (Date.now() - start < 2000) {
@@ -2517,28 +2852,51 @@ const stopEverythingNeatly = async () => {
                       }
                     }
                   } else {
-                    logWithTimestamp("warn", UPDATE_LOG_PREFIX, `[CLEANUP] Service ${serviceName} still running, will retry stop command`);
+                    logWithTimestamp(
+                      "warn",
+                      UPDATE_LOG_PREFIX,
+                      `[CLEANUP] Service ${serviceName} still running, will retry stop command`
+                    );
                     break; // Exit verification loop to retry stop command
                   }
-                  
                 } catch (queryError) {
                   // Service doesn't exist or query failed
-                  if (queryError.message.includes('1060') || queryError.message.includes('does not exist')) {
-                    logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] ✅ Service ${serviceName} doesn't exist (already removed)`);
+                  if (
+                    queryError.message.includes("1060") ||
+                    queryError.message.includes("does not exist")
+                  ) {
+                    logWithTimestamp(
+                      "info",
+                      UPDATE_LOG_PREFIX,
+                      `[CLEANUP] ✅ Service ${serviceName} doesn't exist (already removed)`
+                    );
                     return true;
                   }
-                  logWithTimestamp("warn", UPDATE_LOG_PREFIX, `[CLEANUP] Query error for ${serviceName}: ${queryError.message}`);
+                  logWithTimestamp(
+                    "warn",
+                    UPDATE_LOG_PREFIX,
+                    `[CLEANUP] Query error for ${serviceName}: ${queryError.message}`
+                  );
                   break; // Exit verification loop to retry
                 }
               }
-              
+
               // If we get here, either verification failed or service is still running
-              logWithTimestamp("warn", UPDATE_LOG_PREFIX, `[CLEANUP] Service ${serviceName} not confirmed stopped, will retry`);
-              
+              logWithTimestamp(
+                "warn",
+                UPDATE_LOG_PREFIX,
+                `[CLEANUP] Service ${serviceName} not confirmed stopped, will retry`
+              );
+
               // Wait before retry (exponential backoff, max 5 seconds)
               const waitTime = Math.min(1000 * Math.pow(2, attempts - 1), 5000);
               try {
-                execSync(`timeout /t ${Math.ceil(waitTime/1000)} /nobreak > nul 2>&1`, { stdio: 'ignore' });
+                execSync(
+                  `timeout /t ${Math.ceil(
+                    waitTime / 1000
+                  )} /nobreak > nul 2>&1`,
+                  { stdio: "ignore" }
+                );
               } catch (_) {
                 // Fallback to setTimeout if timeout command fails
                 const start = Date.now();
@@ -2546,14 +2904,22 @@ const stopEverythingNeatly = async () => {
                   // Busy wait
                 }
               }
-              
             } catch (error) {
-              logWithTimestamp("error", UPDATE_LOG_PREFIX, `[CLEANUP] Unexpected error on attempt ${attempts} for ${serviceName}: ${error.message}`);
-              
+              logWithTimestamp(
+                "error",
+                UPDATE_LOG_PREFIX,
+                `[CLEANUP] Unexpected error on attempt ${attempts} for ${serviceName}: ${error.message}`
+              );
+
               // Wait before retry
               const waitTime = Math.min(1000 * Math.pow(2, attempts - 1), 5000);
               try {
-                execSync(`timeout /t ${Math.ceil(waitTime/1000)} /nobreak > nul 2>&1`, { stdio: 'ignore' });
+                execSync(
+                  `timeout /t ${Math.ceil(
+                    waitTime / 1000
+                  )} /nobreak > nul 2>&1`,
+                  { stdio: "ignore" }
+                );
               } catch (_) {
                 const start = Date.now();
                 while (Date.now() - start < waitTime) {
@@ -2562,26 +2928,43 @@ const stopEverythingNeatly = async () => {
               }
             }
           }
-          
-          logWithTimestamp("error", UPDATE_LOG_PREFIX, `[CLEANUP] ❌ Failed to stop and verify service ${serviceName} after ${attempts} attempts and ${Date.now() - startTime}ms`);
+
+          logWithTimestamp(
+            "error",
+            UPDATE_LOG_PREFIX,
+            `[CLEANUP] ❌ Failed to stop and verify service ${serviceName} after ${attempts} attempts and ${
+              Date.now() - startTime
+            }ms`
+          );
           return false;
         };
-        
-        try { 
+
+        try {
           stopServiceWithRetry(serviceName);
-        }
-        catch (_) { 
-          logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] Service ${serviceName} retry function completed`);
+        } catch (_) {
+          logWithTimestamp(
+            "info",
+            UPDATE_LOG_PREFIX,
+            `[CLEANUP] Service ${serviceName} retry function completed`
+          );
         }
       }
-      
+
       // Wait for services to fully stop
-      logWithTimestamp("info", UPDATE_LOG_PREFIX, "[CLEANUP] Waiting for services to stop...");
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
+      logWithTimestamp(
+        "info",
+        UPDATE_LOG_PREFIX,
+        "[CLEANUP] Waiting for services to stop..."
+      );
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+
       // Kill gateway processes aggressively
-      logWithTimestamp("info", UPDATE_LOG_PREFIX, "[CLEANUP] Force terminating gateway processes...");
-      
+      logWithTimestamp(
+        "info",
+        UPDATE_LOG_PREFIX,
+        "[CLEANUP] Force terminating gateway processes..."
+      );
+
       // Try multiple kill methods
       const killMethods = [
         // Method 1: Kill by exact name
@@ -2589,28 +2972,43 @@ const stopEverythingNeatly = async () => {
         // Method 2: Kill with tree
         'taskkill /IM "gatewayService.exe" /F /T',
         // Method 3: Kill any gateway pattern
-        'wmic process where "name like \'%gateway%\'" delete',
+        "wmic process where \"name like '%gateway%'\" delete",
         // Method 4: PowerShell force kill
-        'powershell -Command "Get-Process | Where-Object {$_.ProcessName -like \'*gateway*\'} | Stop-Process -Force"'
+        "powershell -Command \"Get-Process | Where-Object {$_.ProcessName -like '*gateway*'} | Stop-Process -Force\"",
       ];
-      
+
       for (let i = 0; i < killMethods.length; i++) {
         try {
-          logWithTimestamp("info", UPDATE_LOG_PREFIX, `[CLEANUP] Kill method ${i + 1}: ${killMethods[i].substring(0, 30)}...`);
+          logWithTimestamp(
+            "info",
+            UPDATE_LOG_PREFIX,
+            `[CLEANUP] Kill method ${i + 1}: ${killMethods[i].substring(
+              0,
+              30
+            )}...`
+          );
           execSync(killMethods[i], { shell: true, windowsHide: true });
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await new Promise((resolve) => setTimeout(resolve, 500));
         } catch (e) {
           // Continue with next method
         }
       }
-      
+
       // Final verification
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       try {
         execSync('tasklist | find /I "gatewayService.exe"', { shell: true });
-        logWithTimestamp("warn", UPDATE_LOG_PREFIX, "[CLEANUP] Gateway process might still be running");
+        logWithTimestamp(
+          "warn",
+          UPDATE_LOG_PREFIX,
+          "[CLEANUP] Gateway process might still be running"
+        );
       } catch (e) {
-        logWithTimestamp("info", UPDATE_LOG_PREFIX, "[CLEANUP] Gateway process successfully terminated");
+        logWithTimestamp(
+          "info",
+          UPDATE_LOG_PREFIX,
+          "[CLEANUP] Gateway process successfully terminated"
+        );
       }
     }
 
@@ -2619,28 +3017,48 @@ const stopEverythingNeatly = async () => {
       const db = databaseManager.getInstance()?.getDatabase();
       if (db) {
         db.close();
-        logWithTimestamp("info", UPDATE_LOG_PREFIX, "[CLEANUP] Closed database connection");
+        logWithTimestamp(
+          "info",
+          UPDATE_LOG_PREFIX,
+          "[CLEANUP] Closed database connection"
+        );
       }
     } catch (_) {}
 
     // 3. Kill Python backend
     if (pythonProcess) {
       pythonProcess.kill("SIGTERM");
-      logWithTimestamp("info", UPDATE_LOG_PREFIX, "[CLEANUP] Terminated Python backend");
+      logWithTimestamp(
+        "info",
+        UPDATE_LOG_PREFIX,
+        "[CLEANUP] Terminated Python backend"
+      );
     }
-    
-    logWithTimestamp("info", UPDATE_LOG_PREFIX, "[CLEANUP] Gateway termination complete");
+
+    logWithTimestamp(
+      "info",
+      UPDATE_LOG_PREFIX,
+      "[CLEANUP] Gateway termination complete"
+    );
   } catch (e) {
-    logWithTimestamp("error", UPDATE_LOG_PREFIX, `[CLEANUP] stopEverythingNeatly error: ${e.message}`);
+    logWithTimestamp(
+      "error",
+      UPDATE_LOG_PREFIX,
+      `[CLEANUP] stopEverythingNeatly error: ${e.message}`
+    );
   }
 };
 
 // Critical for auto-updater to work!
 app.on("before-quit-for-update", async () => {
-  logWithTimestamp("info", UPDATE_LOG_PREFIX, "Before quit for update triggered");
+  logWithTimestamp(
+    "info",
+    UPDATE_LOG_PREFIX,
+    "Before quit for update triggered"
+  );
   // Prevent normal quit behavior during update
   isUpdating = true;
-  
+
   // Run cleanup
   await stopEverythingNeatly();
 });
@@ -2669,27 +3087,40 @@ function checkForUpdates() {
   }
 
   // Check if we recently updated (within 15 minutes)
-  const updateFlagPath = path.join(app.getPath("userData"), "update-success.txt");
-  const gracePeriodPath = path.join(app.getPath("userData"), "update-grace-period.json");
-  
+  const updateFlagPath = path.join(
+    app.getPath("userData"),
+    "update-success.txt"
+  );
+  const gracePeriodPath = path.join(
+    app.getPath("userData"),
+    "update-grace-period.json"
+  );
+
   try {
     // Check if update just completed
     if (fs.existsSync(updateFlagPath)) {
       // Create grace period file
-      fs.writeFileSync(gracePeriodPath, JSON.stringify({
-        timestamp: Date.now(),
-        version: app.getVersion()
-      }));
+      fs.writeFileSync(
+        gracePeriodPath,
+        JSON.stringify({
+          timestamp: Date.now(),
+          version: app.getVersion(),
+        })
+      );
     }
-    
+
     // Check if we're in grace period
     if (fs.existsSync(gracePeriodPath)) {
-      const graceData = JSON.parse(fs.readFileSync(gracePeriodPath, 'utf8'));
+      const graceData = JSON.parse(fs.readFileSync(gracePeriodPath, "utf8"));
       const timeSinceUpdate = Date.now() - graceData.timestamp;
-      
+
       // Skip update check if within 15 minutes of update
       if (timeSinceUpdate < 15 * 60 * 1000) {
-        log.info(`Skipping update check - in grace period (${Math.round(timeSinceUpdate/1000/60)} minutes since update)`);
+        log.info(
+          `Skipping update check - in grace period (${Math.round(
+            timeSinceUpdate / 1000 / 60
+          )} minutes since update)`
+        );
         return;
       } else {
         // Grace period expired, remove file
