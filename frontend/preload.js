@@ -208,8 +208,8 @@ contextBridge.exposeInMainWorld("electron", {
       uploadData
     ),
 
-  getTallyTransactions: (caseId) =>
-    ipcRenderer.invoke("get-tally-transactions", caseId),
+  getTallyTransactions: (caseId,individualId) =>
+    ipcRenderer.invoke("get-tally-transactions", caseId,individualId),
   getTallyVouchers: () => ipcRenderer.invoke("get-tally-vouchers"),
   getProgressed: () => ipcRenderer.invoke("get-user-progress"),
 
