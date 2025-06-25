@@ -799,7 +799,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
           console.log({
             files: scannedOCRFiles,
             caseName,
-            is_ocr: true,
             soure: "add-pdf",
           });
           try {

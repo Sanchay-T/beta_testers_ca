@@ -767,13 +767,7 @@ function generateReportIpc(tmpdir_path) {
 
   ipcMain.handle(
     "generate-report",
-    async (
-      event,
-      receivedResult,
-      caseName,
-      is_ocr,
-      source = "generate-report"
-    ) => {
+    async (event, receivedResult, caseName, source = "generate-report") => {
       try {
         const { success, data } = await checkStatementLimit();
         if (!success) {
@@ -855,7 +849,7 @@ function generateReportIpc(tmpdir_path) {
 
         let whole_transaction_sheet = null;
         let transactionsForCase = null;
-        log.info({aqsource:source})
+        log.info({ aqsource: source });
         if (source === "add-pdf") {
           try {
             transactionsForCase = await db
@@ -912,7 +906,7 @@ function generateReportIpc(tmpdir_path) {
           end_date: fileDetails.map((d) => d.end_date || ""),
           ca_id: caseName || "DEFAULT_CASE",
           whole_transaction_sheet,
-          is_ocr,
+          is_ocr: fileDetails.map((d) => d.is_ocr || false),
         };
 
         log.info("Sending API request with payload:", payload);
@@ -1256,7 +1250,15 @@ function generateReportIpc(tmpdir_path) {
 
       whole_transaction_sheet = updatedTransactions || null;
       // log.info("Whole Transaction Sheet: ",whole_transaction_sheet.length);
-
+      const isOcrCandidate = (reason = "") => {
+        const r = reason.toLowerCase();
+        return (
+          r.includes("image-only") ||
+          r.includes("scanned") ||
+          r.includes("non-text") ||
+          r.includes("encoded")
+        );
+      };
       const payload = {
         bank_names: result.map((d) => d.bankName),
         pdf_paths: result.map((d) => d.path),
@@ -1266,9 +1268,11 @@ function generateReportIpc(tmpdir_path) {
         ca_id: caseId || "DEFAULT_CASE",
         aiyazs_array_of_array: result.map((d) => d.rectifiedColumns || ""),
         whole_transaction_sheet: whole_transaction_sheet,
-        is_ocr:[true]
+        is_ocr: result.map((d)=>isOcrCandidate(d.respectiveReasonsForError)),
         // whole_transaction_sheet:result.map((d) => d.whole_transaction_sheet || ""),
       };
+
+      console.log({rectifyPayload: payload});
 
       const finalPayload = preprocessPayload(payload);
 

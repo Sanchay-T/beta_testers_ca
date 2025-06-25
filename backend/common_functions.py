@@ -347,7 +347,7 @@ def convert_csv_to_excel(csv_path, CA_ID):
     return excel_path
 
 
-def extraction_process(bank, pdf_path, pdf_password, start_date, end_date, is_ocr):
+def extraction_process(bank, pdf_path, pdf_password, start_date, end_date, isthis_ocr):
     CA_ID = "1234_temp"
     empty_idf = pd.DataFrame()
     default_name_n_num = ["_", "XXXXXXXXXX"]
@@ -355,7 +355,7 @@ def extraction_process(bank, pdf_path, pdf_password, start_date, end_date, is_oc
     # bank = re.sub(r"\d+", "", bank)
     ext = extract_extension(pdf_path)
 
-    if is_ocr:
+    if isthis_ocr:
         try:
             if ext == ".pdf":
                 idf, text, explicit_lines = extract_with_test_cases_ocr(bank, pdf_path, pdf_password, CA_ID)

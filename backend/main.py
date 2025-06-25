@@ -86,7 +86,7 @@ class BankStatementRequest(BaseModel):
     ca_id: str
     whole_transaction_sheet: Optional[List[dict]] = None
     aiyazs_array_of_array: Optional[List[List[ColumnData]]]=None
-    is_ocr: Optional[bool] = False
+    is_ocr: List[bool]
     
 class EditCategoryRequest(BaseModel):
     transaction_data: List[dict]

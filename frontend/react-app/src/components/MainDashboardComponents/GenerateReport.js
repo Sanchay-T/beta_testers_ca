@@ -93,7 +93,7 @@ export default function GenerateReport({ activeTab }) {
       id: null,
       name: caseName,
       userId: null,
-      status: "Pending",
+      status: "Processing",
       pages: null,
       createdAt: new Date().toLocaleDateString("en-GB", {
         day: "2-digit",
@@ -170,17 +170,8 @@ export default function GenerateReport({ activeTab }) {
       setCurrentCaseId(result.data.caseId); // Store caseId
       console.log({ result });
       if (result.success) {
-        clearInterval(progressIntervalRef.current);
-        setProgress(100);
-        toast.dismiss(newToastId);
-
-        // open dialog and everything
-
-        setLoading(false);
-        localStorage.removeItem("dashboardData");
-        // refreshPage();
-        progressIntervalRef.current = null;
         setDialogOpen(true); // Open the Dialog
+        toast.dismiss(newToastId);
 
         console.log("Report generated successfully:", result.data);
         if (result.data.failedFiles.length > 0) {
@@ -274,7 +265,7 @@ export default function GenerateReport({ activeTab }) {
           });
         }
 
-        if(result.data.totalTransactions>0) {
+        if (result.data.totalTransactions > 0) {
           setShowAnalysisButton(true);
         }
 
@@ -320,36 +311,231 @@ export default function GenerateReport({ activeTab }) {
           start_date: startDates[i],
           end_date: endDates[i],
           ca_id: result.data.caseId,
-          is_ocr: [true],
+          is_ocr: true,
         }));
 
+        console.log({ scannedOCRFiles });
         // If any OCR-worthy files found
         if (eligibleIndexes.length > 0) {
-          toast({
-            title: "OCR Triggered",
-            description: `Detected scanned or encoded PDFs.`,
-            variant: "default",
-            duration: 5000,
+          const newData = {
+            id: result.data.caseId,
+            name: caseName,
+            userId: null,
+            status: "Processing",
+            pages: null,
+            createdAt: new Date().toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            }),
+            // statements: null,
+          };
+
+          updateReportData({
+            recentReportsData: [newData, ...reportData.recentReportsData],
           });
 
-          console.log( {files: scannedOCRFiles ,
-              caseName,
-              is_ocr:true,
-              soure:"add-pdf"});
+          toast({
+            id: newToastId,
+            title: "Running OCR",
+            description: (
+              <div className="mt-2 w-full flex items-center gap-2">
+                <div className="flex items-center gap-4">
+                  <CircularProgress className="w-full" />
+                </div>
+                <p className="text-sm text-gray-500">
+                  Processing scanned/encoded PDFs…
+                </p>
+              </div>
+            ),
+            variant: "default",
+            duration: Infinity,
+          });
+          // toast({
+          //   title: "OCR Triggered",
+          //   description: `Detected scanned or encoded PDFs.`,
+          //   variant: "default",
+          //   duration: 5000,
+          // });
+
+          console.log({
+            files: scannedOCRFiles,
+            caseName,
+            is_ocr: true,
+            soure: "add-pdf",
+          });
           try {
             const ocrResult = await window.electron.generateReportIpc(
               { files: scannedOCRFiles },
               caseName,
-              true,
               "add-pdf"
             );
 
+            setFailedStatements([]);
+            setSuccessfulStatements([]);
+            setShowRectifyButton(false);
+            setShowAnalysisButton(false);
+            setMissingMonthsList([]);
+            setWarning([]);
+
             console.log("OCR Result:", ocrResult);
 
-            toast({
-              title: "OCR Completed",
-              variant: "success",
-            });
+            if (
+              ocrResult.data.missingMonthsList &&
+              ocrResult.data.missingMonthsList.length > 0
+            ) {
+              setMissingMonthsList(ocrResult.data.missingMonthsList);
+            }
+
+            if (ocrResult.data.warning && ocrResult.data.warning.length > 0) {
+              const formattedWarnings = ocrResult.data.warning.filter(
+                (warn) => {
+                  return warn && warn.trim() !== ""; // Return true for non-empty warnings
+                }
+              );
+
+              const uniqueWarnings = Array.from(new Set(formattedWarnings)); // Remove duplicates
+              setWarning(uniqueWarnings);
+            }
+
+            // setCurrentCaseId(ocrResult.data.caseId); // Store caseId
+            console.log({ ocrResult });
+            if (ocrResult.success) {
+              setDialogOpen(true); // Open the Dialog
+              toast.dismiss(newToastId);
+
+              console.log("ocrResult generated successfully:", ocrResult.data);
+              if (ocrResult.data.failedFiles.length > 0) {
+                setShowRectifyButton(true);
+                const failedFiles = ocrResult.data.failedFiles.map(
+                  (file_path) => {
+                    // Get the filename from the path and remove the timestamp
+                    const filename = file_path.split("\\").pop(); // Get filename from path
+                    const filenameWithoutTimestamp = filename.substring(
+                      filename.indexOf("-") + 1
+                    ); // Remove everything before first hyphen
+                    return filenameWithoutTimestamp;
+                  }
+                );
+                setFailedStatements(failedFiles || []); // Store failed
+
+                const newData = {
+                  id: ocrResult.data.caseId,
+                  name: caseName,
+                  userId: null,
+                  status: "Failed",
+                  pages: null,
+                  createdAt: new Date().toLocaleDateString("en-GB", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  }),
+                  statements: null,
+                };
+
+                // setShowRectifyButton(true);
+                const successfulFiles = ocrResult.data.successfulFiles.map(
+                  (file_path) => {
+                    // Get the filename from the path and remove the timestamp
+                    const filename = file_path.split("\\").pop(); // Get filename from path
+                    const filenameWithoutTimestamp = filename.substring(
+                      filename.indexOf("-") + 1
+                    ); // Remove everything before first hyphen
+                    return filenameWithoutTimestamp;
+                  }
+                );
+                setSuccessfulStatements(successfulFiles || []); // Store successful
+
+                updateReportData({
+                  recentReportsData: [newData, ...reportData.recentReportsData],
+                });
+
+                if (activeTab !== "Generate Report")
+                  toast({
+                    title: "Failed",
+                    description: `${caseName} report had some issues!`,
+                    variant: "destructive",
+                  });
+              } else {
+                // setShowRectifyButton(true);
+                const successfulFiles = ocrResult.data.successfulFiles.map(
+                  (file_path) => {
+                    // Get the filename from the path and remove the timestamp
+                    const filename = file_path.split("\\").pop(); // Get filename from path
+                    const filenameWithoutTimestamp = filename.substring(
+                      filename.indexOf("-") + 1
+                    ); // Remove everything before first hyphen
+                    return filenameWithoutTimestamp;
+                  }
+                );
+                setSuccessfulStatements(successfulFiles || []); // Store successful
+
+                const newData = {
+                  id: ocrResult.data.caseId,
+                  name: caseName,
+                  userId: null,
+                  status: "Success",
+                  pages: null,
+                  createdAt: new Date().toLocaleDateString("en-GB", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  }),
+                  // statements: null,
+                };
+
+                updateReportData({
+                  recentReportsData: [newData, ...reportData.recentReportsData],
+                });
+              }
+
+              if (
+                ocrResult.data.totalTransactions &&
+                activeTab !== "Generate Report"
+              ) {
+                toast({
+                  title: "Success",
+                  description: `${caseName} report generated successfully!`,
+                  duration: Infinity,
+                  variant: "success",
+                });
+              }
+
+              if (ocrResult.data.totalTransactions > 0) {
+                setShowAnalysisButton(true);
+              }
+
+              // setFailedStatements(ocrResult.pdf_paths_not_extracted || []); // Store failed
+              setSelectedFiles([]);
+              setFileDetails([]);
+
+              clearInterval(progressIntervalRef.current);
+              setProgress(100);
+              toast.dismiss(newToastId);
+
+              // open dialog and everything
+
+              setLoading(false);
+              localStorage.removeItem("dashboardData");
+              // refreshPage();
+              progressIntervalRef.current = null;
+
+              // Trigger a page refresh
+              // refreshPage();
+            } else {
+              const errorMessage = result.error
+                ? typeof result.error === "object"
+                  ? JSON.stringify(result.error, null, 2)
+                  : result.error
+                : "Unknown error occurred";
+
+              throw new Error(errorMessage);
+            }
+
+            // toast({
+            //   title: "OCR Completed",
+            //   variant: "success",
+            // });
           } catch (ocrErr) {
             toast({
               title: "OCR Failed",
@@ -359,6 +545,16 @@ export default function GenerateReport({ activeTab }) {
             console.error("OCR error:", ocrErr);
           }
         }
+        clearInterval(progressIntervalRef.current);
+        setProgress(100);
+        toast.dismiss(newToastId);
+
+        // open dialog and everything
+
+        setLoading(false);
+        localStorage.removeItem("dashboardData");
+        // refreshPage();
+        progressIntervalRef.current = null;
 
         // Trigger a page refresh
         // refreshPage();
@@ -552,7 +748,6 @@ export default function GenerateReport({ activeTab }) {
             </DialogDescription>
           </DialogHeader>
 
-                
           {(failedStatements.length > 0 || successfulStatements.length > 0) && (
             <div className="mb-2">
               <ul className="list-disc pl-5">
@@ -569,11 +764,11 @@ export default function GenerateReport({ activeTab }) {
               </ul>
             </div>
           )}
- {hasScannedOrEncodedWarning && (
+          {hasScannedOrEncodedWarning && (
             <div className="mb-4 mt-2">
               <h3 className="text-md font-semibold flex items-center gap-x-2 mb-2">
                 <AlertCircle className="text-blue-500 w-5 h-5" />
-                OCR Processing Started
+                OCR Triggered
               </h3>
               <Card className="p-3 bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700">
                 <p className="text-blue-700 dark:text-blue-300 text-sm">
@@ -638,7 +833,7 @@ export default function GenerateReport({ activeTab }) {
               </Card>
             </div>
           )}
-         
+
           <div className="flex gap-4 sticky w-full p-4  bottom-0 bg-white ">
             {showAnalsisButton && (
               <Button onClick={() => viewAnalysis()} className="flex-1">

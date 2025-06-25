@@ -60,6 +60,224 @@ rec_model_mobile = TextRecognition(model_name="PP-OCRv5_mobile_rec", model_dir=R
 # # ─────────────────────────────────────────────────────────────────────────────
 
 
+def add_start_n_end_date_v2(df, start_date, end_date, bank):
+
+    def _missing(s):
+        return s is None or str(s).strip().lower() in {"", "null", "none"}
+
+    df = df.copy()
+
+    # 1. Coerce numeric columns ------------------------------------------------
+    for col in ["Balance", "Debit", "Credit"]:
+        df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
+
+    # 2. Parse the Value Date column once -------------------------------------
+    df["Value Date"] = pd.to_datetime(
+        df["Value Date"],
+        format="%d-%m-%Y",
+        errors="coerce",
+    )
+
+    period_start, period_end = df["Value Date"].iloc[[0, -1]]
+
+    # ── Scenario A: no dates supplied ────────────────────────────────────────
+    if _missing(start_date) and _missing(end_date):
+        return _wrap(df, bank, open_date=start_date, close_date=end_date)            # synthetic rows get real first/last dates
+
+    # ── Scenario B: dates supplied ───────────────────────────────────────────
+    sd = datetime.strptime(start_date, "%d-%m-%Y")
+    ed = datetime.strptime(end_date,   "%d-%m-%Y")
+
+    # 3. Range check (±1 day tolerance, matches original behaviour) ----------
+    # if [sd, ed] sits entirely before or after [period_start, period_end]:
+    if ed < period_start or sd > period_end:
+        raise Exception(
+            f"Error: The period for Bank: {bank} "
+            f"({period_start:%d-%m-%Y} to {period_end:%d-%m-%Y}), "
+            f"does not overlap with the user‐provided dates "
+            f"({sd:%d-%m-%Y} to {ed:%d-%m-%Y})."
+        )
+
+    # 4. Slice from first ≥ start_date to last ≤ end_date ---------------------
+    idx_start = df.index[df["Value Date"] >= pd.Timestamp(sd)].min()
+    idx_end   = df.index[df["Value Date"] <= pd.Timestamp(ed)].max()
+
+    trimmed = df.loc[idx_start:idx_end].reset_index(drop=True)
+
+    # 5. Build final frame with user‑supplied open/close dates ---------------
+    return _wrap(trimmed, bank, open_date=start_date, close_date=end_date)
+
+def _wrap(slice_df, bank, open_date, close_date):
+    first, last = slice_df.iloc[0], slice_df.iloc[-1]
+
+    opening_bal = (
+        first["Balance"] - first["Credit"]
+        if first["Credit"] > 0
+        else first["Balance"] + first["Debit"]
+    )
+    closing_bal = last["Balance"]
+
+    # default dates if not overridden
+    open_dt  = pd.to_datetime(open_date,  format="%d-%m-%Y") if open_date  else first["Value Date"]
+    close_dt = pd.to_datetime(close_date, format="%d-%m-%Y") if close_date else last["Value Date"]
+
+    rows = [
+        {
+            "Value Date": open_dt,
+            "Description": "Opening Balance",
+            "Debit": 0.0,
+            "Credit": 0.0,
+            "Balance": opening_bal,
+        },
+        *slice_df.to_dict("records"),
+        {
+            "Value Date": close_dt,
+            "Description": "Closing Balance",
+            "Debit": 0.0,
+            "Credit": 0.0,
+            "Balance": closing_bal,
+        },
+    ]
+    out = pd.DataFrame(rows)
+    out["Value Date"] = pd.to_datetime(out["Value Date"]).dt.strftime("%d-%m-%Y")
+    out["Bank"] = bank
+    return out
+
+# Function to extract account number and IFSC code from text
+def extract_info(raw_text):
+    acc = "XXXXXXXXXXXXXX"
+    # Regular expressions to capture Customer ID and ECS No
+    customer_id_pattern = r"(?i)\bCust(?:omer)?\s*ID[:\s]*\d{10}\b"
+    ecs_no_pattern = r"(?i)ECS\s*No[:\s]*\d{10,18}\b"  # Match ECS No followed by digits
+    cif_no_pattern = r"CIF\sNo\.?\s*[:\-]?\s*(\d+)"
+
+    # Remove Customer ID and ECS No from the raw text
+    if re.search(customer_id_pattern, raw_text):
+        raw_text = re.sub(customer_id_pattern, "", raw_text)
+    if re.search(ecs_no_pattern, raw_text):
+        raw_text = re.sub(ecs_no_pattern, "", raw_text)
+    if re.search(cif_no_pattern, raw_text):
+        raw_text = re.sub(cif_no_pattern, "", raw_text)
+
+    # Patterns specifically targeting the numeric part for account numbers
+    account_number_patterns = [
+        r"\b(?!18002026161\b)(?!9\d{9}\b)(?!91\d{10}\b)\d{10,18}\b",
+        r"(?!CIF No\.?:?\s*\d+\s*)Account No\.?\s*[:#]?\s*(\d+\/?[A-Z]*\/?\d+)",
+        r"(?i)CUSTOMER\s*ID[:\s]*\d{10}\b",
+        r"(?!Phone No. :?\s?)\d(10)",
+        r"Account No\s*[:#]?\s*(\d+)",
+        r"Account\s*No\s*[:#]?\s*(\d+)",
+        r"Account\sNo.\s:\s(\d+\/[A-Z]+\/\d+)",
+        r"Account\sNo\.?\s*[:#]?\s*(\d+\/[A-Z]+\/\d+)",
+        r"Account\s*number\s*[:#]?\s*(\d+)",
+        r"account\s*number\s*[:#]?\s*(\d+)",
+        r"Account\s*Number\s*[:#]?\s*(\d+)",
+        r"Account Number\s*:\s*(\d+)",
+        r"Account Number\s*(\d+)",
+        r"A/C NO[:#]?\s*(\d+)",
+        r"STATEMENT PERIOD\s*(\d+)",
+        r"Account number[:#]?\s*(\d+)",
+        r"Account\s*[:#]?\s*(\d+)",
+        r"\b\d{15}\b",
+        r"Account #\s*(\d+)",
+        r"\b\d{3}-\d{6}-\d{3}\b",
+        r"A/c X{10}\d{4}",
+        r"\b\d{8}\b",
+    ]
+
+    ifsc_pattern = r"\b[A-Z]{4}0[A-Z0-9]{6}\b"  # IFSC code pattern
+
+    if not raw_text:  # If raw_text is None or empty, return None values
+        return acc
+
+    # Search for account number using specific patterns
+    for pattern in account_number_patterns:
+        match = re.search(pattern, raw_text, re.IGNORECASE)
+
+        if match:
+            try:
+                # Try accessing group 1 if it exists
+                acc = match.group(1).strip()  # Extracted number only
+            except IndexError:
+                # If group 1 does not exist, return the whole match
+                acc = match.group(0).strip()  # Whole match
+        else:
+            acc = None  # No match found
+
+        if match:
+            return acc
+
+
+    # Return None if no pattern matches
+    return acc
+
+def extract_account_details(text):
+
+    try:
+        # Combined pattern to match account holder names for different banks
+        name_patterns = [
+            re.compile(p, re.IGNORECASE)
+            for p in [
+                r"Customer Details\s*:\s*(.*?)\s*\n",
+                r"Name\s*:\s*([^\n]+)",
+                r"Account Holders? Name\s*:\s*([^\n]+)",
+                r"(?:MR\.?|M/S\.?|MS\.?|MRS\.?)\s*([^\n]+)",
+                r"Name:\s*(.*)",
+                r"date ofstatement\s*\n(.*)",
+                r"(.*)\s*Period",
+                r"Customer Name\s*:\s*(.*)",
+                r"INR\s*\n(.*)",
+                r"CUSTOMER NAME (.*)",
+                r"Customer\s*Details\s*:\s*([A-Z][a-zA-Z\s]+[A-Z])\s*",
+                r"Account\s*Holder\s*Name\s*:\s*([A-Z][a-zA-Z\s]+[A-Z])\s*",
+                r"(?:MR\.?|MRS\.?|MS\.?|M/S\.?)\s*([A-Z][a-zA-Z\s]*[A-Z])",
+                r"Customer\s*Name\s*:\s*([A-Z][a-zA-Z\s]+[A-Z])\s*",
+                r"Name\s*of\s*Customer\s*:\s*([A-Z][a-zA-Z\s]+[A-Z])\s*",
+                r"Name\s*:\s*([A-Z][a-zA-Z\s]+[A-Z])\s*",
+                r"Accountholder\s*Name\s*:\s*([A-Z][a-zA-Z\s]+[A-Z])\s*",
+                r"Account\s*Title\s*[:\-]?\s*([A-Z][A-Z\s]+[A-Z])",
+                r"CUSTOMER\s*NAME\s*[:\-]?\s*([A-Z][a-zA-Z\s]+[A-Z])",
+                r"To\s*,?\s*([A-Z][a-zA-Z\s]+[A-Z])",
+                r"TO\s*:\s*([A-Z][a-zA-Z\s]+[A-Z])",
+                r"Account\s*Title\s*:\s*([A-Z][a-zA-Z\s]+[A-Z])",
+                r"Name\s+([A-Z][A-Z\s]+[A-Z])",
+                r"Account Holders? Name\s*([A-Z][A-Z\s]+[A-Z])(?:\s*\n)?",
+            ]
+        ]
+
+        names = []
+        for pattern in name_patterns:
+            matches = pattern.findall(text)
+            if matches:
+                names.extend(matches)
+        # Fallback for joint holder text specific to AXIS_BANK
+        joint_holder_text = "Joint Holder :"
+        if joint_holder_text in text:
+            parts = text.split(joint_holder_text, 1)
+            names.extend(parts[0].strip().split("\n"))
+
+        names = [
+            name.strip() for name in names if name.strip()
+        ]  # Clean up names list
+
+        # Combined pattern to match account numbers for different banks
+        account_numbers = extract_info(text)
+
+        details = [
+            names[0] if names else "_____",
+            account_numbers,
+        ]
+
+        return details
+
+    except Exception as e:
+        print(
+            f"An error occurred while extracting names and account numbers: {str(e)}"
+        )
+        return ["_", "XXXXXXXXXX"]
+
+
+
 def __init__(bank_name, pdf_path, pdf_password, CA_ID):
     writer = None
     bank_names = bank_name
@@ -2414,7 +2632,7 @@ def extract_with_test_cases_ocr(bank_name, pdf_path, pdf_password, CA_ID, encode
        detected_original_bboxs = extract_textboxes(pdf_in_saved_pdf) 
 
    else:
-       detected_original_bboxs = det_model_mobile.predict(pdf_to_images)
+       detected_original_bboxs = det_model.predict(pdf_to_images)
 
    end = time.time()
    print(f"Time taken for detection: {end - start} seconds")
@@ -2434,15 +2652,17 @@ def extract_with_test_cases_ocr(bank_name, pdf_path, pdf_password, CA_ID, encode
    text = extract_text_from_pdf_ocr(pdf_in_saved_pdf)
    return idf, text, explicit_lines
 
-def extraction_process_rectify(bank, pdf_path, pdf_password, only_lines, labels, encoded_pdf=False):
+def extraction_process_only_rectify(bank, pdf_path, pdf_password, start_date, end_date, only_lines, labels, encoded_pdf=False):
     
-    only_lines = [360.12442452566955, 466.55299595424094, 277.2672816685267, 85.83871023995533, 567.2672816685266, 24.410138811383923]
+    # only_lines = [360.12442452566955, 466.55299595424094, 277.2672816685267, 85.83871023995533, 567.2672816685266, 24.410138811383923]
     
     CA_ID = "1234_temp"
     empty_idf = pd.DataFrame()
     default_name_n_num = ["_", "XXXXXXXXXX"]
     # bank = re.sub(r"\d+", "", bank)
     a = ""
+
+    print("______________________________qwerty_______________________")
 
     explicit_lines = [(x, 0, 0, 0) for x in only_lines]
     pdf_to_images = pdf_to_numpy_arrays(pdf_path)
@@ -2452,7 +2672,7 @@ def extraction_process_rectify(bank, pdf_path, pdf_password, only_lines, labels,
     if encoded_pdf:
         detected_original_bboxs = [] # replace wil new textboxes detected directly from pdf_pages
     else:
-        detected_original_bboxs = det_model_mobile.predict(pdf_to_images)
+        detected_original_bboxs = det_model.predict(pdf_to_images)
     end = time.time()
     print(f"Time taken for detection rectify: {end - start} seconds")
 
@@ -2513,7 +2733,9 @@ def extraction_process_rectify(bank, pdf_path, pdf_password, only_lines, labels,
             idf, _ = model_for_pdf_ocr(df)
 
         # idf = add_start_n_end_date_v2(idf, start_date, end_date, bank)
-        name_n_num = []
+        # name_n_num = []
+        idf = add_start_n_end_date_v2(idf, start_date, end_date, bank)
+        name_n_num = extract_account_details(extract_text_from_pdf_ocr(pdf_path))
         a = validate_bank_statement_returns_error_message_ocr(idf)
 
         return idf, name_n_num, a
