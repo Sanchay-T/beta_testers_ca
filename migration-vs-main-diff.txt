@@ -1,0 +1,1244 @@
+diff --git a/frontend/main.js b/frontend/main.js
+index 8f3aad71..7fc09f8e 100644
+--- a/frontend/main.js
++++ b/frontend/main.js
+@@ -27,6 +27,7 @@ const { registerTallyIpc } = require("./ipc/tallyHandlers.js");
+ const { registerVoucherIpc } = require("./ipc/VoucherHandlers.js");
+ const { registerExcelDownloadHandlers } = require("./ipc/excelDownloadHandler");
+ const { registerAppLevelIPCHandlers } = require("./ipc/appLevelIPC");
++const DatabaseMigration = require('./utils/databaseMigration');
+ // Moved database require to after AppConfig initialization
+ const { spawn, execFile, exec, execSync } = require("child_process");
+ const log = require("electron-log");
+@@ -151,10 +152,11 @@ if (global.AppConfig.isDev) {
+ // Removed redundant settings - configured above
+ 
+ // Configure autoUpdater for GitHub repository
++// BETA TESTING: Using beta-testers repo for testing migration changes
+ autoUpdater.setFeedURL({
+   provider: "github",
+   owner: "Shama-Cyphersol",
+-  repo: "ca-offline-suite",
++  repo: "beta_testers_ca", // TODO: Change back to "ca-offline-suite" after testing
+   token: process.env.GH_TOKEN,
+ });
+ 
+@@ -1326,13 +1328,164 @@ console.log("GATEWAY EXECUTABLE DIR:", GATEWAY_EXECUTABLE_DIR);
+ 
+ app.setName("CypherSol Dev");
+ 
++// Add this function before app.whenReady()
++async function performUserDataMigration() {
++  const migrationStartTime = Date.now();
++  
++  try {
++    log.info("🚀 [USER-DATA-MIGRATION] === STARTING MIGRATION PROCESS ===");
++    log.info("[USER-DATA-MIGRATION] SYSTEM CONTEXT", {
++      appVersion: app.getVersion(),
++      appName: app.getName(),
++      platform: process.platform,
++      arch: process.arch,
++      isPackaged: app.isPackaged,
++      userDataDir: app.getPath('userData'),
++      tempDir: app.getPath('temp'),
++      processId: process.pid,
++      startTime: new Date().toISOString()
++    });
++    
++    const migration = new DatabaseMigration();
++    
++    // Get initial status
++    const initialStatus = migration.getMigrationStatus();
++    log.info("[USER-DATA-MIGRATION] INITIAL STATUS", initialStatus);
++    
++    // Perform migration
++    log.info("[USER-DATA-MIGRATION] CALLING MIGRATION FUNCTION");
++    const result = await migration.performMigration();
++    
++    const migrationEndTime = Date.now();
++    const totalDuration = migrationEndTime - migrationStartTime;
++    
++    // Log results based on outcome
++    if (result.alreadyCompleted) {
++      log.info("✅ [USER-DATA-MIGRATION] ALREADY COMPLETED", { 
++        totalDurationMs: totalDuration 
++      });
++    } else if (result.freshInstall) {
++      log.info("ℹ️ [USER-DATA-MIGRATION] FRESH INSTALLATION DETECTED", { 
++        totalDurationMs: totalDuration 
++      });
++    } else if (result.success) {
++      log.info("🎉 [USER-DATA-MIGRATION] MIGRATION SUCCESSFUL!", {
++        oldApp: result.oldAppName,
++        totalItems: result.totalItems,
++        successfulMigrations: result.successfulMigrations,
++        failedMigrations: result.failedMigrations,
++        preservedOriginal: result.preservedOriginal,
++        migrationDurationMs: result.migrationDurationMs,
++        totalProcessDurationMs: totalDuration
++      });
++      
++      // Log detailed success information
++      if (result.successfulMigrations > 0) {
++        const migratedFiles = result.migratedItems
++          .filter(item => item.migrationSuccess)
++          .map(item => ({
++            name: item.fileName,
++            type: item.type,
++            description: item.description || 'No description',
++            size: item.size || 'Unknown',
++            durationMs: item.migrationDurationMs || 'Unknown'
++          }));
++          
++        log.info("📋 [USER-DATA-MIGRATION] SUCCESSFULLY MIGRATED ITEMS", {
++          count: migratedFiles.length,
++          items: migratedFiles,
++          note: "Original files preserved in old app directory"
++        });
++      }
++      
++      // Log any failures for debugging
++      if (result.failedMigrations > 0) {
++        const failedFiles = result.migratedItems
++          .filter(item => !item.migrationSuccess)
++          .map(item => ({
++            name: item.fileName,
++            type: item.type,
++            description: item.description || 'No description'
++          }));
++          
++        log.warn("⚠️ [USER-DATA-MIGRATION] FAILED MIGRATIONS", {
++          count: failedFiles.length,
++          items: failedFiles
++        });
++      }
++    } else {
++      log.error("❌ [USER-DATA-MIGRATION] MIGRATION FAILED", {
++        totalItems: result.totalItems || 'Unknown',
++        successful: result.successfulMigrations || 0,
++        failed: result.failedMigrations || 'Unknown',
++        error: result.error || 'Unknown error',
++        totalDurationMs: totalDuration
++      });
++    }
++    
++    // Get final status for comparison
++    const finalStatus = migration.getMigrationStatus();
++    log.info("[USER-DATA-MIGRATION] FINAL STATUS", finalStatus);
++    
++    log.info("🏁 [USER-DATA-MIGRATION] === MIGRATION PROCESS COMPLETED ===", {
++      totalDurationMs: totalDuration,
++      totalDurationSeconds: (totalDuration / 1000).toFixed(2)
++    });
++    
++    return result;
++    
++  } catch (error) {
++    const migrationEndTime = Date.now();
++    const totalDuration = migrationEndTime - migrationStartTime;
++    
++    log.error("💥 [USER-DATA-MIGRATION] CRITICAL MIGRATION ERROR", {
++      error: error.message,
++      stack: error.stack,
++      totalDurationMs: totalDuration,
++      timestamp: new Date().toISOString()
++    });
++    
++    // Try to log to a backup location
++    try {
++      const errorLogPath = path.join(app.getPath('temp'), 'cyphersol-migration-error.log');
++      const errorInfo = {
++        timestamp: new Date().toISOString(),
++        error: error.message,
++        stack: error.stack,
++        appVersion: app.getVersion(),
++        platform: process.platform
++      };
++      fs.writeFileSync(errorLogPath, JSON.stringify(errorInfo, null, 2));
++      log.info("[USER-DATA-MIGRATION] Error details saved to:", errorLogPath);
++    } catch (backupError) {
++      log.error("[USER-DATA-MIGRATION] Failed to save error backup:", backupError);
++    }
++    
++    return { success: false, error: error.message, criticalError: true };
++  }
++}
++
+ app.whenReady().then(async () => {
+-  log.info("App is ready", userDataDir);
++  log.info("🚀 APP READY - STARTING INITIALIZATION SEQUENCE", {
++    userDataDir: userDataDir,
++    appVersion: app.getVersion(),
++    timestamp: new Date().toISOString()
++  });
+ 
+   createSplashWindow();
+ 
+   try {
+-    // 🗄️ Initialize Database FIRST (Core Requirement)
++    // 🔄 MIGRATE USER DATA FROM OLD APP (Critical first step)
++    log.info("📋 INITIALIZATION STEP 1: USER DATA MIGRATION");
++    const migrationResult = await performUserDataMigration();
++    
++    if (migrationResult.criticalError) {
++      log.error("💥 CRITICAL MIGRATION ERROR - CONTINUING WITH CAUTION");
++      // Continue with app initialization even if migration fails
++    }
++    
++    // 🗄️ Initialize Database AFTER migration (so it uses the migrated data)
++    log.info("📋 INITIALIZATION STEP 2: DATABASE INITIALIZATION");
+     try {
+       const dbManager = databaseManager.getInstance();
+       await dbManager.initialize(userDataDir);
+diff --git a/frontend/react-app/src/components/activate-license.jsx b/frontend/react-app/src/components/activate-license.jsx
+index 08bd1032..711eb5e9 100644
+--- a/frontend/react-app/src/components/activate-license.jsx
++++ b/frontend/react-app/src/components/activate-license.jsx
+@@ -811,11 +811,11 @@ export function LicenseActivationForm({ className, ...props }) {
+               >
+                 <div className="flex flex-col gap-4">
+                   <motion.div className="grid gap-2" custom={0} variants={itemVariants}>
+-                    <Label htmlFor="email">Email</Label>
++                    <Label htmlFor="email">Username / Email</Label>
+                     <Input
+                       id="email"
+-                      type="email"
+-                      placeholder="johndoe@example.com"
++                      type="text"
++                      placeholder="Enter your username or email"
+                       required
+                       value={credentials.email}
+                       onChange={handleInputChange}
+@@ -885,11 +885,11 @@ export function LicenseActivationForm({ className, ...props }) {
+               >
+                 <div className="flex flex-col gap-4">
+                   <motion.div className="grid gap-2" custom={0} variants={itemVariants}>
+-                    <Label htmlFor="email">Email</Label>
++                    <Label htmlFor="email">Username / Email</Label>
+                     <Input
+                       id="email"
+-                      type="email"
+-                      placeholder="johndoe@example.com"
++                      type="text"
++                      placeholder="Enter your username or email"
+                       required
+                       value={credentials.email}
+                       onChange={handleInputChange}
+@@ -976,4 +976,4 @@ export function LicenseActivationForm({ className, ...props }) {
+       </motion.div>
+     </>
+   );
+-}
+\ No newline at end of file
++}
+diff --git a/frontend/utils/databaseMigration.js b/frontend/utils/databaseMigration.js
+new file mode 100644
+index 00000000..5293d487
+--- /dev/null
++++ b/frontend/utils/databaseMigration.js
+@@ -0,0 +1,548 @@
++const fs = require('fs');
++const path = require('path');
++const { app } = require('electron');
++const log = require('electron-log');
++
++class DatabaseMigration {
++  constructor() {
++    this.currentUserDataDir = app.getPath('userData');
++    this.migrationLogFile = path.join(this.currentUserDataDir, 'migration-detailed.log');
++    
++    // The old app name where user's important data is stored
++    this.oldAppName = 'cyphersol-ats-electron-app';
++    
++    // Initialize detailed logging
++    this.initializeDetailedLogging();
++  }
++
++  /**
++   * Initialize comprehensive logging system
++   */
++  initializeDetailedLogging() {
++    const systemInfo = {
++      timestamp: new Date().toISOString(),
++      platform: process.platform,
++      arch: process.arch,
++      nodeVersion: process.versions.node,
++      electronVersion: process.versions.electron,
++      appVersion: app.getVersion(),
++      appName: app.getName(),
++      isPackaged: app.isPackaged,
++      currentUserDataDir: this.currentUserDataDir,
++      oldAppName: this.oldAppName,
++      processId: process.pid,
++      workingDirectory: process.cwd()
++    };
++
++    this.logMigration('🚀 SIMPLIFIED MIGRATION SYSTEM INITIALIZED', systemInfo);
++    this.logMigration('='.repeat(80));
++  }
++
++  /**
++   * Get the old app data directory path where user's data is stored
++   */
++  getOldAppDataDirectory() {
++    const appDataRoot = path.dirname(this.currentUserDataDir);
++    const oldDir = path.join(appDataRoot, this.oldAppName);
++    
++    this.logMigration('📍 CALCULATING OLD APP DIRECTORY', {
++      appDataRoot: appDataRoot,
++      oldAppName: this.oldAppName,
++      calculatedOldDir: oldDir,
++      currentDir: this.currentUserDataDir
++    });
++    
++    return oldDir;
++  }
++
++  /**
++   * Check if migration has already been performed for this installation
++   */
++  isMigrationCompleted() {
++    const migrationFlagFile = path.join(this.currentUserDataDir, '.migration-completed');
++    const exists = fs.existsSync(migrationFlagFile);
++    
++    this.logMigration('🔍 CHECKING MIGRATION STATUS', {
++      flagFile: migrationFlagFile,
++      exists: exists,
++      currentUserDataDirExists: fs.existsSync(this.currentUserDataDir)
++    });
++    
++    if (exists) {
++      try {
++        const content = fs.readFileSync(migrationFlagFile, 'utf8');
++        const migrationInfo = JSON.parse(content);
++        this.logMigration('📄 EXISTING MIGRATION INFO FOUND', migrationInfo);
++      } catch (error) {
++        this.logMigration('❌ ERROR READING MIGRATION FLAG', { error: error.message });
++      }
++    }
++    
++    return exists;
++  }
++
++  /**
++   * Mark migration as completed with detailed information
++   */
++  markMigrationCompleted(migrationResults = []) {
++    const migrationFlagFile = path.join(this.currentUserDataDir, '.migration-completed');
++    const migrationInfo = {
++      completedAt: new Date().toISOString(),
++      appVersion: app.getVersion(),
++      platform: process.platform,
++      oldAppName: this.oldAppName,
++      oldDirectory: this.getOldAppDataDirectory(),
++      currentDirectory: this.currentUserDataDir,
++      migratedFiles: migrationResults,
++      note: 'Original files preserved in old location',
++      migrationLogFile: this.migrationLogFile,
++      processId: process.pid,
++      migrationVersion: 'simplified-v1.0'
++    };
++    
++    try {
++      fs.writeFileSync(migrationFlagFile, JSON.stringify(migrationInfo, null, 2));
++      this.logMigration('✅ MIGRATION COMPLETION FLAG CREATED', {
++        flagFile: migrationFlagFile,
++        migrationInfo: migrationInfo
++      });
++    } catch (error) {
++      this.logMigration('❌ FAILED TO CREATE MIGRATION FLAG', {
++        error: error.message,
++        flagFile: migrationFlagFile
++      });
++    }
++  }
++
++  /**
++   * Enhanced logging with multiple outputs and detailed context
++   */
++  logMigration(message, data = null) {
++    const timestamp = new Date().toISOString();
++    const formattedEntry = `[${timestamp}] [PID:${process.pid}] ${message}${data ? '\n' + JSON.stringify(data, null, 2) : ''}\n`;
++    
++    // 1. Log to electron-log (appears in main app logs)
++    if (data) {
++      log.info(`[SIMPLE-MIGRATION] ${message}`, data);
++    } else {
++      log.info(`[SIMPLE-MIGRATION] ${message}`);
++    }
++    
++    // 2. Log to console for immediate visibility during development
++    console.log(`[SIMPLE-MIGRATION] ${message}`, data || '');
++    
++    // 3. Log to dedicated migration file for detailed audit trail
++    try {
++      // Ensure current userData directory exists
++      if (!fs.existsSync(this.currentUserDataDir)) {
++        fs.mkdirSync(this.currentUserDataDir, { recursive: true });
++        console.log(`[SIMPLE-MIGRATION] Created userData directory: ${this.currentUserDataDir}`);
++      }
++      
++      fs.appendFileSync(this.migrationLogFile, formattedEntry);
++    } catch (error) {
++      console.error('[SIMPLE-MIGRATION] CRITICAL: Failed to write to migration log file:', error);
++      log.error('[SIMPLE-MIGRATION] CRITICAL: Failed to write to migration log file:', error);
++    }
++    
++    // 4. Also write to a backup log in temp directory as failsafe
++    try {
++      const tempLogFile = path.join(app.getPath('temp'), 'cyphersol-migration-backup.log');
++      fs.appendFileSync(tempLogFile, formattedEntry);
++    } catch (error) {
++      console.error('[SIMPLE-MIGRATION] Failed to write backup log:', error);
++    }
++  }
++
++  /**
++   * Find critical user data files (simplified to only essential files)
++   */
++  findOldUserDataFiles() {
++    const oldDir = this.getOldAppDataDirectory();
++    const foundFiles = [];
++    
++    this.logMigration('🔍 === STARTING SIMPLIFIED USER DATA SEARCH ===');
++    this.logMigration('SEARCH PARAMETERS', { 
++      oldAppDirectory: oldDir,
++      newAppDirectory: this.currentUserDataDir,
++      oldAppName: this.oldAppName,
++      strategy: 'SIMPLIFIED - Only Critical Files'
++    });
++
++    if (!fs.existsSync(oldDir)) {
++      this.logMigration('🆕 NO OLD APP DATA FOUND - FRESH INSTALLATION DETECTED');
++      return foundFiles;
++    }
++
++    // SIMPLIFIED FILES LIST - Only the absolutely critical files
++    const criticalFiles = [
++      { name: 'db.sqlite3', description: 'Main application database', priority: 'CRITICAL' },
++      { name: 'clientLicense.enc', description: 'Encrypted license file', priority: 'CRITICAL' }
++    ];
++
++    this.logMigration('📋 SEARCHING FOR CRITICAL FILES ONLY', { 
++      totalFiles: criticalFiles.length,
++      files: criticalFiles.map(f => f.name)
++    });
++
++    // Check for critical files
++    for (const fileInfo of criticalFiles) {
++      const filePath = path.join(oldDir, fileInfo.name);
++      
++      this.logMigration(`🔍 Checking ${fileInfo.priority} file: ${fileInfo.name}`, {
++        path: filePath,
++        description: fileInfo.description,
++        priority: fileInfo.priority
++      });
++      
++      if (fs.existsSync(filePath)) {
++        try {
++          const stats = fs.statSync(filePath);
++          
++          this.logMigration(`📄 CRITICAL FILE FOUND: ${fileInfo.name}`, {
++            path: filePath,
++            size: stats.size,
++            sizeKB: (stats.size / 1024).toFixed(2),
++            created: stats.birthtime,
++            modified: stats.mtime,
++            description: fileInfo.description,
++            priority: fileInfo.priority
++          });
++          
++          // Only migrate files that have content
++          if (stats.size > 0) {
++            foundFiles.push({
++              type: 'file',
++              oldPath: filePath,
++              fileName: fileInfo.name,
++              description: fileInfo.description,
++              priority: fileInfo.priority,
++              size: stats.size,
++              lastModified: stats.mtime,
++              sourceDirectory: oldDir
++            });
++            
++            this.logMigration(`✅ ADDED TO MIGRATION LIST: ${fileInfo.name} (${fileInfo.priority})`);
++          } else {
++            this.logMigration(`⚠️ SKIPPING EMPTY FILE: ${fileInfo.name}`, { path: filePath });
++          }
++        } catch (error) {
++          this.logMigration(`❌ ERROR ANALYZING FILE: ${fileInfo.name}`, {
++            path: filePath,
++            error: error.message
++          });
++        }
++      } else {
++        this.logMigration(`❌ CRITICAL FILE NOT FOUND: ${fileInfo.name}`, { path: filePath });
++      }
++    }
++
++    this.logMigration('📊 === SIMPLIFIED SEARCH SUMMARY ===', {
++      totalItemsFound: foundFiles.length,
++      criticalItemsFound: foundFiles.length,
++      foundItems: foundFiles.map(f => ({ 
++        name: f.fileName, 
++        type: f.type, 
++        priority: f.priority,
++        description: f.description 
++      }))
++    });
++
++    return foundFiles;
++  }
++
++  /**
++   * Copy a single file with extensive verification and logging
++   */
++  copyFile(sourceInfo) {
++    const { oldPath, fileName, description, priority } = sourceInfo;
++    const newPath = path.join(this.currentUserDataDir, fileName);
++    
++    this.logMigration(`📄 === STARTING FILE COPY: ${fileName} (${priority}) ===`, {
++      description: description,
++      priority: priority,
++      source: oldPath,
++      destination: newPath
++    });
++    
++    try {
++      // Pre-copy analysis
++      const sourceStats = fs.statSync(oldPath);
++      this.logMigration(`📊 SOURCE FILE ANALYSIS: ${fileName}`, {
++        path: oldPath,
++        size: sourceStats.size,
++        sizeKB: (sourceStats.size / 1024).toFixed(2),
++        created: sourceStats.birthtime,
++        modified: sourceStats.mtime,
++        priority: priority
++      });
++
++      // Check if destination already exists
++      if (fs.existsSync(newPath)) {
++        const existingStats = fs.statSync(newPath);
++        this.logMigration(`⚠️ DESTINATION FILE EXISTS: ${fileName}`, {
++          path: newPath,
++          existingSize: existingStats.size,
++          existingSizeKB: (existingStats.size / 1024).toFixed(2),
++          existingModified: existingStats.mtime
++        });
++        
++        if (existingStats.size > 0) {
++          // Create backup
++          const backupDir = path.join(this.currentUserDataDir, 'pre-migration-backups');
++          const timestamp = Date.now();
++          const backupPath = path.join(backupDir, `${fileName}.backup.${timestamp}`);
++          
++          this.logMigration(`💾 CREATING BACKUP OF EXISTING FILE: ${fileName}`, {
++            backupPath: backupPath
++          });
++          
++          if (!fs.existsSync(backupDir)) {
++            fs.mkdirSync(backupDir, { recursive: true });
++            this.logMigration(`📁 CREATED BACKUP DIRECTORY: ${backupDir}`);
++          }
++          
++          fs.copyFileSync(newPath, backupPath);
++          const backupStats = fs.statSync(backupPath);
++          
++          this.logMigration(`✅ BACKUP CREATED SUCCESSFULLY: ${fileName}`, {
++            backupPath: backupPath,
++            backupSize: backupStats.size,
++            verified: backupStats.size === existingStats.size
++          });
++        }
++      }
++
++      // Perform the actual copy
++      this.logMigration(`🔄 COPYING ${priority} FILE: ${fileName}`);
++      const copyStartTime = Date.now();
++      
++      fs.copyFileSync(oldPath, newPath);
++      
++      const copyEndTime = Date.now();
++      const copyDuration = copyEndTime - copyStartTime;
++      
++      // Verify the copy
++      const newStats = fs.statSync(newPath);
++      const verificationResult = {
++        originalSize: sourceStats.size,
++        copiedSize: newStats.size,
++        sizesMatch: sourceStats.size === newStats.size,
++        copyDurationMs: copyDuration,
++        copySpeedKBps: sourceStats.size > 0 ? ((sourceStats.size / 1024) / (copyDuration / 1000)).toFixed(2) : 0,
++        priority: priority
++      };
++      
++      if (verificationResult.sizesMatch) {
++        this.logMigration(`✅ FILE COPY SUCCESSFUL: ${fileName} (${priority})`, {
++          source: oldPath,
++          destination: newPath,
++          verification: verificationResult
++        });
++        return true;
++      } else {
++        throw new Error(`File size mismatch after copy. Original: ${sourceStats.size}, Copy: ${newStats.size}`);
++      }
++      
++    } catch (error) {
++      this.logMigration(`❌ FILE COPY FAILED: ${fileName} (${priority})`, {
++        error: error.message,
++        stack: error.stack,
++        source: oldPath,
++        destination: newPath,
++        priority: priority
++      });
++      return false;
++    }
++  }
++
++  /**
++   * Perform the simplified migration process
++   */
++  async performMigration() {
++    const migrationStartTime = Date.now();
++    
++    this.logMigration('🚀 === STARTING SIMPLIFIED MIGRATION PROCESS ===');
++    this.logMigration('MIGRATION STRATEGY', {
++      approach: 'SIMPLIFIED',
++      targetFiles: ['db.sqlite3', 'clientLicense.enc'],
++      preserveOriginal: true,
++      oneTimeOnly: true
++    });
++
++    try {
++      // Step 1: Check if migration already completed
++      this.logMigration('📋 STEP 1: CHECKING MIGRATION STATUS');
++      if (this.isMigrationCompleted()) {
++        const result = {
++          alreadyCompleted: true,
++          success: true,
++          message: 'Migration already completed previously'
++        };
++        this.logMigration('✅ MIGRATION ALREADY COMPLETED - SKIPPING', result);
++        return result;
++      }
++
++      // Step 2: Ensure current directory exists
++      this.logMigration('📋 STEP 2: ENSURING CURRENT USER DATA DIRECTORY');
++      if (!fs.existsSync(this.currentUserDataDir)) {
++        fs.mkdirSync(this.currentUserDataDir, { recursive: true });
++        this.logMigration('📁 CREATED CURRENT USER DATA DIRECTORY', {
++          path: this.currentUserDataDir
++        });
++      }
++
++      // Step 3: Find old user data
++      this.logMigration('📋 STEP 3: SEARCHING FOR OLD USER DATA');
++      const oldUserData = this.findOldUserDataFiles();
++      
++      if (oldUserData.length === 0) {
++        const result = {
++          freshInstall: true,
++          success: true,
++          message: 'No old user data found - fresh installation'
++        };
++        this.logMigration('🆕 FRESH INSTALLATION DETECTED', result);
++        this.markMigrationCompleted([]);
++        return result;
++      }
++
++      // Step 4: Perform migration
++      this.logMigration('📋 STEP 4: PERFORMING SIMPLIFIED DATA MIGRATION', {
++        itemsToMigrate: oldUserData.length,
++        items: oldUserData.map(item => ({ 
++          name: item.fileName, 
++          type: item.type, 
++          priority: item.priority,
++          description: item.description 
++        }))
++      });
++
++      const migrationResults = [];
++      let successCount = 0;
++      let failureCount = 0;
++
++      for (let i = 0; i < oldUserData.length; i++) {
++        const item = oldUserData[i];
++        const itemStartTime = Date.now();
++        
++        this.logMigration(`🔄 MIGRATING ITEM ${i + 1}/${oldUserData.length}: ${item.fileName} (${item.priority})`, {
++          type: item.type,
++          description: item.description,
++          priority: item.priority
++        });
++        
++        let success = false;
++        
++        try {
++          success = this.copyFile(item);
++        } catch (error) {
++          this.logMigration(`❌ MIGRATION ERROR FOR ITEM: ${item.fileName}`, {
++            error: error.message,
++            stack: error.stack,
++            priority: item.priority
++          });
++          success = false;
++        }
++        
++        const itemEndTime = Date.now();
++        const itemDuration = itemEndTime - itemStartTime;
++        
++        const result = {
++          ...item,
++          migrationSuccess: success,
++          newPath: path.join(this.currentUserDataDir, item.fileName),
++          migrationDurationMs: itemDuration
++        };
++        
++        migrationResults.push(result);
++        
++        if (success) {
++          successCount++;
++          this.logMigration(`✅ ITEM MIGRATION SUCCESS: ${item.fileName} (${item.priority})`, { 
++            durationMs: itemDuration 
++          });
++        } else {
++          failureCount++;
++          this.logMigration(`❌ ITEM MIGRATION FAILED: ${item.fileName} (${item.priority})`, { 
++            durationMs: itemDuration 
++          });
++        }
++      }
++
++      // Step 5: Complete migration
++      this.logMigration('📋 STEP 5: COMPLETING MIGRATION PROCESS');
++      this.markMigrationCompleted(migrationResults);
++      
++      const migrationEndTime = Date.now();
++      const totalMigrationTime = migrationEndTime - migrationStartTime;
++      
++      const finalResult = {
++        success: successCount > 0,
++        totalItems: oldUserData.length,
++        successfulMigrations: successCount,
++        failedMigrations: failureCount,
++        migratedItems: migrationResults,
++        oldAppName: this.oldAppName,
++        oldDirectory: this.getOldAppDataDirectory(),
++        preservedOriginal: true,
++        migrationDurationMs: totalMigrationTime,
++        migrationDurationSeconds: (totalMigrationTime / 1000).toFixed(2),
++        migrationVersion: 'simplified-v1.0'
++      };
++
++      if (finalResult.success) {
++        this.logMigration('🎉 === SIMPLIFIED MIGRATION COMPLETED SUCCESSFULLY ===', {
++          summary: `${successCount}/${oldUserData.length} critical files migrated successfully`,
++          totalDuration: `${finalResult.migrationDurationSeconds} seconds`,
++          note: 'Original files preserved in old app directory'
++        });
++      } else {
++        this.logMigration('⚠️ === SIMPLIFIED MIGRATION COMPLETED WITH FAILURES ===', finalResult);
++      }
++      
++      this.logMigration('='.repeat(80));
++      
++      return finalResult;
++      
++    } catch (error) {
++      const migrationEndTime = Date.now();
++      const totalMigrationTime = migrationEndTime - migrationStartTime;
++      
++      this.logMigration('💥 === CRITICAL MIGRATION ERROR ===', {
++        error: error.message,
++        stack: error.stack,
++        totalDurationMs: totalMigrationTime,
++        timestamp: new Date().toISOString()
++      });
++      
++      return { 
++        success: false, 
++        error: error.message, 
++        criticalError: true,
++        migrationDurationMs: totalMigrationTime
++      };
++    }
++  }
++
++  /**
++   * Get current migration status for debugging
++   */
++  getMigrationStatus() {
++    const oldDir = this.getOldAppDataDirectory();
++    const migrationFlag = path.join(this.currentUserDataDir, '.migration-completed');
++    
++    return {
++      oldAppDirectory: oldDir,
++      oldAppDirectoryExists: fs.existsSync(oldDir),
++      currentUserDataDir: this.currentUserDataDir,
++      currentUserDataDirExists: fs.existsSync(this.currentUserDataDir),
++      migrationCompleted: fs.existsSync(migrationFlag),
++      migrationFlagPath: migrationFlag,
++      migrationLogPath: this.migrationLogFile,
++      migrationVersion: 'simplified-v1.0'
++    };
++  }
++}
++
++module.exports = DatabaseMigration;
+\ No newline at end of file
+diff --git a/frontend/utils/logger.js b/frontend/utils/logger.js
+new file mode 100644
+index 00000000..be79a1c1
+--- /dev/null
++++ b/frontend/utils/logger.js
+@@ -0,0 +1,449 @@
++const log = require('electron-log');
++const path = require('path');
++const fs = require('fs');
++const { app } = require('electron');
++
++class CyphersolLogger {
++  constructor() {
++    this.sessionId = this.generateSessionId();
++    this.buildId = this.getBuildId();
++    this.systemInfo = null;
++    this.setupLoggers();
++    this.initializeSystemInfo();
++  }
++
++  generateSessionId() {
++    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
++  }
++
++  getBuildId() {
++    try {
++      const packagePath = path.join(__dirname, '../package.json');
++      const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
++      return `${packageJson.version}-${Date.now()}`;
++    } catch (error) {
++      return `unknown-${Date.now()}`;
++    }
++  }
++
++  setupLoggers() {
++    try {
++      const userDataDir = app ? app.getPath('userData') : './logs';
++      const logsDir = path.join(userDataDir, 'logs');
++      
++      // Ensure logs directory exists
++      if (!fs.existsSync(logsDir)) {
++        fs.mkdirSync(logsDir, { recursive: true });
++      }
++
++      // Configure main logger
++      log.transports.file.level = 'debug';
++      log.transports.console.level = 'debug';
++      log.transports.file.maxSize = 10 * 1024 * 1024; // 10MB
++      log.transports.file.archiveLog = true;
++      log.transports.file.fileName = 'cyphersol-main.log';
++      log.transports.file.resolvePathFn = () => path.join(logsDir, 'cyphersol-main.log');
++
++      // Create specialized loggers
++      this.createSpecializedLoggers(logsDir);
++      
++      // Setup log rotation
++      this.setupLogRotation(logsDir);
++    } catch (error) {
++      // Fallback to console logging if file logging fails
++      console.error('Failed to setup file logging:', error);
++      log.transports.file.level = false;
++      log.transports.console.level = 'debug';
++    }
++  }
++
++  createSpecializedLoggers(logsDir) {
++    try {
++      // Build Process Logger
++      this.buildLogger = log.create('build');
++      this.buildLogger.transports.file.fileName = 'build.log';
++      this.buildLogger.transports.file.resolvePathFn = () => path.join(logsDir, 'build.log');
++      this.buildLogger.transports.console.level = 'info';
++
++      // Update Process Logger
++      this.updateLogger = log.create('update');
++      this.updateLogger.transports.file.fileName = 'update.log';
++      this.updateLogger.transports.file.resolvePathFn = () => path.join(logsDir, 'update.log');
++      this.updateLogger.transports.console.level = 'info';
++
++      // Database Logger
++      this.dbLogger = log.create('database');
++      this.dbLogger.transports.file.fileName = 'database.log';
++      this.dbLogger.transports.file.resolvePathFn = () => path.join(logsDir, 'database.log');
++      this.dbLogger.transports.console.level = 'warn';
++
++      // Network Logger
++      this.networkLogger = log.create('network');
++      this.networkLogger.transports.file.fileName = 'network.log';
++      this.networkLogger.transports.file.resolvePathFn = () => path.join(logsDir, 'network.log');
++      this.networkLogger.transports.console.level = 'warn';
++
++      // Performance Logger
++      this.perfLogger = log.create('performance');
++      this.perfLogger.transports.file.fileName = 'performance.log';
++      this.perfLogger.transports.file.resolvePathFn = () => path.join(logsDir, 'performance.log');
++      this.perfLogger.transports.console.level = 'info';
++
++      // Error Logger (Critical issues only)
++      this.errorLogger = log.create('error');
++      this.errorLogger.transports.file.fileName = 'errors.log';
++      this.errorLogger.transports.file.resolvePathFn = () => path.join(logsDir, 'errors.log');
++      this.errorLogger.transports.console.level = 'error';
++
++      // User Actions Logger
++      this.userLogger = log.create('user');
++      this.userLogger.transports.file.fileName = 'user-actions.log';
++      this.userLogger.transports.file.resolvePathFn = () => path.join(logsDir, 'user-actions.log');
++      this.userLogger.transports.console.level = false; // Don't spam console with user actions
++    } catch (error) {
++      console.error('Failed to create specialized loggers:', error);
++      // Create fallback loggers that just use the main logger
++      this.buildLogger = log;
++      this.updateLogger = log;
++      this.dbLogger = log;
++      this.networkLogger = log;
++      this.perfLogger = log;
++      this.errorLogger = log;
++      this.userLogger = log;
++    }
++  }
++
++  setupLogRotation(logsDir) {
++    // Clean up old logs (keep last 30 days)
++    const maxAge = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
++    
++    try {
++      const files = fs.readdirSync(logsDir);
++      const now = Date.now();
++      
++      files.forEach(file => {
++        const filePath = path.join(logsDir, file);
++        const stats = fs.statSync(filePath);
++        
++        if (now - stats.mtime.getTime() > maxAge) {
++          fs.unlinkSync(filePath);
++          this.info('SYSTEM', 'Cleaned up old log file', { file });
++        }
++      });
++    } catch (error) {
++      this.error('SYSTEM', 'Failed to clean up old logs', { error: error.message });
++    }
++  }
++
++  async initializeSystemInfo() {
++    try {
++      const si = require('systeminformation');
++      this.systemInfo = {
++        os: await si.osInfo(),
++        cpu: await si.cpu(),
++        mem: await si.mem(),
++        disk: await si.diskLayout(),
++        network: await si.networkInterfaces(),
++        timestamp: new Date().toISOString()
++      };
++    } catch (error) {
++      this.systemInfo = {
++        error: 'Failed to gather system info',
++        timestamp: new Date().toISOString()
++      };
++    }
++  }
++
++  // Enhanced logging methods with context
++  formatMessage(component, message, context = {}) {
++    const timestamp = new Date().toISOString();
++    const baseContext = {
++      sessionId: this.sessionId,
++      buildId: this.buildId,
++      component,
++      timestamp,
++      pid: process.pid,
++      platform: process.platform,
++      version: app ? app.getVersion() : 'unknown'
++    };
++
++    return {
++      message,
++      context: { ...baseContext, ...context }
++    };
++  }
++
++  // Main logging methods
++  trace(component, message, context = {}) {
++    const formatted = this.formatMessage(component, message, context);
++    log.silly(`[${component}] ${message}`, formatted.context);
++  }
++
++  debug(component, message, context = {}) {
++    const formatted = this.formatMessage(component, message, context);
++    log.debug(`[${component}] ${message}`, formatted.context);
++  }
++
++  info(component, message, context = {}) {
++    const formatted = this.formatMessage(component, message, context);
++    log.info(`[${component}] ${message}`, formatted.context);
++  }
++
++  warn(component, message, context = {}) {
++    const formatted = this.formatMessage(component, message, context);
++    log.warn(`[${component}] ⚠️  ${message}`, formatted.context);
++  }
++
++  error(component, message, context = {}) {
++    const formatted = this.formatMessage(component, message, context);
++    log.error(`[${component}] ❌ ${message}`, formatted.context);
++    
++    // Also log to error logger
++    this.errorLogger.error(`[${component}] ${message}`, formatted.context);
++  }
++
++  fatal(component, message, context = {}) {
++    const formatted = this.formatMessage(component, message, context);
++    log.error(`[${component}] 💀 FATAL: ${message}`, formatted.context);
++    
++    // Log to error logger with FATAL prefix
++    this.errorLogger.error(`FATAL [${component}] ${message}`, formatted.context);
++  }
++
++  // Specialized logging methods
++  
++  // Build Process Logging
++  buildStart(version, platform) {
++    const context = { version, platform, stage: 'start' };
++    this.buildLogger.info('🏗️  BUILD STARTED', context);
++    this.info('BUILD', 'Build process initiated', context);
++  }
++
++  buildStep(step, details = {}) {
++    const context = { step, stage: 'progress', ...details };
++    this.buildLogger.info(`📦 ${step}`, context);
++    this.info('BUILD', step, context);
++  }
++
++  buildError(step, error, details = {}) {
++    const context = { step, error: error.message, stack: error.stack, stage: 'error', ...details };
++    this.buildLogger.error(`❌ BUILD FAILED: ${step}`, context);
++    this.error('BUILD', `Build failed at ${step}`, context);
++  }
++
++  buildSuccess(outputPath, size, duration) {
++    const context = { outputPath, size, duration, stage: 'complete' };
++    this.buildLogger.info('✅ BUILD COMPLETED', context);
++    this.info('BUILD', 'Build completed successfully', context);
++  }
++
++  // Update Process Logging
++  updateStart(currentVersion, targetVersion) {
++    const context = { currentVersion, targetVersion, stage: 'start' };
++    this.updateLogger.info('🔄 UPDATE STARTED', context);
++    this.info('UPDATE', 'Update process initiated', context);
++  }
++
++  updateProgress(stage, progress, details = {}) {
++    const context = { stage, progress, ...details };
++    this.updateLogger.info(`📥 ${stage}: ${progress}%`, context);
++    this.debug('UPDATE', `${stage} progress: ${progress}%`, context);
++  }
++
++  updateCleanup(action, success, details = {}) {
++    const context = { action, success, stage: 'cleanup', ...details };
++    const status = success ? '✅' : '❌';
++    this.updateLogger.info(`${status} CLEANUP: ${action}`, context);
++    this.info('UPDATE', `Cleanup ${action}: ${success ? 'success' : 'failed'}`, context);
++  }
++
++  updateError(stage, error, details = {}) {
++    const context = { stage, error: error.message, stack: error.stack, ...details };
++    this.updateLogger.error(`❌ UPDATE FAILED: ${stage}`, context);
++    this.error('UPDATE', `Update failed at ${stage}`, context);
++  }
++
++  updateSuccess(newVersion, duration) {
++    const context = { newVersion, duration, stage: 'complete' };
++    this.updateLogger.info('✅ UPDATE COMPLETED', context);
++    this.info('UPDATE', 'Update completed successfully', context);
++  }
++
++  // Database Logging
++  dbQuery(query, duration, rowCount, params = {}) {
++    const context = { query, duration, rowCount, params };
++    this.dbLogger.debug('🗄️  DB QUERY', context);
++    
++    if (duration > 1000) { // Log slow queries
++      this.warn('DATABASE', 'Slow query detected', context);
++    }
++  }
++
++  dbError(operation, error, query = null) {
++    const context = { operation, error: error.message, query, stack: error.stack };
++    this.dbLogger.error('❌ DB ERROR', context);
++    this.error('DATABASE', `Database error in ${operation}`, context);
++  }
++
++  dbConnection(action, success, details = {}) {
++    const context = { action, success, ...details };
++    const status = success ? '✅' : '❌';
++    this.dbLogger.info(`${status} DB ${action.toUpperCase()}`, context);
++    this.info('DATABASE', `Database ${action}: ${success ? 'success' : 'failed'}`, context);
++  }
++
++  // Network Logging
++  networkRequest(method, url, duration, status, size = null) {
++    const context = { method, url, duration, status, size };
++    this.networkLogger.debug(`🌐 ${method} ${url}`, context);
++    
++    if (status >= 400) {
++      this.warn('NETWORK', `HTTP ${status} error`, context);
++    }
++    
++    if (duration > 5000) { // Log slow requests
++      this.warn('NETWORK', 'Slow network request', context);
++    }
++  }
++
++  networkError(operation, error, url = null) {
++    const context = { operation, error: error.message, url, stack: error.stack };
++    this.networkLogger.error('❌ NETWORK ERROR', context);
++    this.error('NETWORK', `Network error in ${operation}`, context);
++  }
++
++  // Performance Logging
++  perfStart(operation) {
++    const startTime = Date.now();
++    return {
++      operation,
++      startTime,
++      end: (details = {}) => {
++        const duration = Date.now() - startTime;
++        const context = { operation, duration, ...details };
++        this.perfLogger.info(`⏱️  ${operation}: ${duration}ms`, context);
++        
++        if (duration > 10000) { // Log operations taking more than 10 seconds
++          this.warn('PERFORMANCE', 'Slow operation detected', context);
++        }
++        
++        return duration;
++      }
++    };
++  }
++
++  perfMemory(operation, details = {}) {
++    const memUsage = process.memoryUsage();
++    const context = { 
++      operation, 
++      memory: {
++        rss: Math.round(memUsage.rss / 1024 / 1024) + 'MB',
++        heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024) + 'MB',
++        heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024) + 'MB',
++        external: Math.round(memUsage.external / 1024 / 1024) + 'MB'
++      },
++      ...details 
++    };
++    this.perfLogger.info(`💾 MEMORY: ${operation}`, context);
++  }
++
++  // User Action Logging
++  userAction(action, details = {}) {
++    const context = { action, ...details };
++    this.userLogger.info(`👤 ${action}`, context);
++  }
++
++  userError(action, error, details = {}) {
++    const context = { action, error: error.message, ...details };
++    this.userLogger.error(`👤 ERROR: ${action}`, context);
++    this.error('USER', `User action failed: ${action}`, context);
++  }
++
++  // System State Logging
++  systemState(component, state, details = {}) {
++    const context = { 
++      component, 
++      state, 
++      systemInfo: this.systemInfo,
++      ...details 
++    };
++    this.info('SYSTEM', `${component} state: ${state}`, context);
++  }
++
++  // Process Logging
++  processStart(processName, command, args = []) {
++    const context = { processName, command, args };
++    this.info('PROCESS', `Starting ${processName}`, context);
++  }
++
++  processExit(processName, exitCode, signal = null) {
++    const context = { processName, exitCode, signal };
++    if (exitCode === 0) {
++      this.info('PROCESS', `${processName} exited normally`, context);
++    } else {
++      this.error('PROCESS', `${processName} exited with error`, context);
++    }
++  }
++
++  processOutput(processName, output, isError = false) {
++    const context = { processName, output };
++    if (isError) {
++      this.warn('PROCESS', `${processName} stderr`, context);
++    } else {
++      this.debug('PROCESS', `${processName} stdout`, context);
++    }
++  }
++
++  // File Operation Logging
++  fileOperation(operation, filePath, success, details = {}) {
++    const context = { operation, filePath, success, ...details };
++    const status = success ? '✅' : '❌';
++    this.debug('FILE', `${status} ${operation}: ${filePath}`, context);
++    
++    if (!success) {
++      this.warn('FILE', `File operation failed: ${operation}`, context);
++    }
++  }
++
++  // Startup Logging
++  startupPhase(phase, duration = null, details = {}) {
++    const context = { phase, duration, ...details };
++    this.info('STARTUP', `Phase: ${phase}${duration ? ` (${duration}ms)` : ''}`, context);
++  }
++
++  // Session Logging
++  sessionEvent(event, userId = null, details = {}) {
++    const context = { event, userId, ...details };
++    this.userAction(`SESSION_${event.toUpperCase()}`, context);
++  }
++
++  // License Logging
++  licenseEvent(event, details = {}) {
++    const context = { event, ...details };
++    this.info('LICENSE', event, context);
++  }
++
++  // Generate diagnostic report
++  generateDiagnosticReport() {
++    const report = {
++      sessionId: this.sessionId,
++      buildId: this.buildId,
++      timestamp: new Date().toISOString(),
++      systemInfo: this.systemInfo,
++      appVersion: app ? app.getVersion() : 'unknown',
++      platform: process.platform,
++      nodeVersion: process.version,
++      electronVersion: process.versions.electron,
++      memoryUsage: process.memoryUsage(),
++      uptime: process.uptime()
++    };
++
++    this.info('DIAGNOSTIC', 'Generated diagnostic report', report);
++    return report;
++  }
++}
++
++// Create singleton instance
++const logger = new CyphersolLogger();
++
++module.exports = logger; 
+\ No newline at end of file

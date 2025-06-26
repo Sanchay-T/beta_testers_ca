@@ -2559,7 +2559,13 @@ app.whenReady().then(async () => {
       const systemInfoStartTime = Date.now();
       log.info("🔍 Starting system information collection...");
 
-      await systemInfo.loadData(app.getPath("userData"));
+      // Add 10-second timeout to prevent hanging on server environments
+      const systemInfoPromise = systemInfo.loadData(app.getPath("userData"));
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("SystemInfo collection timeout after 10 seconds")), 10000)
+      );
+
+      await Promise.race([systemInfoPromise, timeoutPromise]);
 
       const systemInfoEndTime = Date.now();
       log.info("✅ SystemInfo loaded successfully", {
@@ -2570,8 +2576,9 @@ app.whenReady().then(async () => {
         macAddress: systemInfo.getMACAddress(),
       });
     } catch (error) {
-      log.error("❌ SystemInfo initialization failed:", error);
-      throw error;
+      log.warn("⚠️ SystemInfo collection failed, continuing with fallback values:", error.message);
+      log.info("✅ SystemInfo initialization completed with fallback - app will continue");
+      // Don't throw error - continue with default/cached values instead of crashing
     }
 
     // 5. File System Operations
