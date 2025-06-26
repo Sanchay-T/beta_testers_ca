@@ -382,7 +382,8 @@ def extraction_process(bank, pdf_path, pdf_password, start_date, end_date, isthi
 
                 if idf.empty:
                     # SECOND CHECK: Check if PDF is encoded
-                    encoding_result = is_pdf_encoded(pdf_path)
+                    encoding_result = is_pdf_encoded(pdf_path,pdf_password)
+                    print("Encoding Result:", encoding_result)
                     if encoding_result != "PDF text is readable and not encoded.":
                         raise Exception("The PDF appears to be encoded or obfuscated. Please upload a readable PDF.")
 

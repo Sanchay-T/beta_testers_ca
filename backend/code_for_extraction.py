@@ -1595,16 +1595,29 @@ def run_test_output_on_whole_pdf(list_a, pdf_in_saved_pdf, bank_name, timestamp,
         return df, explicit_lines
 
 
-def is_pdf_encoded(pdf_path):
+def is_pdf_encoded(pdf_path,password=""):
     try:
+        print(f"Checking if PDF is encoded: {pdf_path}")
         reader = PdfReader(pdf_path)
+
+        # Attempt decryption if the file is encrypted
+        if reader.is_encrypted:
+            print("PDF is encrypted. Attempting to decrypt...")
+            try:
+                # Try decrypting with empty password first (common case)
+                result = reader.decrypt(password)
+                if result == 0:
+                    return "PDF is encrypted and cannot be read without a password."
+                else:
+                    print("PDF decrypted successfully.")
+            except Exception as e:
+                return f"PDF decryption failed: {str(e)}"
+
         total_pages = len(reader.pages)
-        
+        print(f"Number of pages in PDF: {total_pages} for path: {pdf_path}")
+
         # Choose pages 0 to 3 if total_pages > 4, else all available pages
-        if total_pages > 4:
-            page_indices = [0, 1, 2, 3]
-        else:
-            page_indices = list(range(total_pages))
+        page_indices = [0, 1, 2, 3] if total_pages > 4 else list(range(total_pages))
 
         readable_count = 0
 
@@ -1622,8 +1635,7 @@ def is_pdf_encoded(pdf_path):
             return "PDF appears encoded or obfuscated."
 
     except Exception as e:
-        return f"An unexpected error occurred: {e}"
-
+        return f"Encoding Result: An unexpected error occurred: {str(e)}"
 
 # Main function to run test cases with optimizations
 def extract_with_test_cases(bank_name, pdf_path, pdf_password, CA_ID):
