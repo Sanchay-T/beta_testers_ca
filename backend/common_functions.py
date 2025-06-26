@@ -361,6 +361,7 @@ def extraction_process(bank, pdf_path, pdf_password, start_date, end_date, isthi
                 idf, text, explicit_lines = extract_with_test_cases_ocr(bank, pdf_path, pdf_password, CA_ID)
 
                 if idf.empty:
+                    print("Empty result from ocr detection")
                     raise Exception("Rectify PDF")
 
                 name_n_num = explicit_lines if idf.empty else extract_account_details(text)

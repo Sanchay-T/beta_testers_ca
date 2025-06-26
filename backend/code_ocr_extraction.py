@@ -2335,7 +2335,7 @@ def process_pdf_with_test_cases(pdf_to_images, detected_original_bboxs, encoded_
    # print("pdf to images:", image_path)
    enhanced_image = new_enhance_image_contrast(image_path)
 #    enhanced_path = "temp_enhanced.jpg"
-   enhanced_path = os.path.join(TEMP_SAVED_PDF_DIR, f"temp_enhanced_{i}_is_{uuid.uuid4().hex}.jpg")
+   enhanced_path = os.path.join(TEMP_SAVED_PDF_DIR, f"temp_enhanced_is_{uuid.uuid4().hex}.jpg")
 
    cv2.imwrite(enhanced_path, enhanced_image)
    print("Enhanced image saved at:", enhanced_path)
@@ -2643,6 +2643,7 @@ def extract_with_test_cases_ocr(bank_name, pdf_path, pdf_password, CA_ID, encode
    
    list_test = process_pdf_with_test_cases(pdf_to_images, detected_original_bboxs, encoded_pdf)
 
+   print("aiyaz ",list_test)
    if list_test[0] == "E":
        print("ALL TEST CASES FAILED")
        return pd.DataFrame(), "GO TO RECTIFY", []

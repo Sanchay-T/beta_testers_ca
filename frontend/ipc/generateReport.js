@@ -811,9 +811,12 @@ function generateReportIpc(tmpdir_path) {
           }
 
           const originalFilename = fileDetail.pdf_paths;
-          const tempFilename = `${Date.now()}-${path.basename(
-            originalFilename
-          )}`;
+          let tempFilename;
+          if (source !== "add-pdf") {
+            tempFilename = `${Date.now()}-${path.basename(originalFilename)}`;
+          } else {
+            tempFilename = path.basename(originalFilename);
+          }
           const filePath = path.join(caseFolder, tempFilename);
 
           allProcessedFiles.add(filePath);
@@ -1268,11 +1271,11 @@ function generateReportIpc(tmpdir_path) {
         ca_id: caseId || "DEFAULT_CASE",
         aiyazs_array_of_array: result.map((d) => d.rectifiedColumns || ""),
         whole_transaction_sheet: whole_transaction_sheet,
-        is_ocr: result.map((d)=>isOcrCandidate(d.respectiveReasonsForError)),
+        is_ocr: result.map((d) => isOcrCandidate(d.respectiveReasonsForError)),
         // whole_transaction_sheet:result.map((d) => d.whole_transaction_sheet || ""),
       };
 
-      console.log({rectifyPayload: payload});
+      console.log({ rectifyPayload: payload });
 
       const finalPayload = preprocessPayload(payload);
 
