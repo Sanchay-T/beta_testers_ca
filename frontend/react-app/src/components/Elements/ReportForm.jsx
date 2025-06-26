@@ -837,8 +837,7 @@ const GenerateReportForm = ({
                                   onOpenChange={() => setBankSearchTerm("")}
                                 >
                                   <SelectTrigger className="w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-500 transition-all">
-                                    <SelectValue placeholder="Select Bank Name" />
-                                    <SelectValue>
+                                    <SelectValue placeholder="Select Bank Name">
                                       {detail.bankName || "Select a bank"}
                                     </SelectValue>
                                   </SelectTrigger>

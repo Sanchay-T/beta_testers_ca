@@ -10,26 +10,33 @@ from reportlab.lib.colors import black
 from datetime import datetime, timedelta
 import torch
 from PIL import Image
+import fitz  # PyMuPDF
+from PIL import Image
+
 import pdfplumber
 from torchvision import transforms
 from huggingface_hub import hf_hub_download
+import cv2
 # import matplotlib
 # matplotlib.use("Agg")
 # from matplotlib.patches import Patch
 from PIL import ImageDraw
+from PIL import Image
 from transformers import TableTransformerForObjectDetection
-from tqdm.auto import tqdm
+# from tqdm.auto import tqdm
 # import matplotlib.pyplot as plt
 # import matplotlib.patches as patches
 import os
 import fitz  # PyMuPDF
 from io import BytesIO
-from .old_bank_extractions import CustomStatement
 import re
 import uuid
 # from findaddy.exceptions import ExtractionError
 import logging
 from .utils import get_base_dir
+
+from paddleocr import PaddleOCR, TextDetection, TextRecognition
+
 
 logger = logging.getLogger(__name__)
 BASE_DIR = get_base_dir()
@@ -37,6 +44,239 @@ logger.info("Base Dir : ", BASE_DIR)
 
 from .utils import get_saved_pdf_dir
 TEMP_SAVED_PDF_DIR = get_saved_pdf_dir()
+
+# # 1. Paths to Your Model Folders and Sample Image
+# # ─────────────────────────────────────────────────────────────────────────────\
+
+DETDIR_server = os.path.join(BASE_DIR,"models", "PP-OCRv5_server_det_infer")
+DETDIR_mobile = os.path.join(BASE_DIR,"models", "PP-OCRv5_mobile_det_infer")
+RECDIR_server = os.path.join(BASE_DIR,"models", "PP-OCRv5_server_rec_infer")
+RECDIR_mobile = os.path.join(BASE_DIR,"models", "PP-OCRv5_mobile_rec_infer")
+
+det_model = TextDetection(model_name="PP-OCRv5_server_det", model_dir= DETDIR_server)
+det_model_mobile = TextDetection(model_name="PP-OCRv5_mobile_det", model_dir=DETDIR_mobile)
+rec_model = TextRecognition(model_name="PP-OCRv5_server_rec", model_dir=RECDIR_server)
+rec_model_mobile = TextRecognition(model_name="PP-OCRv5_mobile_rec", model_dir=RECDIR_mobile)
+# # ─────────────────────────────────────────────────────────────────────────────
+
+
+def add_start_n_end_date_v2(df, start_date, end_date, bank):
+
+    def _missing(s):
+        return s is None or str(s).strip().lower() in {"", "null", "none"}
+
+    df = df.copy()
+
+    # 1. Coerce numeric columns ------------------------------------------------
+    for col in ["Balance", "Debit", "Credit"]:
+        df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
+
+    # 2. Parse the Value Date column once -------------------------------------
+    df["Value Date"] = pd.to_datetime(
+        df["Value Date"],
+        format="%d-%m-%Y",
+        errors="coerce",
+    )
+
+    period_start, period_end = df["Value Date"].iloc[[0, -1]]
+
+    # ── Scenario A: no dates supplied ────────────────────────────────────────
+    if _missing(start_date) and _missing(end_date):
+        return _wrap(df, bank, open_date=start_date, close_date=end_date)            # synthetic rows get real first/last dates
+
+    # ── Scenario B: dates supplied ───────────────────────────────────────────
+    sd = datetime.strptime(start_date, "%d-%m-%Y")
+    ed = datetime.strptime(end_date,   "%d-%m-%Y")
+
+    # 3. Range check (±1 day tolerance, matches original behaviour) ----------
+    # if [sd, ed] sits entirely before or after [period_start, period_end]:
+    if ed < period_start or sd > period_end:
+        raise Exception(
+            f"Error: The period for Bank: {bank} "
+            f"({period_start:%d-%m-%Y} to {period_end:%d-%m-%Y}), "
+            f"does not overlap with the user‐provided dates "
+            f"({sd:%d-%m-%Y} to {ed:%d-%m-%Y})."
+        )
+
+    # 4. Slice from first ≥ start_date to last ≤ end_date ---------------------
+    idx_start = df.index[df["Value Date"] >= pd.Timestamp(sd)].min()
+    idx_end   = df.index[df["Value Date"] <= pd.Timestamp(ed)].max()
+
+    trimmed = df.loc[idx_start:idx_end].reset_index(drop=True)
+
+    # 5. Build final frame with user‑supplied open/close dates ---------------
+    return _wrap(trimmed, bank, open_date=start_date, close_date=end_date)
+
+def _wrap(slice_df, bank, open_date, close_date):
+    first, last = slice_df.iloc[0], slice_df.iloc[-1]
+
+    opening_bal = (
+        first["Balance"] - first["Credit"]
+        if first["Credit"] > 0
+        else first["Balance"] + first["Debit"]
+    )
+    closing_bal = last["Balance"]
+
+    # default dates if not overridden
+    open_dt  = pd.to_datetime(open_date,  format="%d-%m-%Y") if open_date  else first["Value Date"]
+    close_dt = pd.to_datetime(close_date, format="%d-%m-%Y") if close_date else last["Value Date"]
+
+    rows = [
+        {
+            "Value Date": open_dt,
+            "Description": "Opening Balance",
+            "Debit": 0.0,
+            "Credit": 0.0,
+            "Balance": opening_bal,
+        },
+        *slice_df.to_dict("records"),
+        {
+            "Value Date": close_dt,
+            "Description": "Closing Balance",
+            "Debit": 0.0,
+            "Credit": 0.0,
+            "Balance": closing_bal,
+        },
+    ]
+    out = pd.DataFrame(rows)
+    out["Value Date"] = pd.to_datetime(out["Value Date"]).dt.strftime("%d-%m-%Y")
+    out["Bank"] = bank
+    return out
+
+# Function to extract account number and IFSC code from text
+def extract_info(raw_text):
+    acc = "XXXXXXXXXXXXXX"
+    # Regular expressions to capture Customer ID and ECS No
+    customer_id_pattern = r"(?i)\bCust(?:omer)?\s*ID[:\s]*\d{10}\b"
+    ecs_no_pattern = r"(?i)ECS\s*No[:\s]*\d{10,18}\b"  # Match ECS No followed by digits
+    cif_no_pattern = r"CIF\sNo\.?\s*[:\-]?\s*(\d+)"
+
+    # Remove Customer ID and ECS No from the raw text
+    if re.search(customer_id_pattern, raw_text):
+        raw_text = re.sub(customer_id_pattern, "", raw_text)
+    if re.search(ecs_no_pattern, raw_text):
+        raw_text = re.sub(ecs_no_pattern, "", raw_text)
+    if re.search(cif_no_pattern, raw_text):
+        raw_text = re.sub(cif_no_pattern, "", raw_text)
+
+    # Patterns specifically targeting the numeric part for account numbers
+    account_number_patterns = [
+        r"\b(?!18002026161\b)(?!9\d{9}\b)(?!91\d{10}\b)\d{10,18}\b",
+        r"(?!CIF No\.?:?\s*\d+\s*)Account No\.?\s*[:#]?\s*(\d+\/?[A-Z]*\/?\d+)",
+        r"(?i)CUSTOMER\s*ID[:\s]*\d{10}\b",
+        r"(?!Phone No. :?\s?)\d(10)",
+        r"Account No\s*[:#]?\s*(\d+)",
+        r"Account\s*No\s*[:#]?\s*(\d+)",
+        r"Account\sNo.\s:\s(\d+\/[A-Z]+\/\d+)",
+        r"Account\sNo\.?\s*[:#]?\s*(\d+\/[A-Z]+\/\d+)",
+        r"Account\s*number\s*[:#]?\s*(\d+)",
+        r"account\s*number\s*[:#]?\s*(\d+)",
+        r"Account\s*Number\s*[:#]?\s*(\d+)",
+        r"Account Number\s*:\s*(\d+)",
+        r"Account Number\s*(\d+)",
+        r"A/C NO[:#]?\s*(\d+)",
+        r"STATEMENT PERIOD\s*(\d+)",
+        r"Account number[:#]?\s*(\d+)",
+        r"Account\s*[:#]?\s*(\d+)",
+        r"\b\d{15}\b",
+        r"Account #\s*(\d+)",
+        r"\b\d{3}-\d{6}-\d{3}\b",
+        r"A/c X{10}\d{4}",
+        r"\b\d{8}\b",
+    ]
+
+    ifsc_pattern = r"\b[A-Z]{4}0[A-Z0-9]{6}\b"  # IFSC code pattern
+
+    if not raw_text:  # If raw_text is None or empty, return None values
+        return acc
+
+    # Search for account number using specific patterns
+    for pattern in account_number_patterns:
+        match = re.search(pattern, raw_text, re.IGNORECASE)
+
+        if match:
+            try:
+                # Try accessing group 1 if it exists
+                acc = match.group(1).strip()  # Extracted number only
+            except IndexError:
+                # If group 1 does not exist, return the whole match
+                acc = match.group(0).strip()  # Whole match
+        else:
+            acc = None  # No match found
+
+        if match:
+            return acc
+
+
+    # Return None if no pattern matches
+    return acc
+
+def extract_account_details(text):
+
+    try:
+        # Combined pattern to match account holder names for different banks
+        name_patterns = [
+            re.compile(p, re.IGNORECASE)
+            for p in [
+                r"Customer Details\s*:\s*(.*?)\s*\n",
+                r"Name\s*:\s*([^\n]+)",
+                r"Account Holders? Name\s*:\s*([^\n]+)",
+                r"(?:MR\.?|M/S\.?|MS\.?|MRS\.?)\s*([^\n]+)",
+                r"Name:\s*(.*)",
+                r"date ofstatement\s*\n(.*)",
+                r"(.*)\s*Period",
+                r"Customer Name\s*:\s*(.*)",
+                r"INR\s*\n(.*)",
+                r"CUSTOMER NAME (.*)",
+                r"Customer\s*Details\s*:\s*([A-Z][a-zA-Z\s]+[A-Z])\s*",
+                r"Account\s*Holder\s*Name\s*:\s*([A-Z][a-zA-Z\s]+[A-Z])\s*",
+                r"(?:MR\.?|MRS\.?|MS\.?|M/S\.?)\s*([A-Z][a-zA-Z\s]*[A-Z])",
+                r"Customer\s*Name\s*:\s*([A-Z][a-zA-Z\s]+[A-Z])\s*",
+                r"Name\s*of\s*Customer\s*:\s*([A-Z][a-zA-Z\s]+[A-Z])\s*",
+                r"Name\s*:\s*([A-Z][a-zA-Z\s]+[A-Z])\s*",
+                r"Accountholder\s*Name\s*:\s*([A-Z][a-zA-Z\s]+[A-Z])\s*",
+                r"Account\s*Title\s*[:\-]?\s*([A-Z][A-Z\s]+[A-Z])",
+                r"CUSTOMER\s*NAME\s*[:\-]?\s*([A-Z][a-zA-Z\s]+[A-Z])",
+                r"To\s*,?\s*([A-Z][a-zA-Z\s]+[A-Z])",
+                r"TO\s*:\s*([A-Z][a-zA-Z\s]+[A-Z])",
+                r"Account\s*Title\s*:\s*([A-Z][a-zA-Z\s]+[A-Z])",
+                r"Name\s+([A-Z][A-Z\s]+[A-Z])",
+                r"Account Holders? Name\s*([A-Z][A-Z\s]+[A-Z])(?:\s*\n)?",
+            ]
+        ]
+
+        names = []
+        for pattern in name_patterns:
+            matches = pattern.findall(text)
+            if matches:
+                names.extend(matches)
+        # Fallback for joint holder text specific to AXIS_BANK
+        joint_holder_text = "Joint Holder :"
+        if joint_holder_text in text:
+            parts = text.split(joint_holder_text, 1)
+            names.extend(parts[0].strip().split("\n"))
+
+        names = [
+            name.strip() for name in names if name.strip()
+        ]  # Clean up names list
+
+        # Combined pattern to match account numbers for different banks
+        account_numbers = extract_info(text)
+
+        details = [
+            names[0] if names else "_____",
+            account_numbers,
+        ]
+
+        return details
+
+    except Exception as e:
+        print(
+            f"An error occurred while extracting names and account numbers: {str(e)}"
+        )
+        return ["_", "XXXXXXXXXX"]
+
+
 
 def __init__(bank_name, pdf_path, pdf_password, CA_ID):
     writer = None
@@ -256,7 +496,6 @@ def flatten_pdf_rotation(input_pdf_path, output_pdf_path):
     return output_pdf_path
 
 def unlock_and_add_margins_to_pdf(pdf_path, pdf_password, timestamp, CA_ID):
-    margin = 0.3
     os.makedirs(TEMP_SAVED_PDF_DIR, exist_ok=True)
 
     try:
@@ -268,48 +507,9 @@ def unlock_and_add_margins_to_pdf(pdf_path, pdf_password, timestamp, CA_ID):
             if not pdf_document.authenticate(pdf_password):
                 raise ValueError("Incorrect password. Unable to unlock the PDF.")
 
-        # FIRST CHECK: Check if the PDF is image-only
-        first_page = pdf_document[0]
-        text = first_page.get_text("text").strip()
-        if not text or text == "CamScanner":
-            raise ValueError("The PDF is of image-only (non-text) format. Please upload a text PDF.")
-
         # Define the output path for the unlocked PDF
         unlocked_pdf_filename = f"{timestamp}-{CA_ID}_{uuid.uuid4().hex}.pdf"
         unlocked_pdf_path = os.path.join(TEMP_SAVED_PDF_DIR, unlocked_pdf_filename)
-
-        # MARGIN CODE STARTS NOW: Convert margin from inches to points (1 inch = 72 points)
-        margin_pts = margin * 72
-
-        # Process the first page for trimming if needed
-        cropped_doc = load_new_first_page_function(pdf_document)
-
-        if cropped_doc:
-            # Create a new document combining the cropped first page and the remaining pages
-            combined_doc = fitz.open()
-            combined_doc.insert_pdf(cropped_doc)
-            combined_doc.insert_pdf(pdf_document, from_page=1)
-
-            # Save the combined document back to the original reference
-            combined_path = "combined_temp.pdf"
-            combined_doc.save(combined_path)
-            pdf_document = fitz.open(combined_path)
-
-        # Iterate through each page, applying the margin adjustment
-        for page_num in range(len(pdf_document)):
-            page = pdf_document.load_page(page_num)
-            rect = page.rect  # Get the original page size
-
-            # Expand the page size by adding margin around all sides
-            new_rect = fitz.Rect(
-                rect.x0 - margin_pts,  # Left
-                rect.y0,  # Top (unchanged for now)
-                rect.x1 + margin_pts,  # Right
-                rect.y1  # Bottom (unchanged for now)
-            )
-
-            # Set the new page size (media box) to the expanded dimensions
-            page.set_mediabox(new_rect)
 
         # Save the modified PDF (unlocked and with margins)
         pdf_document.save(unlocked_pdf_path)
@@ -321,11 +521,6 @@ def unlock_and_add_margins_to_pdf(pdf_path, pdf_password, timestamp, CA_ID):
         raise ValueError(f"Error: {e}")
 
     finally:
-        # Ensure all temporary documents are closed and cleaned up
-        if 'cropped_doc' in locals() and cropped_doc is not None:
-            cropped_doc.close()
-        if 'combined_doc' in locals() and combined_doc is not None:
-            combined_doc.close()
         if os.path.exists("combined_temp.pdf"):
             os.remove("combined_temp.pdf")
 
@@ -375,6 +570,39 @@ def get_table_column_coordinates(pdf_path):
 
         if len(column_x_coords) < 4:
             return column_all_coords
+
+        return column_x_coords
+
+def get_ocr_column_coordinates(pdf_path, page_num: int = 0):
+    """
+    Treat the whole page as a grid and return the X-coordinates
+    of all significant vertical lines on that page.
+    """
+    with pdfplumber.open(pdf_path) as pdf:
+        page = pdf.pages[page_num]
+
+        # Ask pdfplumber to find *line* objects, but ignore its table output
+        table_settings = {
+            "vertical_strategy": "lines",
+            "horizontal_strategy": "lines",
+            "intersection_x_tolerance": 200,
+        }
+        tf = page.debug_tablefinder(table_settings)
+
+        page_height = page.height
+        min_length = 0.50 * page_height        # keep only long-ish lines
+        tolerance  = 1                         # how strict a “vertical” check is
+
+        column_x_coords = sorted(
+            {
+                edge["x0"]
+                for edge in tf.edges
+                if edge["orientation"] == "v"
+                   and "top" in edge and "bottom" in edge
+                   and (edge["bottom"] - edge["top"]) >= min_length
+                   and abs(edge["x0"] - edge["x1"]) <= tolerance
+            }
+        )
 
         return column_x_coords
 
@@ -465,6 +693,7 @@ def parse_date(date_string):
         "%d-%b- %Y %H:%M:%S",
         "%d/%b/%Y %H:%M:%S",
         "%y-%m-%d %H:%M:%S",
+        "%d/%m/%Y %H:%M",
         "%y-%m-%d",
     ]
 
@@ -625,6 +854,7 @@ def cleaning(new_df):
             "%d-%b- %Y %H:%M:%S",
             "%d/%b/%Y %H:%M:%S",
             "%y-%m-%d %H:%M:%S",
+            "%d/%m/%Y %H:%M",
             "%y-%m-%d",
         ]
 
@@ -801,13 +1031,62 @@ def crdr_to_credit_debit_columns(df, description_column, date_column, bal_column
 
     return final_df
 
-def extract_text_from_pdf(unlocked_file_path):
+def extract_text_from_pdf_ocr(unlocked_file_path):
     with pdfplumber.open(unlocked_file_path) as pdf:
         first_page = pdf.pages[0]
         text = first_page.extract_text()
         return text.strip() if text else None
 
 ##____________AFTER EXTRACTION (cleaning)_________________
+
+##--------------------------------------------------------------------------------------------------------------------##
+
+
+def add_horizontal_lines_to_page(page, horizontal_lines, scale, line_width = 0.8, line_opacity = 1.0):
+
+  # Add horizontal lines
+  for x_px, y_px, w_px, h_px in horizontal_lines:
+      x  = x_px * scale
+      y  = y_px * scale
+      L  = w_px * scale
+      t  = h_px * scale  # thickness
+
+      left  = page.rect.x0
+      right = page.rect.x1
+
+      page.draw_line(
+          fitz.Point(left, y),
+          fitz.Point(right, y),
+          color=(0, 0, 1),
+          width=t
+      )
+
+  return page
+
+def add_vertical_lines_to_page(page, vertical_lines, scale, line_width = 0.8, line_opacity = 1.0):
+
+  # Add vertical lines
+  for x_px, y_px, w_px, h_px in vertical_lines:
+      x  = x_px * scale
+      y  = y_px * scale
+      H  = h_px * scale
+      t  = w_px * scale  # thickness
+
+      up  = page.rect.y0
+      down = page.rect.y1
+
+      page.draw_line(
+          fitz.Point(x, up),
+          fitz.Point(x, down),
+          color=(0, 0, 1),
+          width=t
+      )
+
+  return page
+
+
+##--------------------------------------------------------------------------------------------------------------------##
+
 
 ##____________COLUMN SEPARATORS_______________________
 def pdf_to_images(pdf_path):
@@ -911,7 +1190,7 @@ def annotate_pdf(pdf_document, columns):
             xmin = bbox[0]  # Extract xmin
 
             # Draw the left side line (xmin) for each column
-            list_of.append(xmin)
+            list_of.append(xmin)            
             page.draw_line((xmin, 0), (xmin, page_height), color=(1, 0, 0), width=1)
 
         # Draw the bounding box for the rightmost column
@@ -926,11 +1205,14 @@ def annotate_pdf(pdf_document, columns):
     return lines
 
 def process_pdf_and_annotate(pdf_path, output_pdf):
+
     images = pdf_to_images(pdf_path)
+    img_path = images[0]  # Use the first image for column detection
+
     pdf_document = fitz.open(pdf_path)
 
     # Detect table columns only on the first page
-    first_page_columns = detect_table_columns(images[0])
+    first_page_columns = detect_table_columns(img_path)
 
     # Display the first page with detected table columns
     # plot_results(images[0], first_page_columns)
@@ -961,7 +1243,7 @@ def clean_table(table):
     return cleaned_table
 
 # Functions for handling test cases and transformations
-def extract_dataframe_from_pdf(page_path, table_settings):
+def extract_dataframe_from_pdf_ocr(page_path, table_settings):
     pdf = pdfplumber.open(page_path)
     df_total = pd.DataFrame()
     # text = extract_text_from_pdf(unlocked_pdf_path)
@@ -976,7 +1258,8 @@ def extract_dataframe_from_pdf(page_path, table_settings):
     w = df_total.copy()
     # rage_path = pdf_path.split(".")[0]
     # w.to_excel(f"raw_dataframe_{rage_path}.xlsx")
-    return w
+    df = cut_the_datframe_from_headers(w)
+    return df
 
 def extract_dataframe_from_full_pdf(pdf_path):
     pdf = pdfplumber.open(pdf_path)
@@ -1018,7 +1301,6 @@ def cut_the_datframe_from_headers(df):
         df = df.loc[crop_index:].reset_index(drop=True)
 
     return df
-
 
 def validate_bank_statement(df, tolerance=2, raise_error=True):
     """
@@ -1119,8 +1401,7 @@ def validate_bank_statement(df, tolerance=2, raise_error=True):
 
     return df
 
-
-def validate_bank_statement_returns_error_message(df, tolerance=2, raise_error=True):
+def validate_bank_statement_returns_error_message_ocr(df, tolerance=2, raise_error=True):
     """
     Validates a bank statement by checking that each row's balance matches the previous balance +/- credit/debit.
 
@@ -1223,9 +1504,10 @@ def validate_bank_statement_returns_error_message(df, tolerance=2, raise_error=T
 
     return error_message
 
-def model_for_pdf(df):
+def model_for_pdf_ocr(df):
     # Simulate cleaning or processing the dataframe
     # print(f"Modeling dataframe: {df}")
+    print("Modeling dataframe with the new mode for PDF extraction...")
     print(df.head(10))
     df = cut_the_datframe_from_headers(df)
     date_column = [extract_date_col_from_df(df)[0]]
@@ -1343,25 +1625,28 @@ def add_column_separators_with_coordinates(pdf_path, coordinates):
 
 # Optimized test case A
 def run_test_case_A(page, explicit_lines):
+    print("Running Test Case A with explicit lines:", explicit_lines)
+    print("Page content:", page)
+
     try:
-        if explicit_lines == 0:
-            df = extract_dataframe_from_pdf(page, table_settings={
+        if not explicit_lines:
+            df = extract_dataframe_from_pdf_ocr(page, table_settings={
                 "vertical_strategy": "lines",
                 "horizontal_strategy": "lines",
                 "edge_min_length": 20,
             })
-            model_df, lists = model_for_pdf(df)  # Process the DataFrame
-            model_df = validate_bank_statement(model_df)
+            model_df, lists = model_for_pdf_ocr(df)  # Process the DataFrame
+            # model_df = validate_bank_statement(model_df)
             return model_df, lists  # No coordinates for Test Case A
         else:
-            df = extract_dataframe_from_pdf(page, table_settings={
+            df = extract_dataframe_from_pdf_ocr(page, table_settings={
                 "vertical_strategy": "explicit",
                 "explicit_vertical_lines": explicit_lines,
                 "horizontal_strategy": "lines",
-                "intersection_x_tolerance": 20,
+                "intersection_x_tolerance": 200,
             })
-            model_df, lists = model_for_pdf(df)
-            model_df = validate_bank_statement(model_df)# Process the DataFrame
+            model_df, lists = model_for_pdf_ocr(df)
+            # model_df = validate_bank_statement(model_df)# Process the DataFrame
             return model_df, lists  # No coordinates for Test Case A
 
     except Exception as e:
@@ -1371,27 +1656,27 @@ def run_test_case_A(page, explicit_lines):
 # Optimized test case B
 def run_test_case_B(page_with_rows_added, explicit_lines):
     try:
-        if explicit_lines == 0:
-            df = extract_dataframe_from_pdf(page_with_rows_added, table_settings={
+        if not explicit_lines:
+            df = extract_dataframe_from_pdf_ocr(page_with_rows_added, table_settings={
                 "vertical_strategy": "lines",
                 "horizontal_strategy": "text",
                 "edge_min_length": 20,
-                "intersection_x_tolerance": 120
+                "intersection_x_tolerance": 200
             })
             print(df.head(20))
-            model_df, lists = model_for_pdf(df)  # Process the DataFrame
-            model_df = validate_bank_statement(model_df)
+            model_df, lists = model_for_pdf_ocr(df)  # Process the DataFrame
+            # model_df = validate_bank_statement(model_df)
             return model_df, lists  # No coordinates for Test Case A
         else:
-            df = extract_dataframe_from_pdf(page_with_rows_added, table_settings={
+            df = extract_dataframe_from_pdf_ocr(page_with_rows_added, table_settings={
                 "vertical_strategy": "explicit",
                 "explicit_vertical_lines": explicit_lines,
                 "horizontal_strategy": "text",
-                "intersection_x_tolerance": 120
+                "intersection_x_tolerance": 200
             })
             print(df.head(20))
-            model_df, lists = model_for_pdf(df)
-            model_df = validate_bank_statement(model_df)
+            model_df, lists = model_for_pdf_ocr(df)
+            # model_df = validate_bank_statement(model_df)
             return model_df, lists  # No coordinates for Test Case B
     except Exception as e:
         print(f"Test Case B failed: {e}")
@@ -1400,14 +1685,14 @@ def run_test_case_B(page_with_rows_added, explicit_lines):
 # Optimized test case C
 def run_test_case_C(page_with_columns_added, explicit_lines):
     try:
-        df = extract_dataframe_from_pdf(page_with_columns_added, table_settings={
+        df = extract_dataframe_from_pdf_ocr(page_with_columns_added, table_settings={
             "vertical_strategy": "explicit",
             "explicit_vertical_lines": explicit_lines,
             "horizontal_strategy": "lines",
-            "intersection_x_tolerance": 120
+            "intersection_x_tolerance": 200
         })
-        model_df, lists = model_for_pdf(df)
-        model_df = validate_bank_statement(model_df)
+        model_df, lists = model_for_pdf_ocr(df)
+        # model_df = validate_bank_statement(model_df)
         return model_df, lists  # Return coordinates for Test Case C
     except Exception as e:
         print(f"Test Case C failed: {e}")
@@ -1416,14 +1701,14 @@ def run_test_case_C(page_with_columns_added, explicit_lines):
 # Optimized test case D
 def run_test_case_D(page_with_rows_n_columns_added, explicit_lines):
     try:
-        df = extract_dataframe_from_pdf(page_with_rows_n_columns_added, table_settings={
+        df = extract_dataframe_from_pdf_ocr(page_with_rows_n_columns_added, table_settings={
             "vertical_strategy": "explicit",
             "explicit_vertical_lines": explicit_lines,
             "horizontal_strategy": "text",
-            "intersection_x_tolerance": 120,
+            "intersection_x_tolerance": 200,
         })
-        model_df, lists = model_for_pdf(df)
-        model_df = validate_bank_statement(model_df)
+        model_df, lists = model_for_pdf_ocr(df)
+        # model_df = validate_bank_statement(model_df)
         return model_df, lists  # Return coordinates for Test Case C
     except Exception as e:
         print(e)
@@ -1436,89 +1721,704 @@ def run_test_case_E(bank, pdf_path, timestamp, CA_ID):
     # df = customer.custom_extraction(bank, pdf_path, 0, timestamp)
     return df, lists
 
-def process_pdf_with_test_cases(pdf_path):
-    print("Starting Test Case Processing...")
+def image_with_ocr_to_pdf_dynamic_font(
+    image_path: str,
+    ocr_boxes: list[dict],
+    horizontal_lines: list,
+    vertical_lines: list,
+    doc=None,
+    fontname: str = "helv",
+    font_scale: float = 1.0,
+    min_fontsize: float = 1.0,
+    image_quality: int = 90,
+    dpi: int = 300,
+    force_a4: bool = True,
+):
+    """
+    Force-fit the image into A4 (or use dpi-based size), *without* distortion,
+    and overlay the OCR boxes in exactly the right spots.
+    """
+    img = Image.open(image_path)
+    w_px, h_px = img.size
 
-    # Load the first page of the PDF into memory once
-    page = load_first_page_into_memory(pdf_path)
-    reader = PdfReader(page)
-    writer = PdfWriter()
-    age = reader.pages[0]
-    rotate_obj = age.get(NameObject("/Rotate"), NumberObject(0))
-    rotation = int(rotate_obj)  # Convert to plain int
-    coordinates_A = get_table_column_coordinates(page)
-
-    if rotation != 0:
-        print("-----------------------PDF IS ROTATED--------------------------")
-        # Test Case A
-        model_df_A, lists = run_test_case_A(page, 0)
-        if model_df_A is not None:
-            print("Test Case A passed")
-            return ["A", 0, lists, 0]  # Test Case A passed
-
-        model_df_B, lists = run_test_case_B(page, 0)
-        if model_df_B is not None:
-            print("Test Case B passed")
-            return ["B", 0, lists, 0]  # Test Case B passed
-
+    if force_a4:
+        target_w_pt, target_h_pt = 595.0, 842.0
+        scale = min(target_w_pt / w_px, target_h_pt / h_px)
+        offset_x = (target_w_pt - w_px * scale) / 2
+        offset_y = (target_h_pt - h_px * scale) / 2
+        page_w, page_h = target_w_pt, target_h_pt
     else:
-        # Test Case A
-        model_df_A, lists = run_test_case_A(page, coordinates_A)
-        if model_df_A is not None:
+        scale = 72.0 / dpi
+        offset_x = offset_y = 0
+        page_w, page_h = w_px * scale, h_px * scale
+
+    if doc is None:
+        doc = fitz.open()
+    page = doc.new_page(width=page_w, height=page_h)
+
+    # insert image stretched *uniformly*
+    pix = fitz.Pixmap(image_path)
+    img_rect = fitz.Rect(offset_x, offset_y,
+                         offset_x + w_px*scale,
+                         offset_y + h_px*scale)
+    page.insert_image(img_rect, pixmap=pix, overlay=False)
+
+    # lines must also use (x*scale+offset_x, y*scale+offset_y)
+    if horizontal_lines:
+        page = add_horizontal_lines_to_page(page, horizontal_lines, scale, offset_y)
+    if vertical_lines:
+        page = add_vertical_lines_to_page(page, vertical_lines, scale, offset_x)
+
+    page.wrap_contents()
+
+    for box in ocr_boxes:
+        x0 = box["x"] * scale + offset_x
+        y0 = box["y"] * scale + offset_y
+        x1 = (box["x"] + box["w"]) * scale + offset_x
+        y1 = (box["y"] + box["h"]) * scale + offset_y
+        rect = fitz.Rect(x0, y0, x1, y1)
+
+        # debug rectangle
+        annot = page.add_rect_annot(rect)
+        annot.set_colors(stroke=(1, 0, 0))
+        annot.set_border(width=0.5)
+        annot.update()
+
+        fontsize = (box["h"] * scale) * font_scale
+        while fontsize >= min_fontsize:
+            rc = page.insert_textbox(
+                rect,
+                box["text"],
+                fontsize=fontsize,
+                fontname=fontname,
+                align=fitz.TEXT_ALIGN_CENTER,
+                render_mode=3,
+                overlay=True
+            )
+            if rc >= 0:
+                break
+            fontsize -= 0.5
+
+        if rc < 0:
+            print(f"Warning: box didn’t fit: {box}")
+
+    return doc
+
+def vertical_lines_detection(image_path, min_line_height_ratio=0.20, line_width_range=(1, 5)):
+    """
+    Enhanced vertical line detection optimized for bank statements and grids
+
+    Parameters:
+    image_path (str): Path to the input image file
+    min_line_height_ratio (float): Minimum height ratio compared to image height (default 0.20)
+    line_width_range (tuple): Min and max width for vertical lines in pixels
+
+    Returns:
+    list: List of vertical lines as (x, y, w, h)
+    """
+    # Read the image
+    image = cv2.imread(image_path)
+    img_height = image.shape[0]
+
+    if image is None:
+        raise ValueError(f"Could not read image: {image_path}")
+    
+    print(f"Processing image for vertical line detection: {image_path}")
+
+    # Convert to grayscale
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    # Image dimensions
+    img_height, img_width = image.shape[:2]
+
+    # Create a binary image optimized for vertical lines
+    binary_v = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C,
+                                    cv2.THRESH_BINARY_INV, 15, 2)
+
+    # Create multiple vertical kernels for better line detection with more variety
+    v_kernel_sizes = [
+        int(img_height * 0.03),  # 3% of image height (for short lines)
+        int(img_height * 0.07),  # 7% of image height
+        int(img_height * 0.10),  # 10% of image height (original value)
+        int(img_height * 0.15)   # 15% of image height (for longer lines)
+    ]
+
+    # Process with multiple kernel sizes and combine results
+    vertical_binary_results = []
+
+    for kernel_size in v_kernel_sizes:
+        vertical_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1, kernel_size))
+
+        # Process with morphological operations - use more iterations for thinner lines
+        temp_v = cv2.erode(binary_v, vertical_kernel, iterations=1)
+
+        # Use different dilation iterations based on kernel size
+        iteration_count = 1
+        if kernel_size <= int(img_height * 0.05):  # For smaller kernels
+            iteration_count = 2  # More aggressive dilation to capture thin/broken lines
+
+        v_result = cv2.dilate(temp_v, vertical_kernel, iterations=iteration_count)
+
+        # Clean up with a small opening
+        small_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1, 3))
+        v_result = cv2.morphologyEx(v_result, cv2.MORPH_OPEN, small_kernel)
+
+        vertical_binary_results.append(v_result)
+
+    # Combine all vertical detection results
+    vertical_lines_img = vertical_binary_results[0]
+    for res in vertical_binary_results[1:]:
+        vertical_lines_img = cv2.bitwise_or(vertical_lines_img, res)
+
+    # Additional morphological operations to connect nearby line segments
+    connect_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1, 10))
+    vertical_lines_img = cv2.morphologyEx(vertical_lines_img, cv2.MORPH_CLOSE, connect_kernel)
+
+    # Find contours of vertical lines
+    contours, _ = cv2.findContours(
+        vertical_lines_img,
+        cv2.RETR_EXTERNAL,
+        cv2.CHAIN_APPROX_SIMPLE
+    )
+
+    # Filter and process vertical lines with more relaxed criteria
+    min_height = img_height * min_line_height_ratio
+    min_width, max_width = line_width_range
+
+    # Collect all potential vertical lines
+    potential_v_lines = []
+
+    for cnt in contours:
+        x, y, w, h = cv2.boundingRect(cnt)
+
+        # More relaxed width criteria
+        if min_width <= w <= max_width * 3:  # Tripled max width to catch merged lines
+            # More relaxed height range
+            if h >= min_height * 0.6:  # Even more reduced height requirement - catches shorter lines
+                # Calculate confidence based on height and pixel density
+                roi = vertical_lines_img[y:y+h, x:x+w]
+                pixel_density = cv2.countNonZero(roi) / (w * h)
+
+                # Height relative to image height
+                height_ratio = h / img_height
+
+                # Calculate confidence (higher is better)
+                # Weight pixel density more - this helps with faint lines
+                confidence = (pixel_density * 0.7) + (height_ratio * 0.3)
+
+                potential_v_lines.append((x, y, w, h, confidence))
+
+    # Sort by x-coordinate to process from left to right
+    potential_v_lines.sort(key=lambda x: x[0])
+
+    # Process lines with smarter duplicate detection
+    last_x = -100  # Initialize with a value that won't match any line
+    vertical_lines = []
+
+    for x, y, w, h, conf in potential_v_lines:
+        # Check if this line is too close to the last added line
+        if x - last_x > w * 2:  # Slightly reduced separation requirement
+            # Accept lower confidence threshold to catch more lines
+            if conf > 0.2 or x - last_x > 15:
+                vertical_lines.append((x, y, w, h))
+                last_x = x
+
+    adjusted_vertical_lines = [(x, 0, w, img_height) for (x, y, w, h) in vertical_lines]
+    return adjusted_vertical_lines
+
+def new_enhance_image_contrast(image,
+                              clip_limit: float = 9.0,
+                              tile_grid_size: tuple = (4, 4),
+                              jpeg_quality: int = 90,
+                              dpi: int = 250):
+    """
+    Combine CLAHE-based contrast enhancement with JPEG compression
+    to both sharpen faint text (even under watermarks) and
+    attenuate remaining watermark artifacts.
+
+    Args:
+        image (np.ndarray): Input BGR image (as from cv2.imread).
+        clip_limit (float): CLAHE clip limit. Higher => more contrast. Default=5.0.
+        tile_grid_size (tuple): CLAHE tile grid size. Default=(4,4).
+        jpeg_quality (int): Pillow JPEG quality (1-100). Lower => more artifacting.
+        dpi (int): DPI metadata for the JPEG (doesn't affect pixel data).
+
+    Returns:
+        np.ndarray: Enhanced BGR image suitable for OCR.
+    """
+    # 1. Convert to grayscale and apply CLAHE
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    clahe = cv2.createCLAHE(clipLimit=clip_limit,
+                            tileGridSize=tile_grid_size)
+    enhanced = clahe.apply(gray)  # boosts local contrast :contentReference[oaicite:0]{index=0}
+
+    # 2. Convert back to BGR so downstream code expecting 3‐channels still works
+    enhanced_bgr = cv2.cvtColor(enhanced, cv2.COLOR_GRAY2BGR)
+
+    # 3. Quick JPEG “denoise” via Pillow to help suppress faint watermarks
+    #    (the compression step tends to blur very low‐contrast background patterns) :contentReference[oaicite:1]{index=1}
+    pil_img = Image.fromarray(cv2.cvtColor(enhanced_bgr, cv2.COLOR_BGR2RGB))
+    buf = io.BytesIO()
+    pil_img.save(buf,
+                 format='JPEG',
+                 quality=jpeg_quality,
+                 optimize=True,
+                 dpi=(dpi, dpi))
+    buf.seek(0)
+    optimized = Image.open(buf)
+
+    # 4. Convert back to OpenCV BGR
+    final = cv2.cvtColor(np.array(optimized), cv2.COLOR_RGB2BGR)
+    return final
+
+def detect_and_split_boxes(det_results, vertical_lines, encoded_pdf):
+    """
+    Detect text boxes and split them at vertical lines without recognition
+
+    Parameters:
+    image_path (str): Path to the input image
+    enhance_path (str): Path to the enhanced image
+    detect_lines_func (function): Function to detect vertical lines
+
+    Returns:
+    tuple: (split_text_boxes, vertical_lines)
+    """
+
+    if encoded_pdf:
+        return det_results
+
+    # Process detection results
+    split_text_boxes = []
+
+    # Process detection-only results
+    for idx in range(len(det_results)):
+        boxes = det_results[idx]
+        for points in boxes:
+            # Convert points to rectangle
+            x_coords = [point[0] for point in points]
+            y_coords = [point[1] for point in points]
+            x = min(x_coords)
+            y = min(y_coords)
+            w = max(x_coords) - x
+            h = max(y_coords) - y
+
+            box = {
+                'x': int(x),
+                'y': int(y),
+                'w': int(w),
+                'h': int(h),
+                'points': points,  # Keep original points for reference
+                'text': "",  # Will be filled in by recognition step
+                'confidence': 0.0  # Will be filled in by recognition step
+            }
+
+            # Check if this box intersects with any vertical line
+            intersecting_lines = []
+            for line_idx, (line_x, line_y, line_w, line_h) in enumerate(vertical_lines):
+                # Calculate the center of the line
+                line_center_x = line_x + line_w // 2
+
+                # Check if the vertical line intersects with the box horizontally
+                if box['x'] < line_center_x < (box['x'] + box['w']):
+                    # Check if the line and box overlap vertically
+                    if (line_y < (box['y'] + box['h']) and (line_y + line_h) > box['y']):
+                        # Add this line as intersecting
+                        intersecting_lines.append((line_idx, line_center_x))
+
+            # If no intersections, add the box as is
+            if not intersecting_lines:
+                split_text_boxes.append(box)
+                continue
+
+            # We have intersections, so we need to split this box
+            # Sort intersecting lines by x-coordinate
+            intersecting_lines.sort(key=lambda line: line[1])
+
+            # Process each split iteratively
+            current_x = box['x']
+
+            for split_idx, (_, line_x) in enumerate(intersecting_lines):
+                # Calculate width of this segment
+                segment_width = line_x - current_x
+
+                # Create a box for the left segment
+                if segment_width > 0:
+                    split_text_boxes.append({
+                        'x': current_x,
+                        'y': box['y'],
+                        'w': segment_width,
+                        'h': box['h'],
+                        'points': None,  # Original points no longer valid
+                        'text': "",  # Will be filled in by recognition step
+                        'confidence': 0.0,  # Will be filled in by recognition step
+                        'split': True,
+                        'split_idx': split_idx
+                    })
+
+                # Update for the next iteration
+                current_x = line_x
+
+            # Add the final segment
+            final_width = (box['x'] + box['w']) - current_x
+            if final_width > 0:
+                split_text_boxes.append({
+                    'x': current_x,
+                    'y': box['y'],
+                    'w': final_width,
+                    'h': box['h'],
+                    'points': None,  # Original points no longer valid
+                    'text': "",  # Will be filled in by recognition step
+                    'confidence': 0.0,  # Will be filled in by recognition step
+                    'split': True,
+                    'split_idx': len(intersecting_lines)
+                })
+
+    return split_text_boxes
+
+def detect_and_split_boxes_new(det_page, vertical_lines, encoded_pdf: bool = False):
+    """
+    Slice every text-detection box at the supplied vertical rules.
+
+    Parameters
+    ----------
+    det_page      : dict
+        Single-page result from TextDetection()
+        Must contain keys: 'dt_polys' (N×4×2 int array) and
+        'dt_scores' (list of floats, len N).
+    vertical_lines: list[(x, y, w, h)]
+        Coordinates of vertical rulers already detected in the same image.
+    encoded_pdf   : bool, default False
+        If the PDF already carries selectable text, no splitting is required.
+
+    Returns
+    -------
+    List[Box]
+        A flat list of dictionaries; each represents either an untouched
+        detection or a fragment created by splitting.  Keys:
+
+        x, y, w, h      : int  – axis-aligned bounding rectangle
+        points          : list – original quad vertices (None for fragments)
+        confidence      : float
+        text            : str  – recogniser will fill later
+        split           : bool – True if this is a fragment
+        split_idx       : int  – order of fragment within parent (0-n, left→right)
+        parent_idx      : int  – index of the original polygon in det_page['dt_polys']
+    """
+    # ------------------------------------------------------------------ fast-exit
+    if encoded_pdf:
+        # caller can keep working with original detection output unchanged
+        return det_page
+
+    # ------------------------------------------------------------------ normalise
+    poly_arr = det_page["dt_polys"].astype(int)       # (N, 4, 2)
+    scores = list(map(float, det_page["dt_scores"]))  # (N,)
+
+    split_boxes: List[Box] = []
+
+    # ------------------------------------------------------------------ main loop
+    for idx, (poly, sc) in enumerate(zip(poly_arr, scores)):
+        xs, ys = poly[:, 0], poly[:, 1]
+        x0, y0 = int(xs.min()), int(ys.min())
+        w, h = int(xs.max() - xs.min()), int(ys.max() - ys.min())
+
+        # identify rulers that bisect this rectangle
+        crossings = [
+            (ln_idx, lx + lw // 2)
+            for ln_idx, (lx, ly, lw, lh) in enumerate(vertical_lines)
+            if x0 < lx + lw // 2 < x0 + w and ly < y0 + h and ly + lh > y0
+        ]
+
+        # ................................................ no crossings → keep box
+        if not crossings:
+            split_boxes.append(
+                {
+                    "x": x0,
+                    "y": y0,
+                    "w": w,
+                    "h": h,
+                    "points": poly.tolist(),
+                    "confidence": sc,
+                    "text": "",
+                }
+            )
+            continue
+
+        # ................................................ crossings → split box
+        crossings.sort(key=lambda t: t[1])  # left → right
+        cur_x = x0
+
+        for seg_idx, (_, cx) in enumerate(crossings):
+            seg_w = cx - cur_x
+            if seg_w > 0:
+                split_boxes.append(
+                    {
+                        "x": cur_x,
+                        "y": y0,
+                        "w": seg_w,
+                        "h": h,
+                        "points": None,
+                        "confidence": sc,
+                        "split": True,
+                        "split_idx": seg_idx,
+                        "parent_idx": idx,
+                        "text": "",
+                    }
+                )
+            cur_x = cx
+
+        # right-most fragment
+        right_w = x0 + w - cur_x
+        if right_w > 0:
+            split_boxes.append(
+                {
+                    "x": cur_x,
+                    "y": y0,
+                    "w": right_w,
+                    "h": h,
+                    "points": None,
+                    "confidence": sc,
+                    "split": True,
+                    "split_idx": len(crossings),
+                    "parent_idx": idx,
+                    "text": "",
+                }
+            )
+
+    return split_boxes
+
+def recognize_text_in_boxes(image, boxes):
+    """
+    Batch-recognise the text inside `boxes` on `image`.
+
+    Parameters
+    ----------
+    image : np.ndarray (H×W×3 BGR)
+    boxes : list of dicts with keys x, y, w, h
+    ocr_rec : a pre-initialised PaddleOCR object
+              with det=False, rec=True, cls=False
+
+    Returns
+    -------
+    list[dict]  -- boxes enriched with 'text' and 'confidence'
+    """
+    crops, meta = [], []
+
+    start_time = time.time()
+
+    print("Starting RECOGNITIO**************************************************N processing...")
+
+    # print("boxes:", boxes)
+    # print("image shape:", image)
+
+    # 1️⃣ collect ROIs in RAM (no cv2.imwrite)
+    for b in boxes:
+        # print("Processing box:", b)
+        x0, y0, x1, y1 = b['x'], b['y'], b['x'] + b['w'], b['y'] + b['h']
+        # print("x0, y0, x1, y1:", x0, y0, x1, y1)
+        roi = image[y0:y1, x0:x1]
+        # print("roi shape:", roi)
+
+        # skip empty / very small crops
+        if roi.size == 0 or roi.shape[0] < 5 or roi.shape[1] < 5:
+            b.update(text='', confidence=0.0)
+            continue
+
+        crops.append(roi)
+        meta.append(b)
+
+    if not crops:                       # nothing to do
+        return boxes
+
+    # 2️⃣ single batched call (Paddle handles rec_batch_num)
+    #    det=False & cls=False keep it strictly recogniser-only
+
+    start = time.time()
+    print("Starting recognition on crops...")
+    rec_results = rec_model_mobile.predict(crops) ##############################################################################################
+    end = time.time()
+    print(f"Time taken for recognition: {end - start:.2f} seconds")
+
+    # print("Recognition results:", rec_results)
+
+    # 3️⃣ unpack results back into their boxes
+    for b, res in zip(meta, rec_results):
+        # each res looks like [[txt, score]]
+        txt, score = res['rec_text'], res['rec_score']
+        b.update(text=txt, confidence=score)
+
+    return boxes
+
+
+def returns_doc_according_to_columns(images_path, detected_original_bboxs, vertical_lines, horizontal_lines, encoded_pdf, first_page):
+   """
+   Returns a document with columns added based on the test case.
+   This function is a placeholder and should be replaced with actual logic.
+   """
+   output_folder = "temp_pdfs"
+   os.makedirs(output_folder, exist_ok=True)
+   output_pdf = os.path.join(TEMP_SAVED_PDF_DIR, f"ocr_output_{uuid.uuid4().hex}.pdf")
+   doc = fitz.open()
+
+   if first_page:
+      print("Processing first page with detected boxes")
+      images_path = [images_path[0]]
+      detected_original_bboxs = [detected_original_bboxs[0]]
+          
+   print("len detected:", len(detected_original_bboxs))
+
+   i = 0
+   for i in range(len(images_path)):
+
+      print(f"Processing  ----------- page {i} with detected boxes")
+
+      print("Detected original bounding boxes:", detected_original_bboxs[i])
+
+      # 1. First detect and split boxes (no recognition yet)
+      split_boxes = detect_and_split_boxes_new(detected_original_bboxs[i], vertical_lines, encoded_pdf)
+
+      print(f"Split boxes for page {i}: {split_boxes}")
+
+      print("step one passed")
+
+      # 2. Now run text recognition on the split boxes
+      text_boxes = recognize_text_in_boxes(images_path[i], split_boxes)
+
+      print("step two passed")
+
+      image_path = images_path[i]  # Use the first page image directly
+    #   print("pdf to images:", image_path)
+      enhanced_image = new_enhance_image_contrast(image_path)
+      enhanced_path = os.path.join(TEMP_SAVED_PDF_DIR, f"temp_enhanced_{i}_is_{uuid.uuid4().hex}.jpg")
+      cv2.imwrite(enhanced_path, enhanced_image)
+      print(f"Enhanced image {i} saved at:", enhanced_path)
+      enhanced_new_path = save_first_page_numpy_to_image(enhanced_image)
+   
+      # 3. Add this page to our document
+      doc = image_with_ocr_to_pdf_dynamic_font(enhanced_new_path, text_boxes, horizontal_lines, vertical_lines,
+                                                doc=doc,  # Pass the existing document
+                                                )
+      
+      print("step three passed")
+      
+      i += 1
+   
+   # 4. Save the document to a temporary file
+   if doc:
+         doc.save(
+            output_pdf,
+            garbage=3,
+            deflate=True,
+            deflate_images=True,
+            deflate_fonts=True,
+            clean=False
+         )
+         doc.close()
+
+   return output_pdf
+
+def save_first_page_numpy_to_image(array):
+   output_path = os.path.join(TEMP_SAVED_PDF_DIR, f"first_page_image_{uuid.uuid4().hex}.png")
+   # OpenCV saves in BGR format, so convert RGB -> BGR
+   img_bgr = cv2.cvtColor(array, cv2.COLOR_RGB2BGR)
+   cv2.imwrite(output_path, img_bgr, [cv2.IMWRITE_PNG_COMPRESSION, 0])  # 0 = highest quality for PNG
+   return output_path
+
+
+def process_pdf_with_test_cases(pdf_to_images, detected_original_bboxs, encoded_pdf):
+   # Create new PDF document with compression settings
+   horizontal_lines = [] # Placeholder for horizontal lines, if needed
+   
+   ###-------------------------FOR DETECTION OF VERTICAL LINES WHERE ITS REALLY PRESENT------------------------------###
+
+   # image_path = save_first_page_numpy_to_image(pdf_to_images[0]) #get the first 2 pages of the scanned pdf
+   image_path = pdf_to_images[0]  # Use the first page image directly
+   # print("pdf to images:", image_path)
+   enhanced_image = new_enhance_image_contrast(image_path)
+#    enhanced_path = "temp_enhanced.jpg"
+   enhanced_path = os.path.join(TEMP_SAVED_PDF_DIR, f"temp_enhanced_is_{uuid.uuid4().hex}.jpg")
+
+   cv2.imwrite(enhanced_path, enhanced_image)
+   print("Enhanced image saved at:", enhanced_path)
+   new_path = save_first_page_numpy_to_image(enhanced_image)
+   coordinates_A = vertical_lines_detection(new_path) #returns lines (if>3)
+   print("Detected vertical lines:", coordinates_A)
+   ###-----------------------------END OF DETECTION OF VERTICAL LINES WHERE ITS REALLY PRESENT-----------------------###
+
+   doc_og = returns_doc_according_to_columns(pdf_to_images, detected_original_bboxs, coordinates_A, horizontal_lines, encoded_pdf, first_page=True) #rec1
+   print(f"Document after initial processing: {doc_og}")
+
+#    v_lines = [item[0] for item in coordinates_A]
+
+   print("Starting Test Case Processing...")
+
+   coordinates_after_ocr = get_ocr_column_coordinates(doc_og)
+
+#    print("before ocr: ", v_lines)
+   print("after ocr: ", coordinates_A)
+
+   if len (coordinates_A) > 3:
+
+    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% NOT SKIPPING %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+    # Test Case A
+    model_df_A, lists = run_test_case_A(doc_og, coordinates_after_ocr)
+    if model_df_A is not None:
             print("Test Case A passed")
             return ["A", 0, lists, coordinates_A]  # Test Case A passed
 
-        model_df_B, lists = run_test_case_B(page, coordinates_A)
-        if model_df_B is not None:
+    model_df_B, lists = run_test_case_B(doc_og, coordinates_after_ocr)
+    if model_df_B is not None:
             print("Test Case B passed")
             return ["B", 0, lists, coordinates_A]  # Test Case B passed
 
-    # Test Case C1
-    # page_with_columns, coordinates_C, explicit_lines = self.add_column_separators_in_memory(page)
-    explicit_lines_x = get_table_column_coordinates_by_text(page)
-    model_df_C, lists = run_test_case_C(page, explicit_lines_x)
-    if model_df_C is not None:
-        print("Test Case C2 passed")
-        return ["C", 0, lists, explicit_lines_x]  # Test Case C passed
 
+   ###------------------------------------------------------------------------------------------------
+   ### first we will have to make a raw document with direct ocr extraction
+#    page_one_raw_doc = returns_doc_according_to_columns(pdf_to_images, detected_original_bboxs, [], [], encoded_pdf, first_page=True) # rec2
+   output_single_pdf = os.path.join(TEMP_SAVED_PDF_DIR, f"model_single_ocr_output_{uuid.uuid4().hex}.pdf")
+   image = Image.open(new_path).convert("RGB")
+   image.save(output_single_pdf)
+   print(f"Single page PDF saved at: {output_single_pdf}")
+
+   page_with_columns, coordinates_C, only_lines = add_column_separators_in_memory(output_single_pdf)
+   explicit_lines = [(x+20, 0, 0, 0) for x in only_lines] #coz vertical lines look like this
+   print("Column separators added, coordinates:", coordinates_C)
+   doc_model = returns_doc_according_to_columns(pdf_to_images, detected_original_bboxs, explicit_lines, horizontal_lines, encoded_pdf, first_page=True) # rec3
+   print(f"Document after text processing for (transformer model): {doc_model}")
+
+   coordinates_after_ocr = get_ocr_column_coordinates(doc_model)
+    
     # Test Case C
-    page_with_columns, coordinates_C, explicit_lines = add_column_separators_in_memory(page)
-    model_df_C, lists = run_test_case_C(page_with_columns, explicit_lines)
-    if model_df_C is not None:
-        print("Test Case C passed")
+   model_df_C, lists = run_test_case_C(doc_model, coordinates_after_ocr)
+   if model_df_C is not None:
+        print("Test Case C (with table_transformer model) passed")
         return ["C", coordinates_C, lists, explicit_lines]  # Test Case C passed
 
     # Test Case D
-    # page_with_rows = self.add_row_separators_in_memory(page)
-    # page_with_columns_n_rows, explicit_lines = self.add_column_separators_with_coordinates(page, coordinates_C)
-    model_df_D, lists = run_test_case_D(page_with_columns, explicit_lines)
-    if model_df_D is not None:
-        print("Test Case D passed")
+   model_df_D, lists = run_test_case_D(doc_model, coordinates_after_ocr)
+   if model_df_D is not None:
+        print("Test Case D (with table_transformer model) passed")
         return ["D", coordinates_C, lists, explicit_lines]  # Test Case D passed
 
-    # Test Case D2
-    model_df_D, lists = run_test_case_D(page, explicit_lines_x)
-    if model_df_D is not None:
-        print("Test Case D2 passed")
-        return ["D", 0, lists, explicit_lines_x]  # Test Case D passed
-
-    else:
+   else:
         # Test Case E
         lists = 0
-        print("Test Case E begins : MOVING TOWARDS CUSTOM EXTRACTION")
+        print("Test Case E begins : NOT MOVING TOWARDS CUSTOM EXTRACTION")
         return ["E", coordinates_C, lists, explicit_lines]
 
-def run_test_output_on_whole_pdf(list_a, pdf_in_saved_pdf, bank_name, timestamp, CA_ID):
+def run_test_output_on_whole_pdf(list_a, pdf_in_saved_pdf, encoded_pdf):
     test_case = list_a[0]
     coordinates_C = list_a[1]
     lists_of_columns = list_a[2]
     explicit_lines = list_a[3]
 
+    coordinates_after_ocr = get_ocr_column_coordinates(pdf_in_saved_pdf)
+
     if test_case == "A":
-        # Run `extract_dataframe_from_pdf()` for Test Case A
-        print("Running extract_dataframe_from_pdf() for Test Case A")
-        if explicit_lines == 0:
-            df = extract_dataframe_from_pdf(pdf_in_saved_pdf, table_settings={
+        # Run `extract_dataframe_from_pdf_ocr()` for Test Case A
+        print("Running extract_dataframe_from_pdf_ocr() for Test Case A")
+        explicit_lines = coordinates_after_ocr
+        if not explicit_lines:
+            df = extract_dataframe_from_pdf_ocr(pdf_in_saved_pdf, table_settings={
                 "vertical_strategy": "lines",
                 "horizontal_strategy": "lines",
                 "edge_min_length": 20,
@@ -1526,49 +2426,49 @@ def run_test_output_on_whole_pdf(list_a, pdf_in_saved_pdf, bank_name, timestamp,
             model_df = new_mode_for_pdf(df, lists_of_columns)
             return model_df, None
         else:
-            df = extract_dataframe_from_pdf(pdf_in_saved_pdf, table_settings={
+            df = extract_dataframe_from_pdf_ocr(pdf_in_saved_pdf, table_settings={
                 "vertical_strategy": "explicit",
                 "explicit_vertical_lines": explicit_lines,
                 "horizontal_strategy": "lines",
-                "intersection_x_tolerance": 20,
+                "intersection_x_tolerance": 200,
             })
             model_df = new_mode_for_pdf(df, lists_of_columns)
             return model_df, None
-
 
     elif test_case == "B":
         # Run `row_separators_addition()` for Test Case B
+        explicit_lines = coordinates_after_ocr
         print("Running row_separators_addition() for Test Case B")
         # pdf_in_rows_saved_pdf = self.add_row_separators_in_memory(pdf_in_saved_pdf)
-        if explicit_lines == 0:
-            df = extract_dataframe_from_pdf(pdf_in_saved_pdf, table_settings={
+        if not explicit_lines:
+            df = extract_dataframe_from_pdf_ocr(pdf_in_saved_pdf, table_settings={
                 "vertical_strategy": "lines",
                 "horizontal_strategy": "text",
                 "edge_min_length": 20,
-                "intersection_x_tolerance": 120
+                "intersection_x_tolerance": 200
             })
             model_df = new_mode_for_pdf(df, lists_of_columns)
             return model_df, None
         else:
-            df = extract_dataframe_from_pdf(pdf_in_saved_pdf, table_settings={
+            df = extract_dataframe_from_pdf_ocr(pdf_in_saved_pdf, table_settings={
                 "vertical_strategy": "explicit",
                 "explicit_vertical_lines": explicit_lines,
                 "horizontal_strategy": "text",
-                "intersection_x_tolerance": 120
+                "intersection_x_tolerance": 200
             })
             model_df = new_mode_for_pdf(df, lists_of_columns)
             return model_df, None
-
 
     elif test_case == "C":
         # Run `add_column_separators_with_coordinates()` for Test Case C
         print(f"Running add_column_separators_with_coordinates() for Test Case C with coordinates {coordinates_C}")
+        explicit_lines = coordinates_after_ocr
         # pdf_in_columns_saved_pdf, explicit_lines = self.add_column_separators_with_coordinates(pdf_in_saved_pdf, coordinates_C)
-        df = extract_dataframe_from_pdf(pdf_in_saved_pdf, table_settings={
+        df = extract_dataframe_from_pdf_ocr(pdf_in_saved_pdf, table_settings={
             "vertical_strategy": "explicit",
             "explicit_vertical_lines": explicit_lines,
             "horizontal_strategy": "lines",
-            "intersection_x_tolerance": 120
+            "intersection_x_tolerance": 200
         })
         model_df = new_mode_for_pdf(df, lists_of_columns)
         return model_df, None
@@ -1578,15 +2478,15 @@ def run_test_output_on_whole_pdf(list_a, pdf_in_saved_pdf, bank_name, timestamp,
         print("Running add_row_separators and add_column_separators_with_coordinates() for Test Case D")
         # pdf_in_rows_saved_pdf = self.add_row_separators_in_memory(pdf_in_saved_pdf)
         # pdf_in_columns_saved_pdf, explicit_lines = self.add_column_separators_with_coordinates(pdf_in_saved_pdf, coordinates_C)
-        df = extract_dataframe_from_pdf(pdf_in_saved_pdf, table_settings={
+        explicit_lines = coordinates_after_ocr
+        df = extract_dataframe_from_pdf_ocr(pdf_in_saved_pdf, table_settings={
             "vertical_strategy": "explicit",
             "explicit_vertical_lines": explicit_lines,
             "horizontal_strategy": "text",
-            "intersection_x_tolerance": 120,
+            "intersection_x_tolerance": 200,
         })
         model_df = new_mode_for_pdf(df, lists_of_columns)
         return model_df, None
-
 
     else:
         # Handle Test Case E
@@ -1594,30 +2494,16 @@ def run_test_output_on_whole_pdf(list_a, pdf_in_saved_pdf, bank_name, timestamp,
         df = pd.DataFrame()
         return df, explicit_lines
 
-
-def is_pdf_encoded(pdf_path,password=""):
+def is_pdf_encoded_ocr(pdf_path):
     try:
-        print(f"Checking if PDF is encoded: {pdf_path}")
         reader = PdfReader(pdf_path)
-
-        # Attempt decryption if the file is encrypted
-        if reader.is_encrypted:
-            print("PDF is encrypted. Attempting to decrypt...")
-            try:
-                # Try decrypting with empty password first (common case)
-                result = reader.decrypt(password)
-                if result == 0:
-                    return "PDF is encrypted and cannot be read without a password."
-                else:
-                    print("PDF decrypted successfully.")
-            except Exception as e:
-                return f"PDF decryption failed: {str(e)}"
-
         total_pages = len(reader.pages)
-        print(f"Number of pages in PDF: {total_pages} for path: {pdf_path}")
-
+        
         # Choose pages 0 to 3 if total_pages > 4, else all available pages
-        page_indices = [0, 1, 2, 3] if total_pages > 4 else list(range(total_pages))
+        if total_pages > 4:
+            page_indices = [0, 1, 2, 3]
+        else:
+            page_indices = list(range(total_pages))
 
         readable_count = 0
 
@@ -1635,22 +2521,229 @@ def is_pdf_encoded(pdf_path,password=""):
             return "PDF appears encoded or obfuscated."
 
     except Exception as e:
-        return f"Encoding Result: An unexpected error occurred: {str(e)}"
+        return f"An unexpected error occurred: {e}"
 
+def pdf_to_numpy_arrays(pdf_path):
+    doc = fitz.open(pdf_path)
+    arrays = []
+
+    for page in doc:
+        # Use identity matrix (no zoom)
+        pix = page.get_pixmap(matrix=fitz.Matrix(1, 1), alpha=False)
+        
+        # Convert to NumPy array
+        img_array = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.height, pix.width, pix.n)
+        arrays.append(img_array)
+
+    doc.close()
+    return arrays
+
+
+from pathlib import Path
+import fitz              # PyMuPDF
+import numpy as np
+
+def extract_textboxes(pdf_path: str | Path,
+                      pages: list[int] | None = None,
+                      scale: float = 2.0):
+    """
+    Parameters
+    ----------
+    pdf_path : str | Path
+        Path to the PDF.
+    pages : list[int] | None
+        0-based page indexes to process (None → all).
+    scale : float
+        Render scale multiplier. 2.0 ⇒ 144 dpi if the PDF is 72 dpi.
+
+    Returns
+    -------
+    list[dict]
+        One dict per page, matching your desired schema:
+        {
+          'input_path': str,
+          'page_index': int,
+          'input_img': np.ndarray[H,W,3] uint8,
+          'dt_polys': np.ndarray[(N,4,2)] int16,
+          'dt_scores': list[float]
+        }
+    """
+    pdf_path = Path(pdf_path).expanduser().resolve()
+    outputs = []
+
+    with fitz.open(pdf_path) as doc:
+        page_ids = pages if pages is not None else range(len(doc))
+
+        for pno in page_ids:
+            page = doc[pno]
+
+            # 1️⃣ Render page → RGB image  -----------------------------------
+            mat   = fitz.Matrix(scale, scale)        # upscale for clarity
+            pix   = page.get_pixmap(matrix=mat, alpha=False)
+            img   = np.frombuffer(pix.samples, dtype=np.uint8)
+            img   = img.reshape(pix.height, pix.width, 3)
+
+            # 2️⃣ Collect text blocks → polygons -----------------------------
+            blocks = page.get_text("blocks")  # (x0, y0, x1, y1, text, ...)
+            polys  = [
+                [[x0, y0], [x1, y0], [x1, y1], [x0, y1]]
+                for x0, y0, x1, y1, *_ in blocks
+            ]
+
+            if not polys:    # page with no text
+                continue
+
+            dt_polys  = np.array(polys, dtype=np.int16)
+            dt_scores = [0.99] * len(polys)
+
+            outputs.append(
+                {
+                    "input_path": str(pdf_path.name),
+                    "page_index": pno,
+                    "input_img":  img,
+                    "dt_polys":   dt_polys,
+                    "dt_scores":  dt_scores,
+                }
+            )
+
+    return outputs
+
+
+import time
 # Main function to run test cases with optimizations
-def extract_with_test_cases(bank_name, pdf_path, pdf_password, CA_ID):
-    timestamp = "1234_temp"
-    pdf_in_saved_pdf = unlock_and_add_margins_to_pdf(pdf_path, pdf_password, timestamp, CA_ID)
-    list_test = process_pdf_with_test_cases(pdf_in_saved_pdf)
-    text = extract_text_from_pdf(pdf_in_saved_pdf)
-    idf, explicit_lines = run_test_output_on_whole_pdf(list_test, pdf_in_saved_pdf, bank_name, timestamp, CA_ID)
-    return idf, text, explicit_lines
+def extract_with_test_cases_ocr(bank_name, pdf_path, pdf_password, CA_ID, encoded_pdf=False):
+   ##################################################################################################################
 
-#################################################
-# bank_name = "ABC"
-# pdf_path = "018391600012630  MOHD IRFAN ULLAH SHAREEF 1.pdf"
-# pdf_password = "123"
-# CA_ID = "A123"
-# compp = ExtractionOnly(bank_name, pdf_path, pdf_password, CA_ID)
-# df, text = compp.extract_with_test_cases(bank_name, pdf_path, pdf_password, CA_ID)
-# df.to_excel(f"{CA_ID}_one.xlsx")
+#    df , name_num, error = extract_with_test_cases(bank_name, pdf_path, pdf_password, [], [], encoded_pdf)
+
+#    print("---------------------------------Initial extraction process completed--------------------------------------------")
+
+#    df.to_excel("rectify_output.xlsx")
+
+#    print(xx)
+
+   ###################################################################################################################
+   timestamp = "1234_temp"
+   pdf_in_saved_pdf = unlock_and_add_margins_to_pdf(pdf_path, pdf_password, timestamp, CA_ID)
+   pdf_to_images = pdf_to_numpy_arrays(pdf_in_saved_pdf) #list of high quality images of pdf page
+   # print(f"PDF converted to images: {pdf_to_images}"
+   print("Detection Started")
+   start = time.time() 
+
+   if encoded_pdf:
+       detected_original_bboxs = extract_textboxes(pdf_in_saved_pdf) 
+
+   else:
+       detected_original_bboxs = det_model.predict(pdf_to_images)
+
+   end = time.time()
+   print(f"Time taken for detection: {end - start} seconds")
+
+   #  print(f"Detected original bounding boxes: {dict_output}")
+   
+   list_test = process_pdf_with_test_cases(pdf_to_images, detected_original_bboxs, encoded_pdf)
+
+   print("aiyaz ",list_test)
+   if list_test[0] == "E":
+       print("ALL TEST CASES FAILED")
+       return pd.DataFrame(), "GO TO RECTIFY", []
+
+   pdf_in_saved_pdf = returns_doc_according_to_columns(pdf_to_images, detected_original_bboxs, list_test[3], [], encoded_pdf, first_page=False) # rec4
+    
+   idf, explicit_lines = run_test_output_on_whole_pdf(list_test, pdf_in_saved_pdf, encoded_pdf)
+
+   text = extract_text_from_pdf_ocr(pdf_in_saved_pdf)
+   return idf, text, explicit_lines
+
+def extraction_process_only_rectify(bank, pdf_path, pdf_password, start_date, end_date, only_lines, labels, encoded_pdf=False):
+    
+    # only_lines = [360.12442452566955, 466.55299595424094, 277.2672816685267, 85.83871023995533, 567.2672816685266, 24.410138811383923]
+    
+    CA_ID = "1234_temp"
+    empty_idf = pd.DataFrame()
+    default_name_n_num = ["_", "XXXXXXXXXX"]
+    # bank = re.sub(r"\d+", "", bank)
+    a = ""
+
+    print("______________________________qwerty_______________________")
+
+    explicit_lines = [(x, 0, 0, 0) for x in only_lines]
+    pdf_to_images = pdf_to_numpy_arrays(pdf_path)
+
+    print("Detection Started for rectify")
+    start = time.time() 
+    if encoded_pdf:
+        detected_original_bboxs = [] # replace wil new textboxes detected directly from pdf_pages
+    else:
+        detected_original_bboxs = det_model.predict(pdf_to_images)
+    end = time.time()
+    print(f"Time taken for detection rectify: {end - start} seconds")
+
+    doc_rectify = returns_doc_according_to_columns(pdf_to_images, detected_original_bboxs, explicit_lines, [], encoded_pdf, first_page=False) # rec3
+    print(f"Document after text processing for (transformer model): {doc_rectify}")
+
+    coordinates_after_ocr = get_ocr_column_coordinates(doc_rectify)
+    explicit_lines = coordinates_after_ocr
+
+    try:
+        df = extract_dataframe_from_pdf_ocr(doc_rectify, table_settings={
+            "vertical_strategy": "explicit",
+            "explicit_vertical_lines": explicit_lines,
+            "horizontal_strategy": "text",
+            "intersection_x_tolerance": 200,
+        })
+
+        all_null = all(label[1] == "null" for label in labels)
+
+        if not all_null and not df.empty:
+            new_row = [None] * len(df.columns)  # Create a blank row with the same number of columns
+            for index, label_type in labels:
+                if index < len(new_row):
+                    new_row[index] = label_type
+
+            # Insert the new row at the top of the DataFrame
+            df.loc[-1] = new_row  # Add the new row with a negative index to place it at the top
+            df.index = df.index + 1  # Shift all indices by 1
+            df.sort_index(inplace=True)  # Reorder the DataFrame to update the row positions
+
+        try:
+            idf, _ = model_for_pdf_ocr(df)
+        except Exception as e:
+            idf = empty_idf
+            
+        # Add start and end date
+        if idf.empty:
+            df = extract_dataframe_from_pdf_ocr(doc_rectify, table_settings={
+                "vertical_strategy": "explicit",
+                "explicit_vertical_lines": explicit_lines,
+                "horizontal_strategy": "lines",
+                "intersection_x_tolerance": 200,
+            })
+
+            all_null = all(label[1] == "null" for label in labels)
+
+            if not all_null:
+                new_row = [None] * len(df.columns)  # Create a blank row with the same number of columns
+                for index, label_type in labels:
+                    if index < len(new_row):
+                        new_row[index] = label_type
+
+                # Insert the new row at the top of the DataFrame
+                df.loc[-1] = new_row  # Add the new row with a negative index to place it at the top
+                df.index = df.index + 1  # Shift all indices by 1
+                df.sort_index(inplace=True)  # Reorder the DataFrame to update the row positions
+
+            idf, _ = model_for_pdf_ocr(df)
+
+        # idf = add_start_n_end_date_v2(idf, start_date, end_date, bank)
+        # name_n_num = []
+        idf = add_start_n_end_date_v2(idf, start_date, end_date, bank)
+        name_n_num = extract_account_details(extract_text_from_pdf_ocr(pdf_path))
+        a = validate_bank_statement_returns_error_message_ocr(idf)
+
+        return idf, name_n_num, a
+
+    except Exception as e:
+        er = "There was an exception error, please contact sales team for help."
+        return empty_idf, default_name_n_num, er
+    

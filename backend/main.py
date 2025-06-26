@@ -86,6 +86,7 @@ class BankStatementRequest(BaseModel):
     ca_id: str
     whole_transaction_sheet: Optional[List[dict]] = None
     aiyazs_array_of_array: Optional[List[List[ColumnData]]]=None
+    is_ocr: List[bool]
     
 class EditCategoryRequest(BaseModel):
     transaction_data: List[dict]
@@ -214,8 +215,8 @@ async def analyze_bank_statements(request: BankStatementRequest):
             print("whole_transaction_sheet", whole_transaction_sheet.head())
             whole_transaction_sheet["Value Date"] = pd.to_datetime(whole_transaction_sheet["Value Date"], format="%d-%m-%Y")
 
-                
-        result = start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_date, end_date, CA_ID, progress_data,whole_transaction_sheet=whole_transaction_sheet,aiyazs_array_of_array=temp_aiyaz_array_of_array)
+        is_ocr = request.is_ocr
+        result = start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_date, end_date, CA_ID, progress_data,is_ocr,whole_transaction_sheet=whole_transaction_sheet,aiyazs_array_of_array=temp_aiyaz_array_of_array)
         
         end_extraction = time.time()
         end_total = time.time()

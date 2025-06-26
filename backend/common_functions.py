@@ -47,8 +47,10 @@ BASE_DIR = get_base_dir()
 logger.info("Base Dir : ", BASE_DIR)
 #from old_bank_extractions import CustomStatement
 import json
+from .code_ocr_extraction import extract_with_test_cases_ocr, model_for_pdf_ocr
 from .code_for_extraction import extract_text_from_pdf, extract_with_test_cases, model_for_pdf, extract_dataframe_from_pdf, validate_bank_statement_returns_error_message, is_pdf_encoded
 import  argparse
+
 
 p = argparse.ArgumentParser()
 p.add_argument(
@@ -82,68 +84,6 @@ def extract_text_from_file(file_path):
         text = df.head(20).to_string(index=False)
 
     return text
-
-# def add_start_n_end_date( df, start_date, end_date, bank):
-#     df["Balance"] = pd.to_numeric(df["Balance"], errors="coerce")
-#     df["Debit"] = pd.to_numeric(df["Debit"], errors="coerce")
-#     df["Credit"] = pd.to_numeric(df["Credit"], errors="coerce")
-
-#     # Check if the period falls within the start and end dates
-#     start_date_sd = pd.to_datetime(start_date, format="%d-%m-%Y", errors="coerce")
-#     end_date_ed = pd.to_datetime(end_date, format="%d-%m-%Y", errors="coerce")
-#     period_start = pd.to_datetime(
-#         df["Value Date"].iloc[0], format="%d-%m-%Y", errors="coerce"
-#     )
-#     period_end = pd.to_datetime(
-#         df["Value Date"].iloc[-1], format="%d-%m-%Y", errors="coerce"
-#     )
-
-#     if (start_date_sd - timedelta(days=1)) <= period_start <= (
-#         end_date_ed + timedelta(days=1)
-#     ) and (start_date_sd - timedelta(days=1)) <= period_end <= (
-#         end_date_ed + timedelta(days=1)
-#     ):
-#         print("The period falls within the start and end dates.")
-#     else:
-#         raise Exception(
-#             f"Error: The period for Bank: {bank} ({period_start} to {period_end}), "
-#             f"does not fall within the start and end dates ({start_date_sd} to {end_date_ed}), provided by the user."
-#         )
-
-#     # add opening and closing balance
-#     start_bal = (
-#         df.iloc[0]["Balance"] - df.iloc[0]["Credit"]
-#         if df.iloc[0]["Credit"] > 0
-#         else df.iloc[0]["Balance"] + df.iloc[0]["Debit"]
-#     )
-#     end_bal = df.iloc[-1]["Balance"]
-
-#     start_row = pd.DataFrame(
-#         [
-#             {
-#                 "Value Date": start_date,
-#                 "Description": "Opening Balance",
-#                 "Debit": 0,
-#                 "Credit": 0,
-#                 "Balance": start_bal,
-#             }
-#         ]
-#     )
-#     end_row = pd.DataFrame(
-#         [
-#             {
-#                 "Value Date": end_date,
-#                 "Description": "Closing Balance",
-#                 "Debit": 0,
-#                 "Credit": 0,
-#                 "Balance": end_bal,
-#             }
-#         ]
-#     )
-
-#     idf = pd.concat([start_row, df, end_row], ignore_index=True)
-#     idf["Bank"] = f"{bank}"
-#     return idf
 
 
 def _wrap(slice_df, bank, open_date, close_date):
@@ -407,7 +347,7 @@ def convert_csv_to_excel(csv_path, CA_ID):
     return excel_path
 
 
-def extraction_process(bank, pdf_path, pdf_password, start_date, end_date):
+def extraction_process(bank, pdf_path, pdf_password, start_date, end_date, isthis_ocr):
     CA_ID = "1234_temp"
     empty_idf = pd.DataFrame()
     default_name_n_num = ["_", "XXXXXXXXXX"]
@@ -415,59 +355,83 @@ def extraction_process(bank, pdf_path, pdf_password, start_date, end_date):
     # bank = re.sub(r"\d+", "", bank)
     ext = extract_extension(pdf_path)
 
-    try:
-        if ext == ".pdf":
-            idf, text, explicit_lines = extract_with_test_cases(bank, pdf_path, pdf_password, CA_ID)
+    if isthis_ocr:
+        try:
+            if ext == ".pdf":
+                idf, text, explicit_lines = extract_with_test_cases_ocr(bank, pdf_path, pdf_password, CA_ID)
 
-            if idf.empty:
-                # SECOND CHECK: Check if PDF is encoded
-                encoding_result = is_pdf_encoded(pdf_path)
-                if encoding_result != "PDF text is readable and not encoded.":
-                    raise Exception("The PDF appears to be encoded or obfuscated. Please upload a readable PDF.")
+                if idf.empty:
+                    print("Empty result from ocr detection")
+                    raise Exception("Rectify PDF")
 
-            name_n_num = explicit_lines if idf.empty else extract_account_details(text)
+                name_n_num = explicit_lines if idf.empty else extract_account_details(text)
 
-        elif ext == ".csv":
-            pdf_path = convert_csv_to_excel(pdf_path, CA_ID)
-            df = pd.read_excel(pdf_path)
-            df = pd.concat([pd.DataFrame([df.columns], columns=df.columns), df], ignore_index=True)
-            df.columns = range(df.shape[1])
+            if not idf.empty:
+                a = validate_bank_statement_returns_error_message(idf)
+                idf = add_start_n_end_date_v2(idf, start_date, end_date, bank)
 
-            start_index = df.apply(
-                lambda row: (
-                    row.astype(str).str.contains("date", case=False).any() and
-                    row.astype(str).str.contains("balance|total amount", case=False).any()) or
-                    row.astype(str).str.contains("balance|total amount", case=False).any(),
-                axis=1
-            ).idxmax()
-            df = df.loc[start_index:] if start_index is not None else pd.DataFrame()
-            idf, _ = model_for_pdf(df)
-            name_n_num = extract_account_details(extract_text_from_file(pdf_path))
+            return idf, name_n_num, a
 
-        else:
-            df = pd.read_excel(pdf_path)
-            df = pd.concat([pd.DataFrame([df.columns], columns=df.columns), df], ignore_index=True)
-            df.columns = range(df.shape[1])
+        except Exception as e:
+            return empty_idf, default_name_n_num, str(e)
+    
+    else:
+        try:
+            if ext == ".pdf":
+                idf, text, explicit_lines = extract_with_test_cases(bank, pdf_path, pdf_password, CA_ID)
 
-            start_index = df.apply(
-                lambda row: (
-                    row.astype(str).str.contains("date", case=False).any() and
-                    row.astype(str).str.contains("balance|total amount", case=False).any()) or
-                    row.astype(str).str.contains("balance|total amount", case=False).any(),
-                axis=1
-            ).idxmax()
-            df = df.loc[start_index:] if start_index is not None else pd.DataFrame()
-            idf, _ = model_for_pdf(df)
-            name_n_num = extract_account_details(extract_text_from_file(pdf_path))
+                if idf.empty:
+                    # SECOND CHECK: Check if PDF is encoded
+                    encoding_result = is_pdf_encoded(pdf_path,pdf_password)
+                    print("Encoding Result:", encoding_result)
+                    if encoding_result != "PDF text is readable and not encoded.":
+                        raise Exception("The PDF appears to be encoded or obfuscated. Please upload a readable PDF.")
 
-        if not idf.empty:
-            a = validate_bank_statement_returns_error_message(idf)
-            idf = add_start_n_end_date_v2(idf, start_date, end_date, bank)
+                name_n_num = explicit_lines if idf.empty else extract_account_details(text)
 
-        return idf, name_n_num, a
+            elif ext == ".csv":
+                pdf_path = convert_csv_to_excel(pdf_path, CA_ID)
+                df = pd.read_excel(pdf_path)
+                df = pd.concat([pd.DataFrame([df.columns], columns=df.columns), df], ignore_index=True)
+                df.columns = range(df.shape[1])
 
-    except Exception as e:
-        return empty_idf, default_name_n_num, str(e)
+                start_index = df.apply(
+                    lambda row: (
+                        row.astype(str).str.contains("date", case=False).any() and
+                        row.astype(str).str.contains("balance|total amount", case=False).any()) or
+                        row.astype(str).str.contains("balance|total amount", case=False).any(),
+                    axis=1
+                ).idxmax()
+                df = df.loc[start_index:] if start_index is not None else pd.DataFrame()
+                idf, _ = model_for_pdf(df)
+                name_n_num = extract_account_details(extract_text_from_file(pdf_path))
+
+            else:
+                df = pd.read_excel(pdf_path)
+                df = pd.concat([pd.DataFrame([df.columns], columns=df.columns), df], ignore_index=True)
+                df.columns = range(df.shape[1])
+
+                start_index = df.apply(
+                    lambda row: (
+                        row.astype(str).str.contains("date", case=False).any() and
+                        row.astype(str).str.contains("balance|total amount", case=False).any()) or
+                        row.astype(str).str.contains("balance|total amount", case=False).any(),
+                    axis=1
+                ).idxmax()
+                df = df.loc[start_index:] if start_index is not None else pd.DataFrame()
+                idf, _ = model_for_pdf(df)
+                name_n_num = extract_account_details(extract_text_from_file(pdf_path))
+
+            if not idf.empty:
+                a = validate_bank_statement_returns_error_message(idf)
+                idf = add_start_n_end_date_v2(idf, start_date, end_date, bank)
+
+            return idf, name_n_num, a
+
+        except Exception as e:
+            return empty_idf, default_name_n_num, str(e)
+
+
 
 
 def extraction_process_explicit_lines(bank, pdf_path, pdf_password, start_date, end_date, explicit_lines, labels):
@@ -2614,11 +2578,12 @@ def make_summary_great_again(df1, opening_closing_balance, df2):
     contra_debit_table = pd.concat([template_rows, contra_debit_table]).reset_index(drop=True)
 
     # Converting the "Value Date" column to datetime format in income_table, important_table, and other_table
-    income_table['Value Date'] = pd.to_datetime(income_table['Value Date'], format='%d-%m-%Y')
-    important_table['Value Date'] = pd.to_datetime(important_table['Value Date'], format='%d-%m-%Y')
-    other_table['Value Date'] = pd.to_datetime(other_table['Value Date'], format='%d-%m-%Y')
-    contra_credit_table['Value Date'] = pd.to_datetime(contra_credit_table['Value Date'], format='%d-%m-%Y')
-    contra_debit_table['Value Date'] = pd.to_datetime(contra_debit_table['Value Date'], format='%d-%m-%Y')
+    income_table['Value Date'] = pd.to_datetime(income_table['Value Date'] )
+    important_table['Value Date'] = pd.to_datetime(important_table['Value Date'] )
+    other_table['Value Date'] = pd.to_datetime(other_table['Value Date'] )
+    contra_credit_table['Value Date'] = pd.to_datetime(contra_credit_table['Value Date'] )
+    contra_debit_table['Value Date'] = pd.to_datetime(contra_debit_table['Value Date'] )
+
 
     income_table = income_table.sort_values(by=['Value Date']).reset_index(drop=True)
     important_table = important_table.sort_values(by=['Value Date']).reset_index(drop=True)
