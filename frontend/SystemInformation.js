@@ -40,30 +40,77 @@ class SystemInformation {
   // Load all system-related data once at startup.
   // This method can be awaited in your startup logic.
   async loadData(userDataPath) {
+    const startTime = Date.now();
+    const debugLog = (step, data = {}) => {
+      const elapsed = Date.now() - startTime;
+      log.info(`[SYSINFO DEBUG] ${step} | Elapsed: ${elapsed}ms |`, data);
+    };
+
     try {
+      debugLog("START loadData", { userDataPath });
       log.info("Starting system information loading...");
 
       // Load hashedUUID with timeout
-      this.hashedUUID = await this.computeHashedUUID();
+      debugLog("BEFORE computeHashedUUID");
+      try {
+        this.hashedUUID = await this.computeHashedUUID();
+        debugLog("AFTER computeHashedUUID", { hashedUUID: this.hashedUUID?.substring(0, 8) + "..." });
+      } catch (uuidError) {
+        debugLog("ERROR computeHashedUUID", { error: uuidError.message });
+        throw uuidError;
+      }
 
       // Load MAC address with timeout
-      this.macAddress = await this.computeMACAddress();
+      debugLog("BEFORE computeMACAddress");
+      try {
+        this.macAddress = await this.computeMACAddress();
+        debugLog("AFTER computeMACAddress", { macAddress: this.macAddress });
+      } catch (macError) {
+        debugLog("ERROR computeMACAddress", { error: macError.message });
+        throw macError;
+      }
 
       // Get hostname (safe, synchronous)
+      debugLog("BEFORE computeHostname");
       this.hostname = this.computeHostname();
+      debugLog("AFTER computeHostname", { hostname: this.hostname });
 
       // Get username (safe, synchronous)
+      debugLog("BEFORE computeUsername");
       this.username = this.computeUsername();
+      debugLog("AFTER computeUsername", { username: this.username });
 
       // Load Windows User SID if on Windows, else set as null.
       if (process.platform === "win32") {
-        this.userSID = await this.computeWindowsUserSID(userDataPath);
+        debugLog("BEFORE computeWindowsUserSID");
+        try {
+          this.userSID = await this.computeWindowsUserSID(userDataPath);
+          debugLog("AFTER computeWindowsUserSID", { userSID: this.userSID });
+        } catch (sidError) {
+          debugLog("ERROR computeWindowsUserSID", { error: sidError.message });
+          throw sidError;
+        }
       } else {
         this.userSID = "SIDWindows3";
+        debugLog("SKIP computeWindowsUserSID (not Windows)", { userSID: this.userSID });
       }
 
+      debugLog("SUCCESS loadData complete", {
+        totalTime: Date.now() - startTime,
+        uuid: this.uuid?.substring(0, 8) + "...",
+        hashedUUID: this.hashedUUID?.substring(0, 8) + "...",
+        macAddress: this.macAddress,
+        hostname: this.hostname,
+        username: this.username,
+        userSID: this.userSID
+      });
       log.info("System information loaded successfully.");
     } catch (error) {
+      debugLog("FATAL ERROR in loadData", { 
+        error: error.message,
+        stack: error.stack,
+        totalTime: Date.now() - startTime
+      });
       log.error("Error during system information loading:", error);
       // Set fallback values so app doesn't crash
       this.hashedUUID = this.hashedUUID || "fallback-hash";
@@ -71,6 +118,13 @@ class SystemInformation {
       this.hostname = this.hostname || os.hostname();
       this.username = this.username || "unknown";
       this.userSID = this.userSID || "S-1-5-21-fallback";
+      debugLog("APPLIED FALLBACK VALUES", {
+        hashedUUID: this.hashedUUID,
+        macAddress: this.macAddress,
+        hostname: this.hostname,
+        username: this.username,
+        userSID: this.userSID
+      });
     }
   }
 
@@ -99,18 +153,28 @@ class SystemInformation {
 
   // Get the MAC address with timeout and fallbacks
   async computeMACAddress() {
+    const startTime = Date.now();
+    const debugLog = (method, status, data = {}) => {
+      const elapsed = Date.now() - startTime;
+      log.info(`[MAC DEBUG] ${method} - ${status} | Elapsed: ${elapsed}ms |`, data);
+    };
+
     try {
+      debugLog("computeMACAddress", "START");
       log.info("Getting MAC address with safe method...");
 
       // Method 1: Try WMI with timeout
+      debugLog("WMI", "ATTEMPTING");
       try {
         const wmiCommand =
           'wmic path Win32_NetworkAdapter where "NetConnectionStatus=2" get MACAddress /value';
+        debugLog("WMI", "EXECUTING", { command: wmiCommand });
         const result = execSync(wmiCommand, {
           timeout: 5000,
           encoding: "utf8",
           windowsHide: true,
         });
+        debugLog("WMI", "EXECUTED", { resultLength: result.length });
 
         const lines = result.split("\n");
         for (const line of lines) {
@@ -124,10 +188,12 @@ class SystemInformation {
           }
         }
       } catch (wmiError) {
+        debugLog("WMI", "FAILED", { error: wmiError.message, code: wmiError.code });
         log.warn("WMI MAC address failed:", wmiError.message);
       }
 
       // Method 2: Use Node.js os.networkInterfaces() (safer than systeminformation)
+      debugLog("NODE_INTERFACES", "ATTEMPTING");
       log.info("Trying Node.js network interfaces...");
       const interfaces = os.networkInterfaces();
 
@@ -147,13 +213,16 @@ class SystemInformation {
       }
 
       // Method 3: Try getmac command
+      debugLog("GETMAC", "ATTEMPTING");
       log.info("Trying getmac command...");
       try {
+        debugLog("GETMAC", "EXECUTING");
         const getMacResult = execSync("getmac /fo csv /nh", {
           timeout: 5000,
           encoding: "utf8",
           windowsHide: true,
         });
+        debugLog("GETMAC", "EXECUTED", { resultLength: getMacResult.length });
 
         const lines = getMacResult.split("\n");
         for (const line of lines) {
@@ -169,6 +238,7 @@ class SystemInformation {
           }
         }
       } catch (getMacError) {
+        debugLog("GETMAC", "FAILED", { error: getMacError.message, code: getMacError.code });
         log.warn("getmac command failed:", getMacError.message);
       }
 
@@ -234,7 +304,11 @@ class SystemInformation {
 
     // Compute SID using command and securely store it
     return new Promise((resolve, reject) => {
+      const cmdStartTime = Date.now();
+      log.info("[SID DEBUG] Executing whoami /user command...");
       exec("whoami /user", { timeout: 10000 }, (error, stdout, stderr) => {
+        const cmdElapsed = Date.now() - cmdStartTime;
+        log.info(`[SID DEBUG] whoami command completed in ${cmdElapsed}ms`);
         if (error) {
           log.error("Error retrieving SID:", error);
           // Generate fallback SID

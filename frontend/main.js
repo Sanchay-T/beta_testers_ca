@@ -1575,8 +1575,16 @@ app.whenReady().then(async () => {
       throw error;
     }
 
+    // 4. Load System Information
+    phaseLog("SYSTEM_INFO", "LOADING");
     try {
+      const sysInfoStartTime = Date.now();
       await systemInfo.loadData(app.getPath("userData"));
+      phaseLog("SYSTEM_INFO", "SUCCESS", {
+        hostname: systemInfo.getHostname(),
+        userSID: systemInfo.getWindowsUserSID()?.substring(0, 20) + "...",
+        duration: Date.now() - sysInfoStartTime
+      });
       log.info("SystemInfo loaded successfully");
       log.info(
         "SystemInfo data:",
@@ -1584,23 +1592,38 @@ app.whenReady().then(async () => {
         systemInfo.getWindowsUserSID()
       );
     } catch (error) {
+      phaseLog("SYSTEM_INFO", "FAILED", { error: error.message });
       log.error("SystemInfo initialization failed:", error);
       throw error;
     }
 
     // await new Promise(resolve => setTimeout(resolve, 255500)); // Wait 1.5 seconds
 
+    // 5. Create Protocol and Window
+    phaseLog("UI_SETUP", "STARTING");
+    phaseLog("PROTOCOL", "CREATING");
     createProtocol();
+    phaseLog("PROTOCOL", "CREATED");
+    phaseLog("MAIN_WINDOW", "CREATING");
     createWindow();
+    phaseLog("MAIN_WINDOW", "CREATED");
 
     win.once("ready-to-show", () => {
+      phaseLog("MAIN_WINDOW", "READY_TO_SHOW");
       splashWindow.close();
       win.show();
+      phaseLog("MAIN_WINDOW", "SHOWN");
     });
 
+    // 6. Start Python Backend
+    phaseLog("PYTHON_BACKEND", "STARTING");
     try {
+      const pythonStartTime = Date.now();
       await startPythonExecutable();
+      phaseLog("PYTHON_BACKEND", "SUCCESS", { duration: Date.now() - pythonStartTime });
+      log.info("Python backend started successfully");
     } catch (error) {
+      phaseLog("PYTHON_BACKEND", "FAILED", { error: error.message });
       log.error("Python initialization failed:", error);
       throw error;
     }
