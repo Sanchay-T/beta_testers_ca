@@ -2380,8 +2380,9 @@ def process_pdf_with_test_cases(pdf_to_images, detected_original_bboxs, encoded_
    print(f"Single page PDF saved at: {output_single_pdf}")
 
    page_with_columns, coordinates_C, only_lines = add_column_separators_in_memory(output_single_pdf)
-   explicit_lines = [(x+20, 0, 0, 0) for x in only_lines] #coz vertical lines look like this
-   print("Column separators added, coordinates:", coordinates_C)
+   page_h = pdf_to_images[0].shape[0]   # if numpy array, otherwise use image height
+   explicit_lines = [(int(round(x+20)), 0, 2, page_h) for x in only_lines] #coz vertical lines look like this
+
    doc_model = returns_doc_according_to_columns(pdf_to_images, detected_original_bboxs, explicit_lines, horizontal_lines, encoded_pdf, first_page=True) # rec3
    print(f"Document after text processing for (transformer model): {doc_model}")
 
