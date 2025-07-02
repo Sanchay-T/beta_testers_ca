@@ -2668,8 +2668,11 @@ def extraction_process_only_rectify(bank, pdf_path, pdf_password, start_date, en
 
     print("______________________________qwerty_______________________")
 
-    explicit_lines = [(x, 0, 0, 0) for x in only_lines]
+    # explicit_lines = [(x, 0, 0, 0) for x in only_lines]
     pdf_to_images = pdf_to_numpy_arrays(pdf_path)
+
+    page_h = pdf_to_images[0].shape[0]   # if numpy array, otherwise use image height
+    explicit_lines = [(int(round(x+20)), 0, 2, page_h) for x in only_lines] #coz vertical lines look like this
 
     print("Detection Started for rectify")
     start = time.time() 
