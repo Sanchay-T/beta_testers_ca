@@ -48,14 +48,14 @@ TEMP_SAVED_PDF_DIR = get_saved_pdf_dir()
 # # 1. Paths to Your Model Folders and Sample Image
 # # ─────────────────────────────────────────────────────────────────────────────\
 
-DETDIR_server = os.path.join(BASE_DIR,"models", "PP-OCRv5_server_det_infer")
+# DETDIR_server = os.path.join(BASE_DIR,"models", "PP-OCRv5_server_det_infer")
 DETDIR_mobile = os.path.join(BASE_DIR,"models", "PP-OCRv5_mobile_det_infer")
-RECDIR_server = os.path.join(BASE_DIR,"models", "PP-OCRv5_server_rec_infer")
+# RECDIR_server = os.path.join(BASE_DIR,"models", "PP-OCRv5_server_rec_infer")
 RECDIR_mobile = os.path.join(BASE_DIR,"models", "PP-OCRv5_mobile_rec_infer")
 
-det_model = TextDetection(model_name="PP-OCRv5_server_det", model_dir= DETDIR_server)
+# det_model = TextDetection(model_name="PP-OCRv5_server_det", model_dir= DETDIR_server)
 det_model_mobile = TextDetection(model_name="PP-OCRv5_mobile_det", model_dir=DETDIR_mobile)
-rec_model = TextRecognition(model_name="PP-OCRv5_server_rec", model_dir=RECDIR_server)
+# rec_model = TextRecognition(model_name="PP-OCRv5_server_rec", model_dir=RECDIR_server)
 rec_model_mobile = TextRecognition(model_name="PP-OCRv5_mobile_rec", model_dir=RECDIR_mobile)
 # # ─────────────────────────────────────────────────────────────────────────────
 
@@ -2380,8 +2380,9 @@ def process_pdf_with_test_cases(pdf_to_images, detected_original_bboxs, encoded_
    print(f"Single page PDF saved at: {output_single_pdf}")
 
    page_with_columns, coordinates_C, only_lines = add_column_separators_in_memory(output_single_pdf)
-   explicit_lines = [(x+20, 0, 0, 0) for x in only_lines] #coz vertical lines look like this
-   print("Column separators added, coordinates:", coordinates_C)
+   page_h = pdf_to_images[0].shape[0]   # if numpy array, otherwise use image height
+   explicit_lines = [(int(round(x+20)), 0, 2, page_h) for x in only_lines] #coz vertical lines look like this
+
    doc_model = returns_doc_according_to_columns(pdf_to_images, detected_original_bboxs, explicit_lines, horizontal_lines, encoded_pdf, first_page=True) # rec3
    print(f"Document after text processing for (transformer model): {doc_model}")
 
@@ -2634,7 +2635,7 @@ def extract_with_test_cases_ocr(bank_name, pdf_path, pdf_password, CA_ID, encode
        detected_original_bboxs = extract_textboxes(pdf_in_saved_pdf) 
 
    else:
-       detected_original_bboxs = det_model.predict(pdf_to_images)
+       detected_original_bboxs = det_model_mobile.predict(pdf_to_images)
 
    end = time.time()
    print(f"Time taken for detection: {end - start} seconds")
@@ -2667,15 +2668,18 @@ def extraction_process_only_rectify(bank, pdf_path, pdf_password, start_date, en
 
     print("______________________________qwerty_______________________")
 
-    explicit_lines = [(x, 0, 0, 0) for x in only_lines]
+    # explicit_lines = [(x, 0, 0, 0) for x in only_lines]
     pdf_to_images = pdf_to_numpy_arrays(pdf_path)
+
+    page_h = pdf_to_images[0].shape[0]   # if numpy array, otherwise use image height
+    explicit_lines = [(int(round(x+20)), 0, 2, page_h) for x in only_lines] #coz vertical lines look like this
 
     print("Detection Started for rectify")
     start = time.time() 
     if encoded_pdf:
         detected_original_bboxs = [] # replace wil new textboxes detected directly from pdf_pages
     else:
-        detected_original_bboxs = det_model.predict(pdf_to_images)
+        detected_original_bboxs = det_model_mobile.predict(pdf_to_images)
     end = time.time()
     print(f"Time taken for detection rectify: {end - start} seconds")
 

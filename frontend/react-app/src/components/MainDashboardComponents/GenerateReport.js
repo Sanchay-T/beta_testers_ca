@@ -15,6 +15,7 @@ import { useNavigate } from "react-router-dom"; // Import useNavigate for naviga
 import { Card } from "../ui/card";
 import { AlertCircle, ChevronRight } from "lucide-react";
 import { useReportContext } from "../../contexts/ReportContext";
+import { cn } from "../../lib/utils"; // for conditional class names
 
 export default function GenerateReport({ activeTab }) {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -29,7 +30,9 @@ export default function GenerateReport({ activeTab }) {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const { reportData, updateReportData } = useReportContext();
   const [missingMonthsList, setMissingMonthsList] = useState([]);
-  const [warning, setWarning] = useState("");
+  const [warning, setWarning] = useState([]);
+  const [warningExpanded, setWarningExpanded] = useState(false);
+  const [dateRangeWarning, setDateRangeWarning] = useState(null);
 
   const hasScannedOrEncodedWarning = useMemo(() => {
     if (!Array.isArray(warning)) return false;
@@ -38,6 +41,16 @@ export default function GenerateReport({ activeTab }) {
       /image-only|scanned|non-text|encoded/i.test(msg)
     );
   }, [warning]);
+
+  // extract balance-mismatch errors
+  const balanceMismatchErrors = warning.filter((msg) =>
+    msg.startsWith("Balance mismatch")
+  );
+
+  // everything else stays “red”
+  const otherErrors = warning.filter(
+    (msg) => !msg.startsWith("Balance mismatch")
+  );
 
   const handleSubmit = async (
     setProgress,
@@ -140,6 +153,8 @@ export default function GenerateReport({ activeTab }) {
       setShowAnalysisButton(false);
       setMissingMonthsList([]);
       setWarning([]);
+      setDateRangeWarning(null); // Reset date range warning
+      setWarningExpanded(false); // Reset warning expansion state
 
       const result = await window.electron.generateReportIpc(
         {
@@ -159,12 +174,26 @@ export default function GenerateReport({ activeTab }) {
       }
 
       if (result.data.warning && result.data.warning.length > 0) {
-        const formattedWarnings = result.data.warning.filter((warn) => {
-          return warn && warn.trim() !== ""; // Return true for non-empty warnings
+        const formatted = result.data.warning.filter((w) => w && w.trim());
+
+        // regex to find your date-overlap error
+        const re =
+          /The period for Bank:[^)]+\((\d{2}-\d{2}-\d{4}) to (\d{2}-\d{2}-\d{4})\)[^()]*\((\d{2}-\d{2}-\d{4}) to (\d{2}-\d{2}-\d{4})\)/;
+
+        // split into dateErrors vs. rest
+        let drWarn = null;
+        const rest = formatted.filter((msg) => {
+          const m = msg.match(re);
+          if (m) {
+            const [, fetchedStart, fetchedEnd, userStart, userEnd] = m;
+            drWarn = { fetchedStart, fetchedEnd, userStart, userEnd };
+            return false; // remove from “rest”
+          }
+          return true; // keep everything else
         });
 
-        const uniqueWarnings = Array.from(new Set(formattedWarnings)); // Remove duplicates
-        setWarning(uniqueWarnings);
+        setDateRangeWarning(drWarn); // either an object or null
+        setWarning(Array.from(new Set(rest))); // your existing red/amber logic
       }
 
       setCurrentCaseId(result.data.caseId); // Store caseId
@@ -377,6 +406,8 @@ export default function GenerateReport({ activeTab }) {
             setShowAnalysisButton(false);
             setMissingMonthsList([]);
             setWarning([]);
+            setDateRangeWarning(null); // Reset date range warning
+            setWarningExpanded(false); // Reset warning expansion state
 
             console.log("OCR Result:", ocrResult);
 
@@ -388,14 +419,28 @@ export default function GenerateReport({ activeTab }) {
             }
 
             if (ocrResult.data.warning && ocrResult.data.warning.length > 0) {
-              const formattedWarnings = ocrResult.data.warning.filter(
-                (warn) => {
-                  return warn && warn.trim() !== ""; // Return true for non-empty warnings
-                }
+              const formatted = ocrResult.data.warning.filter(
+                (w) => w && w.trim()
               );
 
-              const uniqueWarnings = Array.from(new Set(formattedWarnings)); // Remove duplicates
-              setWarning(uniqueWarnings);
+              // regex to find your date-overlap error
+              const re =
+                /The period for Bank:[^)]+\((\d{2}-\d{2}-\d{4}) to (\d{2}-\d{2}-\d{4})\)[^()]*\((\d{2}-\d{2}-\d{4}) to (\d{2}-\d{2}-\d{4})\)/;
+
+              // split into dateErrors vs. rest
+              let drWarn = null;
+              const rest = formatted.filter((msg) => {
+                const m = msg.match(re);
+                if (m) {
+                  const [, fetchedStart, fetchedEnd, userStart, userEnd] = m;
+                  drWarn = { fetchedStart, fetchedEnd, userStart, userEnd };
+                  return false; // remove from “rest”
+                }
+                return true; // keep everything else
+              });
+
+              setDateRangeWarning(drWarn); // either an object or null
+              setWarning(Array.from(new Set(rest))); // your existing red/amber logic
             }
 
             // setCurrentCaseId(ocrResult.data.caseId); // Store caseId
@@ -641,15 +686,22 @@ export default function GenerateReport({ activeTab }) {
   });
 
   const note = {
-    content: [
-      "Scanned copies",
-      "Image-Based PDF Statements: Bank statements provided as image-based PDFs, rather than in a structured file format, might lead to processing issues.",
+    general: [
       "File Integrity: Encoded, encrypted, or corrupted files cannot be processed and should not be uploaded.",
       "Handwritten Statements: Handwritten bank statements are not accepted.",
       "Canara Bank Formats: Certain formats of Canara Bank statements may not be compatible with our processing system.",
       "Data Authenticity: Please ensure that the uploaded data has not been tampered with, as alterations can result in incorrect responses.",
       "Statement Recency: Avoid uploading very old bank statements, as changes in keyword formats over time may affect processing accuracy.",
     ],
+    scanned: {
+      header: "IMPORTANT NOTES regarding scanned PDFs processing:",
+      items: [
+        "Sharp, readable text – zoom in; if you can read every digit, so can we.",
+        "Aligned and maintains continuity across all pages.",
+        "Clear, without overlapping narration in the amount fields.",
+        "Avoid photo-scanned PDFs – no issues if they’re clear and aligned.",
+      ],
+    },
   };
 
   return (
@@ -701,25 +753,34 @@ export default function GenerateReport({ activeTab }) {
       <RecentReports key={refreshTrigger} onReportGenerated={refreshPage} />
 
       {/* statments which we dont work with */}
+      {/* ==== General Notes ==== */}
       <Card className="p-6">
-        <h4 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
-          <AlertCircle className="h-5 w-5 text-amber-500" />
+        <h4 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <AlertCircle className="w-5 h-5 text-gray-700 dark:text-gray-300" />
           Important Notes
         </h4>
-        <h6 className="text-gray-600 dark:text-slate-300 mb-4">
-          Certain statements may not be processed properly due to various
-          reasons. Below is a list of common unsupported or partially extracted
-          formats:
-        </h6>
-        <ul className="space-y-3">
-          {note.content.map((item, idx) => (
+        <ul className="space-y-2">
+          {note.general.map((line, i) => (
             <li
-              key={idx}
-              className="flex gap-3 items-center text-gray-600 dark:text-slate-300"
+              key={i}
+              className="flex items-start gap-2 text-gray-600 dark:text-slate-300"
             >
-              <ChevronRight className="h-5 w-5 flex-shrink-0 text-gray-400" />
-              <span>{item}</span>
+              <ChevronRight className="w-4 h-4 text-gray-400" />
+              <span>{line}</span>
             </li>
+          ))}
+        </ul>
+      </Card>
+
+      {/* ==== Scanned-PDF Guidelines ==== */}
+      <Card className="p-6">
+        <h4 className="text-lg font-semibold  mb-3 flex items-center gap-2">
+          <AlertTriangle className="w-5 h-5 " />
+          {note.scanned.header}
+        </h4>
+        <ul className="list-disc list-inside space-y-2 ">
+          {note.scanned.items.map((sub, j) => (
+            <li key={j}>{sub}</li>
           ))}
         </ul>
       </Card>
@@ -773,9 +834,10 @@ export default function GenerateReport({ activeTab }) {
               <Card className="p-3 bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700">
                 <p className="text-blue-700 dark:text-blue-300 text-sm">
                   We detected one or more scanned or encoded PDFs. We're
-                  processing them using OCR in the background. Please allow
-                  approximately 1 minute per page. You'll receive a notification
-                  once it's ready.
+                  processing them using OCR in the background. As this process
+                  is on your PC, please be patient as this is a heavy operation
+                  and can take some time depending on your configurations.
+                  You'll receive a notification once it's ready.
                 </p>
               </Card>
             </div>
@@ -808,29 +870,71 @@ export default function GenerateReport({ activeTab }) {
             </div>
           )}
 
-          {/* display any other warning if any */}
-          {warning.length > 0 && (
-            <div className="mb-4 mt-2">
-              <h3 className="text-md font-semibold flex items-center gap-x-2 mb-2">
-                <AlertCircle className="text-red-500 w-5 h-5" />
-                Warning
+          {/* ——— Other errors in red ——— */}
+          {(otherErrors.length > 0 || dateRangeWarning) && (
+            <Card className="p-3 bg-red-50 …">
+              <h3 className="…">
+                <AlertCircle className="…" /> Warning
               </h3>
-              <Card className="p-3 bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800">
-                <ul className="space-y-1">
-                  {warning.map((month, index) => (
-                    <li
-                      key={index}
-                      className="text-red-700 dark:text-red-400 flex items-start"
-                    >
-                      • <span className="ml-1 break-all"> {month}</span>
-                    </li>
-                  ))}
-                </ul>
-                {/* <p className="text-sm text-amber-700 dark:text-amber-400 mt-3">
-                  These months are missing from your statements. You may want to
-                  add them for a complete analysis.
-                </p> */}
-              </Card>
+              <ul className="space-y-1">
+                {otherErrors.map((msg, i) => (
+                  <li key={i} className="text-red-700 flex items-start">
+                    • <span className="ml-1 break-words">{msg}</span>
+                  </li>
+                ))}
+
+                {dateRangeWarning && (
+                  <li className="mt-2 text-red-700">
+                    <p className="font-semibold">Date range mismatch:</p>
+                    <ul className="list-disc list-inside ml-6 space-y-1">
+                      <li>
+                        User Input: {dateRangeWarning.userStart}–
+                        {dateRangeWarning.userEnd}
+                      </li>
+                      <li>
+                        Available: {dateRangeWarning.fetchedStart}–
+                        {dateRangeWarning.fetchedEnd}
+                      </li>
+                    </ul>
+                  </li>
+                )}
+              </ul>
+            </Card>
+          )}
+
+          {/* ——— Balance-mismatch in amber, collapsible ——— */}
+          {balanceMismatchErrors.length > 0 && (
+            <div className="mb-4 mt-2">
+              <div
+                className="flex items-center justify-between cursor-pointer"
+                onClick={() => setWarningExpanded(!warningExpanded)}
+              >
+                <h3 className="text-md font-semibold flex items-center gap-x-2">
+                  <AlertCircle className="text-amber-500 w-5 h-5" />
+                  Balance mismatch details
+                </h3>
+                <ChevronRight
+                  className={cn(
+                    "transition-transform text-amber-500 w-5 h-5",
+                    warningExpanded ? "rotate-90" : ""
+                  )}
+                />
+              </div>
+
+              {warningExpanded && (
+                <Card className="p-3 bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800 mt-2">
+                  <ul className="space-y-1">
+                    {balanceMismatchErrors.map((msg, idx) => (
+                      <li
+                        key={idx}
+                        className="text-amber-700 dark:text-amber-400 flex items-start"
+                      >
+                        • <span className="ml-1 break-all">{msg}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </Card>
+              )}
             </div>
           )}
 
