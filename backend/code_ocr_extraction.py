@@ -48,14 +48,14 @@ TEMP_SAVED_PDF_DIR = get_saved_pdf_dir()
 # # 1. Paths to Your Model Folders and Sample Image
 # # ─────────────────────────────────────────────────────────────────────────────\
 
-DETDIR_server = os.path.join(BASE_DIR,"models", "PP-OCRv5_server_det_infer")
+# DETDIR_server = os.path.join(BASE_DIR,"models", "PP-OCRv5_server_det_infer")
 DETDIR_mobile = os.path.join(BASE_DIR,"models", "PP-OCRv5_mobile_det_infer")
-RECDIR_server = os.path.join(BASE_DIR,"models", "PP-OCRv5_server_rec_infer")
+# RECDIR_server = os.path.join(BASE_DIR,"models", "PP-OCRv5_server_rec_infer")
 RECDIR_mobile = os.path.join(BASE_DIR,"models", "PP-OCRv5_mobile_rec_infer")
 
-det_model = TextDetection(model_name="PP-OCRv5_server_det", model_dir= DETDIR_server)
+# det_model = TextDetection(model_name="PP-OCRv5_server_det", model_dir= DETDIR_server)
 det_model_mobile = TextDetection(model_name="PP-OCRv5_mobile_det", model_dir=DETDIR_mobile)
-rec_model = TextRecognition(model_name="PP-OCRv5_server_rec", model_dir=RECDIR_server)
+# rec_model = TextRecognition(model_name="PP-OCRv5_server_rec", model_dir=RECDIR_server)
 rec_model_mobile = TextRecognition(model_name="PP-OCRv5_mobile_rec", model_dir=RECDIR_mobile)
 # # ─────────────────────────────────────────────────────────────────────────────
 
@@ -2635,7 +2635,7 @@ def extract_with_test_cases_ocr(bank_name, pdf_path, pdf_password, CA_ID, encode
        detected_original_bboxs = extract_textboxes(pdf_in_saved_pdf) 
 
    else:
-       detected_original_bboxs = det_model.predict(pdf_to_images)
+       detected_original_bboxs = det_model_mobile.predict(pdf_to_images)
 
    end = time.time()
    print(f"Time taken for detection: {end - start} seconds")
@@ -2679,7 +2679,7 @@ def extraction_process_only_rectify(bank, pdf_path, pdf_password, start_date, en
     if encoded_pdf:
         detected_original_bboxs = [] # replace wil new textboxes detected directly from pdf_pages
     else:
-        detected_original_bboxs = det_model.predict(pdf_to_images)
+        detected_original_bboxs = det_model_mobile.predict(pdf_to_images)
     end = time.time()
     print(f"Time taken for detection rectify: {end - start} seconds")
 

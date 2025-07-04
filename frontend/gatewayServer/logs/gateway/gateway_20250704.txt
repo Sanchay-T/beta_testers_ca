@@ -1,0 +1,227 @@
+2025-07-04 10:23:08.148 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:24:07.053 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:25:07.067 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:26:07.073 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:27:07.077 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:28:07.091 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:29:07.100 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:30:07.107 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:31:07.112 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:32:07.122 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:32:12.855 +05:30 [INF] [License Polling] Expiry: 1753010196.877816
+2025-07-04 10:32:12.855 +05:30 [INF] [SetExpiry] Updating license expiry from 1753010196.877816 to 1753010196.877816
+2025-07-04 10:32:12.855 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1751458721.619947 to 1751605332.832462
+2025-07-04 10:32:12.856 +05:30 [INF] [SetSystemUpTime] Updating license system up time from 805068843 to 951681171
+2025-07-04 10:32:12.868 +05:30 [INF] [License Polling] LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting3",
+  "current_timestamp": 1751605332.832462,
+  "expiry_timestamp": 1753010196.877816,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 24,
+  "SystemUpTime": 951681171
+}
+2025-07-04 10:32:12.868 +05:30 [INF] [License Polling] LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting3",
+  "current_timestamp": 1751605332.832462,
+  "expiry_timestamp": 1753010196.877816,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 24,
+  "SystemUpTime": 951681171
+}
+2025-07-04 10:32:12.868 +05:30 [INF] [License Polling] License resynced successfully.
+2025-07-04 10:33:07.135 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:34:07.209 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:35:07.220 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:36:03.231 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting3",
+  "current_timestamp": 1751605332.832462,
+  "expiry_timestamp": 1753010196.877816,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 24,
+  "SystemUpTime": 951681171
+}
+2025-07-04 10:36:07.220 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:36:33.463 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting3",
+  "current_timestamp": 1751605332.832462,
+  "expiry_timestamp": 1753010196.877816,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 24,
+  "SystemUpTime": 951681171
+}
+2025-07-04 10:36:33.544 +05:30 [INF] Session activation logged to Django.
+2025-07-04 10:36:55.796 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting3",
+  "current_timestamp": 1751605332.832462,
+  "expiry_timestamp": 1753010196.877816,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 24,
+  "SystemUpTime": 951681171
+}
+2025-07-04 10:36:55.796 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting3",
+  "current_timestamp": 1751605332.832462,
+  "expiry_timestamp": 1753010196.877816,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 24,
+  "SystemUpTime": 951681171
+}
+2025-07-04 10:36:55.796 +05:30 [INF] [IsStatementLimitReached] Current used statements: 24, License limit: 100
+2025-07-04 10:37:02.413 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting3",
+  "current_timestamp": 1751605332.832462,
+  "expiry_timestamp": 1753010196.877816,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 24,
+  "SystemUpTime": 951681171
+}
+2025-07-04 10:37:02.413 +05:30 [INF] [TryUseStatement] Flushing 25 used statements to disk., last flush was at 6/30/2025 12:15:48 PM, difference: 3.16:51:13.8195155
+2025-07-04 10:37:02.413 +05:30 [INF] [FlushToDisk] Flushing 25 used statements to disk.
+2025-07-04 10:37:02.414 +05:30 [INF] [FlushToDisk] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting3","current_timestamp":1751605332.832462,"expiry_timestamp":1753010196.877816,"number_of_users":1,"number_of_statements":100,"role":"CA","UsedStatements":25,"SystemUpTime":951681171}
+2025-07-04 10:37:02.418 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-07-04 10:37:02.600 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-07-04 10:37:02.601 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-07-04 10:37:02.601 +05:30 [INF] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-07-04 10:37:07.229 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:38:07.231 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:39:07.235 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:39:30.886 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting3",
+  "current_timestamp": 1751605332.832462,
+  "expiry_timestamp": 1753010196.877816,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 25,
+  "SystemUpTime": 951681171
+}
+2025-07-04 10:39:30.886 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting3",
+  "current_timestamp": 1751605332.832462,
+  "expiry_timestamp": 1753010196.877816,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 25,
+  "SystemUpTime": 951681171
+}
+2025-07-04 10:39:30.886 +05:30 [INF] [IsStatementLimitReached] Current used statements: 25, License limit: 100
+2025-07-04 10:39:40.341 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting3",
+  "current_timestamp": 1751605332.832462,
+  "expiry_timestamp": 1753010196.877816,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 25,
+  "SystemUpTime": 951681171
+}
+2025-07-04 10:39:40.341 +05:30 [INF] [TryUseStatement] Flushing 26 used statements to disk., last flush was at 7/4/2025 5:07:02 AM, difference: 00:02:37.7402008
+2025-07-04 10:39:40.341 +05:30 [INF] [FlushToDisk] Flushing 26 used statements to disk.
+2025-07-04 10:39:40.342 +05:30 [INF] [FlushToDisk] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting3","current_timestamp":1751605332.832462,"expiry_timestamp":1753010196.877816,"number_of_users":1,"number_of_statements":100,"role":"CA","UsedStatements":26,"SystemUpTime":951681171}
+2025-07-04 10:39:40.343 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-07-04 10:39:40.500 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-07-04 10:39:40.501 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-07-04 10:39:40.501 +05:30 [INF] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-07-04 10:40:07.245 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:41:07.250 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:42:07.250 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:43:07.264 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:44:07.270 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:45:07.275 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:46:07.280 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:47:07.290 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:48:07.297 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:49:07.308 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:50:07.323 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:51:07.336 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:52:07.343 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:53:07.345 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:54:07.357 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:55:07.369 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:56:07.371 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:57:07.372 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:58:07.385 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 10:59:07.393 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 11:00:07.405 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 11:01:07.405 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 11:02:07.428 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 11:03:07.429 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 11:04:07.442 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 11:05:07.445 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 11:06:07.457 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 11:07:07.472 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 11:08:06.631 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting3",
+  "current_timestamp": 1751605332.832462,
+  "expiry_timestamp": 1753010196.877816,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 26,
+  "SystemUpTime": 951681171
+}
+2025-07-04 11:08:06.632 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting3",
+  "current_timestamp": 1751605332.832462,
+  "expiry_timestamp": 1753010196.877816,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 26,
+  "SystemUpTime": 951681171
+}
+2025-07-04 11:08:06.632 +05:30 [INF] [IsStatementLimitReached] Current used statements: 26, License limit: 100
+2025-07-04 11:08:07.485 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 11:08:08.627 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting3",
+  "current_timestamp": 1751605332.832462,
+  "expiry_timestamp": 1753010196.877816,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 26,
+  "SystemUpTime": 951681171
+}
+2025-07-04 11:08:08.627 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting3",
+  "current_timestamp": 1751605332.832462,
+  "expiry_timestamp": 1753010196.877816,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 26,
+  "SystemUpTime": 951681171
+}
+2025-07-04 11:08:08.627 +05:30 [INF] [IsStatementLimitReached] Current used statements: 26, License limit: 100
+2025-07-04 11:08:52.069 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting3",
+  "current_timestamp": 1751605332.832462,
+  "expiry_timestamp": 1753010196.877816,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 26,
+  "SystemUpTime": 951681171
+}
+2025-07-04 11:08:52.069 +05:30 [INF] [TryUseStatement] Flushing 27 used statements to disk., last flush was at 7/4/2025 5:09:40 AM, difference: 00:29:11.5680498
+2025-07-04 11:08:52.069 +05:30 [INF] [FlushToDisk] Flushing 27 used statements to disk.
+2025-07-04 11:08:52.069 +05:30 [INF] [FlushToDisk] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting3","current_timestamp":1751605332.832462,"expiry_timestamp":1753010196.877816,"number_of_users":1,"number_of_statements":100,"role":"CA","UsedStatements":27,"SystemUpTime":951681171}
+2025-07-04 11:08:52.070 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-07-04 11:08:52.187 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-07-04 11:08:52.187 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-07-04 11:08:52.187 +05:30 [INF] License information securely saved at C:\ProgramData\Cyphersol\license.enc

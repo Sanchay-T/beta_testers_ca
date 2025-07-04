@@ -123,9 +123,11 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
   const [isHandleDetailsDialogOpen, setIsHandleDetailsDialogOpen] =
     useState(null);
   const { individualId } = useParams();
-  const [warning, setWarning] = useState(false);
+  const [warning, setWarning] = useState([]);
   const [missingMonthsList, setMissingMonthsList] = useState([]);
   const [successfulStatements, setSuccessfulStatements] = useState([]);
+  const [dateRangeWarning, setDateRangeWarning] = useState(null);
+  const [warningExpanded, setWarningExpanded] = useState(false);
 
   const hasScannedOrEncodedWarning = useMemo(() => {
     if (!Array.isArray(warning)) return false;
@@ -134,6 +136,16 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       /image-only|scanned|non-text|encoded/i.test(msg)
     );
   }, [warning]);
+
+  // extract balance-mismatch errors
+  const balanceMismatchErrors = warning.filter((msg) =>
+    msg.startsWith("Balance mismatch")
+  );
+
+  // everything else stays “red”
+  const otherErrors = warning.filter(
+    (msg) => !msg.startsWith("Balance mismatch")
+  );
 
   const handleSubmitEditPdf = async () => {
     setPdfEditLoading(true);
@@ -667,12 +679,26 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         setMissingMonthsList(result.data.missingMonthsList);
       }
       if (result.data.warning && result.data.warning.length > 0) {
-        const nonEmptyWarnings = result.data.warning.filter((warn) => {
-          return warn && warn.trim() !== ""; // Return true for non-empty warnings
-        });
-        const uniqueWarningsSet = new Set(nonEmptyWarnings);
+        const formatted = result.data.warning.filter((w) => w && w.trim());
 
-        setWarning([...uniqueWarningsSet]);
+        // regex to find your date-overlap error
+        const re =
+          /The period for Bank:[^)]+\((\d{2}-\d{2}-\d{4}) to (\d{2}-\d{2}-\d{4})\)[^()]*\((\d{2}-\d{2}-\d{4}) to (\d{2}-\d{2}-\d{4})\)/;
+
+        // split into dateErrors vs. rest
+        let drWarn = null;
+        const rest = formatted.filter((msg) => {
+          const m = msg.match(re);
+          if (m) {
+            const [, fetchedStart, fetchedEnd, userStart, userEnd] = m;
+            drWarn = { fetchedStart, fetchedEnd, userStart, userEnd };
+            return false; // remove from “rest”
+          }
+          return true; // keep everything else
+        });
+
+        setDateRangeWarning(drWarn); // either an object or null
+        setWarning(Array.from(new Set(rest))); // your existing red/amber logic
       }
 
       setCurrentCaseId(result.data.caseId); // Store caseId
@@ -920,8 +946,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                 updateReportData({
                   recentReportsData: [newData, ...reportData.recentReportsData],
                 });
-
-                
               } else {
                 // setShowRectifyButton(true);
                 const successfulFiles = ocrResult.data.successfulFiles.map(
@@ -955,9 +979,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                 });
               }
 
-              if (
-                ocrResult.data.totalTransactions
-              ) {
+              if (ocrResult.data.totalTransactions) {
                 toast({
                   title: "Success",
                   description: `${caseName} report generated successfully!`,
@@ -1983,25 +2005,67 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                               </div>
                                             }
                                           </div>
-                                          {hasError && (
-                                            <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
-                                              <p className="text-red-600 text-sm">
-                                                <strong>Error:</strong>{" "}
-                                                {
-                                                  statement.respectiveReasonsForError
-                                                }
-                                              </p>
-                                              <p className="text-red-500 text-xs mt-1">
-                                                {statement.respectiveReasonsForError
-                                                  .toLowerCase()
-                                                  .includes(
-                                                    "start and end date"
-                                                  )
-                                                  ? "Please Re-run this statement with correct dates."
-                                                  : "Please contact sales for assistance with this issue."}
-                                              </p>
-                                            </div>
-                                          )}
+                                          {hasError &&
+                                            (() => {
+                                              const msg =
+                                                statement.respectiveReasonsForError ||
+                                                "";
+                                              // match your date-range error
+                                              const re =
+                                                /The period for Bank:[^()]+\((\d{2}-\d{2}-\d{4}) to (\d{2}-\d{2}-\d{4})\)[^()]*\((\d{2}-\d{2}-\d{4}) to (\d{2}-\d{2}-\d{4})\)/;
+                                              const m = msg.match(re);
+
+                                              return (
+                                                <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
+                                                  <div className="flex items-center gap-2">
+                                                    <XCircle className="w-5 h-5 text-red-500" />
+                                                    <span className="font-semibold text-red-700">
+                                                      Error
+                                                    </span>
+                                                  </div>
+
+                                                  {m ? (
+                                                    // date-range case: nested bullets
+                                                    <ul className="list-disc list-inside mt-2 space-y-1 text-red-600">
+                                                      <li className="font-medium">
+                                                        Inccorect Date Entered:
+                                                      </li>
+                                                      <ul className="list-disc list-inside ml-6 space-y-1">
+                                                        <li>
+                                                          User Input: {m[3]} – 
+                                                          {m[4]}
+                                                        </li>
+                                                        <li>
+                                                          Correct: {m[1]} – 
+                                                          {m[2]}
+                                                        </li>
+                                                        <li>
+                                                          Please Verify and
+                                                          Reupload With Correct
+                                                          Date.
+                                                        </li>
+                                                      </ul>
+                                                    </ul>
+                                                  ) : (
+                                                    // all other errors: single paragraph
+                                                    <p className="mt-2 text-red-600 text-sm">
+                                                      {msg}
+                                                    </p>
+                                                  )}
+
+                                                  {/* your existing “please rerun” vs “contact sales” hint */}
+                                                  <p className="mt-2 text-red-500 text-xs">
+                                                    {msg
+                                                      .toLowerCase()
+                                                      .includes(
+                                                        "start and end date"
+                                                      )
+                                                      ? "Please re-run this statement with correct dates."
+                                                      : ""}
+                                                  </p>
+                                                </div>
+                                              );
+                                            })()}
                                         </div>
                                       );
                                     })}
@@ -2132,7 +2196,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       {/* Modal for GenerateReportForm & its changes */}
       {isAddPdfModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-          <div className="bg-white rounded-lg shadow-lg max-w-5xl w-full p-6 max-h-[90%] overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-lg max-w-7xl w-full p-6 max-h-[90%] overflow-y-auto">
             <header className="flex justify-between items-center">
               <h2 className="text-lg font-semibold">
                 Add Additional Statements
@@ -2221,7 +2285,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
 
       {/* Dialog for successful report generation */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen} className="">
-        <DialogContent className="max-h-[90vh] overflow-y-auto pb-0">
+        <DialogContent className="max-h-[90vh] overflow-y-auto pb-0 border-none shadow-none">
           <DialogHeader>
             {successfulStatements.length > 0 ? (
               <DialogTitle>
@@ -2303,29 +2367,71 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
             </div>
           )}
 
-          {/* display any other warning if any */}
-          {warning.length > 0 && (
-            <div className="mb-4 mt-2">
-              <h3 className="text-md font-semibold flex items-center gap-x-2 mb-2">
-                <AlertCircle className="text-red-500 w-5 h-5" />
-                Warning
+          {/* ——— Other errors in red ——— */}
+          {(otherErrors.length > 0 || dateRangeWarning) && (
+            <Card className="p-3 bg-red-50 …">
+              <h3 className="…">
+                <AlertCircle className="…" /> Warning
               </h3>
-              <Card className="p-3 bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800">
-                <ul className="space-y-1">
-                  {warning.map((month, index) => (
-                    <li
-                      key={index}
-                      className="text-red-700 dark:text-red-400 flex items-start"
-                    >
-                      • <span className="ml-1"> {month}</span>
-                    </li>
-                  ))}
-                </ul>
-                {/* <p className="text-sm text-amber-700 dark:text-amber-400 mt-3">
-                        These months are missing from your statements. You may want to
-                        add them for a complete analysis.
-                      </p> */}
-              </Card>
+              <ul className="space-y-1">
+                {otherErrors.map((msg, i) => (
+                  <li key={i} className="text-red-700 flex items-start">
+                    • <span className="ml-1 break-words">{msg}</span>
+                  </li>
+                ))}
+
+                {dateRangeWarning && (
+                  <li className="mt-2 text-red-700">
+                    <p className="font-semibold">Date range mismatch:</p>
+                    <ul className="list-disc list-inside ml-6 space-y-1">
+                      <li>
+                        User Input: {dateRangeWarning.userStart}–
+                        {dateRangeWarning.userEnd}
+                      </li>
+                      <li>
+                        Available: {dateRangeWarning.fetchedStart}–
+                        {dateRangeWarning.fetchedEnd}
+                      </li>
+                    </ul>
+                  </li>
+                )}
+              </ul>
+            </Card>
+          )}
+
+          {/* ——— Balance-mismatch in amber, collapsible ——— */}
+          {balanceMismatchErrors.length > 0 && (
+            <div className="mb-4 mt-2">
+              <div
+                className="flex items-center justify-between cursor-pointer"
+                onClick={() => setWarningExpanded(!warningExpanded)}
+              >
+                <h3 className="text-md font-semibold flex items-center gap-x-2">
+                  <AlertCircle className="text-amber-500 w-5 h-5" />
+                  Balance mismatch details
+                </h3>
+                <ChevronRight
+                  className={cn(
+                    "transition-transform text-amber-500 w-5 h-5",
+                    warningExpanded ? "rotate-90" : ""
+                  )}
+                />
+              </div>
+
+              {warningExpanded && (
+                <Card className="p-3 bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800 mt-2">
+                  <ul className="space-y-1">
+                    {balanceMismatchErrors.map((msg, idx) => (
+                      <li
+                        key={idx}
+                        className="text-amber-700 dark:text-amber-400 flex items-start"
+                      >
+                        • <span className="ml-1 break-all">{msg}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </Card>
+              )}
             </div>
           )}
 
