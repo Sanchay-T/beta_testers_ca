@@ -417,3 +417,146 @@
 2025-07-04 12:59:09.320 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
 2025-07-04 12:59:09.321 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
 2025-07-04 12:59:09.321 +05:30 [INF] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-07-04 13:00:09.124 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 13:01:09.133 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 13:01:59.919 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting3",
+  "current_timestamp": 1751609060.901676,
+  "expiry_timestamp": 1753010196.877816,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 39,
+  "SystemUpTime": 960316578
+}
+2025-07-04 13:02:05.103 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting3",
+  "current_timestamp": 1751609060.901676,
+  "expiry_timestamp": 1753010196.877816,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 39,
+  "SystemUpTime": 960316578
+}
+2025-07-04 13:02:05.159 +05:30 [WRN] Failed to log session activation: {"error":"Invalid license key."}
+2025-07-04 13:02:09.133 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 13:02:24.230 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting3",
+  "current_timestamp": 1751609060.901676,
+  "expiry_timestamp": 1753010196.877816,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 39,
+  "SystemUpTime": 960316578
+}
+2025-07-04 13:02:24.230 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting3",
+  "current_timestamp": 1751609060.901676,
+  "expiry_timestamp": 1753010196.877816,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 39,
+  "SystemUpTime": 960316578
+}
+2025-07-04 13:02:24.230 +05:30 [INF] [IsStatementLimitReached] Current used statements: 39, License limit: 100
+2025-07-04 13:02:30.058 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting3",
+  "current_timestamp": 1751609060.901676,
+  "expiry_timestamp": 1753010196.877816,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 39,
+  "SystemUpTime": 960316578
+}
+2025-07-04 13:02:30.058 +05:30 [INF] [TryUseStatement] Flushing 40 used statements to disk., last flush was at 7/4/2025 7:29:09 AM, difference: 00:03:20.7377405
+2025-07-04 13:02:30.059 +05:30 [INF] [FlushToDisk] Flushing 40 used statements to disk.
+2025-07-04 13:02:30.059 +05:30 [INF] [FlushToDisk] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting3","current_timestamp":1751609060.901676,"expiry_timestamp":1753010196.877816,"number_of_users":1,"number_of_statements":100,"role":"CA","UsedStatements":40,"SystemUpTime":960316578}
+2025-07-04 13:02:30.059 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-07-04 13:02:30.193 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-07-04 13:02:30.194 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-07-04 13:02:30.194 +05:30 [INF] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-07-04 13:03:09.142 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 13:04:09.142 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 13:04:44.872 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting3",
+  "current_timestamp": 1751609060.901676,
+  "expiry_timestamp": 1753010196.877816,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 40,
+  "SystemUpTime": 960316578
+}
+2025-07-04 13:04:44.872 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting3",
+  "current_timestamp": 1751609060.901676,
+  "expiry_timestamp": 1753010196.877816,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 40,
+  "SystemUpTime": 960316578
+}
+2025-07-04 13:04:44.872 +05:30 [INF] [IsStatementLimitReached] Current used statements: 40, License limit: 100
+2025-07-04 13:04:50.438 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting3",
+  "current_timestamp": 1751609060.901676,
+  "expiry_timestamp": 1753010196.877816,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 40,
+  "SystemUpTime": 960316578
+}
+2025-07-04 13:04:50.438 +05:30 [INF] [TryUseStatement] Flushing 41 used statements to disk., last flush was at 7/4/2025 7:32:30 AM, difference: 00:02:20.2439890
+2025-07-04 13:04:50.438 +05:30 [INF] [FlushToDisk] Flushing 41 used statements to disk.
+2025-07-04 13:04:50.438 +05:30 [INF] [FlushToDisk] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting3","current_timestamp":1751609060.901676,"expiry_timestamp":1753010196.877816,"number_of_users":1,"number_of_statements":100,"role":"CA","UsedStatements":41,"SystemUpTime":960316578}
+2025-07-04 13:04:50.439 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-07-04 13:04:50.553 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-07-04 13:04:50.554 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-07-04 13:04:50.554 +05:30 [INF] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-07-04 13:05:09.154 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 13:06:09.164 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 13:07:09.169 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 13:08:09.178 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 13:09:09.189 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 13:10:09.201 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 13:11:09.211 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 13:12:09.216 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 13:13:09.232 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 13:14:09.237 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 13:15:09.240 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 13:16:09.248 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 13:17:09.260 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 13:18:09.262 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 13:19:09.264 +05:30 [INF] Re-advertising mDNS service...
+2025-07-04 13:20:05.032 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting3",
+  "current_timestamp": 1751609060.901676,
+  "expiry_timestamp": 1753010196.877816,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 41,
+  "SystemUpTime": 960316578
+}
+2025-07-04 13:20:05.051 +05:30 [ERR] Error during license expiry check.
+Microsoft.AspNetCore.Server.Kestrel.Core.BadHttpRequestException: Unexpected end of request content.
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http.Http1ContentLengthMessageBody.ReadAsyncInternal(CancellationToken cancellationToken)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http.HttpRequestStream.ReadAsyncInternal(Memory`1 destination, CancellationToken cancellationToken)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at System.Text.Json.Serialization.ReadBufferState.ReadFromStreamAsync(Stream utf8Json, CancellationToken cancellationToken, Boolean fillBuffer)
+   at System.Text.Json.Serialization.Metadata.JsonTypeInfo`1.DeserializeAsync(Stream utf8Json, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Http.HttpRequestJsonExtensions.ReadFromJsonAsync[TValue](HttpRequest request, JsonTypeInfo`1 jsonTypeInfo, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Http.HttpRequestJsonExtensions.ReadFromJsonAsync[TValue](HttpRequest request, JsonTypeInfo`1 jsonTypeInfo, CancellationToken cancellationToken)
+   at MyLanService.HttpApiHost.HandleDeactivateSession(HttpContext context)
+   at MyLanService.HttpApiHost.<StartAsync>b__11_8(HttpContext context)
+   at Microsoft.AspNetCore.Http.RequestDelegateFactory.ExecuteTaskResult[T](Task`1 task, HttpContext httpContext)
+   at Microsoft.AspNetCore.Routing.EndpointMiddleware.<Invoke>g__AwaitRequestTask|7_0(Endpoint endpoint, Task requestTask, ILogger logger)
+   at MyLanService.Middlewares.LicenseExpiryMiddleware.InvokeAsync(HttpContext context)
+2025-07-04 13:20:09.274 +05:30 [INF] Re-advertising mDNS service...
