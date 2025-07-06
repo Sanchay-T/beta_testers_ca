@@ -60,6 +60,7 @@ export function LicenseActivationForm({ className, ...props }) {
   const [showPassword, setShowPassword] = useState(false);
   const [activationStatus, setActivationStatus] = useState(null);
   const [isNetworkSearching, setIsNetworkSearching] = useState(false);
+  const [isDirectActivating, setIsDirectActivating] = useState(false);
   // New state for inactive licenses
   const [licenses, setLicenses] = useState([]);
   const [revokingLicense, setRevokingLicense] = useState(null);
@@ -76,6 +77,29 @@ export function LicenseActivationForm({ className, ...props }) {
       setRememberMe(true);
     }
   }, []);
+
+  // Clear messages when component mounts or when navigating back
+  useEffect(() => {
+    // Clear any existing success/error messages when the component first loads
+    setError(null);
+    setSuccessMessage(null);
+  }, [setError, setSuccessMessage]);
+
+  // Clear messages when activation step changes (to prevent stale messages)
+  useEffect(() => {
+    if (activationStep === 1) {
+      setError(null);
+      setSuccessMessage(null);
+    }
+  }, [activationStep, setError, setSuccessMessage]);
+
+  // Cleanup messages when component unmounts
+  useEffect(() => {
+    return () => {
+      setError(null);
+      setSuccessMessage(null);
+    };
+  }, [setError, setSuccessMessage]);
 
   // Function to close the modal
   const handleCloseModal = () => {
@@ -120,20 +144,21 @@ export function LicenseActivationForm({ className, ...props }) {
 
   const handleDirectActivation = async (e) => {
     e.preventDefault();
+    setIsDirectActivating(true);
     setActivationStatus("processing");
     setError(null); // Clear previous error messages
 
-    const adminStatus = await window.electron.app.checkAdminRights();
-
-    if (!adminStatus?.elevated) {
-      setActivationStatus("failed");
-      setError("Administrator permissions required");
-      console.log("No elevated permissions");
-      setShowAdminPrompt(true);
-      return;
-    }
-
     try {
+      const adminStatus = await window.electron.app.checkAdminRights();
+
+      if (!adminStatus?.elevated) {
+        setActivationStatus("failed");
+        setError("Administrator permissions required");
+        console.log("No elevated permissions");
+        setShowAdminPrompt(true);
+        return;
+      }
+
       const result = await window.electron.auth.activateLicense({
         licenseKey: credentials.licenseKey,
         role: credentials.role,
@@ -163,12 +188,9 @@ export function LicenseActivationForm({ className, ...props }) {
             if (networkResult.errorDetails) {
               console.warn("Error details:", networkResult.errorDetails);
             }
-            // Add a network warning without overriding the existing success message
-            // We don't call setError here to avoid overriding our activation success
           }
         } catch (error) {
           console.error("Error connecting to network license:", error);
-          // Log but don't display this error to avoid overriding activation success
         }
       } else {
         // Detailed error handling for activation failure
@@ -191,14 +213,15 @@ export function LicenseActivationForm({ className, ...props }) {
       console.error("Activation error:", error);
       setActivationStatus("failed");
       setError("An unexpected error occurred during activation.");
+    } finally {
+      setIsDirectActivating(false);
     }
   };
 
   const handleNetworkLicenseSearch = async (e) => {
-    setActivationStatus("processing");
-    setError(null);
     e.preventDefault();
     setIsNetworkSearching(true);
+    setError(null);
 
     try {
       const result = await window.electron.auth.searchNetworkLicenses({ serviceType: "license-server" });
@@ -210,12 +233,10 @@ export function LicenseActivationForm({ className, ...props }) {
         setNetworkLicenses([]);
         console.log("No network licenses found.");
         setError("No network licenses found");
-        // setActivationStatus("network-not-found");
       }
     } catch (error) {
       console.error("Error searching network licenses:", error);
       setError("An unexpected error occurred while searching for network licenses.");
-      // setActivationStatus("network-error");
     } finally {
       setIsNetworkSearching(false);
     }
@@ -255,6 +276,7 @@ export function LicenseActivationForm({ className, ...props }) {
           setActivationStatus("inactive-licenses");
         } else if (result.activeLicenses && result.activeLicenses.length > 0) {
           // Handle active licenses on other devices
+          setLicenses(result.activeLicenses);
           setActivationStatus("active-licenses");
         } else {
           // Generic error case
@@ -262,15 +284,15 @@ export function LicenseActivationForm({ className, ...props }) {
         }
 
         // Set only one error message - prioritize the server's error message
-        if (result.error) {
-          setError(result.error);
-        } else if (result.inactiveLicenses && result.inactiveLicenses.length > 0) {
-          setError("Found inactive licenses. Please revoke an existing license.");
-        } else if (result.activeLicenses && result.activeLicenses.length > 0) {
-          setError("License is active on another device.");
-        } else {
-          setError("Failed to connect to network license.");
-        }
+        // if (result.error) {
+        //   setError(result.error);
+        // } else if (result.inactiveLicenses && result.inactiveLicenses.length > 0) {
+        //   setError("Found inactive licenses. Please revoke an existing license.");
+        // } else if (result.activeLicenses && result.activeLicenses.length > 0) {
+        //   setError("License is active on another device.");
+        // } else {
+        //   setError("Failed to connect to network license.");
+        // }
 
         // Log detailed error information for debugging
         if (result.errorDetails) {
@@ -298,11 +320,8 @@ export function LicenseActivationForm({ className, ...props }) {
       if (result.success) {
         // Remove the revoked license from the list
         setLicenses(prev => prev.filter(session => session.sessionKey !== sessionKey));
-
-        // If that was the last one, retry connection automatically
-        if (licenses.length === 1) {
-          handleNetworkLicenseSelect(selectedNetworkLicense);
-        }
+        // Immediately retry connection after successful revocation
+        handleNetworkLicenseSelect(selectedNetworkLicense);
       } else {
         // Handle revoke failure
         console.error("Failed to revoke license:", result.error);
@@ -419,24 +438,12 @@ export function LicenseActivationForm({ className, ...props }) {
 
 
   const renderStatusAlert = () => {
-    // Show success message if available
-    if (successMessage) {
-      return (
-        <Alert className="mb-4 bg-green-50 border-green-200">
-          <div className="flex items-center">
-            <CheckCircle className="h-4 text-green-700 mr-2" />
-            <AlertDescription className="text-green-700">
-              {successMessage}
-            </AlertDescription>
-          </div>
-        </Alert>
-      );
-    }
+    const alerts = [];
 
-    // Show explicit error message if available - this is highest priority
+    // Show error message first (highest priority)
     if (error) {
-      return (
-        <Alert variant="destructive" className="mb-4">
+      alerts.push(
+        <Alert key="error" variant="destructive" className="mb-4">
           <div className="flex items-center">
             <AlertTriangle className="h-4 mr-2" />
             <AlertDescription>
@@ -447,34 +454,46 @@ export function LicenseActivationForm({ className, ...props }) {
       );
     }
 
-    // Only show status-based alerts if no explicit error message exists
-    if (!activationStatus) return null;
-
-    switch (activationStatus) {
-      case "active":
-        return (
-          <Alert className="mb-4 bg-green-50 border-green-200">
-            <CheckCircle className="h-4 w-4 text-green-700 mr-2" />
+    // Show success message if available (but below errors)
+    if (successMessage) {
+      alerts.push(
+        <Alert key="success" className="mb-4 bg-green-50 border-green-200">
+          <div className="flex items-center">
+            <CheckCircle className="h-4 text-green-700 mr-2" />
             <AlertDescription className="text-green-700">
-              License successfully activated! Please continue to set up your account.
+              {successMessage}
             </AlertDescription>
-          </Alert>
-        );
-      // Only show these status-based error alerts if no explicit error message exists
-      case "failed":
-      case "inactive-licenses":
-      case "active-licenses":
-      case "network-not-found":
-      case "network-error":
-        // We're no longer rendering any of these status-based errors
-        // as we'll prioritize the explicit error messages from context
-        return null;
-      case "processing":
-        // You could also show a small spinner if you like
-        return null;
-      default:
-        return null;
+          </div>
+        </Alert>
+      );
     }
+
+    // Only show status-based alerts if no explicit messages exist
+    if (alerts.length === 0 && activationStatus) {
+      switch (activationStatus) {
+        case "active":
+          alerts.push(
+            <Alert key="status-active" className="mb-4 bg-green-50 border-green-200">
+              <CheckCircle className="h-4 w-4 text-green-700 mr-2" />
+              <AlertDescription className="text-green-700">
+                License successfully activated! Please continue to set up your account.
+              </AlertDescription>
+            </Alert>
+          );
+          break;
+        case "failed":
+        case "inactive-licenses":
+        case "active-licenses":
+        case "network-not-found":
+        case "network-error":
+        case "processing":
+        default:
+          // No status-based alerts for these cases
+          break;
+      }
+    }
+
+    return alerts.length > 0 ? <div>{alerts}</div> : null;
   };
 
 
@@ -532,7 +551,7 @@ export function LicenseActivationForm({ className, ...props }) {
                       </p>
                     </div>
 
-                    {(activationStatus === 'active-licenses') &&
+                    {(activationStatus === 'inactive-licenses') &&
                       (<Button
                         variant="outline"
                         size="sm"
@@ -810,9 +829,9 @@ export function LicenseActivationForm({ className, ...props }) {
                         <Button
                           type="submit"
                           className="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center justify-center gap-2"
-                          disabled={loading || activationStatus === "processing"}
+                          disabled={loading || isDirectActivating}
                         >
-                          {activationStatus === "processing" ? (
+                          {isDirectActivating ? (
                             <>
                               <RefreshCw className="h-4 w-4 animate-spin" />
                               Processing...
