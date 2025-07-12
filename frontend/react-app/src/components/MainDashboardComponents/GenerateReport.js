@@ -685,24 +685,27 @@ export default function GenerateReport({ activeTab }) {
     }
   });
 
-  const note = {
-    general: [
-      "File Integrity: Encoded, encrypted, or corrupted files cannot be processed and should not be uploaded.",
-      "Handwritten Statements: Handwritten bank statements are not accepted.",
-      "Canara Bank Formats: Certain formats of Canara Bank statements may not be compatible with our processing system.",
-      "Data Authenticity: Please ensure that the uploaded data has not been tampered with, as alterations can result in incorrect responses.",
-      "Statement Recency: Avoid uploading very old bank statements, as changes in keyword formats over time may affect processing accuracy.",
+ const note = {
+  content: [
+    "Scanned copies",
+    "Image-Based PDF Statements: Bank statements provided as image-based PDFs, rather than in a structured file format, might lead to processing issues.",
+    "File Integrity: Encoded, encrypted, or corrupted files cannot be processed and should not be uploaded.",
+    "Handwritten Statements: Handwritten bank statements are not accepted.",
+    "Canara Bank Formats: Certain formats of Canara Bank statements may not be compatible with our processing system.",
+    "Data Authenticity: Please ensure that the uploaded data has not been tampered with, as alterations can result in incorrect responses.",
+    "Statement Recency: Avoid uploading very old bank statements, as changes in keyword formats over time may affect processing accuracy.",
+  ],
+  scanned: {
+    header: "IMPORTANT NOTES regarding scanned PDFs processing:",
+    items: [
+      "Sharp, readable text – zoom in; if you can read every digit, so can we",
+      "Aligned and maintains continuity across all pages",
+      "Clear, without overlapping narration in the amount fields",
+      "Avoid photo-scanned PDFs – no issues if it’s clear and aligned",
     ],
-    scanned: {
-      header: "IMPORTANT NOTES regarding scanned PDFs processing:",
-      items: [
-        "Sharp, readable text – zoom in; if you can read every digit, so can we.",
-        "Aligned and maintains continuity across all pages.",
-        "Clear, without overlapping narration in the amount fields.",
-        "Avoid photo-scanned PDFs – no issues if they’re clear and aligned.",
-      ],
-    },
-  };
+  },
+}
+
 
   return (
     <div className="p-8 pt-0 space-y-8 bg-white dark:bg-black min-h-screen">
@@ -752,38 +755,45 @@ export default function GenerateReport({ activeTab }) {
 
       <RecentReports key={refreshTrigger} onReportGenerated={refreshPage} />
 
-      {/* statments which we dont work with */}
-      {/* ==== General Notes ==== */}
-      <Card className="p-6">
-        <h4 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <AlertCircle className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-          Important Notes
-        </h4>
-        <ul className="space-y-2">
-          {note.general.map((line, i) => (
-            <li
-              key={i}
-              className="flex items-start gap-2 text-gray-600 dark:text-slate-300"
-            >
-              <ChevronRight className="w-4 h-4 text-gray-400" />
-              <span>{line}</span>
-            </li>
-          ))}
-        </ul>
-      </Card>
+     <Card className="p-6">
+  <h4 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+    <AlertCircle className="h-5 w-5 text-amber-500" />
+    Important Notes
+  </h4>
+  <h6 className="text-gray-600 dark:text-slate-300 mb-4">
+    Certain statements may not be processed properly due to various reasons.
+    Below is a list of common unsupported or partially extracted formats:
+  </h6>
+  <ul className="space-y-3">
+    {note.content.map((item, idx) => (
+      <li
+        key={idx}
+        className="flex gap-3 items-center text-gray-600 dark:text-slate-300"
+      >
+        <ChevronRight className="h-5 w-5 text-gray-400 flex-shrink-0" />
+        <span>{item}</span>
+      </li>
+    ))}
 
-      {/* ==== Scanned-PDF Guidelines ==== */}
-      <Card className="p-6">
-        <h4 className="text-lg font-semibold  mb-3 flex items-center gap-2">
-          <AlertTriangle className="w-5 h-5 " />
-          {note.scanned.header}
-        </h4>
-        <ul className="list-disc list-inside space-y-2 ">
-          {note.scanned.items.map((sub, j) => (
-            <li key={j}>{sub}</li>
-          ))}
-        </ul>
-      </Card>
+    {/* scanned-PDF header as a bold “parent” bullet */}
+    <li className="flex gap-3 items-start text-gray-600 dark:text-slate-300">
+      <ChevronRight className="h-5 w-5 text-gray-400 flex-shrink-0" />
+      <span className="font-semibold">{note.scanned.header}</span>
+    </li>
+
+    {/* scanned-PDF details as indented sub-bullets */}
+    {note.scanned.items.map((sub, i) => (
+      <li
+        key={i}
+        className="flex gap-3 items-center text-gray-600 dark:text-slate-300 ml-8"
+      >
+        <ChevronRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
+        <span>{sub}</span>
+      </li>
+    ))}
+  </ul>
+</Card>
+
 
       {/* Dialog for successful report generation */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen} className="">
@@ -827,16 +837,14 @@ export default function GenerateReport({ activeTab }) {
           )}
           {hasScannedOrEncodedWarning && (
             <div className="mb-4 mt-2">
-              <h3 className="text-md font-semibold flex items-center gap-x-2 mb-2">
+              {/* <h3 className="text-md font-semibold flex items-center gap-x-2 mb-2">
                 <AlertCircle className="text-blue-500 w-5 h-5" />
                 OCR Triggered
-              </h3>
+              </h3> */}
               <Card className="p-3 bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700">
                 <p className="text-blue-700 dark:text-blue-300 text-sm">
                   We detected one or more scanned or encoded PDFs. We're
-                  processing them using OCR in the background. As this process
-                  is on your PC, please be patient as this is a heavy operation
-                  and can take some time depending on your configurations.
+                  processing them using OCR in the background.
                   You'll receive a notification once it's ready.
                 </p>
               </Card>
@@ -874,7 +882,7 @@ export default function GenerateReport({ activeTab }) {
           {(otherErrors.length > 0 || dateRangeWarning) && (
             <Card className="p-3 bg-red-50 …">
               <h3 className="…">
-                <AlertCircle className="…" /> Warning
+                {/* <AlertCircle className="…" /> Warning */}
               </h3>
               <ul className="space-y-1">
                 {otherErrors.map((msg, i) => (

@@ -769,8 +769,29 @@ const MainDashboard = ({ handleTabChange }) => {
     <ScrollArea className="h-full">
       {/* scroll to top */}
 
-      <div className="p-8 pt-0 space-y-8">          <div className="flex justify-between items-center">            <div>              <div className="flex items-center gap-3">                <h2 className="text-3xl font-bold tracking-tight dark:text-slate-300">                  CypherSOL                </h2>                <span className="bg-gradient-to-r from-blue-500 to-cyan-400 text-white text-xs px-2 py-1 rounded-full font-semibold animate-pulse">                  v1.0.16           </span>              </div>              <p className="text-muted-foreground">                Analytics Dashboard - Chartered Accountants and Tax Professionals              </p>            </div>            <div className="flex items-center space-x-4">
-        {/* <DropdownMenu>
+      <div className="p-8 pt-0 space-y-8">
+        {" "}
+        <div className="flex justify-between items-center">
+          {" "}
+          <div>
+            {" "}
+            <div className="flex items-center gap-3">
+              {" "}
+              <h2 className="text-3xl font-bold tracking-tight dark:text-slate-300">
+                {" "}
+                CypherSOL{" "}
+              </h2>{" "}
+              <span className="bg-gradient-to-r from-blue-500 to-cyan-400 text-white text-xs px-2 py-1 rounded-full font-semibold animate-pulse">
+                {" "}
+                v2.0.1{" "}
+              </span>{" "}
+            </div>{" "}
+            <p className="text-muted-foreground">
+              {" "}
+              Analytics Dashboard - Chartered Accountants and Tax Professionals{" "}
+            </p>{" "}
+          </div>{" "}
+          <div className="flex items-center space-x-4">            {/* <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="icon" className="relative">
                   <Bell className="h-4 w-4" />
@@ -799,24 +820,22 @@ const MainDashboard = ({ handleTabChange }) => {
               </DropdownMenuContent>
             </DropdownMenu> */}
 
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-        >
-          {theme === "light" ? (
-            <Moon className="h-4 w-4" />
-          ) : (
-            <Sun className="h-4 w-4" />
-          )}
-        </Button>
-      </div>
-      </div>
-
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+            >
+              {theme === "light" ? (
+                <Moon className="h-4 w-4" />
+              ) : (
+                <Sun className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        </div>
         {/* <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           
         </div> */}
-
         {/* <ResponsiveContainer className={gridClasses} width="100%" height={570}> */}
         <CustomContainer
           className={gridClasses}
@@ -879,7 +898,6 @@ const MainDashboard = ({ handleTabChange }) => {
             />
           )}
         </CustomContainer>
-
         <RecentReports />
       </div>
     </ScrollArea>

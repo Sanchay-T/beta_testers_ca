@@ -255,6 +255,7 @@ def flatten_pdf_rotation(input_pdf_path, output_pdf_path):
 
     return output_pdf_path
 
+
 def unlock_and_add_margins_to_pdf(
     pdf_path: str,
     pdf_password: str | None,
@@ -302,6 +303,7 @@ def unlock_and_add_margins_to_pdf(
 
         if image_only_pages == min(5, len(pdf_document)):
             raise ValueError("The PDF appears to be image-only (non-text). Please upload a text PDF.")
+
 
         # ----------------------------------------------------------
         # 4.  Replace / crop first page if your workflow needs it
@@ -367,6 +369,7 @@ def unlock_and_add_margins_to_pdf(
         locals().get("combined_doc", None) and combined_doc.close()
         if os.path.exists("combined_temp.pdf"):
             os.remove("combined_temp.pdf")
+
 
 def get_table_column_coordinates(pdf_path):
     page_num = 0

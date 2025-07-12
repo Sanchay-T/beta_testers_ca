@@ -76,7 +76,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
   const location = useLocation();
   // If you have a caseId in the ReportContext:
   const { reportData, updateReportData } = useReportContext();
-  const { caseId } = reportData;
+  const { caseId,individualId } = reportData;
   const { toast } = useToast();
   const [port, setPort] = useState(reportData.tallyPortNumber);
   const [tallyVersion, setTallyVersion] = useState("TallyPrime");
@@ -145,7 +145,9 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
   // New helper function to fetch and process transactions data
   async function fetchAllTransactions() {
     try {
-      const data = await window.electron.getTallyTransactions(caseId);
+      console.log("Auyaz",{caseId, individualId});  
+      let tempIndividualId = individualId!=="combined" ? individualId : null;
+      const data = await window.electron.getTallyTransactions(caseId,tempIndividualId);
       console.log("fetched data", data);
       // const sortedData = data.sort((a, b) => a.imported - b.imported);
       // const storedReasons = JSON.parse(

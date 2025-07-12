@@ -409,6 +409,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100",
       Failed: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100",
       Deleted: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100",
+      Processing:"bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100",
     };
 
     return (
@@ -2005,7 +2006,12 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                               </div>
                                             }
                                           </div>
+                                          {console.log("aiyaz", {
+                                            hasError,
+                                            isDone,
+                                          })}
                                           {hasError &&
+                                            report.status !== "Success" &&
                                             (() => {
                                               const msg =
                                                 statement.respectiveReasonsForError ||
