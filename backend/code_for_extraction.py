@@ -293,11 +293,17 @@ def unlock_and_add_margins_to_pdf(
         # ----------------------------------------------------------
         # 3.  Reject image-only PDFs (simple first-page heuristic)
         # ----------------------------------------------------------
-        first_page_text = pdf_document[0].get_text("text").strip()
-        if not first_page_text or first_page_text == "CamScanner":
-            raise ValueError(
-                "The PDF appears to be image-only (non-text). Please upload a text PDF."
-            )
+        # FIRST CHECK: Check if the first 5 pages are image-only
+        image_only_pages = 0
+        for i in range(min(5, len(pdf_document))):
+            page = pdf_document[i]
+            text = page.get_text("text").strip()
+            if not text or text in ["CamScanner", "DocScanner"]:
+                image_only_pages += 1
+
+        if image_only_pages == min(5, len(pdf_document)):
+            raise ValueError("The PDF appears to be image-only (non-text). Please upload a text PDF.")
+
 
         # ----------------------------------------------------------
         # 4.  Replace / crop first page if your workflow needs it
@@ -1253,7 +1259,7 @@ def validate_bank_statement_returns_error_message(df, tolerance=2, raise_error=T
                              f"for Description '{description}'; "
                              f"Expected balance {true_expected_balance}, "
                              f"Actual balance {actual_balance}. "
-                             f"Difference: {difference}")
+                             f"Difference: {difference:.2f}")
                 error_message = error_msg
                 # raise Exception(error_msg)
 

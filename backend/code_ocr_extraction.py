@@ -1498,7 +1498,7 @@ def validate_bank_statement_returns_error_message_ocr(df, tolerance=2, raise_err
                              f"for Description '{description}'; "
                              f"Expected balance {true_expected_balance}, "
                              f"Actual balance {actual_balance}. "
-                             f"Difference: {difference}")
+                             f"Difference: {difference:.2f}")
                 error_message = error_msg
                 # raise Exception(error_msg)
 
@@ -1926,6 +1926,113 @@ def vertical_lines_detection(image_path, min_line_height_ratio=0.20, line_width_
     adjusted_vertical_lines = [(x, 0, w, img_height) for (x, y, w, h) in vertical_lines]
     return adjusted_vertical_lines
 
+
+def horizontal_lines_detection(image_path, min_line_width_ratio=0.3, line_height_range=(1, 5)):
+    """
+    Enhanced horizontal line detection optimized for bank statements and grids
+
+    Parameters:
+    image_path (str): Path to the input image file
+    min_line_width_ratio (float): Minimum width ratio compared to image width (default 0.3)
+    line_height_range (tuple): Min and max height for horizontal lines in pixels
+
+    Returns:
+    list: List of horizontal lines as (x, y, w, h)
+    """
+    # Read the image
+    image = cv2.imread(image_path)
+    if image is None:
+        raise ValueError(f"Could not read image: {image_path}")
+
+    # Convert to grayscale
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    # Image dimensions
+    img_height, img_width = image.shape[:2]
+
+    # Apply adaptive thresholding to get a binary image
+    binary_h = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C,
+                                    cv2.THRESH_BINARY_INV, 15, 2)
+
+    # Create multiple horizontal kernels for better line detection
+    h_kernel_sizes = [
+        int(img_width * 0.05),  # 5% of image width
+        int(img_width * 0.1),   # 10% of image width
+        int(img_width * 0.15)   # 15% of image width
+    ]
+
+    # Process with multiple kernel sizes and combine results
+    horizontal_binary_results = []
+
+    for kernel_size in h_kernel_sizes:
+        horizontal_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (kernel_size, 1))
+
+        # Process with morphological operations
+        temp_h = cv2.erode(binary_h, horizontal_kernel, iterations=1)
+        h_result = cv2.dilate(temp_h, horizontal_kernel, iterations=1)
+
+        # Clean up with a small opening
+        small_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 1))
+        h_result = cv2.morphologyEx(h_result, cv2.MORPH_OPEN, small_kernel)
+
+        horizontal_binary_results.append(h_result)
+
+    # Combine all horizontal detection results
+    horizontal_lines_img = horizontal_binary_results[0]
+    for res in horizontal_binary_results[1:]:
+        horizontal_lines_img = cv2.bitwise_or(horizontal_lines_img, res)
+
+    # Find contours
+    contours, _ = cv2.findContours(
+        horizontal_lines_img,
+        cv2.RETR_EXTERNAL,
+        cv2.CHAIN_APPROX_SIMPLE
+    )
+
+    # Filter and process horizontal lines
+    min_width = img_width * min_line_width_ratio
+    min_height, max_height = line_height_range
+
+    # Collect all potential horizontal lines
+    potential_h_lines = []
+
+    for cnt in contours:
+        x, y, w, h = cv2.boundingRect(cnt)
+
+        # More relaxed width criteria
+        if w > min_width * 0.5:  # Reduced from original
+            # More relaxed height range
+            if min_height <= h <= max_height * 2:  # Double the max height
+                # Calculate confidence
+                roi = horizontal_lines_img[y:y+h, x:x+w]
+                pixel_density = cv2.countNonZero(roi) / (w * h)
+
+                # Width relative to image width
+                width_ratio = w / img_width
+
+                # Calculate confidence (higher is better)
+                confidence = pixel_density * width_ratio
+
+                potential_h_lines.append((x, y, w, h, confidence))
+
+    # Sort by y-coordinate to process from top to bottom
+    potential_h_lines.sort(key=lambda x: x[1])
+
+    # Process lines with smarter duplicate detection
+    last_y = -100  # Initialize with a value that won't match any line
+    horizontal_lines = []
+
+    for x, y, w, h, conf in potential_h_lines:
+        # Check if this line is too close to the last added line
+        if y - last_y > h * 2:  # Ensure minimum vertical separation
+            # Only consider high confidence or sufficiently separated lines
+            if conf > 0.3 or y - last_y > 20:
+                horizontal_lines.append((x, y, w, h))
+                last_y = y
+
+    return horizontal_lines
+
+
 def new_enhance_image_contrast(image,
                               clip_limit: float = 9.0,
                               tile_grid_size: tuple = (4, 4),
@@ -2248,7 +2355,6 @@ def recognize_text_in_boxes(image, boxes):
 
     return boxes
 
-
 def returns_doc_according_to_columns(images_path, detected_original_bboxs, vertical_lines, horizontal_lines, encoded_pdf, first_page):
    """
    Returns a document with columns added based on the test case.
@@ -2271,19 +2377,15 @@ def returns_doc_according_to_columns(images_path, detected_original_bboxs, verti
 
       print(f"Processing  ----------- page {i} with detected boxes")
 
-      print("Detected original bounding boxes:", detected_original_bboxs[i])
-
       # 1. First detect and split boxes (no recognition yet)
       split_boxes = detect_and_split_boxes_new(detected_original_bboxs[i], vertical_lines, encoded_pdf)
 
-      print(f"Split boxes for page {i}: {split_boxes}")
-
-      print("step one passed")
+      print("step one passed: boxes are split")
 
       # 2. Now run text recognition on the split boxes
       text_boxes = recognize_text_in_boxes(images_path[i], split_boxes)
 
-      print("step two passed")
+      print("step two passed: text recognition done")
 
       image_path = images_path[i]  # Use the first page image directly
     #   print("pdf to images:", image_path)
@@ -2292,13 +2394,16 @@ def returns_doc_according_to_columns(images_path, detected_original_bboxs, verti
       cv2.imwrite(enhanced_path, enhanced_image)
       print(f"Enhanced image {i} saved at:", enhanced_path)
       enhanced_new_path = save_first_page_numpy_to_image(enhanced_image)
+
+      horizontal_lines = horizontal_lines_detection(enhanced_new_path)  # Detect horizontal lines
+      print(f"Detected horizontal lines for page {i}: {horizontal_lines}")
    
       # 3. Add this page to our document
       doc = image_with_ocr_to_pdf_dynamic_font(enhanced_new_path, text_boxes, horizontal_lines, vertical_lines,
                                                 doc=doc,  # Pass the existing document
                                                 )
       
-      print("step three passed")
+      print(f"step three passed: page no {i} added to document")
       
       i += 1
    
