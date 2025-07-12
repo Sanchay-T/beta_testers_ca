@@ -1256,7 +1256,7 @@ def validate_bank_statement_returns_error_message(df, tolerance=2, raise_error=T
                              f"for Description '{description}'; "
                              f"Expected balance {true_expected_balance}, "
                              f"Actual balance {actual_balance}. "
-                             f"Difference: {difference}")
+                             f"Difference: {difference:.2f}")
                 error_message = error_msg
                 # raise Exception(error_msg)
 
