@@ -2079,7 +2079,7 @@ async function createWindow() {
   registerMainDashboardIpc(TMP_DIR);
   registerCaseDashboardIpc();
   generateReportIpc(TMP_DIR);
-  registerOpenFileIpc(global.AppConfig.baseDir, global.AppConfig.userDataDir);
+  registerOpenFileIpc(app.getPath("userData"));
   registerReportHandlers(TMP_DIR);
   registerAuthHandlers(app.getPath("userData"));
   registerOpportunityToEarnIpc();

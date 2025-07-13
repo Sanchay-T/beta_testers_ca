@@ -31,8 +31,15 @@ const sanitizeJSONString = (jsonString) => {
 };
 
 const validateAndTransformTransaction = (transaction, statementId) => {
-  // log.info({ BeforeTransformation: transaction })
-  if (!transaction["Value Date"] || !transaction.Description) {
+  if (
+    transaction.Description === "" ||
+    transaction.Description === null ||
+    transaction.Description === undefined
+  ) {
+    log.info("FOUND NULL TRANSACTION - ", transaction.Description);
+  }
+  log.info({ BeforeTransformation: transaction });
+  if (!transaction["Value Date"]) {
     log.info("Missing required transaction fields");
     throw new Error("Missing required transaction fields");
   }
@@ -89,20 +96,20 @@ const validateAndTransformTransaction = (transaction, statementId) => {
   };
 };
 
-const isDuplicateTransaction = async (transaction, statementId) => {
-  const existing = await db
-    .select()
-    .from(transactions)
-    .where(
-      and(
-        eq(transactions.statementId, statementId),
-        eq(transactions.date, transaction.date),
-        eq(transactions.amount, transaction.amount),
-        eq(transactions.description, transaction.description)
-      )
-    );
-  return existing.length > 0;
-};
+// const isDuplicateTransaction = async (transaction, statementId) => {
+//   const existing = await db
+//     .select()
+//     .from(transactions)
+//     .where(
+//       and(
+//         eq(transactions.statementId, statementId),
+//         eq(transactions.date, transaction.date),
+//         eq(transactions.amount, transaction.amount),
+//         eq(transactions.description, transaction.description)
+//       )
+//     );
+//   return existing.length > 0;
+// };
 
 const storeTransactionsBatch = async (transformedTransactions) => {
   console.log("Inside storeTransactionsBatch", transformedTransactions.length);

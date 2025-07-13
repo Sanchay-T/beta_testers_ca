@@ -302,7 +302,7 @@ def unlock_and_add_margins_to_pdf(
                 image_only_pages += 1
 
         if image_only_pages == min(5, len(pdf_document)):
-            raise ValueError("The PDF appears to be image-only (non-text). Please upload a text PDF.")
+            raise ValueError("The PDF appears to be image-only / Scanned")
 
 
         # ----------------------------------------------------------
