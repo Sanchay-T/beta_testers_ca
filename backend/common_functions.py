@@ -47,7 +47,7 @@ BASE_DIR = get_base_dir()
 logger.info("Base Dir : ", BASE_DIR)
 #from old_bank_extractions import CustomStatement
 import json
-from .code_ocr_extraction import extract_with_test_cases_ocr, model_for_pdf_ocr
+from .code_ocr_extraction import extract_with_test_cases_ocr, model_for_pdf_ocr, validate_bank_statement_returns_error_message_ocr
 from .code_for_extraction import extract_text_from_pdf, extract_with_test_cases, model_for_pdf, extract_dataframe_from_pdf, validate_bank_statement_returns_error_message, is_pdf_encoded
 import  argparse
 
@@ -367,7 +367,7 @@ def extraction_process(bank, pdf_path, pdf_password, start_date, end_date, isthi
                 name_n_num = explicit_lines if idf.empty else extract_account_details(text)
 
             if not idf.empty:
-                a = validate_bank_statement_returns_error_message(idf)
+                a = validate_bank_statement_returns_error_message_ocr(idf)
                 idf = add_start_n_end_date_v2(idf, start_date, end_date, bank)
 
             return idf, name_n_num, a
