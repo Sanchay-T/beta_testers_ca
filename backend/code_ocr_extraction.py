@@ -1500,7 +1500,7 @@ def validate_bank_statement_returns_error_message_ocr(df, tolerance=2, raise_err
                              f"Actual balance {actual_balance}. "
                              f"Difference: {difference:.2f}")
                 error_message = error_msg
-                # raise Exception(error_msg)
+                raise Exception(error_msg)
 
     return error_message
 
