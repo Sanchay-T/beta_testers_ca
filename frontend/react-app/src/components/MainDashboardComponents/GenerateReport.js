@@ -49,8 +49,16 @@ export default function GenerateReport({ activeTab }) {
 
   // everything else stays “red”
   const otherErrors = warning.filter(
-    (msg) => !msg.startsWith("Balance mismatch")
+    (msg) =>
+      !msg.startsWith("Balance mismatch") &&
+      !/image-only|scanned|non-text|encoded/i.test(msg)
   );
+
+  // put next to your other helpers
+  const OCR_REASON_RE = /(image-only|scanned|non-text|encoded)/i;
+
+  const onlyOcrableFailures = (reasons = []) =>
+    reasons.length > 0 && reasons.every((r) => OCR_REASON_RE.test(r));
 
   const handleSubmit = async (
     setProgress,
@@ -204,7 +212,13 @@ export default function GenerateReport({ activeTab }) {
 
         console.log("Report generated successfully:", result.data);
         if (result.data.failedFiles.length > 0) {
-          setShowRectifyButton(true);
+          // ----- decide whether *all* failures are OCR-friendly -----
+          const { respective_reasons_for_error: reasons = [] } =
+            result.data.failedStatements || {};
+
+          const mustRectify = !onlyOcrableFailures(reasons);
+          setShowRectifyButton(mustRectify); // ✅ true only when some non-OCR error exists
+
           const failedFiles = result.data.failedFiles.map((file_path) => {
             // Get the filename from the path and remove the timestamp
             const filename = file_path.split("\\").pop(); // Get filename from path
@@ -704,8 +718,7 @@ export default function GenerateReport({ activeTab }) {
       "Avoid photo-scanned PDFs – no issues if it’s clear and aligned",
     ],
   },
-}
-
+  };
 
   return (
     <div className="p-8 pt-0 space-y-8 bg-white dark:bg-black min-h-screen">
@@ -793,7 +806,6 @@ export default function GenerateReport({ activeTab }) {
     ))}
   </ul>
 </Card>
-
 
       {/* Dialog for successful report generation */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen} className="">

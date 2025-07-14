@@ -2376,8 +2376,8 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
           {/* ——— Other errors in red ——— */}
           {(otherErrors.length > 0 || dateRangeWarning) && (
             <Card className="p-3 bg-red-50 …">
-              <h3 className="…">
-                <AlertCircle className="…" /> Warning
+              <h3 className="flex gap-2 mb-4 font-semibold">
+                <AlertCircle className="" /> Warning
               </h3>
               <ul className="space-y-1">
                 {otherErrors.map((msg, i) => (
