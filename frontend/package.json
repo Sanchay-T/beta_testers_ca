@@ -1,6 +1,6 @@
 {
   "name": "CypherEdge",
-  "version": "2.0.1",
+  "version": "2.0.101",
   "description": "CA OFFLINE APP",
   "main": "main.js",
   "icon": "./assets/cyphersol-icon.png",
@@ -51,7 +51,7 @@
     "publish": {
       "provider": "github",
       "owner": "Shama-Cyphersol",
-      "repo": "beta_testers_ca",
+      "repo": "ca-offline-suite",
       "private": true,
       "releaseType": "release"
     },
