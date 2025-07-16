@@ -1829,29 +1829,45 @@ async function startPythonExecutable() {
 
 const XLSM_SOURCE_DIR = path.join(__dirname, "media", "vouchers", "tallyprime"); // Bundled location
 const XLSM_USERDATA_DIR = path.join(app.getPath("userData"), "tallyprime");
+const XLSM_PATCH_DIR = path.join(XLSM_SOURCE_DIR, "update");
 
 // Copies all .xlsm files from sourceDir to destDir, replacing old files with new ones.
 function syncTallyprimeFilesToUserData() {
+  log.info("Syncing TallyPrime files to user data directory...");
   if (!fs.existsSync(XLSM_SOURCE_DIR)) {
-    log.error("Source .xlsm directory not found:", XLSM_SOURCE_DIR);
+    log.info("Source .xlsm directory not found:", XLSM_SOURCE_DIR);
     return;
   }
   if (!fs.existsSync(XLSM_USERDATA_DIR)) {
     fs.mkdirSync(XLSM_USERDATA_DIR, { recursive: true });
-  }
-  const xlsmFiles = fs
-    .readdirSync(XLSM_SOURCE_DIR)
-    .filter((f) => f.endsWith(".xlsm"));
 
-  log.info({ xlsmFiles });
-  xlsmFiles.forEach((file) => {
-    const src = path.join(XLSM_SOURCE_DIR, file);
-    const dest = path.join(XLSM_USERDATA_DIR, file);
-    log.info({ src, dest });
-    // Always overwrite to ensure latest is shipped on update
-    fs.copyFileSync(src, dest);
-    log.info(`Synced tallyprime file: ${file}`);
-  });
+      const bundled = fs.readdirSync(XLSM_SOURCE_DIR).filter(f => f.endsWith('.xlsm'));
+    bundled.forEach(file => {
+      fs.copyFileSync(path.join(XLSM_SOURCE_DIR, file),
+                      path.join(XLSM_USERDATA_DIR, file));
+      log.info(`Initial sync of voucher: ${file}`);
+    });
+  }else{
+    log.info("User data directory already exists:", XLSM_USERDATA_DIR);
+  }
+// 2) Patch sync: if there are any updates in userData/tallyprime/update, apply them
+  if (fs.existsSync(XLSM_PATCH_DIR)) {
+    const patches = fs.readdirSync(XLSM_PATCH_DIR).filter(f => f.endsWith('.xlsm'));
+    patches.forEach(file => {
+      const src = path.join(XLSM_PATCH_DIR, file);
+      const dest = path.join(XLSM_USERDATA_DIR, file);
+      fs.copyFileSync(src, dest);
+      log.info(`Patched voucher: ${file}`);
+      // Optionally delete the patch file after applying:
+      fs.unlinkSync(src);
+    });
+    // Cleanup patch dir if empty
+    if (fs.readdirSync(XLSM_PATCH_DIR).length === 0) {
+      fs.rmdirSync(XLSM_PATCH_DIR);
+    }
+  }else{
+    log.info("No patch directory found:", XLSM_PATCH_DIR);
+  }
 }
 
 // Add this function to handle file protocol
