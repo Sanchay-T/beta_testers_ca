@@ -276,9 +276,9 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         }
       } else {
         toast({
-          title: "Contact Sales",
+          title: "Error",
           description:
-            "Unable to rectify all statements. Please contact our sales team for assistance.",
+            "Unable to rectify all statements.",
           variant: "destructive",
           duration: 5000,
         });

@@ -855,9 +855,9 @@ export default function GenerateReport({ activeTab }) {
               </h3> */}
               <Card className="p-3 bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700">
                 <p className="text-blue-700 dark:text-blue-300 text-sm">
-                  We detected one or more scanned or encoded PDFs. We're
-                  processing them using OCR in the background.
-                  You'll receive a notification once it's ready.
+                  We detected one or more scanned or encoded PDFs. We are
+                  processing your statements in the background. Processing will take approximately
+                  1-2 minutes per page, depending on the configuration of your pc.
                 </p>
               </Card>
             </div>

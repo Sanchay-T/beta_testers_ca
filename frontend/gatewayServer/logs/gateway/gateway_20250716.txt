@@ -366,3 +366,404 @@
   "SystemUpTime": 171889812
 }
 2025-07-16 11:07:10.189 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:08:10.199 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:08:26.370 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "current_timestamp": 1752643749.993278,
+  "expiry_timestamp": 1755073471.541656,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 171889812
+}
+2025-07-16 11:09:10.201 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:10:10.207 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:10:24.541 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "current_timestamp": 1752643749.993278,
+  "expiry_timestamp": 1755073471.541656,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 171889812
+}
+2025-07-16 11:11:01.200 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "current_timestamp": 1752643749.993278,
+  "expiry_timestamp": 1755073471.541656,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 171889812
+}
+2025-07-16 11:11:10.239 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:11:35.636 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "current_timestamp": 1752643749.993278,
+  "expiry_timestamp": 1755073471.541656,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 171889812
+}
+2025-07-16 11:12:10.246 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:13:10.258 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:14:10.273 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:15:10.281 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:16:10.290 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:17:10.306 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:18:10.309 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:19:10.316 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:20:10.326 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:21:10.340 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:22:10.349 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:23:10.360 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:24:10.375 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:25:10.381 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:26:10.388 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:27:10.396 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:28:10.417 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:29:39.236 +05:30 [INF] Starting service...
+2025-07-16 11:29:39.395 +05:30 [INF] Actual log path: D:\CA\beta_testers_ca\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-07-16 11:29:39.446 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-07-16 11:29:39.805 +05:30 [INF] [DeviceInfo Init] UUID: 4C4C4544-0051-4A10-804B-B8C04F595932
+2025-07-16 11:29:39.807 +05:30 [INF] [DeviceInfo Init] MAC Address: 00:15:5D:9B:40:A5
+2025-07-16 11:29:39.807 +05:30 [INF] [DeviceInfo Init] Hostname: AQ
+2025-07-16 11:29:39.807 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-18
+2025-07-16 11:29:39.807 +05:30 [INF] [DeviceInfo Init] Username: AQ$
+2025-07-16 11:29:39.814 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-07-16 11:29:39.815 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 240 bytes
+2025-07-16 11:29:39.822 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-07-16 11:29:40.161 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "current_timestamp": 1752641868.749009,
+  "expiry_timestamp": 1755073471.541656,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 17953
+}
+2025-07-16 11:29:40.161 +05:30 [INF] LicenseInfoProvider initialized.
+2025-07-16 11:29:40.162 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "current_timestamp": 1752641868.749009,
+  "expiry_timestamp": 1755073471.541656,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 17953
+}
+2025-07-16 11:29:40.162 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 2
+2025-07-16 11:29:40.164 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\session-cache.enc
+2025-07-16 11:29:40.164 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-07-16 11:29:40.369 +05:30 [INF] Restored 1 sessions from disk.
+2025-07-16 11:29:40.384 +05:30 [INF] Worker initialized.
+2025-07-16 11:29:40.396 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-07-16 11:29:40.397 +05:30 [INF] Waiting for network to be ready...
+2025-07-16 11:29:40.493 +05:30 [WRN] Network not ready yet (attempt 1/10): No suitable active network interface with an IPv4 address found.
+2025-07-16 11:29:40.497 +05:30 [INF] Application started. Hosting environment: Production; Content root path: D:\CA\beta_testers_ca\frontend\gatewayServer\
+2025-07-16 11:29:43.556 +05:30 [WRN] Network not ready yet (attempt 2/10): No suitable active network interface with an IPv4 address found.
+2025-07-16 11:29:50.031 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.11
+2025-07-16 11:29:50.031 +05:30 [INF] Network is ready with IP: 192.168.1.11
+2025-07-16 11:29:50.153 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.11
+2025-07-16 11:29:50.204 +05:30 [INF] Django base URL: https://cyphersol.co.in
+2025-07-16 11:29:50.312 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-07-16 11:29:50.853 +05:30 [INF] License Loaded: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "current_timestamp": 1752641868.749009,
+  "expiry_timestamp": 1755073471.541656,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 17953
+}
+2025-07-16 11:29:51.285 +05:30 [INF] Starting license polling...
+2025-07-16 11:29:51.569 +05:30 [INF] HTTP API Server started on port 7890
+2025-07-16 11:29:51.572 +05:30 [INF] UDP broadcast listener started on port 41234.
+2025-07-16 11:29:51.585 +05:30 [INF] IP address: 192.168.1.11
+2025-07-16 11:29:51.983 +05:30 [INF] [License Polling] Expiry: 1755073471.541656
+2025-07-16 11:29:51.984 +05:30 [INF] [SetExpiry] Updating license expiry from 1755073471.541656 to 1755073471.541656
+2025-07-16 11:29:51.984 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1752641868.749009 to 1752645591.764497
+2025-07-16 11:29:51.987 +05:30 [INF] [SetSystemUpTime] Updating license system up time from 17953 to 29796
+2025-07-16 11:29:51.987 +05:30 [INF] [License Polling] LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "current_timestamp": 1752645591.764497,
+  "expiry_timestamp": 1755073471.541656,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 29796
+}
+2025-07-16 11:29:51.988 +05:30 [INF] [License Polling] LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "current_timestamp": 1752645591.764497,
+  "expiry_timestamp": 1755073471.541656,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 29796
+}
+2025-07-16 11:29:51.988 +05:30 [INF] [License Polling] License resynced successfully.
+2025-07-16 11:29:52.095 +05:30 [INF] mDNS advertisement started using hostname: AQ and IP: 192.168.1.11:7890
+2025-07-16 11:29:52.098 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:30:52.119 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:31:52.135 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:32:52.138 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:33:52.153 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:34:52.161 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:35:52.161 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:36:52.174 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:39:11.332 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:40:11.336 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:58:09.411 +05:30 [INF] Starting service...
+2025-07-16 11:58:09.540 +05:30 [INF] Actual log path: D:\CA\beta_testers_ca\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-07-16 11:58:09.589 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-07-16 11:58:09.897 +05:30 [INF] [DeviceInfo Init] UUID: 4C4C4544-0051-4A10-804B-B8C04F595932
+2025-07-16 11:58:09.899 +05:30 [INF] [DeviceInfo Init] MAC Address: 4C:1D:96:1F:5A:59
+2025-07-16 11:58:09.899 +05:30 [INF] [DeviceInfo Init] Hostname: AQ
+2025-07-16 11:58:09.899 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-18
+2025-07-16 11:58:09.899 +05:30 [INF] [DeviceInfo Init] Username: AQ$
+2025-07-16 11:58:09.904 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-07-16 11:58:09.915 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 240 bytes
+2025-07-16 11:58:09.921 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-07-16 11:58:10.186 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "current_timestamp": 1752641868.749009,
+  "expiry_timestamp": 1755073471.541656,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 1727968
+}
+2025-07-16 11:58:10.186 +05:30 [INF] LicenseInfoProvider initialized.
+2025-07-16 11:58:10.187 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "current_timestamp": 1752641868.749009,
+  "expiry_timestamp": 1755073471.541656,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 1727968
+}
+2025-07-16 11:58:10.187 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 2
+2025-07-16 11:58:10.188 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\session-cache.enc
+2025-07-16 11:58:10.198 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-07-16 11:58:10.428 +05:30 [INF] Restored 1 sessions from disk.
+2025-07-16 11:58:10.438 +05:30 [INF] Worker initialized.
+2025-07-16 11:58:10.452 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-07-16 11:58:10.453 +05:30 [INF] Waiting for network to be ready...
+2025-07-16 11:58:10.600 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.11
+2025-07-16 11:58:10.600 +05:30 [INF] Network is ready with IP: 192.168.1.11
+2025-07-16 11:58:10.713 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.11
+2025-07-16 11:58:10.748 +05:30 [INF] Django base URL: https://cyphersol.co.in
+2025-07-16 11:58:10.766 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-07-16 11:58:10.890 +05:30 [INF] License Loaded: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "current_timestamp": 1752641868.749009,
+  "expiry_timestamp": 1755073471.541656,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 1727968
+}
+2025-07-16 11:58:11.057 +05:30 [INF] Starting license polling...
+2025-07-16 11:58:11.132 +05:30 [INF] HTTP API Server started on port 7890
+2025-07-16 11:58:11.134 +05:30 [INF] UDP broadcast listener started on port 41234.
+2025-07-16 11:58:11.138 +05:30 [INF] IP address: 192.168.1.11
+2025-07-16 11:58:11.537 +05:30 [INF] mDNS advertisement started using hostname: AQ and IP: 192.168.1.11:7890
+2025-07-16 11:58:11.541 +05:30 [INF] Application started. Hosting environment: Production; Content root path: D:\CA\beta_testers_ca\frontend\gatewayServer\
+2025-07-16 11:58:11.545 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 11:58:15.902 +05:30 [INF] [License Polling] Expiry: 1755073471.541656
+2025-07-16 11:58:15.902 +05:30 [INF] [SetExpiry] Updating license expiry from 1755073471.541656 to 1755073471.541656
+2025-07-16 11:58:15.902 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1752641868.749009 to 1752647295.70918
+2025-07-16 11:58:15.902 +05:30 [INF] [SetSystemUpTime] Updating license system up time from 1727968 to 1733718
+2025-07-16 11:58:15.904 +05:30 [INF] [License Polling] LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "current_timestamp": 1752647295.70918,
+  "expiry_timestamp": 1755073471.541656,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 1733718
+}
+2025-07-16 11:58:15.904 +05:30 [INF] [License Polling] LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "current_timestamp": 1752647295.70918,
+  "expiry_timestamp": 1755073471.541656,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 1733718
+}
+2025-07-16 11:58:15.904 +05:30 [INF] [License Polling] License resynced successfully.
+2025-07-16 11:59:11.572 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 12:00:11.580 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 12:01:11.584 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 12:02:11.588 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 12:03:11.597 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 12:03:50.027 +05:30 [INF] got query for _license-server._tcp.local PTR
+2025-07-16 12:03:50.027 +05:30 [INF] got answer for _license-server._tcp.local PTR
+2025-07-16 12:03:50.043 +05:30 [INF] UDP broadcast received from 192.168.1.25:50644: DISCOVER_LICENSE_SERVER
+2025-07-16 12:03:50.046 +05:30 [INF] Responded to UDP discovery with: {"name":"LicenseServer","host":"AQ","ip":"0.0.0.0","port":7890}
+2025-07-16 12:03:50.074 +05:30 [INF] got answer for _license-server._tcp.local PTR
+2025-07-16 12:03:50.074 +05:30 [INF] got answer for _license-server._tcp.local PTR
+2025-07-16 12:03:50.074 +05:30 [INF] got answer for _license-server._tcp.local PTR
+2025-07-16 12:03:50.074 +05:30 [INF] got answer for _license-server._tcp.local PTR
+2025-07-16 12:03:50.151 +05:30 [INF] got answer for _license-server._tcp.local PTR
+2025-07-16 12:03:55.185 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "current_timestamp": 1752647295.70918,
+  "expiry_timestamp": 1755073471.541656,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 1733718
+}
+2025-07-16 12:03:55.187 +05:30 [INF] Reading async license file from C:\ProgramData\Cyphersol\license.enc
+2025-07-16 12:03:55.190 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc
+2025-07-16 12:03:55.190 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-07-16 12:04:11.603 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 12:04:19.509 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "current_timestamp": 1752647295.70918,
+  "expiry_timestamp": 1755073471.541656,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 1733718
+}
+2025-07-16 12:04:19.519 +05:30 [INF] License assign request: {"clientId":"S-1-5-21-4244229929-2064862495-2454678271-1001","uuid":"D3181F88-F0D0-11E5-8E35-62CFC4068082","hostname":"DESKTOP-JH5M7U2","username":"admin","macAddress":"44:85:00:6D:89:E5"}
+2025-07-16 12:04:19.520 +05:30 [INF] License assign request: S-1-5-21-4244229929-2064862495-2454678271-1001, D3181F88-F0D0-11E5-8E35-62CFC4068082, 44:85:00:6D:89:E5, DESKTOP-JH5M7U2, admin
+2025-07-16 12:04:19.521 +05:30 [INF] License info: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "current_timestamp": 1752647295.70918,
+  "expiry_timestamp": 1755073471.541656,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 1733718
+}
+2025-07-16 12:04:19.521 +05:30 [INF] License manager active count: 1 / 1
+2025-07-16 12:04:21.252 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "current_timestamp": 1752647295.70918,
+  "expiry_timestamp": 1755073471.541656,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 1733718
+}
+2025-07-16 12:04:21.254 +05:30 [INF] Revoke session request: 979a2d415157391062b286ae2e988ea25bd9e03b172e54eb6f64d7c821fa33da
+2025-07-16 12:04:21.270 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "current_timestamp": 1752647295.70918,
+  "expiry_timestamp": 1755073471.541656,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 1733718
+}
+2025-07-16 12:04:21.270 +05:30 [INF] License assign request: {"clientId":"S-1-5-21-4244229929-2064862495-2454678271-1001","uuid":"D3181F88-F0D0-11E5-8E35-62CFC4068082","hostname":"DESKTOP-JH5M7U2","username":"admin","macAddress":"44:85:00:6D:89:E5"}
+2025-07-16 12:04:21.270 +05:30 [INF] License assign request: S-1-5-21-4244229929-2064862495-2454678271-1001, D3181F88-F0D0-11E5-8E35-62CFC4068082, 44:85:00:6D:89:E5, DESKTOP-JH5M7U2, admin
+2025-07-16 12:04:21.270 +05:30 [INF] License info: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "current_timestamp": 1752647295.70918,
+  "expiry_timestamp": 1755073471.541656,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 1733718
+}
+2025-07-16 12:04:21.270 +05:30 [INF] License manager active count: 0 / 1
+2025-07-16 12:04:47.186 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "current_timestamp": 1752647295.70918,
+  "expiry_timestamp": 1755073471.541656,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 1733718
+}
+2025-07-16 12:04:47.254 +05:30 [INF] Session activation logged to Django.
+2025-07-16 12:05:11.618 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 12:06:11.627 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 12:07:11.637 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 12:07:19.607 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "current_timestamp": 1752647295.70918,
+  "expiry_timestamp": 1755073471.541656,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 1733718
+}
+2025-07-16 12:07:19.610 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "current_timestamp": 1752647295.70918,
+  "expiry_timestamp": 1755073471.541656,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 1733718
+}
+2025-07-16 12:07:19.610 +05:30 [INF] [IsStatementLimitReached] Current used statements: 2, License limit: 100
+2025-07-16 12:07:36.850 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "current_timestamp": 1752647295.70918,
+  "expiry_timestamp": 1755073471.541656,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 1733718
+}
+2025-07-16 12:07:36.850 +05:30 [INF] {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "current_timestamp": 1752647295.70918,
+  "expiry_timestamp": 1755073471.541656,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 1733718
+}
+2025-07-16 12:07:36.850 +05:30 [INF] [IsStatementLimitReached] Current used statements: 2, License limit: 100
+2025-07-16 12:08:11.651 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 12:09:11.664 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 12:10:11.677 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 12:11:11.693 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 12:12:11.697 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 12:13:11.700 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 12:14:11.717 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 12:15:11.730 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 12:16:11.742 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 12:17:11.758 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 12:18:11.766 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 12:19:11.768 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 12:20:11.773 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 12:21:11.780 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 12:22:11.796 +05:30 [INF] Re-advertising mDNS service...
+2025-07-16 12:23:11.892 +05:30 [INF] Re-advertising mDNS service...
