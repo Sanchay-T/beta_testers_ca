@@ -1,6 +1,6 @@
 {
   "name": "CypherEdge",
-  "version": "2.1.000",
+  "version": "2.1.200",
   "description": "CA OFFLINE APP",
   "main": "main.js",
   "icon": "./assets/cyphersol-icon.png",

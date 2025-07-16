@@ -58,11 +58,11 @@ const Dashboard = () => {
       url: "#",
       icon: Grid2X2,
     },
-     {
-      title: "Billing",
-      url: "#",
-      icon: Grid2X2,
-    },
+    //  {
+    //   title: "Billing",
+    //   url: "#",
+    //   icon: Grid2X2,
+    // },
     // {
     //   title: "Import to Tally",
     //   url: "#",
