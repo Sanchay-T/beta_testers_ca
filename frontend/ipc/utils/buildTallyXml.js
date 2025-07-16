@@ -58,6 +58,7 @@ function buildTallyXmlPayment(row) {
               <AMOUNT>${amount}</AMOUNT>
               <BANKALLOCATIONS.LIST>
                 <DATE>${invoiceDateFormatted}</DATE>
+                <NAME>e216acbc-d76e-48a7-a6e7-30a843e73917</NAME>
                 <PAYMENTFAVOURING>${DrLedger}</PAYMENTFAVOURING>
                 <PAYMENTMODE>Transacted</PAYMENTMODE>
                 <BANKPARTYNAME>${DrLedger}</BANKPARTYNAME>
@@ -252,6 +253,7 @@ function buildTallyXmlContra(row) {
               <BANKALLOCATIONS.LIST>
                 <DATE>${invoiceDate}</DATE>
                 <INSTRUMENTDATE>${invoiceDate}</INSTRUMENTDATE>
+                <NAME>e216acbc-d76e-48a7-a6e7-30a843e73917</NAME>
                 <TRANSACTIONTYPE>Cheque</TRANSACTIONTYPE>
                 <PAYMENTFAVOURING>Self</PAYMENTFAVOURING>
                 <PAYMENTMODE>Transacted</PAYMENTMODE>
