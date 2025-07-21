@@ -1,0 +1,157 @@
+name: PR Validation
+on:
+  pull_request:
+    branches: [uat]
+    types: [opened, synchronize, reopened]
+
+env:
+  NODE_VERSION: '18'
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  validate:
+    name: Validate Build Process
+    runs-on: windows-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: |
+            frontend/package-lock.json
+            frontend/react-app/package-lock.json
+
+      - name: Validate Python Backend Setup
+        run: |
+          Write-Host "🐍 Setting up Python backend..." -ForegroundColor Yellow
+          python -m venv .venv
+          .\.venv\Scripts\Activate.ps1
+          
+          Write-Host "📦 Installing Python dependencies..." -ForegroundColor Yellow
+          pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          
+          Write-Host "🔍 Validating backend imports..." -ForegroundColor Yellow
+          python -c "
+          try:
+              import backend.main
+              print('✅ Backend imports successful')
+          except Exception as e:
+              print(f'❌ Backend import failed: {e}')
+              exit(1)
+          "
+          
+          Write-Host "✅ Python backend validation complete" -ForegroundColor Green
+        shell: pwsh
+
+      - name: Validate Frontend Dependencies
+        run: |
+          Write-Host "⚛️ Setting up frontend dependencies..." -ForegroundColor Yellow
+          
+          cd frontend
+          npm ci
+          
+          Write-Host "📱 Setting up React app dependencies..." -ForegroundColor Yellow
+          cd react-app
+          npm ci
+          
+          Write-Host "✅ Frontend dependencies installed" -ForegroundColor Green
+        shell: pwsh
+
+      - name: Validate React Build Process
+        run: |
+          Write-Host "🏗️ Testing React build process..." -ForegroundColor Yellow
+          
+          cd frontend/react-app
+          npm run build
+          
+          Write-Host "🔍 Validating build outputs..." -ForegroundColor Yellow
+          if (Test-Path "build/index.html") {
+            Write-Host "✅ React build successful - index.html found" -ForegroundColor Green
+          } else {
+            Write-Host "❌ React build failed - index.html missing" -ForegroundColor Red
+            exit 1
+          }
+          
+          if (Test-Path "build/static") {
+            Write-Host "✅ Static assets generated successfully" -ForegroundColor Green
+          } else {
+            Write-Host "❌ Static assets missing" -ForegroundColor Red
+            exit 1
+          }
+        shell: pwsh
+
+      - name: Validate Electron Build Configuration
+        run: |
+          Write-Host "⚡ Validating Electron build configuration..." -ForegroundColor Yellow
+          
+          cd frontend
+          
+          Write-Host "🔍 Checking package.json scripts..." -ForegroundColor Yellow
+          $packageJson = Get-Content package.json | ConvertFrom-Json
+          
+          $requiredScripts = @('build', 'build:react', 'build:electron', 'sync-version')
+          foreach ($script in $requiredScripts) {
+            if ($packageJson.scripts.$script) {
+              Write-Host "✅ Script '$script' found" -ForegroundColor Green
+            } else {
+              Write-Host "❌ Required script '$script' missing" -ForegroundColor Red
+              exit 1
+            }
+          }
+          
+          Write-Host "🔍 Testing Electron build preparation..." -ForegroundColor Yellow
+          npm run build:react
+          
+          Write-Host "✅ Electron build validation complete" -ForegroundColor Green
+        shell: pwsh
+
+      - name: Check Critical Files
+        run: |
+          Write-Host "📋 Checking for critical files..." -ForegroundColor Yellow
+          
+          $criticalFiles = @(
+            'backend/main.py',
+            'backend/requirements.txt', 
+            'frontend/main.js',
+            'frontend/package.json',
+            'postbuild.py'
+          )
+          
+          foreach ($file in $criticalFiles) {
+            if (Test-Path $file) {
+              Write-Host "✅ Critical file '$file' exists" -ForegroundColor Green
+            } else {
+              Write-Host "❌ Critical file '$file' missing" -ForegroundColor Red
+              exit 1
+            }
+          }
+          
+          Write-Host "✅ All critical files present" -ForegroundColor Green
+        shell: pwsh
+
+      - name: Validation Summary
+        run: |
+          Write-Host "🎉 PR Validation Complete!" -ForegroundColor Green
+          Write-Host "✅ Python backend setup validated" -ForegroundColor Green
+          Write-Host "✅ Frontend dependencies validated" -ForegroundColor Green  
+          Write-Host "✅ React build process validated" -ForegroundColor Green
+          Write-Host "✅ Electron configuration validated" -ForegroundColor Green
+          Write-Host "✅ Critical files verified" -ForegroundColor Green
+          Write-Host "" 
+          Write-Host "🚀 Ready for review and merge to uat!" -ForegroundColor Cyan
+        shell: pwsh
