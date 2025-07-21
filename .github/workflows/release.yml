@@ -1,0 +1,174 @@
+name: Production Release Build
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+
+env:
+  NODE_VERSION: '18'
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  release:
+    name: Build Production Release
+    runs-on: windows-latest
+    timeout-minutes: 60
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from tag/branch
+        id: version
+        run: |
+          if ($env:GITHUB_REF -match 'refs/tags/(.*)') {
+            $version = $matches[1]
+            Write-Host "🏷️ Tagged version: $version"
+          } else {
+            $version = "dev-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
+            Write-Host "🔄 Development version: $version"
+          }
+          
+          echo "version=$version" >> $env:GITHUB_OUTPUT
+          echo "VERSION=$version" >> $env:GITHUB_ENV
+        shell: pwsh
+
+      - name: Setup Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Build Python Backend
+        run: |
+          Write-Host "🐍 Building Python backend for production..." -ForegroundColor Yellow
+          
+          python -m venv .venv
+          .\.venv\Scripts\Activate.ps1
+          
+          pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install pyinstaller
+          
+          Write-Host "🔨 Creating production Python executable..." -ForegroundColor Yellow
+          pyinstaller --onedir backend.main
+          
+          Write-Host "⚙️ Running post-build processing..." -ForegroundColor Yellow
+          python postbuild.py
+          
+          Write-Host "✅ Python backend build complete" -ForegroundColor Green
+        shell: pwsh
+
+      - name: Build Frontend for Production
+        run: |
+          Write-Host "⚛️ Building frontend for production..." -ForegroundColor Yellow
+          
+          cd frontend
+          npm ci --production=false
+          
+          cd react-app  
+          npm ci --production=false
+          cd ..
+          
+          Write-Host "🔧 Running production build..." -ForegroundColor Yellow
+          npm run build
+          
+          Write-Host "✅ Frontend production build complete" -ForegroundColor Green
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Prepare Release Artifacts
+        run: |
+          Write-Host "📦 Preparing release artifacts..." -ForegroundColor Yellow
+          
+          # Create release directory
+          New-Item -ItemType Directory -Force -Path "release-artifacts"
+          
+          # Copy Windows installer if it exists
+          $windowsInstaller = Get-ChildItem -Path "frontend/dist" -Filter "*.exe" | Select-Object -First 1
+          if ($windowsInstaller) {
+            Copy-Item $windowsInstaller.FullName "release-artifacts/CypherEdge-Setup-$env:VERSION.exe"
+            Write-Host "✅ Windows installer: CypherEdge-Setup-$env:VERSION.exe" -ForegroundColor Green
+          }
+          
+          # Copy other build artifacts
+          $artifacts = @("*.dmg", "*.zip", "*.AppImage")
+          foreach ($pattern in $artifacts) {
+            $files = Get-ChildItem -Path "frontend/dist" -Filter $pattern -ErrorAction SilentlyContinue
+            foreach ($file in $files) {
+              Copy-Item $file.FullName "release-artifacts/"
+              Write-Host "✅ Artifact: $($file.Name)" -ForegroundColor Green
+            }
+          }
+          
+          Write-Host "📋 Release artifacts prepared" -ForegroundColor Green
+        shell: pwsh
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          draft: true
+          prerelease: contains(github.ref, 'beta')
+          files: release-artifacts/*
+          body: |
+            ## CypherEdge Release ${{ steps.version.outputs.version }}
+            
+            ### 🔄 Build Information
+            - **Version**: ${{ steps.version.outputs.version }}
+            - **Build Date**: ${{ github.event.head_commit.timestamp }}
+            - **Commit**: ${{ github.sha }}
+            
+            ### 📦 Installation
+            
+            **Windows:**
+            1. Download `CypherEdge-Setup-${{ steps.version.outputs.version }}.exe`
+            2. Run as administrator
+            3. Follow installation prompts
+            
+            **Important Notes:**
+            - ⚠️ These binaries are **UNSIGNED** 
+            - 🔐 Final signed release will be published separately
+            - 🧪 Use for testing and validation only
+            
+            ### 🛠️ For Release Manager (Sanchay)
+            1. Download the unsigned installer
+            2. Add `gatewayserver.exe` to the installation package
+            3. Code sign on the dedicated Windows PC
+            4. Update this release with the signed binary
+            5. Mark as published (remove draft status)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Build Artifacts  
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-build-${{ steps.version.outputs.version }}
+          path: |
+            release-artifacts/
+            frontend/dist/
+          retention-days: 30
+
+      - name: Release Summary
+        run: |
+          Write-Host "🎉 Production Release Build Complete!" -ForegroundColor Green
+          Write-Host "=================================" -ForegroundColor Cyan
+          Write-Host "📋 Version: $env:VERSION" -ForegroundColor White
+          Write-Host "📋 Commit: $env:GITHUB_SHA" -ForegroundColor White
+          Write-Host "📋 Build Status: Success" -ForegroundColor Green
+          Write-Host "=================================" -ForegroundColor Cyan
+          Write-Host "" 
+          Write-Host "📝 Next Steps for Release Manager:" -ForegroundColor Yellow
+          Write-Host "1. Download unsigned artifacts from this build" -ForegroundColor White
+          Write-Host "2. Add gatewayserver.exe to the package" -ForegroundColor White  
+          Write-Host "3. Code sign on dedicated Windows PC" -ForegroundColor White
+          Write-Host "4. Upload signed version to GitHub Release" -ForegroundColor White
+          Write-Host "5. Publish release to customers" -ForegroundColor White
+        shell: pwsh
