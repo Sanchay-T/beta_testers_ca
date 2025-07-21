@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+<!-- CI/CD Test: Testing PR validation workflow -->
+
 ## Common Development Commands
 
 ### Backend (Python/FastAPI)
