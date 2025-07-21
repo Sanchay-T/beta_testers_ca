@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-<!-- CI/CD Test: Testing PR validation workflow -->
+<!-- CI/CD Test: Testing PR validation workflow - Updated to trigger check -->
 
 ## Common Development Commands
 
