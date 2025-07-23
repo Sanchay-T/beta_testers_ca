@@ -48,18 +48,19 @@ jobs:
           Write-Host "🔍 Validating backend imports..." -ForegroundColor Yellow
           python -c "
           import os
+          import sys
           os.environ['SKIP_MODEL_LOADING'] = 'true'
+          sys.stdout.reconfigure(encoding='utf-8')
           try:
               # Test basic imports without loading models
-              import sys
               sys.path.append('.')
               import fastapi
               import uvicorn
               import pandas
               import numpy
-              print('✅ Core backend dependencies imported successfully')
+              print('[SUCCESS] Core backend dependencies imported successfully')
           except Exception as e:
-              print(f'❌ Backend import failed: {e}')
+              print(f'[ERROR] Backend import failed: {e}')
               exit(1)
           "
           
