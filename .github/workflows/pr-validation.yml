@@ -76,7 +76,13 @@ jobs:
           
           Write-Host "📱 Setting up React app dependencies..." -ForegroundColor Yellow
           cd react-app
-          npm ci
+          if (Test-Path "package-lock.json") {
+            Write-Host "📦 Using npm ci (lockfile found)" -ForegroundColor Green
+            npm ci
+          } else {
+            Write-Host "📦 Using npm install (no lockfile)" -ForegroundColor Yellow
+            npm install
+          }
           
           Write-Host "✅ Frontend dependencies installed" -ForegroundColor Green
         shell: pwsh
