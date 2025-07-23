@@ -133,6 +133,7 @@ jobs:
           }
           
           Write-Host "🔍 Testing Electron build preparation..." -ForegroundColor Yellow
+          $env:CI = "false"
           npm run build:react
           
           Write-Host "✅ Electron build validation complete" -ForegroundColor Green
