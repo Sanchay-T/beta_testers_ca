@@ -114,8 +114,26 @@ jobs:
             exit 1
           }
           
-          Write-Host "📄 PyInstaller command: pyinstaller --onedir backend/main.py" -ForegroundColor Cyan
-          pyinstaller --onedir backend/main.py
+          Write-Host "📄 PyInstaller command with hidden imports..." -ForegroundColor Cyan
+          pyinstaller --onedir backend/main.py `
+            --hidden-import=scipy._cyutility `
+            --hidden-import=scipy.sparse._matrix `
+            --hidden-import=scipy.sparse.csgraph._validation `
+            --hidden-import=scipy.special._ufuncs_cxx `
+            --hidden-import=scipy.linalg.cython_blas `
+            --hidden-import=scipy.linalg.cython_lapack `
+            --hidden-import=scipy.integrate._quadpack `
+            --hidden-import=scipy.integrate._odepack `
+            --hidden-import=scipy.integrate._dop `
+            --hidden-import=sklearn.utils._cython_blas `
+            --hidden-import=sklearn.neighbors.typedefs `
+            --hidden-import=sklearn.neighbors.quad_tree `
+            --hidden-import=sklearn.tree._utils `
+            --hidden-import=transformers.models.auto.modeling_auto `
+            --hidden-import=transformers.models.auto.tokenization_auto `
+            --collect-all=scipy `
+            --collect-all=sklearn `
+            --collect-all=transformers
           
           Write-Host "🔍 Checking if main.exe was created..." -ForegroundColor Yellow
           if (Test-Path "dist/main/main.exe") {
