@@ -8,6 +8,11 @@ on:
 
 env:
   PYTHON_VERSION: '3.11'
+  # Development environment variables
+  NODE_ENV: 'development'
+  VALIDATE_LICENSE: 'false'
+  FOR_ATS: 'false'
+  APP_VERSION: 'dev-${{ github.run_number }}'
 
 jobs:
   build-and-test-backend:
@@ -19,8 +24,44 @@ jobs:
       # Step 1: Get the code (like git clone)
       - name: 📥 Clone Repository
         uses: actions/checkout@v4
+      
+      - name: ✅ Verify Code Checkout
         run: |
           Write-Host "✅ Code cloned to Windows runner" -ForegroundColor Green
+          Write-Host "📁 Current directory: $(Get-Location)" -ForegroundColor Cyan
+          Write-Host "📋 Repository contents:" -ForegroundColor Yellow
+          Get-ChildItem -Name | Select-Object -First 10
+        shell: pwsh
+
+      - name: 🔐 Create Environment Configuration
+        run: |
+          Write-Host "🔧 Creating environment configuration..." -ForegroundColor Yellow
+          
+          # Create frontend/.env file with development settings
+          $envContent = @"
+          DB_FILE_NAME=file:db.sqlite3
+          NODE_ENV=${{ env.NODE_ENV }}
+          UUID_SALT=${{ secrets.UUID_SALT || 'cyphersol-dev' }}
+          VALIDATE_LICENSE=${{ env.VALIDATE_LICENSE }}
+          API_URL=${{ secrets.API_URL || 'https://dev-api.cyphersol.co.in/validate-offlineapp-login/' }}
+          FOR_ATS=${{ env.FOR_ATS }}
+          GH_TOKEN=${{ secrets.GH_TOKEN }}
+          APP_VERSION=${{ env.APP_VERSION }}
+          "@
+          
+          # Ensure frontend directory exists
+          if (-not (Test-Path "frontend")) {
+            New-Item -ItemType Directory -Path "frontend" -Force
+          }
+          
+          # Write .env file
+          $envContent | Out-File -FilePath "frontend/.env" -Encoding UTF8
+          
+          Write-Host "✅ Environment file created" -ForegroundColor Green
+          Write-Host "📄 Environment variables set:" -ForegroundColor Cyan
+          Write-Host "  - NODE_ENV: ${{ env.NODE_ENV }}" -ForegroundColor White
+          Write-Host "  - APP_VERSION: ${{ env.APP_VERSION }}" -ForegroundColor White
+          Write-Host "  - VALIDATE_LICENSE: ${{ env.VALIDATE_LICENSE }}" -ForegroundColor White
         shell: pwsh
 
       # Step 2: Setup Python (like installing Python on Windows)
@@ -154,8 +195,71 @@ jobs:
           }
         shell: pwsh
 
-      # Step 10: Summary
+      # Step 10: Collect Debug Logs (if failure occurs)
+      - name: 📊 Collect Debug Information
+        if: failure()
+        run: |
+          Write-Host "🚨 Build failed - collecting debug information..." -ForegroundColor Red
+          Write-Host "=================================" -ForegroundColor Red
+          
+          # System information
+          Write-Host "🖥️ System Information:" -ForegroundColor Yellow
+          Get-ComputerInfo | Select-Object WindowsProductName, WindowsVersion, TotalPhysicalMemory
+          
+          # Python information
+          Write-Host "🐍 Python Information:" -ForegroundColor Yellow
+          python --version 2>&1 || Write-Host "Python not found"
+          where python 2>&1 || Write-Host "Python path not found"
+          
+          # Check if virtual environment exists
+          Write-Host "📁 Virtual Environment:" -ForegroundColor Yellow
+          if (Test-Path ".venv") {
+            Write-Host "✅ .venv directory exists" -ForegroundColor Green
+            Get-ChildItem .venv -Name
+          } else {
+            Write-Host "❌ .venv directory missing" -ForegroundColor Red
+          }
+          
+          # Check if main.exe exists
+          Write-Host "🔍 Build Artifacts:" -ForegroundColor Yellow
+          if (Test-Path "dist") {
+            Write-Host "📁 dist directory contents:" -ForegroundColor Cyan
+            Get-ChildItem dist -Recurse -Name | Select-Object -First 20
+          } else {
+            Write-Host "❌ dist directory missing" -ForegroundColor Red
+          }
+          
+          # Check ports
+          Write-Host "📡 Port Information:" -ForegroundColor Yellow
+          netstat -an | findstr :7500 || Write-Host "No process on port 7500"
+          
+          # Environment file
+          Write-Host "🔐 Environment Configuration:" -ForegroundColor Yellow
+          if (Test-Path "frontend/.env") {
+            Write-Host "✅ .env file exists" -ForegroundColor Green
+          } else {
+            Write-Host "❌ .env file missing" -ForegroundColor Red
+          }
+          
+          Write-Host "=================================" -ForegroundColor Red
+        shell: pwsh
+
+      # Step 11: Upload Debug Artifacts 
+      - name: 📤 Upload Debug Artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-logs-${{ github.run_number }}
+          path: |
+            **/*.log
+            dist/
+            .venv/
+            frontend/.env
+          retention-days: 7
+
+      # Step 12: Success Summary
       - name: 📊 Build Summary
+        if: success()
         run: |
           Write-Host "🎉 Backend Build & Test Complete!" -ForegroundColor Green
           Write-Host "=================================" -ForegroundColor Cyan
@@ -166,4 +270,5 @@ jobs:
           Write-Host "✅ Backend server started" -ForegroundColor Green
           Write-Host "✅ Health check passed" -ForegroundColor Green
           Write-Host "=================================" -ForegroundColor Cyan
+          Write-Host "🔗 Next: Check https://github.com/${{ github.repository }}/actions for details" -ForegroundColor Blue
         shell: pwsh
