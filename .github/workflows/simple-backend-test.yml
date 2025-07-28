@@ -102,8 +102,20 @@ jobs:
           Write-Host "🏗️ Building backend executable..." -ForegroundColor Yellow
           .\.venv\Scripts\Activate.ps1
           
-          Write-Host "📄 PyInstaller command: pyinstaller --onedir backend.main" -ForegroundColor Cyan
-          pyinstaller --onedir backend.main
+          Write-Host "📄 Checking if backend/main.py exists..." -ForegroundColor Cyan
+          if (Test-Path "backend/main.py") {
+            Write-Host "✅ Found backend/main.py" -ForegroundColor Green
+          } else {
+            Write-Host "❌ backend/main.py not found!" -ForegroundColor Red
+            Write-Host "📁 Current directory contents:" -ForegroundColor Yellow
+            Get-ChildItem -Name
+            Write-Host "📁 Backend directory contents:" -ForegroundColor Yellow
+            Get-ChildItem backend -Name
+            exit 1
+          }
+          
+          Write-Host "📄 PyInstaller command: pyinstaller --onedir backend/main.py" -ForegroundColor Cyan
+          pyinstaller --onedir backend/main.py
           
           Write-Host "🔍 Checking if main.exe was created..." -ForegroundColor Yellow
           if (Test-Path "dist/main/main.exe") {
