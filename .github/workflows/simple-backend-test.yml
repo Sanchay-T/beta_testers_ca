@@ -133,6 +133,13 @@ jobs:
           Write-Host "🔧 Running post-build processing..." -ForegroundColor Yellow
           .\.venv\Scripts\Activate.ps1
           python postbuild.py
+          
+          Write-Host "📋 Checking post-build results..." -ForegroundColor Cyan
+          Write-Host "📁 dist/main directory contents:" -ForegroundColor Yellow
+          if (Test-Path "dist/main") {
+            Get-ChildItem "dist/main" -Name | Select-Object -First 20
+          }
+          
           Write-Host "✅ Post-build completed" -ForegroundColor Green
         shell: pwsh
 
@@ -140,20 +147,90 @@ jobs:
         run: |
           Write-Host "🖥️ Starting main.exe server..." -ForegroundColor Yellow
           
-          $process = Start-Process -FilePath "dist/main/main.exe" -PassThru -WindowStyle Hidden
-          Write-Host "🆔 Process ID: $($process.Id)" -ForegroundColor Cyan
-          
-          Write-Host "⏳ Waiting for server to start..." -ForegroundColor Yellow
-          Start-Sleep -Seconds 15
-          
-          if (Get-Process -Id $process.Id -ErrorAction SilentlyContinue) {
-            Write-Host "✅ Backend server is running!" -ForegroundColor Green
+          # First, let's check what we have in the dist directory
+          Write-Host "📁 Checking dist directory contents..." -ForegroundColor Cyan
+          if (Test-Path "dist") {
+            Get-ChildItem dist -Recurse | Format-Table Name, Length, FullName
           } else {
-            Write-Host "❌ Backend server failed to start!" -ForegroundColor Red
+            Write-Host "❌ dist directory not found!" -ForegroundColor Red
             exit 1
           }
           
-          echo "BACKEND_PID=$($process.Id)" >> $env:GITHUB_ENV
+          # Check if main.exe exists and is executable
+          $mainExe = "dist/main/main.exe"
+          if (-not (Test-Path $mainExe)) {
+            Write-Host "❌ main.exe not found at $mainExe!" -ForegroundColor Red
+            exit 1
+          }
+          
+          $fileInfo = Get-Item $mainExe
+          Write-Host "📊 main.exe info:" -ForegroundColor Cyan
+          Write-Host "  - Size: $([math]::Round($fileInfo.Length / 1MB, 2)) MB" -ForegroundColor White
+          Write-Host "  - Created: $($fileInfo.CreationTime)" -ForegroundColor White
+          
+          # Create logs directory
+          New-Item -ItemType Directory -Path "logs" -Force | Out-Null
+          
+          # Set environment variables that main.exe might need
+          Write-Host "🔧 Setting up environment variables..." -ForegroundColor Cyan
+          $env:API_HOST = "127.0.0.1"
+          $env:API_PORT = "7500"
+          $env:PYTHONIOENCODING = "utf-8"
+          
+          # Try to run main.exe and capture output
+          Write-Host "🚀 Starting main.exe with output capture..." -ForegroundColor Yellow
+          
+          try {
+            # Start process with output redirection and environment
+            $process = Start-Process -FilePath $mainExe -PassThru -WindowStyle Hidden -RedirectStandardOutput "logs/stdout.log" -RedirectStandardError "logs/stderr.log"
+            Write-Host "🆔 Process ID: $($process.Id)" -ForegroundColor Cyan
+            
+            # Wait a bit for startup
+            Write-Host "⏳ Waiting for server to start..." -ForegroundColor Yellow
+            Start-Sleep -Seconds 10
+            
+            # Check if process is still running
+            $isRunning = Get-Process -Id $process.Id -ErrorAction SilentlyContinue
+            if ($isRunning) {
+              Write-Host "✅ Backend server is running!" -ForegroundColor Green
+              echo "BACKEND_PID=$($process.Id)" >> $env:GITHUB_ENV
+            } else {
+              Write-Host "❌ Backend server failed to start!" -ForegroundColor Red
+              
+              # Show exit code if available
+              if ($process.HasExited) {
+                Write-Host "💥 Exit code: $($process.ExitCode)" -ForegroundColor Red
+              }
+              
+              # Display captured logs
+              Write-Host "📄 Standard Output:" -ForegroundColor Yellow
+              if (Test-Path "logs/stdout.log") {
+                Get-Content "logs/stdout.log" | Write-Host
+              } else {
+                Write-Host "  (No stdout log found)" -ForegroundColor Gray
+              }
+              
+              Write-Host "📄 Standard Error:" -ForegroundColor Yellow
+              if (Test-Path "logs/stderr.log") {
+                Get-Content "logs/stderr.log" | Write-Host
+              } else {
+                Write-Host "  (No stderr log found)" -ForegroundColor Gray
+              }
+              
+              # Try running main.exe directly to see immediate errors
+              Write-Host "🔍 Trying direct execution to see errors..." -ForegroundColor Yellow
+              try {
+                & $mainExe --help 2>&1 | Write-Host
+              } catch {
+                Write-Host "❌ Direct execution failed: $_" -ForegroundColor Red
+              }
+              
+              exit 1
+            }
+          } catch {
+            Write-Host "❌ Failed to start process: $_" -ForegroundColor Red
+            exit 1
+          }
         shell: pwsh
 
       - name: 🩺 Test Backend Health
@@ -238,8 +315,8 @@ jobs:
           name: debug-logs-${{ github.run_number }}
           path: |
             **/*.log
+            logs/
             dist/
-            .venv/
             frontend/.env
           retention-days: 7
 
