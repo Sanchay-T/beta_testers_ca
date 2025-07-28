@@ -1,0 +1,174 @@
+name: Test Python Backend Directly
+on:
+  push:
+    branches: [test/backend-automation]
+    paths:
+      - 'backend/**'
+      - 'postbuild.py'
+      - '.github/workflows/test-python-directly.yml'
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_ENV: 'development'
+  VALIDATE_LICENSE: 'false'
+  FOR_ATS: 'false'
+  APP_VERSION: 'dev-${{ github.run_number }}'
+
+jobs:
+  test-python-backend:
+    name: Test Python Backend (No PyInstaller)
+    runs-on: windows-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: 📥 Clone Repository
+        uses: actions/checkout@v4
+
+      - name: 🔐 Create Environment Configuration
+        run: |
+          Write-Host "🔧 Creating environment configuration..." -ForegroundColor Yellow
+          
+          $envContent = @"
+          DB_FILE_NAME=${{ secrets.DB_FILE_NAME }}
+          NODE_ENV=${{ env.NODE_ENV }}
+          UUID_SALT=${{ secrets.UUID_SALT }}
+          VALIDATE_LICENSE=${{ env.VALIDATE_LICENSE }}
+          API_URL=${{ secrets.API_URL }}
+          FOR_ATS=${{ env.FOR_ATS }}
+          GH_TOKEN=${{ secrets.GH_TOKEN }}
+          APP_VERSION=${{ env.APP_VERSION }}
+          "@
+          
+          if (-not (Test-Path "frontend")) {
+            New-Item -ItemType Directory -Path "frontend" -Force
+          }
+          
+          $envContent | Out-File -FilePath "frontend/.env" -Encoding UTF8
+          Write-Host "✅ Environment file created" -ForegroundColor Green
+        shell: pwsh
+
+      - name: 🐍 Setup Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: 📦 Install Dependencies
+        run: |
+          Write-Host "⬆️ Upgrading pip..." -ForegroundColor Yellow
+          python -m pip install --upgrade pip
+          
+          Write-Host "📋 Installing backend requirements..." -ForegroundColor Yellow
+          pip install -r backend/requirements.txt
+          
+          Write-Host "✅ Dependencies installed" -ForegroundColor Green
+        shell: pwsh
+
+      - name: 🧪 Test Backend Imports
+        run: |
+          Write-Host "🔍 Testing backend imports..." -ForegroundColor Yellow
+          
+          # Set environment variables
+          $env:API_HOST = "127.0.0.1"
+          $env:API_PORT = "7500"
+          $env:PYTHONIOENCODING = "utf-8"
+          $env:SKIP_MODEL_LOADING = "true"  # Skip loading heavy models for testing
+          
+          # Test basic imports
+          python -c "
+          import sys
+          import os
+          sys.path.append('.')
+          
+          # Test FastAPI import
+          try:
+              from fastapi import FastAPI
+              print('✅ FastAPI import successful')
+          except Exception as e:
+              print(f'❌ FastAPI import failed: {e}')
+              sys.exit(1)
+          
+          # Test backend imports (without heavy model loading)
+          try:
+              import backend.main
+              print('✅ Backend main import successful')
+          except Exception as e:
+              print(f'❌ Backend main import failed: {e}')
+              sys.exit(1)
+          "
+          
+          Write-Host "✅ Import tests passed" -ForegroundColor Green
+        shell: pwsh
+
+      - name: 🚀 Start Python Backend Server
+        run: |
+          Write-Host "🖥️ Starting Python backend server..." -ForegroundColor Yellow
+          
+          # Set environment variables
+          $env:API_HOST = "127.0.0.1"
+          $env:API_PORT = "7500"
+          $env:PYTHONIOENCODING = "utf-8"
+          $env:SKIP_MODEL_LOADING = "true"
+          
+          # Start server in background
+          $process = Start-Process -FilePath "python" -ArgumentList "backend/main.py" -PassThru -WindowStyle Hidden
+          Write-Host "🆔 Process ID: $($process.Id)" -ForegroundColor Cyan
+          
+          # Wait for startup
+          Write-Host "⏳ Waiting for server to start..." -ForegroundColor Yellow
+          Start-Sleep -Seconds 10
+          
+          # Check if process is running
+          if (Get-Process -Id $process.Id -ErrorAction SilentlyContinue) {
+            Write-Host "✅ Python backend server is running!" -ForegroundColor Green
+            echo "BACKEND_PID=$($process.Id)" >> $env:GITHUB_ENV
+          } else {
+            Write-Host "❌ Backend server failed to start!" -ForegroundColor Red
+            exit 1
+          }
+        shell: pwsh
+
+      - name: 🩺 Test Backend Health
+        run: |
+          Write-Host "🔍 Testing backend health..." -ForegroundColor Yellow
+          
+          try {
+            $response = Invoke-WebRequest -Uri "http://localhost:7500/" -TimeoutSec 10
+            Write-Host "✅ Server responded with status: $($response.StatusCode)" -ForegroundColor Green
+            Write-Host "📄 Response: $($response.Content)" -ForegroundColor Cyan
+          } catch {
+            Write-Host "❌ Health check failed: $_" -ForegroundColor Red
+            
+            Write-Host "📡 Checking what's on port 7500..." -ForegroundColor Yellow
+            netstat -an | findstr :7500
+            
+            exit 1
+          }
+        shell: pwsh
+
+      - name: 🧹 Cleanup
+        if: always()
+        run: |
+          Write-Host "🧹 Cleaning up..." -ForegroundColor Yellow
+          
+          if ($env:BACKEND_PID) {
+            try {
+              Stop-Process -Id $env:BACKEND_PID -Force -ErrorAction SilentlyContinue
+              Write-Host "✅ Backend process stopped" -ForegroundColor Green
+            } catch {
+              Write-Host "⚠️ Process may have already stopped" -ForegroundColor Yellow
+            }
+          }
+        shell: pwsh
+
+      - name: 📊 Success Summary
+        run: |
+          Write-Host "🎉 Python Backend Test Complete!" -ForegroundColor Green
+          Write-Host "=================================" -ForegroundColor Cyan
+          Write-Host "✅ Dependencies installed successfully" -ForegroundColor Green
+          Write-Host "✅ Backend imports working" -ForegroundColor Green
+          Write-Host "✅ FastAPI server started" -ForegroundColor Green
+          Write-Host "✅ Health check passed" -ForegroundColor Green
+          Write-Host "=================================" -ForegroundColor Cyan
+          Write-Host "🚀 Ready for PyInstaller build in production!" -ForegroundColor Blue
+        shell: pwsh
