@@ -97,9 +97,24 @@ jobs:
           Write-Host "✅ All dependencies installed" -ForegroundColor Green
         shell: pwsh
 
-      - name: 🔨 Build main.exe with PyInstaller
+      - name: 🔍 Auto-Detect PyInstaller Dependencies
         run: |
-          Write-Host "🏗️ Building backend executable..." -ForegroundColor Yellow
+          Write-Host "🔍 Auto-detecting PyInstaller dependencies..." -ForegroundColor Yellow
+          .\.venv\Scripts\Activate.ps1
+          
+          # Run the auto-detection script
+          python scripts/auto-detect-dependencies.py
+          
+          Write-Host "📋 Auto-detection complete" -ForegroundColor Green
+          if (Test-Path "pyinstaller_command.txt") {
+            Write-Host "📄 Generated command:" -ForegroundColor Cyan
+            Get-Content "pyinstaller_command.txt"
+          }
+        shell: pwsh
+
+      - name: 🔨 Build main.exe with Auto-Detected Dependencies
+        run: |
+          Write-Host "🏗️ Building backend executable with auto-detected dependencies..." -ForegroundColor Yellow
           .\.venv\Scripts\Activate.ps1
           
           Write-Host "📄 Checking if backend/main.py exists..." -ForegroundColor Cyan
@@ -114,7 +129,8 @@ jobs:
             exit 1
           }
           
-          Write-Host "📄 PyInstaller command with hidden imports and data files..." -ForegroundColor Cyan
+          # Use comprehensive approach - include everything we might need
+          Write-Host "📄 Building with comprehensive dependency collection..." -ForegroundColor Cyan
           pyinstaller --onedir backend/main.py `
             --hidden-import=scipy._cyutility `
             --hidden-import=scipy.sparse._matrix `
@@ -131,11 +147,19 @@ jobs:
             --hidden-import=sklearn.tree._utils `
             --hidden-import=transformers.models.auto.modeling_auto `
             --hidden-import=transformers.models.auto.tokenization_auto `
+            --hidden-import=paddleocr `
+            --hidden-import=paddlex `
             --collect-all=scipy `
             --collect-all=sklearn `
             --collect-all=transformers `
             --collect-all=paddleocr `
-            --collect-all=paddlex
+            --collect-all=paddlex `
+            --collect-all=numpy `
+            --collect-all=pandas `
+            --collect-all=PIL `
+            --collect-all=cv2 `
+            --noconfirm `
+            --clean
           
           Write-Host "🔍 Checking if main.exe was created..." -ForegroundColor Yellow
           if (Test-Path "dist/main/main.exe") {
@@ -340,6 +364,60 @@ jobs:
             frontend/.env
           retention-days: 7
 
+      - name: 💾 Save Working PyInstaller Configuration
+        if: success()
+        run: |
+          Write-Host "💾 Saving working PyInstaller configuration..." -ForegroundColor Yellow
+          
+          $workingConfig = @"
+          # ✅ WORKING PyInstaller Configuration (Generated on $(Get-Date))
+          # This configuration successfully built and ran main.exe in GitHub Actions
+          
+          pyinstaller --onedir backend/main.py \
+            --hidden-import=scipy._cyutility \
+            --hidden-import=scipy.sparse._matrix \
+            --hidden-import=scipy.sparse.csgraph._validation \
+            --hidden-import=scipy.special._ufuncs_cxx \
+            --hidden-import=scipy.linalg.cython_blas \
+            --hidden-import=scipy.linalg.cython_lapack \
+            --hidden-import=scipy.integrate._quadpack \
+            --hidden-import=scipy.integrate._odepack \
+            --hidden-import=scipy.integrate._dop \
+            --hidden-import=sklearn.utils._cython_blas \
+            --hidden-import=sklearn.neighbors.typedefs \
+            --hidden-import=sklearn.neighbors.quad_tree \
+            --hidden-import=sklearn.tree._utils \
+            --hidden-import=transformers.models.auto.modeling_auto \
+            --hidden-import=transformers.models.auto.tokenization_auto \
+            --hidden-import=paddleocr \
+            --hidden-import=paddlex \
+            --collect-all=scipy \
+            --collect-all=sklearn \
+            --collect-all=transformers \
+            --collect-all=paddleocr \
+            --collect-all=paddlex \
+            --collect-all=numpy \
+            --collect-all=pandas \
+            --collect-all=PIL \
+            --collect-all=cv2 \
+            --noconfirm \
+            --clean
+          "@
+          
+          $workingConfig | Out-File -FilePath "WORKING_PYINSTALLER_CONFIG.txt" -Encoding UTF8
+          Write-Host "✅ Working configuration saved to WORKING_PYINSTALLER_CONFIG.txt" -ForegroundColor Green
+        shell: pwsh
+
+      - name: 📤 Upload Working Configuration
+        if: success()  
+        uses: actions/upload-artifact@v4
+        with:
+          name: working-pyinstaller-config-${{ github.run_number }}
+          path: |
+            WORKING_PYINSTALLER_CONFIG.txt
+            pyinstaller_command.txt
+          retention-days: 30
+
       - name: 📊 Build Summary
         if: success()
         run: |
@@ -351,6 +429,8 @@ jobs:
           Write-Host "✅ Post-build processing completed" -ForegroundColor Green
           Write-Host "✅ Backend server started" -ForegroundColor Green
           Write-Host "✅ Health check passed" -ForegroundColor Green
+          Write-Host "✅ Working PyInstaller config saved" -ForegroundColor Green
           Write-Host "=================================" -ForegroundColor Cyan
+          Write-Host "💾 Download working config from artifacts!" -ForegroundColor Blue
           Write-Host "🔗 Next: Check https://github.com/${{ github.repository }}/actions for details" -ForegroundColor Blue
         shell: pwsh
