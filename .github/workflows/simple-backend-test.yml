@@ -5,6 +5,8 @@ on:
     paths:
       - 'backend/**'
       - 'postbuild.py'
+      - '.github/workflows/simple-backend-test.yml'
+  workflow_dispatch:  # Allow manual triggering
 
 env:
   PYTHON_VERSION: '3.11'

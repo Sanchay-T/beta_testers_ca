@@ -6,6 +6,7 @@ import os
 # Respect the PYTHONIOENCODING env if set, or fallback to utf-8
 preferred_encoding = os.environ.get("PYTHONIOENCODING", "utf-8")
 print("aq preferred_encoding from env - ",os.environ.get("PYTHONIOENCODING"))
+# CI/CD Test: Triggering automated build and test workflow
 # Force stdout/stderr to use UTF-8
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding=preferred_encoding)
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding=preferred_encoding)
