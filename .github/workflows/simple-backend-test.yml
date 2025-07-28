@@ -97,6 +97,40 @@ jobs:
           Write-Host "✅ All dependencies installed" -ForegroundColor Green
         shell: pwsh
 
+      - name: 🤖 Pre-download PaddleOCR Models
+        run: |
+          Write-Host "🤖 Pre-downloading PaddleOCR models..." -ForegroundColor Yellow
+          .\.venv\Scripts\Activate.ps1
+          
+          # Create models directory
+          New-Item -ItemType Directory -Path "models" -Force | Out-Null
+          
+          # Try to download models by importing PaddleOCR (this usually triggers model downloads)
+          python -c "
+          import os
+          import sys
+          os.environ['SKIP_MODEL_LOADING'] = 'false'
+          
+          try:
+              print('Attempting to initialize PaddleOCR to download models...')
+              from paddleocr import PaddleOCR
+              
+              # This should trigger model downloads
+              ocr = PaddleOCR(use_angle_cls=True, lang='en', show_log=False)
+              print('✅ PaddleOCR models downloaded successfully')
+          except Exception as e:
+              print(f'⚠️ Model download failed (will try to continue): {e}')
+          "
+          
+          Write-Host "📁 Checking if models were downloaded..." -ForegroundColor Cyan
+          if (Test-Path "models") {
+            Write-Host "✅ Models directory exists" -ForegroundColor Green
+            Get-ChildItem models -Recurse -Name | Select-Object -First 10
+          } else {
+            Write-Host "⚠️ No models directory created" -ForegroundColor Yellow
+          }
+        shell: pwsh
+
       - name: 🔍 Auto-Detect PyInstaller Dependencies
         run: |
           Write-Host "🔍 Auto-detecting PyInstaller dependencies..." -ForegroundColor Yellow
@@ -129,37 +163,63 @@ jobs:
             exit 1
           }
           
+          # Check for model directories and include them
+          Write-Host "🔍 Checking for model directories..." -ForegroundColor Cyan
+          $dataFiles = @()
+          
+          # Check if models directory exists
+          if (Test-Path "models") {
+            Write-Host "✅ Found models directory, adding to PyInstaller" -ForegroundColor Green
+            $dataFiles += "--add-data", "models;models"
+          } else {
+            Write-Host "⚠️ No models directory found - may need to download models at runtime" -ForegroundColor Yellow
+          }
+          
+          # Check for backend data files
+          if (Test-Path "backend/models") {
+            Write-Host "✅ Found backend/models directory" -ForegroundColor Green
+            $dataFiles += "--add-data", "backend/models;backend/models"
+          }
+          
           # Use comprehensive approach - include everything we might need
           Write-Host "📄 Building with comprehensive dependency collection..." -ForegroundColor Cyan
-          pyinstaller --onedir backend/main.py `
-            --hidden-import=scipy._cyutility `
-            --hidden-import=scipy.sparse._matrix `
-            --hidden-import=scipy.sparse.csgraph._validation `
-            --hidden-import=scipy.special._ufuncs_cxx `
-            --hidden-import=scipy.linalg.cython_blas `
-            --hidden-import=scipy.linalg.cython_lapack `
-            --hidden-import=scipy.integrate._quadpack `
-            --hidden-import=scipy.integrate._odepack `
-            --hidden-import=scipy.integrate._dop `
-            --hidden-import=sklearn.utils._cython_blas `
-            --hidden-import=sklearn.neighbors.typedefs `
-            --hidden-import=sklearn.neighbors.quad_tree `
-            --hidden-import=sklearn.tree._utils `
-            --hidden-import=transformers.models.auto.modeling_auto `
-            --hidden-import=transformers.models.auto.tokenization_auto `
-            --hidden-import=paddleocr `
-            --hidden-import=paddlex `
-            --collect-all=scipy `
-            --collect-all=sklearn `
-            --collect-all=transformers `
-            --collect-all=paddleocr `
-            --collect-all=paddlex `
-            --collect-all=numpy `
-            --collect-all=pandas `
-            --collect-all=PIL `
-            --collect-all=cv2 `
-            --noconfirm `
-            --clean
+          $pyinstallerArgs = @(
+            "--onedir", "backend/main.py",
+            "--hidden-import=scipy._cyutility",
+            "--hidden-import=scipy.sparse._matrix", 
+            "--hidden-import=scipy.sparse.csgraph._validation",
+            "--hidden-import=scipy.special._ufuncs_cxx",
+            "--hidden-import=scipy.linalg.cython_blas",
+            "--hidden-import=scipy.linalg.cython_lapack",
+            "--hidden-import=scipy.integrate._quadpack",
+            "--hidden-import=scipy.integrate._odepack",
+            "--hidden-import=scipy.integrate._dop",
+            "--hidden-import=sklearn.utils._cython_blas",
+            "--hidden-import=sklearn.neighbors.typedefs",
+            "--hidden-import=sklearn.neighbors.quad_tree",
+            "--hidden-import=sklearn.tree._utils",
+            "--hidden-import=transformers.models.auto.modeling_auto",
+            "--hidden-import=transformers.models.auto.tokenization_auto",
+            "--hidden-import=paddleocr",
+            "--hidden-import=paddlex",
+            "--collect-all=scipy",
+            "--collect-all=sklearn", 
+            "--collect-all=transformers",
+            "--collect-all=paddleocr",
+            "--collect-all=paddlex",
+            "--collect-all=numpy",
+            "--collect-all=pandas",
+            "--collect-all=PIL",
+            "--collect-all=cv2",
+            "--noconfirm",
+            "--clean"
+          )
+          
+          # Add data files if any were found
+          $pyinstallerArgs += $dataFiles
+          
+          # Build the executable
+          pyinstaller @pyinstallerArgs
           
           Write-Host "🔍 Checking if main.exe was created..." -ForegroundColor Yellow
           if (Test-Path "dist/main/main.exe") {
