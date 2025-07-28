@@ -1,0 +1,169 @@
+name: Simple Backend Build & Test
+on:
+  push:
+    branches: [test/backend-automation]  # Only run on your test branch for now
+    paths:
+      - 'backend/**'
+      - 'postbuild.py'
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  build-and-test-backend:
+    name: Build and Test Backend
+    runs-on: windows-latest
+    timeout-minutes: 30
+    
+    steps:
+      # Step 1: Get the code (like git clone)
+      - name: 📥 Clone Repository
+        uses: actions/checkout@v4
+        run: |
+          Write-Host "✅ Code cloned to Windows runner" -ForegroundColor Green
+        shell: pwsh
+
+      # Step 2: Setup Python (like installing Python on Windows)
+      - name: 🐍 Setup Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: ✅ Verify Python Installation
+        run: |
+          Write-Host "🔍 Checking Python installation..." -ForegroundColor Yellow
+          python --version
+          Write-Host "📍 Python location: $(where python)" -ForegroundColor Cyan
+        shell: pwsh
+
+      # Step 3: Create virtual environment (like you do manually)
+      - name: 🔧 Create Virtual Environment
+        run: |
+          Write-Host "🏗️ Creating virtual environment..." -ForegroundColor Yellow
+          python -m venv .venv
+          Write-Host "✅ Virtual environment created" -ForegroundColor Green
+        shell: pwsh
+
+      # Step 4: Activate virtual environment and install requirements
+      - name: 📦 Install Requirements
+        run: |
+          Write-Host "⚡ Activating virtual environment..." -ForegroundColor Yellow
+          .\.venv\Scripts\Activate.ps1
+          
+          Write-Host "⬆️ Upgrading pip..." -ForegroundColor Yellow
+          pip install --upgrade pip
+          
+          Write-Host "📋 Installing requirements..." -ForegroundColor Yellow
+          pip install -r backend/requirements.txt
+          
+          Write-Host "🔨 Installing PyInstaller..." -ForegroundColor Yellow
+          pip install pyinstaller
+          
+          Write-Host "✅ All dependencies installed" -ForegroundColor Green
+        shell: pwsh
+
+      # Step 5: Build main.exe with PyInstaller (your exact command)
+      - name: 🔨 Build main.exe with PyInstaller
+        run: |
+          Write-Host "🏗️ Building backend executable..." -ForegroundColor Yellow
+          .\.venv\Scripts\Activate.ps1
+          
+          Write-Host "📄 PyInstaller command: pyinstaller --onedir backend.main" -ForegroundColor Cyan
+          pyinstaller --onedir backend.main
+          
+          Write-Host "🔍 Checking if main.exe was created..." -ForegroundColor Yellow
+          if (Test-Path "dist/main/main.exe") {
+            Write-Host "✅ main.exe created successfully!" -ForegroundColor Green
+            $fileSize = (Get-Item "dist/main/main.exe").Length / 1MB
+            Write-Host "📊 Size: $([math]::Round($fileSize, 2)) MB" -ForegroundColor Cyan
+          } else {
+            Write-Host "❌ main.exe not found!" -ForegroundColor Red
+            exit 1
+          }
+        shell: pwsh
+
+      # Step 6: Run postbuild.py (your exact step)
+      - name: ⚙️ Run Post-Build Script
+        run: |
+          Write-Host "🔧 Running post-build processing..." -ForegroundColor Yellow
+          .\.venv\Scripts\Activate.ps1
+          python postbuild.py
+          Write-Host "✅ Post-build completed" -ForegroundColor Green
+        shell: pwsh
+
+      # Step 7: Start main.exe and test it
+      - name: 🚀 Start Backend Server
+        run: |
+          Write-Host "🖥️ Starting main.exe server..." -ForegroundColor Yellow
+          
+          # Start main.exe in background
+          $process = Start-Process -FilePath "dist/main/main.exe" -PassThru -WindowStyle Hidden
+          Write-Host "🆔 Process ID: $($process.Id)" -ForegroundColor Cyan
+          
+          # Wait for server to start
+          Write-Host "⏳ Waiting for server to start..." -ForegroundColor Yellow
+          Start-Sleep -Seconds 15
+          
+          # Check if process is still running
+          if (Get-Process -Id $process.Id -ErrorAction SilentlyContinue) {
+            Write-Host "✅ Backend server is running!" -ForegroundColor Green
+          } else {
+            Write-Host "❌ Backend server failed to start!" -ForegroundColor Red
+            exit 1
+          }
+          
+          # Save process ID for cleanup
+          echo "BACKEND_PID=$($process.Id)" >> $env:GITHUB_ENV
+        shell: pwsh
+
+      # Step 8: Simple health check test
+      - name: 🩺 Test Backend Health
+        run: |
+          Write-Host "🔍 Testing backend health..." -ForegroundColor Yellow
+          
+          # Test if server responds on port 7500
+          try {
+            $response = Invoke-WebRequest -Uri "http://localhost:7500/" -TimeoutSec 10
+            Write-Host "✅ Server responded with status: $($response.StatusCode)" -ForegroundColor Green
+            Write-Host "📄 Response: $($response.Content)" -ForegroundColor Cyan
+          } catch {
+            Write-Host "❌ Health check failed: $_" -ForegroundColor Red
+            
+            # Show what's listening on port 7500
+            Write-Host "📡 Checking what's on port 7500..." -ForegroundColor Yellow
+            netstat -an | findstr :7500
+            
+            exit 1
+          }
+        shell: pwsh
+
+      # Step 9: Cleanup
+      - name: 🧹 Cleanup
+        if: always()
+        run: |
+          Write-Host "🧹 Cleaning up..." -ForegroundColor Yellow
+          
+          # Stop backend process if it's running
+          if ($env:BACKEND_PID) {
+            try {
+              Stop-Process -Id $env:BACKEND_PID -Force -ErrorAction SilentlyContinue
+              Write-Host "✅ Backend process stopped" -ForegroundColor Green
+            } catch {
+              Write-Host "⚠️ Process may have already stopped" -ForegroundColor Yellow
+            }
+          }
+        shell: pwsh
+
+      # Step 10: Summary
+      - name: 📊 Build Summary
+        run: |
+          Write-Host "🎉 Backend Build & Test Complete!" -ForegroundColor Green
+          Write-Host "=================================" -ForegroundColor Cyan
+          Write-Host "✅ Virtual environment created" -ForegroundColor Green
+          Write-Host "✅ Dependencies installed" -ForegroundColor Green
+          Write-Host "✅ main.exe built successfully" -ForegroundColor Green
+          Write-Host "✅ Post-build processing completed" -ForegroundColor Green
+          Write-Host "✅ Backend server started" -ForegroundColor Green
+          Write-Host "✅ Health check passed" -ForegroundColor Green
+          Write-Host "=================================" -ForegroundColor Cyan
+        shell: pwsh
