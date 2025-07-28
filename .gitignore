@@ -28,7 +28,7 @@ develop-eggs/
 # /backend/.env
 # /backend/.venv
 # /backend/.env.*
-/backend/models
+# /backend/models  # Allow PaddleOCR models for CI
 .venv/
 
 # FastAPI specific
@@ -186,10 +186,10 @@ frontend/gatewayServer/*.exe
 gatewayServer/*.exe
 *.exe
 
-# Models and AI/ML files
-/backend/models/
+# Models and AI/ML files  
+# /backend/models/  # Allow PaddleOCR models for CI
 /frontend/models/
-models/
+# models/  # Allow PaddleOCR models for CI
 *.model
 *.bin
 *.safetensors
@@ -204,7 +204,7 @@ models/
 *.weights
 local_model/
 **/local_model/
-**/models/
+# **/models/  # Allow PaddleOCR models for CI
 model_cache/
 checkpoints/
 
