@@ -1,13 +1,14 @@
 name: Simple Backend Build & Test
 on:
   push:
-    branches: [test/backend-automation]
+    branches: [test/backend-automation]  # Only run on your test branch for now
     paths:
       - 'backend/**'
       - 'postbuild.py'
 
 env:
   PYTHON_VERSION: '3.11'
+  # Development environment variables
   NODE_ENV: 'development'
   VALIDATE_LICENSE: 'false'
   FOR_ATS: 'false'
@@ -20,9 +21,10 @@ jobs:
     timeout-minutes: 30
     
     steps:
+      # Step 1: Get the code (like git clone)
       - name: 📥 Clone Repository
         uses: actions/checkout@v4
-
+      
       - name: ✅ Verify Code Checkout
         run: |
           Write-Host "✅ Code cloned to Windows runner" -ForegroundColor Green
@@ -35,21 +37,24 @@ jobs:
         run: |
           Write-Host "🔧 Creating environment configuration..." -ForegroundColor Yellow
           
+          # Create frontend/.env file with development settings
           $envContent = @"
-          DB_FILE_NAME=${{ secrets.DB_FILE_NAME }}
+          DB_FILE_NAME=file:db.sqlite3
           NODE_ENV=${{ env.NODE_ENV }}
-          UUID_SALT=${{ secrets.UUID_SALT }}
+          UUID_SALT=${{ secrets.UUID_SALT || 'cyphersol-dev' }}
           VALIDATE_LICENSE=${{ env.VALIDATE_LICENSE }}
-          API_URL=${{ secrets.API_URL }}
+          API_URL=${{ secrets.API_URL || 'https://dev-api.cyphersol.co.in/validate-offlineapp-login/' }}
           FOR_ATS=${{ env.FOR_ATS }}
           GH_TOKEN=${{ secrets.GH_TOKEN }}
           APP_VERSION=${{ env.APP_VERSION }}
           "@
           
+          # Ensure frontend directory exists
           if (-not (Test-Path "frontend")) {
             New-Item -ItemType Directory -Path "frontend" -Force
           }
           
+          # Write .env file
           $envContent | Out-File -FilePath "frontend/.env" -Encoding UTF8
           
           Write-Host "✅ Environment file created" -ForegroundColor Green
@@ -59,11 +64,12 @@ jobs:
           Write-Host "  - VALIDATE_LICENSE: ${{ env.VALIDATE_LICENSE }}" -ForegroundColor White
         shell: pwsh
 
+      # Step 2: Setup Python (like installing Python on Windows)
       - name: 🐍 Setup Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-
+      
       - name: ✅ Verify Python Installation
         run: |
           Write-Host "🔍 Checking Python installation..." -ForegroundColor Yellow
@@ -71,6 +77,7 @@ jobs:
           Write-Host "📍 Python location: $(where python)" -ForegroundColor Cyan
         shell: pwsh
 
+      # Step 3: Create virtual environment (like you do manually)
       - name: 🔧 Create Virtual Environment
         run: |
           Write-Host "🏗️ Creating virtual environment..." -ForegroundColor Yellow
@@ -78,6 +85,7 @@ jobs:
           Write-Host "✅ Virtual environment created" -ForegroundColor Green
         shell: pwsh
 
+      # Step 4: Activate virtual environment and install requirements
       - name: 📦 Install Requirements
         run: |
           Write-Host "⚡ Activating virtual environment..." -ForegroundColor Yellow
@@ -95,6 +103,7 @@ jobs:
           Write-Host "✅ All dependencies installed" -ForegroundColor Green
         shell: pwsh
 
+      # Step 5: Build main.exe with PyInstaller (your exact command)
       - name: 🔨 Build main.exe with PyInstaller
         run: |
           Write-Host "🏗️ Building backend executable..." -ForegroundColor Yellow
@@ -114,6 +123,7 @@ jobs:
           }
         shell: pwsh
 
+      # Step 6: Run postbuild.py (your exact step)
       - name: ⚙️ Run Post-Build Script
         run: |
           Write-Host "🔧 Running post-build processing..." -ForegroundColor Yellow
@@ -122,16 +132,20 @@ jobs:
           Write-Host "✅ Post-build completed" -ForegroundColor Green
         shell: pwsh
 
+      # Step 7: Start main.exe and test it
       - name: 🚀 Start Backend Server
         run: |
           Write-Host "🖥️ Starting main.exe server..." -ForegroundColor Yellow
           
+          # Start main.exe in background
           $process = Start-Process -FilePath "dist/main/main.exe" -PassThru -WindowStyle Hidden
           Write-Host "🆔 Process ID: $($process.Id)" -ForegroundColor Cyan
           
+          # Wait for server to start
           Write-Host "⏳ Waiting for server to start..." -ForegroundColor Yellow
           Start-Sleep -Seconds 15
           
+          # Check if process is still running
           if (Get-Process -Id $process.Id -ErrorAction SilentlyContinue) {
             Write-Host "✅ Backend server is running!" -ForegroundColor Green
           } else {
@@ -139,13 +153,16 @@ jobs:
             exit 1
           }
           
+          # Save process ID for cleanup
           echo "BACKEND_PID=$($process.Id)" >> $env:GITHUB_ENV
         shell: pwsh
 
+      # Step 8: Simple health check test
       - name: 🩺 Test Backend Health
         run: |
           Write-Host "🔍 Testing backend health..." -ForegroundColor Yellow
           
+          # Test if server responds on port 7500
           try {
             $response = Invoke-WebRequest -Uri "http://localhost:7500/" -TimeoutSec 10
             Write-Host "✅ Server responded with status: $($response.StatusCode)" -ForegroundColor Green
@@ -153,6 +170,7 @@ jobs:
           } catch {
             Write-Host "❌ Health check failed: $_" -ForegroundColor Red
             
+            # Show what's listening on port 7500
             Write-Host "📡 Checking what's on port 7500..." -ForegroundColor Yellow
             netstat -an | findstr :7500
             
@@ -160,11 +178,13 @@ jobs:
           }
         shell: pwsh
 
+      # Step 9: Cleanup
       - name: 🧹 Cleanup
         if: always()
         run: |
           Write-Host "🧹 Cleaning up..." -ForegroundColor Yellow
           
+          # Stop backend process if it's running
           if ($env:BACKEND_PID) {
             try {
               Stop-Process -Id $env:BACKEND_PID -Force -ErrorAction SilentlyContinue
@@ -175,19 +195,23 @@ jobs:
           }
         shell: pwsh
 
+      # Step 10: Collect Debug Logs (if failure occurs)
       - name: 📊 Collect Debug Information
         if: failure()
         run: |
           Write-Host "🚨 Build failed - collecting debug information..." -ForegroundColor Red
           Write-Host "=================================" -ForegroundColor Red
           
+          # System information
           Write-Host "🖥️ System Information:" -ForegroundColor Yellow
           Get-ComputerInfo | Select-Object WindowsProductName, WindowsVersion, TotalPhysicalMemory
           
+          # Python information
           Write-Host "🐍 Python Information:" -ForegroundColor Yellow
           python --version 2>&1 || Write-Host "Python not found"
           where python 2>&1 || Write-Host "Python path not found"
           
+          # Check if virtual environment exists
           Write-Host "📁 Virtual Environment:" -ForegroundColor Yellow
           if (Test-Path ".venv") {
             Write-Host "✅ .venv directory exists" -ForegroundColor Green
@@ -196,6 +220,7 @@ jobs:
             Write-Host "❌ .venv directory missing" -ForegroundColor Red
           }
           
+          # Check if main.exe exists
           Write-Host "🔍 Build Artifacts:" -ForegroundColor Yellow
           if (Test-Path "dist") {
             Write-Host "📁 dist directory contents:" -ForegroundColor Cyan
@@ -204,9 +229,11 @@ jobs:
             Write-Host "❌ dist directory missing" -ForegroundColor Red
           }
           
+          # Check ports
           Write-Host "📡 Port Information:" -ForegroundColor Yellow
           netstat -an | findstr :7500 || Write-Host "No process on port 7500"
           
+          # Environment file
           Write-Host "🔐 Environment Configuration:" -ForegroundColor Yellow
           if (Test-Path "frontend/.env") {
             Write-Host "✅ .env file exists" -ForegroundColor Green
@@ -217,6 +244,7 @@ jobs:
           Write-Host "=================================" -ForegroundColor Red
         shell: pwsh
 
+      # Step 11: Upload Debug Artifacts 
       - name: 📤 Upload Debug Artifacts
         if: failure()
         uses: actions/upload-artifact@v4
@@ -229,6 +257,7 @@ jobs:
             frontend/.env
           retention-days: 7
 
+      # Step 12: Success Summary
       - name: 📊 Build Summary
         if: success()
         run: |
