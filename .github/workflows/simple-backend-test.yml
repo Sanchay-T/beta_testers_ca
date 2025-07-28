@@ -114,7 +114,7 @@ jobs:
             exit 1
           }
           
-          Write-Host "📄 PyInstaller command with hidden imports..." -ForegroundColor Cyan
+          Write-Host "📄 PyInstaller command with hidden imports and data files..." -ForegroundColor Cyan
           pyinstaller --onedir backend/main.py `
             --hidden-import=scipy._cyutility `
             --hidden-import=scipy.sparse._matrix `
@@ -133,7 +133,9 @@ jobs:
             --hidden-import=transformers.models.auto.tokenization_auto `
             --collect-all=scipy `
             --collect-all=sklearn `
-            --collect-all=transformers
+            --collect-all=transformers `
+            --collect-all=paddleocr `
+            --collect-all=paddlex
           
           Write-Host "🔍 Checking if main.exe was created..." -ForegroundColor Yellow
           if (Test-Path "dist/main/main.exe") {
