@@ -658,7 +658,13 @@ def get_table_column_coordinates_by_text(pdf_path):
 def parse_date(date_string):
     formats_to_try = [
         "%d/%m /%Y",
+        "%d/%m/ %Y",
         "%d-%m-%Y",
+        "%d-%m- %Y",
+        "%d-%m -%Y",
+        "%d/%b/%Y",
+        "%d/%b/ %Y",
+        "%d/%b /%Y",
         "%d %b %Y",
         "%Y-%m-%d",
         # "%y-%m-%d",
@@ -819,7 +825,13 @@ def cleaning(new_df):
     def try_parsing_date(text):
         formats_to_try = [
             "%d/%m /%Y",
+            "%d/%m/ %Y",
             "%d-%m-%Y",
+            "%d-%m- %Y",
+            "%d-%m -%Y",
+            "%d/%b/%Y",
+            "%d/%b/ %Y",
+            "%d/%b /%Y",
             "%d %b %Y",
             "%Y-%m-%d",
             # "%y-%m-%d",
@@ -1042,27 +1054,64 @@ def extract_text_from_pdf_ocr(unlocked_file_path):
 ##--------------------------------------------------------------------------------------------------------------------##
 
 
-def add_horizontal_lines_to_page(page, horizontal_lines, scale, line_width = 0.8, line_opacity = 1.0):
+# def add_horizontal_lines_to_page(page, horizontal_lines, scale, line_width = 0.8, line_opacity = 1.0):
 
-  # Add horizontal lines
-  for x_px, y_px, w_px, h_px in horizontal_lines:
-      x  = x_px * scale
-      y  = y_px * scale
-      L  = w_px * scale
-      t  = h_px * scale  # thickness
+#   # Add horizontal lines
+#   for x_px, y_px, w_px, h_px in horizontal_lines:
+#       x  = x_px * scale
+#       y  = y_px * scale
+#       L  = w_px * scale
+#       t  = h_px * scale  # thickness
 
-      left  = page.rect.x0
-      right = page.rect.x1
+#       left  = page.rect.x0
+#       right = page.rect.x1
 
-      page.draw_line(
-          fitz.Point(left, y),
-          fitz.Point(right, y),
-          color=(0, 0, 1),
-          width=t
-      )
+#       page.draw_line(
+#           fitz.Point(left, y),
+#           fitz.Point(right, y),
+#           color=(0, 0, 1),
+#           width=t
+#       )
 
-  return page
+#   return page
 
+# --- THIS IS THE FUNCTION I HAVE CHANGED ---
+def add_horizontal_lines_to_page(page, y_coords_px, image_rect, img_height):
+    """
+    Draws full-width horizontal lines using a robust scaling method that accounts
+    for the image's specific position and size on the page.
+
+    Parameters:
+    page (fitz.Page): The page object from PyMuPDF.
+    y_coords_px (list): List of y-coordinates from the image (in pixels).
+    image_rect (fitz.Rect): The rectangle where the image is placed on the page.
+    img_height (int): The height of the original image in pixels.
+    """
+    # --- THE DEFINITIVE FIX ---
+    # 1. Calculate the vertical scale based on the image's height on the page.
+    scale_y = image_rect.height / img_height
+    
+    # 2. Get the top offset of where the image was inserted.
+    image_top_offset = image_rect.y0
+
+    # Get page boundaries for drawing lines
+    left = page.rect.x0
+    right = page.rect.x1
+    line_width = 0.5
+
+    for y_px in y_coords_px:
+        # 3. Calculate the final y-position on the page.
+        # This is the image's top offset + the scaled pixel position.
+        y_pt = image_top_offset + (y_px * scale_y)
+
+        # Draw the line at the correct, calculated position
+        page.draw_line(
+            fitz.Point(left, y_pt),
+            fitz.Point(right, y_pt),
+            color=(0, 0, 1),
+            width=line_width
+        )
+    return page
 def add_vertical_lines_to_page(page, vertical_lines, scale, line_width = 0.8, line_opacity = 1.0):
 
   # Add vertical lines
@@ -1302,214 +1351,91 @@ def cut_the_datframe_from_headers(df):
 
     return df
 
-def validate_bank_statement(df, tolerance=2, raise_error=True):
-    """
-    Validates a bank statement by checking that each row's balance matches the previous balance +/- credit/debit.
-
-    Args:
-        df: DataFrame with columns 'Date', 'Credit', 'Debit', and 'Balance'
-        tolerance: Maximum allowed difference between expected and actual balance (default: 2)
-        raise_error: Whether to raise an exception on non-sign mismatch (default: True)
-
-    Returns:
-        DataFrame with added columns 'Expected_Balance', 'Match', 'Sign_Error', and 'Difference'
-
-    Raises:
-        BalanceMismatchError: If a balance mismatch (not a sign error) is detected and raise_error is True
-    """
-    # Make a copy to avoid modifying the original
-    validated_df = df.copy()
-
-    # Convert financial columns to numeric (handle strings, commas, currency symbols)
-    for col in ['Credit', 'Debit', 'Balance']:
-        print("0")
-        # First handle common formatting issues
-        if validated_df[col].dtype == 'object':
-            # Remove currency symbols, commas, and spaces
-            validated_df[col] = validated_df[col].astype(str).str.replace('[$£€,\s]', '', regex=True)
-            # Convert empty strings and non-numeric strings to NaN
-            validated_df[col] = pd.to_numeric(validated_df[col], errors='coerce')
-            # Replace NaN with 0
-            validated_df[col].fillna(0, inplace=True)
-
-    # Create new columns
-    validated_df['Expected_Balance'] = 0.0
-    validated_df['Match'] = False
-    validated_df['Sign_Error'] = False
-    validated_df['Difference'] = 0.0
-
-    # First row's expected balance is the same as its actual balance
-    if len(validated_df) > 0:
-        validated_df.loc[0, 'Expected_Balance'] = validated_df.loc[0, 'Balance']
-        validated_df.loc[0, 'Match'] = True
-
-    # Track the true expected balance (not affected by display errors)
-    true_expected_balance = validated_df.loc[0, 'Balance'] if len(validated_df) > 0 else 0.0
-
-    # For each subsequent row, calculate expected balance
-    for i in range(1, len(validated_df)):
-        credit = validated_df.loc[i, 'Credit']
-        debit = validated_df.loc[i, 'Debit']
-        actual_balance = validated_df.loc[i, 'Balance']
-
-        # Get date from the appropriate column
-        try:
-            date = validated_df.loc[i, 'Value Date']
-        except KeyError:
-            try:
-                date = validated_df.loc[i, 'Date']
-            except KeyError:
-                date = f"Row {i}"
-
-        # Calculate the true expected balance based on previous true expected balance
-        if credit > 0:
-            true_expected_balance += credit
-        elif debit > 0:
-            true_expected_balance -= debit
-
-        # Round to avoid floating-point comparison issues
-        true_expected_balance = round(true_expected_balance, 2)
-        actual_balance = round(actual_balance, 2)
-
-        # Store the expected balance
-        validated_df.loc[i, 'Expected_Balance'] = true_expected_balance
-
-        # Calculate difference
-        difference = abs(true_expected_balance - actual_balance)
-        validated_df.loc[i, 'Difference'] = difference
-
-        # Check for match within tolerance
-        if difference <= tolerance:
-            validated_df.loc[i, 'Match'] = True
-        # Check for sign error (absolute values are close but signs differ)
-        elif abs(abs(true_expected_balance) - abs(
-                actual_balance)) <= tolerance and true_expected_balance * actual_balance <= 0:
-            validated_df.loc[i, 'Match'] = False
-            validated_df.loc[i, 'Sign_Error'] = True
-            # No error raised for sign errors, just flagged in the dataframe
-
-        # Otherwise, there's some other type of mismatch
-        else:
-            validated_df.loc[i, 'Match'] = False
-
-            if raise_error:
-                error_msg = (f"Balance mismatch at row {i} (Date: {date}): "
-                             f"Expected balance {true_expected_balance}, "
-                             f"Actual balance {actual_balance}. "
-                             f"Difference: {difference}")
-                raise Exception(error_msg)
-
-    return df
 
 def validate_bank_statement_returns_error_message_ocr(df, tolerance=2, raise_error=True):
     """
-    Validates a bank statement by checking that each row's balance matches the previous balance +/- credit/debit.
+    Validates a bank statement by checking that each row's balance matches
+    the previous balance +/- credit/debit. It unconditionally ignores any
+    mismatch found on the final row.
 
     Args:
-        df: DataFrame with columns 'Date', 'Credit', 'Debit', and 'Balance'
-        tolerance: Maximum allowed difference between expected and actual balance (default: 2)
-        raise_error: Whether to raise an exception on non-sign mismatch (default: True)
+        df (pd.DataFrame): DataFrame with columns 'Date', 'Credit', 'Debit', 'Balance'.
+        tolerance (float, optional): Maximum allowed difference for a balance to be considered a match. Defaults to 2.
+        raise_error (bool, optional): Whether to generate an error message string on mismatch. Defaults to True.
 
     Returns:
-        DataFrame with added columns 'Expected_Balance', 'Match', 'Sign_Error', and 'Difference'
-
-    Raises:
-        BalanceMismatchError: If a balance mismatch (not a sign error) is detected and raise_error is True
+        str: An error message if a mismatch is found on any row BEFORE the last.
+             Returns an empty string if the statement is valid or if the only
+             mismatch occurs on the final row.
     """
-    # Make a copy to avoid modifying the original
     validated_df = df.copy()
     error_message = ""
 
-    # Convert financial columns to numeric (handle strings, commas, currency symbols)
+    # --- Data Cleaning ---
     for col in ['Credit', 'Debit', 'Balance']:
-        print("0")
-        # First handle common formatting issues
         if validated_df[col].dtype == 'object':
-            # Remove currency symbols, commas, and spaces
-            validated_df[col] = validated_df[col].astype(str).str.replace('[$£€,\s]', '', regex=True)
-            # Convert empty strings and non-numeric strings to NaN
-            validated_df[col] = pd.to_numeric(validated_df[col], errors='coerce')
-            # Replace NaN with 0
-            validated_df[col].fillna(0, inplace=True)
+            validated_df[col] = validated_df[col].astype(str).str.replace('[$£€,]', '', regex=True).str.strip()
+            validated_df[col] = pd.to_numeric(validated_df[col], errors='coerce').fillna(0)
 
-    # Create new columns
+    # --- Initialization ---
     validated_df['Expected_Balance'] = 0.0
     validated_df['Match'] = False
     validated_df['Sign_Error'] = False
     validated_df['Difference'] = 0.0
 
-    # First row's expected balance is the same as its actual balance
-    if len(validated_df) > 0:
-        validated_df.loc[0, 'Expected_Balance'] = validated_df.loc[0, 'Balance']
-        validated_df.loc[0, 'Match'] = True
+    if len(validated_df) == 0:
+        return ""
 
-    # Track the true expected balance (not affected by display errors)
-    true_expected_balance = validated_df.loc[0, 'Balance'] if len(validated_df) > 0 else 0.0
+    validated_df.loc[0, 'Expected_Balance'] = validated_df.loc[0, 'Balance']
+    validated_df.loc[0, 'Match'] = True
+    true_expected_balance = validated_df.loc[0, 'Balance']
 
-    # For each subsequent row, calculate expected balance
+    # --- Validation Loop ---
     for i in range(1, len(validated_df)):
         credit = validated_df.loc[i, 'Credit']
         debit = validated_df.loc[i, 'Debit']
         actual_balance = validated_df.loc[i, 'Balance']
-        description = validated_df.loc[i, 'Description']
+        description = validated_df.loc[i, 'Description'] if 'Description' in validated_df.columns else 'N/A'
+        date = validated_df.loc[i, 'Value Date'] if 'Value Date' in validated_df.columns else validated_df.loc[i, 'Date']
 
-        # Get date from the appropriate column
-        try:
-            date = validated_df.loc[i, 'Value Date']
-        except KeyError:
-            try:
-                date = validated_df.loc[i, 'Date']
-            except KeyError:
-                date = f"Row {i}"
-
-        # Calculate the true expected balance based on previous true expected balance
-        if credit > 0:
-            true_expected_balance += credit
-        elif debit > 0:
-            true_expected_balance -= debit
-
-        # Round to avoid floating-point comparison issues
-        true_expected_balance = round(true_expected_balance, 2)
+        true_expected_balance = round((true_expected_balance + credit - debit), 2)
         actual_balance = round(actual_balance, 2)
-
-        # Store the expected balance
+        
         validated_df.loc[i, 'Expected_Balance'] = true_expected_balance
-
-        # Calculate difference
         difference = abs(true_expected_balance - actual_balance)
         validated_df.loc[i, 'Difference'] = difference
 
-        # Check for match within tolerance
+        is_last_row = (i == len(validated_df) - 1)
+
+        # --- Validation Logic ---
         if difference <= tolerance:
             validated_df.loc[i, 'Match'] = True
-        # Check for sign error (absolute values are close but signs differ)
-        elif abs(abs(true_expected_balance) - abs(
-                actual_balance)) <= tolerance and true_expected_balance * actual_balance <= 0:
+        elif is_last_row:
+            # Unconditionally treat the last row as a match, ignoring any difference.
+            validated_df.loc[i, 'Match'] = True
+            validated_df.loc[i, 'Sign_Error'] = False
+        elif abs(abs(true_expected_balance) - abs(actual_balance)) <= tolerance and true_expected_balance * actual_balance <= 0:
             validated_df.loc[i, 'Match'] = False
             validated_df.loc[i, 'Sign_Error'] = True
-            # No error raised for sign errors, just flagged in the dataframe
-
-        # Otherwise, there's some other type of mismatch
         else:
+            # It's a genuine mismatch on a row before the end.
             validated_df.loc[i, 'Match'] = False
-
-            if raise_error:
-                error_msg = (f"Balance mismatch at row {i} (Date: {date}): "
-                             f"for Description '{description}'; "
-                             f"Expected balance {true_expected_balance}, "
-                             f"Actual balance {actual_balance}. "
-                             f"Difference: {difference:.2f}")
-                error_message = error_msg
-                raise Exception(error_msg)
+            if raise_error and not error_message: # Only capture the *first* error found
+                error_message = (f"Balance mismatch at row {i} (Date: {date}): "
+                                 f"for Description '{description}'; "
+                                 f"Expected balance {true_expected_balance}, "
+                                 f"Actual balance {actual_balance}. "
+                                 f"Difference: {difference:.2f}")
 
     return error_message
+
 
 def model_for_pdf_ocr(df):
     # Simulate cleaning or processing the dataframe
     # print(f"Modeling dataframe: {df}")
     print("Modeling dataframe with the new mode for PDF extraction...")
-    print(df.head(10))
     df = cut_the_datframe_from_headers(df)
+    print(df.head(10))
     date_column = [extract_date_col_from_df(df)[0]]
 
     print("Date Column is:", date_column)
@@ -1765,7 +1691,7 @@ def image_with_ocr_to_pdf_dynamic_font(
 
     # lines must also use (x*scale+offset_x, y*scale+offset_y)
     if horizontal_lines:
-        page = add_horizontal_lines_to_page(page, horizontal_lines, scale, offset_y)
+        page = add_horizontal_lines_to_page(page, horizontal_lines, img_rect, h_px)
     if vertical_lines:
         page = add_vertical_lines_to_page(page, vertical_lines, scale, offset_x)
 
@@ -1927,111 +1853,186 @@ def vertical_lines_detection(image_path, min_line_height_ratio=0.20, line_width_
     return adjusted_vertical_lines
 
 
-def horizontal_lines_detection(image_path, min_line_width_ratio=0.3, line_height_range=(1, 5)):
+# def horizontal_lines_detection(image_path, min_line_width_ratio=0.3, line_height_range=(1, 5)):
+#     """
+#     Enhanced horizontal line detection optimized for bank statements and grids
+
+#     Parameters:
+#     image_path (str): Path to the input image file
+#     min_line_width_ratio (float): Minimum width ratio compared to image width (default 0.3)
+#     line_height_range (tuple): Min and max height for horizontal lines in pixels
+
+#     Returns:
+#     list: List of horizontal lines as (x, y, w, h)
+#     """
+#     # Read the image
+#     image = cv2.imread(image_path)
+#     if image is None:
+#         raise ValueError(f"Could not read image: {image_path}")
+
+#     # Convert to grayscale
+#     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+#     # Image dimensions
+#     img_height, img_width = image.shape[:2]
+
+#     # Apply adaptive thresholding to get a binary image
+#     binary_h = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C,
+#                                     cv2.THRESH_BINARY_INV, 15, 2)
+
+#     # Create multiple horizontal kernels for better line detection
+#     h_kernel_sizes = [
+#         int(img_width * 0.05),  # 5% of image width
+#         int(img_width * 0.1),   # 10% of image width
+#         int(img_width * 0.15)   # 15% of image width
+#     ]
+
+#     # Process with multiple kernel sizes and combine results
+#     horizontal_binary_results = []
+
+#     for kernel_size in h_kernel_sizes:
+#         horizontal_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (kernel_size, 1))
+
+#         # Process with morphological operations
+#         temp_h = cv2.erode(binary_h, horizontal_kernel, iterations=1)
+#         h_result = cv2.dilate(temp_h, horizontal_kernel, iterations=1)
+
+#         # Clean up with a small opening
+#         small_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 1))
+#         h_result = cv2.morphologyEx(h_result, cv2.MORPH_OPEN, small_kernel)
+
+#         horizontal_binary_results.append(h_result)
+
+#     # Combine all horizontal detection results
+#     horizontal_lines_img = horizontal_binary_results[0]
+#     for res in horizontal_binary_results[1:]:
+#         horizontal_lines_img = cv2.bitwise_or(horizontal_lines_img, res)
+
+#     # Find contours
+#     contours, _ = cv2.findContours(
+#         horizontal_lines_img,
+#         cv2.RETR_EXTERNAL,
+#         cv2.CHAIN_APPROX_SIMPLE
+#     )
+
+#     # Filter and process horizontal lines
+#     min_width = img_width * min_line_width_ratio
+#     min_height, max_height = line_height_range
+
+#     # Collect all potential horizontal lines
+#     potential_h_lines = []
+
+#     for cnt in contours:
+#         x, y, w, h = cv2.boundingRect(cnt)
+
+#         # More relaxed width criteria
+#         if w > min_width * 0.5:  # Reduced from original
+#             # More relaxed height range
+#             if min_height <= h <= max_height * 2:  # Double the max height
+#                 # Calculate confidence
+#                 roi = horizontal_lines_img[y:y+h, x:x+w]
+#                 pixel_density = cv2.countNonZero(roi) / (w * h)
+
+#                 # Width relative to image width
+#                 width_ratio = w / img_width
+
+#                 # Calculate confidence (higher is better)
+#                 confidence = pixel_density * width_ratio
+
+#                 potential_h_lines.append((x, y, w, h, confidence))
+
+#     # Sort by y-coordinate to process from top to bottom
+#     potential_h_lines.sort(key=lambda x: x[1])
+
+#     # Process lines with smarter duplicate detection
+#     last_y = -100  # Initialize with a value that won't match any line
+#     horizontal_lines = []
+
+#     for x, y, w, h, conf in potential_h_lines:
+#         # Check if this line is too close to the last added line
+#         if y - last_y > h * 2:  # Ensure minimum vertical separation
+#             # Only consider high confidence or sufficiently separated lines
+#             if conf > 0.3 or y - last_y > 20:
+#                 horizontal_lines.append((x, y, w, h))
+#                 last_y = y
+
+#     return horizontal_lines
+
+def horizontal_lines_detection(image_path, min_line_width_ratio=0.4, y_grouping_threshold=5):
     """
-    Enhanced horizontal line detection optimized for bank statements and grids
+    Detects horizontal lines using morphological operations and finds their precise
+    center using centroids for accurate alignment.
 
     Parameters:
-    image_path (str): Path to the input image file
-    min_line_width_ratio (float): Minimum width ratio compared to image width (default 0.3)
-    line_height_range (tuple): Min and max height for horizontal lines in pixels
+    image_path (str): Path to the input image file.
+    min_line_width_ratio (float): Minimum width of a line as a ratio of image width.
+    y_grouping_threshold (int): Pixel distance to group nearby horizontal lines.
 
     Returns:
-    list: List of horizontal lines as (x, y, w, h)
+    list: A list of unique y-coordinates for the detected horizontal lines.
     """
     # Read the image
     image = cv2.imread(image_path)
     if image is None:
         raise ValueError(f"Could not read image: {image_path}")
 
-    # Convert to grayscale
+    # Convert to grayscale and invert for morphological operations
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    img_height, img_width = gray.shape
+    
+    # Use a binary threshold. This can be more stable than adaptive for some backgrounds.
+    # We are looking for dark lines on a light background.
+    _, binary = cv2.threshold(gray, 200, 255, cv2.THRESH_BINARY_INV)
 
-    # Image dimensions
-    img_height, img_width = image.shape[:2]
+    # --- MORPHOLOGICAL OPERATIONS TO ISOLATE HORIZONTAL LINES ---
+    # Create a long horizontal kernel
+    horizontal_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (int(img_width * 0.1), 1))
+    
+    # Use MORPH_OPEN to remove noise and isolate horizontal line shapes
+    detected_lines = cv2.morphologyEx(binary, cv2.MORPH_OPEN, horizontal_kernel, iterations=2)
 
-    # Apply adaptive thresholding to get a binary image
-    binary_h = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C,
-                                    cv2.THRESH_BINARY_INV, 15, 2)
+    # Find contours of the resulting line shapes
+    contours, _ = cv2.findContours(detected_lines, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    # Create multiple horizontal kernels for better line detection
-    h_kernel_sizes = [
-        int(img_width * 0.05),  # 5% of image width
-        int(img_width * 0.1),   # 10% of image width
-        int(img_width * 0.15)   # 15% of image width
-    ]
+    if not contours:
+        return []
 
-    # Process with multiple kernel sizes and combine results
-    horizontal_binary_results = []
-
-    for kernel_size in h_kernel_sizes:
-        horizontal_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (kernel_size, 1))
-
-        # Process with morphological operations
-        temp_h = cv2.erode(binary_h, horizontal_kernel, iterations=1)
-        h_result = cv2.dilate(temp_h, horizontal_kernel, iterations=1)
-
-        # Clean up with a small opening
-        small_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 1))
-        h_result = cv2.morphologyEx(h_result, cv2.MORPH_OPEN, small_kernel)
-
-        horizontal_binary_results.append(h_result)
-
-    # Combine all horizontal detection results
-    horizontal_lines_img = horizontal_binary_results[0]
-    for res in horizontal_binary_results[1:]:
-        horizontal_lines_img = cv2.bitwise_or(horizontal_lines_img, res)
-
-    # Find contours
-    contours, _ = cv2.findContours(
-        horizontal_lines_img,
-        cv2.RETR_EXTERNAL,
-        cv2.CHAIN_APPROX_SIMPLE
-    )
-
-    # Filter and process horizontal lines
+    # --- CALCULATE CENTROIDS AND GROUP LINES ---
+    detected_y_coords = []
     min_width = img_width * min_line_width_ratio
-    min_height, max_height = line_height_range
-
-    # Collect all potential horizontal lines
-    potential_h_lines = []
 
     for cnt in contours:
         x, y, w, h = cv2.boundingRect(cnt)
+        # Filter out contours that are not wide enough
+        if w > min_width:
+            # Calculate moments to find the centroid
+            M = cv2.moments(cnt)
+            # Ensure the contour has area to avoid division by zero
+            if M["m00"] != 0:
+                # Calculate the y-coordinate of the centroid (the true center)
+                cY = int(M["m01"] / M["m00"])
+                detected_y_coords.append(cY)
 
-        # More relaxed width criteria
-        if w > min_width * 0.5:  # Reduced from original
-            # More relaxed height range
-            if min_height <= h <= max_height * 2:  # Double the max height
-                # Calculate confidence
-                roi = horizontal_lines_img[y:y+h, x:x+w]
-                pixel_density = cv2.countNonZero(roi) / (w * h)
+    if not detected_y_coords:
+        return []
 
-                # Width relative to image width
-                width_ratio = w / img_width
+    # Group very close y-coordinates to merge duplicate detections of the same line
+    detected_y_coords.sort()
+    
+    unique_lines_y = []
+    current_group = [detected_y_coords[0]]
 
-                # Calculate confidence (higher is better)
-                confidence = pixel_density * width_ratio
+    for y in detected_y_coords[1:]:
+        if abs(y - current_group[-1]) < y_grouping_threshold:
+            current_group.append(y)
+        else:
+            unique_lines_y.append(np.mean(current_group))
+            current_group = [y]
+    
+    if current_group:
+        unique_lines_y.append(np.mean(current_group))
 
-                potential_h_lines.append((x, y, w, h, confidence))
-
-    # Sort by y-coordinate to process from top to bottom
-    potential_h_lines.sort(key=lambda x: x[1])
-
-    # Process lines with smarter duplicate detection
-    last_y = -100  # Initialize with a value that won't match any line
-    horizontal_lines = []
-
-    for x, y, w, h, conf in potential_h_lines:
-        # Check if this line is too close to the last added line
-        if y - last_y > h * 2:  # Ensure minimum vertical separation
-            # Only consider high confidence or sufficiently separated lines
-            if conf > 0.3 or y - last_y > 20:
-                horizontal_lines.append((x, y, w, h))
-                last_y = y
-
-    return horizontal_lines
-
+    return unique_lines_y
 
 def new_enhance_image_contrast(image,
                               clip_limit: float = 9.0,
@@ -2393,7 +2394,11 @@ def returns_doc_according_to_columns(images_path, detected_original_bboxs, verti
       enhanced_path = os.path.join(TEMP_SAVED_PDF_DIR, f"temp_enhanced_{i}_is_{uuid.uuid4().hex}.jpg")
       cv2.imwrite(enhanced_path, enhanced_image)
       print(f"Enhanced image {i} saved at:", enhanced_path)
-      enhanced_new_path = save_first_page_numpy_to_image(enhanced_image)
+
+      if first_page:
+        enhanced_new_path = save_first_page_numpy_to_image(enhanced_image)
+      else:
+        enhanced_new_path = enhanced_path
 
       horizontal_lines = horizontal_lines_detection(enhanced_new_path)  # Detect horizontal lines
       print(f"Detected horizontal lines for page {i}: {horizontal_lines}")
@@ -2634,11 +2639,21 @@ def pdf_to_numpy_arrays(pdf_path):
     arrays = []
 
     for page in doc:
-        # Use identity matrix (no zoom)
-        pix = page.get_pixmap(matrix=fitz.Matrix(1, 1), alpha=False)
+        # 1. Calculate the zoom factor needed to achieve the target DPI
+        zoom = 300 / 72.0  # The base DPI is 72
         
-        # Convert to NumPy array
-        img_array = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.height, pix.width, pix.n)
+        # 2. Create the transformation matrix
+        matrix = fitz.Matrix(zoom, zoom)
+        
+        # 3. Render the page to a pixmap using the high-res matrix
+        pix = page.get_pixmap(matrix=matrix, alpha=False)
+        
+        # 4. Convert pixmap samples to a NumPy array
+        img_array = np.frombuffer(
+            pix.samples,
+            dtype=np.uint8
+        ).reshape(pix.height, pix.width, pix.n)
+        
         arrays.append(img_array)
 
     doc.close()
@@ -2776,8 +2791,21 @@ def extraction_process_only_rectify(bank, pdf_path, pdf_password, start_date, en
     # explicit_lines = [(x, 0, 0, 0) for x in only_lines]
     pdf_to_images = pdf_to_numpy_arrays(pdf_path)
 
-    page_h = pdf_to_images[0].shape[0]   # if numpy array, otherwise use image height
-    explicit_lines = [(int(round(x+20)), 0, 2, page_h) for x in only_lines] #coz vertical lines look like this
+    # page_h = pdf_to_images[0].shape[0]   # if numpy array, otherwise use image height
+    # explicit_lines = [(int(round(x+20)), 0, 2, page_h) for x in only_lines] #coz vertical lines look like this
+
+    # --- FIX IS HERE ---
+    # 1. Recalculate the SAME zoom factor that the function uses internally.
+    zoom = 300 / 72.0 
+
+    # 2. Get the height of the new, high-res image
+    page_h = pdf_to_images[0].shape[0]
+
+    # 3. Scale your original coordinates using the zoom factor
+    explicit_lines = [(int(round((x) * zoom)), 0, int(round(2 * zoom)), page_h) for x in only_lines]
+
+    print("Only Lines:", only_lines)
+    print("Explicit lines for rectify:", explicit_lines)
 
     print("Detection Started for rectify")
     start = time.time() 
