@@ -472,7 +472,13 @@ def get_table_column_coordinates_by_text(pdf_path):
 def parse_date(date_string):
     formats_to_try = [
         "%d/%m /%Y",
+        "%d/%m/ %Y",
         "%d-%m-%Y",
+        "%d-%m- %Y",
+        "%d-%m -%Y",
+        "%d/%b/%Y",
+        "%d/%b/ %Y",
+        "%d/%b /%Y",
         "%d %b %Y",
         "%Y-%m-%d",
         # "%y-%m-%d",
@@ -507,6 +513,7 @@ def parse_date(date_string):
         "%d-%b- %Y %H:%M:%S",
         "%d/%b/%Y %H:%M:%S",
         "%y-%m-%d %H:%M:%S",
+        "%d/%m/%Y %H:%M",
         "%y-%m-%d",
     ]
 
@@ -632,7 +639,13 @@ def cleaning(new_df):
     def try_parsing_date(text):
         formats_to_try = [
             "%d/%m /%Y",
+            "%d/%m/ %Y",
             "%d-%m-%Y",
+            "%d-%m- %Y",
+            "%d-%m -%Y",
+            "%d/%b/%Y",
+            "%d/%b/ %Y",
+            "%d/%b /%Y",
             "%d %b %Y",
             "%Y-%m-%d",
             # "%y-%m-%d",
@@ -667,6 +680,7 @@ def cleaning(new_df):
             "%d-%b- %Y %H:%M:%S",
             "%d/%b/%Y %H:%M:%S",
             "%y-%m-%d %H:%M:%S",
+            "%d/%m/%Y %H:%M",
             "%y-%m-%d",
         ]
 
