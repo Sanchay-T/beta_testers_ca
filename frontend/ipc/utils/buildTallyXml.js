@@ -491,5 +491,4 @@ module.exports = {
   buildTallyPrimeLedgerXml,
   buildTallyERPLedgerXml,
   buildTallyXmlGetAllLedgers,
-  fetchLedgerData,
 };

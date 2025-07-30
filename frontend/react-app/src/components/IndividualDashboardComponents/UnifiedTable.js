@@ -1807,7 +1807,7 @@ const DataTable = ({
         return;
       }
 
-      if (!previewUrl.includes(".pdf")) {
+      if (!previewUrl.includes(".pdf")|| !previewUrl.includes(".PDF")) {
         toast({
           title: "Alert",
           description: "File not supported for preview",

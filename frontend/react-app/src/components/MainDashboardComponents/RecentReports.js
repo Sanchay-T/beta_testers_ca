@@ -155,13 +155,35 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       (statement) => statement.resolved
     );
 
+    // ✅ collect just the statements the user has fixed
+    const statementsToRectify = failedDatasOfCurrentReport.filter(
+      (s) => s.resolved
+    );
+
+    if (statementsToRectify.length === 0) {
+      toast({
+        title: "Nothing to rectify",
+        description: "Please mark at least one PDF as resolved first.",
+        variant: "destructive",
+      });
+      return setPdfEditLoading(false);
+    }
+
     try {
-      if (allRectified) {
-        // Call the API to update the statements
+      if (true) {
+        // Call the API only for the chosen PDFs
         let result = await window.electron.editPdf(
-          failedDatasOfCurrentReport,
+          statementsToRectify,
           currentCaseName
         );
+
+        // try {
+        //   if (true) {
+        //     // Call the API to update the statements
+        //     let result = await window.electron.editPdf(
+        //       failedDatasOfCurrentReport,
+        //       currentCaseName
+        //     );
 
         console.log({ electronResponse: result });
 
@@ -277,8 +299,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       } else {
         toast({
           title: "Error",
-          description:
-            "Unable to rectify all statements.",
+          description: "Unable to rectify all statements.",
           variant: "destructive",
           duration: 5000,
         });
@@ -409,7 +430,8 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100",
       Failed: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100",
       Deleted: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100",
-      Processing:"bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100",
+      Processing:
+        "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100",
     };
 
     return (
