@@ -470,6 +470,7 @@ def get_table_column_coordinates_by_text(pdf_path):
 
 ##____________AFTER EXTRACTION (cleaning)_________________
 def parse_date(date_string):
+    date_string = date_string.strip()
     formats_to_try = [
         "%d/%m /%Y",
         "%d/%m/ %Y",
@@ -637,6 +638,7 @@ def check_date(df):
 def cleaning(new_df):
 
     def try_parsing_date(text):
+        text = str(text).strip()
         formats_to_try = [
             "%d/%m /%Y",
             "%d/%m/ %Y",
