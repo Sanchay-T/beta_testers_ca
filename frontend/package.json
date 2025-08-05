@@ -125,6 +125,7 @@
       "publisherName": "Cyphersol",
       "requestedExecutionLevel": "requireAdministrator"
     },
+    
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": false,
