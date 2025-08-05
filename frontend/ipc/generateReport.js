@@ -38,7 +38,7 @@ const validateAndTransformTransaction = (transaction, statementId) => {
   ) {
     log.info("FOUND NULL TRANSACTION - ", transaction.Description);
   }
-  log.info({ BeforeTransformation: transaction });
+  // log.info({ BeforeTransformation: transaction });
   if (!transaction["Value Date"]) {
     log.info("Missing required transaction fields");
     throw new Error("Missing required transaction fields");
@@ -464,7 +464,7 @@ const processSummaryData = async (parsedData, caseName) => {
   try {
     const validCaseId = await getOrCreateCase(caseName);
 
-    log.info({ parsedDataFromProcessSummary: parsedData });
+    // log.info({ parsedDataFromProcessSummary: parsedData });
 
     // Validate the summary data
     if (
@@ -490,7 +490,7 @@ const processSummaryData = async (parsedData, caseName) => {
       contraCredit: parsedData["Contra Credit"],
     };
 
-    log.info("Summary Data 1:", summaryData);
+    // log.info("Summary Data 1:", summaryData);
 
     // Check if summary data already exists for this case
     const existingSummary = await db

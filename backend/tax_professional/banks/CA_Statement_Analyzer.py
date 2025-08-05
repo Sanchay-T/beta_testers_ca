@@ -594,19 +594,19 @@ def individual_summary(transactions_df):
 
     summary_df_list,mission_months = summary_sheet(transactions_df, opening_bal, closing_bal, transactions_df)
 
-    print("summary_df_list", len(summary_df_list))
+    # print("summary_df_list", len(summary_df_list))
     particulars_df = summary_df_list[0]
-    print("particulars_df", particulars_df)
+    # print("particulars_df", particulars_df)
     income_receipts_df = summary_df_list[1]
-    print("income_receipts_df", income_receipts_df)
+    # print("income_receipts_df", income_receipts_df)
     imp_expenses_payments_df = summary_df_list[2]
-    print("imp_expenses_payments_df", imp_expenses_payments_df)
+    # print("imp_expenses_payments_df", imp_expenses_payments_df)
     other_expenses_df = summary_df_list[3]
-    print("other_expenses_df", other_expenses_df)
+    # print("other_expenses_df", other_expenses_df)
     contra_credit_df = summary_df_list[4]
-    print("contra_credit_df", contra_credit_df)
+    # print("contra_credit_df", contra_credit_df)
     contra_debit_df = summary_df_list[5]
-    print("contra_debit_df", contra_debit_df)
+    # print("contra_debit_df", contra_debit_df)
 
     result_dict = {
         "Particulars": particulars_df.to_dict(orient="records"),
