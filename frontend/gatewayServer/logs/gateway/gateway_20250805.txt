@@ -1,0 +1,73 @@
+2025-08-05 17:24:31.881 +05:30 [INF] Starting service...
+2025-08-05 17:24:31.965 +05:30 [INF] Actual log path: E:\Workplace\Cyphersol\ca_offline_multiple_clones\beta_testers_ca\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-08-05 17:24:32.011 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-08-05 17:24:32.246 +05:30 [INF] [DeviceInfo Init] UUID: 726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 17:24:32.248 +05:30 [INF] [DeviceInfo Init] MAC Address: 54:6C:EB:CA:39:15
+2025-08-05 17:24:32.248 +05:30 [INF] [DeviceInfo Init] Hostname: AIYAZ
+2025-08-05 17:24:32.248 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-21-3165862944-3759782804-3413270121-1001
+2025-08-05 17:24:32.248 +05:30 [INF] [DeviceInfo Init] Username: qures
+2025-08-05 17:24:32.256 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-08-05 17:24:32.269 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 240 bytes
+2025-08-05 17:24:32.282 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 17:24:32.460 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "current_timestamp": 1754368596.74779,
+  "expiry_timestamp": 1755977112.007323,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 23,
+  "SystemUpTime": 266712531
+}
+2025-08-05 17:24:32.460 +05:30 [INF] LicenseInfoProvider initialized.
+2025-08-05 17:24:32.461 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "current_timestamp": 1754368596.74779,
+  "expiry_timestamp": 1755977112.007323,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 23,
+  "SystemUpTime": 266712531
+}
+2025-08-05 17:24:32.461 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 23
+2025-08-05 17:24:32.462 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\session-cache.enc
+2025-08-05 17:24:32.472 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 17:24:32.563 +05:30 [INF] Restored 1 sessions from disk.
+2025-08-05 17:24:32.573 +05:30 [INF] Worker initialized.
+2025-08-05 17:24:32.583 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-08-05 17:24:32.584 +05:30 [INF] Waiting for network to be ready...
+2025-08-05 17:24:32.692 +05:30 [INF] Found active network interface: Wi-Fi with IP: 172.20.10.2
+2025-08-05 17:24:32.692 +05:30 [INF] Network is ready with IP: 172.20.10.2
+2025-08-05 17:24:32.756 +05:30 [INF] Found active network interface: Wi-Fi with IP: 172.20.10.2
+2025-08-05 17:24:32.782 +05:30 [INF] Django base URL: https://cyphersol.co.in
+2025-08-05 17:24:32.797 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 17:24:32.926 +05:30 [INF] License Loaded: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "current_timestamp": 1754368596.74779,
+  "expiry_timestamp": 1755977112.007323,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 23,
+  "SystemUpTime": 266712531
+}
+2025-08-05 17:24:33.032 +05:30 [INF] Starting license polling...
+2025-08-05 17:24:33.075 +05:30 [INF] HTTP API Server started on port 7890
+2025-08-05 17:24:33.075 +05:30 [INF] UDP broadcast listener started on port 41234.
+2025-08-05 17:24:33.080 +05:30 [INF] IP address: 172.20.10.2
+2025-08-05 17:24:33.405 +05:30 [INF] mDNS advertisement started using hostname: Aiyaz and IP: 172.20.10.2:7890
+2025-08-05 17:24:33.407 +05:30 [INF] Re-advertising mDNS service...
+2025-08-05 17:24:33.408 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2025-08-05 17:24:33.408 +05:30 [INF] Hosting environment: Production
+2025-08-05 17:24:33.408 +05:30 [INF] Content root path: E:\Workplace\Cyphersol\ca_offline_multiple_clones\beta_testers_ca\frontend\gatewayServer
+2025-08-05 17:24:33.871 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "current_timestamp": 1754368596.74779,
+  "expiry_timestamp": 1755977112.007323,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 23,
+  "SystemUpTime": 266712531
+}

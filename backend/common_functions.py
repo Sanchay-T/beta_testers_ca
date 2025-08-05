@@ -498,7 +498,7 @@ def extraction_process_explicit_lines(bank, pdf_path, pdf_password, start_date, 
         return idf, name_n_num, a
 
     except Exception as e:
-        er = "There was an exception error, please contact sales team for help."
+        er = "There was an exception error, please contact Support team for help."
         return empty_idf, default_name_n_num, er
     
 ##EOD

@@ -1807,7 +1807,10 @@ const DataTable = ({
         return;
       }
 
-      if (!previewUrl.includes(".pdf")|| !previewUrl.includes(".PDF")) {
+      console.log("Previewing file:", previewUrl);
+
+      const isPdf = previewUrl.endsWith(".pdf") || previewUrl.endsWith(".PDF");
+      if (!isPdf) {
         toast({
           title: "Alert",
           description: "File not supported for preview",

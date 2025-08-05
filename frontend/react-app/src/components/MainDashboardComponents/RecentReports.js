@@ -275,8 +275,8 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
             description: (
               <div>
                 <p className="mb-2">
-                  Some statements could not be rectified. Please contact sales
-                  for assistance.
+                  Some statements could not be rectified. Please contact Support
+                  for assistance at +91 97699 51373
                 </p>
                 <p>{result.data.errorMessage}</p>
 
