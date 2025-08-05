@@ -64,7 +64,7 @@ const PDFMarkerModal = ({
           description: (
             <div>
               <p className="mb-2">
-                Statement could not be rectified. Please contact sales for
+                Statement could not be rectified. Please contact Support for
                 assistance.
                 {result.data.errorMessage}
               </p>

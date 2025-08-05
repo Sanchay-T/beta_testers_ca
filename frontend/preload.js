@@ -105,7 +105,7 @@ contextBridge.exposeInMainWorld("electron", {
   cleanupTempFiles: () => ipcRenderer.invoke("cleanup-temp-files"),
 
   checkStatementLimit: () => ipcRenderer.invoke("check-statement-limit"),
-  generateReportIpc: (result, reportName, source) =>
+  generateReportIpc: (result, reportName,source) =>
     ipcRenderer.invoke("generate-report", result, reportName, source),
 
   getOpportunityToEarn: () => ipcRenderer.invoke("getOpportunityToEarn"),

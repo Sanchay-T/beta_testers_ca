@@ -726,7 +726,7 @@ const TallyTable = ({
     }, {});
 
     const columnsToReplace = ["amount", "balance", "debit", "credit"];
-    const filtered = filteredData.filter((row) =>
+    const filtered = data.filter((row) =>
       Object.entries(row).some(([key, value]) => {
         if (columnsToReplace.includes(key)) {
           return String(value)

@@ -469,7 +469,7 @@ const IndividualTable = () => {
                             variant="outline"
                             onClick={(e) => {
                               e.stopPropagation(); // Prevent row click
-                              if (item.filePath.includes(".pdf")) {
+                              if (item.filePath.includes(".pdf")||item.filePath.includes(".PDF")) {
                                 handleRectify(item.filePath);
                               } else {
                                 toast({

@@ -479,9 +479,7 @@ const DataTable = ({
     if (!transactionType) return categoryOptions;
 
     return categoriesArray
-      .filter(
-        (cat) => cat.type === transactionType
-      )
+      .filter((cat) => cat.type === transactionType)
       .map((cat) => cat.name)
       .filter((name) =>
         name.toLowerCase().includes(categorySearchTerm.toLowerCase())
@@ -1691,17 +1689,30 @@ const DataTable = ({
       setIsLoading(true);
 
       setTimeout(() => {
-        // Simulate delay
-        const similarTransactions = processSimilarCategory(
+        // 1) compute all by similarity…
+        let similar = processSimilarCategory(
           filteredData,
           currentTransaction.description,
           sliderValue
         );
-        // remove already selected one
-        const filteredSimilarTransactions = similarTransactions.filter(
-          (t) => t.id !== currentTransaction.id
+
+        console.log("Similar transactions found:", similar.length);
+
+        // 2) remove the original
+        similar = similar.filter((t) => t.id !== currentTransaction.id);
+        // 3) **only keep those matching debit/credit type**
+        const currentIsDebit = Number(currentTransaction.debit) > 0;
+        console.log("Current transaction is debit:", currentIsDebit);
+        similar = similar.filter(
+          (tx) =>
+            currentIsDebit
+              ? Number(tx.debit) > 0 // if original is debit, only show debit
+              : Number(tx.credit) > 0 // if original is credit, only show credit
         );
-        setSimilarCategoryTransactions(filteredSimilarTransactions);
+
+        console.log("Filtered similar transactions:", similar.length);
+
+        setSimilarCategoryTransactions(similar);
         setIsLoading(false);
       }, 500);
     }
@@ -1796,7 +1807,10 @@ const DataTable = ({
         return;
       }
 
-      if (!previewUrl.includes(".pdf")) {
+      console.log("Previewing file:", previewUrl);
+
+      const isPdf = previewUrl.endsWith(".pdf") || previewUrl.endsWith(".PDF");
+      if (!isPdf) {
         toast({
           title: "Alert",
           description: "File not supported for preview",

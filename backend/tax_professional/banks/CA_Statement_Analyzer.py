@@ -10,6 +10,7 @@ import pandas as pd
 import regex as re
 import fitz
 import os
+from ...code_ocr_extraction import extraction_process_only_rectify
 
 
 bold_font = Font(bold=True)
@@ -593,19 +594,19 @@ def individual_summary(transactions_df):
 
     summary_df_list,mission_months = summary_sheet(transactions_df, opening_bal, closing_bal, transactions_df)
 
-    print("summary_df_list", len(summary_df_list))
+    # print("summary_df_list", len(summary_df_list))
     particulars_df = summary_df_list[0]
-    print("particulars_df", particulars_df)
+    # print("particulars_df", particulars_df)
     income_receipts_df = summary_df_list[1]
-    print("income_receipts_df", income_receipts_df)
+    # print("income_receipts_df", income_receipts_df)
     imp_expenses_payments_df = summary_df_list[2]
-    print("imp_expenses_payments_df", imp_expenses_payments_df)
+    # print("imp_expenses_payments_df", imp_expenses_payments_df)
     other_expenses_df = summary_df_list[3]
-    print("other_expenses_df", other_expenses_df)
+    # print("other_expenses_df", other_expenses_df)
     contra_credit_df = summary_df_list[4]
-    print("contra_credit_df", contra_credit_df)
+    # print("contra_credit_df", contra_credit_df)
     contra_debit_df = summary_df_list[5]
-    print("contra_debit_df", contra_debit_df)
+    # print("contra_debit_df", contra_debit_df)
 
     result_dict = {
         "Particulars": particulars_df.to_dict(orient="records"),
@@ -621,7 +622,7 @@ def individual_summary(transactions_df):
     return json_output
     
 
-def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_dates, CA_ID, progress_data,
+def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_dates, CA_ID, progress_data,is_ocr,
                              whole_transaction_sheet=None, aiyazs_array_of_array=None):
     account_number = ""
     dfs = {}
@@ -645,6 +646,7 @@ def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_
         pdf_password = passwords[i]
         start_date = start_dates[i]
         end_date = end_dates[i]
+        isthis_ocr=is_ocr[i]
 
         if aiyazs_array_of_array:
             aiyaz_array_of_array = aiyazs_array_of_array[i]
@@ -653,17 +655,31 @@ def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_
             explicit_lines = list(
                 {coord for item in aiyaz_array_of_array for coord in (item["bounds"]["start"], item["bounds"]["end"])})
             labels = [[entry["index"], entry["column_type"]] for entry in aiyaz_array_of_array]
-            dfs[bank], name_dfs[bank], errorz[bank] = extraction_process_explicit_lines(bank, pdf_path, pdf_password,
+            if isthis_ocr:
+                dfs[bank], name_dfs[bank], errorz[bank] = extraction_process_only_rectify(bank, pdf_path, pdf_password,
                                                                                         start_date, end_date,
-                                                                                        explicit_lines, labels)
+                                                                                        explicit_lines, labels, encoded_pdf=False)
+            else:
+                dfs[bank], name_dfs[bank], errorz[bank] = extraction_process_explicit_lines(bank, pdf_path, pdf_password,
+                                                                                            start_date, end_date,
+                                                                                            explicit_lines, labels)
 
         else:
             dfs[bank], name_dfs[bank], errorz[bank] = extraction_process(bank, pdf_path, pdf_password, start_date,
-                                                                         end_date)
+                                                                         end_date,isthis_ocr)
+            
+        
+        print("heyyyy",dfs)
+        print("*******************************************************")
+        print("name_dfs", name_dfs)
+        print("*******************************************************")
+        print("errorz", errorz)
 
         print(f"Extracted {bank} bank statement successfully")
       
         pdf_paths_not_extracted["respective_reasons_for_error"].append(errorz[bank])
+
+        print("one")
         # account_number += f"{name_dfs[bank][1][:4]}x{name_dfs[bank][1][-4:]}_"
         # Check if the extracted dataframe is empty
         if dfs[bank].empty:
@@ -692,13 +708,13 @@ def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_
             pdf_paths_not_extracted["respective_reasons_for_error"].append(errorz[bank])
             del dfs[bank]
             del name_dfs[bank]
-
+        print("two")
         i += 1
 
     print("|------------------------------|")
     print(account_number)
     print("|------------------------------|")
-
+    print("three")
     if not dfs:
         folder_path = "saved_pdf"
         try:
@@ -713,6 +729,8 @@ def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_
     else:
         data = []
         # num_pairs = len(pd.Series(dfs).to_dict())
+
+        print("four")
 
         for key, value in name_dfs.items():
             bank_name = key

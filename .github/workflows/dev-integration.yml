@@ -1,0 +1,132 @@
+name: Dev Integration Test
+on:
+  push:
+    branches: [uat]
+
+env:
+  NODE_VERSION: '18'
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  integration-test:
+    name: Full Integration Build Test
+    runs-on: windows-latest
+    timeout-minutes: 45
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Full Python Backend Build
+        run: |
+          Write-Host "🐍 Building Python backend..." -ForegroundColor Yellow
+          
+          # Create virtual environment
+          python -m venv .venv
+          .\.venv\Scripts\Activate.ps1
+          
+          # Upgrade pip and install dependencies
+          pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          
+          Write-Host "📦 Installing PyInstaller..." -ForegroundColor Yellow
+          pip install pyinstaller
+          
+          Write-Host "🔨 Building Python executable..." -ForegroundColor Yellow
+          pyinstaller --onedir backend.main
+          
+          # Verify executable was created
+          if (Test-Path "dist/main/main.exe") {
+            Write-Host "✅ Python executable built successfully" -ForegroundColor Green
+          } else {
+            Write-Host "❌ Python executable build failed" -ForegroundColor Red
+            exit 1
+          }
+        shell: pwsh
+
+      - name: Run Post-Build Processing
+        run: |
+          Write-Host "⚙️ Running post-build processing..." -ForegroundColor Yellow
+          
+          .\.venv\Scripts\Activate.ps1
+          python postbuild.py
+          
+          Write-Host "✅ Post-build processing complete" -ForegroundColor Green
+        shell: pwsh
+
+      - name: Frontend Integration Build
+        run: |
+          Write-Host "⚛️ Building frontend components..." -ForegroundColor Yellow
+          
+          # Install frontend dependencies
+          cd frontend
+          npm ci
+          
+          # Install React dependencies
+          cd react-app
+          npm ci
+          cd ..
+          
+          Write-Host "🏗️ Building React application..." -ForegroundColor Yellow
+          npm run build:react
+          
+          Write-Host "📱 Testing Electron build process..." -ForegroundColor Yellow
+          npm run build:electron
+          
+          Write-Host "✅ Frontend integration build complete" -ForegroundColor Green
+        shell: pwsh
+
+      - name: Verify Gateway Server Requirement
+        run: |
+          Write-Host "🔍 Checking for Gateway Server..." -ForegroundColor Yellow
+          
+          $gatewayPath = "frontend/gatewayServer/gatewayserver.exe"
+          if (Test-Path $gatewayPath) {
+            Write-Host "✅ Gateway server found at $gatewayPath" -ForegroundColor Green
+          } else {
+            Write-Host "⚠️ Gateway server not found - this is expected in CI" -ForegroundColor Yellow
+            Write-Host "📝 Note: Gateway server is added manually before final release" -ForegroundColor Yellow
+          }
+        shell: pwsh
+
+      - name: Build Artifacts Summary
+        run: |
+          Write-Host "📊 Build Artifacts Summary:" -ForegroundColor Cyan
+          Write-Host "=================================" -ForegroundColor Cyan
+          
+          if (Test-Path "dist/main") {
+            Write-Host "✅ Python backend: dist/main/" -ForegroundColor Green
+          }
+          
+          if (Test-Path "frontend/react-app/build") {
+            Write-Host "✅ React build: frontend/react-app/build/" -ForegroundColor Green
+          }
+          
+          if (Test-Path "frontend/dist") {
+            Write-Host "✅ Electron dist: frontend/dist/" -ForegroundColor Green
+          }
+          
+          Write-Host "=================================" -ForegroundColor Cyan
+          Write-Host "🎉 Integration test completed successfully!" -ForegroundColor Green
+          Write-Host "🚀 Ready for production release when merged to main" -ForegroundColor Cyan
+        shell: pwsh
+
+      - name: Upload Build Artifacts (For Debugging)
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: failed-build-logs
+          path: |
+            **/*.log
+            **/build/
+          retention-days: 7

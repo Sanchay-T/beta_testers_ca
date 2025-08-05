@@ -31,8 +31,15 @@ const sanitizeJSONString = (jsonString) => {
 };
 
 const validateAndTransformTransaction = (transaction, statementId) => {
-  // log.info({ BeforeTransformation: transaction })
-  if (!transaction["Value Date"] || !transaction.Description) {
+  if (
+    transaction.Description === "" ||
+    transaction.Description === null ||
+    transaction.Description === undefined
+  ) {
+    log.info("FOUND NULL TRANSACTION - ", transaction.Description);
+  }
+  // log.info({ BeforeTransformation: transaction });
+  if (!transaction["Value Date"]) {
     log.info("Missing required transaction fields");
     throw new Error("Missing required transaction fields");
   }
@@ -89,20 +96,20 @@ const validateAndTransformTransaction = (transaction, statementId) => {
   };
 };
 
-const isDuplicateTransaction = async (transaction, statementId) => {
-  const existing = await db
-    .select()
-    .from(transactions)
-    .where(
-      and(
-        eq(transactions.statementId, statementId),
-        eq(transactions.date, transaction.date),
-        eq(transactions.amount, transaction.amount),
-        eq(transactions.description, transaction.description)
-      )
-    );
-  return existing.length > 0;
-};
+// const isDuplicateTransaction = async (transaction, statementId) => {
+//   const existing = await db
+//     .select()
+//     .from(transactions)
+//     .where(
+//       and(
+//         eq(transactions.statementId, statementId),
+//         eq(transactions.date, transaction.date),
+//         eq(transactions.amount, transaction.amount),
+//         eq(transactions.description, transaction.description)
+//       )
+//     );
+//   return existing.length > 0;
+// };
 
 const storeTransactionsBatch = async (transformedTransactions) => {
   console.log("Inside storeTransactionsBatch", transformedTransactions.length);
@@ -457,7 +464,7 @@ const processSummaryData = async (parsedData, caseName) => {
   try {
     const validCaseId = await getOrCreateCase(caseName);
 
-    log.info({ parsedDataFromProcessSummary: parsedData });
+    // log.info({ parsedDataFromProcessSummary: parsedData });
 
     // Validate the summary data
     if (
@@ -483,7 +490,7 @@ const processSummaryData = async (parsedData, caseName) => {
       contraCredit: parsedData["Contra Credit"],
     };
 
-    log.info("Summary Data 1:", summaryData);
+    // log.info("Summary Data 1:", summaryData);
 
     // Check if summary data already exists for this case
     const existingSummary = await db
@@ -674,15 +681,18 @@ const formatDate = (dateString) => {
   return `${day}-${month}-${year}`; // Format as dd-mm-yyyy
 };
 
-
-
 async function checkStatementLimit() {
   log.info("Checking statement limit...");
 
-  const { ip, port } = licenseManager.getLicenseInfo() || { ip: "localhost", port: 7890 }
+  const { ip, port } = licenseManager.getLicenseInfo() || {
+    ip: "localhost",
+    port: 7890,
+  };
 
   try {
-    const response = await axios.get(`http://${ip}:${port}/api/license/check-statement-limit`);
+    const response = await axios.get(
+      `http://${ip}:${port}/api/license/check-statement-limit`
+    );
 
     if (response.status === 200) {
       const { limitReached, remaining } = response.data;
@@ -691,8 +701,8 @@ async function checkStatementLimit() {
         success: true,
         data: {
           limitReached,
-          remaining
-        }
+          remaining,
+        },
       };
     } else {
       log.error("Unexpected response status:", response.statusText);
@@ -704,25 +714,31 @@ async function checkStatementLimit() {
   }
 }
 
-
 async function useStatement() {
   log.info("Requesting to use a statement...");
 
-  const { ip, port } = licenseManager.getLicenseInfo() || { ip: "localhost", port: 7890 };
+  const { ip, port } = licenseManager.getLicenseInfo() || {
+    ip: "localhost",
+    port: 7890,
+  };
 
   try {
-    const response = await axios.post(`http://${ip}:${port}/api/license/use-statement`);
+    const response = await axios.post(
+      `http://${ip}:${port}/api/license/use-statement`
+    );
 
     if (response.status === 200) {
       const { success, message, remaining, used } = response.data;
-      log.info(`Statement used successfully. Remaining: ${remaining}, Used: ${used}`);
+      log.info(
+        `Statement used successfully. Remaining: ${remaining}, Used: ${used}`
+      );
       return {
         success: true,
         data: {
           message,
           remaining,
-          used
-        }
+          used,
+        },
       };
     } else {
       log.error("Unexpected response status:", response.statusText);
@@ -731,14 +747,16 @@ async function useStatement() {
   } catch (err) {
     if (err.response && err.response.data) {
       const { error, remaining, used } = err.response.data;
-      log.warn(`Failed to use statement: ${error}. Remaining: ${remaining}, Used: ${used}`);
+      log.warn(
+        `Failed to use statement: ${error}. Remaining: ${remaining}, Used: ${used}`
+      );
       return {
         success: false,
         error,
         data: {
           remaining,
-          used
-        }
+          used,
+        },
       };
     } else {
       log.error("Error contacting license server:", err.message);
@@ -746,7 +764,6 @@ async function useStatement() {
     }
   }
 }
-
 
 function generateReportIpc(tmpdir_path) {
   db = databaseManager.getInstance().getDatabase();
@@ -758,7 +775,6 @@ function generateReportIpc(tmpdir_path) {
   ipcMain.handle(
     "generate-report",
     async (event, receivedResult, caseName, source = "generate-report") => {
-
       try {
         const { success, data } = await checkStatementLimit();
         if (!success) {
@@ -802,9 +818,12 @@ function generateReportIpc(tmpdir_path) {
           }
 
           const originalFilename = fileDetail.pdf_paths;
-          const tempFilename = `${Date.now()}-${path.basename(
-            originalFilename
-          )}`;
+          let tempFilename;
+          if (source !== "add-pdf") {
+            tempFilename = `${Date.now()}-${path.basename(originalFilename)}`;
+          } else {
+            tempFilename = path.basename(originalFilename);
+          }
           const filePath = path.join(caseFolder, tempFilename);
 
           allProcessedFiles.add(filePath);
@@ -817,9 +836,16 @@ function generateReportIpc(tmpdir_path) {
 
           if (fileDetail.fileContent) {
             fs.writeFileSync(filePath, fileDetail.fileContent, "binary");
-            successfulFiles.add(filePath); // Initially assume success
+            successfulFiles.add(filePath);
+          } else if (fs.existsSync(fileDetail.pdf_paths)) {
+            // Reuse already saved file — just copy it again with a new name
+            fs.copyFileSync(fileDetail.pdf_paths, filePath);
+            successfulFiles.add(filePath);
+            log.info(`Reused existing file from ${fileDetail.pdf_paths}`);
           } else {
-            log.warn(`No file content for ${fileDetail.bankName}`);
+            log.warn(
+              `Missing file content and original file not found for: ${fileDetail.pdf_paths}`
+            );
             failedFiles.add(filePath);
           }
 
@@ -833,6 +859,7 @@ function generateReportIpc(tmpdir_path) {
 
         let whole_transaction_sheet = null;
         let transactionsForCase = null;
+        log.info({ aqsource: source });
         if (source === "add-pdf") {
           try {
             transactionsForCase = await db
@@ -889,6 +916,7 @@ function generateReportIpc(tmpdir_path) {
           end_date: fileDetails.map((d) => d.end_date || ""),
           ca_id: caseName || "DEFAULT_CASE",
           whole_transaction_sheet,
+          is_ocr: fileDetails.map((d) => d.is_ocr || false),
         };
 
         log.info("Sending API request with payload:", payload);
@@ -1114,7 +1142,6 @@ function generateReportIpc(tmpdir_path) {
           log.error("Error using statement:", err.message);
         }
 
-
         return {
           success: true,
           data: {
@@ -1233,7 +1260,15 @@ function generateReportIpc(tmpdir_path) {
 
       whole_transaction_sheet = updatedTransactions || null;
       // log.info("Whole Transaction Sheet: ",whole_transaction_sheet.length);
-
+      const isOcrCandidate = (reason = "") => {
+        const r = reason.toLowerCase();
+        return (
+          r.includes("image-only") ||
+          r.includes("scanned") ||
+          r.includes("non-text") ||
+          r.includes("encoded")
+        );
+      };
       const payload = {
         bank_names: result.map((d) => d.bankName),
         pdf_paths: result.map((d) => d.path),
@@ -1243,8 +1278,11 @@ function generateReportIpc(tmpdir_path) {
         ca_id: caseId || "DEFAULT_CASE",
         aiyazs_array_of_array: result.map((d) => d.rectifiedColumns || ""),
         whole_transaction_sheet: whole_transaction_sheet,
+        is_ocr: result.map((d) => isOcrCandidate(d.respectiveReasonsForError)),
         // whole_transaction_sheet:result.map((d) => d.whole_transaction_sheet || ""),
       };
+
+      console.log({ rectifyPayload: payload });
 
       const finalPayload = preprocessPayload(payload);
 

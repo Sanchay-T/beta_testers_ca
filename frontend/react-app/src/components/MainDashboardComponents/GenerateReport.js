@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { Bell, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
 import GenerateReportForm from "../Elements/ReportForm";
 import RecentReports from "./RecentReports";
@@ -15,6 +15,7 @@ import { useNavigate } from "react-router-dom"; // Import useNavigate for naviga
 import { Card } from "../ui/card";
 import { AlertCircle, ChevronRight } from "lucide-react";
 import { useReportContext } from "../../contexts/ReportContext";
+import { cn } from "../../lib/utils"; // for conditional class names
 
 export default function GenerateReport({ activeTab }) {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -29,7 +30,35 @@ export default function GenerateReport({ activeTab }) {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const { reportData, updateReportData } = useReportContext();
   const [missingMonthsList, setMissingMonthsList] = useState([]);
-  const [warning, setWarning] = useState("");
+  const [warning, setWarning] = useState([]);
+  const [warningExpanded, setWarningExpanded] = useState(false);
+  const [dateRangeWarning, setDateRangeWarning] = useState(null);
+
+  const hasScannedOrEncodedWarning = useMemo(() => {
+    if (!Array.isArray(warning)) return false;
+
+    return warning.some((msg) =>
+      /image-only|scanned|non-text|encoded/i.test(msg)
+    );
+  }, [warning]);
+
+  // extract balance-mismatch errors
+  const balanceMismatchErrors = warning.filter((msg) =>
+    msg.startsWith("Balance mismatch")
+  );
+
+  // everything else stays “red”
+  const otherErrors = warning.filter(
+    (msg) =>
+      !msg.startsWith("Balance mismatch") &&
+      !/image-only|scanned|non-text|encoded/i.test(msg)
+  );
+
+  // put next to your other helpers
+  const OCR_REASON_RE = /(image-only|scanned|non-text|encoded)/i;
+
+  const onlyOcrableFailures = (reasons = []) =>
+    reasons.length > 0 && reasons.every((r) => OCR_REASON_RE.test(r));
 
   const handleSubmit = async (
     setProgress,
@@ -85,7 +114,7 @@ export default function GenerateReport({ activeTab }) {
       id: null,
       name: caseName,
       userId: null,
-      status: "Pending",
+      status: "Processing",
       pages: null,
       createdAt: new Date().toLocaleDateString("en-GB", {
         day: "2-digit",
@@ -132,12 +161,15 @@ export default function GenerateReport({ activeTab }) {
       setShowAnalysisButton(false);
       setMissingMonthsList([]);
       setWarning([]);
+      setDateRangeWarning(null); // Reset date range warning
+      setWarningExpanded(false); // Reset warning expansion state
 
       const result = await window.electron.generateReportIpc(
         {
           files: filesWithContent,
         },
         caseName,
+        false,
         "generate-report"
       );
 
@@ -150,24 +182,43 @@ export default function GenerateReport({ activeTab }) {
       }
 
       if (result.data.warning && result.data.warning.length > 0) {
-        const formattedWarnings = result.data.warning.filter((warn) => {
-          return warn && warn.trim() !== ""; // Return true for non-empty warnings
+        const formatted = result.data.warning.filter((w) => w && w.trim());
+
+        // regex to find your date-overlap error
+        const re =
+          /The period for Bank:[^)]+\((\d{2}-\d{2}-\d{4}) to (\d{2}-\d{2}-\d{4})\)[^()]*\((\d{2}-\d{2}-\d{4}) to (\d{2}-\d{2}-\d{4})\)/;
+
+        // split into dateErrors vs. rest
+        let drWarn = null;
+        const rest = formatted.filter((msg) => {
+          const m = msg.match(re);
+          if (m) {
+            const [, fetchedStart, fetchedEnd, userStart, userEnd] = m;
+            drWarn = { fetchedStart, fetchedEnd, userStart, userEnd };
+            return false; // remove from “rest”
+          }
+          return true; // keep everything else
         });
 
-        const uniqueWarnings = Array.from(new Set(formattedWarnings)); // Remove duplicates
-        setWarning(uniqueWarnings);
+        setDateRangeWarning(drWarn); // either an object or null
+        setWarning(Array.from(new Set(rest))); // your existing red/amber logic
       }
 
       setCurrentCaseId(result.data.caseId); // Store caseId
       console.log({ result });
       if (result.success) {
-        clearInterval(progressIntervalRef.current);
-        setProgress(100);
+        setDialogOpen(true); // Open the Dialog
         toast.dismiss(newToastId);
 
         console.log("Report generated successfully:", result.data);
         if (result.data.failedFiles.length > 0) {
-          setShowRectifyButton(true);
+          // ----- decide whether *all* failures are OCR-friendly -----
+          const { respective_reasons_for_error: reasons = [] } =
+            result.data.failedStatements || {};
+
+          const mustRectify = !onlyOcrableFailures(reasons);
+          setShowRectifyButton(mustRectify); // ✅ true only when some non-OCR error exists
+
           const failedFiles = result.data.failedFiles.map((file_path) => {
             // Get the filename from the path and remove the timestamp
             const filename = file_path.split("\\").pop(); // Get filename from path
@@ -256,11 +307,313 @@ export default function GenerateReport({ activeTab }) {
             variant: "success",
           });
         }
-        setShowAnalysisButton(true);
+
+        if (result.data.totalTransactions > 0) {
+          setShowAnalysisButton(true);
+        }
 
         // setFailedStatements(result.pdf_paths_not_extracted || []); // Store failed
         setSelectedFiles([]);
         setFileDetails([]);
+
+        // Handle Scanned and encoded files
+        console.log({ aiyaz: result.data.failedStatements });
+        const failedStatementsFromBackend = result.data.failedStatements || [];
+        console.log({ tyope: typeof failedStatementsFromBackend });
+
+        const paths = failedStatementsFromBackend.paths || [];
+        const reasons =
+          failedStatementsFromBackend.respective_reasons_for_error || [];
+        const bankNames = failedStatementsFromBackend.bank_names || [];
+        const passwords = failedStatementsFromBackend.passwords || [];
+        const startDates = failedStatementsFromBackend.start_dates || [];
+        const endDates = failedStatementsFromBackend.end_dates || [];
+
+        // Helper: Match OCR-triggering reasons
+        const isOcrCandidate = (reason = "") => {
+          const r = reason.toLowerCase();
+          return (
+            r.includes("image-only") ||
+            r.includes("scanned") ||
+            r.includes("non-text") ||
+            r.includes("encoded")
+          );
+        };
+
+        // ✅ Filter out null or undefined pdfs and match OCR-triggering reasons
+        const eligibleIndexes = reasons
+          .map((reason, idx) =>
+            isOcrCandidate(reason) && paths[idx] ? idx : null
+          )
+          .filter((i) => i !== null);
+        console.log({ eligibleIndexes });
+        const scannedOCRFiles = eligibleIndexes.map((i) => ({
+          bankName: bankNames[i],
+          pdf_paths: paths[i],
+          passwords: passwords[i],
+          start_date: startDates[i],
+          end_date: endDates[i],
+          ca_id: result.data.caseId,
+          is_ocr: true,
+        }));
+
+        console.log({ scannedOCRFiles });
+        // If any OCR-worthy files found
+        if (eligibleIndexes.length > 0) {
+          const newData = {
+            id: result.data.caseId,
+            name: caseName,
+            userId: null,
+            status: "Processing",
+            pages: null,
+            createdAt: new Date().toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            }),
+            // statements: null,
+          };
+
+          updateReportData({
+            recentReportsData: [newData, ...reportData.recentReportsData],
+          });
+
+          toast({
+            id: newToastId,
+            title: "Running OCR",
+            description: (
+              <div className="mt-2 w-full flex items-center gap-2">
+                <div className="flex items-center gap-4">
+                  <CircularProgress className="w-full" />
+                </div>
+                <p className="text-sm text-gray-500">
+                  Processing scanned/encoded PDFs…
+                </p>
+              </div>
+            ),
+            variant: "default",
+            duration: Infinity,
+          });
+          // toast({
+          //   title: "OCR Triggered",
+          //   description: `Detected scanned or encoded PDFs.`,
+          //   variant: "default",
+          //   duration: 5000,
+          // });
+
+          console.log({
+            files: scannedOCRFiles,
+            caseName,
+            is_ocr: true,
+            soure: "add-pdf",
+          });
+          try {
+            const ocrResult = await window.electron.generateReportIpc(
+              { files: scannedOCRFiles },
+              caseName,
+              "add-pdf"
+            );
+
+            setFailedStatements([]);
+            setSuccessfulStatements([]);
+            setShowRectifyButton(false);
+            setShowAnalysisButton(false);
+            setMissingMonthsList([]);
+            setWarning([]);
+            setDateRangeWarning(null); // Reset date range warning
+            setWarningExpanded(false); // Reset warning expansion state
+
+            console.log("OCR Result:", ocrResult);
+
+            if (
+              ocrResult.data.missingMonthsList &&
+              ocrResult.data.missingMonthsList.length > 0
+            ) {
+              setMissingMonthsList(ocrResult.data.missingMonthsList);
+            }
+
+            if (ocrResult.data.warning && ocrResult.data.warning.length > 0) {
+              const formatted = ocrResult.data.warning.filter(
+                (w) => w && w.trim()
+              );
+
+              // regex to find your date-overlap error
+              const re =
+                /The period for Bank:[^)]+\((\d{2}-\d{2}-\d{4}) to (\d{2}-\d{2}-\d{4})\)[^()]*\((\d{2}-\d{2}-\d{4}) to (\d{2}-\d{2}-\d{4})\)/;
+
+              // split into dateErrors vs. rest
+              let drWarn = null;
+              const rest = formatted.filter((msg) => {
+                const m = msg.match(re);
+                if (m) {
+                  const [, fetchedStart, fetchedEnd, userStart, userEnd] = m;
+                  drWarn = { fetchedStart, fetchedEnd, userStart, userEnd };
+                  return false; // remove from “rest”
+                }
+                return true; // keep everything else
+              });
+
+              setDateRangeWarning(drWarn); // either an object or null
+              setWarning(Array.from(new Set(rest))); // your existing red/amber logic
+            }
+
+            // setCurrentCaseId(ocrResult.data.caseId); // Store caseId
+            console.log({ ocrResult });
+            if (ocrResult.success) {
+              setDialogOpen(true); // Open the Dialog
+              toast.dismiss(newToastId);
+
+              console.log("ocrResult generated successfully:", ocrResult.data);
+              if (ocrResult.data.failedFiles.length > 0) {
+                setShowRectifyButton(true);
+                const failedFiles = ocrResult.data.failedFiles.map(
+                  (file_path) => {
+                    // Get the filename from the path and remove the timestamp
+                    const filename = file_path.split("\\").pop(); // Get filename from path
+                    const filenameWithoutTimestamp = filename.substring(
+                      filename.indexOf("-") + 1
+                    ); // Remove everything before first hyphen
+                    return filenameWithoutTimestamp;
+                  }
+                );
+                setFailedStatements(failedFiles || []); // Store failed
+
+                const newData = {
+                  id: ocrResult.data.caseId,
+                  name: caseName,
+                  userId: null,
+                  status: "Failed",
+                  pages: null,
+                  createdAt: new Date().toLocaleDateString("en-GB", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  }),
+                  statements: null,
+                };
+
+                // setShowRectifyButton(true);
+                const successfulFiles = ocrResult.data.successfulFiles.map(
+                  (file_path) => {
+                    // Get the filename from the path and remove the timestamp
+                    const filename = file_path.split("\\").pop(); // Get filename from path
+                    const filenameWithoutTimestamp = filename.substring(
+                      filename.indexOf("-") + 1
+                    ); // Remove everything before first hyphen
+                    return filenameWithoutTimestamp;
+                  }
+                );
+                setSuccessfulStatements(successfulFiles || []); // Store successful
+
+                updateReportData({
+                  recentReportsData: [newData, ...reportData.recentReportsData],
+                });
+
+                if (activeTab !== "Generate Report")
+                  toast({
+                    title: "Failed",
+                    description: `${caseName} report had some issues!`,
+                    variant: "destructive",
+                  });
+              } else {
+                // setShowRectifyButton(true);
+                const successfulFiles = ocrResult.data.successfulFiles.map(
+                  (file_path) => {
+                    // Get the filename from the path and remove the timestamp
+                    const filename = file_path.split("\\").pop(); // Get filename from path
+                    const filenameWithoutTimestamp = filename.substring(
+                      filename.indexOf("-") + 1
+                    ); // Remove everything before first hyphen
+                    return filenameWithoutTimestamp;
+                  }
+                );
+                setSuccessfulStatements(successfulFiles || []); // Store successful
+
+                const newData = {
+                  id: ocrResult.data.caseId,
+                  name: caseName,
+                  userId: null,
+                  status: "Success",
+                  pages: null,
+                  createdAt: new Date().toLocaleDateString("en-GB", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  }),
+                  // statements: null,
+                };
+
+                updateReportData({
+                  recentReportsData: [newData, ...reportData.recentReportsData],
+                });
+              }
+
+              if (
+                ocrResult.data.totalTransactions &&
+                activeTab !== "Generate Report"
+              ) {
+                toast({
+                  title: "Success",
+                  description: `${caseName} report generated successfully!`,
+                  duration: Infinity,
+                  variant: "success",
+                });
+              }
+
+              if (ocrResult.data.totalTransactions > 0) {
+                setShowAnalysisButton(true);
+              }
+
+              // setFailedStatements(ocrResult.pdf_paths_not_extracted || []); // Store failed
+              setSelectedFiles([]);
+              setFileDetails([]);
+
+              clearInterval(progressIntervalRef.current);
+              setProgress(100);
+              toast.dismiss(newToastId);
+
+              // open dialog and everything
+
+              setLoading(false);
+              localStorage.removeItem("dashboardData");
+              // refreshPage();
+              progressIntervalRef.current = null;
+
+              // Trigger a page refresh
+              // refreshPage();
+            } else {
+              const errorMessage = result.error
+                ? typeof result.error === "object"
+                  ? JSON.stringify(result.error, null, 2)
+                  : result.error
+                : "Unknown error occurred";
+
+              throw new Error(errorMessage);
+            }
+
+            // toast({
+            //   title: "OCR Completed",
+            //   variant: "success",
+            // });
+          } catch (ocrErr) {
+            toast({
+              title: "OCR Failed",
+              description: "OCR retry failed for scanned/encoded PDFs.",
+              variant: "destructive",
+            });
+            console.error("OCR error:", ocrErr);
+          }
+        }
+        clearInterval(progressIntervalRef.current);
+        setProgress(100);
+        toast.dismiss(newToastId);
+
+        // open dialog and everything
+
+        setLoading(false);
+        localStorage.removeItem("dashboardData");
+        // refreshPage();
+        progressIntervalRef.current = null;
 
         // Trigger a page refresh
         // refreshPage();
@@ -304,12 +657,6 @@ export default function GenerateReport({ activeTab }) {
       const updatedRecentReportData = reportData.recentReportsData;
       updateReportData({ recentReportsData: updatedRecentReportData });
     } finally {
-      setLoading(false);
-      localStorage.removeItem("dashboardData");
-      // refreshPage();
-      progressIntervalRef.current = null;
-      setDialogOpen(true); // Open the Dialog
-
       return true;
     }
   };
@@ -352,16 +699,25 @@ export default function GenerateReport({ activeTab }) {
     }
   });
 
-  const note = {
-    content: [
-      "Scanned copies",
-      "Image-Based PDF Statements: Bank statements provided as image-based PDFs, rather than in a structured file format, might lead to processing issues.",
-      "File Integrity: Encoded, encrypted, or corrupted files cannot be processed and should not be uploaded.",
-      "Handwritten Statements: Handwritten bank statements are not accepted.",
-      "Canara Bank Formats: Certain formats of Canara Bank statements may not be compatible with our processing system.",
-      "Data Authenticity: Please ensure that the uploaded data has not been tampered with, as alterations can result in incorrect responses.",
-      "Statement Recency: Avoid uploading very old bank statements, as changes in keyword formats over time may affect processing accuracy.",
+ const note = {
+  content: [
+    "Scanned copies",
+    "Image-Based PDF Statements: Bank statements provided as image-based PDFs, rather than in a structured file format, might lead to processing issues.",
+    "File Integrity: Encoded, encrypted, or corrupted files cannot be processed and should not be uploaded.",
+    "Handwritten Statements: Handwritten bank statements are not accepted.",
+    "Canara Bank Formats: Certain formats of Canara Bank statements may not be compatible with our processing system.",
+    "Data Authenticity: Please ensure that the uploaded data has not been tampered with, as alterations can result in incorrect responses.",
+    "Statement Recency: Avoid uploading very old bank statements, as changes in keyword formats over time may affect processing accuracy.",
+  ],
+  scanned: {
+    header: "IMPORTANT NOTES regarding scanned PDFs processing:",
+    items: [
+      "Sharp, readable text – zoom in; if you can read every digit, so can we",
+      "Aligned and maintains continuity across all pages",
+      "Clear, without overlapping narration in the amount fields",
+      "Avoid photo-scanned PDFs – no issues if it’s clear and aligned",
     ],
+  },
   };
 
   return (
@@ -412,33 +768,48 @@ export default function GenerateReport({ activeTab }) {
 
       <RecentReports key={refreshTrigger} onReportGenerated={refreshPage} />
 
-      {/* statments which we dont work with */}
-      <Card className="p-6">
-        <h4 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
-          <AlertCircle className="h-5 w-5 text-amber-500" />
-          Important Notes
-        </h4>
-        <h6 className="text-gray-600 dark:text-slate-300 mb-4">
-          Certain statements may not be processed properly due to various
-          reasons. Below is a list of common unsupported or partially extracted
-          formats:
-        </h6>
-        <ul className="space-y-3">
-          {note.content.map((item, idx) => (
-            <li
-              key={idx}
-              className="flex gap-3 items-center text-gray-600 dark:text-slate-300"
-            >
-              <ChevronRight className="h-5 w-5 flex-shrink-0 text-gray-400" />
-              <span>{item}</span>
-            </li>
-          ))}
-        </ul>
-      </Card>
+     <Card className="p-6">
+  <h4 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+    <AlertCircle className="h-5 w-5 text-amber-500" />
+    Important Notes
+  </h4>
+  <h6 className="text-gray-600 dark:text-slate-300 mb-4">
+    Certain statements may not be processed properly due to various reasons.
+    Below is a list of common unsupported or partially extracted formats:
+  </h6>
+  <ul className="space-y-3">
+    {note.content.map((item, idx) => (
+      <li
+        key={idx}
+        className="flex gap-3 items-center text-gray-600 dark:text-slate-300"
+      >
+        <ChevronRight className="h-5 w-5 text-gray-400 flex-shrink-0" />
+        <span>{item}</span>
+      </li>
+    ))}
+
+    {/* scanned-PDF header as a bold “parent” bullet */}
+    <li className="flex gap-3 items-start text-gray-600 dark:text-slate-300">
+      <ChevronRight className="h-5 w-5 text-gray-400 flex-shrink-0" />
+      <span className="font-semibold">{note.scanned.header}</span>
+    </li>
+
+    {/* scanned-PDF details as indented sub-bullets */}
+    {note.scanned.items.map((sub, i) => (
+      <li
+        key={i}
+        className="flex gap-3 items-center text-gray-600 dark:text-slate-300 ml-8"
+      >
+        <ChevronRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
+        <span>{sub}</span>
+      </li>
+    ))}
+  </ul>
+</Card>
 
       {/* Dialog for successful report generation */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen} className="">
-        <DialogContent className="max-h-[90vh] overflow-y-auto pb-0">
+        <DialogContent className="max-h-[90vh] overflow-y-auto pb-0 border-none shadow-none">
           <DialogHeader>
             {successfulStatements.length > 0 ? (
               <DialogTitle>
@@ -476,6 +847,22 @@ export default function GenerateReport({ activeTab }) {
               </ul>
             </div>
           )}
+          {hasScannedOrEncodedWarning && (
+            <div className="mb-4 mt-2">
+              {/* <h3 className="text-md font-semibold flex items-center gap-x-2 mb-2">
+                <AlertCircle className="text-blue-500 w-5 h-5" />
+                OCR Triggered
+              </h3> */}
+              <Card className="p-3 bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700">
+                <p className="text-blue-700 dark:text-blue-300 text-sm">
+                  We detected one or more scanned or encoded PDFs. We are
+                  processing your statements in the background. Processing will take approximately
+                  1-2 minutes per page, depending on the configuration of your pc.
+                </p>
+              </Card>
+            </div>
+          )}
+
           {/* Display Missing Months Section */}
           {missingMonthsList.length > 0 && (
             <div className="mb-4 mt-2">
@@ -503,32 +890,75 @@ export default function GenerateReport({ activeTab }) {
             </div>
           )}
 
-          {/* display any other warning if any */}
-          {warning.length > 0 && (
-            <div className="mb-4 mt-2">
-              <h3 className="text-md font-semibold flex items-center gap-x-2 mb-2">
-                <AlertCircle className="text-red-500 w-5 h-5" />
-                Warning
+          {/* ——— Other errors in red ——— */}
+          {(otherErrors.length > 0 || dateRangeWarning) && (
+            <Card className="p-3 bg-red-50 …">
+              <h3 className="…">
+                {/* <AlertCircle className="…" /> Warning */}
               </h3>
-              <Card className="p-3 bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800">
-                <ul className="space-y-1">
-                  {warning.map((month, index) => (
-                    <li
-                      key={index}
-                      className="text-red-700 dark:text-red-400 flex items-start"
-                    >
-                      • <span className="ml-1 break-all"> {month}</span>
-                    </li>
-                  ))}
-                </ul>
-                {/* <p className="text-sm text-amber-700 dark:text-amber-400 mt-3">
-                  These months are missing from your statements. You may want to
-                  add them for a complete analysis.
-                </p> */}
-              </Card>
+              <ul className="space-y-1">
+                {otherErrors.map((msg, i) => (
+                  <li key={i} className="text-red-700 flex items-start">
+                    • <span className="ml-1 break-words">{msg}</span>
+                  </li>
+                ))}
+
+                {dateRangeWarning && (
+                  <li className="mt-2 text-red-700">
+                    <p className="font-semibold">Date range mismatch:</p>
+                    <ul className="list-disc list-inside ml-6 space-y-1">
+                      <li>
+                        User Input: {dateRangeWarning.userStart}–
+                        {dateRangeWarning.userEnd}
+                      </li>
+                      <li>
+                        Available: {dateRangeWarning.fetchedStart}–
+                        {dateRangeWarning.fetchedEnd}
+                      </li>
+                    </ul>
+                  </li>
+                )}
+              </ul>
+            </Card>
+          )}
+
+          {/* ——— Balance-mismatch in amber, collapsible ——— */}
+          {balanceMismatchErrors.length > 0 && (
+            <div className="mb-4 mt-2">
+              <div
+                className="flex items-center justify-between cursor-pointer"
+                onClick={() => setWarningExpanded(!warningExpanded)}
+              >
+                <h3 className="text-md font-semibold flex items-center gap-x-2">
+                  <AlertCircle className="text-amber-500 w-5 h-5" />
+                  Balance mismatch details
+                </h3>
+                <ChevronRight
+                  className={cn(
+                    "transition-transform text-amber-500 w-5 h-5",
+                    warningExpanded ? "rotate-90" : ""
+                  )}
+                />
+              </div>
+
+              {warningExpanded && (
+                <Card className="p-3 bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800 mt-2">
+                  <ul className="space-y-1">
+                    {balanceMismatchErrors.map((msg, idx) => (
+                      <li
+                        key={idx}
+                        className="text-amber-700 dark:text-amber-400 flex items-start"
+                      >
+                        • <span className="ml-1 break-all">{msg}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </Card>
+              )}
             </div>
           )}
-          <div className="flex gap-4 sticky w-full p-4  bottom-0 bg-white">
+
+          <div className="flex gap-4 sticky w-full p-4  bottom-0 bg-white ">
             {showAnalsisButton && (
               <Button onClick={() => viewAnalysis()} className="flex-1">
                 View Analysis
