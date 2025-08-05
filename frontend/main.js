@@ -27,7 +27,7 @@ const { registerTallyIpc } = require("./ipc/tallyHandlers.js");
 const { registerVoucherIpc } = require("./ipc/VoucherHandlers.js");
 const { registerExcelDownloadHandlers } = require("./ipc/excelDownloadHandler");
 const { registerAppLevelIPCHandlers } = require("./ipc/appLevelIPC");
-const DatabaseMigration = require('./utils/databaseMigration');
+const DatabaseMigration = require("./utils/databaseMigration");
 // Moved database require to after AppConfig initialization
 const { spawn, execFile, exec, execSync } = require("child_process");
 const log = require("electron-log");
@@ -104,22 +104,22 @@ log.transports.console.level = "debug"; // Set the log level
 log.transports.file.level = "info"; // Only log info level and above in the log file
 
 // Set up detailed logging for updates
-log.transports.file.fileName = 'cyphersol.log';
-log.info('===========================================');
+log.transports.file.fileName = "cyphersol.log";
+log.info("===========================================");
 log.info(`Application starting - Version ${app.getVersion()}`);
 log.info(`User data directory: ${userDataDir}`);
 log.info(`Platform: ${process.platform}`);
 log.info(`Arch: ${process.arch}`);
 log.info(`Node version: ${process.versions.node}`);
 log.info(`Electron version: ${process.versions.electron}`);
-log.info('===========================================');
+log.info("===========================================");
 
 // Configure autoUpdater logging
 autoUpdater.logger = log;
 autoUpdater.logger.transports.file.level = "info";
 
 // Configure autoUpdater for seamless background updates
-autoUpdater.autoDownload = true;  // Enable automatic background downloads
+autoUpdater.autoDownload = true; // Enable automatic background downloads
 autoUpdater.disableWebInstaller = true;
 autoUpdater.allowPrerelease = false;
 
@@ -171,32 +171,49 @@ let lastCheckedVersion = null;
 
 // Auto-update event handlers with detailed logging
 autoUpdater.on("checking-for-update", () => {
-  performanceTracker.start('update-check');
-  
-  logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Update check initiated');
-  logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Checking GitHub repository for new releases');
-  
+  performanceTracker.start("update-check");
+
+  logWithTimestamp("info", UPDATE_LOG_PREFIX, "Update check initiated");
+  logWithTimestamp(
+    "info",
+    UPDATE_LOG_PREFIX,
+    "Checking GitHub repository for new releases"
+  );
+
   const updateCheckData = {
     currentVersion: app.getVersion(),
     checkTime: new Date().toISOString(),
     platform: process.platform,
     feedUrl: autoUpdater.getFeedURL(),
-    autoDownloadEnabled: autoUpdater.autoDownload
+    autoDownloadEnabled: autoUpdater.autoDownload,
   };
-  
-  logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Update check configuration', updateCheckData);
-  
+
+  logWithTimestamp(
+    "info",
+    UPDATE_LOG_PREFIX,
+    "Update check configuration",
+    updateCheckData
+  );
+
   win?.webContents.send("update-status", "checking");
 });
 
 autoUpdater.on("update-available", (info) => {
-  performanceTracker.end('update-check');
-  performanceTracker.start('update-download-process');
-  
+  performanceTracker.end("update-check");
+  performanceTracker.start("update-download-process");
+
   // Skip if we've already notified about this version
   if (lastCheckedVersion === info.version) {
-    logWithTimestamp('warn', UPDATE_LOG_PREFIX, `Skipping duplicate update notification for version: ${info.version}`);
-    logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Update process terminated - duplicate version detected');
+    logWithTimestamp(
+      "warn",
+      UPDATE_LOG_PREFIX,
+      `Skipping duplicate update notification for version: ${info.version}`
+    );
+    logWithTimestamp(
+      "info",
+      UPDATE_LOG_PREFIX,
+      "Update process terminated - duplicate version detected"
+    );
     return;
   }
 
@@ -204,95 +221,158 @@ autoUpdater.on("update-available", (info) => {
     currentVersion: app.getVersion(),
     newVersion: info.version,
     releaseDate: info.releaseDate,
-    releaseNotes: info.releaseNotes ? info.releaseNotes.substring(0, 200) + '...' : 'No release notes',
-    downloadUrl: info.files?.[0]?.url || 'URL not available',
-    fileSize: info.files?.[0]?.size || 'Size unknown',
+    releaseNotes: info.releaseNotes
+      ? info.releaseNotes.substring(0, 200) + "..."
+      : "No release notes",
+    downloadUrl: info.files?.[0]?.url || "URL not available",
+    fileSize: info.files?.[0]?.size || "Size unknown",
     detectionTime: new Date().toISOString(),
-    isAutoDownloadEnabled: autoUpdater.autoDownload
+    isAutoDownloadEnabled: autoUpdater.autoDownload,
   };
 
-  logWithTimestamp('info', UPDATE_LOG_PREFIX, '🎉 UPDATE AVAILABLE DETECTED!', updateAvailableData);
-  logWithTimestamp('info', UPDATE_LOG_PREFIX, `Version upgrade path: ${app.getVersion()} → ${info.version}`);
-  
+  logWithTimestamp(
+    "info",
+    UPDATE_LOG_PREFIX,
+    "🎉 UPDATE AVAILABLE DETECTED!",
+    updateAvailableData
+  );
+  logWithTimestamp(
+    "info",
+    UPDATE_LOG_PREFIX,
+    `Version upgrade path: ${app.getVersion()} → ${info.version}`
+  );
+
   lastCheckedVersion = info.version;
 
   // Log seamless download strategy
-  logWithTimestamp('info', UPDATE_LOG_PREFIX, '🚀 SEAMLESS UPDATE STRATEGY ACTIVATED');
-  logWithTimestamp('info', UPDATE_LOG_PREFIX, 'No user prompts - initiating silent background download');
-  
+  logWithTimestamp(
+    "info",
+    UPDATE_LOG_PREFIX,
+    "🚀 SEAMLESS UPDATE STRATEGY ACTIVATED"
+  );
+  logWithTimestamp(
+    "info",
+    UPDATE_LOG_PREFIX,
+    "No user prompts - initiating silent background download"
+  );
+
   // Send notification to frontend about background download starting
   const frontendNotification = {
-    status: "downloading-background", 
+    status: "downloading-background",
     version: info.version,
     message: "Update downloading in background...",
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
-  
-  logWithTimestamp('info', USER_LOG_PREFIX, 'Frontend notification sent', frontendNotification);
+
+  logWithTimestamp(
+    "info",
+    USER_LOG_PREFIX,
+    "Frontend notification sent",
+    frontendNotification
+  );
   win?.webContents.send("update-status", frontendNotification);
-  
+
   // Create database backup silently in background
-  performanceTracker.start('database-backup');
-  
+  performanceTracker.start("database-backup");
+
   try {
-        const dbPath = path.join(userDataDir, "database.sqlite");
-        const backupDir = path.join(userDataDir, "backups");
-    
-    logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Starting pre-update database backup');
-        
-        if (!fs.existsSync(backupDir)) {
-          fs.mkdirSync(backupDir, { recursive: true });
-      logWithTimestamp('info', UPDATE_LOG_PREFIX, `Created backup directory: ${backupDir}`);
-        }
-        
-        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-        const backupPath = path.join(backupDir, `db-backup-${timestamp}.sqlite`);
-        
-        if (fs.existsSync(dbPath)) {
+    const dbPath = path.join(userDataDir, "database.sqlite");
+    const backupDir = path.join(userDataDir, "backups");
+
+    logWithTimestamp(
+      "info",
+      UPDATE_LOG_PREFIX,
+      "Starting pre-update database backup"
+    );
+
+    if (!fs.existsSync(backupDir)) {
+      fs.mkdirSync(backupDir, { recursive: true });
+      logWithTimestamp(
+        "info",
+        UPDATE_LOG_PREFIX,
+        `Created backup directory: ${backupDir}`
+      );
+    }
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const backupPath = path.join(backupDir, `db-backup-${timestamp}.sqlite`);
+
+    if (fs.existsSync(dbPath)) {
       const dbStats = fs.statSync(dbPath);
-          fs.copyFileSync(dbPath, backupPath);
-      
+      fs.copyFileSync(dbPath, backupPath);
+
       const backupData = {
         sourcePath: dbPath,
         backupPath: backupPath,
         dbSize: dbStats.size,
         backupTime: timestamp,
-        success: true
+        success: true,
       };
-      
-      performanceTracker.end('database-backup');
-      logWithTimestamp('info', SUCCESS_LOG_PREFIX, 'Database backup completed successfully', backupData);
+
+      performanceTracker.end("database-backup");
+      logWithTimestamp(
+        "info",
+        SUCCESS_LOG_PREFIX,
+        "Database backup completed successfully",
+        backupData
+      );
     } else {
-      logWithTimestamp('warn', UPDATE_LOG_PREFIX, 'Database file not found - skipping backup');
+      logWithTimestamp(
+        "warn",
+        UPDATE_LOG_PREFIX,
+        "Database file not found - skipping backup"
+      );
     }
   } catch (error) {
-    performanceTracker.end('database-backup');
+    performanceTracker.end("database-backup");
     const backupError = {
       error: error.message,
       stack: error.stack,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
-    logWithTimestamp('error', ERROR_LOG_PREFIX, 'Database backup failed - continuing update', backupError);
+    logWithTimestamp(
+      "error",
+      ERROR_LOG_PREFIX,
+      "Database backup failed - continuing update",
+      backupError
+    );
   }
-  
-  logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Automatic download will commence (autoDownload=true)');
-  logWithTimestamp('info', UPDATE_LOG_PREFIX, 'No manual download trigger required');
+
+  logWithTimestamp(
+    "info",
+    UPDATE_LOG_PREFIX,
+    "Automatic download will commence (autoDownload=true)"
+  );
+  logWithTimestamp(
+    "info",
+    UPDATE_LOG_PREFIX,
+    "No manual download trigger required"
+  );
 });
 
 autoUpdater.on("update-not-available", (info) => {
-  performanceTracker.end('update-check');
-  
+  performanceTracker.end("update-check");
+
   const noUpdateData = {
     currentVersion: app.getVersion(),
-    latestVersion: info?.version || 'Unknown',
+    latestVersion: info?.version || "Unknown",
     checkTime: new Date().toISOString(),
     platform: process.platform,
-    isUpToDate: true
+    isUpToDate: true,
   };
-  
-  logWithTimestamp('info', UPDATE_LOG_PREFIX, 'No updates available - application is up to date', noUpdateData);
-  logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Update check completed successfully');
-  
+
+  logWithTimestamp(
+    "info",
+    UPDATE_LOG_PREFIX,
+    "No updates available - application is up to date",
+    noUpdateData
+  );
+  logWithTimestamp(
+    "info",
+    UPDATE_LOG_PREFIX,
+    "Update check completed successfully"
+  );
+
   win?.webContents.send("update-status", "not-available");
 });
 
@@ -303,42 +383,65 @@ autoUpdater.on("download-progress", (progress) => {
     transferred: progress.transferred,
     total: progress.total,
     speed: progress.bytesPerSecond || 0,
-    timeRemaining: progress.total && progress.bytesPerSecond ? 
-      Math.round((progress.total - progress.transferred) / progress.bytesPerSecond) : 'Unknown',
-    timestamp: new Date().toISOString()
+    timeRemaining:
+      progress.total && progress.bytesPerSecond
+        ? Math.round(
+            (progress.total - progress.transferred) / progress.bytesPerSecond
+          )
+        : "Unknown",
+    timestamp: new Date().toISOString(),
   };
-  
+
   // Log every 10% to avoid spam but provide detailed progress tracking
-  if (Math.floor(progress.percent) % 10 === 0 && Math.floor(progress.percent) !== Math.floor(progress.percent - 1)) {
-    logWithTimestamp('info', UPDATE_LOG_PREFIX, `📥 Download Progress: ${Math.round(progress.percent)}%`, downloadData);
-    
+  if (
+    Math.floor(progress.percent) % 10 === 0 &&
+    Math.floor(progress.percent) !== Math.floor(progress.percent - 1)
+  ) {
+    logWithTimestamp(
+      "info",
+      UPDATE_LOG_PREFIX,
+      `📥 Download Progress: ${Math.round(progress.percent)}%`,
+      downloadData
+    );
+
     // Calculate and log download speed
-    const speedMBps = progress.bytesPerSecond ? (progress.bytesPerSecond / 1024 / 1024).toFixed(2) : 'Unknown';
-    logWithTimestamp('info', PERFORMANCE_LOG_PREFIX, `Download speed: ${speedMBps} MB/s`);
+    const speedMBps = progress.bytesPerSecond
+      ? (progress.bytesPerSecond / 1024 / 1024).toFixed(2)
+      : "Unknown";
+    logWithTimestamp(
+      "info",
+      PERFORMANCE_LOG_PREFIX,
+      `Download speed: ${speedMBps} MB/s`
+    );
   }
-  
+
   // Send detailed progress to frontend for optional subtle indicator
   const frontendProgress = {
     percent: progress.percent,
     transferred: progress.transferred,
     total: progress.total,
     speed: progress.bytesPerSecond,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
-  
+
   win?.webContents.send("update-download-progress", frontendProgress);
-  
+
   // Very subtle progress in taskbar (user barely notices)
-  win?.setProgressBar(progress.percent / 100, { mode: 'normal' });
-  
+  win?.setProgressBar(progress.percent / 100, { mode: "normal" });
+
   // Log completion
   if (progress.percent >= 100) {
-    performanceTracker.end('update-download-process');
-    logWithTimestamp('info', SUCCESS_LOG_PREFIX, 'Update download completed successfully!', {
-      totalSize: progress.total,
-      finalPercent: progress.percent,
-      completionTime: new Date().toISOString()
-    });
+    performanceTracker.end("update-download-process");
+    logWithTimestamp(
+      "info",
+      SUCCESS_LOG_PREFIX,
+      "Update download completed successfully!",
+      {
+        totalSize: progress.total,
+        finalPercent: progress.percent,
+        completionTime: new Date().toISOString(),
+      }
+    );
   }
 });
 
@@ -347,266 +450,446 @@ let isUpdating = false;
 
 // Cleanup function to ensure all processes are stopped before update
 async function cleanupForUpdate() {
-  performanceTracker.start('cleanup-process');
-  
-  logWithTimestamp('info', UPDATE_LOG_PREFIX, '🧹 ADMIN-LEVEL CLEANUP SEQUENCE INITIATED');
-  logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Using administrator privileges for clean process termination');
-  
+  performanceTracker.start("cleanup-process");
+
+  logWithTimestamp(
+    "info",
+    UPDATE_LOG_PREFIX,
+    "🧹 ADMIN-LEVEL CLEANUP SEQUENCE INITIATED"
+  );
+  logWithTimestamp(
+    "info",
+    UPDATE_LOG_PREFIX,
+    "Using administrator privileges for clean process termination"
+  );
+
   const cleanupSteps = [];
-  
+
   try {
     // 1. Stop the Gateway Windows Service with admin privileges
-    if (process.platform === 'win32') {
-      performanceTracker.start('gateway-service-stop');
-      logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Step 1/6: Stopping Gateway Windows Service (Admin Mode)');
-      
+    if (process.platform === "win32") {
+      performanceTracker.start("gateway-service-stop");
+      logWithTimestamp(
+        "info",
+        UPDATE_LOG_PREFIX,
+        "Step 1/6: Stopping Gateway Windows Service (Admin Mode)"
+      );
+
       try {
-        execSync('sc stop LicensingServer', { timeout: 5000 });
-        logWithTimestamp('info', SUCCESS_LOG_PREFIX, 'Gateway service stopped successfully with admin privileges');
-        cleanupSteps.push({ step: 'Gateway Service Stop', status: 'SUCCESS', timing: performanceTracker.end('gateway-service-stop') });
+        execSync("sc stop LicensingServer", { timeout: 5000 });
+        logWithTimestamp(
+          "info",
+          SUCCESS_LOG_PREFIX,
+          "Gateway service stopped successfully with admin privileges"
+        );
+        cleanupSteps.push({
+          step: "Gateway Service Stop",
+          status: "SUCCESS",
+          timing: performanceTracker.end("gateway-service-stop"),
+        });
       } catch (e) {
-        performanceTracker.end('gateway-service-stop');
-        logWithTimestamp('warn', UPDATE_LOG_PREFIX, 'Gateway service already stopped or not running');
-        cleanupSteps.push({ step: 'Gateway Service Stop', status: 'ALREADY_STOPPED' });
+        performanceTracker.end("gateway-service-stop");
+        logWithTimestamp(
+          "warn",
+          UPDATE_LOG_PREFIX,
+          "Gateway service already stopped or not running"
+        );
+        cleanupSteps.push({
+          step: "Gateway Service Stop",
+          status: "ALREADY_STOPPED",
+        });
       }
-      
+
       // Short wait for service to stop
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
     }
-    
+
     // 2. Close database connections
-    performanceTracker.start('database-cleanup');
-    logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Step 2/6: Closing database connections');
-    
+    performanceTracker.start("database-cleanup");
+    logWithTimestamp(
+      "info",
+      UPDATE_LOG_PREFIX,
+      "Step 2/6: Closing database connections"
+    );
+
     try {
       const dbManager = databaseManager.getInstance();
       if (dbManager && dbManager.getDatabase()) {
         const db = dbManager.getDatabase();
         if (db && db.close) {
           db.close();
-          logWithTimestamp('info', SUCCESS_LOG_PREFIX, 'Database connection closed successfully');
+          logWithTimestamp(
+            "info",
+            SUCCESS_LOG_PREFIX,
+            "Database connection closed successfully"
+          );
         }
       }
-      cleanupSteps.push({ step: 'Database Cleanup', status: 'SUCCESS', timing: performanceTracker.end('database-cleanup') });
+      cleanupSteps.push({
+        step: "Database Cleanup",
+        status: "SUCCESS",
+        timing: performanceTracker.end("database-cleanup"),
+      });
     } catch (e) {
-      performanceTracker.end('database-cleanup');
-      cleanupSteps.push({ step: 'Database Cleanup', status: 'ERROR', error: e.message });
+      performanceTracker.end("database-cleanup");
+      cleanupSteps.push({
+        step: "Database Cleanup",
+        status: "ERROR",
+        error: e.message,
+      });
     }
-    
+
     // 3. Terminate Python backend with admin privileges
-    performanceTracker.start('python-process-cleanup');
-    logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Step 3/6: Terminating Python backend (Admin Mode)');
-    
+    performanceTracker.start("python-process-cleanup");
+    logWithTimestamp(
+      "info",
+      UPDATE_LOG_PREFIX,
+      "Step 3/6: Terminating Python backend (Admin Mode)"
+    );
+
     if (pythonProcess && !pythonProcess.killed) {
-      pythonProcess.kill('SIGTERM');
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      pythonProcess.kill("SIGTERM");
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       if (!pythonProcess.killed) {
-        pythonProcess.kill('SIGKILL');
+        pythonProcess.kill("SIGKILL");
       }
-      }
-      
+    }
+
     // Force kill any remaining Python processes with admin privileges
-      if (process.platform === 'win32') {
-        try {
-          execSync('taskkill /F /IM main.exe', { timeout: 3000 });
-        logWithTimestamp('info', SUCCESS_LOG_PREFIX, 'Python processes terminated with admin privileges');
-        } catch (e) {
+    if (process.platform === "win32") {
+      try {
+        execSync("taskkill /F /IM main.exe", { timeout: 3000 });
+        logWithTimestamp(
+          "info",
+          SUCCESS_LOG_PREFIX,
+          "Python processes terminated with admin privileges"
+        );
+      } catch (e) {
         // Process might not exist - not an error
       }
     }
-    
-    cleanupSteps.push({ step: 'Python Process Cleanup', status: 'SUCCESS', timing: performanceTracker.end('python-process-cleanup') });
-    
+
+    cleanupSteps.push({
+      step: "Python Process Cleanup",
+      status: "SUCCESS",
+      timing: performanceTracker.end("python-process-cleanup"),
+    });
+
     // 4. Terminate Gateway executable with admin privileges
-    performanceTracker.start('gateway-exe-cleanup');
-    logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Step 4/6: Terminating Gateway executable (Admin Mode)');
-    
-    if (process.platform === 'win32') {
+    performanceTracker.start("gateway-exe-cleanup");
+    logWithTimestamp(
+      "info",
+      UPDATE_LOG_PREFIX,
+      "Step 4/6: Terminating Gateway executable (Admin Mode)"
+    );
+
+    if (process.platform === "win32") {
       try {
-        execSync('taskkill /F /IM gatewayService.exe', { timeout: 3000 });
-        logWithTimestamp('info', SUCCESS_LOG_PREFIX, 'Gateway executable terminated with admin privileges');
-        cleanupSteps.push({ step: 'Gateway Executable Cleanup', status: 'SUCCESS', timing: performanceTracker.end('gateway-exe-cleanup') });
+        execSync("taskkill /F /IM gatewayService.exe", { timeout: 3000 });
+        logWithTimestamp(
+          "info",
+          SUCCESS_LOG_PREFIX,
+          "Gateway executable terminated with admin privileges"
+        );
+        cleanupSteps.push({
+          step: "Gateway Executable Cleanup",
+          status: "SUCCESS",
+          timing: performanceTracker.end("gateway-exe-cleanup"),
+        });
       } catch (e) {
-        performanceTracker.end('gateway-exe-cleanup');
-        logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Gateway executable already terminated');
-        cleanupSteps.push({ step: 'Gateway Executable Cleanup', status: 'ALREADY_TERMINATED' });
+        performanceTracker.end("gateway-exe-cleanup");
+        logWithTimestamp(
+          "info",
+          UPDATE_LOG_PREFIX,
+          "Gateway executable already terminated"
+        );
+        cleanupSteps.push({
+          step: "Gateway Executable Cleanup",
+          status: "ALREADY_TERMINATED",
+        });
       }
     }
-    
+
     // 5. Close main application windows (preserve installation window)
-    performanceTracker.start('window-cleanup');
-    logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Step 5/6: Closing application windows');
-    
+    performanceTracker.start("window-cleanup");
+    logWithTimestamp(
+      "info",
+      UPDATE_LOG_PREFIX,
+      "Step 5/6: Closing application windows"
+    );
+
     const openWindows = BrowserWindow.getAllWindows();
     let windowsClosedCount = 0;
     let installationWindowsFound = 0;
-    
+
     openWindows.forEach((win, index) => {
       if (!win.isDestroyed()) {
         const isInstallationWindow = win.isInstallationWindow === true;
-        
+
         if (isInstallationWindow) {
           installationWindowsFound++;
-          logWithTimestamp('info', UPDATE_LOG_PREFIX, `Preserving installation window ${index + 1}`);
+          logWithTimestamp(
+            "info",
+            UPDATE_LOG_PREFIX,
+            `Preserving installation window ${index + 1}`
+          );
         } else {
-        win.removeAllListeners('close');
+          win.removeAllListeners("close");
           win.close();
           windowsClosedCount++;
         }
       }
     });
-    
-    logWithTimestamp('info', SUCCESS_LOG_PREFIX, `Closed ${windowsClosedCount} windows, preserved ${installationWindowsFound} installation windows`);
-    cleanupSteps.push({ 
-      step: 'Window Cleanup', 
-      status: 'SUCCESS', 
+
+    logWithTimestamp(
+      "info",
+      SUCCESS_LOG_PREFIX,
+      `Closed ${windowsClosedCount} windows, preserved ${installationWindowsFound} installation windows`
+    );
+    cleanupSteps.push({
+      step: "Window Cleanup",
+      status: "SUCCESS",
       windowsClosed: windowsClosedCount,
       installationWindowsPreserved: installationWindowsFound,
-      timing: performanceTracker.end('window-cleanup')
+      timing: performanceTracker.end("window-cleanup"),
     });
-    
+
     // 6. Final settlement wait
-    performanceTracker.start('final-wait');
-    logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Step 6/6: Final process settlement (3 seconds)');
-    logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Admin privileges ensure clean termination - minimal wait required');
-    
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    cleanupSteps.push({ step: 'Final Settlement Wait', status: 'COMPLETED', timing: performanceTracker.end('final-wait') });
-    
-    const totalCleanupTime = performanceTracker.end('cleanup-process');
-    
+    performanceTracker.start("final-wait");
+    logWithTimestamp(
+      "info",
+      UPDATE_LOG_PREFIX,
+      "Step 6/6: Final process settlement (3 seconds)"
+    );
+    logWithTimestamp(
+      "info",
+      UPDATE_LOG_PREFIX,
+      "Admin privileges ensure clean termination - minimal wait required"
+    );
+
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    cleanupSteps.push({
+      step: "Final Settlement Wait",
+      status: "COMPLETED",
+      timing: performanceTracker.end("final-wait"),
+    });
+
+    const totalCleanupTime = performanceTracker.end("cleanup-process");
+
     // Admin-level cleanup summary
     const cleanupSummary = {
       totalSteps: cleanupSteps.length,
-      successfulSteps: cleanupSteps.filter(s => s.status === 'SUCCESS').length,
+      successfulSteps: cleanupSteps.filter((s) => s.status === "SUCCESS")
+        .length,
       adminPrivileges: true,
       totalCleanupTime: totalCleanupTime,
       completionTime: new Date().toISOString(),
-      stepDetails: cleanupSteps
+      stepDetails: cleanupSteps,
     };
-    
-    logWithTimestamp('info', SUCCESS_LOG_PREFIX, '🧹 ADMIN-LEVEL CLEANUP COMPLETED SUCCESSFULLY!', cleanupSummary);
-    logWithTimestamp('info', UPDATE_LOG_PREFIX, 'All processes terminated cleanly with administrator privileges');
-    logWithTimestamp('info', UPDATE_LOG_PREFIX, 'System ready for seamless update installation');
-    
+
+    logWithTimestamp(
+      "info",
+      SUCCESS_LOG_PREFIX,
+      "🧹 ADMIN-LEVEL CLEANUP COMPLETED SUCCESSFULLY!",
+      cleanupSummary
+    );
+    logWithTimestamp(
+      "info",
+      UPDATE_LOG_PREFIX,
+      "All processes terminated cleanly with administrator privileges"
+    );
+    logWithTimestamp(
+      "info",
+      UPDATE_LOG_PREFIX,
+      "System ready for seamless update installation"
+    );
   } catch (error) {
-    performanceTracker.end('cleanup-process');
-    
+    performanceTracker.end("cleanup-process");
+
     const criticalError = {
       error: error.message,
       stack: error.stack,
       timestamp: new Date().toISOString(),
-      adminPrivileges: true
+      adminPrivileges: true,
     };
-    
-    logWithTimestamp('error', ERROR_LOG_PREFIX, '💥 CRITICAL ERROR IN ADMIN-LEVEL CLEANUP', criticalError);
-    logWithTimestamp('warn', UPDATE_LOG_PREFIX, 'Continuing with update installation despite cleanup errors');
+
+    logWithTimestamp(
+      "error",
+      ERROR_LOG_PREFIX,
+      "💥 CRITICAL ERROR IN ADMIN-LEVEL CLEANUP",
+      criticalError
+    );
+    logWithTimestamp(
+      "warn",
+      UPDATE_LOG_PREFIX,
+      "Continuing with update installation despite cleanup errors"
+    );
   }
 }
 
 autoUpdater.on("update-downloaded", (info) => {
-  performanceTracker.start('user-interaction-flow');
-  
+  performanceTracker.start("user-interaction-flow");
+
   const downloadCompletedData = {
     newVersion: info.version,
     currentVersion: app.getVersion(),
     downloadedAt: new Date().toISOString(),
-    fileSize: info.files?.[0]?.size || 'Unknown',
-    releaseNotes: info.releaseNotes ? info.releaseNotes.substring(0, 100) + '...' : 'No release notes',
-    platform: process.platform
+    fileSize: info.files?.[0]?.size || "Unknown",
+    releaseNotes: info.releaseNotes
+      ? info.releaseNotes.substring(0, 100) + "..."
+      : "No release notes",
+    platform: process.platform,
   };
-  
-  logWithTimestamp('info', SUCCESS_LOG_PREFIX, '🎉 UPDATE DOWNLOAD COMPLETED SUCCESSFULLY!', downloadCompletedData);
-  logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Clearing taskbar progress indicator');
-  
+
+  logWithTimestamp(
+    "info",
+    SUCCESS_LOG_PREFIX,
+    "🎉 UPDATE DOWNLOAD COMPLETED SUCCESSFULLY!",
+    downloadCompletedData
+  );
+  logWithTimestamp(
+    "info",
+    UPDATE_LOG_PREFIX,
+    "Clearing taskbar progress indicator"
+  );
+
   win?.setProgressBar(-1); // Clear taskbar progress
-  
+
   // Log the seamless strategy transition
-  logWithTimestamp('info', UPDATE_LOG_PREFIX, '🎯 TRANSITIONING TO USER INTERACTION PHASE');
-  logWithTimestamp('info', UPDATE_LOG_PREFIX, 'This is the ONLY user interaction in the seamless update process');
-  
+  logWithTimestamp(
+    "info",
+    UPDATE_LOG_PREFIX,
+    "🎯 TRANSITIONING TO USER INTERACTION PHASE"
+  );
+  logWithTimestamp(
+    "info",
+    UPDATE_LOG_PREFIX,
+    "This is the ONLY user interaction in the seamless update process"
+  );
+
   // Send notification to frontend first (for any UI updates)
   const frontendUpdateStatus = {
-    status: "ready-to-install", 
+    status: "ready-to-install",
     version: info.version,
     message: "Update ready to install",
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
-  
-  logWithTimestamp('info', USER_LOG_PREFIX, 'Sending ready-to-install status to frontend', frontendUpdateStatus);
+
+  logWithTimestamp(
+    "info",
+    USER_LOG_PREFIX,
+    "Sending ready-to-install status to frontend",
+    frontendUpdateStatus
+  );
   win?.webContents.send("update-status", frontendUpdateStatus);
-  
+
   // Show user-friendly notification AFTER download is complete
   const dialogOptions = {
-      type: "info",
+    type: "info",
     title: "Update Ready to Install",
     message: `🎉 New version ${info.version} has been downloaded!`,
-    detail: "The update is ready to install. Would you like to restart and apply it now, or install it later?",
+    detail:
+      "The update is ready to install. Would you like to restart and apply it now, or install it later?",
     buttons: ["Install Now", "Install Later"],
-      defaultId: 0,
-      cancelId: 1,
+    defaultId: 0,
+    cancelId: 1,
   };
-  
-  logWithTimestamp('info', USER_LOG_PREFIX, 'Displaying update installation dialog to user', {
-    dialogTitle: dialogOptions.title,
-    dialogMessage: dialogOptions.message,
-    buttonOptions: dialogOptions.buttons,
-    displayTime: new Date().toISOString()
-  });
-  
+
+  logWithTimestamp(
+    "info",
+    USER_LOG_PREFIX,
+    "Displaying update installation dialog to user",
+    {
+      dialogTitle: dialogOptions.title,
+      dialogMessage: dialogOptions.message,
+      buttonOptions: dialogOptions.buttons,
+      displayTime: new Date().toISOString(),
+    }
+  );
+
   dialog
     .showMessageBox(dialogOptions)
     .then(async (response) => {
-      performanceTracker.end('user-interaction-flow');
-      
-      const userChoice = response.response === 0 ? 'Install Now' : 'Install Later';
-      
-      logWithTimestamp('info', USER_LOG_PREFIX, `User decision recorded: ${userChoice}`, {
-        buttonIndex: response.response,
-        responseTime: new Date().toISOString(),
-        userChoice: userChoice
-      });
-      
-      if (response.response === 0) {  // User clicked "Install Now"
-        performanceTracker.start('installation-process');
-        
-        logWithTimestamp('info', UPDATE_LOG_PREFIX, '🚀 IMMEDIATE INSTALLATION REQUESTED BY USER');
-        
+      performanceTracker.end("user-interaction-flow");
+
+      const userChoice =
+        response.response === 0 ? "Install Now" : "Install Later";
+
+      logWithTimestamp(
+        "info",
+        USER_LOG_PREFIX,
+        `User decision recorded: ${userChoice}`,
+        {
+          buttonIndex: response.response,
+          responseTime: new Date().toISOString(),
+          userChoice: userChoice,
+        }
+      );
+
+      if (response.response === 0) {
+        // User clicked "Install Now"
+        performanceTracker.start("installation-process");
+
+        logWithTimestamp(
+          "info",
+          UPDATE_LOG_PREFIX,
+          "🚀 IMMEDIATE INSTALLATION REQUESTED BY USER"
+        );
+
         // Set updating flag to skip confirmation dialogs FIRST
         isUpdating = true;
         sessionManager.logoutUser();
-        
-        logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Update flag set - skipping close confirmations');
-        logWithTimestamp('info', UPDATE_LOG_PREFIX, 'User session logged out for clean installation');
-        
+
+        logWithTimestamp(
+          "info",
+          UPDATE_LOG_PREFIX,
+          "Update flag set - skipping close confirmations"
+        );
+        logWithTimestamp(
+          "info",
+          UPDATE_LOG_PREFIX,
+          "User session logged out for clean installation"
+        );
+
         // Create success flag for next startup
-        const updateFlagPath = path.join(app.getPath("userData"), "update-success.txt");
+        const updateFlagPath = path.join(
+          app.getPath("userData"),
+          "update-success.txt"
+        );
         fs.writeFileSync(updateFlagPath, info.version);
-        logWithTimestamp('info', UPDATE_LOG_PREFIX, `Success flag created: ${updateFlagPath}`);
-        
+        logWithTimestamp(
+          "info",
+          UPDATE_LOG_PREFIX,
+          `Success flag created: ${updateFlagPath}`
+        );
+
         // Show minimal installation progress BEFORE cleanup
-        logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Creating installation progress window');
-        
+        logWithTimestamp(
+          "info",
+          UPDATE_LOG_PREFIX,
+          "Creating installation progress window"
+        );
+
         const installingWindow = new BrowserWindow({
           width: 350,
           height: 100,
-        frame: false,
-        resizable: false,
-        center: true,
-        alwaysOnTop: true,
-        show: false,
-        webPreferences: {
-          nodeIntegration: true,
-          contextIsolation: false
-        }
-      });
-        
+          frame: false,
+          resizable: false,
+          center: true,
+          alwaysOnTop: true,
+          show: false,
+          webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false,
+          },
+        });
+
         // Mark this as an installation window for cleanup exclusion
         installingWindow.isInstallationWindow = true;
-      
-      const installHtml = `
+
+        const installHtml = `
         <html>
           <head>
             <meta charset="UTF-8">
@@ -643,157 +926,223 @@ autoUpdater.on("update-downloaded", (info) => {
           </body>
         </html>
       `;
-      
-      installingWindow.loadURL("data:text/html;charset=utf-8," + encodeURIComponent(installHtml));
-      
-      installingWindow.once('ready-to-show', () => {
-        installingWindow.show();
-          logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Installation progress window displayed to user');
+
+        installingWindow.loadURL(
+          "data:text/html;charset=utf-8," + encodeURIComponent(installHtml)
+        );
+
+        installingWindow.once("ready-to-show", () => {
+          installingWindow.show();
+          logWithTimestamp(
+            "info",
+            UPDATE_LOG_PREFIX,
+            "Installation progress window displayed to user"
+          );
         });
-        
+
         // Run cleanup AFTER showing installation window
-        logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Starting pre-installation cleanup sequence');
+        logWithTimestamp(
+          "info",
+          UPDATE_LOG_PREFIX,
+          "Starting pre-installation cleanup sequence"
+        );
         await cleanupForUpdate();
-        
+
         // Install update
-      setTimeout(() => {
-        try {
-            logWithTimestamp('info', UPDATE_LOG_PREFIX, '🚀 INITIATING QUIT AND INSTALL SEQUENCE');
-            logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Application will restart with new version');
-            
-            performanceTracker.end('installation-process');
+        setTimeout(() => {
+          try {
+            logWithTimestamp(
+              "info",
+              UPDATE_LOG_PREFIX,
+              "🚀 INITIATING QUIT AND INSTALL SEQUENCE"
+            );
+            logWithTimestamp(
+              "info",
+              UPDATE_LOG_PREFIX,
+              "Application will restart with new version"
+            );
+
+            performanceTracker.end("installation-process");
             autoUpdater.autoInstallOnAppQuit = false;
             autoUpdater.quitAndInstall(true, true);
-        } catch (err) {
-            performanceTracker.end('installation-process');
+          } catch (err) {
+            performanceTracker.end("installation-process");
             const installError = {
               error: err.message,
               stack: err.stack,
-              timestamp: new Date().toISOString()
+              timestamp: new Date().toISOString(),
             };
-            logWithTimestamp('error', ERROR_LOG_PREFIX, 'Critical error during installation', installError);
-          app.quit();
-        }
+            logWithTimestamp(
+              "error",
+              ERROR_LOG_PREFIX,
+              "Critical error during installation",
+              installError
+            );
+            app.quit();
+          }
         }, 1000);
-        
       } else {
         // User clicked "Install Later"
-        logWithTimestamp('info', USER_LOG_PREFIX, '📅 DEFERRED INSTALLATION SELECTED BY USER');
-        logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Update will be applied on next application restart');
-        logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Update file cached and ready for installation');
+        logWithTimestamp(
+          "info",
+          USER_LOG_PREFIX,
+          "📅 DEFERRED INSTALLATION SELECTED BY USER"
+        );
+        logWithTimestamp(
+          "info",
+          UPDATE_LOG_PREFIX,
+          "Update will be applied on next application restart"
+        );
+        logWithTimestamp(
+          "info",
+          UPDATE_LOG_PREFIX,
+          "Update file cached and ready for installation"
+        );
       }
     })
     .catch((dialogError) => {
-      performanceTracker.end('user-interaction-flow');
+      performanceTracker.end("user-interaction-flow");
       const dialogErrorData = {
         error: dialogError.message,
         stack: dialogError.stack,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-      logWithTimestamp('error', ERROR_LOG_PREFIX, 'Error displaying installation dialog', dialogErrorData);
+      logWithTimestamp(
+        "error",
+        ERROR_LOG_PREFIX,
+        "Error displaying installation dialog",
+        dialogErrorData
+      );
     });
 });
 
 autoUpdater.on("error", (err) => {
   // Stop any running performance timers
-  if (performanceTracker.timers.has('update-check')) performanceTracker.end('update-check');
-  if (performanceTracker.timers.has('update-download-process')) performanceTracker.end('update-download-process');
-  if (performanceTracker.timers.has('installation-process')) performanceTracker.end('installation-process');
-  
+  if (performanceTracker.timers.has("update-check"))
+    performanceTracker.end("update-check");
+  if (performanceTracker.timers.has("update-download-process"))
+    performanceTracker.end("update-download-process");
+  if (performanceTracker.timers.has("installation-process"))
+    performanceTracker.end("installation-process");
+
   const errorData = {
     errorMessage: err.message,
-    errorCode: err.code || 'Unknown',
-    stack: err.stack || 'No stack trace available',
+    errorCode: err.code || "Unknown",
+    stack: err.stack || "No stack trace available",
     platform: process.platform,
     appVersion: app.getVersion(),
     timestamp: new Date().toISOString(),
     updateUrl: autoUpdater.getFeedURL(),
-    autoDownloadEnabled: autoUpdater.autoDownload
+    autoDownloadEnabled: autoUpdater.autoDownload,
   };
-  
-  logWithTimestamp('error', ERROR_LOG_PREFIX, '💥 AUTO-UPDATER ERROR OCCURRED', errorData);
-  
+
+  logWithTimestamp(
+    "error",
+    ERROR_LOG_PREFIX,
+    "💥 AUTO-UPDATER ERROR OCCURRED",
+    errorData
+  );
+
   // Categorize error types for better analysis
-  let errorCategory = 'UNKNOWN';
-  if (err.message.includes('No published releases')) {
-    errorCategory = 'NO_RELEASES_AVAILABLE';
-  } else if (err.message.includes('net::')) {
-    errorCategory = 'NETWORK_ERROR';
-  } else if (err.message.includes('ENOENT')) {
-    errorCategory = 'FILE_NOT_FOUND';
-  } else if (err.message.includes('Permission denied')) {
-    errorCategory = 'PERMISSION_ERROR';
-  } else if (err.message.includes('timeout')) {
-    errorCategory = 'TIMEOUT_ERROR';
+  let errorCategory = "UNKNOWN";
+  if (err.message.includes("No published releases")) {
+    errorCategory = "NO_RELEASES_AVAILABLE";
+  } else if (err.message.includes("net::")) {
+    errorCategory = "NETWORK_ERROR";
+  } else if (err.message.includes("ENOENT")) {
+    errorCategory = "FILE_NOT_FOUND";
+  } else if (err.message.includes("Permission denied")) {
+    errorCategory = "PERMISSION_ERROR";
+  } else if (err.message.includes("timeout")) {
+    errorCategory = "TIMEOUT_ERROR";
   }
-  
-  logWithTimestamp('error', ERROR_LOG_PREFIX, `Error category identified: ${errorCategory}`);
-  
+
+  logWithTimestamp(
+    "error",
+    ERROR_LOG_PREFIX,
+    `Error category identified: ${errorCategory}`
+  );
+
   win?.webContents.send("update-error", err.message);
   win?.setProgressBar(-1); // Clear any progress indication
-  
+
   // Show error to user only if it's a critical error (not just "no releases")
   if (!err.message.includes("No published releases")) {
     const errorDialogData = {
       errorCategory: errorCategory,
       shownToUser: true,
-      userNotificationTime: new Date().toISOString()
+      userNotificationTime: new Date().toISOString(),
     };
-    
-    logWithTimestamp('error', USER_LOG_PREFIX, 'Displaying error dialog to user', errorDialogData);
-    
-  dialog.showMessageBox({
-    type: "error",
-    title: "Update Error",
-    message: "There was a problem updating the application.",
-    detail: "You can try again later or contact support if the problem persists.",
-    buttons: ["OK"]
-  });
+
+    logWithTimestamp(
+      "error",
+      USER_LOG_PREFIX,
+      "Displaying error dialog to user",
+      errorDialogData
+    );
+
+    dialog.showMessageBox({
+      type: "error",
+      title: "Update Error",
+      message: "There was a problem updating the application.",
+      detail:
+        "You can try again later or contact support if the problem persists.",
+      buttons: ["OK"],
+    });
   } else {
-    logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Non-critical error - no user notification shown');
+    logWithTimestamp(
+      "info",
+      UPDATE_LOG_PREFIX,
+      "Non-critical error - no user notification shown"
+    );
   }
-  
+
   // Log recovery suggestions for backend team
   const recoverySuggestions = {
     errorCategory: errorCategory,
     suggestions: getRecoverySuggestions(errorCategory),
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
-  
-  logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Recovery suggestions for backend team', recoverySuggestions);
+
+  logWithTimestamp(
+    "info",
+    UPDATE_LOG_PREFIX,
+    "Recovery suggestions for backend team",
+    recoverySuggestions
+  );
 });
 
 // Helper function for recovery suggestions
 function getRecoverySuggestions(errorCategory) {
   const suggestions = {
-    'NO_RELEASES_AVAILABLE': [
-      'Verify GitHub repository has published releases',
-      'Check release visibility settings',
-      'Ensure GH_TOKEN has correct permissions'
+    NO_RELEASES_AVAILABLE: [
+      "Verify GitHub repository has published releases",
+      "Check release visibility settings",
+      "Ensure GH_TOKEN has correct permissions",
     ],
-    'NETWORK_ERROR': [
-      'Check internet connectivity',
-      'Verify firewall settings',
-      'Test GitHub API accessibility'
+    NETWORK_ERROR: [
+      "Check internet connectivity",
+      "Verify firewall settings",
+      "Test GitHub API accessibility",
     ],
-    'PERMISSION_ERROR': [
-      'Check file system permissions',
-      'Verify user has write access to update directory',
-      'Consider running with elevated permissions'
+    PERMISSION_ERROR: [
+      "Check file system permissions",
+      "Verify user has write access to update directory",
+      "Consider running with elevated permissions",
     ],
-    'TIMEOUT_ERROR': [
-      'Increase timeout settings',
-      'Check network stability',
-      'Retry during off-peak hours'
+    TIMEOUT_ERROR: [
+      "Increase timeout settings",
+      "Check network stability",
+      "Retry during off-peak hours",
     ],
-    'UNKNOWN': [
-      'Review full error logs',
-      'Check system resources',
-      'Verify update configuration'
-    ]
+    UNKNOWN: [
+      "Review full error logs",
+      "Check system resources",
+      "Verify update configuration",
+    ],
   };
-  
-  return suggestions[errorCategory] || suggestions['UNKNOWN'];
+
+  return suggestions[errorCategory] || suggestions["UNKNOWN"];
 }
 
 let win = null;
@@ -853,7 +1202,8 @@ function getProductionExecutablePath() {
   return executablePath;
 }
 
-async function startPythonExecutable() {  return new Promise((resolve, reject) => {
+async function startPythonExecutable() {
+  return new Promise((resolve, reject) => {
     let command, args;
     let options = {
       detached: false,
@@ -1017,19 +1367,25 @@ function syncTallyprimeFilesToUserData() {
   if (!fs.existsSync(XLSM_USERDATA_DIR)) {
     fs.mkdirSync(XLSM_USERDATA_DIR, { recursive: true });
 
-      const bundled = fs.readdirSync(XLSM_SOURCE_DIR).filter(f => f.endsWith('.xlsm'));
-    bundled.forEach(file => {
-      fs.copyFileSync(path.join(XLSM_SOURCE_DIR, file),
-                      path.join(XLSM_USERDATA_DIR, file));
+    const bundled = fs
+      .readdirSync(XLSM_SOURCE_DIR)
+      .filter((f) => f.endsWith(".xlsm"));
+    bundled.forEach((file) => {
+      fs.copyFileSync(
+        path.join(XLSM_SOURCE_DIR, file),
+        path.join(XLSM_USERDATA_DIR, file)
+      );
       log.info(`Initial sync of voucher: ${file}`);
     });
-  }else{
+  } else {
     log.info("User data directory already exists:", XLSM_USERDATA_DIR);
   }
-// 2) Patch sync: if there are any updates in userData/tallyprime/update, apply them
+  // 2) Patch sync: if there are any updates in userData/tallyprime/update, apply them
   if (fs.existsSync(XLSM_PATCH_DIR)) {
-    const patches = fs.readdirSync(XLSM_PATCH_DIR).filter(f => f.endsWith('.xlsm'));
-    patches.forEach(file => {
+    const patches = fs
+      .readdirSync(XLSM_PATCH_DIR)
+      .filter((f) => f.endsWith(".xlsm"));
+    patches.forEach((file) => {
       const src = path.join(XLSM_PATCH_DIR, file);
       const dest = path.join(XLSM_USERDATA_DIR, file);
       fs.copyFileSync(src, dest);
@@ -1041,7 +1397,7 @@ function syncTallyprimeFilesToUserData() {
     if (fs.readdirSync(XLSM_PATCH_DIR).length === 0) {
       fs.rmdirSync(XLSM_PATCH_DIR);
     }
-  }else{
+  } else {
     log.info("No patch directory found:", XLSM_PATCH_DIR);
   }
 }
@@ -1121,7 +1477,9 @@ async function createWindow() {
     },
     icon: path.join(__dirname, "assets", "cyphersol-icon.png"),
     autoHideMenuBar: true,
-    title: global.AppConfig.isDev ? `CypherSol Dev v${app.getVersion()}` : `CypherSol v${app.getVersion()}`,
+    title: global.AppConfig.isDev
+      ? `CypherSol Dev v${app.getVersion()}`
+      : `CypherSol v${app.getVersion()}`,
   });
   if (global.AppConfig.isDev) {
     win.loadURL("http://localhost:3000");
@@ -1373,7 +1731,7 @@ app.setName("CypherSol Dev");
 // Add this function before app.whenReady()
 async function performUserDataMigration() {
   const migrationStartTime = Date.now();
-  
+
   try {
     log.info("🚀 [USER-DATA-MIGRATION] === STARTING MIGRATION PROCESS ===");
     log.info("[USER-DATA-MIGRATION] SYSTEM CONTEXT", {
@@ -1382,33 +1740,33 @@ async function performUserDataMigration() {
       platform: process.platform,
       arch: process.arch,
       isPackaged: app.isPackaged,
-      userDataDir: app.getPath('userData'),
-      tempDir: app.getPath('temp'),
+      userDataDir: app.getPath("userData"),
+      tempDir: app.getPath("temp"),
       processId: process.pid,
-      startTime: new Date().toISOString()
+      startTime: new Date().toISOString(),
     });
-    
+
     const migration = new DatabaseMigration();
-    
+
     // Get initial status
     const initialStatus = migration.getMigrationStatus();
     log.info("[USER-DATA-MIGRATION] INITIAL STATUS", initialStatus);
-    
+
     // Perform migration
     log.info("[USER-DATA-MIGRATION] CALLING MIGRATION FUNCTION");
     const result = await migration.performMigration();
-    
+
     const migrationEndTime = Date.now();
     const totalDuration = migrationEndTime - migrationStartTime;
-    
+
     // Log results based on outcome
     if (result.alreadyCompleted) {
-      log.info("✅ [USER-DATA-MIGRATION] ALREADY COMPLETED", { 
-        totalDurationMs: totalDuration 
+      log.info("✅ [USER-DATA-MIGRATION] ALREADY COMPLETED", {
+        totalDurationMs: totalDuration,
       });
     } else if (result.freshInstall) {
-      log.info("ℹ️ [USER-DATA-MIGRATION] FRESH INSTALLATION DETECTED", { 
-        totalDurationMs: totalDuration 
+      log.info("ℹ️ [USER-DATA-MIGRATION] FRESH INSTALLATION DETECTED", {
+        totalDurationMs: totalDuration,
       });
     } else if (result.success) {
       log.info("🎉 [USER-DATA-MIGRATION] MIGRATION SUCCESSFUL!", {
@@ -1418,91 +1776,96 @@ async function performUserDataMigration() {
         failedMigrations: result.failedMigrations,
         preservedOriginal: result.preservedOriginal,
         migrationDurationMs: result.migrationDurationMs,
-        totalProcessDurationMs: totalDuration
+        totalProcessDurationMs: totalDuration,
       });
-      
+
       // Log detailed success information
       if (result.successfulMigrations > 0) {
         const migratedFiles = result.migratedItems
-          .filter(item => item.migrationSuccess)
-          .map(item => ({
+          .filter((item) => item.migrationSuccess)
+          .map((item) => ({
             name: item.fileName,
             type: item.type,
-            description: item.description || 'No description',
-            size: item.size || 'Unknown',
-            durationMs: item.migrationDurationMs || 'Unknown'
+            description: item.description || "No description",
+            size: item.size || "Unknown",
+            durationMs: item.migrationDurationMs || "Unknown",
           }));
-          
+
         log.info("📋 [USER-DATA-MIGRATION] SUCCESSFULLY MIGRATED ITEMS", {
           count: migratedFiles.length,
           items: migratedFiles,
-          note: "Original files preserved in old app directory"
+          note: "Original files preserved in old app directory",
         });
       }
-      
+
       // Log any failures for debugging
       if (result.failedMigrations > 0) {
         const failedFiles = result.migratedItems
-          .filter(item => !item.migrationSuccess)
-          .map(item => ({
+          .filter((item) => !item.migrationSuccess)
+          .map((item) => ({
             name: item.fileName,
             type: item.type,
-            description: item.description || 'No description'
+            description: item.description || "No description",
           }));
-          
+
         log.warn("⚠️ [USER-DATA-MIGRATION] FAILED MIGRATIONS", {
           count: failedFiles.length,
-          items: failedFiles
+          items: failedFiles,
         });
       }
     } else {
       log.error("❌ [USER-DATA-MIGRATION] MIGRATION FAILED", {
-        totalItems: result.totalItems || 'Unknown',
+        totalItems: result.totalItems || "Unknown",
         successful: result.successfulMigrations || 0,
-        failed: result.failedMigrations || 'Unknown',
-        error: result.error || 'Unknown error',
-        totalDurationMs: totalDuration
+        failed: result.failedMigrations || "Unknown",
+        error: result.error || "Unknown error",
+        totalDurationMs: totalDuration,
       });
     }
-    
+
     // Get final status for comparison
     const finalStatus = migration.getMigrationStatus();
     log.info("[USER-DATA-MIGRATION] FINAL STATUS", finalStatus);
-    
+
     log.info("🏁 [USER-DATA-MIGRATION] === MIGRATION PROCESS COMPLETED ===", {
       totalDurationMs: totalDuration,
-      totalDurationSeconds: (totalDuration / 1000).toFixed(2)
+      totalDurationSeconds: (totalDuration / 1000).toFixed(2),
     });
-    
+
     return result;
-    
   } catch (error) {
     const migrationEndTime = Date.now();
     const totalDuration = migrationEndTime - migrationStartTime;
-    
+
     log.error("💥 [USER-DATA-MIGRATION] CRITICAL MIGRATION ERROR", {
       error: error.message,
       stack: error.stack,
       totalDurationMs: totalDuration,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
-    
+
     // Try to log to a backup location
     try {
-      const errorLogPath = path.join(app.getPath('temp'), 'cyphersol-migration-error.log');
+      const errorLogPath = path.join(
+        app.getPath("temp"),
+        "cyphersol-migration-error.log"
+      );
       const errorInfo = {
         timestamp: new Date().toISOString(),
         error: error.message,
         stack: error.stack,
         appVersion: app.getVersion(),
-        platform: process.platform
+        platform: process.platform,
       };
       fs.writeFileSync(errorLogPath, JSON.stringify(errorInfo, null, 2));
       log.info("[USER-DATA-MIGRATION] Error details saved to:", errorLogPath);
     } catch (backupError) {
-      log.error("[USER-DATA-MIGRATION] Failed to save error backup:", backupError);
+      log.error(
+        "[USER-DATA-MIGRATION] Failed to save error backup:",
+        backupError
+      );
     }
-    
+
     return { success: false, error: error.message, criticalError: true };
   }
 }
@@ -1511,7 +1874,7 @@ app.whenReady().then(async () => {
   log.info("🚀 APP READY - STARTING INITIALIZATION SEQUENCE", {
     userDataDir: userDataDir,
     appVersion: app.getVersion(),
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 
   createSplashWindow();
@@ -1520,12 +1883,12 @@ app.whenReady().then(async () => {
     // 🔄 MIGRATE USER DATA FROM OLD APP (Critical first step)
     log.info("📋 INITIALIZATION STEP 1: USER DATA MIGRATION");
     const migrationResult = await performUserDataMigration();
-    
+
     if (migrationResult.criticalError) {
       log.error("💥 CRITICAL MIGRATION ERROR - CONTINUING WITH CAUTION");
       // Continue with app initialization even if migration fails
     }
-    
+
     // 🗄️ Initialize Database AFTER migration (so it uses the migrated data)
     log.info("📋 INITIALIZATION STEP 2: DATABASE INITIALIZATION");
     try {
@@ -1538,32 +1901,38 @@ app.whenReady().then(async () => {
     }
 
     // 🏁 Check Update Success/Failure Flags
-    const updateFlagPath = path.join(app.getPath("userData"), "update-success.txt");
+    const updateFlagPath = path.join(
+      app.getPath("userData"),
+      "update-success.txt"
+    );
     if (fs.existsSync(updateFlagPath)) {
       try {
-        const version = fs.readFileSync(updateFlagPath, 'utf8');
+        const version = fs.readFileSync(updateFlagPath, "utf8");
         fs.unlinkSync(updateFlagPath); // Remove the flag file
-        
+
         // Show success message after app fully loads
         setTimeout(() => {
           dialog.showMessageBox({
             type: "info",
             title: "Update Successful",
             message: `Successfully updated to version ${app.getVersion()}`,
-            buttons: ["OK"]
+            buttons: ["OK"],
           });
         }, 2000);
       } catch (err) {
         log.error("Error reading update flag:", err);
       }
     }
-    
+
     // Check for update failure flag
-    const updateFailurePath = path.join(app.getPath("userData"), "update-failure.txt");
+    const updateFailurePath = path.join(
+      app.getPath("userData"),
+      "update-failure.txt"
+    );
     if (fs.existsSync(updateFailurePath)) {
       try {
         fs.unlinkSync(updateFailurePath); // Remove the flag file
-        
+
         // Show failure recovery message
         setTimeout(() => {
           dialog.showMessageBox({
@@ -1571,7 +1940,7 @@ app.whenReady().then(async () => {
             title: "Update Recovery",
             message: "The application recovered from a failed update attempt.",
             detail: "You can try updating again later.",
-            buttons: ["OK"]
+            buttons: ["OK"],
           });
         }, 2000);
       } catch (err) {
@@ -1581,17 +1950,18 @@ app.whenReady().then(async () => {
 
     // ✅ FIXED: Correct initialization order to prevent license validation race condition
     // 🚨 CRITICAL: Gateway server MUST start BEFORE license validation
-    
+
     // 1. Start Gateway Server FIRST (needed for license validation)
     try {
-      log.info("🚀 PHASE 1: Initializing Gateway Server (Required for License Validation)");
+      log.info(
+        "🚀 PHASE 1: Initializing Gateway Server (Required for License Validation)"
+      );
       gatewayServer.init(GATEWAY_EXECUTABLE_DIR);
       log.info("✅ Gateway server path configured");
-      
+
       // 🔧 ROBUST GATEWAY INITIALIZATION with health checks and fallback
       await gatewayServer.initialize();
       log.info("✅ Gateway server initialized and responding on port 7890");
-      
     } catch (error) {
       log.error("❌ GatewayServer initialization failed:", error);
       throw error;
@@ -1599,7 +1969,9 @@ app.whenReady().then(async () => {
 
     // 2. Initialize License Manager AFTER Gateway Server is ready
     try {
-      log.info("🚀 PHASE 2: Initializing License Manager (Gateway Server Available)");
+      log.info(
+        "🚀 PHASE 2: Initializing License Manager (Gateway Server Available)"
+      );
       const isLicenseValid = await licenseManager.init(app.getPath("userData"));
       log.info("✅ License status:", isLicenseValid);
       log.info("✅ License Info Data:", licenseManager.licenseData);
@@ -1619,14 +1991,14 @@ app.whenReady().then(async () => {
     }
 
     // 4. Load System Information
-    phaseLog("SYSTEM_INFO", "LOADING");
+    log.info("SYSTEM_INFO", "LOADING");
     try {
       const sysInfoStartTime = Date.now();
       await systemInfo.loadData(app.getPath("userData"));
-      phaseLog("SYSTEM_INFO", "SUCCESS", {
+      log.info("SYSTEM_INFO", "SUCCESS", {
         hostname: systemInfo.getHostname(),
         userSID: systemInfo.getWindowsUserSID()?.substring(0, 20) + "...",
-        duration: Date.now() - sysInfoStartTime
+        duration: Date.now() - sysInfoStartTime,
       });
       log.info("SystemInfo loaded successfully");
       log.info(
@@ -1635,7 +2007,7 @@ app.whenReady().then(async () => {
         systemInfo.getWindowsUserSID()
       );
     } catch (error) {
-      phaseLog("SYSTEM_INFO", "FAILED", { error: error.message });
+      log.info("SYSTEM_INFO", "FAILED", { error: error.message });
       log.error("SystemInfo initialization failed:", error);
       throw error;
     }
@@ -1643,30 +2015,32 @@ app.whenReady().then(async () => {
     // await new Promise(resolve => setTimeout(resolve, 255500)); // Wait 1.5 seconds
 
     // 5. Create Protocol and Window
-    phaseLog("UI_SETUP", "STARTING");
-    phaseLog("PROTOCOL", "CREATING");
+    log.info("UI_SETUP", "STARTING");
+    log.info("PROTOCOL", "CREATING");
     createProtocol();
-    phaseLog("PROTOCOL", "CREATED");
-    phaseLog("MAIN_WINDOW", "CREATING");
+    log.info("PROTOCOL", "CREATED");
+    log.info("MAIN_WINDOW", "CREATING");
     createWindow();
-    phaseLog("MAIN_WINDOW", "CREATED");
+    log.info("MAIN_WINDOW", "CREATED");
 
     win.once("ready-to-show", () => {
-      phaseLog("MAIN_WINDOW", "READY_TO_SHOW");
+      log.info("MAIN_WINDOW", "READY_TO_SHOW");
       splashWindow.close();
       win.show();
-      phaseLog("MAIN_WINDOW", "SHOWN");
+      log.info("MAIN_WINDOW", "SHOWN");
     });
 
     // 6. Start Python Backend
-    phaseLog("PYTHON_BACKEND", "STARTING");
+    log.info("PYTHON_BACKEND", "STARTING");
     try {
       const pythonStartTime = Date.now();
       await startPythonExecutable();
-      phaseLog("PYTHON_BACKEND", "SUCCESS", { duration: Date.now() - pythonStartTime });
+      log.info("PYTHON_BACKEND", "SUCCESS", {
+        duration: Date.now() - pythonStartTime,
+      });
       log.info("Python backend started successfully");
     } catch (error) {
-      phaseLog("PYTHON_BACKEND", "FAILED", { error: error.message });
+      log.info("PYTHON_BACKEND", "FAILED", { error: error.message });
       log.error("Python initialization failed:", error);
       throw error;
     }
@@ -1744,7 +2118,7 @@ function checkForUpdates() {
 }
 
 // Set up detailed logging for updates
-log.transports.file.fileName = 'cyphersol.log';
+log.transports.file.fileName = "cyphersol.log";
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
 // 🚀 COMPREHENSIVE AUTO-UPDATE LOGGING SYSTEM v2.0.0
@@ -1753,52 +2127,60 @@ log.transports.file.fileName = 'cyphersol.log';
 // Purpose: Detailed tracking of update process, user behavior, and system performance
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
-const UPDATE_LOG_PREFIX = '🔄 [AUTO-UPDATE]';
-const PERFORMANCE_LOG_PREFIX = '⚡ [PERFORMANCE]';
-const USER_LOG_PREFIX = '👤 [USER-INTERACTION]';
-const SYSTEM_LOG_PREFIX = '🖥️ [SYSTEM]';
-const ERROR_LOG_PREFIX = '❌ [ERROR]';
-const SUCCESS_LOG_PREFIX = '✅ [SUCCESS]';
+const UPDATE_LOG_PREFIX = "🔄 [AUTO-UPDATE]";
+const PERFORMANCE_LOG_PREFIX = "⚡ [PERFORMANCE]";
+const USER_LOG_PREFIX = "👤 [USER-INTERACTION]";
+const SYSTEM_LOG_PREFIX = "🖥️ [SYSTEM]";
+const ERROR_LOG_PREFIX = "❌ [ERROR]";
+const SUCCESS_LOG_PREFIX = "✅ [SUCCESS]";
 
 // Enhanced logging utility functions
 const logWithTimestamp = (level, prefix, message, data = null) => {
   const timestamp = new Date().toISOString();
   const logMessage = `${prefix} [${timestamp}] ${message}`;
-  
+
   if (data) {
     log[level](`${logMessage}`, JSON.stringify(data, null, 2));
   } else {
     log[level](logMessage);
   }
-  
+
   // Also log to console in development for immediate feedback
   if (global.AppConfig.isDev) {
-    console.log(`${prefix} ${message}`, data || '');
+    console.log(`${prefix} ${message}`, data || "");
   }
 };
 
 // Performance tracking utilities
 const performanceTracker = {
   timers: new Map(),
-  
+
   start(operationName) {
     const startTime = Date.now();
     this.timers.set(operationName, startTime);
-    logWithTimestamp('info', PERFORMANCE_LOG_PREFIX, `Started: ${operationName}`);
+    logWithTimestamp(
+      "info",
+      PERFORMANCE_LOG_PREFIX,
+      `Started: ${operationName}`
+    );
     return startTime;
   },
-  
+
   end(operationName) {
     const endTime = Date.now();
     const startTime = this.timers.get(operationName);
     if (startTime) {
       const duration = endTime - startTime;
       this.timers.delete(operationName);
-      logWithTimestamp('info', PERFORMANCE_LOG_PREFIX, `Completed: ${operationName} | Duration: ${duration}ms`);
+      logWithTimestamp(
+        "info",
+        PERFORMANCE_LOG_PREFIX,
+        `Completed: ${operationName} | Duration: ${duration}ms`
+      );
       return duration;
     }
     return null;
-  }
+  },
 };
 
 // System information logger
@@ -1812,26 +2194,43 @@ const logSystemInfo = () => {
     userDataDir: userDataDir,
     isPackaged: app.isPackaged,
     isDevelopment: global.AppConfig.isDev,
-    totalMemory: process.getSystemMemoryInfo ? process.getSystemMemoryInfo().total : 'N/A',
-    availableMemory: process.getSystemMemoryInfo ? process.getSystemMemoryInfo().free : 'N/A'
+    totalMemory: process.getSystemMemoryInfo
+      ? process.getSystemMemoryInfo().total
+      : "N/A",
+    availableMemory: process.getSystemMemoryInfo
+      ? process.getSystemMemoryInfo().free
+      : "N/A",
   };
-  
-  logWithTimestamp('info', SYSTEM_LOG_PREFIX, 'System Information Collected', systemInfo);
+
+  logWithTimestamp(
+    "info",
+    SYSTEM_LOG_PREFIX,
+    "System Information Collected",
+    systemInfo
+  );
   return systemInfo;
 };
 
 // Initialize comprehensive logging
-log.info('═══════════════════════════════════════════════════════════════════════════════════════');
-log.info('🚀 CYPHERSOL AUTO-UPDATE LOGGING SYSTEM v2.0.0 INITIALIZED');
-log.info('═══════════════════════════════════════════════════════════════════════════════════════');
+log.info(
+  "═══════════════════════════════════════════════════════════════════════════════════════"
+);
+log.info("🚀 CYPHERSOL AUTO-UPDATE LOGGING SYSTEM v2.0.0 INITIALIZED");
+log.info(
+  "═══════════════════════════════════════════════════════════════════════════════════════"
+);
 log.info(`📅 Session Start Time: ${new Date().toISOString()}`);
 log.info(`🏷️ Application Version: ${app.getVersion()}`);
 log.info(`📁 User Data Directory: ${userDataDir}`);
 log.info(`🖥️ Platform: ${process.platform} (${process.arch})`);
 log.info(`⚡ Node Version: ${process.versions.node}`);
 log.info(`🔋 Electron Version: ${process.versions.electron}`);
-log.info(`🔧 Development Mode: ${global.AppConfig.isDev ? 'ENABLED' : 'DISABLED'}`);
-log.info('═══════════════════════════════════════════════════════════════════════════════════════');
+log.info(
+  `🔧 Development Mode: ${global.AppConfig.isDev ? "ENABLED" : "DISABLED"}`
+);
+log.info(
+  "═══════════════════════════════════════════════════════════════════════════════════════"
+);
 
 // Log detailed system information
 logSystemInfo();

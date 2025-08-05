@@ -71,3 +71,241 @@
   "UsedStatements": 23,
   "SystemUpTime": 266712531
 }
+2025-08-05 17:57:06.394 +05:30 [INF] Starting service in Production...
+2025-08-05 17:57:06.440 +05:30 [INF] Actual log path: E:\Workplace\Cyphersol\ca_offline_multiple_clones\beta_testers_ca\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-08-05 17:57:06.466 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-08-05 17:57:06.637 +05:30 [INF] [DeviceInfo Init] UUID: 726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 17:57:06.638 +05:30 [INF] [DeviceInfo Init] MAC Address: 54:6C:EB:CA:39:15
+2025-08-05 17:57:06.638 +05:30 [INF] [DeviceInfo Init] Hostname: AIYAZ
+2025-08-05 17:57:06.638 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-21-3165862944-3759782804-3413270121-1001
+2025-08-05 17:57:06.638 +05:30 [INF] [DeviceInfo Init] Username: qures
+2025-08-05 17:57:06.643 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-08-05 17:57:06.643 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 240 bytes
+2025-08-05 17:57:06.649 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 17:57:06.769 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 0 to 268666859
+2025-08-05 17:57:06.806 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "CurrentTimestampIST": "05-Aug-2025 05:24:43 PM IST",
+  "ExpiryTimestampIST": "24-Aug-2025 12:55:12 AM IST",
+  "CurrentTimestamp": 1754394883.400393,
+  "ExpiryTimestamp": 1755977112.007323,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 24,
+  "SystemUpTime": 268666859
+}
+2025-08-05 17:57:06.806 +05:30 [INF] LicenseInfoProvider initialized.
+2025-08-05 17:57:06.807 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "CurrentTimestampIST": "05-Aug-2025 05:24:43 PM IST",
+  "ExpiryTimestampIST": "24-Aug-2025 12:55:12 AM IST",
+  "CurrentTimestamp": 1754394883.400393,
+  "ExpiryTimestamp": 1755977112.007323,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 24,
+  "SystemUpTime": 268666859
+}
+2025-08-05 17:57:06.807 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 24
+2025-08-05 17:57:06.808 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\session-cache.enc
+2025-08-05 17:57:06.808 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 17:57:06.877 +05:30 [INF] Restored 1 sessions from disk.
+2025-08-05 17:57:06.878 +05:30 [INF] Initializing MdnsAdvertiser...
+2025-08-05 17:57:06.884 +05:30 [INF] MdnsAdvertiser initialized successfully
+2025-08-05 17:57:06.888 +05:30 [INF] UdpDiscoveryService initialized for license service LicenseServer on port 7890, listening on UDP port 41234
+2025-08-05 17:57:06.889 +05:30 [INF] Worker initialized.
+2025-08-05 17:57:06.898 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-08-05 17:57:06.899 +05:30 [INF] Waiting for network to be ready...
+2025-08-05 17:57:06.959 +05:30 [INF] Found active network interface: Wi-Fi with IP: 172.20.10.2
+2025-08-05 17:57:06.959 +05:30 [INF] Network is ready with IP: 172.20.10.2
+2025-08-05 17:57:07.005 +05:30 [INF] Found active network interface: Wi-Fi with IP: 172.20.10.2
+2025-08-05 17:57:07.006 +05:30 [INF] Registered mDNS event handlers for traffic monitoring
+2025-08-05 17:57:07.069 +05:30 [INF] Discovered network interface: Wi-Fi ({5B8891F1-2BEB-4AFA-BDE5-852994B07352})
+2025-08-05 17:57:07.069 +05:30 [INF] Discovered network interface: Local Area Connection* 8-WFP Native MAC Layer LightWeight Filter-0000 ({F68A6C31-6F85-11F0-ADF8-546CEBCA3919})
+2025-08-05 17:57:07.070 +05:30 [INF] Discovered network interface: Local Area Connection* 8-Realtek NDIS LightWeight Filter (NDIS 6.40)-0000 ({82C740A8-9845-11EF-ADB8-F0C297345EA8})
+2025-08-05 17:57:07.070 +05:30 [INF] Discovered network interface: Local Area Connection* 8-QoS Packet Scheduler-0000 ({F68A6C32-6F85-11F0-ADF8-546CEBCA3919})
+2025-08-05 17:57:07.070 +05:30 [INF] Discovered network interface: Local Area Connection* 9-WFP Native MAC Layer LightWeight Filter-0000 ({F68A6C33-6F85-11F0-ADF8-546CEBCA3919})
+2025-08-05 17:57:07.070 +05:30 [INF] Discovered network interface: Local Area Connection* 9-Realtek NDIS LightWeight Filter (NDIS 6.40)-0000 ({82C740AB-9845-11EF-ADB8-F0C297345EA8})
+2025-08-05 17:57:07.070 +05:30 [INF] Discovered network interface: Local Area Connection* 9-QoS Packet Scheduler-0000 ({F68A6C34-6F85-11F0-ADF8-546CEBCA3919})
+2025-08-05 17:57:07.070 +05:30 [INF] Discovered network interface: Local Area Connection* 10-WFP Native MAC Layer LightWeight Filter-0000 ({F68A6C35-6F85-11F0-ADF8-546CEBCA3919})
+2025-08-05 17:57:07.070 +05:30 [INF] Discovered network interface: Local Area Connection* 10-Realtek NDIS LightWeight Filter (NDIS 6.40)-0000 ({82C740AE-9845-11EF-ADB8-F0C297345EA8})
+2025-08-05 17:57:07.070 +05:30 [INF] Discovered network interface: Local Area Connection* 10-QoS Packet Scheduler-0000 ({F68A6C36-6F85-11F0-ADF8-546CEBCA3919})
+2025-08-05 17:57:07.070 +05:30 [INF] Discovered network interface: Local Area Connection* 8 ({B248E46C-F7BD-4130-9D20-B64C7D9120C0})
+2025-08-05 17:57:07.070 +05:30 [INF] Discovered network interface: Local Area Connection* 9 ({D9486D3B-EBE9-4F7F-9709-609859FFDC59})
+2025-08-05 17:57:07.070 +05:30 [INF] Discovered network interface: Local Area Connection* 10 ({ECDB1392-D886-4265-82D5-FD232E80CB23})
+2025-08-05 17:57:07.070 +05:30 [INF] Discovered network interface: Wi-Fi-WFP Native MAC Layer LightWeight Filter-0000 ({F68A69DE-6F85-11F0-ADF8-546CEBCA3919})
+2025-08-05 17:57:07.070 +05:30 [INF] Discovered network interface: Wi-Fi-Virtual WiFi Filter Driver-0000 ({F7E63AFB-9844-11EF-ADB7-9B9219567F09})
+2025-08-05 17:57:07.070 +05:30 [INF] Discovered network interface: Wi-Fi-Native WiFi Filter Driver-0000 ({F7E63AFC-9844-11EF-ADB7-9B9219567F09})
+2025-08-05 17:57:07.070 +05:30 [INF] Discovered network interface: Wi-Fi-Realtek NDIS LightWeight Filter (NDIS 6.40)-0000 ({2382B62E-02C7-11ED-AD93-546CEBCA3919})
+2025-08-05 17:57:07.070 +05:30 [INF] Discovered network interface: Wi-Fi-QoS Packet Scheduler-0000 ({F68A69DF-6F85-11F0-ADF8-546CEBCA3919})
+2025-08-05 17:57:07.070 +05:30 [INF] Discovered network interface: Wi-Fi-WFP 802.3 MAC Layer LightWeight Filter-0000 ({F68A69E0-6F85-11F0-ADF8-546CEBCA3919})
+2025-08-05 17:57:07.072 +05:30 [INF] mDNS service started
+2025-08-05 17:57:07.073 +05:30 [INF] mDNS advertisement task started with interval: 60 seconds
+2025-08-05 17:57:07.083 +05:30 [INF] Django base URL: https://cyphersol.co.in
+2025-08-05 17:57:07.084 +05:30 [INF] Database configuration file not found at C:\ProgramData\Cyphersol\database_config.json
+2025-08-05 17:57:07.084 +05:30 [INF] No database configuration found, skipping auto-start
+2025-08-05 17:57:07.088 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 17:57:07.130 +05:30 [INF] License Loaded: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "CurrentTimestampIST": "05-Aug-2025 05:24:43 PM IST",
+  "ExpiryTimestampIST": "24-Aug-2025 12:55:12 AM IST",
+  "CurrentTimestamp": 1754394883.400393,
+  "ExpiryTimestamp": 1755977112.007323,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 24,
+  "SystemUpTime": 268666859
+}
+2025-08-05 17:57:07.200 +05:30 [INF] Starting license polling...
+2025-08-05 17:57:07.202 +05:30 [INF] License is present: true
+2025-08-05 17:57:07.204 +05:30 [INF] [License Polling] Enriched JSON: { license_key = SOMEX4Y4ZLicenseKEYForTesting4, used_statements = 24 }
+2025-08-05 17:57:07.234 +05:30 [INF] HTTP API Server started on port 7890
+2025-08-05 17:57:07.236 +05:30 [INF] Starting UDP discovery listener on port 41234...
+2025-08-05 17:57:07.239 +05:30 [INF] UdpDiscoveryService started on port 41234
+2025-08-05 17:57:07.239 +05:30 [INF] UDP discovery service started.
+2025-08-05 17:57:07.249 +05:30 [INF] IP address: 172.20.10.2
+2025-08-05 17:57:07.341 +05:30 [INF] mDNS advertisement started for license server (key: license-server:7890) using hostname: Aiyaz and IP: 172.20.10.2:7890
+2025-08-05 17:57:07.341 +05:30 [INF] mDNS advertisement started using hostname: Aiyaz and IP: 172.20.10.2:7890
+2025-08-05 17:57:07.342 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2025-08-05 17:57:07.342 +05:30 [INF] Hosting environment: Production
+2025-08-05 17:57:07.342 +05:30 [INF] Content root path: E:\Workplace\Cyphersol\ca_offline_multiple_clones\beta_testers_ca\frontend\gatewayServer
+2025-08-05 18:02:00.971 +05:30 [INF] Starting service in Production...
+2025-08-05 18:02:01.019 +05:30 [INF] Actual log path: E:\Workplace\Cyphersol\ca_offline_multiple_clones\beta_testers_ca\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-08-05 18:02:01.053 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-08-05 18:02:01.220 +05:30 [INF] [DeviceInfo Init] UUID: 726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 18:02:01.220 +05:30 [INF] [DeviceInfo Init] MAC Address: 54:6C:EB:CA:39:15
+2025-08-05 18:02:01.220 +05:30 [INF] [DeviceInfo Init] Hostname: AIYAZ
+2025-08-05 18:02:01.220 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-21-3165862944-3759782804-3413270121-1001
+2025-08-05 18:02:01.220 +05:30 [INF] [DeviceInfo Init] Username: qures
+2025-08-05 18:02:01.225 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:02:01.225 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 240 bytes
+2025-08-05 18:02:01.231 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 18:02:01.359 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 0 to 268961437
+2025-08-05 18:02:01.397 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "CurrentTimestampIST": "05-Aug-2025 05:24:43 PM IST",
+  "ExpiryTimestampIST": "24-Aug-2025 12:55:12 AM IST",
+  "CurrentTimestamp": 1754394883.400393,
+  "ExpiryTimestamp": 1755977112.007323,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 24,
+  "SystemUpTime": 268961437
+}
+2025-08-05 18:02:01.397 +05:30 [INF] LicenseInfoProvider initialized.
+2025-08-05 18:02:01.398 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "CurrentTimestampIST": "05-Aug-2025 05:24:43 PM IST",
+  "ExpiryTimestampIST": "24-Aug-2025 12:55:12 AM IST",
+  "CurrentTimestamp": 1754394883.400393,
+  "ExpiryTimestamp": 1755977112.007323,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 24,
+  "SystemUpTime": 268961437
+}
+2025-08-05 18:02:01.398 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 24
+2025-08-05 18:02:01.399 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\session-cache.enc
+2025-08-05 18:02:01.400 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 18:02:01.470 +05:30 [INF] Restored 1 sessions from disk.
+2025-08-05 18:02:01.473 +05:30 [INF] Initializing MdnsAdvertiser...
+2025-08-05 18:02:01.479 +05:30 [INF] MdnsAdvertiser initialized successfully
+2025-08-05 18:02:01.484 +05:30 [INF] UdpDiscoveryService initialized for license service LicenseServer on port 7890, listening on UDP port 41234
+2025-08-05 18:02:01.485 +05:30 [INF] Worker initialized.
+2025-08-05 18:02:01.494 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-08-05 18:02:01.494 +05:30 [INF] Waiting for network to be ready...
+2025-08-05 18:02:01.564 +05:30 [INF] Found active network interface: Wi-Fi with IP: 172.20.10.2
+2025-08-05 18:02:01.564 +05:30 [INF] Network is ready with IP: 172.20.10.2
+2025-08-05 18:02:01.609 +05:30 [INF] Found active network interface: Wi-Fi with IP: 172.20.10.2
+2025-08-05 18:02:01.609 +05:30 [INF] Registered mDNS event handlers for traffic monitoring
+2025-08-05 18:02:01.675 +05:30 [INF] Discovered network interface: Wi-Fi ({5B8891F1-2BEB-4AFA-BDE5-852994B07352})
+2025-08-05 18:02:01.675 +05:30 [INF] Discovered network interface: Local Area Connection* 8-WFP Native MAC Layer LightWeight Filter-0000 ({F68A6C31-6F85-11F0-ADF8-546CEBCA3919})
+2025-08-05 18:02:01.675 +05:30 [INF] Discovered network interface: Local Area Connection* 8-Realtek NDIS LightWeight Filter (NDIS 6.40)-0000 ({82C740A8-9845-11EF-ADB8-F0C297345EA8})
+2025-08-05 18:02:01.675 +05:30 [INF] Discovered network interface: Local Area Connection* 8-QoS Packet Scheduler-0000 ({F68A6C32-6F85-11F0-ADF8-546CEBCA3919})
+2025-08-05 18:02:01.675 +05:30 [INF] Discovered network interface: Local Area Connection* 9-WFP Native MAC Layer LightWeight Filter-0000 ({F68A6C33-6F85-11F0-ADF8-546CEBCA3919})
+2025-08-05 18:02:01.675 +05:30 [INF] Discovered network interface: Local Area Connection* 9-Realtek NDIS LightWeight Filter (NDIS 6.40)-0000 ({82C740AB-9845-11EF-ADB8-F0C297345EA8})
+2025-08-05 18:02:01.675 +05:30 [INF] Discovered network interface: Local Area Connection* 9-QoS Packet Scheduler-0000 ({F68A6C34-6F85-11F0-ADF8-546CEBCA3919})
+2025-08-05 18:02:01.675 +05:30 [INF] Discovered network interface: Local Area Connection* 10-WFP Native MAC Layer LightWeight Filter-0000 ({F68A6C35-6F85-11F0-ADF8-546CEBCA3919})
+2025-08-05 18:02:01.675 +05:30 [INF] Discovered network interface: Local Area Connection* 10-Realtek NDIS LightWeight Filter (NDIS 6.40)-0000 ({82C740AE-9845-11EF-ADB8-F0C297345EA8})
+2025-08-05 18:02:01.675 +05:30 [INF] Discovered network interface: Local Area Connection* 10-QoS Packet Scheduler-0000 ({F68A6C36-6F85-11F0-ADF8-546CEBCA3919})
+2025-08-05 18:02:01.675 +05:30 [INF] Discovered network interface: Local Area Connection* 8 ({B248E46C-F7BD-4130-9D20-B64C7D9120C0})
+2025-08-05 18:02:01.675 +05:30 [INF] Discovered network interface: Local Area Connection* 9 ({D9486D3B-EBE9-4F7F-9709-609859FFDC59})
+2025-08-05 18:02:01.675 +05:30 [INF] Discovered network interface: Local Area Connection* 10 ({ECDB1392-D886-4265-82D5-FD232E80CB23})
+2025-08-05 18:02:01.675 +05:30 [INF] Discovered network interface: Wi-Fi-WFP Native MAC Layer LightWeight Filter-0000 ({F68A69DE-6F85-11F0-ADF8-546CEBCA3919})
+2025-08-05 18:02:01.675 +05:30 [INF] Discovered network interface: Wi-Fi-Virtual WiFi Filter Driver-0000 ({F7E63AFB-9844-11EF-ADB7-9B9219567F09})
+2025-08-05 18:02:01.675 +05:30 [INF] Discovered network interface: Wi-Fi-Native WiFi Filter Driver-0000 ({F7E63AFC-9844-11EF-ADB7-9B9219567F09})
+2025-08-05 18:02:01.675 +05:30 [INF] Discovered network interface: Wi-Fi-Realtek NDIS LightWeight Filter (NDIS 6.40)-0000 ({2382B62E-02C7-11ED-AD93-546CEBCA3919})
+2025-08-05 18:02:01.675 +05:30 [INF] Discovered network interface: Wi-Fi-QoS Packet Scheduler-0000 ({F68A69DF-6F85-11F0-ADF8-546CEBCA3919})
+2025-08-05 18:02:01.675 +05:30 [INF] Discovered network interface: Wi-Fi-WFP 802.3 MAC Layer LightWeight Filter-0000 ({F68A69E0-6F85-11F0-ADF8-546CEBCA3919})
+2025-08-05 18:02:01.676 +05:30 [INF] mDNS service started
+2025-08-05 18:02:01.677 +05:30 [INF] mDNS advertisement task started with interval: 60 seconds
+2025-08-05 18:02:01.691 +05:30 [INF] Django base URL: https://cyphersol.co.in
+2025-08-05 18:02:01.692 +05:30 [INF] Database configuration file not found at C:\ProgramData\Cyphersol\database_config.json
+2025-08-05 18:02:01.692 +05:30 [INF] No database configuration found, skipping auto-start
+2025-08-05 18:02:01.702 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 18:02:01.767 +05:30 [INF] License Loaded: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "CurrentTimestampIST": "05-Aug-2025 05:24:43 PM IST",
+  "ExpiryTimestampIST": "24-Aug-2025 12:55:12 AM IST",
+  "CurrentTimestamp": 1754394883.400393,
+  "ExpiryTimestamp": 1755977112.007323,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 24,
+  "SystemUpTime": 268961437
+}
+2025-08-05 18:02:01.851 +05:30 [INF] Starting license polling...
+2025-08-05 18:02:01.853 +05:30 [INF] License is present: true
+2025-08-05 18:02:01.854 +05:30 [INF] [License Polling] Enriched JSON: { license_key = SOMEX4Y4ZLicenseKEYForTesting4, used_statements = 24 }
+2025-08-05 18:02:01.885 +05:30 [INF] HTTP API Server started on port 7890
+2025-08-05 18:02:01.887 +05:30 [INF] Starting UDP discovery listener on port 41234...
+2025-08-05 18:02:01.890 +05:30 [INF] UdpDiscoveryService started on port 41234
+2025-08-05 18:02:01.890 +05:30 [INF] UDP discovery service started.
+2025-08-05 18:02:01.890 +05:30 [INF] IP address: 172.20.10.2
+2025-08-05 18:02:01.950 +05:30 [INF] mDNS advertisement started for license server (key: license-server:7890) using hostname: Aiyaz and IP: 172.20.10.2:7890
+2025-08-05 18:02:01.950 +05:30 [INF] mDNS advertisement started using hostname: Aiyaz and IP: 172.20.10.2:7890
+2025-08-05 18:02:01.952 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2025-08-05 18:02:01.952 +05:30 [INF] Hosting environment: Production
+2025-08-05 18:02:01.952 +05:30 [INF] Content root path: E:\Workplace\Cyphersol\ca_offline_multiple_clones\beta_testers_ca\frontend\gatewayServer
+2025-08-05 18:02:02.105 +05:30 [INF] [License Polling] Expiry: 1755977112.007323
+2025-08-05 18:02:02.105 +05:30 [INF] License is present: true
+2025-08-05 18:02:02.105 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1755977112.007323 to 1755977112.007323
+2025-08-05 18:02:02.105 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1754394883.400393 to 1754397121.046423
+2025-08-05 18:02:02.105 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 268961437 to 268962187
+2025-08-05 18:02:02.105 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-05 18:02:02.106 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting4","current_timestamp":1754397121.046423,"expiry_timestamp":1755977112.007323,"number_of_users":1,"number_of_statements":10,"role":"CA","UsedStatements":24,"system_up_time":268962187}
+2025-08-05 18:02:02.107 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 18:02:02.161 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:02:02.162 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:02:02.162 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:02:02.162 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "CurrentTimestampIST": "05-Aug-2025 06:02:01 PM IST",
+  "ExpiryTimestampIST": "24-Aug-2025 12:55:12 AM IST",
+  "CurrentTimestamp": 1754397121.046423,
+  "ExpiryTimestamp": 1755977112.007323,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 10,
+  "Role": "CA",
+  "UsedStatements": 24,
+  "SystemUpTime": 268962187
+}
+2025-08-05 18:02:02.162 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-05 18:02:02.975 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "CurrentTimestampIST": "05-Aug-2025 06:02:01 PM IST",
+  "ExpiryTimestampIST": "24-Aug-2025 12:55:12 AM IST",
+  "CurrentTimestamp": 1754397121.046423,
+  "ExpiryTimestamp": 1755977112.007323,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 10,
+  "Role": "CA",
+  "UsedStatements": 24,
+  "SystemUpTime": 268962187
+}
