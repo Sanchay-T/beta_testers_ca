@@ -4,7 +4,7 @@ const log = require("electron-log");
 const licenseManager = require("../LicenseManager");
 const { users } = require("../db/schema/User");
 const AuthError = require("./utils/AuthError");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const databaseManager = require("../db/db");
 const { eq, exists, sql } = require("drizzle-orm");
 const systemInformation = require("../SystemInformation");
@@ -614,11 +614,11 @@ function registerAuthHandlers(userDataPath) {
         };
       }
     } catch (err) {
-      log.error(
-        "Error activating license:",
-        err.response.data.detail,
-        err.message
-      );
+      // log.error(
+      //   "Error activating license:",
+      //   err.response.data.detail,
+      //   err.message
+      // );
 
       // Log the full error structure for debugging
       if (err.response) {
@@ -811,7 +811,7 @@ function registerAuthHandlers(userDataPath) {
         }
       } catch (error) {
         // Log the complete error for debugging
-        log.error("License assignment error:", error);
+        // log.error("License assignment error:", error);
 
         // Log the full error structure for debugging
         if (error.response) {
