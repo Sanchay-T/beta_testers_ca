@@ -2033,7 +2033,6 @@ app.whenReady().then(async () => {
     // 6. Start Python Backend
     log.info("PYTHON_BACKEND", "STARTING");
     try {
-      const pythonStartTime = Date.now();
       await startPythonExecutable();
       log.info("PYTHON_BACKEND", "SUCCESS", {
         duration: Date.now() - pythonStartTime,
