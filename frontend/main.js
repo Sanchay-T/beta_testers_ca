@@ -1705,6 +1705,37 @@ async function createWindow() {
     }
   });
 
+  ipcMain.handle("open-file-dialog", async () => {
+    const result = await dialog.showOpenDialog(win, {
+      properties: [
+        "openFile",
+        "multiSelections",
+        "showHiddenFiles",
+        "treatPackageAsDirectory",
+        "dontAddToRecent",
+      ],
+      filters: [
+        { name: "Documents", extensions: ["pdf", "xls", "xlsx"] },
+        { name: "All Files", extensions: ["*"] },
+      ],
+    });
+
+    if (!result.canceled) {
+      return result.filePaths;
+    }
+    return [];
+  });
+
+  ipcMain.handle("get-file-content", async (event, filePath) => {
+    try {
+      const content = await fs.promises.readFile(filePath);
+      return content;
+    } catch (error) {
+      log.error("Error reading file:", error);
+      throw error;
+    }
+  });
+
   // Check for updates after window is ready
   win.webContents.on("did-finish-load", () => {
     if (!global.AppConfig.isDev) {
@@ -1998,62 +2029,58 @@ app.whenReady().then(async () => {
       log.info("SYSTEM_INFO", "SUCCESS", {
         hostname: systemInfo.getHostname(),
         userSID: systemInfo.getWindowsUserSID()?.substring(0, 20) + "...",
-        duration: Date.now() - sysInfoStartTime,
       });
-      log.info("SystemInfo loaded successfully");
-      log.info(
-        "SystemInfo data:",
-        systemInfo.getHostname(),
-        systemInfo.getWindowsUserSID()
-      );
     } catch (error) {
-      log.info("SYSTEM_INFO", "FAILED", { error: error.message });
-      log.error("SystemInfo initialization failed:", error);
-      throw error;
+      log.error("SYSTEM_INFO", "FAILURE", { error: error.message });
     }
 
-    // await new Promise(resolve => setTimeout(resolve, 255500)); // Wait 1.5 seconds
+    // 5. Create main window
+    log.info("📋 INITIALIZATION STEP 3: CREATING MAIN WINDOW");
+    await createWindow();
+    log.info("✅ Main window created successfully");
 
-    // 5. Create Protocol and Window
-    log.info("UI_SETUP", "STARTING");
-    log.info("PROTOCOL", "CREATING");
-    createProtocol();
-    log.info("PROTOCOL", "CREATED");
-    log.info("MAIN_WINDOW", "CREATING");
-    createWindow();
-    log.info("MAIN_WINDOW", "CREATED");
-
-    win.once("ready-to-show", () => {
-      log.info("MAIN_WINDOW", "READY_TO_SHOW");
-      splashWindow.close();
-      win.show();
-      log.info("MAIN_WINDOW", "SHOWN");
-    });
-
-    // 6. Start Python Backend
-    log.info("PYTHON_BACKEND", "STARTING");
+    // 6. Start Python backend
+    log.info("📋 INITIALIZATION STEP 4: STARTING PYTHON BACKEND");
     try {
       await startPythonExecutable();
-      log.info("PYTHON_BACKEND", "SUCCESS", {
-        duration: Date.now() - pythonStartTime,
-      });
-      log.info("Python backend started successfully");
+      log.info("✅ Python backend started successfully");
     } catch (error) {
-      log.info("PYTHON_BACKEND", "FAILED", { error: error.message });
-      log.error("Python initialization failed:", error);
-      throw error;
+      log.error("❌ Python backend failed to start:", error);
+      // Handle backend start failure
     }
 
-    // Initial update check after 1 minute
-    if (!global.AppConfig.isDev) {
-      setTimeout(() => {
-        autoUpdater.checkForUpdates().catch((err) => {
-          log.error("Error in initial update check:", err);
-        });
-      }, 60 * 1000);
+    // 7. Sync TallyPrime files
+    log.info("📋 INITIALIZATION STEP 5: SYNCING TALLYPRIME FILES");
+    syncTallyprimeFilesToUserData();
+    log.info("✅ TallyPrime files synced successfully");
+
+    // 8. Show main window
+    log.info("📋 INITIALIZATION STEP 6: SHOWING MAIN WINDOW");
+    if (win) {
+      win.show();
+      log.info("✅ Main window shown");
     }
+
+    // 9. Close splash screen
+    log.info("📋 INITIALIZATION STEP 7: CLOSING SPLASH SCREEN");
+    if (splashWindow) {
+      splashWindow.close();
+      log.info("✅ Splash screen closed");
+    }
+
+    log.info("🎉 APP INITIALIZATION COMPLETED SUCCESSFULLY");
   } catch (error) {
-    log.error("Failed to initialize App:", error);
+    log.error("💥 APP INITIALIZATION FAILED", {
+      error: error.message,
+      stack: error.stack,
+    });
+    if (splashWindow) {
+      splashWindow.close();
+    }
+    dialog.showErrorBox(
+      "Application Error",
+      `Failed to initialize the application: ${error.message}`
+    );
     app.quit();
   }
 });
@@ -2064,172 +2091,81 @@ app.on("window-all-closed", () => {
   }
 });
 
-app.on("will-quit", () => {
-  log.info("App is quitting");
-  sessionManager.logoutUser();
-  if (pythonProcess) {
-    log.info("Stopping Python process...");
-    pythonProcess.kill("SIGTERM");
-  }
-});
-
 app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
 });
 
-// Add these IPC handlers
-ipcMain.handle("start-download", () => {
-  autoUpdater.downloadUpdate();
-});
+// Graceful shutdown
+app.on("before-quit", (event) => {
+  log.info("Application is about to quit");
 
-ipcMain.handle("quit-and-install", () => {
-  log.info("Manual quit and install requested via IPC");
-  autoUpdater.quitAndInstall(true, true);
-});
-
-// Modify the update check function
-function checkForUpdates() {
-  if (global.AppConfig.isDev) {
-    log.info("Skipping update check in development mode");
+  // Skip confirmation if updating
+  if (isUpdating) {
+    log.info("Skipping graceful shutdown for update");
     return;
   }
 
-  const currentVersion = app.getVersion();
-
-  // Skip check if we're already on the latest notified version
-  if (lastCheckedVersion && lastCheckedVersion === currentVersion) {
-    log.info("Already on latest notified version:", currentVersion);
-    return;
+  // Terminate Python backend
+  if (pythonProcess && !pythonProcess.killed) {
+    log.info("Terminating Python backend...");
+    pythonProcess.kill();
   }
 
-  log.info("Checking for updates...");
-  autoUpdater.checkForUpdates().catch((err) => {
-    log.error("Error checking for updates:", err);
-    // dialog.showMessageBox({
-    //   type: "error",
-    //   title: "Update Error",
-    //   message: `Error checking for updates: ${err.message}`,
-    //   buttons: ["OK"],
-    // });
-  });
-}
+  // Close database connection
+  const dbManager = databaseManager.getInstance();
+  if (dbManager && dbManager.getDatabase()) {
+    dbManager.getDatabase().close();
+    log.info("Database connection closed");
+  }
+});
 
-// Set up detailed logging for updates
-log.transports.file.fileName = "cyphersol.log";
+// Performance tracking utility
+const performanceTracker = {
+  timers: new Map(),
+  start(label) {
+    this.timers.set(label, process.hrtime());
+    log.info(`[PERF] Starting: ${label}`);
+  },
+  end(label) {
+    const startTime = this.timers.get(label);
+    if (startTime) {
+      const diff = process.hrtime(startTime);
+      const duration = (diff[0] * 1e9 + diff[1]) / 1e6; // ms
+      log.info(`[PERF] Finished: ${label} in ${duration.toFixed(2)}ms`);
+      this.timers.delete(label);
+      return duration;
+    }
+    return 0;
+  },
+};
 
-// ═══════════════════════════════════════════════════════════════════════════════════════
-// 🚀 COMPREHENSIVE AUTO-UPDATE LOGGING SYSTEM v2.0.0
-// ═══════════════════════════════════════════════════════════════════════════════════════
-// Created for: Backend Team Analysis & Software Improvement
-// Purpose: Detailed tracking of update process, user behavior, and system performance
-// ═══════════════════════════════════════════════════════════════════════════════════════
-
-const UPDATE_LOG_PREFIX = "🔄 [AUTO-UPDATE]";
-const PERFORMANCE_LOG_PREFIX = "⚡ [PERFORMANCE]";
-const USER_LOG_PREFIX = "👤 [USER-INTERACTION]";
-const SYSTEM_LOG_PREFIX = "🖥️ [SYSTEM]";
-const ERROR_LOG_PREFIX = "❌ [ERROR]";
-const SUCCESS_LOG_PREFIX = "✅ [SUCCESS]";
-
-// Enhanced logging utility functions
-const logWithTimestamp = (level, prefix, message, data = null) => {
+// Centralized logging function
+const logWithTimestamp = (level, prefix, message, data = {}) => {
   const timestamp = new Date().toISOString();
-  const logMessage = `${prefix} [${timestamp}] ${message}`;
+  const logMessage = `[${timestamp}] [${prefix}] ${message}`;
 
-  if (data) {
-    log[level](`${logMessage}`, JSON.stringify(data, null, 2));
+  if (Object.keys(data).length > 0) {
+    log[level](logMessage, data);
   } else {
     log[level](logMessage);
   }
-
-  // Also log to console in development for immediate feedback
-  if (global.AppConfig.isDev) {
-    console.log(`${prefix} ${message}`, data || "");
-  }
 };
 
-// Performance tracking utilities
-const performanceTracker = {
-  timers: new Map(),
+// Log prefixes
+const UPDATE_LOG_PREFIX = "UPDATE";
+const ERROR_LOG_PREFIX = "ERROR";
+const SUCCESS_LOG_PREFIX = "SUCCESS";
+const USER_LOG_PREFIX = "USER";
+const PERFORMANCE_LOG_PREFIX = "PERFORMANCE";
 
-  start(operationName) {
-    const startTime = Date.now();
-    this.timers.set(operationName, startTime);
-    logWithTimestamp(
-      "info",
-      PERFORMANCE_LOG_PREFIX,
-      `Started: ${operationName}`
-    );
-    return startTime;
-  },
-
-  end(operationName) {
-    const endTime = Date.now();
-    const startTime = this.timers.get(operationName);
-    if (startTime) {
-      const duration = endTime - startTime;
-      this.timers.delete(operationName);
-      logWithTimestamp(
-        "info",
-        PERFORMANCE_LOG_PREFIX,
-        `Completed: ${operationName} | Duration: ${duration}ms`
-      );
-      return duration;
-    }
-    return null;
-  },
-};
-
-// System information logger
-const logSystemInfo = () => {
-  const systemInfo = {
-    platform: process.platform,
-    arch: process.arch,
-    nodeVersion: process.versions.node,
-    electronVersion: process.versions.electron,
-    appVersion: app.getVersion(),
-    userDataDir: userDataDir,
-    isPackaged: app.isPackaged,
-    isDevelopment: global.AppConfig.isDev,
-    totalMemory: process.getSystemMemoryInfo
-      ? process.getSystemMemoryInfo().total
-      : "N/A",
-    availableMemory: process.getSystemMemoryInfo
-      ? process.getSystemMemoryInfo().free
-      : "N/A",
-  };
-
+// Function to check for updates
+function checkForUpdates() {
   logWithTimestamp(
     "info",
-    SYSTEM_LOG_PREFIX,
-    "System Information Collected",
-    systemInfo
+    UPDATE_LOG_PREFIX,
+    "Scheduled update check triggered"
   );
-  return systemInfo;
-};
-
-// Initialize comprehensive logging
-log.info(
-  "═══════════════════════════════════════════════════════════════════════════════════════"
-);
-log.info("🚀 CYPHERSOL AUTO-UPDATE LOGGING SYSTEM v2.0.0 INITIALIZED");
-log.info(
-  "═══════════════════════════════════════════════════════════════════════════════════════"
-);
-log.info(`📅 Session Start Time: ${new Date().toISOString()}`);
-log.info(`🏷️ Application Version: ${app.getVersion()}`);
-log.info(`📁 User Data Directory: ${userDataDir}`);
-log.info(`🖥️ Platform: ${process.platform} (${process.arch})`);
-log.info(`⚡ Node Version: ${process.versions.node}`);
-log.info(`🔋 Electron Version: ${process.versions.electron}`);
-log.info(
-  `🔧 Development Mode: ${global.AppConfig.isDev ? "ENABLED" : "DISABLED"}`
-);
-log.info(
-  "═══════════════════════════════════════════════════════════════════════════════════════"
-);
-
-// Log detailed system information
-logSystemInfo();
+  autoUpdater.checkForUpdates();
+}

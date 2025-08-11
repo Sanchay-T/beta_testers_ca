@@ -5,6 +5,8 @@ const log = require("electron-log");
 // Expose a secure API for opening files to the renderer process
 contextBridge.exposeInMainWorld("electron", {
   openFile: (filePath) => ipcRenderer.invoke("open-file", filePath),
+  openFileDialog: () => ipcRenderer.invoke("open-file-dialog"),
+  getFileContent: (filePath) => ipcRenderer.invoke("get-file-content", filePath),
   fetchPdfContent: (filePath, caseName) =>
     ipcRenderer.invoke("fetch-pdf-content", filePath, caseName),
 

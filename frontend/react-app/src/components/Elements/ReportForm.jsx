@@ -22,7 +22,7 @@ import {
 } from "../ui/select";
 import { Input } from "../ui/input";
 
-const GenerateReportForm = ({
+const GenerateReportForm = ({ 
   currentCaseName = null,
   handleReportSubmit,
   onReportGenerated,
@@ -309,9 +309,13 @@ const GenerateReportForm = ({
   useEffect(() => {
     const newFileDetails = selectedFiles.map((file, index) => {
       const existing = fileDetails[index] || {};
+      let previewUrl = existing.previewUrl;
+      if (file instanceof File) {
+        previewUrl = URL.createObjectURL(file);
+      }
       return {
         file,
-        previewUrl: URL.createObjectURL(file),
+        previewUrl,
         password: existing.password || "",
         start_date: existing.start_date || "",
         end_date: existing.end_date || "",
@@ -329,26 +333,8 @@ const GenerateReportForm = ({
     };
   }, [selectedFiles]);
 
-  // const handleFileDetailChange = (index, field, value) => {
-  //   setFileDetails((prev) => {
-  //     const updated = prev.map((detail, i) => {
-  //       if (i === index) {
-  //         const updatedDetail = { ...detail, [field]: value };
-  //         console.log(`Updated ${field} for file ${index}:`, {
-  //           previous: detail[field],
-  //           new: value,
-  //           fullDetail: updatedDetail,
-  //         });
-  //         return updatedDetail;
-  //       }
-  //       return detail;
-  //     });
-
-  //     console.log("Updated fileDetails:", updated);
-  //     return updated;
-  //   });
-  // };
   const handlePreviewFile = (previewUrl, fileType) => {
+    console.log("Previewing file:", previewUrl, "Type:", fileType);
     if (fileType.includes("application/pdf")) {
       window.open(previewUrl, "_blank");
     } else {
@@ -586,54 +572,34 @@ const GenerateReportForm = ({
     setIsDragging(false);
 
     const files = Array.from(e.dataTransfer.files);
-    setSelectedFiles((prevFiles) => [...prevFiles, ...files]);
+    handleFileChange(files);
   };
 
-  const handleFileChange = (e) => {
-    console.log("Inside handleFileChange..");
-    console.log({ e: e.target });
-    if (e.target.files) {
-      const newFiles = Array.from(e.target.files);
+  const handleFileChange = (files) => {
+    const newFiles = files.map(file => {
+      if (typeof file === 'string') {
+        const blob = new Blob([null], { type: 'application/pdf' });
+        const newFile = new File([blob], file.split('\\').pop(), { type: 'application/pdf' });
+        newFile.path = file;
+        return newFile;
+      } 
+      return file;
+    });
 
-      // Combine new files with existing files
-      const combinedFiles = [...selectedFiles, ...newFiles];
+    const combinedFiles = [...selectedFiles, ...newFiles];
 
-      console.log({ newFiles, combinedFiles });
+    const uniqueFiles = combinedFiles.filter(
+      (file, index, self) =>
+        index === self.findIndex((f) => f.path === file.path)
+    );
 
-      // Remove duplicates based on file name and size
-      const uniqueFiles = combinedFiles.filter(
-        (file, index, self) =>
-          index ===
-          self.findIndex((f) => f.name === file.name && f.size === file.size)
-      );
+    setSelectedFiles(uniqueFiles);
+  };
 
-      console.log({ uniqueFiles });
-
-      setSelectedFiles(uniqueFiles);
-
-      // Create file details for all files
-      const newFileDetails = uniqueFiles.map((file, index) => {
-        // Check if this file already has details from previous selection
-        const existingDetailIndex = selectedFiles.findIndex(
-          (existingFile) =>
-            existingFile.name === file.name && existingFile.size === file.size
-        );
-
-        const existingDetail =
-          existingDetailIndex !== -1 ? fileDetails[existingDetailIndex] : {};
-
-        return {
-          file,
-          previewUrl: URL.createObjectURL(file),
-          password: existingDetail.password || "",
-          start_date: existingDetail.start_date || "",
-          end_date: existingDetail.end_date || "",
-          bankName: existingDetail.bankName || "",
-        };
-      });
-
-      setFileDetails(newFileDetails);
-      e.target.value = "";
+  const openFileDialog = async () => {
+    const filePaths = await window.electron.openFileDialog();
+    if (filePaths && filePaths.length > 0) {
+      handleFileChange(filePaths);
     }
   };
 
@@ -761,15 +727,14 @@ const GenerateReportForm = ({
               </div>
 
               <div
-                className={`relative ${isDragging ? "ring-2 ring-[#3498db] dark:ring-blue-500" : ""
-                  }`}
+                className={`relative ${isDragging ? "ring-2 ring-[#3498db] dark:ring-blue-500" : ""}`}
                 onDragEnter={handleDragEnter}
                 onDragLeave={handleDragLeave}
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
               >
                 <div
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={openFileDialog}
                   className="flex cursor-pointer flex-col items-center justify-center p-5 border-2 border-dashed border-gray-200 dark:border-white rounded-lg hover:border-gray-300 dark:hover:border-gray-500 transition-all bg-gray-50 dark:bg-black"
                 >
                   <div className="flex flex-col items-center justify-center w-full">
@@ -781,6 +746,7 @@ const GenerateReportForm = ({
                             className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 p-4 space-y-4"
                             onClick={(e) => e.stopPropagation()}
                           >
+                            {console.log({detail})}
                             <div className="flex items-center justify-between">
                               <div className="flex items-center space-x-3">
                                 <FileText className="w-5 h-5 text-[#3498db] dark:text-blue-500" />
@@ -799,7 +765,7 @@ const GenerateReportForm = ({
                                   type="button"
                                   onClick={() =>
                                     handlePreviewFile(
-                                      detail.previewUrl,
+                                      detail.file.path,
                                       detail.file.type
                                     )
                                   }
@@ -1007,24 +973,13 @@ const GenerateReportForm = ({
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      fileInputRef.current?.click();
-                    }}
+                    onClick={openFileDialog}
                     className="mt-4 px-6 py-2.5 text-sm font-medium"
                   >
                     {selectedFiles.length > 0
                       ? "Add More Files"
                       : "Browse Files"}
                   </Button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    onChange={handleFileChange}
-                    className="hidden"
-                    multiple
-                    accept=".pdf,.xls,.xlsx"
-                  />
                 </div>
 
                 {isDragging && (

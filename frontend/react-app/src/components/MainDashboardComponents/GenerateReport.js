@@ -132,28 +132,17 @@ export default function GenerateReport({ activeTab }) {
     progressIntervalRef.current = simulateProgress();
 
     try {
-      const filesWithContent = await Promise.all(
-        selectedFiles.map(async (file, index) => {
-          const fileContent = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsBinaryString(file);
-          });
-
-          const detail = fileDetails[index];
-
-          return {
-            fileContent,
-            pdf_paths: file.name,
-            bankName: detail.bankName,
-            passwords: detail.password || "",
-            start_date: convertDateFormat(detail.start_date), // Convert date format
-            end_date: convertDateFormat(detail.end_date), // Convert date format
-            ca_id: currentCaseId,
-          };
-        })
-      );
+      const filesWithPaths = selectedFiles.map((file, index) => {
+        const detail = fileDetails[index];
+        return {
+          pdf_paths: file.path,
+          bankName: detail.bankName,
+          passwords: detail.password || "",
+          start_date: convertDateFormat(detail.start_date), // Convert date format
+          end_date: convertDateFormat(detail.end_date), // Convert date format
+          ca_id: currentCaseId,
+        };
+      });
 
       setFailedStatements([]);
       setSuccessfulStatements([]);
@@ -166,7 +155,7 @@ export default function GenerateReport({ activeTab }) {
 
       const result = await window.electron.generateReportIpc(
         {
-          files: filesWithContent,
+          files: filesWithPaths,
         },
         caseName,
         false,
@@ -354,7 +343,7 @@ export default function GenerateReport({ activeTab }) {
           start_date: startDates[i],
           end_date: endDates[i],
           ca_id: result.data.caseId,
-          is_ocr: true,
+          is_ocr: isOcrCandidate(reasons[i]),
         }));
 
         console.log({ scannedOCRFiles });
@@ -908,11 +897,11 @@ export default function GenerateReport({ activeTab }) {
                     <p className="font-semibold">Date range mismatch:</p>
                     <ul className="list-disc list-inside ml-6 space-y-1">
                       <li>
-                        User Input: {dateRangeWarning.userStart}–
+                        User Input: {dateRangeWarning.userStart}--
                         {dateRangeWarning.userEnd}
                       </li>
                       <li>
-                        Available: {dateRangeWarning.fetchedStart}–
+                        Available: {dateRangeWarning.fetchedStart}--
                         {dateRangeWarning.fetchedEnd}
                       </li>
                     </ul>

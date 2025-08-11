@@ -834,18 +834,12 @@ function generateReportIpc(tmpdir_path) {
 
           console.log(`Saving file to ${filePath}`);
 
-          if (fileDetail.fileContent) {
-            fs.writeFileSync(filePath, fileDetail.fileContent, "binary");
+          try {
+            const fileContent = fs.readFileSync(fileDetail.pdf_paths, "binary");
+            fs.writeFileSync(filePath, fileContent, "binary");
             successfulFiles.add(filePath);
-          } else if (fs.existsSync(fileDetail.pdf_paths)) {
-            // Reuse already saved file — just copy it again with a new name
-            fs.copyFileSync(fileDetail.pdf_paths, filePath);
-            successfulFiles.add(filePath);
-            log.info(`Reused existing file from ${fileDetail.pdf_paths}`);
-          } else {
-            log.warn(
-              `Missing file content and original file not found for: ${fileDetail.pdf_paths}`
-            );
+          } catch (error) {
+            log.error(`Failed to read or write file: ${fileDetail.pdf_paths}`, error);
             failedFiles.add(filePath);
           }
 
