@@ -5,7 +5,7 @@
   "main": "main.js",
   "icon": "./assets/cyphersol-icon.png",
   "scripts": {
-    "start": "powershell -Command \"Start-Process cmd -ArgumentList '/k cd /d \\\"E:\\Workplace\\Cyphersol\\ca_offline_multiple_clones\\beta_testers_ca\\frontend\\\" && npm run electron' -Verb runAs\"",
+    "start": "powershell -Command \"Start-Process cmd -ArgumentList '/k cd /d \\\"D:\\CA\\beta_testers_ca\\frontend\\\" && npm run electron' -Verb runAs\"",
     "start_": "npm run electron",
     "electron": "electron main.js",
     "start:fastapi": "cd ../ && uvicorn backend.main:app --reload --port 7500",
@@ -154,7 +154,7 @@
     "@radix-ui/react-progress": "^1.1.1",
     "@radix-ui/react-toast": "^1.2.4",
     "axios": "^1.7.9",
-    "bcryptjs": "^2.4.3",
+    "bcrypt": "^5.1.1",
     "bonjour": "^3.5.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

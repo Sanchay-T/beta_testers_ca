@@ -1903,6 +1903,16 @@ const DataTable = ({
     }
   };
 
+  const formatNumber = (val) => {
+    const num = parseFloat(val);
+    return isNaN(num)
+      ? "-"
+      : num.toLocaleString("en-IN", {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 2,
+        });
+  };
+
   return (
     // if source is equal to lifo or fifo then show the table
     <Card className="min-w-full max-w-[0]">
@@ -2432,11 +2442,10 @@ const DataTable = ({
                           return (
                             <TableCell key={column} className="max-w-[200px]">
                               <div>
-                                {numericColumns.includes(column)
-                                  ? row[column].toString().includes(".")
-                                    ? parseFloat(row[column]).toFixed(2)
-                                    : row[column]
-                                  : row[column]}
+                                {numericColumns.includes(column) &&
+                                !column.toLowerCase().includes("date")
+                                  ? formatNumber(row[column])
+                                  : row[column] ?? "-"}
                               </div>
                             </TableCell>
                           );
