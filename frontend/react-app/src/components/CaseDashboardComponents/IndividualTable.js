@@ -38,6 +38,7 @@ import {
   TooltipTrigger,
 } from "../ui/tooltip";
 import { generateFinancialReport } from "../ReportExcel";
+import InfoHoverVideo from "../InfoHoverVideo";
 const IndividualTable = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -373,6 +374,7 @@ const IndividualTable = () => {
           <div className="flex justify-between items-center">
             <div>
               <CardTitle>Individual Records</CardTitle>
+
               <CardDescription className="py-3">
                 Search and view individual records for this case
               </CardDescription>
@@ -389,7 +391,10 @@ const IndividualTable = () => {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
+                
               </div>
+                            <InfoHoverVideo videoId="demo" />
+
             </div>
           </div>
         </CardHeader>

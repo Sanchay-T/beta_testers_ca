@@ -1100,6 +1100,7 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
                   setPort={setPort}
                   handlePortChange={handlePortChange}
                   setActiveTab={setActiveTab}
+                  videoId={"demo"}
                 />
               ) : (
                 // Fallback if not manual and no data

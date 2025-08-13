@@ -1,5 +1,6 @@
 import React from "react";
 import { AiFillFileExcel } from "react-icons/ai"; // Install react-icons using npm install react-icons
+import InfoHoverVideo from "../InfoHoverVideo";
 
 function ExcelViewer() {
   const handleOpenFile = async (filePath) => {
@@ -44,13 +45,18 @@ function ExcelViewer() {
   return (
     <div
       style={{
-        textAlign: "center",
-        marginTop: "50px",
-        padding: "20px",
+        padding: "40px",
         fontFamily: "'Poppins', sans-serif",
         minHeight: "100vh",
+        paddingTop: "20px",
       }}
     >
+      <div className="flex justify-between items-center">
+        <h2 className="text-3xl font-bold tracking-tight dark:text-slate-300 pb-8">
+          Tally Vouchers
+        </h2>
+        <InfoHoverVideo videoId="demo" />
+      </div>
       {/* <h1
         style={{
           marginBottom: "30px",
@@ -58,13 +64,12 @@ function ExcelViewer() {
           fontSize: "2.5rem",
           fontWeight: "700",
         }}
-      ></h1> */}
+      >Tally Vouc</h1> */}
       <div
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
           gap: "20px",
-          padding: "20px",
         }}
       >
         {files.map((file, index) => (

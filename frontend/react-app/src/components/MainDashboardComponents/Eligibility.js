@@ -26,6 +26,7 @@ import {
 } from "../ui/dropdown-menu";
 import { ChevronDown, Calculator, PiggyBank } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
+import InfoHoverVideo from "../InfoHoverVideo";
 
 export default function Eligibility() {
   const [opportunityData, setOpportunityData] = useState(null);
@@ -104,17 +105,17 @@ export default function Eligibility() {
 
   const totals = opportunityData
     ? opportunityData.reduce(
-      (acc, data) => {
-        acc.eligibility += Object.values(data)
-          .filter((item) => item.type)
-          .reduce((sum, item) => sum + item.amount, 0);
-        acc.commission += Object.values(data)
-          .filter((item) => item.type)
-          .reduce((sum, item) => sum + item.value, 0);
-        return acc;
-      },
-      { eligibility: 0, commission: 0 }
-    )
+        (acc, data) => {
+          acc.eligibility += Object.values(data)
+            .filter((item) => item.type)
+            .reduce((sum, item) => sum + item.amount, 0);
+          acc.commission += Object.values(data)
+            .filter((item) => item.type)
+            .reduce((sum, item) => sum + item.value, 0);
+          return acc;
+        },
+        { eligibility: 0, commission: 0 }
+      )
     : { eligibility: 0, commission: 0 };
 
   const note = [
@@ -201,12 +202,16 @@ export default function Eligibility() {
               {user.role === "MSME"
                 ? "Loan Eligibility"
                 : "Opportunity to Earn"}
+              <InfoHoverVideo videoId="demo" />
+
             </h2>
             <p className="text-gray-600 mt-2 dark:text-[#7F8EA3]">
               Discover the products you're eligible for and the associated
               benefits.
             </p>
+            
           </div>
+          
           {opportunityData && (
             <div>
               {user.role === "MSME" ? (

@@ -7,6 +7,7 @@ import {
   IndianRupee,
   ReceiptText,
   Grid2X2,
+  Video,
 } from "lucide-react";
 import ReportGenerator from "../components/MainDashboardComponents/GenerateReport";
 import { cn } from "../lib/utils";
@@ -28,6 +29,7 @@ import TallyPrime from "../components/ImportTally/TallyPrime";
 import { useReportContext } from "../contexts/ReportContext";
 import { useAuth } from "../contexts/AuthContext";
 import TimerDisplay from "../components/TimerDisplay";
+import VideoLibrary from "../components/MainDashboardComponents/VideoLibrary";
 
 const Dashboard = () => {
   const { breadcrumbs, setMainDashboard } = useBreadcrumb();
@@ -90,6 +92,11 @@ const Dashboard = () => {
       title: user.role === "MSME" ? "Loan Eligibility" : "Opportunity to Earn",
       url: "#",
       icon: IndianRupee,
+    },
+    {
+      title: "Video Library",
+      url: "#",
+      icon: Video,
     },
 
     // {
@@ -167,6 +174,7 @@ const Dashboard = () => {
                 <TallyPrimeDirect source="manual" />
               )}
               {activeTab === "TallyERP Vouchers" && <ExcelERP />}
+              {activeTab === "Video Library" && <VideoLibrary />}
             </main>
           </div>
         </ScrollArea>

@@ -16,6 +16,7 @@ import { Card } from "../ui/card";
 import { AlertCircle, ChevronRight } from "lucide-react";
 import { useReportContext } from "../../contexts/ReportContext";
 import { cn } from "../../lib/utils"; // for conditional class names
+import InfoHoverVideo from "../InfoHoverVideo";
 
 export default function GenerateReport({ activeTab }) {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -688,25 +689,25 @@ export default function GenerateReport({ activeTab }) {
     }
   });
 
- const note = {
-  content: [
-    "Scanned copies",
-    "Image-Based PDF Statements: Bank statements provided as image-based PDFs, rather than in a structured file format, might lead to processing issues.",
-    "File Integrity: Encoded, encrypted, or corrupted files cannot be processed and should not be uploaded.",
-    "Handwritten Statements: Handwritten bank statements are not accepted.",
-    "Canara Bank Formats: Certain formats of Canara Bank statements may not be compatible with our processing system.",
-    "Data Authenticity: Please ensure that the uploaded data has not been tampered with, as alterations can result in incorrect responses.",
-    "Statement Recency: Avoid uploading very old bank statements, as changes in keyword formats over time may affect processing accuracy.",
-  ],
-  scanned: {
-    header: "IMPORTANT NOTES regarding scanned PDFs processing:",
-    items: [
-      "Sharp, readable text – zoom in; if you can read every digit, so can we",
-      "Aligned and maintains continuity across all pages",
-      "Clear, without overlapping narration in the amount fields",
-      "Avoid photo-scanned PDFs – no issues if it’s clear and aligned",
+  const note = {
+    content: [
+      "Scanned copies",
+      "Image-Based PDF Statements: Bank statements provided as image-based PDFs, rather than in a structured file format, might lead to processing issues.",
+      "File Integrity: Encoded, encrypted, or corrupted files cannot be processed and should not be uploaded.",
+      "Handwritten Statements: Handwritten bank statements are not accepted.",
+      "Canara Bank Formats: Certain formats of Canara Bank statements may not be compatible with our processing system.",
+      "Data Authenticity: Please ensure that the uploaded data has not been tampered with, as alterations can result in incorrect responses.",
+      "Statement Recency: Avoid uploading very old bank statements, as changes in keyword formats over time may affect processing accuracy.",
     ],
-  },
+    scanned: {
+      header: "IMPORTANT NOTES regarding scanned PDFs processing:",
+      items: [
+        "Sharp, readable text – zoom in; if you can read every digit, so can we",
+        "Aligned and maintains continuity across all pages",
+        "Clear, without overlapping narration in the amount fields",
+        "Avoid photo-scanned PDFs – no issues if it’s clear and aligned",
+      ],
+    },
   };
 
   return (
@@ -715,6 +716,7 @@ export default function GenerateReport({ activeTab }) {
         <h2 className="text-3xl font-bold tracking-tight dark:text-slate-300">
           Report Generator
         </h2>
+        <InfoHoverVideo videoId="demo" />
         {/* <button onClick={handleTestEdit}>Test Excel download</button> */}
         {/* <div className="flex items-center space-x-4">
           <button
@@ -757,44 +759,45 @@ export default function GenerateReport({ activeTab }) {
 
       <RecentReports key={refreshTrigger} onReportGenerated={refreshPage} />
 
-     <Card className="p-6">
-  <h4 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
-    <AlertCircle className="h-5 w-5 text-amber-500" />
-    Important Notes
-  </h4>
-  <h6 className="text-gray-600 dark:text-slate-300 mb-4">
-    Certain statements may not be processed properly due to various reasons.
-    Below is a list of common unsupported or partially extracted formats:
-  </h6>
-  <ul className="space-y-3">
-    {note.content.map((item, idx) => (
-      <li
-        key={idx}
-        className="flex gap-3 items-center text-gray-600 dark:text-slate-300"
-      >
-        <ChevronRight className="h-5 w-5 text-gray-400 flex-shrink-0" />
-        <span>{item}</span>
-      </li>
-    ))}
+      <Card className="p-6">
+        <h4 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+          <AlertCircle className="h-5 w-5 text-amber-500" />
+          Important Notes
+        </h4>
+        <h6 className="text-gray-600 dark:text-slate-300 mb-4">
+          Certain statements may not be processed properly due to various
+          reasons. Below is a list of common unsupported or partially extracted
+          formats:
+        </h6>
+        <ul className="space-y-3">
+          {note.content.map((item, idx) => (
+            <li
+              key={idx}
+              className="flex gap-3 items-center text-gray-600 dark:text-slate-300"
+            >
+              <ChevronRight className="h-5 w-5 text-gray-400 flex-shrink-0" />
+              <span>{item}</span>
+            </li>
+          ))}
 
-    {/* scanned-PDF header as a bold “parent” bullet */}
-    <li className="flex gap-3 items-start text-gray-600 dark:text-slate-300">
-      <ChevronRight className="h-5 w-5 text-gray-400 flex-shrink-0" />
-      <span className="font-semibold">{note.scanned.header}</span>
-    </li>
+          {/* scanned-PDF header as a bold “parent” bullet */}
+          <li className="flex gap-3 items-start text-gray-600 dark:text-slate-300">
+            <ChevronRight className="h-5 w-5 text-gray-400 flex-shrink-0" />
+            <span className="font-semibold">{note.scanned.header}</span>
+          </li>
 
-    {/* scanned-PDF details as indented sub-bullets */}
-    {note.scanned.items.map((sub, i) => (
-      <li
-        key={i}
-        className="flex gap-3 items-center text-gray-600 dark:text-slate-300 ml-8"
-      >
-        <ChevronRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
-        <span>{sub}</span>
-      </li>
-    ))}
-  </ul>
-</Card>
+          {/* scanned-PDF details as indented sub-bullets */}
+          {note.scanned.items.map((sub, i) => (
+            <li
+              key={i}
+              className="flex gap-3 items-center text-gray-600 dark:text-slate-300 ml-8"
+            >
+              <ChevronRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
+              <span>{sub}</span>
+            </li>
+          ))}
+        </ul>
+      </Card>
 
       {/* Dialog for successful report generation */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen} className="">
@@ -845,8 +848,9 @@ export default function GenerateReport({ activeTab }) {
               <Card className="p-3 bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700">
                 <p className="text-blue-700 dark:text-blue-300 text-sm">
                   We detected one or more scanned or encoded PDFs. We are
-                  processing your statements in the background. Processing will take approximately
-                  1-2 minutes per page, depending on the configuration of your pc.
+                  processing your statements in the background. Processing will
+                  take approximately 1-2 minutes per page, depending on the
+                  configuration of your pc.
                 </p>
               </Card>
             </div>

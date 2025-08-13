@@ -11,6 +11,7 @@ import Card3 from "../Elements/Card3";
 import { useAuth } from "../../contexts/AuthContext";
 import MSME_Card3 from "../Elements/MSME_Card3";
 import CustomContainer from "./CustomContainer";
+import InfoHoverVideo from "../InfoHoverVideo";
 
 const MainDashboard = ({ handleTabChange }) => {
   const { theme, setTheme } = useTheme();
@@ -791,7 +792,9 @@ const MainDashboard = ({ handleTabChange }) => {
               Analytics Dashboard - Chartered Accountants and Tax Professionals{" "}
             </p>{" "}
           </div>{" "}
-          <div className="flex items-center space-x-4">            {/* <DropdownMenu>
+          <div className="flex items-center space-x-4">
+            {" "}
+            {/* <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="icon" className="relative">
                   <Bell className="h-4 w-4" />
@@ -819,7 +822,9 @@ const MainDashboard = ({ handleTabChange }) => {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu> */}
-
+            <InfoHoverVideo
+              videoId="demo"
+            />
             <Button
               variant="ghost"
               size="icon"

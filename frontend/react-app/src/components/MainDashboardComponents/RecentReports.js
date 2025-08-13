@@ -88,6 +88,7 @@ import {
 import { exportToExcel } from "../exportToExcel";
 import * as XLSX from "xlsx";
 import { generateFinancialReport } from "../ReportExcel";
+import InfoHoverVideo from "../InfoHoverVideo";
 
 const RecentReportsComp = ({ key, onReportGenerated }) => {
   const { toast } = useToast();
@@ -1673,6 +1674,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
             >
               <RotateCw className="w-4 h-4" />
             </Button>
+            <InfoHoverVideo videoId="demo" />
           </div>
           {/* add refresh button */}
         </div>

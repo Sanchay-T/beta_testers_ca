@@ -15,7 +15,8 @@ import {
   Filter,
   FileSpreadsheet,
   Settings,
-  Info, ChevronDown
+  Info,
+  ChevronDown,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import {
@@ -64,6 +65,7 @@ import localForage, { clear } from "localforage";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import InfoHoverVideo from "../InfoHoverVideo";
 const ledgerGroups = [
   "Branch / Divisions",
   "Capital Account",
@@ -118,6 +120,7 @@ const TallyTable = ({
   port,
   handlePortChange,
   setActiveTab,
+  videoId=null
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [transactions, setTransactions] = useState([]);
@@ -183,8 +186,8 @@ const TallyTable = ({
   const [isCreatingBank, setIsCreatingBank] = useState(false);
   const [openingBalanceOptions, setOpeningBalanceOptions] = useState([]);
   const [showBalanceDropdown, setShowBalanceDropdown] = useState(false);
-  const [balanceInput, setBalanceInput] = useState("");               // the text the user is typing
-  const [showBalanceList, setShowBalanceList] = useState(false);      // whether to show the dropdown list
+  const [balanceInput, setBalanceInput] = useState(""); // the text the user is typing
+  const [showBalanceList, setShowBalanceList] = useState(false); // whether to show the dropdown list
 
   const isFirstLoad = useRef(true);
 
@@ -384,7 +387,7 @@ const TallyTable = ({
       //   description: "Please Select a company first, to check if bank ledger exists",
       //   variant: "destructive",
       // });
-      return
+      return;
     }
 
     setIsFetchingBalance(true);
@@ -404,7 +407,7 @@ const TallyTable = ({
             amount: Number(item.amount).toFixed(2),
             date: item.date,
             description: item.description,
-            id: item.id
+            id: item.id,
           }));
 
           console.log("Formatted data:", formattedData);
@@ -1420,6 +1423,7 @@ const TallyTable = ({
               {selectedVoucher === "Ledgers"
                 ? "Create Ledgers"
                 : selectedVoucher + " Voucher"}
+              {videoId&&<InfoHoverVideo videoId={videoId} />}
             </CardTitle>
 
             {/* Case ID badge */}
@@ -1624,7 +1628,6 @@ const TallyTable = ({
                             />
                           </div>
 
-
                           <div className="space-y-1">
                             <label className="text-xs font-medium flex items-center justify-between text-slate-600 dark:text-slate-300">
                               <div className="flex items-center">
@@ -1640,11 +1643,14 @@ const TallyTable = ({
                               <Input
                                 type="number"
                                 value={balanceInput || bankOpeningBalance}
-                                onChange={e => {
+                                onChange={(e) => {
                                   setBalanceInput(e.target.value);
                                   setBankOpeningBalance(e.target.value);
                                 }}
-                                onFocus={() => openingBalanceOptions.length > 1 && setShowBalanceList(true)}
+                                onFocus={() =>
+                                  openingBalanceOptions.length > 1 &&
+                                  setShowBalanceList(true)
+                                }
                                 placeholder="0.00"
                                 className="h-8 text-sm pr-8"
                                 disabled={isCreatingBank || isFetchingBalance}
@@ -1654,7 +1660,7 @@ const TallyTable = ({
                               {openingBalanceOptions.length > 1 && (
                                 <button
                                   type="button"
-                                  onClick={() => setShowBalanceList(v => !v)}
+                                  onClick={() => setShowBalanceList((v) => !v)}
                                   className="absolute inset-y-0 right-2 flex items-center"
                                 >
                                   <ChevronDown className="h-4 w-4 text-gray-500" />
@@ -1671,22 +1677,23 @@ const TallyTable = ({
                                     <div
                                       key={i}
                                       className="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
-                                      onMouseDown={e => {
-                                        e.preventDefault();        // prevent blur
+                                      onMouseDown={(e) => {
+                                        e.preventDefault(); // prevent blur
                                         const amt = opt.amount.toString();
                                         setBalanceInput(amt);
                                         setBankOpeningBalance(amt);
                                         setShowBalanceList(false);
                                       }}
                                     >
-                                      {`${opt.amount}  (${opt.date || "Unknown date"})`}
+                                      {`${opt.amount}  (${
+                                        opt.date || "Unknown date"
+                                      })`}
                                     </div>
                                   ))}
                                 </div>
                               )}
                             </div>
                           </div>
-
                         </div>
 
                         <div className="flex justify-end gap-2 mt-4">
@@ -1755,8 +1762,9 @@ const TallyTable = ({
           )}
           {/* Search field - takes 3 or 4 columns on desktop */}
           <div
-            className={`w-full  md:col-span-${selectedVoucher === "Payment Receipt Contra" ? "3" : "4"
-              }`}
+            className={`w-full  md:col-span-${
+              selectedVoucher === "Payment Receipt Contra" ? "3" : "4"
+            }`}
           >
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-slate-500 dark:text-slate-400">
@@ -1834,8 +1842,8 @@ const TallyTable = ({
                   className="max-w-xs p-3 bg-white dark:bg-gray-800 border shadow-lg rounded-md"
                 >
                   {selectedVoucher === "Payment Receipt Contra" &&
-                    !isLedgersCreated &&
-                    !isEmptyLedgersSelected ? (
+                  !isLedgersCreated &&
+                  !isEmptyLedgersSelected ? (
                     <div className="space-y-2">
                       <p className="text-sm font-medium">
                         Ledgers need to be created first
@@ -1986,13 +1994,14 @@ const TallyTable = ({
                 {columns.map((column) => (
                   <TableHead
                     key={column}
-                    className={`whitespace-nowrap ${["bill_reference", "dr_ledger", "cr_ledger"].includes(
-                      column
-                    )
-                      ? "min-w-[180px]"
-                      : "min-w-[150px]"
-                      } ${column === "narration" && "min-w-[300px]"}`}
-                  // className={source === "summary" ? "bg-gray-900 dark:bg-slate-800 text-white" : ""}
+                    className={`whitespace-nowrap ${
+                      ["bill_reference", "dr_ledger", "cr_ledger"].includes(
+                        column
+                      )
+                        ? "min-w-[180px]"
+                        : "min-w-[150px]"
+                    } ${column === "narration" && "min-w-[300px]"}`}
+                    // className={source === "summary" ? "bg-gray-900 dark:bg-slate-800 text-white" : ""}
                   >
                     <div className="flex items-center gap-2">
                       {[
@@ -2003,10 +2012,10 @@ const TallyTable = ({
                         "date",
                         "ledger",
                       ].includes(column) && (
-                          <p className="text-lg text-gray-500 dark:text-gray-400">
-                            *
-                          </p>
-                        )}
+                        <p className="text-lg text-gray-500 dark:text-gray-400">
+                          *
+                        </p>
+                      )}
                       {makeReadable(column)}
 
                       {[
@@ -2021,31 +2030,31 @@ const TallyTable = ({
                         "country",
                         "opening_balance",
                       ].includes(column.toLowerCase()) === false && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                            onClick={() => {
-                              if (column.toLowerCase() === "date") {
-                                setCurrentFilterColumn(column);
-                                setCurrentDateColumn(column);
-                                setDateFilterModalOpen(true);
-                              } else if (column.toLowerCase() === "amount") {
-                                setCurrentNumericColumn(column);
-                                setNumericFilterModalOpen(true);
-                                setDateFilterModalOpen(false);
-                              } else {
-                                setCurrentFilterColumn(column);
-                                // setSelectedCategories([]);
-                                setCategorySearchTerm("");
-                                setFilterModalOpen(true);
-                                setDateFilterModalOpen(false);
-                              }
-                            }}
-                          >
-                            ▼
-                          </Button>
-                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => {
+                            if (column.toLowerCase() === "date") {
+                              setCurrentFilterColumn(column);
+                              setCurrentDateColumn(column);
+                              setDateFilterModalOpen(true);
+                            } else if (column.toLowerCase() === "amount") {
+                              setCurrentNumericColumn(column);
+                              setNumericFilterModalOpen(true);
+                              setDateFilterModalOpen(false);
+                            } else {
+                              setCurrentFilterColumn(column);
+                              // setSelectedCategories([]);
+                              setCategorySearchTerm("");
+                              setFilterModalOpen(true);
+                              setDateFilterModalOpen(false);
+                            }
+                          }}
+                        >
+                          ▼
+                        </Button>
+                      )}
                     </div>
                   </TableHead>
                 ))}
@@ -2066,11 +2075,12 @@ const TallyTable = ({
                   return (
                     <TableRow
                       key={row.id}
-                      className={`group ${row.imported
-                        ? "bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800"
-                        : "hover:bg-gray-100 dark:hover:bg-gray-800"
-                        }`}
-                    // className={source === "summary" ? "even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200" : ""}
+                      className={`group ${
+                        row.imported
+                          ? "bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800"
+                          : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                      }`}
+                      // className={source === "summary" ? "even:bg-slate-200 even:dark:bg-slate-800 hover:bg-transparent even:hover:bg-slate-200" : ""}
                     >
                       <TableCell className={`sticky left-0 bg-white z-10`}>
                         <Checkbox
@@ -2194,9 +2204,9 @@ const TallyTable = ({
                             <TableCell
                               key={column}
                               className={`w-[250px] group relative `}
-                            // ${
-                            //   selectedVoucher === "Ledgers" && "z-[200]"
-                            // }
+                              // ${
+                              //   selectedVoucher === "Ledgers" && "z-[200]"
+                              // }
                             >
                               <DatePicker
                                 selected={
@@ -2264,8 +2274,8 @@ const TallyTable = ({
                                 {row[column] === true
                                   ? "Success"
                                   : row.failed_reason === ""
-                                    ? "Not Uploaded Yet"
-                                    : "Failed"}
+                                  ? "Not Uploaded Yet"
+                                  : "Failed"}
                               </div>
                             </TableCell>
                           );
@@ -2424,14 +2434,14 @@ const TallyTable = ({
                                     />
                                     {editedEntities[row.id] !== undefined &&
                                       editedEntities[row.id] !==
-                                      row[column] && (
+                                        row[column] && (
                                         <Check
                                           className="ml-2 cursor-pointer text-green-500"
                                           onClick={() => {
                                             // For manual typing, pass the new value explicitly
                                             const updatedValue =
                                               editedEntities[row.id] !==
-                                                undefined
+                                              undefined
                                                 ? editedEntities[row.id]
                                                 : row[column];
                                             handleEntityUpdateConfirm(
@@ -2446,7 +2456,7 @@ const TallyTable = ({
                                   {ledgerSelectDropdownOpen[row.id] && (
                                     <div className="absolute z-10 top-full mt-[-10px] w-full max-h-60 overflow-auto rounded-md bg-white border shadow-sm">
                                       {rowFilteredLedgers.length === 0 &&
-                                        currentSearchTerm.trim() !== "" ? (
+                                      currentSearchTerm.trim() !== "" ? (
                                         <div
                                           className="cursor-pointer select-none p-2 hover:bg-gray-100 flex items-center gap-1"
                                           onMouseDown={(e) => {
@@ -2667,7 +2677,7 @@ const TallyTable = ({
                     className={cn(
                       "cursor-pointer",
                       currentPage === totalPages &&
-                      "pointer-events-none opacity-50"
+                        "pointer-events-none opacity-50"
                     )}
                   />
                 </PaginationItem>
@@ -2758,7 +2768,7 @@ const TallyTable = ({
                         ).toLowerCase()
                       )
                   ).length === 0 &&
-                    (ledgerSearchTerms["bulkEditLedger"] || "").trim() !== "" ? (
+                  (ledgerSearchTerms["bulkEditLedger"] || "").trim() !== "" ? (
                     <div
                       className="cursor-pointer select-none p-2 hover:bg-gray-100 flex items-center gap-1"
                       onMouseDown={(e) => {

@@ -82,6 +82,7 @@ import {
   CommandInput,
   CommandItem,
 } from "../ui/command";
+import InfoHoverVideo from "../InfoHoverVideo";
 
 const voucherOptions = ["Payment", "Receipt", "Contra"];
 
@@ -92,6 +93,7 @@ const DataTable = ({
   source,
   refreshFunction,
   caseId,
+  videoId=null
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [transactions, setTransactions] = useState([]);
@@ -1921,8 +1923,11 @@ const DataTable = ({
           <div className="flex flex-wrap justify-between items-center">
             <div>
               <CardTitle className="dark:text-slate-300">
-                {title || "Data Table"}
+                {title || "Data Table"} 
+                                      {videoId&&<InfoHoverVideo videoId={videoId} />}
+
               </CardTitle>
+
               <CardDescription>
                 {subtitle || "View and manage your data"}
               </CardDescription>
