@@ -1674,7 +1674,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
             >
               <RotateCw className="w-4 h-4" />
             </Button>
-            <InfoHoverVideo videoId="demo" />
+            <InfoHoverVideo videoId="recent_reports" />
           </div>
           {/* add refresh button */}
         </div>

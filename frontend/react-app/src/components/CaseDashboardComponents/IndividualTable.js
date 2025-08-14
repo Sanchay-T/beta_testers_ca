@@ -234,9 +234,13 @@ const IndividualTable = () => {
     }
   };
 
-  const handleDownload = async (caseId, individualId,customerName) => {
+  const handleDownload = async (caseId, individualId, customerName) => {
     try {
-      const success = await generateFinancialReport(caseId, individualId, customerName);
+      const success = await generateFinancialReport(
+        caseId,
+        individualId,
+        customerName
+      );
 
       if (success) {
       } else {
@@ -391,10 +395,8 @@ const IndividualTable = () => {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
-                
               </div>
-                            <InfoHoverVideo videoId="demo" />
-
+              <InfoHoverVideo videoId="individualTable" />
             </div>
           </div>
         </CardHeader>
@@ -460,7 +462,11 @@ const IndividualTable = () => {
                                 size="icon"
                                 onClick={(e) => {
                                   e.stopPropagation(); // Prevent row click
-                                  handleDownload(caseId, item.id,item.customerName);
+                                  handleDownload(
+                                    caseId,
+                                    item.id,
+                                    item.customerName
+                                  );
                                 }}
                               >
                                 <Download className="h-4 w-4" />
@@ -474,7 +480,10 @@ const IndividualTable = () => {
                             variant="outline"
                             onClick={(e) => {
                               e.stopPropagation(); // Prevent row click
-                              if (item.filePath.includes(".pdf")||item.filePath.includes(".PDF")) {
+                              if (
+                                item.filePath.includes(".pdf") ||
+                                item.filePath.includes(".PDF")
+                              ) {
                                 handleRectify(item.filePath);
                               } else {
                                 toast({

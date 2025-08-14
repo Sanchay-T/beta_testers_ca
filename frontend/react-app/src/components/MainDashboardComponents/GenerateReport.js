@@ -716,7 +716,7 @@ export default function GenerateReport({ activeTab }) {
         <h2 className="text-3xl font-bold tracking-tight dark:text-slate-300">
           Report Generator
         </h2>
-        <InfoHoverVideo videoId="demo" />
+        <InfoHoverVideo videoId="generateReport" />
         {/* <button onClick={handleTestEdit}>Test Excel download</button> */}
         {/* <div className="flex items-center space-x-4">
           <button

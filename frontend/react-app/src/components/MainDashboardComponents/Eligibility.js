@@ -202,7 +202,6 @@ export default function Eligibility() {
               {user.role === "MSME"
                 ? "Loan Eligibility"
                 : "Opportunity to Earn"}
-              <InfoHoverVideo videoId="demo" />
 
             </h2>
             <p className="text-gray-600 mt-2 dark:text-[#7F8EA3]">
@@ -213,7 +212,9 @@ export default function Eligibility() {
           </div>
           
           {opportunityData && (
-            <div>
+            <div className="flex gap-x-4">
+              <InfoHoverVideo videoId="oppToEarn" />
+
               {user.role === "MSME" ? (
                 <DropdownMenu>
                   <Button
@@ -223,6 +224,7 @@ export default function Eligibility() {
                   >
                     <Download className="w-5 h-5" /> Download All
                   </Button>
+                
                 </DropdownMenu>
               ) : (
                 <DropdownMenu>
@@ -251,8 +253,10 @@ export default function Eligibility() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
+
             </div>
           )}
+          
         </div>
         {!opportunityData || opportunityData.length === 0 ? (
           <div className="bg-gray-100 p-4 rounded-md w-full h-[10vh]">

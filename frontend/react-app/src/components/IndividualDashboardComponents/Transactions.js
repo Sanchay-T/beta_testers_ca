@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import ToggleStrip from "./ToggleStrip";
 import { useParams } from "react-router-dom";
 import UnifiedTable from "../IndividualDashboardComponents/UnifiedTable";
-import InfoHoverVideo from "../InfoHoverVideo";
 
 const Transactions = () => {
   const [transactionData, setTransactionData] = useState([]);
@@ -244,7 +243,7 @@ const Transactions = () => {
                 caseId={parseInt(caseId)}
                 refreshFunction={fetchTransactions}
                 source="transactions"
-                videoId="demo"
+                videoId="transactions"
               />
             </>
           )}

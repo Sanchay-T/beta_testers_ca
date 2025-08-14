@@ -1,7 +1,13 @@
 // InfoHoverVideo.js
-import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+  useCallback,
+} from "react";
 import { createPortal } from "react-dom";
-import { Clock, Info, Play, X } from "lucide-react";
+import { Clock, Play, X } from "lucide-react";
 import { Button } from "./ui/button";
 import video_calalog from "../data/videoDetails.json";
 
@@ -26,7 +32,9 @@ const extractYouTubeId = (url) => {
 };
 
 const toEmbed = (id) =>
-  id ? `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1` : "";
+  id
+    ? `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1`
+    : "";
 
 const metaCache = new Map();
 
@@ -87,9 +95,7 @@ const FullScreenVideo = ({ embedUrl, onClose, open, returnFocusTo }) => {
 const InfoHoverVideo = ({
   videoId,
   catalog = VIDEO_CATALOG,
-  label = "Watch demo",
   fixedTopRight = false,
-  videoUrl,
   disablePreviewOnTouch = true,
 }) => {
   const [hoverOpen, setHoverOpen] = useState(false);
@@ -117,15 +123,17 @@ const InfoHoverVideo = ({
 
   // detect touch
   const isTouch = useMemo(
-    () => typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0),
+    () =>
+      typeof window !== "undefined" &&
+      ("ontouchstart" in window || navigator.maxTouchPoints > 0),
     []
   );
   const shouldShowHover = !(disablePreviewOnTouch && isTouch);
 
   const selected = catalog?.[videoId];
-  const effectiveUrl = selected?.link || videoUrl || "";
-  const catalogTitle = selected?.name || "Demo video";
-  const ctaText = (selected?.buttonText || label).trim(); // <-- NEW: CTA text from JSON
+  const effectiveUrl = selected?.link || "";
+  const catalogTitle = selected?.name;
+  const ctaText = (selected?.buttonText).trim(); // <-- NEW: CTA text from JSON
 
   const ytId = useMemo(() => extractYouTubeId(effectiveUrl), [effectiveUrl]);
   const embedUrl = useMemo(() => toEmbed(ytId), [ytId]);
@@ -181,7 +189,10 @@ const InfoHoverVideo = ({
           fallbackThumb;
 
         if (!abort) {
-          metaCache.set(ytId, { thumb: bestThumb, title: item?.title || catalogTitle });
+          metaCache.set(ytId, {
+            thumb: bestThumb,
+            title: item?.title || catalogTitle,
+          });
           setThumb(bestThumb);
           setTitle(item?.title || catalogTitle);
           setLoading(false);
@@ -237,38 +248,41 @@ const InfoHoverVideo = ({
   const openModal = useCallback(() => setModalOpen(true), []);
   const closeModal = useCallback(() => setModalOpen(false), []);
 
-  const containerClass = fixedTopRight ? "fixed top-4 right-4 z-50" : "relative z-40";
+  const containerClass = fixedTopRight
+    ? "fixed top-4 right-4 z-50"
+    : "relative z-40";
   if (!effectiveUrl || !ytId) return null;
 
   return (
-    <div className={`${containerClass} group`} style={{ display: "inline-block" }}>
+    <div
+      className={`${containerClass} group`}
+      style={{ display: "inline-block" }}
+    >
       {/* Trigger (icon + text from catalog.buttonText) */}
       <Button
         ref={triggerRef}
-        aria-label={ctaText || label}
-        title={ctaText || label}
+        aria-label={ctaText}
+        title={ctaText}
         onMouseEnter={openHover}
         onMouseLeave={() => scheduleClose(160)}
         onFocus={openHover}
         onBlur={() => scheduleClose(120)}
         onClick={openModal}
-        className="group relative inline-flex items-center gap-2 rounded-full px-3.5 py-2
-                   text-white shadow-md transition will-change-transform
-                   hover:-translate-y-0.5 hover:shadow-lg
-                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500
-                   [background:linear-gradient(135deg,#003366_0%,#0056B3_100%)]
-                   border border-white/10 max-w-[60vw]"
+        className="group relative inline-flex items-center gap-2 rounded-full px-4 py-2
+             text-white font-semibold transition-all duration-300
+             hover:scale-[1.03] hover:shadow-[0_0_12px_rgba(255,255,255,0.25)]
+             focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-white/50
+             border border-white/20 backdrop-blur-md overflow-hidden"
+        style={{
+          background: `linear-gradient(135deg, #4080c0ff 0%, #0057b3bf 100%),
+                 radial-gradient(circle at top right, rgba( 0,150, 255, 0.3) 0%, transparent 70%),
+    radial-gradient(circle at bottom left, rgba(0, 80, 170, 0.3) 0%, transparent 70%),
+    radial-gradient(circle at center, rgba(0, 150, 255, 0.1) 0%, transparent 50%)`,
+          boxShadow: "0 8px 32px rgba(0, 51, 102, 0.25)",
+        }}
       >
-        <span
-          aria-hidden
-          className="pointer-events-none absolute -inset-0.5 rounded-full opacity-0 group-hover:opacity-100 transition blur-[2px]"
-          style={{ background: "linear-gradient(90deg,#1187e9,#0a4a8e)" }}
-        />
-        <span aria-hidden className="absolute inset-0 rounded-full bg-white/10 dark:bg-black/10 backdrop-blur-[2px]" />
-        <Info className="h-4 w-4 relative z-10 text-white/90" />
-        <span className="relative z-10 text-sm font-semibold truncate">
-          {ctaText}
-        </span>
+        <Play className="h-4 w-4 text-white" />
+        <span className="truncate">{ctaText}</span>
       </Button>
 
       {/* Hover card (PORTALED) */}
@@ -276,7 +290,11 @@ const InfoHoverVideo = ({
         createPortal(
           <div
             className="fixed z-[9998]"
-            style={{ top: previewPos.top, left: previewPos.left, width: previewPos.width }}
+            style={{
+              top: previewPos.top,
+              left: previewPos.left,
+              width: previewPos.width,
+            }}
             onMouseEnter={cancelClose}
             onMouseLeave={() => scheduleClose(140)}
           >
@@ -298,19 +316,23 @@ const InfoHoverVideo = ({
                   {loading ? (
                     <div className="aspect-video w-full animate-pulse bg-slate-200 dark:bg-slate-700" />
                   ) : (
-                    <img src={thumb} alt={title || catalogTitle} className="aspect-video w-full object-cover" />
+                    <img
+                      src={thumb}
+                      alt={title || catalogTitle}
+                      className="aspect-video w-full object-cover"
+                    />
                   )}
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-black/10 to-transparent" />
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="rounded-full bg-white/95 dark:bg-black/60 backdrop-blur px-4 py-2 flex items-center gap-2 shadow-lg border border-white/70 dark:border-white/10">
+                    {/* <div className="rounded-full bg-white/95 dark:bg-black/60 backdrop-blur px-4 py-2 flex items-center gap-2 shadow-lg border border-white/70 dark:border-white/10">
                       <Play className="h-4 w-4" />
                       <span className="text-sm font-semibold">Play</span>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
 
                 <p className="mt-3 text-sm font-semibold text-slate-900 dark:text-white line-clamp-2">
-                  {title || catalogTitle}
+                  {catalogTitle}
                 </p>
 
                 <div className="mt-3">
@@ -319,21 +341,24 @@ const InfoHoverVideo = ({
                     onClick={openModal}
                     aria-label={ctaText}
                     title={ctaText}
-                    className="group relative inline-flex items-center gap-2 rounded-full px-3.5 py-2
-                               text-white shadow-md transition will-change-transform
-                               hover:-translate-y-0.5 hover:shadow-lg
-                               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500
-                               [background:linear-gradient(135deg,#003366_0%,#0056B3_100%)]
-                               border border-white/10 w-full"
+                    className="group relative inline-flex items-center gap-2 rounded-full px-4 py-2
+             text-white font-semibold transition-all duration-300
+             hover:scale-[1.03] hover:shadow-[0_0_12px_rgba(255,255,255,0.25)]
+             focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-white/50
+             border border-white/20 backdrop-blur-md overflow-hidden w-full"
+                    style={{
+                      background: `linear-gradient(135deg, #4080c0ff 0%, #0057b3bf 100%),
+                 radial-gradient(circle at top right, rgba( 0,150, 255, 0.3) 0%, transparent 70%),
+    radial-gradient(circle at bottom left, rgba(0, 80, 170, 0.3) 0%, transparent 70%),
+    radial-gradient(circle at center, rgba(0, 150, 255, 0.1) 0%, transparent 50%)`,
+                      boxShadow: "0 8px 32px rgba(0, 51, 102, 0.25)",
+                    }}
                   >
-                    <span
-                      aria-hidden
-                      className="pointer-events-none absolute -inset-0.5 rounded-full opacity-0 group-hover:opacity-100 transition blur-[2px]"
-                      style={{ background: "linear-gradient(90deg,#1187e9,#0a4a8e)" }}
-                    />
-                    <span aria-hidden className="absolute inset-0 rounded-full bg-white/10 dark:bg-black/10 backdrop-blur-[2px]" />
-                    <Clock className="h-4 w-4 relative z-10 text-white/90" />
-                    <span className="relative z-10 text-sm font-semibold truncate">{ctaText}</span>
+                    <Play />
+                    <span className="relative z-10 text-sm font-semibold truncate">
+                      {/* {ctaText} */}
+                      Play
+                    </span>
                   </Button>
                 </div>
               </div>
@@ -342,7 +367,12 @@ const InfoHoverVideo = ({
           document.body
         )}
 
-      <FullScreenVideo embedUrl={embedUrl} open={modalOpen} onClose={closeModal} returnFocusTo={triggerRef} />
+      <FullScreenVideo
+        embedUrl={embedUrl}
+        open={modalOpen}
+        onClose={closeModal}
+        returnFocusTo={triggerRef}
+      />
 
       <style>{`
         @keyframes pop { from { opacity: 0; transform: translateY(6px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }

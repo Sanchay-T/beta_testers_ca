@@ -40,6 +40,10 @@ function ExcelViewer() {
       label: "Sales Multistock Items Voucher",
       path: "tallyprime/sales_multistock.xlsm",
     },
+    {
+      label: "Journal Multistock",
+      path: "tallyprime/journal_multistock.xlsm",
+    },
   ];
 
   return (
@@ -55,7 +59,7 @@ function ExcelViewer() {
         <h2 className="text-3xl font-bold tracking-tight dark:text-slate-300 pb-8">
           Tally Vouchers
         </h2>
-        <InfoHoverVideo videoId="demo" />
+        <InfoHoverVideo videoId="tallyVouchers" />
       </div>
       {/* <h1
         style={{

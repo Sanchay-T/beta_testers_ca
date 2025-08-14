@@ -466,11 +466,11 @@ const Summary = () => {
           Summary
         </h1>
         <div className="flex items-center space-x-2">
-          <Button onClick={() => handleDownload(caseId)} variant="outline">
+          <InfoHoverVideo videoId="summary" />
+          <Button onClick={() => handleDownload(caseId)} variant="default">
             <Download className="w-4 h-4 mr-2" />
             Download Summary
           </Button>
-          <InfoHoverVideo videoId="demo" />
         </div>
       </div>
       <div className="flex flex-wrap -mx-2">

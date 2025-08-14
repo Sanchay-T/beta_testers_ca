@@ -309,3 +309,1066 @@
   "UsedStatements": 24,
   "SystemUpTime": 268962187
 }
+2025-08-05 18:03:01.687 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:03:21.871 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "CurrentTimestampIST": "05-Aug-2025 06:02:01 PM IST",
+  "ExpiryTimestampIST": "24-Aug-2025 12:55:12 AM IST",
+  "CurrentTimestamp": 1754397121.046423,
+  "ExpiryTimestamp": 1755977112.007323,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 10,
+  "Role": "CA",
+  "UsedStatements": 24,
+  "SystemUpTime": 268962187
+}
+2025-08-05 18:03:27.326 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "CurrentTimestampIST": "05-Aug-2025 06:02:01 PM IST",
+  "ExpiryTimestampIST": "24-Aug-2025 12:55:12 AM IST",
+  "CurrentTimestamp": 1754397121.046423,
+  "ExpiryTimestamp": 1755977112.007323,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 10,
+  "Role": "CA",
+  "UsedStatements": 24,
+  "SystemUpTime": 268962187
+}
+2025-08-05 18:03:27.534 +05:30 [INF] Session activation logged to Django.
+2025-08-05 18:04:01.705 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:04:02.172 +05:30 [INF] License is present: true
+2025-08-05 18:04:02.172 +05:30 [INF] [License Polling] Enriched JSON: { license_key = SOMEX4Y4ZLicenseKEYForTesting4, used_statements = 24 }
+2025-08-05 18:04:02.235 +05:30 [INF] [License Polling] Expiry: 1755977112.007323
+2025-08-05 18:04:02.235 +05:30 [INF] License is present: true
+2025-08-05 18:04:02.235 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1755977112.007323 to 1755977112.007323
+2025-08-05 18:04:02.235 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1754397121.046423 to 1754397241.185375
+2025-08-05 18:04:02.235 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 268962187 to 269082328
+2025-08-05 18:04:02.235 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-05 18:04:02.236 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting4","current_timestamp":1754397241.185375,"expiry_timestamp":1755977112.007323,"number_of_users":1,"number_of_statements":10,"role":"CA","UsedStatements":24,"system_up_time":269082328}
+2025-08-05 18:04:02.236 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 18:04:02.301 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:04:02.302 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:04:02.302 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:04:02.304 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "CurrentTimestampIST": "05-Aug-2025 06:04:01 PM IST",
+  "ExpiryTimestampIST": "24-Aug-2025 12:55:12 AM IST",
+  "CurrentTimestamp": 1754397241.185375,
+  "ExpiryTimestamp": 1755977112.007323,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 10,
+  "Role": "CA",
+  "UsedStatements": 24,
+  "SystemUpTime": 269082328
+}
+2025-08-05 18:04:02.304 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-05 18:04:42.903 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "CurrentTimestampIST": "05-Aug-2025 06:04:01 PM IST",
+  "ExpiryTimestampIST": "24-Aug-2025 12:55:12 AM IST",
+  "CurrentTimestamp": 1754397241.185375,
+  "ExpiryTimestamp": 1755977112.007323,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 10,
+  "Role": "CA",
+  "UsedStatements": 24,
+  "SystemUpTime": 269082328
+}
+2025-08-05 18:04:42.906 +05:30 [INF] {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "CurrentTimestampIST": "05-Aug-2025 06:04:01 PM IST",
+  "ExpiryTimestampIST": "24-Aug-2025 12:55:12 AM IST",
+  "CurrentTimestamp": 1754397241.185375,
+  "ExpiryTimestamp": 1755977112.007323,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 10,
+  "Role": "CA",
+  "UsedStatements": 24,
+  "SystemUpTime": 269082328
+}
+2025-08-05 18:04:42.906 +05:30 [INF] [IsStatementLimitReached] Current used statements: 24, License limit: 10
+2025-08-05 18:05:01.715 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:05:42.159 +05:30 [INF] Django API response: {"detail":"License key is already in use with a different device."}
+2025-08-05 18:05:42.159 +05:30 [ERR] Django API returned error: {"detail":"License key is already in use with a different device."}
+2025-08-05 18:06:01.720 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:06:02.319 +05:30 [INF] License is present: true
+2025-08-05 18:06:02.320 +05:30 [INF] [License Polling] Enriched JSON: { license_key = SOMEX4Y4ZLicenseKEYForTesting4, used_statements = 24 }
+2025-08-05 18:06:02.374 +05:30 [INF] [License Polling] Expiry: 1755977112.007323
+2025-08-05 18:06:02.374 +05:30 [INF] License is present: true
+2025-08-05 18:06:02.374 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1755977112.007323 to 1755977112.007323
+2025-08-05 18:06:02.374 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1754397241.185375 to 1754397361.326425
+2025-08-05 18:06:02.374 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 269082328 to 269202453
+2025-08-05 18:06:02.374 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-05 18:06:02.375 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting4","current_timestamp":1754397361.326425,"expiry_timestamp":1755977112.007323,"number_of_users":1,"number_of_statements":10,"role":"CA","UsedStatements":24,"system_up_time":269202453}
+2025-08-05 18:06:02.375 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 18:06:02.475 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:06:02.476 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:06:02.476 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:06:02.476 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting4",
+  "CurrentTimestampIST": "05-Aug-2025 06:06:01 PM IST",
+  "ExpiryTimestampIST": "24-Aug-2025 12:55:12 AM IST",
+  "CurrentTimestamp": 1754397361.326425,
+  "ExpiryTimestamp": 1755977112.007323,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 10,
+  "Role": "CA",
+  "UsedStatements": 24,
+  "SystemUpTime": 269202453
+}
+2025-08-05 18:06:02.476 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-05 18:06:06.480 +05:30 [INF] Django API response: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting","current_timestamp":1754397365.419334,"expiry_timestamp":1756989365.419334,"number_of_users":1,"number_of_statements":100,"used_statements":0}
+2025-08-05 18:06:06.482 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 0 to 1754397365.419334
+2025-08-05 18:06:06.482 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 0 to 1756989365.419334
+2025-08-05 18:06:06.482 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 0 to 269206562
+2025-08-05 18:06:06.495 +05:30 [INF] Final JSON before encryption: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting","current_timestamp":1754397365.419334,"expiry_timestamp":1756989365.419334,"number_of_users":1,"number_of_statements":100,"used_statements":0,"role":"CA"}
+2025-08-05 18:06:06.495 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 18:06:06.581 +05:30 [INF] Successfully encrypted license JSON: 208 bytes
+2025-08-05 18:06:06.583 +05:30 [INF] Writing async license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:06:06.587 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:06:06.599 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 18:06:06.679 +05:30 [INF] Decrypted JSON for validation: 208
+2025-08-05 18:06:06.679 +05:30 [INF] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:06:06.679 +05:30 [INF] While Activation License info : {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:06:05 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754397365.419334,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 269206562
+}
+2025-08-05 18:06:07.190 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:06:05 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754397365.419334,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 269206562
+}
+2025-08-05 18:06:07.199 +05:30 [INF] License assign request: {"clientId":"S-1-5-21-3165862944-3759782804-3413270121-1001","uuid":"726D9D02-0268-11ED-9BD6-546CEBCA3915","hostname":"Aiyaz","username":"qures","macAddress":"54:6C:EB:CA:39:15"}
+2025-08-05 18:06:07.200 +05:30 [INF] License assign request: S-1-5-21-3165862944-3759782804-3413270121-1001, 726D9D02-0268-11ED-9BD6-546CEBCA3915, 54:6C:EB:CA:39:15, Aiyaz, qures
+2025-08-05 18:06:07.200 +05:30 [INF] License info: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:06:05 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754397365.419334,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 269206562
+}
+2025-08-05 18:06:07.200 +05:30 [INF] License manager active count: 1 / 1
+2025-08-05 18:06:07.839 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:06:05 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754397365.419334,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 269206562
+}
+2025-08-05 18:06:07.922 +05:30 [INF] Session activation logged to Django.
+2025-08-05 18:06:26.416 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:06:05 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754397365.419334,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 269206562
+}
+2025-08-05 18:06:26.416 +05:30 [INF] {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:06:05 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754397365.419334,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 269206562
+}
+2025-08-05 18:06:26.416 +05:30 [INF] [IsStatementLimitReached] Current used statements: 0, License limit: 100
+2025-08-05 18:07:01.724 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:08:01.730 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:08:02.484 +05:30 [INF] License is present: true
+2025-08-05 18:08:02.484 +05:30 [INF] [License Polling] Enriched JSON: { license_key = SOMEX4Y4ZLicenseKEYForTesting, used_statements = 0 }
+2025-08-05 18:08:02.662 +05:30 [INF] [License Polling] Expiry: 1756989365.419334
+2025-08-05 18:08:02.662 +05:30 [INF] License is present: true
+2025-08-05 18:08:02.662 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1756989365.419334 to 1756989365.419334
+2025-08-05 18:08:02.662 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1754397365.419334 to 1754397481.612941
+2025-08-05 18:08:02.662 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 269206562 to 269322750
+2025-08-05 18:08:02.662 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-05 18:08:02.662 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting","current_timestamp":1754397481.612941,"expiry_timestamp":1756989365.419334,"number_of_users":3,"number_of_statements":100,"role":"CA","UsedStatements":0,"system_up_time":269322750}
+2025-08-05 18:08:02.663 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 18:08:02.740 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:08:02.740 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:08:02.740 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:08:02.744 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:08:01 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754397481.612941,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 269322750
+}
+2025-08-05 18:08:02.744 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-05 18:09:01.735 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:10:01.743 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:10:02.755 +05:30 [INF] License is present: true
+2025-08-05 18:10:02.755 +05:30 [INF] [License Polling] Enriched JSON: { license_key = SOMEX4Y4ZLicenseKEYForTesting, used_statements = 0 }
+2025-08-05 18:10:14.105 +05:30 [INF] [License Polling] Expiry: 1756989365.419334
+2025-08-05 18:10:14.105 +05:30 [INF] License is present: true
+2025-08-05 18:10:14.105 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1756989365.419334 to 1756989365.419334
+2025-08-05 18:10:14.105 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1754397481.612941 to 1754397613.058427
+2025-08-05 18:10:14.105 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 269322750 to 269454187
+2025-08-05 18:10:14.105 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-05 18:10:14.105 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting","current_timestamp":1754397613.058427,"expiry_timestamp":1756989365.419334,"number_of_users":3,"number_of_statements":1000,"role":"CA","UsedStatements":0,"system_up_time":269454187}
+2025-08-05 18:10:14.106 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 18:10:14.195 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:10:14.195 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:10:14.195 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:10:14.196 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:10:13 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754397613.058427,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 269454187
+}
+2025-08-05 18:10:14.196 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-05 18:10:56.815 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:10:13 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754397613.058427,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 269454187
+}
+2025-08-05 18:11:00.472 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:10:13 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754397613.058427,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 269454187
+}
+2025-08-05 18:11:00.536 +05:30 [INF] Session activation logged to Django.
+2025-08-05 18:11:01.751 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:11:17.103 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:10:13 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754397613.058427,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 269454187
+}
+2025-08-05 18:11:17.103 +05:30 [INF] {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:10:13 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754397613.058427,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 269454187
+}
+2025-08-05 18:11:17.103 +05:30 [INF] [IsStatementLimitReached] Current used statements: 0, License limit: 1000
+2025-08-05 18:11:33.320 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:10:13 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754397613.058427,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 269454187
+}
+2025-08-05 18:11:33.324 +05:30 [INF] [TryUseStatement] Flushing 1 used statements to disk., last flush was at 05-08-2025 12:32:01, difference: 00:09:31.9240053
+2025-08-05 18:11:33.326 +05:30 [INF] License is present: true
+2025-08-05 18:11:33.326 +05:30 [INF] [FlushToDisk] Flushing 1 used statements to disk.
+2025-08-05 18:11:33.326 +05:30 [INF] [FlushToDisk] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting","current_timestamp":1754397613.058427,"expiry_timestamp":1756989365.419334,"number_of_users":3,"number_of_statements":1000,"role":"CA","UsedStatements":1,"system_up_time":269454187}
+2025-08-05 18:11:33.328 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 18:11:33.380 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:11:33.381 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:11:33.381 +05:30 [INF] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:12:01.759 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:12:14.210 +05:30 [INF] License is present: true
+2025-08-05 18:12:14.210 +05:30 [INF] [License Polling] Enriched JSON: { license_key = SOMEX4Y4ZLicenseKEYForTesting, used_statements = 1 }
+2025-08-05 18:12:25.491 +05:30 [INF] [License Polling] Expiry: 1756989365.419334
+2025-08-05 18:12:25.491 +05:30 [INF] License is present: true
+2025-08-05 18:12:25.491 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1756989365.419334 to 1756989365.419334
+2025-08-05 18:12:25.491 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1754397613.058427 to 1754397744.449043
+2025-08-05 18:12:25.491 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 269454187 to 269585578
+2025-08-05 18:12:25.491 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-05 18:12:25.491 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting","current_timestamp":1754397744.449043,"expiry_timestamp":1756989365.419334,"number_of_users":3,"number_of_statements":1000,"role":"CA","UsedStatements":1,"system_up_time":269585578}
+2025-08-05 18:12:25.492 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 18:12:25.552 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:12:25.552 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:12:25.552 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:12:25.552 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:12:24 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754397744.449043,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 269585578
+}
+2025-08-05 18:12:25.552 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-05 18:13:01.769 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:13:32.729 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:12:24 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754397744.449043,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 269585578
+}
+2025-08-05 18:13:32.734 +05:30 [INF] [InactivateSession] Found session for clientId: S-1-5-21-3165862944-3759782804-3413270121-1001, uuid: 726D9D02-0268-11ED-9BD6-546CEBCA3915, macAddress: 54:6C:EB:CA:39:15, hostname: Aiyaz
+2025-08-05 18:13:32.823 +05:30 [INF] Session deactivation logged to Django.
+2025-08-05 18:14:01.776 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:14:25.559 +05:30 [INF] License is present: true
+2025-08-05 18:14:25.559 +05:30 [INF] [License Polling] Enriched JSON: { license_key = SOMEX4Y4ZLicenseKEYForTesting, used_statements = 1 }
+2025-08-05 18:14:25.654 +05:30 [INF] [License Polling] Expiry: 1756989365.419334
+2025-08-05 18:14:25.654 +05:30 [INF] License is present: true
+2025-08-05 18:14:25.654 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1756989365.419334 to 1756989365.419334
+2025-08-05 18:14:25.654 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1754397744.449043 to 1754397864.559248
+2025-08-05 18:14:25.654 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 269585578 to 269705734
+2025-08-05 18:14:25.654 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-05 18:14:25.654 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting","current_timestamp":1754397864.559248,"expiry_timestamp":1756989365.419334,"number_of_users":3,"number_of_statements":1000,"role":"CA","UsedStatements":1,"system_up_time":269705734}
+2025-08-05 18:14:25.655 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 18:14:25.752 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:14:25.753 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:14:25.753 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:14:25.753 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:14:24 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754397864.559248,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 269705734
+}
+2025-08-05 18:14:25.753 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-05 18:15:01.777 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:16:01.789 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:16:25.763 +05:30 [INF] License is present: true
+2025-08-05 18:16:25.763 +05:30 [INF] [License Polling] Enriched JSON: { license_key = SOMEX4Y4ZLicenseKEYForTesting, used_statements = 1 }
+2025-08-05 18:16:38.610 +05:30 [INF] [License Polling] Expiry: 1756989365.419334
+2025-08-05 18:16:38.610 +05:30 [INF] License is present: true
+2025-08-05 18:16:38.610 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1756989365.419334 to 1756989365.419334
+2025-08-05 18:16:38.610 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1754397864.559248 to 1754397997.497606
+2025-08-05 18:16:38.610 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 269705734 to 269838703
+2025-08-05 18:16:38.610 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-05 18:16:38.610 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting","current_timestamp":1754397997.497606,"expiry_timestamp":1756989365.419334,"number_of_users":3,"number_of_statements":1000,"role":"CA","UsedStatements":1,"system_up_time":269838703}
+2025-08-05 18:16:38.611 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 18:16:38.711 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:16:38.711 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:16:38.711 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:16:38.711 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:16:37 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754397997.497606,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 269838703
+}
+2025-08-05 18:16:38.711 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-05 18:17:01.799 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:18:01.806 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:18:38.724 +05:30 [INF] License is present: true
+2025-08-05 18:18:38.724 +05:30 [INF] [License Polling] Enriched JSON: { license_key = SOMEX4Y4ZLicenseKEYForTesting, used_statements = 1 }
+2025-08-05 18:18:39.032 +05:30 [INF] [License Polling] Expiry: 1756989365.419334
+2025-08-05 18:18:39.032 +05:30 [INF] License is present: true
+2025-08-05 18:18:39.032 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1756989365.419334 to 1756989365.419334
+2025-08-05 18:18:39.032 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1754397997.497606 to 1754398117.996411
+2025-08-05 18:18:39.032 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 269838703 to 269959125
+2025-08-05 18:18:39.032 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-05 18:18:39.032 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting","current_timestamp":1754398117.996411,"expiry_timestamp":1756989365.419334,"number_of_users":3,"number_of_statements":1000,"role":"CA","UsedStatements":1,"system_up_time":269959125}
+2025-08-05 18:18:39.033 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 18:18:39.122 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:18:39.123 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:18:39.123 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:18:39.123 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:18:37 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754398117.996411,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 269959125
+}
+2025-08-05 18:18:39.123 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-05 18:19:01.819 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:20:01.821 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:20:39.127 +05:30 [INF] License is present: true
+2025-08-05 18:20:39.127 +05:30 [INF] [License Polling] Enriched JSON: { license_key = SOMEX4Y4ZLicenseKEYForTesting, used_statements = 1 }
+2025-08-05 18:20:50.474 +05:30 [INF] [License Polling] Expiry: 1756989365.419334
+2025-08-05 18:20:50.474 +05:30 [INF] License is present: true
+2025-08-05 18:20:50.474 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1756989365.419334 to 1756989365.419334
+2025-08-05 18:20:50.474 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1754398117.996411 to 1754398249.423062
+2025-08-05 18:20:50.474 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 269959125 to 270090562
+2025-08-05 18:20:50.474 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-05 18:20:50.474 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting","current_timestamp":1754398249.423062,"expiry_timestamp":1756989365.419334,"number_of_users":3,"number_of_statements":1000,"role":"CA","UsedStatements":1,"system_up_time":270090562}
+2025-08-05 18:20:50.475 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 18:20:50.573 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:20:50.574 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:20:50.574 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:20:50.574 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:20:49 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754398249.423062,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 270090562
+}
+2025-08-05 18:20:50.574 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-05 18:21:01.824 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:22:01.828 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:22:50.581 +05:30 [INF] License is present: true
+2025-08-05 18:22:50.581 +05:30 [INF] [License Polling] Enriched JSON: { license_key = SOMEX4Y4ZLicenseKEYForTesting, used_statements = 1 }
+2025-08-05 18:23:01.839 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:23:01.932 +05:30 [INF] [License Polling] Expiry: 1756989365.419334
+2025-08-05 18:23:01.932 +05:30 [INF] License is present: true
+2025-08-05 18:23:01.932 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1756989365.419334 to 1756989365.419334
+2025-08-05 18:23:01.932 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1754398249.423062 to 1754398380.90157
+2025-08-05 18:23:01.932 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 270090562 to 270222015
+2025-08-05 18:23:01.932 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-05 18:23:01.932 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting","current_timestamp":1754398380.90157,"expiry_timestamp":1756989365.419334,"number_of_users":3,"number_of_statements":1000,"role":"CA","UsedStatements":1,"system_up_time":270222015}
+2025-08-05 18:23:01.933 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 18:23:02.013 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:23:02.013 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:23:02.013 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:23:02.013 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:23:00 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754398380.90157,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 270222015
+}
+2025-08-05 18:23:02.013 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-05 18:24:01.841 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:25:01.857 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:25:02.022 +05:30 [INF] License is present: true
+2025-08-05 18:25:02.023 +05:30 [INF] [License Polling] Enriched JSON: { license_key = SOMEX4Y4ZLicenseKEYForTesting, used_statements = 1 }
+2025-08-05 18:25:13.305 +05:30 [INF] [License Polling] Expiry: 1756989365.419334
+2025-08-05 18:25:13.305 +05:30 [INF] License is present: true
+2025-08-05 18:25:13.305 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1756989365.419334 to 1756989365.419334
+2025-08-05 18:25:13.305 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1754398380.90157 to 1754398512.278133
+2025-08-05 18:25:13.305 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 270222015 to 270353390
+2025-08-05 18:25:13.305 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-05 18:25:13.305 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting","current_timestamp":1754398512.278133,"expiry_timestamp":1756989365.419334,"number_of_users":3,"number_of_statements":1000,"role":"CA","UsedStatements":1,"system_up_time":270353390}
+2025-08-05 18:25:13.306 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 18:25:13.395 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:25:13.396 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:25:13.396 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:25:13.396 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:25:12 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754398512.278133,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 270353390
+}
+2025-08-05 18:25:13.396 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-05 18:26:01.863 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:27:01.872 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:27:13.400 +05:30 [INF] License is present: true
+2025-08-05 18:27:13.400 +05:30 [INF] [License Polling] Enriched JSON: { license_key = SOMEX4Y4ZLicenseKEYForTesting, used_statements = 1 }
+2025-08-05 18:27:24.694 +05:30 [INF] [License Polling] Expiry: 1756989365.419334
+2025-08-05 18:27:24.694 +05:30 [INF] License is present: true
+2025-08-05 18:27:24.694 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1756989365.419334 to 1756989365.419334
+2025-08-05 18:27:24.694 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1754398512.278133 to 1754398643.667048
+2025-08-05 18:27:24.694 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 270353390 to 270484781
+2025-08-05 18:27:24.694 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-05 18:27:24.694 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting","current_timestamp":1754398643.667048,"expiry_timestamp":1756989365.419334,"number_of_users":3,"number_of_statements":1000,"role":"CA","UsedStatements":1,"system_up_time":270484781}
+2025-08-05 18:27:24.695 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 18:27:24.785 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:27:24.785 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:27:24.785 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:27:24.785 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:27:23 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754398643.667048,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 270484781
+}
+2025-08-05 18:27:24.785 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-05 18:28:01.882 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:29:01.886 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:29:24.797 +05:30 [INF] License is present: true
+2025-08-05 18:29:24.797 +05:30 [INF] [License Polling] Enriched JSON: { license_key = SOMEX4Y4ZLicenseKEYForTesting, used_statements = 1 }
+2025-08-05 18:29:36.103 +05:30 [INF] [License Polling] Expiry: 1756989365.419334
+2025-08-05 18:29:36.103 +05:30 [INF] License is present: true
+2025-08-05 18:29:36.103 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1756989365.419334 to 1756989365.419334
+2025-08-05 18:29:36.103 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1754398643.667048 to 1754398775.072926
+2025-08-05 18:29:36.103 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 270484781 to 270616171
+2025-08-05 18:29:36.103 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-05 18:29:36.103 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting","current_timestamp":1754398775.072926,"expiry_timestamp":1756989365.419334,"number_of_users":3,"number_of_statements":1000,"role":"CA","UsedStatements":1,"system_up_time":270616171}
+2025-08-05 18:29:36.104 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 18:29:36.182 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:29:36.183 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:29:36.183 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:29:36.183 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:29:35 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754398775.072926,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 270616171
+}
+2025-08-05 18:29:36.183 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-05 18:30:01.890 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:31:01.896 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:31:36.179 +05:30 [INF] License is present: true
+2025-08-05 18:31:36.179 +05:30 [INF] [License Polling] Enriched JSON: { license_key = SOMEX4Y4ZLicenseKEYForTesting, used_statements = 1 }
+2025-08-05 18:31:47.502 +05:30 [INF] [License Polling] Expiry: 1756989365.419334
+2025-08-05 18:31:47.502 +05:30 [INF] License is present: true
+2025-08-05 18:31:47.502 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1756989365.419334 to 1756989365.419334
+2025-08-05 18:31:47.502 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1754398775.072926 to 1754398906.478342
+2025-08-05 18:31:47.502 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 270616171 to 270747593
+2025-08-05 18:31:47.502 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-05 18:31:47.502 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting","current_timestamp":1754398906.478342,"expiry_timestamp":1756989365.419334,"number_of_users":3,"number_of_statements":1000,"role":"CA","UsedStatements":1,"system_up_time":270747593}
+2025-08-05 18:31:47.504 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 18:31:47.595 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:31:47.596 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:31:47.596 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:31:47.596 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:31:46 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754398906.478342,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 270747593
+}
+2025-08-05 18:31:47.596 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-05 18:32:01.902 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:33:01.905 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:33:47.603 +05:30 [INF] License is present: true
+2025-08-05 18:33:47.603 +05:30 [INF] [License Polling] Enriched JSON: { license_key = SOMEX4Y4ZLicenseKEYForTesting, used_statements = 1 }
+2025-08-05 18:33:59.207 +05:30 [INF] [License Polling] Expiry: 1756989365.419334
+2025-08-05 18:33:59.207 +05:30 [INF] License is present: true
+2025-08-05 18:33:59.207 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1756989365.419334 to 1756989365.419334
+2025-08-05 18:33:59.207 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1754398906.478342 to 1754399038.159646
+2025-08-05 18:33:59.207 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 270747593 to 270879296
+2025-08-05 18:33:59.207 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-05 18:33:59.207 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting","current_timestamp":1754399038.159646,"expiry_timestamp":1756989365.419334,"number_of_users":3,"number_of_statements":1000,"role":"CA","UsedStatements":1,"system_up_time":270879296}
+2025-08-05 18:33:59.208 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 18:33:59.311 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:33:59.311 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:33:59.311 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:33:59.311 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:33:58 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754399038.159646,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 270879296
+}
+2025-08-05 18:33:59.311 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-05 18:34:01.907 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:35:01.908 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:35:59.311 +05:30 [INF] License is present: true
+2025-08-05 18:35:59.311 +05:30 [INF] [License Polling] Enriched JSON: { license_key = SOMEX4Y4ZLicenseKEYForTesting, used_statements = 1 }
+2025-08-05 18:36:01.916 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:36:10.557 +05:30 [INF] [License Polling] Expiry: 1756989365.419334
+2025-08-05 18:36:10.557 +05:30 [INF] License is present: true
+2025-08-05 18:36:10.557 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1756989365.419334 to 1756989365.419334
+2025-08-05 18:36:10.557 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1754399038.159646 to 1754399169.536685
+2025-08-05 18:36:10.557 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 270879296 to 271010640
+2025-08-05 18:36:10.557 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-05 18:36:10.557 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting","current_timestamp":1754399169.536685,"expiry_timestamp":1756989365.419334,"number_of_users":3,"number_of_statements":1000,"role":"CA","UsedStatements":1,"system_up_time":271010640}
+2025-08-05 18:36:10.557 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 18:36:10.625 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:36:10.626 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:36:10.626 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:36:10.628 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:36:09 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754399169.536685,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 271010640
+}
+2025-08-05 18:36:10.628 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-05 18:37:01.929 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:38:01.931 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:38:10.634 +05:30 [INF] License is present: true
+2025-08-05 18:38:10.634 +05:30 [INF] [License Polling] Enriched JSON: { license_key = SOMEX4Y4ZLicenseKEYForTesting, used_statements = 1 }
+2025-08-05 18:38:21.934 +05:30 [INF] [License Polling] Expiry: 1756989365.419334
+2025-08-05 18:38:21.934 +05:30 [INF] License is present: true
+2025-08-05 18:38:21.934 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1756989365.419334 to 1756989365.419334
+2025-08-05 18:38:21.934 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1754399169.536685 to 1754399300.918155
+2025-08-05 18:38:21.934 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 271010640 to 271142015
+2025-08-05 18:38:21.934 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-05 18:38:21.935 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting","current_timestamp":1754399300.918155,"expiry_timestamp":1756989365.419334,"number_of_users":3,"number_of_statements":1000,"role":"CA","UsedStatements":1,"system_up_time":271142015}
+2025-08-05 18:38:21.935 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 18:38:22.016 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:38:22.017 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:38:22.017 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:38:22.017 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:38:20 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754399300.918155,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 271142015
+}
+2025-08-05 18:38:22.017 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-05 18:39:01.931 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:40:01.940 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:40:22.025 +05:30 [INF] License is present: true
+2025-08-05 18:40:22.026 +05:30 [INF] [License Polling] Enriched JSON: { license_key = SOMEX4Y4ZLicenseKEYForTesting, used_statements = 1 }
+2025-08-05 18:40:33.287 +05:30 [INF] [License Polling] Expiry: 1756989365.419334
+2025-08-05 18:40:33.288 +05:30 [INF] License is present: true
+2025-08-05 18:40:33.288 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1756989365.419334 to 1756989365.419334
+2025-08-05 18:40:33.288 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1754399300.918155 to 1754399432.272151
+2025-08-05 18:40:33.288 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 271142015 to 271273375
+2025-08-05 18:40:33.288 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-05 18:40:33.288 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting","current_timestamp":1754399432.272151,"expiry_timestamp":1756989365.419334,"number_of_users":3,"number_of_statements":1000,"role":"CA","UsedStatements":1,"system_up_time":271273375}
+2025-08-05 18:40:33.289 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 18:40:33.374 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:40:33.375 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:40:33.375 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:40:33.375 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:40:32 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754399432.272151,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 271273375
+}
+2025-08-05 18:40:33.375 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-05 18:41:01.945 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:42:01.947 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:42:33.378 +05:30 [INF] License is present: true
+2025-08-05 18:42:33.378 +05:30 [INF] [License Polling] Enriched JSON: { license_key = SOMEX4Y4ZLicenseKEYForTesting, used_statements = 1 }
+2025-08-05 18:42:44.709 +05:30 [INF] [License Polling] Expiry: 1756989365.419334
+2025-08-05 18:42:44.709 +05:30 [INF] License is present: true
+2025-08-05 18:42:44.709 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1756989365.419334 to 1756989365.419334
+2025-08-05 18:42:44.709 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1754399432.272151 to 1754399563.695821
+2025-08-05 18:42:44.709 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 271273375 to 271404796
+2025-08-05 18:42:44.709 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-05 18:42:44.710 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting","current_timestamp":1754399563.695821,"expiry_timestamp":1756989365.419334,"number_of_users":3,"number_of_statements":1000,"role":"CA","UsedStatements":1,"system_up_time":271404796}
+2025-08-05 18:42:44.710 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 18:42:44.808 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:42:44.808 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:42:44.808 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:42:44.808 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:42:43 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754399563.695821,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 271404796
+}
+2025-08-05 18:42:44.808 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-05 18:43:01.959 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:44:01.974 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:44:44.809 +05:30 [INF] License is present: true
+2025-08-05 18:44:44.809 +05:30 [INF] [License Polling] Enriched JSON: { license_key = SOMEX4Y4ZLicenseKEYForTesting, used_statements = 1 }
+2025-08-05 18:44:56.078 +05:30 [INF] [License Polling] Expiry: 1756989365.419334
+2025-08-05 18:44:56.078 +05:30 [INF] License is present: true
+2025-08-05 18:44:56.078 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1756989365.419334 to 1756989365.419334
+2025-08-05 18:44:56.078 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1754399563.695821 to 1754399695.068282
+2025-08-05 18:44:56.078 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 271404796 to 271536171
+2025-08-05 18:44:56.078 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-05 18:44:56.078 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting","current_timestamp":1754399695.068282,"expiry_timestamp":1756989365.419334,"number_of_users":3,"number_of_statements":1000,"role":"CA","UsedStatements":1,"system_up_time":271536171}
+2025-08-05 18:44:56.079 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 18:44:56.162 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:44:56.162 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:44:56.162 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:44:56.163 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:44:55 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754399695.068282,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 271536171
+}
+2025-08-05 18:44:56.163 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-05 18:45:01.988 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:46:01.990 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:46:56.166 +05:30 [INF] License is present: true
+2025-08-05 18:46:56.167 +05:30 [INF] [License Polling] Enriched JSON: { license_key = SOMEX4Y4ZLicenseKEYForTesting, used_statements = 1 }
+2025-08-05 18:47:01.996 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:47:07.342 +05:30 [ERR] No such host is known. (cyphersol.co.in:443)
+2025-08-05 18:47:07.342 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-08-05 18:48:02.010 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:49:02.017 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:49:07.351 +05:30 [INF] License is present: true
+2025-08-05 18:49:07.351 +05:30 [INF] [License Polling] Enriched JSON: { license_key = SOMEX4Y4ZLicenseKEYForTesting, used_statements = 1 }
+2025-08-05 18:49:18.496 +05:30 [ERR] No such host is known. (cyphersol.co.in:443)
+2025-08-05 18:49:18.497 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-08-05 18:50:02.019 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:51:02.020 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:51:18.505 +05:30 [INF] License is present: true
+2025-08-05 18:51:18.505 +05:30 [INF] [License Polling] Enriched JSON: { license_key = SOMEX4Y4ZLicenseKEYForTesting, used_statements = 1 }
+2025-08-05 18:51:29.655 +05:30 [ERR] No such host is known. (cyphersol.co.in:443)
+2025-08-05 18:51:29.655 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-08-05 18:52:02.029 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:53:02.037 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:53:29.664 +05:30 [INF] License is present: true
+2025-08-05 18:53:29.664 +05:30 [INF] [License Polling] Enriched JSON: { license_key = SOMEX4Y4ZLicenseKEYForTesting, used_statements = 1 }
+2025-08-05 18:53:40.808 +05:30 [ERR] No such host is known. (cyphersol.co.in:443)
+2025-08-05 18:53:40.808 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-08-05 18:54:02.043 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:55:02.053 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:55:15.489 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:44:55 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754399695.068282,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 271536171
+}
+2025-08-05 18:55:19.231 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:44:55 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754399695.068282,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 271536171
+}
+2025-08-05 18:55:30.371 +05:30 [ERR] Error logging session activation: No such host is known. (cyphersol.co.in:443)
+2025-08-05 18:55:31.539 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:44:55 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754399695.068282,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 271536171
+}
+2025-08-05 18:55:31.539 +05:30 [INF] {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:44:55 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754399695.068282,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 271536171
+}
+2025-08-05 18:55:31.539 +05:30 [INF] [IsStatementLimitReached] Current used statements: 1, License limit: 1000
+2025-08-05 18:55:39.376 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:44:55 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754399695.068282,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 271536171
+}
+2025-08-05 18:55:39.377 +05:30 [INF] [TryUseStatement] Flushing 2 used statements to disk., last flush was at 05-08-2025 12:41:33, difference: 00:44:05.9959766
+2025-08-05 18:55:39.377 +05:30 [INF] License is present: true
+2025-08-05 18:55:39.377 +05:30 [INF] [FlushToDisk] Flushing 2 used statements to disk.
+2025-08-05 18:55:39.377 +05:30 [INF] [FlushToDisk] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting","current_timestamp":1754399695.068282,"expiry_timestamp":1756989365.419334,"number_of_users":3,"number_of_statements":1000,"role":"CA","UsedStatements":2,"system_up_time":271536171}
+2025-08-05 18:55:39.380 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 18:55:39.535 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:55:39.536 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:55:39.536 +05:30 [INF] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:55:40.822 +05:30 [INF] License is present: true
+2025-08-05 18:55:40.822 +05:30 [INF] [License Polling] Enriched JSON: { license_key = SOMEX4Y4ZLicenseKEYForTesting, used_statements = 2 }
+2025-08-05 18:55:51.991 +05:30 [ERR] No such host is known. (cyphersol.co.in:443)
+2025-08-05 18:55:51.991 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-08-05 18:56:02.066 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:56:41.950 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:44:55 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754399695.068282,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 271536171
+}
+2025-08-05 18:56:41.950 +05:30 [INF] {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:44:55 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754399695.068282,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 271536171
+}
+2025-08-05 18:56:41.950 +05:30 [INF] [IsStatementLimitReached] Current used statements: 2, License limit: 1000
+2025-08-05 18:56:58.971 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:44:55 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754399695.068282,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 271536171
+}
+2025-08-05 18:56:58.971 +05:30 [INF] {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:44:55 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754399695.068282,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 271536171
+}
+2025-08-05 18:56:58.971 +05:30 [INF] [IsStatementLimitReached] Current used statements: 2, License limit: 1000
+2025-08-05 18:57:02.074 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:57:04.880 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:44:55 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754399695.068282,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 2,
+  "SystemUpTime": 271536171
+}
+2025-08-05 18:57:04.880 +05:30 [INF] [TryUseStatement] Flushing 3 used statements to disk., last flush was at 05-08-2025 13:25:39, difference: 00:01:25.3442067
+2025-08-05 18:57:04.880 +05:30 [INF] License is present: true
+2025-08-05 18:57:04.880 +05:30 [INF] [FlushToDisk] Flushing 3 used statements to disk.
+2025-08-05 18:57:04.880 +05:30 [INF] [FlushToDisk] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting","current_timestamp":1754399695.068282,"expiry_timestamp":1756989365.419334,"number_of_users":3,"number_of_statements":1000,"role":"CA","UsedStatements":3,"system_up_time":271536171}
+2025-08-05 18:57:04.881 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 18:57:05.008 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:57:05.009 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:57:05.009 +05:30 [INF] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-05 18:57:51.994 +05:30 [INF] License is present: true
+2025-08-05 18:57:51.995 +05:30 [INF] [License Polling] Enriched JSON: { license_key = SOMEX4Y4ZLicenseKEYForTesting, used_statements = 3 }
+2025-08-05 18:58:02.075 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:58:03.145 +05:30 [ERR] No such host is known. (cyphersol.co.in:443)
+2025-08-05 18:58:03.145 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-08-05 18:59:02.076 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 18:59:13.903 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 06:44:55 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754399695.068282,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 3,
+  "SystemUpTime": 271536171
+}
+2025-08-05 18:59:13.903 +05:30 [INF] [InactivateSession] Found session for clientId: S-1-5-21-3165862944-3759782804-3413270121-1001, uuid: 726D9D02-0268-11ED-9BD6-546CEBCA3915, macAddress: 54:6C:EB:CA:39:15, hostname: Aiyaz
+2025-08-05 18:59:25.053 +05:30 [ERR] Error logging session deactivation: No such host is known. (cyphersol.co.in:443)
+2025-08-05 19:00:02.075 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 19:00:03.146 +05:30 [INF] License is present: true
+2025-08-05 19:00:03.146 +05:30 [INF] [License Polling] Enriched JSON: { license_key = SOMEX4Y4ZLicenseKEYForTesting, used_statements = 3 }
+2025-08-05 19:00:14.428 +05:30 [INF] [License Polling] Expiry: 1756989365.419334
+2025-08-05 19:00:14.428 +05:30 [INF] License is present: true
+2025-08-05 19:00:14.428 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1756989365.419334 to 1756989365.419334
+2025-08-05 19:00:14.428 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1754399695.068282 to 1754400613.431739
+2025-08-05 19:00:14.428 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 271536171 to 272454515
+2025-08-05 19:00:14.428 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-05 19:00:14.428 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting","current_timestamp":1754400613.431739,"expiry_timestamp":1756989365.419334,"number_of_users":3,"number_of_statements":1000,"role":"CA","UsedStatements":3,"system_up_time":272454515}
+2025-08-05 19:00:14.429 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 19:00:14.527 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 19:00:14.528 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 19:00:14.528 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-05 19:00:14.528 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 07:00:13 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754400613.431739,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 3,
+  "SystemUpTime": 272454515
+}
+2025-08-05 19:00:14.528 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-05 19:01:02.083 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 19:02:02.085 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 19:02:14.532 +05:30 [INF] License is present: true
+2025-08-05 19:02:14.532 +05:30 [INF] [License Polling] Enriched JSON: { license_key = SOMEX4Y4ZLicenseKEYForTesting, used_statements = 3 }
+2025-08-05 19:02:25.811 +05:30 [INF] [License Polling] Expiry: 1756989365.419334
+2025-08-05 19:02:25.811 +05:30 [INF] License is present: true
+2025-08-05 19:02:25.811 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1756989365.419334 to 1756989365.419334
+2025-08-05 19:02:25.811 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1754400613.431739 to 1754400744.816193
+2025-08-05 19:02:25.811 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 272454515 to 272585890
+2025-08-05 19:02:25.811 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-05 19:02:25.811 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting","current_timestamp":1754400744.816193,"expiry_timestamp":1756989365.419334,"number_of_users":3,"number_of_statements":1000,"role":"CA","UsedStatements":3,"system_up_time":272585890}
+2025-08-05 19:02:25.812 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 19:02:25.932 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 19:02:25.933 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 19:02:25.933 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-05 19:02:25.933 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 07:02:24 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754400744.816193,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 3,
+  "SystemUpTime": 272585890
+}
+2025-08-05 19:02:25.933 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-05 19:03:02.094 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 19:04:02.100 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-05 19:04:25.935 +05:30 [INF] License is present: true
+2025-08-05 19:04:25.935 +05:30 [INF] [License Polling] Enriched JSON: { license_key = SOMEX4Y4ZLicenseKEYForTesting, used_statements = 3 }
+2025-08-05 19:04:37.168 +05:30 [INF] [License Polling] Expiry: 1756989365.419334
+2025-08-05 19:04:37.168 +05:30 [INF] License is present: true
+2025-08-05 19:04:37.168 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1756989365.419334 to 1756989365.419334
+2025-08-05 19:04:37.168 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1754400744.816193 to 1754400876.176495
+2025-08-05 19:04:37.168 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 272585890 to 272717250
+2025-08-05 19:04:37.168 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-05 19:04:37.168 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"SOMEX4Y4ZLicenseKEYForTesting","current_timestamp":1754400876.176495,"expiry_timestamp":1756989365.419334,"number_of_users":3,"number_of_statements":1000,"role":"CA","UsedStatements":3,"system_up_time":272717250}
+2025-08-05 19:04:37.169 +05:30 [INF] Fingerprint: AIYAZquresS-1-5-21-3165862944-3759782804-3413270121-1001726D9D02-0268-11ED-9BD6-546CEBCA3915
+2025-08-05 19:04:37.340 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 19:04:37.341 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-05 19:04:37.341 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-05 19:04:37.341 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "SOMEX4Y4ZLicenseKEYForTesting",
+  "CurrentTimestampIST": "05-Aug-2025 07:04:36 PM IST",
+  "ExpiryTimestampIST": "04-Sept-2025 06:06:05 PM IST",
+  "CurrentTimestamp": 1754400876.176495,
+  "ExpiryTimestamp": 1756989365.419334,
+  "NumberOfUsers": 3,
+  "NumberOfStatements": 1000,
+  "Role": "CA",
+  "UsedStatements": 3,
+  "SystemUpTime": 272717250
+}
+2025-08-05 19:04:37.341 +05:30 [INF] [License Polling] License resynced successfully.

@@ -93,7 +93,7 @@ const DataTable = ({
   source,
   refreshFunction,
   caseId,
-  videoId=null
+  videoId = null,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [transactions, setTransactions] = useState([]);
@@ -1923,9 +1923,7 @@ const DataTable = ({
           <div className="flex flex-wrap justify-between items-center">
             <div>
               <CardTitle className="dark:text-slate-300">
-                {title || "Data Table"} 
-                                      {videoId&&<InfoHoverVideo videoId={videoId} />}
-
+                {title || "Data Table"}
               </CardTitle>
 
               <CardDescription>
@@ -2003,6 +2001,7 @@ const DataTable = ({
                 <Share2 className="h-4 w-4" />
                 <span>Share</span>
               </Button>
+              {videoId && <InfoHoverVideo videoId={videoId} />}
             </div>
           </div>
 

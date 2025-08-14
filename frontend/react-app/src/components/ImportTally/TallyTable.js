@@ -120,7 +120,6 @@ const TallyTable = ({
   port,
   handlePortChange,
   setActiveTab,
-  videoId=null
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [transactions, setTransactions] = useState([]);
@@ -1423,7 +1422,6 @@ const TallyTable = ({
               {selectedVoucher === "Ledgers"
                 ? "Create Ledgers"
                 : selectedVoucher + " Voucher"}
-              {videoId&&<InfoHoverVideo videoId={videoId} />}
             </CardTitle>
 
             {/* Case ID badge */}
@@ -1505,6 +1503,7 @@ const TallyTable = ({
                   </div>
                 </PopoverContent>
               </Popover>
+              <InfoHoverVideo videoId={"tally"} />
             </div>
           </div>
         </div>
