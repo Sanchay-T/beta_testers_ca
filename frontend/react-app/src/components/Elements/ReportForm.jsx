@@ -333,16 +333,47 @@ const GenerateReportForm = ({
     };
   }, [selectedFiles]);
 
-  const handlePreviewFile = (previewUrl, fileType) => {
-    console.log("Previewing file:", previewUrl, "Type:", fileType);
-    if (fileType.includes("application/pdf")) {
-      window.open(previewUrl, "_blank");
-    } else {
+  const isPdfPath = (p) =>
+    typeof p === "string" && p.toLowerCase().endsWith(".pdf");
+
+  const handlePreviewFile = async (previewUrlOrPath, fileType) => {
+    try {
+      // If it's a blob URL (e.g., from <input type="file">), open in a tab
+      const isBlobUrl =
+        typeof previewUrlOrPath === "string" &&
+        previewUrlOrPath.startsWith("blob:");
+
+      // Prefer robust PDF check: file extension OR mime
+      const isPdf =
+        isBlobUrl ||
+        isPdfPath(previewUrlOrPath) ||
+        (typeof fileType === "string" && fileType.includes("application/pdf"));
+
+      if (!isPdf) {
+        toast({
+          title: "Alert",
+          description: "File not supported for preview",
+          variant: "destructive",
+          duration: 3000,
+        });
+        return;
+      }
+
+      if (isBlobUrl) {
+        // Old flow (HTML input) still works
+        window.open(previewUrlOrPath, "_blank", "noopener,noreferrer");
+        return;
+      }
+
+      // New flow (paths from showOpenDialog): ask main to open with default viewer
+      await window.electron.previewFile(previewUrlOrPath);
+    } catch (err) {
+      console.error("Preview failed:", err);
       toast({
-        title: "Alert",
-        description: "File not supported for preview",
+        title: "Preview failed",
+        description: err?.message || "Could not open file",
         variant: "destructive",
-        duration: 3000,
+        duration: 4000,
       });
     }
   };
@@ -563,7 +594,6 @@ const GenerateReportForm = ({
   const handleDragOver = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDragging(true);
   };
 
   const handleDrop = (e) => {
@@ -576,13 +606,15 @@ const GenerateReportForm = ({
   };
 
   const handleFileChange = (files) => {
-    const newFiles = files.map(file => {
-      if (typeof file === 'string') {
-        const blob = new Blob([null], { type: 'application/pdf' });
-        const newFile = new File([blob], file.split('\\').pop(), { type: 'application/pdf' });
+    const newFiles = files.map((file) => {
+      if (typeof file === "string") {
+        const blob = new Blob([null], { type: "application/pdf" });
+        const newFile = new File([blob], file.split("\\").pop(), {
+          type: "application/pdf",
+        });
         newFile.path = file;
         return newFile;
-      } 
+      }
       return file;
     });
 
@@ -719,17 +751,15 @@ const GenerateReportForm = ({
                   value={currentCaseName || caseName}
                   onChange={(e) => setCaseName(e.target.value)}
                   disabled={currentCaseName != null}
-                  className={`w-1/3 px-3 py-2 text-sm text-gray-500 dark:text-gray-400 focus:outline-none ${currentCaseName == null
+                  className={`w-1/3 px-3 py-2 text-sm text-gray-500 dark:text-gray-400 focus:outline-none ${ currentCaseName == null
                       ? "focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-500"
                       : "cursor-not-allowed"
-                    } transition-all border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm`}
+                  } transition-all border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm`}
                 />
               </div>
 
               <div
-                className={`relative ${isDragging ? "ring-2 ring-[#3498db] dark:ring-blue-500" : ""}`}
-                onDragEnter={handleDragEnter}
-                onDragLeave={handleDragLeave}
+                className={`relative ${ isDragging ? "ring-2 ring-[#3498db] dark:ring-blue-500" : ""}`}
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
               >
@@ -746,7 +776,7 @@ const GenerateReportForm = ({
                             className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 p-4 space-y-4"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            {console.log({detail})}
+                            {console.log({ detail })}
                             <div className="flex items-center justify-between">
                               <div className="flex items-center space-x-3">
                                 <FileText className="w-5 h-5 text-[#3498db] dark:text-blue-500" />
@@ -973,7 +1003,10 @@ const GenerateReportForm = ({
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={openFileDialog}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openFileDialog();
+                    }}
                     className="mt-4 px-6 py-2.5 text-sm font-medium"
                   >
                     {selectedFiles.length > 0
@@ -983,7 +1016,10 @@ const GenerateReportForm = ({
                 </div>
 
                 {isDragging && (
-                  <div className="absolute inset-0 bg-[#3498db]/10 dark:bg-blue-500/10 rounded-lg pointer-events-none" />
+                  <div
+                    className="absolute inset-0 bg-[#3498db]/10 dark:bg-blue-500/10 rounded-lg pointer-events-none"
+                    style={{ pointerEvents: "none" }}
+                  />
                 )}
               </div>
             </div>

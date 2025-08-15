@@ -1736,6 +1736,16 @@ async function createWindow() {
     }
   });
 
+  ipcMain.handle("preview-file", async (_event, filePath) => {
+    // This opens the file with the system default app (e.g., your PDF viewer)
+    const result = await shell.openPath(filePath);
+    // result is an error string on failure, or '' on success
+    if (result) {
+      throw new Error(result);
+    }
+    return true;
+  });
+
   // Check for updates after window is ready
   win.webContents.on("did-finish-load", () => {
     if (!global.AppConfig.isDev) {
@@ -2116,7 +2126,7 @@ app.on("before-quit", (event) => {
   // Close database connection
   const dbManager = databaseManager.getInstance();
   if (dbManager && dbManager.getDatabase()) {
-    dbManager.getDatabase().close();
+    // dbManager.getDatabase().close();
     log.info("Database connection closed");
   }
 });

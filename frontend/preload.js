@@ -6,6 +6,7 @@ const log = require("electron-log");
 contextBridge.exposeInMainWorld("electron", {
   openFile: (filePath) => ipcRenderer.invoke("open-file", filePath),
   openFileDialog: () => ipcRenderer.invoke("open-file-dialog"),
+  previewFile: (filePath) => ipcRenderer.invoke("preview-file", filePath),
   getFileContent: (filePath) => ipcRenderer.invoke("get-file-content", filePath),
   fetchPdfContent: (filePath, caseName) =>
     ipcRenderer.invoke("fetch-pdf-content", filePath, caseName),
