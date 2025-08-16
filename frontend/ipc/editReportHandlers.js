@@ -11,6 +11,7 @@ const { eod } = require("../db/schema/EodSchema");
 const { opportunityToEarn } = require("../db/schema/OpportunityToEarn");
 const { eq, and, SQL, sql, inArray } = require("drizzle-orm");
 const axios = require("axios");
+const getBaseUrl = require("../getBaseUrl");
 
 function registerEditReportHandlers() {
   const db = databaseManager.getInstance().getDatabase();
@@ -378,7 +379,8 @@ function registerEditReportHandlers() {
 
     try {
       // make api call
-      const serverEndpoint = "http://localhost:7500/edit-category/";
+      const baseUrl = getBaseUrl();
+      const serverEndpoint = `${baseUrl}/edit-category/`;
 
       const payload = {
         transaction_data: updatedTransactions,

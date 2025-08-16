@@ -14,6 +14,7 @@ const { summary } = require("../db/schema/Summary");
 const { failedStatements } = require("../db/schema/FailedStatements");
 const { eq, and, inArray } = require("drizzle-orm");
 const { opportunityToEarn } = require("../db/schema/OpportunityToEarn");
+const getBaseUrl = require("../getBaseUrl");
 
 let db = null;
 
@@ -768,7 +769,7 @@ async function useStatement() {
 function generateReportIpc(tmpdir_path) {
   db = databaseManager.getInstance().getDatabase();
 
-  const baseUrl = `http://localhost:7500`;
+  const baseUrl = getBaseUrl();
   const generateReportEndpoint = `${baseUrl}/analyze-statements/`;
   const editPdfEndpoint = `${baseUrl}/column-rectify-add-pdf/`;
 
@@ -839,7 +840,10 @@ function generateReportIpc(tmpdir_path) {
             fs.writeFileSync(filePath, fileContent, "binary");
             successfulFiles.add(filePath);
           } catch (error) {
-            log.error(`Failed to read or write file: ${fileDetail.pdf_paths}`, error);
+            log.error(
+              `Failed to read or write file: ${fileDetail.pdf_paths}`,
+              error
+            );
             failedFiles.add(filePath);
           }
 

@@ -10,6 +10,7 @@ const { cases } = require("../db/schema/Cases");
 const { failedStatements } = require("../db/schema/FailedStatements");
 const { eq, and } = require("drizzle-orm");
 const { updateCaseStatus } = require("./generateReport");
+const getBaseUrl = require("../getBaseUrl");
 
 let db = null;
 
@@ -385,8 +386,9 @@ function registerReportHandlers(tmpdir_path) {
       };
 
       log.info("Sending payload to analysis server...");
+      const baseUrl = getBaseUrl();
       const response = await axios.post(
-        "http://localhost:7500/analyze-statements/",
+        `${baseUrl}/analyze-statements/`,
         payload,
         {
           headers: { "Content-Type": "application/json" },
@@ -425,7 +427,6 @@ function registerReportHandlers(tmpdir_path) {
 
         log.warn("Some PDF paths were not extracted", Array.from(failedFiles));
       }
-
 
       const sanitizedJsonString = sanitizeJSONString(response.data.data);
       const parsedData = JSON.parse(sanitizedJsonString);
@@ -569,7 +570,6 @@ function registerReportHandlers(tmpdir_path) {
     } catch (error) {
       // Cleanup on error
       await updateCaseStatus(caseId, "Failed");
-
 
       log.error("Error in report generation:", {
         message: error.message,
