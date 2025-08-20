@@ -32,6 +32,8 @@ from fastapi.responses import JSONResponse
 from backend.account_number_ifsc_extraction import extract_accno_ifsc
 from backend.pdf_to_name import extract_entities
 import time
+import platform
+import psutil
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -894,9 +896,6 @@ async def check_pdf_processing(pdf_paths: List[str], passwords: Optional[List[st
 def get_system_info():
     """Collect system information for compatibility reporting"""
     try:
-        import platform
-        import psutil
-        
         return {
             "platform": {
                 "system": platform.system(),
@@ -929,6 +928,15 @@ def get_system_info():
         }
 
 
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    print("Validation Error:", exc.errors())
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors()},
+    )
+
+
 if __name__ == "__main__":
     # Optionally use environment variables for host/port. Falls back to "127.0.0.1" and 7500 if none provided.
     host = os.getenv("API_HOST", "127.0.0.1")
@@ -948,12 +956,3 @@ if __name__ == "__main__":
     # import time
     # time.sleep(8)
     uvicorn.run(app, host=host, port=port, reload=False)
-
-
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    print("Validation Error:", exc.errors())
-    return JSONResponse(
-        status_code=422,
-        content={"detail": exc.errors()},
-    )

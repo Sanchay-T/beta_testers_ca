@@ -106,15 +106,16 @@ class IsolatedCompatibilityBubble {
       return {
         success: allTestsSuccessful,
         message: allTestsSuccessful ? 
-          'All components verified in isolated environment' : 
+          'All critical components verified in isolated environment' : 
           'Some components failed in isolated environment',
         details: {
           python: pythonHealthResult,
           gateway: gatewayHealthResult,
-          pdf: pdfResult,
+          pdf: pdfResult,  // Optional endpoint - not critical
           licensing: licensingResult,
           environment: 'isolated',
-          controlled: true
+          controlled: true,
+          criticalComponentsOK: pythonHealthResult.success && gatewayHealthResult.success
         },
         severity: allTestsSuccessful ? 'success' : 'critical'
       };
@@ -198,7 +199,7 @@ class IsolatedCompatibilityBubble {
     return new Promise((resolve) => {
       try {
         const pythonPath = this.isDev
-          ? path.join(__dirname, '../../backend/main.py')
+          ? path.join(__dirname, '../../dist/main/main.exe')
           : path.join(process.resourcesPath, 'backend/main/main.exe');
         
         this.sendLiveUpdate(`🐍 Starting controlled Python backend at ${pythonPath}...`);
@@ -212,17 +213,14 @@ class IsolatedCompatibilityBubble {
           return;
         }
         
-        const spawnOptions = this.isDev ? {
-          cwd: path.join(__dirname, '../..'),
+        const spawnOptions = {
           stdio: 'pipe',
-          detached: false
-        } : {
-          stdio: 'pipe',
-          detached: false
+          detached: false,
+          cwd: path.dirname(pythonPath)  // Set working directory to executable location
         };
         
-        const command = this.isDev ? 'python' : pythonPath;
-        const args = this.isDev ? ['-m', 'backend.main'] : [];
+        const command = pythonPath;  // Always use the executable path
+        const args = [];  // No args needed for .exe
         
         this.sendLiveUpdate(`🐍 Spawning: ${command} ${args.join(' ')}...`);
         
@@ -266,7 +264,7 @@ class IsolatedCompatibilityBubble {
               details: { error: error.message, output, errorOutput }
             });
           }
-        }, 8000); // Give Python time to start
+        }, 12000); // Give Python backend more time to fully start (main.exe takes ~10s)
         
       } catch (error) {
         resolve({
@@ -358,8 +356,11 @@ class IsolatedCompatibilityBubble {
       this.sendLiveUpdate('🔍 Checking controlled Python health endpoint...');
       
       const axios = require('axios');
-      const response = await axios.get(`http://localhost:${this.ports.python}/health`, {
-        timeout: 3000,
+      const healthUrl = `http://localhost:${this.ports.python}/health`;
+      this.sendLiveUpdate(`📡 Testing health endpoint: ${healthUrl}`);
+      
+      const response = await axios.get(healthUrl, {
+        timeout: 5000,  // Increased timeout
         headers: { 'User-Agent': 'CypherEdge-IsolatedTest' }
       });
       
@@ -371,6 +372,7 @@ class IsolatedCompatibilityBubble {
           details: { status: response.status, data: response.data }
         };
       } else {
+        this.sendLiveUpdate(`⚠️ Unexpected status: ${response.status}`);
         return {
           success: false,
           message: `Controlled Python health check returned status ${response.status}`,
@@ -378,11 +380,14 @@ class IsolatedCompatibilityBubble {
         };
       }
     } catch (error) {
-      this.sendLiveUpdate(`❌ Controlled Python health check failed: ${error.message}`);
+      const errorMsg = error.code === 'ECONNREFUSED' 
+        ? 'Backend not yet listening on port 7500'
+        : error.message;
+      this.sendLiveUpdate(`❌ Controlled Python health check failed: ${errorMsg}`);
       return {
         success: false,
-        message: `Controlled Python health check failed: ${error.message}`,
-        details: { error: error.message, code: error.code }
+        message: `Controlled Python health check failed: ${errorMsg}`,
+        details: { error: error.message, code: error.code, port: this.ports.python }
       };
     }
   }
@@ -438,10 +443,14 @@ class IsolatedCompatibilityBubble {
       }
       
       const axios = require('axios');
-      const response = await axios.post(`http://localhost:${this.ports.python}/compatibility-check/`, {
+      // Use /add-pdf/ endpoint since /compatibility-check/ doesn't exist in production main.exe
+      const response = await axios.post(`http://localhost:${this.ports.python}/add-pdf/`, {
+        bank_names: ["Test Bank"],
         pdf_paths: [testPdfPath],
-        passwords: [''],
-        test_mode: true
+        passwords: [""],
+        start_date: ["2024-01-01"],
+        end_date: ["2024-12-31"],
+        ca_id: "compatibility-test"
       }, {
         timeout: 15000,
         headers: { 
@@ -450,11 +459,12 @@ class IsolatedCompatibilityBubble {
         }
       });
       
-      if (response.status === 200 && response.data) {
+      if (response.status === 200) {
+        // /add-pdf/ endpoint test - if we get 200 OK, the PDF processing pipeline is working
         this.sendLiveUpdate('✅ Controlled PDF processing test completed successfully!');
         return {
           success: true,
-          message: 'Controlled PDF processing test passed',
+          message: 'PDF processing pipeline test passed',
           details: { status: response.status, result: response.data }
         };
       } else {

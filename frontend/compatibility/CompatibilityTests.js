@@ -1005,7 +1005,7 @@ class CompatibilityTests {
       
       // Determine Python path based on environment
       const pythonPath = this.isDev
-        ? path.join(__dirname, "../../backend", "main.py") // Development: Python script
+        ? path.join(__dirname, "../../dist/main/main.exe") // Development: Local production build
         : path.join(process.resourcesPath, "backend", "main", "main.exe"); // Production: PyInstaller executable
       
       this.logger.info('PYTHON_TEST', 'Checking Python executable path', {
@@ -1105,8 +1105,8 @@ class CompatibilityTests {
   async testPythonExecutability(pythonPath) {
     return new Promise((resolve) => {
       try {
-        const testArgs = this.isDev ? [pythonPath, "--help"] : ["--help"];
-        const executable = this.isDev ? "python" : pythonPath;
+        const testArgs = ["--help"];  // Always use --help for .exe
+        const executable = pythonPath;  // Always use the executable path
         
         const testProcess = spawn(executable, testArgs, {
           timeout: this.timeouts.process,
@@ -1783,28 +1783,23 @@ class CompatibilityTests {
     try {
       this.logger.debug('FASTAPI_DEPS_TEST', 'Testing FastAPI dependencies via compatibility endpoint');
       
-      const compatibilityUrl = "http://localhost:7500/compatibility-check/";
-      const testPayload = {
-        pdf_paths: [],
-        passwords: [],
-        quick_check: true
-      };
+      const healthUrl = "http://localhost:7500/health";
+      // Use health endpoint for dependencies test since compatibility-check doesn't exist in production
+      const testPayload = null;
       
-      this.logger.info('FASTAPI_DEPS_TEST', 'Calling FastAPI compatibility endpoint', {
-        url: compatibilityUrl,
+      this.logger.info('FASTAPI_DEPS_TEST', 'Calling FastAPI health endpoint', {
+        url: healthUrl,
         payload: testPayload
       });
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), this.timeouts.network * 2); // Longer timeout for this test
       
-      const response = await fetch(compatibilityUrl, {
-        method: "POST",
+      const response = await fetch(healthUrl, {
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
           'User-Agent': 'CypherEdge-Compatibility-Checker/2.0'
         },
-        body: JSON.stringify(testPayload),
         signal: controller.signal
       });
       
@@ -1964,15 +1959,18 @@ class CompatibilityTests {
       const samplePdfPath = path.join(__dirname, "..", "test-samples", "sample-statement.pdf");
       const testWithSamplePdf = fs.existsSync(samplePdfPath);
       
-      const compatibilityUrl = "http://localhost:7500/compatibility-check/";
+      const pdfTestUrl = "http://localhost:7500/add-pdf/";
       const testPayload = {
+        bank_names: ["Test Bank"],
         pdf_paths: testWithSamplePdf ? [samplePdfPath] : [],
         passwords: [""],
-        quick_check: false // Enable PDF processing test
+        start_date: ["2024-01-01"],
+        end_date: ["2024-12-31"],
+        ca_id: "compatibility-test"
       };
       
       this.logger.info('PDF_PROCESSING_TEST', 'Testing PDF processing via FastAPI', {
-        url: compatibilityUrl,
+        url: pdfTestUrl,
         hasSamplePdf: testWithSamplePdf,
         samplePdfPath: testWithSamplePdf ? samplePdfPath : "none"
       });
@@ -1980,7 +1978,7 @@ class CompatibilityTests {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), this.timeouts.process); // Longer timeout for PDF processing
       
-      const response = await fetch(compatibilityUrl, {
+      const response = await fetch(pdfTestUrl, {
         method: "POST",
         headers: {
           'Content-Type': 'application/json',

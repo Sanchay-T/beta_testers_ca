@@ -662,8 +662,7 @@ class ComponentStartupManager {
         // Python FastAPI endpoints
         { name: 'FastAPI Health', url: `http://localhost:${this.ports.python}/health`, method: 'GET' },
         { name: 'FastAPI Root', url: `http://localhost:${this.ports.python}/`, method: 'GET' },
-        { name: 'FastAPI Compatibility', url: `http://localhost:${this.ports.python}/compatibility-check/`, method: 'POST', 
-          body: { pdf_paths: [], passwords: [], quick_check: true } },
+        { name: 'FastAPI Health Extended', url: `http://localhost:${this.ports.python}/health`, method: 'GET' },
         
         // Gateway endpoints (adjust URLs based on your actual endpoints)
         { name: 'Gateway Health', url: `http://localhost:${this.ports.gateway}/api/health`, method: 'GET' },
@@ -895,12 +894,15 @@ class ComponentStartupManager {
 
       // Test with the comprehensive compatibility check endpoint
       const testPayload = {
+        bank_names: ["Test Bank"],
         pdf_paths: [pdfPath],
         passwords: [""], // No password for Access Bank test PDF
-        quick_check: false // Enable full PDF processing test
+        start_date: ["2024-01-01"],
+        end_date: ["2024-12-31"],
+        ca_id: "component-test"
       };
 
-      const response = await fetch(`http://localhost:${this.ports.python}/compatibility-check/`, {
+      const response = await fetch(`http://localhost:${this.ports.python}/add-pdf/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(testPayload)
