@@ -265,7 +265,7 @@
                     
                     <!-- Auto-start countdown -->
                     <div id="auto-start-countdown" style="margin-top: 16px; font-size: 12px; color: #94a3b8; text-align: center;">
-                      Auto-starting in <span id="countdown">5</span> seconds...
+                      Auto-starting in <span id="countdown">2</span> seconds...
                     </div>
                   </div>
                 </div>
@@ -276,7 +276,7 @@
 
         getStep2HTML() {
           return `
-            <div style="background: white; height: 100vh; width: 100vw; position: relative; overflow-y: auto;">
+            <div style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); height: 100vh; width: 100vw; position: relative; overflow-y: auto;">
               
               <!-- Frameless Window Controls -->
               <div style="position: absolute; top: 15px; right: 15px; z-index: 1000; display: flex; gap: 8px;">
@@ -284,61 +284,137 @@
                   background: rgba(156, 163, 175, 0.8);
                   color: white;
                   border: none;
-                  width: 30px;
-                  height: 30px;
-                  border-radius: 50%;
+                  width: 32px;
+                  height: 32px;
+                  border-radius: 6px;
                   cursor: pointer;
                   font-size: 16px;
                   display: flex;
                   align-items: center;
                   justify-content: center;
                   font-weight: bold;
-                " onmouseover="this.style.background='rgba(156, 163, 175, 1)'" onmouseout="this.style.background='rgba(156, 163, 175, 0.8)'">−</button>
+                  backdrop-filter: blur(10px);
+                  transition: all 0.2s;
+                " onmouseover="this.style.background='rgba(156, 163, 175, 1)'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='rgba(156, 163, 175, 0.8)'; this.style.transform='scale(1)'">−</button>
                 <button onclick="window.compatApp.closeWindow()" style="
                   background: rgba(239, 68, 68, 0.8);
                   color: white;
                   border: none;
-                  width: 30px;
-                  height: 30px;
-                  border-radius: 50%;
+                  width: 32px;
+                  height: 32px;
+                  border-radius: 6px;
                   cursor: pointer;
                   font-size: 16px;
                   display: flex;
                   align-items: center;
                   justify-content: center;
-                " onmouseover="this.style.background='rgba(239, 68, 68, 1)'" onmouseout="this.style.background='rgba(239, 68, 68, 0.8)'">×</button>
+                  backdrop-filter: blur(10px);
+                  transition: all 0.2s;
+                " onmouseover="this.style.background='rgba(239, 68, 68, 1)'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='rgba(239, 68, 68, 0.8)'; this.style.transform='scale(1)'">×</button>
               </div>
               
-              <div style="padding: 60px 40px 40px 40px; max-width: 800px; margin: 0 auto;">
+              <div style="padding: 60px 40px 40px 40px; max-width: 900px; margin: 0 auto;">
                   
                   <!-- Progress Header -->
                   <div style="text-align: center; margin-bottom: 40px;">
                     <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 20px;">
-                      <div style="display: flex; align-items: center; gap: 8px;">
-                        <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--cypheridge-success); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">✓</div>
-                        <div style="width: 40px; height: 2px; background: var(--cypheridge-blue);"></div>
-                        <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--cypheridge-blue); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">2</div>
-                        <div style="width: 40px; height: 2px; background: #e2e8f0;"></div>
-                        <div style="width: 32px; height: 32px; border-radius: 50%; background: #e2e8f0; color: #94a3b8; display: flex; align-items: center; justify-content: center; font-weight: 600;">3</div>
+                      <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--cypheridge-success); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);">✓</div>
+                        <div style="width: 50px; height: 3px; background: linear-gradient(90deg, var(--cypheridge-success), var(--cypheridge-blue)); border-radius: 2px;"></div>
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--cypheridge-blue); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(0, 86, 179, 0.3); animation: pulse 2s infinite;">
+                          <div style="position: absolute; width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--cypheridge-blue); animation: ripple 2s infinite;"></div>
+                          2
+                        </div>
+                        <div style="width: 50px; height: 3px; background: #e2e8f0; border-radius: 2px;"></div>
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background: #e2e8f0; color: #94a3b8; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 16px;">3</div>
                       </div>
                     </div>
-                    <div style="color: #64748b; font-size: 14px;">Step 2 of 3</div>
+                    <div style="color: #64748b; font-size: 14px; font-weight: 500;">Step 2 of 3 • Running System Validation</div>
                   </div>
 
-                  <!-- Main Content -->
-                  <div style="text-align: center; margin-bottom: 32px;">
-                    <div style="font-size: 48px; margin-bottom: 20px;">🔄</div>
-                    <h1 style="font-size: 28px; font-weight: 700; color: #1e293b; margin-bottom: 12px;">Running Compatibility Tests...</h1>
-                    <div id="progress-counter" style="color: #64748b; font-size: 16px;">(0/16)</div>
+                  <!-- Main Status Card -->
+                  <div style="background: white; border-radius: 16px; padding: 32px; margin-bottom: 32px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);">
+                    <div style="text-align: center; margin-bottom: 24px;">
+                      <div style="font-size: 54px; margin-bottom: 16px; animation: rotate 2s linear infinite;">🔍</div>
+                      <h1 style="font-size: 32px; font-weight: 700; color: #1e293b; margin-bottom: 8px;">Running Compatibility Tests</h1>
+                      <div id="progress-counter" style="color: #64748b; font-size: 18px; font-weight: 500;">Initializing... (0/15)</div>
+                      
+                      <!-- Progress Bar -->
+                      <div style="width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; margin: 20px 0; overflow: hidden;">
+                        <div id="progress-bar" style="height: 100%; background: linear-gradient(90deg, var(--cypheridge-blue), var(--cypheridge-blue-light)); border-radius: 3px; width: 0%; transition: width 0.5s ease; box-shadow: 0 0 10px rgba(0, 86, 179, 0.3);"></div>
+                      </div>
+                      
+                      <!-- Current Test Status -->
+                      <div id="current-test-status" style="font-size: 14px; color: #475569; font-weight: 500; min-height: 20px; margin-bottom: 8px;">Preparing system validation...</div>
+                      <div id="current-test-details" style="font-size: 12px; color: #64748b; min-height: 16px; font-style: italic;"></div>
+                    </div>
                   </div>
 
                   <!-- Test Suites -->
-                  <div id="test-suites" style="display: flex; flex-direction: column; gap: 16px;">
-                    ${this.getTestSuitesHTML()}
+                  <div id="test-suites" style="display: flex; flex-direction: column; gap: 20px;">
+                    ${this.getEnhancedTestSuitesHTML()}
+                  </div>
+                  
+                  <!-- Performance Info -->
+                  <div style="margin-top: 24px; text-align: center;">
+                    <div style="background: rgba(255, 255, 255, 0.7); border-radius: 12px; padding: 16px; backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3);">
+                      <div style="display: flex; justify-content: center; gap: 32px; font-size: 13px;">
+                        <div style="display: flex; align-items: center; gap: 6px; color: #64748b;">
+                          <span>⏱️</span>
+                          <span id="elapsed-time">0s elapsed</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px; color: #64748b;">
+                          <span>🔧</span>
+                          <span>Real system validation</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px; color: #64748b;">
+                          <span>🚀</span>
+                          <span id="estimated-remaining">~30s remaining</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
+            
+            <style>
+              @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.7; }
+              }
+              
+              @keyframes ripple {
+                0% {
+                  transform: scale(1);
+                  opacity: 0.6;
+                }
+                100% {
+                  transform: scale(1.4);
+                  opacity: 0;
+                }
+              }
+              
+              @keyframes rotate {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+              }
+              
+              @keyframes slideIn {
+                from {
+                  opacity: 0;
+                  transform: translateY(20px);
+                }
+                to {
+                  opacity: 1;
+                  transform: translateY(0);
+                }
+              }
+              
+              .test-suite-card {
+                animation: slideIn 0.5s ease-out forwards;
+              }
+            </style>
           `;
         }
 
@@ -581,6 +657,9 @@
           const testId = `test-${progress.suiteName.replace(/\\s+/g, '-')}-${progress.testName.replace(/[^a-zA-Z0-9]/g, '-')}`;
           const testElement = document.getElementById(testId);
           
+          // Update overall progress
+          this.updateOverallProgress(progress);
+          
           if (testElement) {
             const statusElement = testElement.querySelector('.test-status');
             const resultElement = testElement.querySelector('.test-result');
@@ -592,16 +671,21 @@
                 resultElement.textContent = 'TESTING';
                 resultElement.style.color = '#64748b';
                 
-                // Enhanced live update display - show componentAction messages
+                // Enhanced live update display with priority handling
                 if (detailsElement) {
                   let detailMessage = '';
                   
-                  // Priority 1: Show componentAction from IsolatedCompatibilityBubble.sendLiveUpdate()
+                  // Priority 1: Show componentAction from IsolatedCompatibilityBubble
                   if (progress.details?.componentAction) {
                     detailMessage = progress.details.componentAction;
                     console.log('📱 Showing componentAction:', detailMessage);
                   }
-                  // Priority 2: Show general message
+                  // Priority 2: Show enhanced description for current test
+                  else if (progress.details?.description) {
+                    detailMessage = progress.details.description;
+                    console.log('📱 Showing description:', detailMessage);
+                  }
+                  // Priority 3: Show general message
                   else if (progress.message) {
                     detailMessage = progress.message;
                     console.log('📱 Showing message:', detailMessage);
@@ -675,6 +759,94 @@
           await window.electronAPI.sendUserDecision(decision);
         }
 
+        updateOverallProgress(progress) {
+          // Update progress counter
+          const completed = Object.keys(this.testProgress).length;
+          const progressCounter = document.getElementById('progress-counter');
+          if (progressCounter) {
+            progressCounter.textContent = `Testing in progress... (${completed}/15)`;
+          }
+          
+          // Update progress bar if we have percentage info
+          if (progress.progress?.percentage !== undefined) {
+            const progressBar = document.getElementById('progress-bar');
+            if (progressBar) {
+              progressBar.style.width = `${progress.progress.percentage}%`;
+            }
+          }
+          
+          // Update current test status
+          const currentTestStatus = document.getElementById('current-test-status');
+          if (currentTestStatus) {
+            currentTestStatus.textContent = `Testing ${progress.testName}...`;
+          }
+          
+          const currentTestDetails = document.getElementById('current-test-details');
+          if (currentTestDetails && progress.details?.description) {
+            currentTestDetails.textContent = progress.details.description;
+          }
+        }
+
+        getEnhancedTestSuitesHTML() {
+          // Enhanced version with better styling
+          const suites = [
+            {
+              name: "System Requirements",
+              icon: "🖥️",
+              tests: ["Available RAM", "ML Models Memory", "Disk Space", "Windows Version", "Admin Privileges"]
+            },
+            {
+              name: "Component Auto-Startup & Verification",
+              icon: "🚀", 
+              tests: ["CypherEdge Component Flow Test"]
+            },
+            {
+              name: "Basic Port Availability",
+              icon: "🌐",
+              tests: ["Python Backend Port (7500)", "Gateway Service Port (7890)", "FastAPI Health Check"]
+            },
+            {
+              name: "File System Tests",
+              icon: "📁", 
+              tests: ["Python Executable", "Gateway Service", "Database Access", "File Permissions"]
+            },
+            {
+              name: "API Dependencies",
+              icon: "🔧",
+              tests: ["FastAPI Dependencies", "PDF Processing Capability"]
+            }
+          ];
+
+          return suites.map((suite, index) => `
+            <div class="test-suite-card" style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.05); animation-delay: ${index * 0.1}s;">
+              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                <span style="font-size: 20px;">${suite.icon}</span>
+                <div style="flex: 1;">
+                  <div style="font-weight: 600; color: #1e293b; font-size: 16px;">${suite.name}</div>
+                  <div style="font-size: 12px; color: #64748b; margin-top: 2px;">${suite.tests.length} tests</div>
+                </div>
+                <span id="suite-status-${suite.name.replace(/\\s+/g, '-')}" style="font-size: 18px;">⏳</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                ${suite.tests.map(test => `
+                  <div id="test-${suite.name.replace(/\\s+/g, '-')}-${test.replace(/[^a-zA-Z0-9]/g, '-')}" style="border-radius: 8px; padding: 12px; background: #f8fafc; border: 1px solid #e2e8f0;">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                      <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="test-status" style="font-size: 16px;">⏳</span>
+                        <div>
+                          <div style="color: #374151; font-size: 14px; font-weight: 500;">${test}</div>
+                        </div>
+                      </div>
+                      <span class="test-result" style="font-size: 12px; color: #64748b; font-weight: 600;"></span>
+                    </div>
+                    <div class="test-details" style="font-size: 11px; color: #6b7280; margin-top: 8px; margin-left: 26px; display: none; font-style: italic; line-height: 1.4;"></div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `).join('');
+        }
+
         // Window control functions for frameless window
         minimizeWindow() {
           const { remote } = require('electron');
@@ -703,8 +875,8 @@
         window.compatApp = app; // Make app globally accessible for window controls
         app.init();
         
-        // Start countdown timer for auto-start
-        let countdown = 5;
+        // Start countdown timer for auto-start (reduced for testing)
+        let countdown = 2; // Reduced from 5 to 2 for faster testing
         const countdownInterval = setInterval(() => {
           countdown--;
           const countdownElement = document.getElementById('countdown');
@@ -717,6 +889,11 @@
             const countdownContainer = document.getElementById('auto-start-countdown');
             if (countdownContainer) {
               countdownContainer.textContent = 'Auto-starting now...';
+            }
+            // Auto-start the tests
+            const app = window.compatApp;
+            if (app) {
+              app.startTests();
             }
           }
         }, 1000);

@@ -164,11 +164,11 @@ class SystemCompatibilityChecker {
   }
 
   setupIPC() {
-    // Auto-start tests after 5 seconds if user doesn't click Continue
+    // Auto-start tests after 2 seconds if user doesn't click Continue (reduced for testing)
     setTimeout(() => {
       if (this.window && !this.window.isDestroyed() && this.userDecision === null) {
-        this.logger.info('AUTO_START', 'Auto-starting compatibility tests after 5 second delay');
-        log.info("🤖 [COMPAT] Auto-starting compatibility tests after 5 second delay");
+        this.logger.info('AUTO_START', 'Auto-starting compatibility tests after 2 second delay');
+        log.info("🤖 [COMPAT] Auto-starting compatibility tests after 2 second delay");
         this.window.webContents.executeJavaScript(`
           const continueBtn = document.getElementById('continue-btn');
           if (continueBtn) {
@@ -179,7 +179,7 @@ class SystemCompatibilityChecker {
           }
         `);
       }
-    }, 5000);
+    }, 2000); // Reduced from 5000 to 2000 for testing
 
     // React app requests to start tests
     ipcMain.handle("compatibility:start-tests", async () => {
@@ -261,12 +261,24 @@ class SystemCompatibilityChecker {
         // Start test with enhanced logging
         const testTracker = this.logger.startTest(suite.name, test.name);
 
-        // Notify React UI that test is starting
+        // Enhanced UI notification with detailed context
         if (this.window && !this.window.isDestroyed()) {
           this.window.webContents.send("test-progress", {
             suiteName: suite.name,
             testName: test.name,
             status: "testing",
+            message: `Testing ${test.name.toLowerCase()}...`,
+            details: {
+              description: this.getTestDescription(suite.name, test.name),
+              importance: this.getTestImportance(suite.name, test.name),
+              expectedDuration: this.getExpectedDuration(suite.name, test.name),
+              testType: this.getTestType(suite.name, test.name)
+            },
+            progress: {
+              currentTest: suite.tests.indexOf(test) + 1,
+              totalInSuite: suite.tests.length,
+              suiteName: suite.name
+            }
           });
         }
 
@@ -327,7 +339,7 @@ class SystemCompatibilityChecker {
           }
         }
 
-        // Send result to React UI
+        // Enhanced result notification with comprehensive information
         if (this.window && !this.window.isDestroyed()) {
           this.window.webContents.send("test-progress", {
             suiteName: suite.name,
@@ -336,6 +348,21 @@ class SystemCompatibilityChecker {
             message,
             details,
             duration,
+            result: {
+              summary: this.getTestSummary(test.name, result, status),
+              impact: this.getTestImpact(test.name, result, status),
+              recommendation: result.details?.recommendation || null,
+              technical: result.details || {},
+              performance: {
+                duration: `${duration}ms`,
+                category: duration < 1000 ? 'fast' : duration < 5000 ? 'normal' : 'slow'
+              }
+            },
+            progress: {
+              currentTest: suite.tests.indexOf(test) + 1,
+              totalInSuite: suite.tests.length,
+              overallProgress: this.calculateOverallProgress(suite, test, testSuites)
+            }
           });
         }
 
@@ -349,9 +376,31 @@ class SystemCompatibilityChecker {
     // Calculate overall compatibility
     this.results.canProceed = this.calculateCompatibility();
 
-    // Send completion signal to React UI
+    // Enhanced completion signal with comprehensive results
     if (this.window && !this.window.isDestroyed()) {
-      this.window.webContents.send("compatibility-complete", this.results);
+      const enhancedResults = {
+        ...this.results,
+        duration: Date.now() - this.results.startTime,
+        systemInfo: {
+          timestamp: new Date().toISOString(),
+          totalTests: this.results.successes.length + this.results.warnings.length + this.results.issues.length,
+          environment: process.env.NODE_ENV || 'production'
+        },
+        summary: {
+          overallStatus: this.results.canProceed === true ? 'compatible' : 
+                        this.results.canProceed === false ? 'incompatible' : 'compatible-with-warnings',
+          performanceLevel: this.getPerformanceLevel(),
+          startupMode: this.getStartupMode(),
+          recommendations: this.getOverallRecommendations()
+        },
+        breakdown: {
+          critical: this.results.issues.filter(i => i.severity === 'critical').length,
+          warnings: this.results.warnings.length,
+          passed: this.results.successes.length
+        }
+      };
+      
+      this.window.webContents.send("compatibility-complete", enhancedResults);
     }
 
     this.logger.info('TESTS_COMPLETE', 'All compatibility tests completed', {
@@ -520,6 +569,198 @@ class SystemCompatibilityChecker {
 
       checkDecision();
     });
+  }
+
+  // Enhanced UI Information Methods
+  getTestDescription(suiteName, testName) {
+    const descriptions = {
+      // System Requirements
+      "Available RAM": "Verifying system has sufficient memory for optimal performance",
+      "ML Models Memory": "Checking memory availability for machine learning model operations",
+      "Disk Space": "Ensuring adequate storage space for application data and temporary files", 
+      "Windows Version": "Validating Windows version compatibility and feature support",
+      "Admin Privileges": "Confirming administrator permissions for system-level operations",
+      
+      // Component Tests
+      "CypherEdge Component Flow Test": "Comprehensive test of all core components in isolated environment",
+      "Python Backend Port (7500)": "Verifying FastAPI backend service port availability",
+      "Gateway Service Port (7890)": "Checking .NET Gateway licensing service port accessibility",
+      "FastAPI Health Check": "Testing HTTP connectivity to Python backend API endpoints",
+      
+      // File System  
+      "Python Executable": "Validating Python backend executable integrity and accessibility",
+      "Gateway Service": "Verifying .NET Gateway service executable and configuration", 
+      "Database Access": "Testing SQLite database creation, read/write operations",
+      "File Permissions": "Checking file system permissions for application directories",
+      
+      // API Dependencies
+      "FastAPI Dependencies": "Validating Python dependencies and ML model availability",
+      "PDF Processing Capability": "Testing PDF parsing and document processing functionality"
+    };
+    
+    return descriptions[testName] || `Testing ${testName.toLowerCase()} functionality`;
+  }
+
+  getTestImportance(suiteName, testName) {
+    const criticalTests = [
+      "Available RAM", "Windows Version", "Admin Privileges", 
+      "CypherEdge Component Flow Test", "Database Access"
+    ];
+    
+    const importantTests = [
+      "Python Executable", "Gateway Service", "FastAPI Dependencies",
+      "Python Backend Port (7500)", "Gateway Service Port (7890)"
+    ];
+    
+    if (criticalTests.includes(testName)) return "critical";
+    if (importantTests.includes(testName)) return "important";
+    return "standard";
+  }
+
+  getExpectedDuration(suiteName, testName) {
+    const durations = {
+      "Available RAM": "< 1s",
+      "ML Models Memory": "< 1s", 
+      "Disk Space": "1-2s",
+      "Windows Version": "< 1s",
+      "Admin Privileges": "2-3s",
+      "CypherEdge Component Flow Test": "15-25s",
+      "Python Backend Port (7500)": "< 1s",
+      "Gateway Service Port (7890)": "< 1s", 
+      "FastAPI Health Check": "3-5s",
+      "Python Executable": "1-2s",
+      "Gateway Service": "1-2s",
+      "Database Access": "2-3s",
+      "File Permissions": "1-2s", 
+      "FastAPI Dependencies": "3-5s",
+      "PDF Processing Capability": "2-4s"
+    };
+    
+    return durations[testName] || "1-3s";
+  }
+
+  getTestType(suiteName, testName) {
+    if (testName.includes("Port")) return "network";
+    if (testName.includes("Memory") || testName === "Available RAM") return "system";
+    if (testName.includes("Executable") || testName.includes("Service")) return "component";
+    if (testName.includes("API") || testName.includes("Processing")) return "integration";
+    if (testName.includes("Admin") || testName.includes("Permissions")) return "security";
+    return "general";
+  }
+
+  getTestSummary(testName, result, status) {
+    if (status === "success") {
+      const successMessages = {
+        "Available RAM": `✅ ${result.details?.totalGB}GB total memory (${result.details?.freeGB}GB available)`,
+        "ML Models Memory": `✅ Sufficient memory for ML operations (${result.details?.freeGB}GB available)`, 
+        "Disk Space": `✅ ${result.details?.freeGB}GB available space`,
+        "Windows Version": `✅ ${result.details?.version} - Fully compatible`,
+        "Admin Privileges": "✅ Administrator permissions confirmed",
+        "CypherEdge Component Flow Test": "✅ All components started and tested successfully",
+        "Python Backend Port (7500)": "✅ Port available for FastAPI backend",
+        "Gateway Service Port (7890)": "✅ Port available for licensing service",
+        "FastAPI Health Check": "✅ Backend API responding normally",
+        "Python Executable": `✅ Backend executable verified (${result.details?.size})`,
+        "Gateway Service": `✅ Licensing service verified (${result.details?.size})`,
+        "Database Access": "✅ SQLite database operations successful",
+        "File Permissions": "✅ All required directories accessible", 
+        "FastAPI Dependencies": "✅ Python dependencies and ML models ready",
+        "PDF Processing Capability": "✅ PDF processing pipeline functional"
+      };
+      
+      return successMessages[testName] || `✅ ${testName} completed successfully`;
+    }
+    
+    return result.message || `${status === "warning" ? "⚠️" : "❌"} ${testName} ${status}`;
+  }
+
+  getTestImpact(testName, result, status) {
+    if (status === "success") return "No issues - optimal performance expected";
+    
+    const impacts = {
+      "Available RAM": "May cause slow performance or crashes during heavy operations",
+      "ML Models Memory": "Machine learning features may not load or perform slowly",
+      "Disk Space": "Application may fail to save data or create temporary files",
+      "Windows Version": "Some features may not work correctly on this Windows version",
+      "Admin Privileges": "Unable to perform system-level operations and service management",
+      "CypherEdge Component Flow Test": "Core application components may not start properly",
+      "Python Backend Port (7500)": "PDF processing and backend services unavailable",
+      "Gateway Service Port (7890)": "License validation and authentication will fail", 
+      "FastAPI Health Check": "Backend API communication issues expected",
+      "Python Executable": "PDF processing and ML features will not function",
+      "Gateway Service": "License management and user authentication unavailable",
+      "Database Access": "Data storage and retrieval operations will fail",
+      "File Permissions": "Unable to access required directories and files",
+      "FastAPI Dependencies": "Backend services may crash or function incorrectly",
+      "PDF Processing Capability": "PDF analysis and document processing unavailable"
+    };
+    
+    return impacts[testName] || "May affect application functionality";
+  }
+
+  calculateOverallProgress(currentSuite, currentTest, allSuites) {
+    let totalTests = 0;
+    let completedTests = 0;
+    
+    for (const suite of allSuites) {
+      for (const test of suite.tests) {
+        totalTests++;
+        if (suite === currentSuite && test === currentTest) {
+          // Current test is completed
+          completedTests++;
+          break;
+        }
+        if (suite !== currentSuite) {
+          // Previous suite, all tests completed
+          completedTests++;
+        }
+      }
+      if (suite === currentSuite) break;
+    }
+    
+    return {
+      completed: completedTests,
+      total: totalTests,
+      percentage: Math.round((completedTests / totalTests) * 100)
+    };
+  }
+
+  getPerformanceLevel() {
+    const criticalIssues = this.results.issues.filter(i => i.severity === 'critical').length;
+    const warnings = this.results.warnings.length;
+    
+    if (criticalIssues === 0 && warnings === 0) return 'excellent';
+    if (criticalIssues === 0 && warnings <= 2) return 'good';
+    if (criticalIssues <= 1 && warnings <= 3) return 'fair';
+    return 'poor';
+  }
+
+  getStartupMode() {
+    const criticalIssues = this.results.issues.filter(i => i.severity === 'critical').length;
+    const warnings = this.results.warnings.length;
+    
+    if (criticalIssues === 0 && warnings === 0) return 'optimal';
+    if (criticalIssues === 0) return 'standard';
+    if (this.results.canProceed) return 'fallback';
+    return 'blocked';
+  }
+
+  getOverallRecommendations() {
+    const recommendations = [];
+    
+    if (this.results.issues.length > 0) {
+      recommendations.push("Address critical issues before launching CypherEdge");
+    }
+    
+    if (this.results.warnings.length > 0) {
+      recommendations.push("Review warnings for optimal performance");
+    }
+    
+    if (this.results.successes.length === 15) {
+      recommendations.push("System fully ready for CypherEdge deployment");
+    }
+    
+    return recommendations;
   }
 }
 

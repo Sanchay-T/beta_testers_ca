@@ -31,20 +31,45 @@ class IsolatedCompatibilityBubble {
     };
   }
 
-  // Send live updates to the compatibility UI
-  sendLiveUpdate(message, status = 'info') {
+  // Enhanced live updates to the compatibility UI with detailed context
+  sendLiveUpdate(message, status = 'info', additionalDetails = {}) {
     if (this.compatibilityWindow && !this.compatibilityWindow.isDestroyed()) {
       this.compatibilityWindow.webContents.send("test-progress", {
         suiteName: 'Component Auto-Startup & Verification',
         testName: 'CypherEdge Component Flow Test',
         status: 'testing',
         message: message,
-        details: { componentAction: message, liveStatus: status }
+        details: { 
+          componentAction: message, 
+          liveStatus: status,
+          phase: this.getCurrentPhase(message),
+          operation: this.getOperationType(message),
+          technical: additionalDetails,
+          timestamp: new Date().toISOString()
+        }
       });
     }
     
-    this.logger?.info('BUBBLE_UPDATE', message, { status });
+    this.logger?.info('BUBBLE_UPDATE', message, { status, ...additionalDetails });
     console.log(`🔄 [BUBBLE] ${message}`);
+  }
+
+  getCurrentPhase(message) {
+    if (message.includes('Phase 1')) return 'cleanup';
+    if (message.includes('Phase 2')) return 'startup';
+    if (message.includes('Phase 3')) return 'testing';
+    if (message.includes('Phase 4')) return 'results';
+    if (message.includes('Initializing')) return 'initialization';
+    return 'processing';
+  }
+
+  getOperationType(message) {
+    if (message.includes('Cleaning') || message.includes('Kill')) return 'cleanup';
+    if (message.includes('Starting')) return 'startup';
+    if (message.includes('Testing') || message.includes('Health')) return 'validation';
+    if (message.includes('PDF') || message.includes('Processing')) return 'integration';
+    if (message.includes('Gateway') || message.includes('Licensing')) return 'authentication';
+    return 'system';
   }
 
   // Main isolated testing method
@@ -58,14 +83,22 @@ class IsolatedCompatibilityBubble {
       await this.killAllExistingProcesses();
       
       // Phase 2: Start OUR controlled instances
-      this.sendLiveUpdate('🔧 Phase 2: Starting controlled Python backend instance...');
+      this.sendLiveUpdate('🔧 Phase 2: Starting controlled Python backend instance...', 'info', {
+        port: this.ports.python,
+        service: 'FastAPI',
+        operation: 'process_spawn'
+      });
       const pythonResult = await this.startControlledPythonBackend();
       
       if (!pythonResult.success) {
         return this.cleanupAndReturn(false, 'Python backend failed to start in isolated environment', pythonResult.details);
       }
       
-      this.sendLiveUpdate('🔧 Phase 2: Starting controlled Gateway service instance...');
+      this.sendLiveUpdate('🔧 Phase 2: Starting controlled Gateway service instance...', 'info', {
+        port: this.ports.gateway,
+        service: '.NET Gateway',
+        operation: 'process_spawn'
+      });
       const gatewayResult = await this.startControlledGatewayService();
       
       if (!gatewayResult.success) {
@@ -73,10 +106,16 @@ class IsolatedCompatibilityBubble {
       }
       
       // Phase 3: Test our controlled services
-      this.sendLiveUpdate('✅ Phase 3: Testing controlled Python backend health...');
+      this.sendLiveUpdate('✅ Phase 3: Testing controlled Python backend health...', 'info', {
+        endpoint: `http://127.0.0.1:${this.ports.python}/health`,
+        testType: 'http_health_check'
+      });
       const pythonHealthResult = await this.testControlledPythonHealth();
       
-      this.sendLiveUpdate('✅ Phase 3: Testing controlled Gateway service health...');
+      this.sendLiveUpdate('✅ Phase 3: Testing controlled Gateway service health...', 'info', {
+        endpoint: `http://127.0.0.1:${this.ports.gateway}/api/health`,
+        testType: 'http_health_check'
+      });
       const gatewayHealthResult = await this.testControlledGatewayHealth();
       
       this.sendLiveUpdate('📄 Phase 3: Testing PDF processing pipeline...');
