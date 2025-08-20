@@ -33,7 +33,7 @@ const extractYouTubeId = (url) => {
 
 const toEmbed = (id) =>
   id
-    ? `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1`
+    ? `https://www.youtube.com/embed/${id}?autoplay=1&mute=0&rel=0&modestbranding=1&playsinline=1`
     : "";
 
 const metaCache = new Map();

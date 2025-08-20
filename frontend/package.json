@@ -1,11 +1,11 @@
 {
   "name": "CypherEdge",
-  "version": "2.1.200",
+  "version": "2.2.300",
   "description": "CA OFFLINE APP",
   "main": "main.js",
   "icon": "./assets/cyphersol-icon.png",
   "scripts": {
-    "start": "powershell -Command \"Start-Process cmd -ArgumentList '/k cd /d \\\"E:\\Workplace\\Cyphersol\\ca_offline_multiple_clones\\beta_testers_ca\\frontend\\\" && npm run electron' -Verb runAs\"",
+    "start": "powershell -Command \"Start-Process cmd -ArgumentList '/k cd /d \\\"D:\\CA\\beta_testers_ca\\frontend\\\" && npm run electron' -Verb runAs\"",
     "start_": "npm run electron",
     "electron": "electron main.js",
     "start:fastapi": "cd ../ && uvicorn backend.main:app --reload --port 7500",
@@ -19,7 +19,8 @@
     "build:electron": "electron-builder",
     "deploy": "electron-builder --publish always",
     "release": "npm run build && npm run deploy",
-    "test": "npx mocha test/**/*.test.js"
+    "test": "npx mocha test/**/*.test.js",
+    "rebuild": "npx electron-rebuild"
   },
   "keywords": [],
   "author": "",
