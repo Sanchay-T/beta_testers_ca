@@ -369,6 +369,19 @@ class SystemCompatibilityChecker {
       canProceed: this.results.canProceed,
     });
 
+    // Cleanup managed server after all tests are complete
+    if (this.tests && this.tests.cleanupManagedServer) {
+      this.logger.info('TESTS_COMPLETE', 'Initiating managed server cleanup');
+      try {
+        const cleanupResult = await this.tests.cleanupManagedServer();
+        this.logger.info('TESTS_COMPLETE', 'Server cleanup completed', cleanupResult);
+      } catch (cleanupError) {
+        this.logger.warn('TESTS_COMPLETE', 'Server cleanup encountered issues', {
+          error: cleanupError.message
+        });
+      }
+    }
+
     return this.results;
   }
 

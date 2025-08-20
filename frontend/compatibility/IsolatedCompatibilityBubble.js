@@ -356,7 +356,7 @@ class IsolatedCompatibilityBubble {
       this.sendLiveUpdate('🔍 Checking controlled Python health endpoint...');
       
       const axios = require('axios');
-      const healthUrl = `http://localhost:${this.ports.python}/health`;
+      const healthUrl = `http://127.0.0.1:${this.ports.python}/health`;
       this.sendLiveUpdate(`📡 Testing health endpoint: ${healthUrl}`);
       
       const response = await axios.get(healthUrl, {
@@ -398,7 +398,7 @@ class IsolatedCompatibilityBubble {
       this.sendLiveUpdate('🔍 Checking controlled Gateway health endpoint...');
       
       const axios = require('axios');
-      const response = await axios.get(`http://localhost:${this.ports.gateway}/api/health`, {
+      const response = await axios.get(`http://127.0.0.1:${this.ports.gateway}/api/health`, {
         timeout: 3000,
         headers: { 'User-Agent': 'CypherEdge-IsolatedTest' }
       });
@@ -490,7 +490,7 @@ class IsolatedCompatibilityBubble {
       this.sendLiveUpdate('🔐 Testing controlled licensing endpoints...');
       
       const axios = require('axios');
-      const response = await axios.get(`http://localhost:${this.ports.gateway}/api/health`, {
+      const response = await axios.get(`http://127.0.0.1:${this.ports.gateway}/api/health`, {
         timeout: 3000,
         headers: { 'User-Agent': 'CypherEdge-IsolatedTest' }
       });

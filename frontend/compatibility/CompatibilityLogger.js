@@ -39,21 +39,41 @@ class CompatibilityLogger {
 
   initializeLogFiles() {
     try {
-      // Create logs directory in user data
+      // Create logs directory in compatibility/log folder for comprehensive tracking
+      const compatLogDir = path.join(__dirname, 'log');
       const userDataPath = app.getPath('userData');
-      this.logDir = path.join(userDataPath, 'logs', 'compatibility');
       
+      // Primary log directory in compatibility/log folder
+      this.logDir = compatLogDir;
+      this.userLogDir = path.join(userDataPath, 'logs', 'compatibility');
+      
+      // Create both directories
       if (!fs.existsSync(this.logDir)) {
         fs.mkdirSync(this.logDir, { recursive: true });
+      }
+      if (!fs.existsSync(this.userLogDir)) {
+        fs.mkdirSync(this.userLogDir, { recursive: true });
       }
 
       // Create log files with timestamps
       const timestamp = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
       const timeString = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5); // Clean timestamp
       
+      // Main comprehensive flow log in compatibility/log
+      this.flowLogFile = path.join(this.logDir, `FLOW_${timeString}.log`);
+      this.detailedLogFile = path.join(this.logDir, `DETAILED_${timeString}.log`);
+      
+      // Standard logs in both locations
       this.logFile = path.join(this.logDir, `compatibility-${timestamp}.log`);
       this.jsonLogFile = path.join(this.logDir, `compatibility-${timeString}.json`);
       this.debugLogFile = path.join(this.logDir, `compatibility-debug-${timeString}.log`);
+      
+      // Also save to user data directory
+      this.userLogFile = path.join(this.userLogDir, `compatibility-${timestamp}.log`);
+      
+      // Initialize comprehensive flow tracking
+      this.flowSteps = [];
+      this.detailedEvents = [];
 
       // Initialize JSON log file with session start
       this.jsonLogs = [];
@@ -76,6 +96,18 @@ class CompatibilityLogger {
     };
 
     this.log('INFO', 'SESSION_START', 'Compatibility check session started', sessionStart);
+    
+    // Write comprehensive flow header
+    this.writeFlowLog('\n' + '='.repeat(80));
+    this.writeFlowLog('CYPHEREDGE SYSTEM COMPATIBILITY CHECKER - COMPREHENSIVE FLOW LOG');
+    this.writeFlowLog('='.repeat(80));
+    this.writeFlowLog(`Session ID: ${this.sessionId}`);
+    this.writeFlowLog(`Start Time: ${new Date().toISOString()}`);
+    this.writeFlowLog(`Platform: ${systemInfo.platform} | Architecture: ${systemInfo.arch}`);
+    this.writeFlowLog(`Memory: ${systemInfo.totalMemory} total | ${systemInfo.freeMemory} free`);
+    this.writeFlowLog('='.repeat(80) + '\n');
+    
+    this.writeFlowLog('FLOW START: Initialization Step -1 beginning...');
   }
 
   getSystemInfo() {
@@ -200,7 +232,19 @@ class CompatibilityLogger {
         ? `${logLine} | Data: ${JSON.stringify(logEntry.data)}\n`
         : `${logLine}\n`;
       
+      // Write to both locations
       fs.appendFileSync(this.logFile, logLineWithData);
+      if (this.userLogFile) {
+        fs.appendFileSync(this.userLogFile, logLineWithData);
+      }
+      
+      // Track comprehensive flow
+      this.trackFlowEvent(logEntry);
+      
+      // Write detailed events
+      if (logEntry.level !== 'DEBUG') {
+        this.writeDetailedLog(logEntry);
+      }
     } catch (error) {
       console.error('Failed to write to log file:', error);
     }
@@ -316,6 +360,24 @@ class CompatibilityLogger {
     };
 
     this.info('SESSION_END', 'Compatibility check session completed', summary);
+    
+    // Write comprehensive flow summary
+    this.writeFlowLog('\n' + '='.repeat(80));
+    this.writeFlowLog('SESSION COMPLETE - SUMMARY');
+    this.writeFlowLog('='.repeat(80));
+    this.writeFlowLog(`Total Duration: ${totalDuration}ms`);
+    this.writeFlowLog(`Can Proceed: ${results.canProceed}`);
+    this.writeFlowLog(`Tests Passed: ${summary.results.successes}`);
+    this.writeFlowLog(`Warnings: ${summary.results.warnings}`);
+    this.writeFlowLog(`Errors: ${summary.results.errors}`);
+    this.writeFlowLog('\nFLOW STEPS SUMMARY:');
+    this.flowSteps.forEach((step, index) => {
+      this.writeFlowLog(`  ${index + 1}. [+${step.time}ms] ${step.message}`);
+    });
+    this.writeFlowLog('\n' + '='.repeat(80));
+    this.writeFlowLog(`Log files saved to: ${this.logDir}`);
+    this.writeFlowLog('FLOW END');
+    this.writeFlowLog('='.repeat(80) + '\n');
 
     // Final JSON log write
     if (this.enableFile) {
@@ -325,19 +387,149 @@ class CompatibilityLogger {
         sessionId: this.sessionId,
         ...summary
       });
+      
+      // Save flow summary
+      this.saveFlowSummary(results);
     }
 
     return summary;
+  }
+  
+  // Save a comprehensive flow summary
+  saveFlowSummary(results) {
+    try {
+      const summaryPath = path.join(this.logDir, `FLOW_SUMMARY_${this.sessionId}.json`);
+      const flowSummary = {
+        sessionId: this.sessionId,
+        startTime: new Date(this.startTime).toISOString(),
+        endTime: new Date().toISOString(),
+        totalDuration: Date.now() - this.startTime,
+        systemInfo: this.getSystemInfo(),
+        flowSteps: this.flowSteps,
+        testResults: results,
+        detailedEventCount: this.detailedEvents.length,
+        logFiles: this.getLogPaths()
+      };
+      
+      fs.writeFileSync(summaryPath, JSON.stringify(flowSummary, null, 2));
+      this.writeFlowLog(`Flow summary saved to: ${summaryPath}`);
+    } catch (error) {
+      console.error('Failed to save flow summary:', error);
+    }
   }
 
   // Get log file paths for external access
   getLogPaths() {
     return {
+      flowLog: this.flowLogFile,
+      detailedLog: this.detailedLogFile,
       mainLog: this.logFile,
       jsonLog: this.jsonLogFile,
       debugLog: this.debugLogFile,
-      logDir: this.logDir
+      logDir: this.logDir,
+      userLogDir: this.userLogDir
     };
+  }
+  
+  // Write to comprehensive flow log
+  writeFlowLog(message) {
+    try {
+      if (this.flowLogFile) {
+        const timestamp = new Date().toISOString();
+        const sessionTime = Date.now() - this.startTime;
+        const flowLine = `[${timestamp}] [+${sessionTime}ms] ${message}\n`;
+        fs.appendFileSync(this.flowLogFile, flowLine);
+      }
+    } catch (error) {
+      console.error('Failed to write flow log:', error);
+    }
+  }
+  
+  // Track flow events for comprehensive logging
+  trackFlowEvent(logEntry) {
+    const flowMessage = this.formatFlowMessage(logEntry);
+    if (flowMessage) {
+      this.writeFlowLog(flowMessage);
+      this.flowSteps.push({
+        time: Date.now() - this.startTime,
+        category: logEntry.category,
+        message: flowMessage
+      });
+    }
+  }
+  
+  // Format messages for flow tracking
+  formatFlowMessage(logEntry) {
+    const { category, message, level, data } = logEntry;
+    
+    // Key events to track in flow
+    const flowEvents = [
+      'SESSION_START', 'SESSION_END', 'SESSION_ERROR',
+      'WINDOW_CREATE', 'WINDOW_READY', 'USER_ACTION', 'USER_DECISION',
+      'TESTS_START', 'SUITE_START', 'TEST_START', 'TEST_COMPLETE', 'TESTS_COMPLETE',
+      'COMPONENT_FLOW', 'PORT_TEST', 'MEMORY_TEST', 'DISK_TEST', 'OS_TEST',
+      'ADMIN_TEST', 'PYTHON_TEST', 'GATEWAY_TEST', 'DATABASE_TEST', 'PERMISSIONS_TEST',
+      'FASTAPI_TEST', 'FASTAPI_DEPS_TEST', 'PDF_PROCESSING_TEST',
+      'COMPATIBILITY_CALCULATION', 'COMPATIBILITY_BLOCKED', 'COMPATIBILITY_WARNING', 'COMPATIBILITY_PASSED',
+      'REPORT_REQUEST', 'REPORT_GENERATED', 'AUTO_START'
+    ];
+    
+    if (flowEvents.includes(category)) {
+      let flowMsg = `[${level}] ${category}: ${message}`;
+      
+      // Add relevant data for specific events
+      if (category === 'TEST_COMPLETE' && data?.result) {
+        flowMsg += ` | Status: ${data.result.success ? 'PASSED' : 'FAILED'}`;
+        if (data.timing) {
+          flowMsg += ` | Duration: ${data.timing.duration}`;
+        }
+      } else if (category === 'SUITE_START' && data?.suiteName) {
+        flowMsg += ` | Suite: ${data.suiteName} (${data.testCount} tests)`;
+      } else if (category === 'USER_DECISION' && data?.decision) {
+        flowMsg += ` | Decision: ${data.decision}`;
+      } else if (category === 'COMPATIBILITY_CALCULATION' && data) {
+        flowMsg += ` | Blocking: ${data.blockingIssues}, Critical: ${data.criticalIssues}, Warnings: ${data.warnings}`;
+      }
+      
+      return flowMsg;
+    }
+    
+    return null;
+  }
+  
+  // Write detailed log entries
+  writeDetailedLog(logEntry) {
+    try {
+      if (this.detailedLogFile) {
+        const timestamp = new Date().toISOString();
+        const sessionTime = Date.now() - this.startTime;
+        
+        let detailedLine = `\n${'='.repeat(60)}\n`;
+        detailedLine += `Time: ${timestamp} (+${sessionTime}ms)\n`;
+        detailedLine += `Level: ${logEntry.level} | Category: ${logEntry.category}\n`;
+        detailedLine += `Message: ${logEntry.message}\n`;
+        
+        if (logEntry.data) {
+          detailedLine += `Data:\n${JSON.stringify(logEntry.data, null, 2)}\n`;
+        }
+        
+        if (logEntry.timing) {
+          detailedLine += `Timing: ${JSON.stringify(logEntry.timing)}\n`;
+        }
+        
+        fs.appendFileSync(this.detailedLogFile, detailedLine);
+        
+        // Track in memory for summary
+        this.detailedEvents.push({
+          time: sessionTime,
+          level: logEntry.level,
+          category: logEntry.category,
+          message: logEntry.message
+        });
+      }
+    } catch (error) {
+      console.error('Failed to write detailed log:', error);
+    }
   }
 
   // Create a summary report

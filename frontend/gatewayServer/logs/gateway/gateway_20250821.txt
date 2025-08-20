@@ -1,0 +1,310 @@
+2025-08-21 00:01:19.389 +05:30 [INF] Starting service...
+2025-08-21 00:01:19.480 +05:30 [INF] Actual log path: C:\Users\sanch\Desktop\Offlinesuite\beta_testers_ca\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-08-21 00:01:19.510 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-08-21 00:01:19.825 +05:30 [INF] [DeviceInfo Init] UUID: 6F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-21 00:01:19.827 +05:30 [INF] [DeviceInfo Init] MAC Address: 00:50:56:C0:00:01
+2025-08-21 00:01:19.827 +05:30 [INF] [DeviceInfo Init] Hostname: SAN
+2025-08-21 00:01:19.827 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-21-4075903880-4100643163-549963829-1001
+2025-08-21 00:01:19.827 +05:30 [INF] [DeviceInfo Init] Username: sanch
+2025-08-21 00:01:19.832 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-08-21 00:01:19.841 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 272 bytes
+2025-08-21 00:01:19.847 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-21 00:01:19.991 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 42542906
+}
+2025-08-21 00:01:19.991 +05:30 [INF] LicenseInfoProvider initialized.
+2025-08-21 00:01:19.992 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 42542906
+}
+2025-08-21 00:01:19.992 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 1
+2025-08-21 00:01:19.993 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\session-cache.enc
+2025-08-21 00:01:20.001 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-21 00:01:20.064 +05:30 [ERR] Decryption failed. The license file may be corrupted or tampered with: Padding is invalid and cannot be removed.
+2025-08-21 00:01:20.065 +05:30 [ERR] Failed to load session cache: Exception of type 'System.Exception' was thrown.
+2025-08-21 00:01:20.070 +05:30 [INF] Worker initialized.
+2025-08-21 00:01:20.078 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-08-21 00:01:20.078 +05:30 [INF] Waiting for network to be ready...
+2025-08-21 00:01:20.181 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.13
+2025-08-21 00:01:20.181 +05:30 [INF] Network is ready with IP: 192.168.1.13
+2025-08-21 00:01:20.278 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.13
+2025-08-21 00:01:20.292 +05:30 [INF] Django base URL: http://localhost:8000
+2025-08-21 00:01:20.300 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-21 00:01:20.385 +05:30 [INF] License Loaded: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 42542906
+}
+2025-08-21 00:01:20.507 +05:30 [INF] Starting license polling...
+2025-08-21 00:01:20.585 +05:30 [INF] HTTP API Server started on port 7890
+2025-08-21 00:01:20.585 +05:30 [INF] UDP broadcast listener started on port 41234.
+2025-08-21 00:01:20.594 +05:30 [INF] IP address: 192.168.1.13
+2025-08-21 00:01:20.839 +05:30 [INF] mDNS advertisement started using hostname: San and IP: 192.168.1.13:7890
+2025-08-21 00:01:20.842 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2025-08-21 00:01:20.842 +05:30 [INF] Hosting environment: Production
+2025-08-21 00:01:20.842 +05:30 [INF] Content root path: C:\Users\sanch\Desktop\Offlinesuite\beta_testers_ca\frontend
+2025-08-21 00:01:20.842 +05:30 [INF] Re-advertising mDNS service...
+2025-08-21 00:01:24.702 +05:30 [ERR] [License Polling] Exception occurred
+System.Net.Http.HttpRequestException: No connection could be made because the target machine actively refused it. (localhost:8000)
+ ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Sockets.Socket.<ConnectAsync>g__WaitForConnectWithCancellation|285_0(AwaitableSocketAsyncEventArgs saea, ValueTask connectTask, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   at MyLanService.HttpApiHost.TryResyncLicenseAsync(CancellationToken stoppingToken)
+2025-08-21 00:01:24.782 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-08-21 00:04:47.280 +05:30 [INF] Starting service...
+2025-08-21 00:04:47.336 +05:30 [INF] Actual log path: C:\Users\sanch\Desktop\Offlinesuite\beta_testers_ca\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-08-21 00:04:47.365 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-08-21 00:04:47.570 +05:30 [INF] [DeviceInfo Init] UUID: 6F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-21 00:04:47.571 +05:30 [INF] [DeviceInfo Init] MAC Address: 00:50:56:C0:00:01
+2025-08-21 00:04:47.571 +05:30 [INF] [DeviceInfo Init] Hostname: SAN
+2025-08-21 00:04:47.571 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-21-4075903880-4100643163-549963829-1001
+2025-08-21 00:04:47.571 +05:30 [INF] [DeviceInfo Init] Username: sanch
+2025-08-21 00:04:47.577 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-08-21 00:04:47.577 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 272 bytes
+2025-08-21 00:04:47.582 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-21 00:04:47.728 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 42750640
+}
+2025-08-21 00:04:47.728 +05:30 [INF] LicenseInfoProvider initialized.
+2025-08-21 00:04:47.729 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 42750640
+}
+2025-08-21 00:04:47.729 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 1
+2025-08-21 00:04:47.730 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\session-cache.enc
+2025-08-21 00:04:47.730 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-21 00:04:47.813 +05:30 [ERR] Decryption failed. The license file may be corrupted or tampered with: Padding is invalid and cannot be removed.
+2025-08-21 00:04:47.814 +05:30 [ERR] Failed to load session cache: Exception of type 'System.Exception' was thrown.
+2025-08-21 00:04:47.822 +05:30 [INF] Worker initialized.
+2025-08-21 00:04:47.831 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-08-21 00:04:47.833 +05:30 [INF] Waiting for network to be ready...
+2025-08-21 00:04:47.934 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.13
+2025-08-21 00:04:47.934 +05:30 [INF] Network is ready with IP: 192.168.1.13
+2025-08-21 00:04:48.013 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.13
+2025-08-21 00:04:48.023 +05:30 [INF] Django base URL: http://localhost:8000
+2025-08-21 00:04:48.028 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-21 00:04:48.082 +05:30 [INF] License Loaded: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 42750640
+}
+2025-08-21 00:04:48.187 +05:30 [INF] Starting license polling...
+2025-08-21 00:04:48.250 +05:30 [INF] HTTP API Server started on port 7890
+2025-08-21 00:04:48.251 +05:30 [INF] UDP broadcast listener started on port 41234.
+2025-08-21 00:04:48.257 +05:30 [INF] IP address: 192.168.1.13
+2025-08-21 00:04:48.451 +05:30 [INF] mDNS advertisement started using hostname: San and IP: 192.168.1.13:7890
+2025-08-21 00:04:48.454 +05:30 [INF] Re-advertising mDNS service...
+2025-08-21 00:04:48.454 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2025-08-21 00:04:48.454 +05:30 [INF] Hosting environment: Production
+2025-08-21 00:04:48.454 +05:30 [INF] Content root path: C:\Users\sanch\Desktop\Offlinesuite\beta_testers_ca\frontend
+2025-08-21 00:43:22.401 +05:30 [INF] Starting service...
+2025-08-21 00:43:22.479 +05:30 [INF] Actual log path: C:\Users\sanch\Desktop\Offlinesuite\beta_testers_ca\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-08-21 00:43:22.553 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-08-21 00:43:22.807 +05:30 [INF] [DeviceInfo Init] UUID: 6F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-21 00:43:22.808 +05:30 [INF] [DeviceInfo Init] MAC Address: 00:50:56:C0:00:01
+2025-08-21 00:43:22.808 +05:30 [INF] [DeviceInfo Init] Hostname: SAN
+2025-08-21 00:43:22.809 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-21-4075903880-4100643163-549963829-1001
+2025-08-21 00:43:22.809 +05:30 [INF] [DeviceInfo Init] Username: sanch
+2025-08-21 00:43:22.814 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-08-21 00:43:22.815 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 272 bytes
+2025-08-21 00:43:22.821 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-21 00:43:22.951 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 45065859
+}
+2025-08-21 00:43:22.951 +05:30 [INF] LicenseInfoProvider initialized.
+2025-08-21 00:43:22.952 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 45065859
+}
+2025-08-21 00:43:22.952 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 1
+2025-08-21 00:43:22.953 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\session-cache.enc
+2025-08-21 00:43:22.954 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-21 00:43:23.025 +05:30 [ERR] Decryption failed. The license file may be corrupted or tampered with: Padding is invalid and cannot be removed.
+2025-08-21 00:43:23.025 +05:30 [ERR] Failed to load session cache: Exception of type 'System.Exception' was thrown.
+2025-08-21 00:43:23.031 +05:30 [INF] Worker initialized.
+2025-08-21 00:43:23.043 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-08-21 00:43:23.045 +05:30 [INF] Waiting for network to be ready...
+2025-08-21 00:43:23.147 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.13
+2025-08-21 00:43:23.147 +05:30 [INF] Network is ready with IP: 192.168.1.13
+2025-08-21 00:43:23.218 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.13
+2025-08-21 00:43:23.228 +05:30 [INF] Django base URL: http://localhost:8000
+2025-08-21 00:43:23.232 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-21 00:43:23.288 +05:30 [INF] License Loaded: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 45065859
+}
+2025-08-21 00:43:23.387 +05:30 [INF] Starting license polling...
+2025-08-21 00:43:23.465 +05:30 [INF] HTTP API Server started on port 7890
+2025-08-21 00:43:23.465 +05:30 [INF] UDP broadcast listener started on port 41234.
+2025-08-21 00:43:23.470 +05:30 [INF] IP address: 192.168.1.13
+2025-08-21 00:43:23.680 +05:30 [INF] mDNS advertisement started using hostname: San and IP: 192.168.1.13:7890
+2025-08-21 00:43:23.682 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2025-08-21 00:43:23.682 +05:30 [INF] Hosting environment: Production
+2025-08-21 00:43:23.682 +05:30 [INF] Content root path: C:\Users\sanch\Desktop\Offlinesuite\beta_testers_ca\frontend
+2025-08-21 00:43:23.683 +05:30 [INF] Re-advertising mDNS service...
+2025-08-21 00:43:27.522 +05:30 [ERR] [License Polling] Exception occurred
+System.Net.Http.HttpRequestException: No connection could be made because the target machine actively refused it. (localhost:8000)
+ ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Sockets.Socket.<ConnectAsync>g__WaitForConnectWithCancellation|285_0(AwaitableSocketAsyncEventArgs saea, ValueTask connectTask, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   at MyLanService.HttpApiHost.TryResyncLicenseAsync(CancellationToken stoppingToken)
+2025-08-21 00:43:27.545 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-08-21 00:46:42.641 +05:30 [INF] Starting service...
+2025-08-21 00:46:42.702 +05:30 [INF] Actual log path: C:\Users\sanch\Desktop\Offlinesuite\beta_testers_ca\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-08-21 00:46:42.733 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-08-21 00:46:42.945 +05:30 [INF] [DeviceInfo Init] UUID: 6F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-21 00:46:42.946 +05:30 [INF] [DeviceInfo Init] MAC Address: 00:50:56:C0:00:01
+2025-08-21 00:46:42.946 +05:30 [INF] [DeviceInfo Init] Hostname: SAN
+2025-08-21 00:46:42.946 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-21-4075903880-4100643163-549963829-1001
+2025-08-21 00:46:42.946 +05:30 [INF] [DeviceInfo Init] Username: sanch
+2025-08-21 00:46:42.951 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-08-21 00:46:42.951 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 272 bytes
+2025-08-21 00:46:42.956 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-21 00:46:43.111 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 45266015
+}
+2025-08-21 00:46:43.111 +05:30 [INF] LicenseInfoProvider initialized.
+2025-08-21 00:46:43.112 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 45266015
+}
+2025-08-21 00:46:43.112 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 1
+2025-08-21 00:46:43.113 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\session-cache.enc
+2025-08-21 00:46:43.114 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-21 00:46:43.197 +05:30 [ERR] Decryption failed. The license file may be corrupted or tampered with: Padding is invalid and cannot be removed.
+2025-08-21 00:46:43.198 +05:30 [ERR] Failed to load session cache: Exception of type 'System.Exception' was thrown.
+2025-08-21 00:46:43.205 +05:30 [INF] Worker initialized.
+2025-08-21 00:46:43.213 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-08-21 00:46:43.214 +05:30 [INF] Waiting for network to be ready...
+2025-08-21 00:46:43.326 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.13
+2025-08-21 00:46:43.327 +05:30 [INF] Network is ready with IP: 192.168.1.13
+2025-08-21 00:46:43.422 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.13
+2025-08-21 00:46:43.434 +05:30 [INF] Django base URL: http://localhost:8000
+2025-08-21 00:46:43.439 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-21 00:46:43.503 +05:30 [INF] License Loaded: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 45266015
+}
+2025-08-21 00:46:43.605 +05:30 [INF] Starting license polling...
+2025-08-21 00:46:43.672 +05:30 [INF] HTTP API Server started on port 7890
+2025-08-21 00:46:43.672 +05:30 [INF] UDP broadcast listener started on port 41234.
+2025-08-21 00:46:43.678 +05:30 [INF] IP address: 192.168.1.13
+2025-08-21 00:46:43.876 +05:30 [INF] mDNS advertisement started using hostname: San and IP: 192.168.1.13:7890
+2025-08-21 00:46:43.879 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2025-08-21 00:46:43.879 +05:30 [INF] Hosting environment: Production
+2025-08-21 00:46:43.879 +05:30 [INF] Content root path: C:\Users\sanch\Desktop\Offlinesuite\beta_testers_ca\frontend
+2025-08-21 00:46:43.880 +05:30 [INF] Re-advertising mDNS service...
+2025-08-21 00:46:47.731 +05:30 [ERR] [License Polling] Exception occurred
+System.Net.Http.HttpRequestException: No connection could be made because the target machine actively refused it. (localhost:8000)
+ ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Sockets.Socket.<ConnectAsync>g__WaitForConnectWithCancellation|285_0(AwaitableSocketAsyncEventArgs saea, ValueTask connectTask, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   at MyLanService.HttpApiHost.TryResyncLicenseAsync(CancellationToken stoppingToken)
+2025-08-21 00:46:47.762 +05:30 [WRN] [License Polling] Failed to resync license.
