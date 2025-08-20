@@ -1,0 +1,320 @@
+2025-08-20 11:16:44.561 +05:30 [INF] Starting service...
+2025-08-20 11:16:44.647 +05:30 [INF] Actual log path: C:\Users\sanch\Desktop\Offlinesuite\beta_testers_ca\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-08-20 11:16:44.682 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-08-20 11:16:44.896 +05:30 [INF] [DeviceInfo Init] UUID: 6F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-20 11:16:44.897 +05:30 [INF] [DeviceInfo Init] MAC Address: 00:50:56:C0:00:01
+2025-08-20 11:16:44.897 +05:30 [INF] [DeviceInfo Init] Hostname: SAN
+2025-08-20 11:16:44.897 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-21-4075903880-4100643163-549963829-1001
+2025-08-20 11:16:44.898 +05:30 [INF] [DeviceInfo Init] Username: sanch
+2025-08-20 11:16:44.903 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-08-20 11:16:44.912 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 192 bytes
+2025-08-20 11:16:44.919 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-20 11:16:45.047 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "license_key": "Testing2",
+  "current_timestamp": 1750755185.618072,
+  "expiry_timestamp": 1753347185.618072,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 1297348875
+}
+2025-08-20 11:16:45.047 +05:30 [INF] LicenseInfoProvider initialized.
+2025-08-20 11:16:45.048 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "license_key": "Testing2",
+  "current_timestamp": 1750755185.618072,
+  "expiry_timestamp": 1753347185.618072,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 1297348875
+}
+2025-08-20 11:16:45.048 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 0
+2025-08-20 11:16:45.050 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\session-cache.enc
+2025-08-20 11:16:45.060 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-20 11:16:45.128 +05:30 [ERR] Decryption failed. The license file may be corrupted or tampered with: Padding is invalid and cannot be removed.
+2025-08-20 11:16:45.129 +05:30 [ERR] Failed to load session cache: Exception of type 'System.Exception' was thrown.
+2025-08-20 11:16:45.135 +05:30 [INF] Worker initialized.
+2025-08-20 11:16:45.148 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-08-20 11:16:45.149 +05:30 [INF] Waiting for network to be ready...
+2025-08-20 11:16:45.299 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.13
+2025-08-20 11:16:45.300 +05:30 [INF] Network is ready with IP: 192.168.1.13
+2025-08-20 11:16:45.433 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.13
+2025-08-20 11:16:45.465 +05:30 [INF] Django base URL: https://cyphersol.co.in
+2025-08-20 11:16:45.470 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-20 11:16:45.565 +05:30 [INF] License Loaded: {
+  "license_key": "Testing2",
+  "current_timestamp": 1750755185.618072,
+  "expiry_timestamp": 1753347185.618072,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 1297348875
+}
+2025-08-20 11:16:45.684 +05:30 [INF] Starting license polling...
+2025-08-20 11:16:45.750 +05:30 [INF] HTTP API Server started on port 7890
+2025-08-20 11:16:45.751 +05:30 [INF] UDP broadcast listener started on port 41234.
+2025-08-20 11:16:45.755 +05:30 [INF] IP address: 192.168.1.13
+2025-08-20 11:16:45.868 +05:30 [INF] [License Polling] Expiry: 1757658635.560683
+2025-08-20 11:16:45.868 +05:30 [INF] [SetExpiry] Updating license expiry from 1753347185.618072 to 1757658635.560683
+2025-08-20 11:16:45.869 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1750755185.618072 to 1755668805.861685
+2025-08-20 11:16:45.869 +05:30 [INF] [SetSystemUpTime] Updating license system up time from 1297348875 to 1297349703
+2025-08-20 11:16:45.870 +05:30 [INF] [License Polling] LicenseInfo: {
+  "license_key": "Testing2",
+  "current_timestamp": 1755668805.861685,
+  "expiry_timestamp": 1757658635.560683,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 1297349703
+}
+2025-08-20 11:16:45.870 +05:30 [INF] [License Polling] LicenseInfo: {
+  "license_key": "Testing2",
+  "current_timestamp": 1755668805.861685,
+  "expiry_timestamp": 1757658635.560683,
+  "number_of_users": 1,
+  "number_of_statements": 100,
+  "role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 1297349703
+}
+2025-08-20 11:16:45.870 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-20 11:16:46.054 +05:30 [INF] mDNS advertisement started using hostname: San and IP: 192.168.1.13:7890
+2025-08-20 11:16:46.058 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2025-08-20 11:16:46.058 +05:30 [INF] Hosting environment: Production
+2025-08-20 11:16:46.058 +05:30 [INF] Content root path: C:\Users\sanch\Desktop\Offlinesuite\beta_testers_ca\frontend\gatewayServer
+2025-08-20 11:16:46.059 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:17:46.078 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:18:46.089 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:19:46.100 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:20:46.105 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:21:34.587 +05:30 [INF] Django API response: {"detail":"License key is already in use with a different device."}
+2025-08-20 11:21:34.587 +05:30 [ERR] Django API returned error: {"detail":"License key is already in use with a different device."}
+2025-08-20 11:21:41.870 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:21:41.871 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:21:46.118 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:22:46.123 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:23:46.123 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:24:14.661 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:24:14.661 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:24:16.787 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:24:16.788 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:24:17.385 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:24:17.385 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:24:17.749 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:24:17.749 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:24:17.989 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:24:17.989 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:24:18.161 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:24:18.161 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:24:18.320 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:24:18.321 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:24:18.453 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:24:18.453 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:24:25.029 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:24:25.029 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:24:46.130 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:25:46.142 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:26:46.157 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:27:44.380 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:27:44.380 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:27:45.671 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:27:45.672 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:27:46.160 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:27:46.201 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:27:46.201 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:27:46.398 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:27:46.398 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:27:46.566 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:27:46.566 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:27:46.718 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:27:46.718 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:27:46.865 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:27:46.865 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:27:47.003 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:27:47.003 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:27:47.156 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:27:47.156 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:27:47.293 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:27:47.293 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:27:47.432 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:27:47.432 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:27:47.717 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:27:47.717 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:27:47.805 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:27:47.805 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:27:48.187 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:27:48.187 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:27:48.315 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:27:48.315 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:27:48.427 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:27:48.427 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:27:48.563 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:27:48.563 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:27:48.688 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:27:48.688 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:27:49.007 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:27:49.007 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:27:49.347 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:27:49.347 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:27:49.661 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:27:49.661 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:27:50.077 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:27:50.077 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:27:50.223 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:27:50.223 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:27:50.576 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:27:50.576 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:27:50.824 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:27:50.824 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:27:51.015 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:27:51.015 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:27:51.389 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:27:51.389 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:27:51.529 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:27:51.529 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:27:51.834 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:27:51.834 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:27:52.072 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:27:52.072 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:27:52.576 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:27:52.576 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:27:52.869 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:27:52.869 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:28:46.162 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:29:46.173 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:30:46.187 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:31:46.198 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:32:46.209 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:33:46.209 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:34:37.364 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:34:37.364 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:34:46.210 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:34:50.134 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:34:50.134 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:34:51.244 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:34:51.244 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:35:46.214 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:36:46.223 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:37:46.237 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:38:41.814 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:38:41.814 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:38:46.240 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:38:48.105 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:38:48.105 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:39:46.249 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:40:30.601 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:40:30.601 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:40:46.259 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:40:59.296 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:40:59.296 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:41:02.256 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:41:02.256 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:41:02.832 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:41:02.833 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:41:03.302 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:41:03.302 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:41:03.583 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:41:03.583 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:41:03.756 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:41:03.756 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:41:04.046 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:41:04.046 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:41:04.188 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:41:04.188 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:41:04.332 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:41:04.332 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:41:04.602 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:41:04.602 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:41:04.814 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:41:04.814 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:41:05.022 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:41:05.022 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:41:05.312 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:41:05.312 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:41:05.557 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:41:05.557 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:41:06.407 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:41:06.407 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:41:06.699 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:41:06.699 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:41:17.009 +05:30 [INF] Django API response: {"detail":"License key is already in use with a different device."}
+2025-08-20 11:41:17.009 +05:30 [ERR] Django API returned error: {"detail":"License key is already in use with a different device."}
+2025-08-20 11:41:46.267 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:42:46.279 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:43:46.295 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:44:46.305 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:45:46.312 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:46:46.324 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:47:05.383 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:47:05.383 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:47:07.048 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:47:07.048 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:47:07.326 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:47:07.326 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:47:07.660 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:47:07.660 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:47:07.973 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:47:07.973 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:47:08.259 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:47:08.259 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:47:08.561 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:47:08.561 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:47:08.930 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:47:08.930 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:47:46.328 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:48:46.341 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:49:46.353 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:50:46.368 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:51:31.318 +05:30 [INF] Django API response: {"detail":"License key has expired."}
+2025-08-20 11:51:31.318 +05:30 [ERR] Django API returned error: {"detail":"License key has expired."}
+2025-08-20 11:51:46.376 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:52:46.376 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:53:46.391 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:54:46.397 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:55:46.412 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:55:46.600 +05:30 [INF] Django API response: {"license_key":"1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50","current_timestamp":1755671146.534516,"expiry_timestamp":1786775146.534516,"number_of_users":1,"number_of_statements":500,"used_statements":0}
+2025-08-20 11:55:46.605 +05:30 [INF] Final JSON before encryption: {"license_key":"1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50","current_timestamp":1755671146.534516,"expiry_timestamp":1786775146.534516,"number_of_users":1,"number_of_statements":500,"used_statements":0,"role":"CA"}
+2025-08-20 11:55:46.606 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-20 11:55:46.654 +05:30 [INF] Successfully encrypted license JSON: 240 bytes
+2025-08-20 11:55:46.655 +05:30 [INF] Writing async license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-20 11:55:46.656 +05:30 [ERR] Error writing file: Access to the path 'C:\ProgramData\Cyphersol\license.enc' is denied.
+2025-08-20 11:55:46.656 +05:30 [ERR] Error saving encrypted license file: Exception of type 'System.Exception' was thrown.
+2025-08-20 11:55:46.656 +05:30 [ERR] Error calling Django validation API: Something went wrong
+2025-08-20 11:56:15.850 +05:30 [INF] Django API response: {"license_key":"1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50","current_timestamp":1755671175.800454,"expiry_timestamp":1786775146.534516,"number_of_users":1,"number_of_statements":500,"used_statements":500}
+2025-08-20 11:56:15.850 +05:30 [INF] Final JSON before encryption: {"license_key":"1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50","current_timestamp":1755671175.800454,"expiry_timestamp":1786775146.534516,"number_of_users":1,"number_of_statements":500,"used_statements":500,"role":"CA"}
+2025-08-20 11:56:15.850 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-20 11:56:15.904 +05:30 [INF] Successfully encrypted license JSON: 240 bytes
+2025-08-20 11:56:15.904 +05:30 [INF] Writing async license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-20 11:56:15.905 +05:30 [ERR] Error writing file: Access to the path 'C:\ProgramData\Cyphersol\license.enc' is denied.
+2025-08-20 11:56:15.905 +05:30 [ERR] Error saving encrypted license file: Exception of type 'System.Exception' was thrown.
+2025-08-20 11:56:15.905 +05:30 [ERR] Error calling Django validation API: Something went wrong
+2025-08-20 11:56:46.413 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:57:46.429 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:58:17.669 +05:30 [INF] Django API response: {"license_key":"1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50","current_timestamp":1755671297.615557,"expiry_timestamp":1786775146.534516,"number_of_users":1,"number_of_statements":500,"used_statements":500}
+2025-08-20 11:58:17.669 +05:30 [INF] Final JSON before encryption: {"license_key":"1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50","current_timestamp":1755671297.615557,"expiry_timestamp":1786775146.534516,"number_of_users":1,"number_of_statements":500,"used_statements":500,"role":"CA"}
+2025-08-20 11:58:17.670 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-20 11:58:17.719 +05:30 [INF] Successfully encrypted license JSON: 240 bytes
+2025-08-20 11:58:17.719 +05:30 [INF] Writing async license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-20 11:58:17.719 +05:30 [ERR] Error writing file: Access to the path 'C:\ProgramData\Cyphersol\license.enc' is denied.
+2025-08-20 11:58:17.719 +05:30 [ERR] Error saving encrypted license file: Exception of type 'System.Exception' was thrown.
+2025-08-20 11:58:17.719 +05:30 [ERR] Error calling Django validation API: Something went wrong
+2025-08-20 11:58:46.433 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 11:59:46.445 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 12:00:46.450 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 12:01:46.461 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 12:02:46.468 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 12:03:46.470 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 12:04:46.471 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 12:05:46.476 +05:30 [INF] Re-advertising mDNS service...
+2025-08-20 12:05:47.539 +05:30 [INF] Django API response: {"license_key":"1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50","current_timestamp":1755671747.47573,"expiry_timestamp":1786775146.534516,"number_of_users":1,"number_of_statements":500,"used_statements":500}
+2025-08-20 12:05:47.539 +05:30 [INF] Final JSON before encryption: {"license_key":"1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50","current_timestamp":1755671747.47573,"expiry_timestamp":1786775146.534516,"number_of_users":1,"number_of_statements":500,"used_statements":500,"role":"CA"}
+2025-08-20 12:05:47.539 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-20 12:05:47.591 +05:30 [INF] Successfully encrypted license JSON: 240 bytes
+2025-08-20 12:05:47.591 +05:30 [INF] Writing async license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-20 12:05:47.591 +05:30 [ERR] Error writing file: Access to the path 'C:\ProgramData\Cyphersol\license.enc' is denied.
+2025-08-20 12:05:47.591 +05:30 [ERR] Error saving encrypted license file: Exception of type 'System.Exception' was thrown.
+2025-08-20 12:05:47.592 +05:30 [ERR] Error calling Django validation API: Something went wrong

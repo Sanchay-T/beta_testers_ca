@@ -2381,6 +2381,57 @@ app.whenReady().then(async () => {
     commandLineArgs: process.argv,
   });
 
+  // 🔍 STEP -1: SYSTEM COMPATIBILITY CHECK (CRITICAL FIRST STEP)
+  log.info("📋 INITIALIZATION STEP -1: SYSTEM COMPATIBILITY CHECK");
+  try {
+    const { SystemCompatibilityChecker } = require("./SystemCompatibilityChecker");
+    const compatStartTime = Date.now();
+    
+    log.info("🔍 Starting comprehensive system compatibility check...");
+    const compatChecker = new SystemCompatibilityChecker();
+    const compatResult = await compatChecker.runFullCheck();
+    
+    const compatEndTime = Date.now();
+    const compatDuration = compatEndTime - compatStartTime;
+    
+    if (!compatResult.canProceed) {
+      log.error("❌ CRITICAL: System compatibility check failed", {
+        duration: compatDuration,
+        issues: compatResult.results.issues.length,
+        warnings: compatResult.results.warnings.length,
+        canProceed: compatResult.canProceed,
+      });
+      
+      // Show final message and exit gracefully
+      log.info("🛑 Application startup terminated due to compatibility issues");
+      app.quit();
+      return;
+    }
+    
+    log.info("✅ System compatibility check passed", {
+      duration: compatDuration,
+      successes: compatResult.results.successes.length,
+      warnings: compatResult.results.warnings.length,
+      issues: compatResult.results.issues.length,
+      canProceed: compatResult.canProceed,
+    });
+    
+    if (compatResult.results.warnings.length > 0) {
+      log.warn("⚠️ Compatibility warnings detected - proceeding with fallback configuration", {
+        warnings: compatResult.results.warnings.map(w => w.test),
+      });
+    }
+    
+  } catch (error) {
+    log.error("💥 Compatibility check crashed - proceeding with startup anyway", {
+      error: error.message,
+      stack: error.stack,
+    });
+    
+    // Don't block startup if compatibility checker itself fails
+    // This ensures we don't break existing functionality
+  }
+
   // 🎯 STEP 0: CREATE SPLASH SCREEN FIRST
   log.info("📋 INITIALIZATION STEP 0: SPLASH SCREEN CREATION");
   try {
