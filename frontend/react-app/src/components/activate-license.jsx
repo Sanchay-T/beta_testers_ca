@@ -36,6 +36,7 @@ import { motion } from "framer-motion";
 import { AdminPermissionPrompt } from "./AdminPermissionPrompt";
 // import { set } from "react-datepicker/dist/date_utils";
 
+
 export function LicenseActivationForm({ className, ...props }) {
   const { login, loading, error, successMessage, isActivated, isSignedUp, signUp, setIsActivated, setError, setSuccessMessage } = useAuth();
   const navigate = useNavigate();

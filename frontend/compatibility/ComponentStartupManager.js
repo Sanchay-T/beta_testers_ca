@@ -371,12 +371,20 @@ class ComponentStartupManager {
     
     try {
       // First, check if Gateway service is already running
-      this.logger?.debug('GATEWAY_VERIFY', 'Checking if Gateway service is already running');
+      this.logger?.info('GATEWAY_VERIFY', 'Starting Gateway service verification process');
+      this.logger?.info('GATEWAY_VERIFY', 'Step 1: Checking if Gateway service is already running', {
+        expectedPort: this.ports.gateway,
+        healthEndpoint: `http://localhost:${this.ports.gateway}/api/health`
+      });
       this.sendProgressUpdate('Component Auto-Startup & Verification', 'CypherEdge Component Flow Test', 'testing', '🔍 Detecting existing Gateway service...');
       
       const healthResult = await this.waitForGatewayHealth();
       
       if (healthResult.success) {
+        this.logger?.info('GATEWAY_VERIFY', '✅ Gateway service already running and healthy!', {
+          attempts: healthResult.attempts,
+          responseData: healthResult.data
+        });
         this.sendProgressUpdate('Component Auto-Startup & Verification', 'CypherEdge Component Flow Test', 'testing', '✅ Gateway service already running and healthy!');
         timer?.stop();
         return {
@@ -392,7 +400,7 @@ class ComponentStartupManager {
       }
       
       // If not running, try to start it
-      this.logger?.info('GATEWAY_VERIFY', 'Gateway service not running, attempting to start');
+      this.logger?.info('GATEWAY_VERIFY', 'Step 2: Gateway service not responding - attempting to start new instance');
       this.sendProgressUpdate('Component Auto-Startup & Verification', 'CypherEdge Component Flow Test', 'testing', '🚀 Starting Gateway service...');
       const startResult = await this.startGatewayService();
       timer?.stop();
@@ -473,27 +481,50 @@ class ComponentStartupManager {
   async startGatewayProcess(gatewayPath) {
     return new Promise((resolve) => {
       try {
-        this.logger?.debug('GATEWAY_PROCESS', 'Starting Gateway process', { gatewayPath });
+        this.logger?.info('GATEWAY_PROCESS', 'Starting Gateway process', { 
+          gatewayPath, 
+          workingDirectory: process.cwd(),
+          nodeEnv: process.env.NODE_ENV,
+          isDev: this.isDev
+        });
 
         this.processes.gateway = spawn(gatewayPath, [], {
           detached: false,
           stdio: ['ignore', 'pipe', 'pipe']
         });
 
+        this.logger?.info('GATEWAY_PROCESS', 'Gateway process spawned', { 
+          pid: this.processes.gateway.pid,
+          gatewayPath
+        });
+
         let output = '';
         let errorOutput = '';
 
         this.processes.gateway.stdout?.on('data', (data) => {
-          output += data.toString();
-          this.logger?.debug('GATEWAY_STDOUT', data.toString());
+          const outputStr = data.toString();
+          output += outputStr;
+          this.logger?.info('GATEWAY_STDOUT', `Gateway output: ${outputStr.trim()}`);
+          
+          // Look for specific startup indicators
+          if (outputStr.includes('HTTP API Server started') || outputStr.includes('Application started')) {
+            this.logger?.info('GATEWAY_PROCESS', '🎯 Gateway startup indicator detected!', { indicator: outputStr.trim() });
+          }
         });
 
         this.processes.gateway.stderr?.on('data', (data) => {
-          errorOutput += data.toString();
-          this.logger?.debug('GATEWAY_STDERR', data.toString());
+          const errorStr = data.toString();
+          errorOutput += errorStr;
+          this.logger?.warn('GATEWAY_STDERR', `Gateway error output: ${errorStr.trim()}`);
         });
 
         this.processes.gateway.on('error', (error) => {
+          this.logger?.error('GATEWAY_PROCESS', 'Gateway process error event', { 
+            error: error.message, 
+            code: error.code,
+            errno: error.errno,
+            syscall: error.syscall
+          });
           resolve({
             success: false,
             message: `Gateway process failed to start: ${error.message}`,
@@ -502,6 +533,14 @@ class ComponentStartupManager {
         });
 
         this.processes.gateway.on('exit', (code, signal) => {
+          this.logger?.warn('GATEWAY_PROCESS', 'Gateway process exit event', { 
+            exitCode: code, 
+            signal,
+            pid: this.processes.gateway?.pid,
+            outputLength: output.length,
+            errorOutputLength: errorOutput.length
+          });
+          
           if (code !== 0 && code !== null) {
             resolve({
               success: false,
@@ -511,19 +550,38 @@ class ComponentStartupManager {
           }
         });
 
-        // Give gateway time to start
-        setTimeout(() => {
+        // Give gateway time to start - increased timeout for better logging
+        const startupTimeout = setTimeout(() => {
+          this.logger?.info('GATEWAY_PROCESS', 'Gateway startup timeout reached', {
+            timeoutMs: this.timeouts.startup,
+            isRunning: this.processes.gateway && !this.processes.gateway.killed,
+            pid: this.processes.gateway?.pid,
+            outputLength: output.length,
+            errorOutputLength: errorOutput.length,
+            hasOutput: output.length > 0,
+            hasErrorOutput: errorOutput.length > 0
+          });
+          
           if (this.processes.gateway && !this.processes.gateway.killed) {
+            this.logger?.info('GATEWAY_PROCESS', '✅ Gateway process appears to be running - proceeding to health checks');
             resolve({
               success: true,
               output,
-              pid: this.processes.gateway.pid
+              pid: this.processes.gateway.pid,
+              note: 'Process running but startup confirmation timeout reached'
             });
           } else {
+            this.logger?.error('GATEWAY_PROCESS', '❌ Gateway process failed to start within timeout');
             resolve({
               success: false,
               message: 'Gateway process failed to start within timeout',
-              details: { output, errorOutput }
+              details: { 
+                timeoutMs: this.timeouts.startup,
+                output, 
+                errorOutput,
+                hasOutput: output.length > 0,
+                hasErrorOutput: errorOutput.length > 0
+              }
             });
           }
         }, this.timeouts.startup);
@@ -539,12 +597,14 @@ class ComponentStartupManager {
   }
 
   async waitForGatewayHealth() {
-    const maxAttempts = 5;  // Reduced attempts for quicker detection
-    const attemptDelay = 500;  // Faster checks
+    const maxAttempts = 20;  // Match main app timeout strategy (20 seconds total)
+    const attemptDelay = 1000;  // 1 second intervals like main app
+
+    this.logger?.info('GATEWAY_HEALTH', `Starting Gateway health check with ${maxAttempts} attempts, ${attemptDelay}ms intervals (${maxAttempts * attemptDelay / 1000}s total timeout)`);
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        this.logger?.debug('GATEWAY_HEALTH', `Gateway health check attempt ${attempt}/${maxAttempts}`);
+        this.logger?.info('GATEWAY_HEALTH', `[${attempt}/${maxAttempts}] Testing Gateway health endpoint...`);
         
         // Test Gateway endpoint (adjust URL based on your actual Gateway endpoints)
         let fetch;
@@ -570,43 +630,73 @@ class ComponentStartupManager {
         }
 
         // Test basic Gateway endpoint (you may need to adjust this URL)
-        const response = await fetch(`http://localhost:${this.ports.gateway}/api/health`, {
+        const healthUrl = `http://localhost:${this.ports.gateway}/api/health`;
+        this.logger?.info('GATEWAY_HEALTH', `[${attempt}/${maxAttempts}] Attempting connection to: ${healthUrl}`);
+        
+        const response = await fetch(healthUrl, {
           method: 'GET',
           timeout: this.timeouts.healthCheck
         });
 
+        this.logger?.info('GATEWAY_HEALTH', `[${attempt}/${maxAttempts}] Response received`, {
+          status: response.status,
+          ok: response.ok,
+          url: healthUrl
+        });
+
         if (response.ok) {
           const data = await response.json();
-          this.logger?.info('GATEWAY_HEALTH', 'Gateway service health check passed', { 
+          this.logger?.info('GATEWAY_HEALTH', `[${attempt}/${maxAttempts}] ✅ Gateway service health check PASSED!`, { 
             attempt, 
             status: response.status,
-            data 
+            data,
+            totalTimeMs: attempt * attemptDelay
           });
           
           return {
             success: true,
             attempts: attempt,
             data,
-            url: `http://localhost:${this.ports.gateway}/api/health`
+            url: healthUrl
           };
+        } else {
+          this.logger?.warn('GATEWAY_HEALTH', `[${attempt}/${maxAttempts}] Gateway health check failed - bad status`, {
+            status: response.status,
+            statusText: response.statusText,
+            url: healthUrl
+          });
         }
 
       } catch (error) {
-        this.logger?.debug('GATEWAY_HEALTH', `Gateway health check attempt ${attempt} failed`, { 
+        this.logger?.warn('GATEWAY_HEALTH', `[${attempt}/${maxAttempts}] ❌ Gateway health check attempt failed`, { 
           error: error.message,
-          code: error.code 
+          code: error.code,
+          errno: error.errno,
+          syscall: error.syscall,
+          address: error.address,
+          port: error.port,
+          url: `http://localhost:${this.ports.gateway}/api/health`
         });
       }
 
       if (attempt < maxAttempts) {
+        this.logger?.info('GATEWAY_HEALTH', `[${attempt}/${maxAttempts}] Waiting ${attemptDelay}ms before next attempt...`);
         await new Promise(resolve => setTimeout(resolve, attemptDelay));
       }
     }
 
+    this.logger?.error('GATEWAY_HEALTH', `❌ Gateway service health checks FAILED after all attempts`, {
+      totalAttempts: maxAttempts,
+      totalTimeoutMs: maxAttempts * attemptDelay,
+      totalTimeoutSec: maxAttempts * attemptDelay / 1000,
+      url: `http://localhost:${this.ports.gateway}/api/health`,
+      recommendedAction: 'Check if Gateway service is actually running and accessible'
+    });
+
     return {
       success: false,
       attempts: maxAttempts,
-      error: 'Gateway service health checks failed after all attempts',
+      error: `Gateway service health checks failed after ${maxAttempts} attempts (${maxAttempts * attemptDelay / 1000}s timeout)`,
       url: `http://localhost:${this.ports.gateway}/api/health`
     };
   }

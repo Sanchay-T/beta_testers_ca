@@ -26,8 +26,9 @@ class IsolatedCompatibilityBubble {
     this.timeouts = {
       cleanup: 10000,    // 10 seconds to kill existing processes
       startup: 20000,    // 20 seconds to start our processes
-      healthCheck: 5000, // 5 seconds for health checks
-      shutdown: 5000     // 5 seconds to clean up our processes
+      healthCheck: 20000, // 20 seconds for health checks (match main app)
+      shutdown: 5000,    // 5 seconds to clean up our processes
+      gateway: 30000     // 30 seconds specifically for Gateway (includes PostgreSQL startup)
     };
   }
 
@@ -334,22 +335,85 @@ class IsolatedCompatibilityBubble {
           return;
         }
         
+        // Set working directory to match main application behavior
+        const gatewayWorkingDir = this.isDev
+          ? path.join(__dirname, '../gatewayServer')
+          : process.resourcesPath;
+        
         this.controlledProcesses.gateway = spawn(gatewayPath, [], {
           stdio: 'pipe',
-          detached: false
+          detached: false,
+          cwd: gatewayWorkingDir  // Critical: Gateway needs correct working directory for config files
         });
+        
+        this.sendLiveUpdate(`🔧 Gateway working directory set to: ${gatewayWorkingDir}`);
+        
+        // Verify Gateway configuration files exist (critical for startup)
+        const appSettingsPath = this.isDev 
+          ? path.join(__dirname, '../gatewayServer/appsettings.json')
+          : path.join(process.resourcesPath, 'appsettings.json');
+        
+        if (fs.existsSync(appSettingsPath)) {
+          this.sendLiveUpdate(`✅ Gateway configuration found: ${path.basename(appSettingsPath)}`);
+        } else {
+          this.sendLiveUpdate(`⚠️ Gateway configuration missing: ${appSettingsPath}`);
+        }
+        
+        // Check PostgreSQL data directory (source of startup hangs)
+        const pgDataPath = 'C:\\ProgramData\\Cyphersol\\pgdata';
+        const dbConfigPath = 'C:\\ProgramData\\Cyphersol\\database_config.json';
+        
+        if (fs.existsSync(pgDataPath)) {
+          this.sendLiveUpdate(`✅ PostgreSQL data directory exists: ${pgDataPath}`);
+        } else {
+          this.sendLiveUpdate(`⚠️ PostgreSQL data directory missing: ${pgDataPath}`);
+        }
+        
+        if (fs.existsSync(dbConfigPath)) {
+          this.sendLiveUpdate(`✅ Database configuration exists: ${dbConfigPath}`);
+        } else {
+          this.sendLiveUpdate(`⚠️ Database configuration missing: ${dbConfigPath}`);
+        }
         
         let output = '';
         let errorOutput = '';
         
+        // Track Gateway startup progress with specific PostgreSQL monitoring
+        let postgresqlStarted = false;
+        let httpServerStarted = false;
+        
         this.controlledProcesses.gateway.stdout.on('data', (data) => {
           output += data.toString();
-          this.sendLiveUpdate(`🚪 Gateway: ${data.toString().trim()}`);
+          const outputStr = data.toString().trim();
+          
+          // Detect PostgreSQL startup phase
+          if (outputStr.includes('Starting embedded Postgres')) {
+            this.sendLiveUpdate('🗄️ Gateway: Initializing PostgreSQL database...');
+            postgresqlStarted = true;
+          } else if (outputStr.includes('HTTP API Server started on port 7890')) {
+            this.sendLiveUpdate('✅ Gateway: HTTP API Server ready on port 7890!');
+            httpServerStarted = true;
+          } else if (outputStr.includes('Application started')) {
+            this.sendLiveUpdate('✅ Gateway: Service fully initialized!');
+          } else {
+            this.sendLiveUpdate(`🚪 Gateway: ${outputStr}`);
+          }
         });
         
         this.controlledProcesses.gateway.stderr.on('data', (data) => {
           errorOutput += data.toString();
-          this.sendLiveUpdate(`🚪 Gateway Error: ${data.toString().trim()}`);
+          const errorStr = data.toString().trim();
+          
+          // Detect PostgreSQL-related errors
+          if (errorStr.includes('Postgres') || errorStr.includes('database')) {
+            this.sendLiveUpdate(`⚠️ Gateway Database Warning: ${errorStr}`);
+          } else if (errorStr.includes('port') && errorStr.includes('5432')) {
+            this.sendLiveUpdate(`⚠️ Gateway PostgreSQL Port Conflict: ${errorStr}`);
+          } else if (errorStr.includes('bind') || errorStr.includes('address already in use')) {
+            this.sendLiveUpdate(`⚠️ Gateway Port Binding Issue: ${errorStr}`);
+          } else {
+            this.sendLiveUpdate(`🚪 Gateway Error: ${errorStr}`);
+          }
         });
         
         this.controlledProcesses.gateway.on('error', (error) => {
@@ -363,21 +427,59 @@ class IsolatedCompatibilityBubble {
         // Wait for Gateway to start and test health
         setTimeout(async () => {
           try {
+            // Provide diagnostic information about startup state
+            if (postgresqlStarted && !httpServerStarted) {
+              this.sendLiveUpdate('⚠️ PostgreSQL started but HTTP server still initializing...');
+            } else if (!postgresqlStarted) {
+              this.sendLiveUpdate('⚠️ Gateway startup may be stuck before PostgreSQL initialization...');
+            }
+            
             this.sendLiveUpdate('🔍 Testing controlled Gateway health...');
             const healthResult = await this.testControlledGatewayHealth();
-            resolve({
-              success: healthResult.success,
-              message: healthResult.success ? 'Controlled Gateway service started successfully' : 'Controlled Gateway service failed health check',
-              details: { healthCheck: healthResult, output, errorOutput, pid: this.controlledProcesses.gateway?.pid }
-            });
+            
+            // Enhanced failure reporting with PostgreSQL context
+            if (!healthResult.success && postgresqlStarted && !httpServerStarted) {
+              resolve({
+                success: false,
+                message: 'Gateway PostgreSQL started but HTTP server failed to initialize',
+                details: { 
+                  healthCheck: healthResult, 
+                  output, 
+                  errorOutput, 
+                  pid: this.controlledProcesses.gateway?.pid,
+                  postgresqlStarted,
+                  httpServerStarted,
+                  diagnosis: 'PostgreSQL startup completed but HTTP API server did not start'
+                }
+              });
+            } else {
+              resolve({
+                success: healthResult.success,
+                message: healthResult.success ? 'Controlled Gateway service started successfully' : 'Controlled Gateway service failed health check',
+                details: { 
+                  healthCheck: healthResult, 
+                  output, 
+                  errorOutput, 
+                  pid: this.controlledProcesses.gateway?.pid,
+                  postgresqlStarted,
+                  httpServerStarted
+                }
+              });
+            }
           } catch (error) {
             resolve({
               success: false,
               message: `Gateway health check failed: ${error.message}`,
-              details: { error: error.message, output, errorOutput }
+              details: { 
+                error: error.message, 
+                output, 
+                errorOutput, 
+                postgresqlStarted, 
+                httpServerStarted 
+              }
             });
           }
-        }, 5000); // Give Gateway time to start
+        }, this.timeouts.gateway); // 30 seconds to accommodate PostgreSQL startup
         
       } catch (error) {
         resolve({
@@ -399,7 +501,7 @@ class IsolatedCompatibilityBubble {
       this.sendLiveUpdate(`📡 Testing health endpoint: ${healthUrl}`);
       
       const response = await axios.get(healthUrl, {
-        timeout: 5000,  // Increased timeout
+        timeout: 15000,  // Increased timeout to match Gateway startup time
         headers: { 'User-Agent': 'CypherEdge-IsolatedTest' }
       });
       
@@ -433,37 +535,65 @@ class IsolatedCompatibilityBubble {
 
   // Phase 3: Test controlled Gateway health
   async testControlledGatewayHealth() {
-    try {
-      this.sendLiveUpdate('🔍 Checking controlled Gateway health endpoint...');
-      
-      const axios = require('axios');
-      const response = await axios.get(`http://127.0.0.1:${this.ports.gateway}/api/health`, {
-        timeout: 3000,
-        headers: { 'User-Agent': 'CypherEdge-IsolatedTest' }
-      });
-      
-      if (response.status === 200) {
-        this.sendLiveUpdate('✅ Controlled Gateway service is healthy!');
-        return {
-          success: true,
-          message: 'Controlled Gateway service health check passed',
-          details: { status: response.status, data: response.data }
-        };
-      } else {
-        return {
-          success: false,
-          message: `Controlled Gateway health check returned status ${response.status}`,
-          details: { status: response.status, data: response.data }
-        };
+    const maxAttempts = 15;  // 15 attempts over 15 seconds
+    const attemptDelay = 1000;  // 1 second between attempts
+    
+    this.sendLiveUpdate(`🔍 Checking controlled Gateway health endpoint... (up to ${maxAttempts}s)`);
+    
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        this.logger?.info('BUBBLE_GATEWAY_HEALTH', `Gateway health check attempt ${attempt}/${maxAttempts}`);
+        
+        const axios = require('axios');
+        const response = await axios.get(`http://127.0.0.1:${this.ports.gateway}/api/health`, {
+          timeout: 5000,  // 5 second timeout per attempt
+          headers: { 'User-Agent': 'CypherEdge-IsolatedTest' }
+        });
+        
+        if (response.status === 200) {
+          this.sendLiveUpdate(`✅ Controlled Gateway service is healthy! (attempt ${attempt}/${maxAttempts})`);
+          this.logger?.info('BUBBLE_GATEWAY_HEALTH', `Gateway health check succeeded on attempt ${attempt}`);
+          return {
+            success: true,
+            message: `Controlled Gateway service health check passed (attempt ${attempt}/${maxAttempts})`,
+            details: { status: response.status, data: response.data, attempts: attempt }
+          };
+        } else {
+          this.logger?.warn('BUBBLE_GATEWAY_HEALTH', `Gateway health check bad status on attempt ${attempt}`, {
+            status: response.status,
+            data: response.data
+          });
+        }
+      } catch (error) {
+        this.logger?.warn('BUBBLE_GATEWAY_HEALTH', `Gateway health check failed on attempt ${attempt}`, {
+          error: error.message,
+          code: error.code
+        });
+        
+        if (attempt === maxAttempts) {
+          // Last attempt failed
+          this.sendLiveUpdate(`❌ Controlled Gateway health check failed after ${maxAttempts} attempts: ${error.message}`);
+          return {
+            success: false,
+            message: `Controlled Gateway health check failed after ${maxAttempts} attempts: ${error.message}`,
+            details: { error: error.message, attempts: maxAttempts, finalError: error.code }
+          };
+        }
       }
-    } catch (error) {
-      this.sendLiveUpdate(`❌ Controlled Gateway health check failed: ${error.message}`);
-      return {
-        success: false,
-        message: `Controlled Gateway health check failed: ${error.message}`,
-        details: { error: error.message, code: error.code }
-      };
+      
+      // Wait before next attempt (except on last attempt)
+      if (attempt < maxAttempts) {
+        this.sendLiveUpdate(`🔄 Gateway attempt ${attempt}/${maxAttempts} failed, retrying in ${attemptDelay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, attemptDelay));
+      }
     }
+    
+    // Should not reach here, but just in case
+    return {
+      success: false,
+      message: `Gateway health check failed after ${maxAttempts} attempts`,
+      details: { attempts: maxAttempts }
+    };
   }
 
   // Phase 3: Test controlled PDF processing
@@ -530,7 +660,7 @@ class IsolatedCompatibilityBubble {
       
       const axios = require('axios');
       const response = await axios.get(`http://127.0.0.1:${this.ports.gateway}/api/health`, {
-        timeout: 3000,
+        timeout: 15000,  // Increased timeout to match Gateway startup time
         headers: { 'User-Agent': 'CypherEdge-IsolatedTest' }
       });
       
