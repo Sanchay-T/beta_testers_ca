@@ -253,7 +253,7 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
             {!isCollapsed && (
               <div className="ml-3 flex-1 text-left">
                 <p className="text-sm font-medium hover:text-black">
-                  {user?.name || "User"}
+                  {user?.email || "User"}
                 </p>
               </div>
             )}
