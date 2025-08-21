@@ -124,23 +124,28 @@ const IndividualTable = () => {
         processingFilePathRef.current = null;
         return;
       }
+      let startDate = "";
+      let endDate = "";
 
-      const startDate = new Date(selectedFile.startDate)
-        .toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        })
-        .replace(/\//g, "-");
+      if (selectedFile.startDate) {
+        startDate = new Date(selectedFile.startDate)
+          .toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          })
+          .replace(/\//g, "-");
+      }
 
-      const endDate = new Date(selectedFile.endDate)
-        .toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        })
-        .replace(/\//g, "-");
-
+      if (selectedFile.endDate) {
+        endDate = new Date(selectedFile.endDate)
+          .toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          })
+          .replace(/\//g, "-");
+      }
       const tempSelectedFile = {
         bankName: selectedFile.bankName,
         caseId: selectedFile.caseId,
@@ -152,6 +157,7 @@ const IndividualTable = () => {
         startDate: startDate,
         endDate: endDate,
       };
+      console.log("tempSelectedFile", tempSelectedFile);
 
       setSelectedFailedFile(tempSelectedFile);
       setIsMarkerModalOpen(true);

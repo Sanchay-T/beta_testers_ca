@@ -33,7 +33,7 @@ const extractYouTubeId = (url) => {
 
 const toEmbed = (id) =>
   id
-    ? `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1`
+    ? `https://www.youtube.com/embed/${id}?autoplay=1&mute=0&rel=0&modestbranding=1&playsinline=1`
     : "";
 
 const metaCache = new Map();
@@ -68,7 +68,7 @@ const FullScreenVideo = ({ embedUrl, onClose, open, returnFocusTo }) => {
       onClick={onClose}
     >
       <div
-        className="relative w-[min(92vw,1200px)] aspect-video rounded-2xl overflow-hidden shadow-xl ring-1 ring-white/10"
+        className="relative w-[min(92vw,1200px)] aspect-video rounded-2xl overflow-hidden  ring-1 ring-white/10"
         onClick={(e) => e.stopPropagation()}
       >
         <iframe
@@ -278,7 +278,6 @@ const InfoHoverVideo = ({
                  radial-gradient(circle at top right, rgba( 0,150, 255, 0.3) 0%, transparent 70%),
     radial-gradient(circle at bottom left, rgba(0, 80, 170, 0.3) 0%, transparent 70%),
     radial-gradient(circle at center, rgba(0, 150, 255, 0.1) 0%, transparent 50%)`,
-          boxShadow: "0 8px 32px rgba(0, 51, 102, 0.25)",
         }}
       >
         <Play className="h-4 w-4 text-white" />

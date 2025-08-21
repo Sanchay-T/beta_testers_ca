@@ -1432,53 +1432,208 @@ async function startPythonExecutable() {
   });
 }
 
-const XLSM_SOURCE_DIR = path.join(__dirname, "media", "vouchers", "tallyprime"); // Bundled location
-const XLSM_USERDATA_DIR = path.join(app.getPath("userData"), "tallyprime");
-const XLSM_PATCH_DIR = path.join(XLSM_SOURCE_DIR, "update");
+// ---- Add these helpers near your other constants ----
+const crypto = require("crypto");
 
-// Copies all .xlsm files from sourceDir to destDir, replacing old files with new ones.
-function syncTallyprimeFilesToUserData() {
-  log.info("Syncing TallyPrime files to user data directory...");
-  if (!fs.existsSync(XLSM_SOURCE_DIR)) {
-    log.info("Source .xlsm directory not found:", XLSM_SOURCE_DIR);
-    return;
+const isDev = global.AppConfig?.isDev ?? !app.isPackaged;
+
+const DEV_MEDIA_DIR = path.join(__dirname, "media", "vouchers", "tallyprime");
+const PROD_MEDIA_DIRS = [
+  path.join(process.resourcesPath, "media", "vouchers", "tallyprime"),
+  path.join(
+    process.resourcesPath,
+    "app.asar.unpacked",
+    "media",
+    "vouchers",
+    "tallyprime"
+  ),
+  path.join(__dirname, "media", "vouchers", "tallyprime"),
+];
+
+function firstExistingDir(paths) {
+  for (const p of paths) {
+    try {
+      if (fs.existsSync(p)) return p;
+    } catch {}
   }
-  if (!fs.existsSync(XLSM_USERDATA_DIR)) {
-    fs.mkdirSync(XLSM_USERDATA_DIR, { recursive: true });
+  return null;
+}
 
-    const bundled = fs
+const XLSM_SOURCE_DIR = isDev
+  ? DEV_MEDIA_DIR
+  : firstExistingDir(PROD_MEDIA_DIRS);
+const XLSM_USERDATA_DIR = path.join(app.getPath("userData"), "tallyprime");
+const XLSM_USER_PATCH_DIR = path.join(XLSM_USERDATA_DIR, "update"); // where you (or remote pull) drop patches
+const XLSM_PENDING_DIR = path.join(XLSM_USERDATA_DIR, "pending_updates"); // where we stash conflicting patches
+const XLSM_BACKUP_DIR = path.join(XLSM_USERDATA_DIR, "backups");
+const STATE_FILE = path.join(XLSM_USERDATA_DIR, "state.json"); // remembers last applied hashes
+
+function sha256OfFile(filePath) {
+  const hash = crypto.createHash("sha256");
+  hash.update(fs.readFileSync(filePath));
+  return hash.digest("hex");
+}
+
+function loadState() {
+  try {
+    if (fs.existsSync(STATE_FILE))
+      return JSON.parse(fs.readFileSync(STATE_FILE, "utf8"));
+  } catch (e) {
+    /* ignore */
+  }
+  return { files: {} }; // { files: { "sales.xlsm": { hash:"...", appliedAt: "ISO" } } }
+}
+
+function saveState(state) {
+  try {
+    fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
+  } catch (e) {
+    // non-fatal
+  }
+}
+
+function ensureDirs() {
+  [
+    XLSM_USERDATA_DIR,
+    XLSM_USER_PATCH_DIR,
+    XLSM_PENDING_DIR,
+    XLSM_BACKUP_DIR,
+  ].forEach((d) => {
+    try {
+      fs.mkdirSync(d, { recursive: true });
+    } catch {}
+  });
+}
+
+// ---- REPLACE your syncTallyprimeFilesToUserData with this ----
+function syncTallyprimeFilesToUserData() {
+  log.info("[SYNC] Start");
+
+  ensureDirs();
+  const state = loadState();
+
+  if (!XLSM_SOURCE_DIR || !fs.existsSync(XLSM_SOURCE_DIR)) {
+    log.info(
+      "[SYNC] No packaged source dir found (ok for patch-only flow):",
+      XLSM_SOURCE_DIR
+    );
+  } else {
+    // 1) Seed base vouchers ONLY IF MISSING (never overwrite user edits)
+    const baseFiles = fs
       .readdirSync(XLSM_SOURCE_DIR)
       .filter((f) => f.endsWith(".xlsm"));
-    bundled.forEach((file) => {
-      fs.copyFileSync(
-        path.join(XLSM_SOURCE_DIR, file),
-        path.join(XLSM_USERDATA_DIR, file)
-      );
-      log.info(`Initial sync of voucher: ${file}`);
-    });
-  } else {
-    log.info("User data directory already exists:", XLSM_USERDATA_DIR);
-  }
-  // 2) Patch sync: if there are any updates in userData/tallyprime/update, apply them
-  if (fs.existsSync(XLSM_PATCH_DIR)) {
-    const patches = fs
-      .readdirSync(XLSM_PATCH_DIR)
-      .filter((f) => f.endsWith(".xlsm"));
-    patches.forEach((file) => {
-      const src = path.join(XLSM_PATCH_DIR, file);
-      const dest = path.join(XLSM_USERDATA_DIR, file);
-      fs.copyFileSync(src, dest);
-      log.info(`Patched voucher: ${file}`);
-      // Optionally delete the patch file after applying:
-      fs.unlinkSync(src);
-    });
-    // Cleanup patch dir if empty
-    if (fs.readdirSync(XLSM_PATCH_DIR).length === 0) {
-      fs.rmdirSync(XLSM_PATCH_DIR);
+    for (const file of baseFiles) {
+      const src = path.join(XLSM_SOURCE_DIR, file);
+      const dst = path.join(XLSM_USERDATA_DIR, file);
+      if (!fs.existsSync(dst)) {
+        try {
+          fs.copyFileSync(src, dst);
+          const h = sha256OfFile(dst);
+          state.files[file] = {
+            hash: h,
+            appliedAt: new Date().toISOString(),
+            source: "seed",
+          };
+          log.info(`[SYNC] Seeded: ${file}`);
+        } catch (e) {
+          log.warn(`[SYNC] Failed seeding ${file}: ${e.message}`);
+        }
+      }
     }
-  } else {
-    log.info("No patch directory found:", XLSM_PATCH_DIR);
   }
+
+  // 2) Apply patches from userData/update (R/W inbox). Policy:
+  //    - If user file is missing: apply
+  //    - If user file exists:
+  //        * If user file hash === lastAppliedHash (unmodified): overwrite (with backup)
+  //        * Else (user-modified): DO NOT overwrite → stash to pending_updates/
+  try {
+    const patches = fs
+      .readdirSync(XLSM_USER_PATCH_DIR)
+      .filter((f) => f.endsWith(".xlsm"));
+    for (const file of patches) {
+      const srcPatch = path.join(XLSM_USER_PATCH_DIR, file);
+      const dst = path.join(XLSM_USERDATA_DIR, file);
+      const patchHash = sha256OfFile(srcPatch);
+
+      const last = state.files[file]; // may be undefined on first-ever apply
+
+      if (!fs.existsSync(dst)) {
+        // No user file → safe apply
+        try {
+          fs.copyFileSync(srcPatch, dst);
+          state.files[file] = {
+            hash: patchHash,
+            appliedAt: new Date().toISOString(),
+            source: "patch",
+          };
+          fs.unlinkSync(srcPatch);
+          log.info(`[SYNC] Applied (new): ${file}`);
+        } catch (e) {
+          log.warn(`[SYNC] Failed applying (new) ${file}: ${e.message}`);
+        }
+        continue;
+      }
+
+      // User file exists → check whether it's unchanged since last time
+      let currentUserHash = null;
+      try {
+        currentUserHash = sha256OfFile(dst);
+      } catch (e) {}
+
+      const userUnmodified =
+        last && currentUserHash && currentUserHash === last.hash;
+
+      if (userUnmodified) {
+        // Safe to overwrite; still back up once
+        try {
+          const ts = new Date().toISOString().replace(/[:.]/g, "-");
+          const bak = path.join(XLSM_BACKUP_DIR, `${file}.${ts}.bak`);
+          fs.copyFileSync(dst, bak);
+
+          fs.copyFileSync(srcPatch, dst);
+          state.files[file] = {
+            hash: patchHash,
+            appliedAt: new Date().toISOString(),
+            source: "patch",
+          };
+          fs.unlinkSync(srcPatch);
+          log.info(`[SYNC] Applied (auto): ${file} (backup created)`);
+        } catch (e) {
+          log.warn(`[SYNC] Failed applying (auto) ${file}: ${e.message}`);
+        }
+      } else {
+        // Detected user modifications → do NOT overwrite
+        try {
+          const ts = new Date().toISOString().replace(/[:.]/g, "-");
+          const pendingName = `${file}.pending-${ts}.xlsm`;
+          const pendingPath = path.join(XLSM_PENDING_DIR, pendingName);
+          fs.copyFileSync(srcPatch, pendingPath);
+          fs.unlinkSync(srcPatch);
+          log.info(
+            `[SYNC] User-modified detected; kept user file. Stashed patch to pending_updates/${pendingName}`
+          );
+          // (Optionally: write a small note file once)
+          const note = path.join(XLSM_PENDING_DIR, "READ_ME.txt");
+          if (!fs.existsSync(note)) {
+            fs.writeFileSync(
+              note,
+              "We detected local edits to your voucher files, so updates were not auto-applied.\n" +
+                "Review files in this folder and replace manually if desired.\n"
+            );
+          }
+        } catch (e) {
+          log.warn(`[SYNC] Failed stashing pending ${file}: ${e.message}`);
+        }
+      }
+    }
+  } catch (e) {
+    log.warn("[SYNC] Patch step skipped:", e.message);
+  }
+
+  // 3) Save state
+  saveState(state);
+  log.info("[SYNC] Done");
 }
 
 // Add this function to handle file protocol
@@ -1823,7 +1978,7 @@ async function createWindow() {
         "dontAddToRecent",
       ],
       filters: [
-        { name: "Documents", extensions: ["pdf", "xls", "xlsx"] },
+        { name: "Documents", extensions: ["pdf", "xlsx","csv"] },
         { name: "All Files", extensions: ["*"] },
       ],
     });
@@ -1877,148 +2032,6 @@ console.log("GATEWAY EXECUTABLE DIR:", GATEWAY_EXECUTABLE_DIR);
 
 app.setName("CypherSol Dev");
 
-// Add this function before app.whenReady()
-async function performUserDataMigration() {
-  const migrationStartTime = Date.now();
-
-  try {
-    log.info("🚀 [USER-DATA-MIGRATION] === STARTING MIGRATION PROCESS ===");
-    log.info("[USER-DATA-MIGRATION] SYSTEM CONTEXT", {
-      appVersion: app.getVersion(),
-      appName: app.getName(),
-      platform: process.platform,
-      arch: process.arch,
-      isPackaged: app.isPackaged,
-      userDataDir: app.getPath("userData"),
-      tempDir: app.getPath("temp"),
-      processId: process.pid,
-      startTime: new Date().toISOString(),
-    });
-
-    const migration = new DatabaseMigration();
-
-    // Get initial status
-    const initialStatus = migration.getMigrationStatus();
-    log.info("[USER-DATA-MIGRATION] INITIAL STATUS", initialStatus);
-
-    // Perform migration
-    log.info("[USER-DATA-MIGRATION] CALLING MIGRATION FUNCTION");
-    const result = await migration.performMigration();
-
-    const migrationEndTime = Date.now();
-    const totalDuration = migrationEndTime - migrationStartTime;
-
-    // Log results based on outcome
-    if (result.alreadyCompleted) {
-      log.info("✅ [USER-DATA-MIGRATION] ALREADY COMPLETED", {
-        totalDurationMs: totalDuration,
-      });
-    } else if (result.freshInstall) {
-      log.info("ℹ️ [USER-DATA-MIGRATION] FRESH INSTALLATION DETECTED", {
-        totalDurationMs: totalDuration,
-      });
-    } else if (result.success) {
-      log.info("🎉 [USER-DATA-MIGRATION] MIGRATION SUCCESSFUL!", {
-        oldApp: result.oldAppName,
-        totalItems: result.totalItems,
-        successfulMigrations: result.successfulMigrations,
-        failedMigrations: result.failedMigrations,
-        preservedOriginal: result.preservedOriginal,
-        migrationDurationMs: result.migrationDurationMs,
-        totalProcessDurationMs: totalDuration,
-      });
-
-      // Log detailed success information
-      if (result.successfulMigrations > 0) {
-        const migratedFiles = result.migratedItems
-          .filter((item) => item.migrationSuccess)
-          .map((item) => ({
-            name: item.fileName,
-            type: item.type,
-            description: item.description || "No description",
-            size: item.size || "Unknown",
-            durationMs: item.migrationDurationMs || "Unknown",
-          }));
-
-        log.info("📋 [USER-DATA-MIGRATION] SUCCESSFULLY MIGRATED ITEMS", {
-          count: migratedFiles.length,
-          items: migratedFiles,
-          note: "Original files preserved in old app directory",
-        });
-      }
-
-      // Log any failures for debugging
-      if (result.failedMigrations > 0) {
-        const failedFiles = result.migratedItems
-          .filter((item) => !item.migrationSuccess)
-          .map((item) => ({
-            name: item.fileName,
-            type: item.type,
-            description: item.description || "No description",
-          }));
-
-        log.warn("⚠️ [USER-DATA-MIGRATION] FAILED MIGRATIONS", {
-          count: failedFiles.length,
-          items: failedFiles,
-        });
-      }
-    } else {
-      log.error("❌ [USER-DATA-MIGRATION] MIGRATION FAILED", {
-        totalItems: result.totalItems || "Unknown",
-        successful: result.successfulMigrations || 0,
-        failed: result.failedMigrations || "Unknown",
-        error: result.error || "Unknown error",
-        totalDurationMs: totalDuration,
-      });
-    }
-
-    // Get final status for comparison
-    const finalStatus = migration.getMigrationStatus();
-    log.info("[USER-DATA-MIGRATION] FINAL STATUS", finalStatus);
-
-    log.info("🏁 [USER-DATA-MIGRATION] === MIGRATION PROCESS COMPLETED ===", {
-      totalDurationMs: totalDuration,
-      totalDurationSeconds: (totalDuration / 1000).toFixed(2),
-    });
-
-    return result;
-  } catch (error) {
-    const migrationEndTime = Date.now();
-    const totalDuration = migrationEndTime - migrationStartTime;
-
-    log.error("💥 [USER-DATA-MIGRATION] CRITICAL MIGRATION ERROR", {
-      error: error.message,
-      stack: error.stack,
-      totalDurationMs: totalDuration,
-      timestamp: new Date().toISOString(),
-    });
-
-    // Try to log to a backup location
-    try {
-      const errorLogPath = path.join(
-        app.getPath("temp"),
-        "cyphersol-migration-error.log"
-      );
-      const errorInfo = {
-        timestamp: new Date().toISOString(),
-        error: error.message,
-        stack: error.stack,
-        appVersion: app.getVersion(),
-        platform: process.platform,
-      };
-      fs.writeFileSync(errorLogPath, JSON.stringify(errorInfo, null, 2));
-      log.info("[USER-DATA-MIGRATION] Error details saved to:", errorLogPath);
-    } catch (backupError) {
-      log.error(
-        "[USER-DATA-MIGRATION] Failed to save error backup:",
-        backupError
-      );
-    }
-
-    return { success: false, error: error.message, criticalError: true };
-  }
-}
-
 app.whenReady().then(async () => {
   log.info("🚀 APP READY - STARTING INITIALIZATION SEQUENCE", {
     userDataDir: userDataDir,
@@ -2031,12 +2044,6 @@ app.whenReady().then(async () => {
   try {
     // 🔄 MIGRATE USER DATA FROM OLD APP (Critical first step)
     log.info("📋 INITIALIZATION STEP 1: USER DATA MIGRATION");
-    const migrationResult = await performUserDataMigration();
-
-    if (migrationResult.criticalError) {
-      log.error("💥 CRITICAL MIGRATION ERROR - CONTINUING WITH CAUTION");
-      // Continue with app initialization even if migration fails
-    }
 
     // 🗄️ Initialize Database AFTER migration (so it uses the migrated data)
     log.info("📋 INITIALIZATION STEP 2: DATABASE INITIALIZATION");

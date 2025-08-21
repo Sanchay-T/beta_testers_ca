@@ -643,8 +643,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       });
       return;
     }
-    setFailedStatements([]);
-    setSuccessfulStatements([]);
     setLoading(true);
     const newToastId = toast({
       title: "Initializing Report Generation",
@@ -675,8 +673,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
           const detail = fileDetails[index];
 
           return {
-            fileContent,
-            pdf_paths: file.name,
+            pdf_paths: file.path,
             bankName: detail.bankName,
             passwords: detail.password || "",
             start_date: convertDateFormat(detail.start_date), // Convert date format
@@ -686,12 +683,20 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         })
       );
 
+      setFailedStatements([]);
+      setSuccessfulStatements([]);
+      setShowRectifyButton(false);
+      setShowAnalysisButton(false);
+      setMissingMonthsList([]);
+      setWarning([]);
+      setDateRangeWarning(null); // Reset date range warning
+      setWarningExpanded(false); // Reset warning expansion state
+
       const result = await window.electron.generateReportIpc(
         {
           files: filesWithContent,
         },
         caseName,
-        false,
         "add-pdf"
       );
       console.log({ electronResponse: result });
