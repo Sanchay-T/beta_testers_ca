@@ -168,6 +168,7 @@ if (!process.env.GH_TOKEN) {
 
 // Add version tracking
 let lastCheckedVersion = null;
+let systemRequirementsNotificationShown = false; // Track if we've shown the notification this session
 
 // Auto-update event handlers with detailed logging
 autoUpdater.on("checking-for-update", () => {
@@ -216,6 +217,84 @@ autoUpdater.on("update-available", (info) => {
     );
     return;
   }
+
+  // Check system requirements before proceeding with update
+  const systemRequirementsCheck = systemInfo.getSystemRequirementsCheck();
+  if (systemRequirementsCheck && systemRequirementsCheck.shouldBlockUpdates) {
+    performanceTracker.end("update-download-process");
+    
+    logWithTimestamp(
+      "warn",
+      UPDATE_LOG_PREFIX,
+      "🚫 UPDATE BLOCKED - System requirements not met",
+      {
+        version: info.version,
+        issues: systemRequirementsCheck.issues,
+        memoryGB: systemRequirementsCheck.memoryGB,
+        hasInsufficientRAM: systemRequirementsCheck.hasInsufficientRAM,
+        hasLowEndCPU: systemRequirementsCheck.hasLowEndCPU
+      }
+    );
+
+    // Only show notification to user once per session to avoid annoyance
+    if (!systemRequirementsNotificationShown) {
+      systemRequirementsNotificationShown = true;
+      
+      // Send system requirements notification to frontend
+      const systemRequirementsNotification = {
+        status: "system-requirements-failed",
+        version: info.version,
+        requirements: systemRequirementsCheck,
+        message: "Update paused due to system requirements",
+        timestamp: new Date().toISOString(),
+      };
+
+      logWithTimestamp(
+        "warn", 
+        UPDATE_LOG_PREFIX,
+        "Update blocked due to system requirements - showing notification to user",
+        {
+          availableVersion: info.version,
+          currentVersion: app.getVersion(),
+          memoryGB: systemRequirementsCheck.memoryGB,
+          issues: systemRequirementsCheck.issues,
+          blockingUpdates: systemRequirementsCheck.shouldBlockUpdates
+        }
+      );
+      
+      logWithTimestamp(
+        "info",
+        USER_LOG_PREFIX,
+        "Sending system requirements notification to frontend (first time this session)",
+        systemRequirementsNotification
+      );
+      
+      win?.webContents.send("update-status", systemRequirementsNotification);
+      win?.webContents.send("system-requirements-check", systemRequirementsCheck);
+    } else {
+      logWithTimestamp(
+        "info",
+        UPDATE_LOG_PREFIX,
+        "Update blocked due to system requirements - notification already shown this session, skipping UI notification"
+      );
+    }
+    
+    // Don't proceed with download
+    return;
+  }
+
+  // System requirements passed - proceed with normal update flow
+  logWithTimestamp(
+    "info",
+    UPDATE_LOG_PREFIX,
+    "✅ System requirements PASSED - proceeding with normal update flow",
+    {
+      availableVersion: info.version,
+      currentVersion: app.getVersion(),
+      memoryGB: systemRequirementsCheck.memoryGB,
+      meetsRequirements: systemRequirementsCheck.meetsRequirements
+    }
+  );
 
   const updateAvailableData = {
     currentVersion: app.getVersion(),
@@ -1621,6 +1700,35 @@ async function createWindow() {
       throw err;
     }
   });
+
+  // System requirements IPC handlers
+  ipcMain.handle("get-system-requirements", () => {
+    log.info("System requirements check requested");
+    try {
+      const requirements = systemInfo.getSystemRequirementsCheck();
+      const memoryGB = systemInfo.getMemoryGB();
+      const cpuModel = systemInfo.getCPUModel();
+      
+      return {
+        requirements,
+        memoryGB,
+        cpuModel,
+        shouldBlockUpdates: systemInfo.shouldBlockUpdates(),
+        meetsRequirements: systemInfo.meetsMinimumRequirements()
+      };
+    } catch (err) {
+      log.error("System requirements check failed:", err);
+      throw err;
+    }
+  });
+
+  ipcMain.handle("override-system-requirements", () => {
+    log.warn("System requirements override requested by user");
+    // This could be used for advanced users to bypass the check
+    // For now, we'll just log it - the implementation can be added later if needed
+    return { overridden: false, message: "Override not implemented for security" };
+  });
+
 
   ipcMain.handle("download-update", async () => {
     log.info("Update download requested");

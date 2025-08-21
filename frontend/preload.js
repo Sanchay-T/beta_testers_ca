@@ -236,6 +236,18 @@ contextBridge.exposeInMainWorld("electron", {
       ipcRenderer.removeAllListeners("update-progress");
       ipcRenderer.removeAllListeners("update-downloaded");
       ipcRenderer.removeAllListeners("update-error");
+      ipcRenderer.removeAllListeners("system-requirements-check");
+    },
+  },
+
+  // System requirements related methods
+  system: {
+    getSystemRequirements: () => ipcRenderer.invoke("get-system-requirements"),
+    onSystemRequirementsCheck: (callback) =>
+      ipcRenderer.on("system-requirements-check", (_, requirements) => callback(requirements)),
+    overrideSystemRequirements: () => ipcRenderer.invoke("override-system-requirements"),
+    removeSystemRequirementsListeners: () => {
+      ipcRenderer.removeAllListeners("system-requirements-check");
     },
   },
 

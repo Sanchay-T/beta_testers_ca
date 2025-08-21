@@ -26,6 +26,9 @@ class SystemInformation {
     this.ssid = null;
     this.userSID = null;
     this.username = null;
+    this.totalMemory = null;
+    this.cpuModel = null;
+    this.systemRequirementsCheck = null;
     SystemInformation.instance = this;
   }
 
@@ -79,6 +82,31 @@ class SystemInformation {
       debugLog("BEFORE computeUsername");
       this.username = this.computeUsername();
       debugLog("AFTER computeUsername", { username: this.username });
+
+      // Get system memory information
+      debugLog("BEFORE computeMemoryInfo");
+      try {
+        this.totalMemory = await this.computeMemoryInfo();
+        debugLog("AFTER computeMemoryInfo", { totalMemoryGB: Math.round(this.totalMemory / 1024 / 1024 / 1024) });
+      } catch (memError) {
+        debugLog("ERROR computeMemoryInfo", { error: memError.message });
+        this.totalMemory = 0;
+      }
+
+      // Get CPU information
+      debugLog("BEFORE computeCPUInfo");
+      try {
+        this.cpuModel = await this.computeCPUInfo();
+        debugLog("AFTER computeCPUInfo", { cpuModel: this.cpuModel?.substring(0, 50) + "..." });
+      } catch (cpuError) {
+        debugLog("ERROR computeCPUInfo", { error: cpuError.message });
+        this.cpuModel = "unknown";
+      }
+
+      // Perform system requirements check
+      debugLog("BEFORE performSystemRequirementsCheck");
+      this.systemRequirementsCheck = this.performSystemRequirementsCheck();
+      debugLog("AFTER performSystemRequirementsCheck", this.systemRequirementsCheck);
 
       // Load Windows User SID if on Windows, else set as null.
       if (process.platform === "win32") {
@@ -360,6 +388,195 @@ class SystemInformation {
     return username;
   }
 
+  // Get system memory information
+  async computeMemoryInfo() {
+    try {
+      log.info("Getting system memory information...");
+      
+      if (process.platform === "win32") {
+        // Use Windows-specific WMI command for accurate memory info
+        const wmiCommand = 'wmic computersystem get TotalPhysicalMemory /value';
+        const result = execSync(wmiCommand, {
+          timeout: 5000,
+          encoding: "utf8",
+          windowsHide: true,
+        });
+        
+        const match = result.match(/TotalPhysicalMemory=(\d+)/);
+        if (match && match[1]) {
+          const totalMemory = parseInt(match[1]);
+          log.info("Total Physical Memory (bytes):", totalMemory);
+          log.info("Total Physical Memory (GB):", Math.round(totalMemory / 1024 / 1024 / 1024 * 100) / 100);
+          return totalMemory;
+        }
+      }
+      
+      // Fallback to Node.js os.totalmem()
+      const totalMemory = os.totalmem();
+      log.info("Total Memory (fallback - bytes):", totalMemory);
+      log.info("Total Memory (fallback - GB):", Math.round(totalMemory / 1024 / 1024 / 1024 * 100) / 100);
+      return totalMemory;
+      
+    } catch (error) {
+      log.error("Error retrieving memory information:", error);
+      // Fallback to os.totalmem()
+      const totalMemory = os.totalmem();
+      log.warn("Using fallback memory detection:", Math.round(totalMemory / 1024 / 1024 / 1024 * 100) / 100, "GB");
+      return totalMemory;
+    }
+  }
+
+  // Get CPU information
+  async computeCPUInfo() {
+    try {
+      log.info("Getting CPU information...");
+      
+      if (process.platform === "win32") {
+        // Use Windows-specific WMI command for CPU info
+        const wmiCommand = 'wmic cpu get Name /value';
+        const result = execSync(wmiCommand, {
+          timeout: 5000,
+          encoding: "utf8",
+          windowsHide: true,
+        });
+        
+        const match = result.match(/Name=(.+)/);
+        if (match && match[1]) {
+          const cpuModel = match[1].trim();
+          log.info("CPU Model:", cpuModel);
+          return cpuModel;
+        }
+      }
+      
+      // Fallback to Node.js os.cpus()
+      const cpus = os.cpus();
+      if (cpus && cpus.length > 0) {
+        const cpuModel = cpus[0].model;
+        log.info("CPU Model (fallback):", cpuModel);
+        return cpuModel;
+      }
+      
+      return "unknown";
+      
+    } catch (error) {
+      log.error("Error retrieving CPU information:", error);
+      // Fallback to os.cpus()
+      try {
+        const cpus = os.cpus();
+        if (cpus && cpus.length > 0) {
+          const cpuModel = cpus[0].model;
+          log.warn("Using fallback CPU detection:", cpuModel);
+          return cpuModel;
+        }
+      } catch (fallbackError) {
+        log.error("Fallback CPU detection failed:", fallbackError);
+      }
+      return "unknown";
+    }
+  }
+
+  // Perform system requirements check
+  performSystemRequirementsCheck() {
+    const requirements = {
+      meetsRequirements: true,
+      issues: [],
+      memoryGB: 0,
+      hasInsufficientRAM: false,
+      hasLowEndCPU: false,
+      shouldBlockUpdates: false
+    };
+
+
+    try {
+      // Check memory requirements (8GB minimum)
+      if (this.totalMemory) {
+        const memoryGB = this.totalMemory / 1024 / 1024 / 1024;
+        requirements.memoryGB = Math.round(memoryGB * 100) / 100;
+        
+        if (memoryGB < 8) {
+          requirements.hasInsufficientRAM = true;
+          requirements.meetsRequirements = false;
+          requirements.issues.push(`RAM: ${requirements.memoryGB}GB (minimum 8GB required)`);
+          log.warn("System has insufficient RAM:", requirements.memoryGB, "GB");
+        } else {
+          log.info("System RAM check passed:", requirements.memoryGB, "GB");
+        }
+      }
+
+      // Check CPU requirements (Intel i5 minimum)
+      if (this.cpuModel && this.cpuModel !== "unknown") {
+        const cpuModel = this.cpuModel.toLowerCase();
+        
+        // Check for Intel processors
+        if (cpuModel.includes('intel')) {
+          // Check for processors below i5
+          const isLowEndIntel = (
+            cpuModel.includes('celeron') ||
+            cpuModel.includes('pentium') ||
+            cpuModel.includes('atom') ||
+            (cpuModel.includes('core') && (
+              cpuModel.includes('i3') ||
+              cpuModel.includes('core 2') ||
+              cpuModel.includes('core duo')
+            ))
+          );
+          
+          if (isLowEndIntel) {
+            requirements.hasLowEndCPU = true;
+            requirements.meetsRequirements = false;
+            requirements.issues.push(`CPU: ${this.cpuModel} (Intel i5 or equivalent recommended)`);
+            log.warn("System has low-end CPU:", this.cpuModel);
+          } else {
+            log.info("Intel CPU check passed:", this.cpuModel);
+          }
+        } else {
+          // For non-Intel CPUs, we'll be less restrictive but still log for monitoring
+          log.info("Non-Intel CPU detected:", this.cpuModel);
+          
+          // Check for very low-end AMD processors
+          if (cpuModel.includes('amd') && (
+            cpuModel.includes('e1-') ||
+            cpuModel.includes('e2-') ||
+            cpuModel.includes('a4-') ||
+            cpuModel.includes('a6-') ||
+            cpuModel.includes('athlon x2') ||
+            cpuModel.includes('sempron')
+          )) {
+            requirements.hasLowEndCPU = true;
+            requirements.meetsRequirements = false;
+            requirements.issues.push(`CPU: ${this.cpuModel} (Higher performance CPU recommended)`);
+            log.warn("System has low-end AMD CPU:", this.cpuModel);
+          }
+        }
+      }
+
+      // Determine if updates should be blocked
+      requirements.shouldBlockUpdates = requirements.hasInsufficientRAM;
+      
+      if (requirements.shouldBlockUpdates) {
+        log.warn("System requirements check FAILED - Updates will be blocked:", requirements.issues);
+      } else if (!requirements.meetsRequirements) {
+        log.warn("System requirements check shows warnings but updates allowed:", requirements.issues);
+      } else {
+        log.info("System requirements check PASSED");
+      }
+
+      return requirements;
+      
+    } catch (error) {
+      log.error("Error during system requirements check:", error);
+      return {
+        meetsRequirements: false,
+        issues: ["System requirements check failed"],
+        memoryGB: 0,
+        hasInsufficientRAM: true,
+        hasLowEndCPU: false,
+        shouldBlockUpdates: true,
+        error: error.message
+      };
+    }
+  }
+
   // Accessor methods to retrieve the cached values
   getUUID() {
     return this.uuid;
@@ -387,6 +604,33 @@ class SystemInformation {
 
   getUsername() {
     return this.username;
+  }
+
+  getTotalMemory() {
+    return this.totalMemory;
+  }
+
+  getMemoryGB() {
+    if (this.totalMemory) {
+      return Math.round(this.totalMemory / 1024 / 1024 / 1024 * 100) / 100;
+    }
+    return 0;
+  }
+
+  getCPUModel() {
+    return this.cpuModel;
+  }
+
+  getSystemRequirementsCheck() {
+    return this.systemRequirementsCheck;
+  }
+
+  meetsMinimumRequirements() {
+    return this.systemRequirementsCheck?.meetsRequirements || false;
+  }
+
+  shouldBlockUpdates() {
+    return this.systemRequirementsCheck?.shouldBlockUpdates || false;
   }
 }
 
