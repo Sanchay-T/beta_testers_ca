@@ -95,7 +95,8 @@ export default function GenerateReport({ activeTab }) {
       });
       return;
     }
-
+    setFailedStatements([]);
+    setSuccessfulStatements([]);
     setLoading(true);
     const newToastId = toast({
       title: "Initializing Report Generation",
