@@ -2191,6 +2191,7 @@ async function createWindow() {
     }
   });
 
+
   // Check for updates after window is ready
   win.webContents.on("did-finish-load", () => {
     if (!global.AppConfig.isDev) {
@@ -2381,8 +2382,135 @@ app.whenReady().then(async () => {
     commandLineArgs: process.argv,
   });
 
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // 🧪 REGISTER APP MODE TESTING IPC HANDLERS (Before System Compatibility Check)
+  // ═══════════════════════════════════════════════════════════════════════════════
+  
+  ipcMain.handle("app-mode:load-config", async () => {
+    try {
+      const configPath = path.join(__dirname, "compatibility", "config", "appModeConfig.json");
+      const configData = fs.readFileSync(configPath, 'utf8');
+      return JSON.parse(configData);
+    } catch (error) {
+      log.error("Failed to load app mode config:", error);
+      throw new Error(`Failed to load configuration: ${error.message}`);
+    }
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // MODE NOTIFICATION IPC HANDLERS
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  ipcMain.handle("mode-notification:unscan-acknowledged", async (event) => {
+    try {
+      log.info("📢 [MODE] UNSCAN mode notification acknowledged by user");
+      return { success: true };
+    } catch (error) {
+      log.error("❌ [MODE] Error handling UNSCAN acknowledgment:", error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle("hybrid-flow:alternative-choice", async (event, hasAlternative) => {
+    try {
+      log.info("📢 [MODE] HYBRID flow alternative PC choice:", hasAlternative);
+      return { success: true, choice: hasAlternative };
+    } catch (error) {
+      log.error("❌ [MODE] Error handling alternative choice:", error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle("hybrid-flow:payment-choice", async (event, agreedToPay) => {
+    try {
+      log.info("📢 [MODE] HYBRID flow payment choice:", agreedToPay);
+      return { success: true, choice: agreedToPay };
+    } catch (error) {
+      log.error("❌ [MODE] Error handling payment choice:", error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle("hybrid-flow:close-app", async (event) => {
+    try {
+      log.info("📢 [MODE] HYBRID flow requested app close");
+      app.quit();
+      return { success: true };
+    } catch (error) {
+      log.error("❌ [MODE] Error handling app close:", error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle("app-mode:run-detection", async (event, options = {}) => {
+    try {
+      log.info("🧪 App mode detection requested from compatibility window", options);
+      const { AppModeManager } = require("./compatibility/AppModeManager");
+      const manager = new AppModeManager(log, null);
+      
+      if (options.scenario && options.scenario !== 'current') {
+        // Load test scenario with proper mapping
+        const configPath = path.join(__dirname, "compatibility", "config", "appModeConfig.json");
+        const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        
+        // Map UI scenario names to config scenario names
+        const scenarioMapping = {
+          'highEnd': 'highEndPC',
+          'midRange': 'midRangePC', 
+          'lowEnd': 'lowEndPC'
+        };
+        
+        const mappedScenario = scenarioMapping[options.scenario] || options.scenario;
+        const scenario = config.testing.scenarios[mappedScenario];
+        
+        if (scenario) {
+          // Override test scenario in config
+          const originalOverrides = config.testingOverrides;
+          config.testingOverrides = {
+            ...originalOverrides,
+            forceRAM: scenario.ram,
+            forceCPU: scenario.cpu,
+            forceScanResult: scenario.scanTime !== null ? 'pass' : 'fail',
+            forceMode: scenario.expectedMode
+          };
+          
+          // Temporarily save scenario config
+          const tempConfigPath = path.join(__dirname, "compatibility", "config", "temp_appModeConfig.json");
+          fs.writeFileSync(tempConfigPath, JSON.stringify(config, null, 2));
+          
+          // Run detection with scenario
+          const result = await manager.runModeDetection({ scenario: options.scenario });
+          
+          // Clean up temp config
+          if (fs.existsSync(tempConfigPath)) {
+            fs.unlinkSync(tempConfigPath);
+          }
+          
+          return result;
+        }
+      }
+      
+      // Run with current system/overrides
+      if (options.overrides) {
+        // Update config with overrides
+        const configPath = path.join(__dirname, "compatibility", "config", "appModeConfig.json");
+        const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        config.testingOverrides = { ...config.testingOverrides, ...options.overrides };
+        fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+      }
+      
+      return await manager.runModeDetection({ scenario: options.scenario || 'current' });
+      
+    } catch (error) {
+      log.error("App mode detection failed:", error);
+      throw new Error(`Detection failed: ${error.message}`);
+    }
+  });
+
   // 🔍 STEP -1: SYSTEM COMPATIBILITY CHECK (CRITICAL FIRST STEP)
   log.info("📋 INITIALIZATION STEP -1: SYSTEM COMPATIBILITY CHECK");
+  
+  // Run system compatibility check for both dev and production
   try {
     const { SystemCompatibilityChecker } = require("./SystemCompatibilityChecker");
     const compatStartTime = Date.now();

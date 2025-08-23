@@ -18,6 +18,7 @@ import { useLoading } from "./contexts/LoadingContext";
 import { useToast } from "./hooks/use-toast";
 import { Toaster } from "./components/ui/toaster";
 import LicenseActivation from "./components/Authentication/LicenseActivation";
+import AppModeTestingPanel from "./components/AppModeTestingPanel";
 
 function App() {
   const [showIntro, setShowIntro] = useState(false);
@@ -78,6 +79,12 @@ function App() {
             </Routes> */}
 
               <Routes>
+                {/* Development route */}
+                <Route path="/app-mode-testing" element={<AppModeTestingPanel onComplete={(result) => {
+                  // Navigate to login after testing
+                  window.location.hash = '/login';
+                }} />} />
+                
                 {/* Public route */}
                 <Route path="/login" element={<Login />} />
                 <Route path="/license-activation" element={<LicenseActivation />} />

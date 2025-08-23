@@ -267,4 +267,10 @@ contextBridge.exposeInMainWorld("electron", {
     advertiseMdns: (data) => ipcRenderer.invoke("db:advertiseMdns", data),
     validateConnection: (data) => ipcRenderer.invoke("db:validateConnection", data),
   },
+  
+  // App mode testing (development mode)
+  appMode: {
+    loadConfig: () => ipcRenderer.invoke("app-mode:load-config"),
+    runDetection: (options) => ipcRenderer.invoke("app-mode:run-detection", options),
+  },
 });

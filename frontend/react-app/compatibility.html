@@ -94,9 +94,16 @@
         sendUserDecision: (decision) =>
           ipcRenderer.invoke("compatibility:user-decision", decision),
         startTests: () => ipcRenderer.invoke("compatibility:start-tests"),
+        invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
+        onModeNotification: (callback) => {
+          ipcRenderer.on("mode-notification:show-unscan", callback);
+          ipcRenderer.on("hybrid-flow:show-screen", callback);
+        },
         removeAllListeners: () => {
           ipcRenderer.removeAllListeners("test-progress");
           ipcRenderer.removeAllListeners("compatibility-complete");
+          ipcRenderer.removeAllListeners("mode-notification:show-unscan");
+          ipcRenderer.removeAllListeners("hybrid-flow:show-screen");
         },
       };
 
@@ -108,6 +115,7 @@
           this.testResults = null;
           this.testProgress = {};
           this.isTestingComplete = false;
+          this.modeNotificationActive = false;
           this.setupEventListeners();
         }
 
@@ -127,6 +135,12 @@
             this.testResults = results;
             this.isTestingComplete = true;
             this.showStep3();
+          });
+
+          // Listen for mode notifications
+          window.electronAPI.onModeNotification((event, notificationData) => {
+            console.log("Mode notification received:", notificationData);
+            this.showModeNotification(notificationData);
           });
         }
 
@@ -557,6 +571,27 @@
                       </div>
                     </div>
 
+                    <!-- App Mode Detection Result -->
+                    <div id="app-mode-result" style="display: none; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 24px; text-align: left;">
+                      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                        <span id="mode-icon" style="font-size: 24px;">🎯</span>
+                        <div>
+                          <h3 style="margin: 0; color: #1e293b; font-size: 18px; font-weight: 600;">
+                            System Mode: <span id="determined-mode" style="color: var(--cypheridge-blue);">SCAN</span>
+                          </h3>
+                          <p id="mode-confidence" style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">
+                            Confidence: High
+                          </p>
+                        </div>
+                      </div>
+                      <div id="mode-description" style="color: #475569; font-size: 14px; line-height: 1.5; margin-bottom: 12px;">
+                        Full offline processing with ML scanning enabled
+                      </div>
+                      <div id="mode-features" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        <!-- Mode-specific features will be added here dynamically -->
+                      </div>
+                    </div>
+
                     <!-- Warnings (if any) -->
                     ${results.warnings.length > 0 ? `
                       <div style="background: #fffbeb; border: 1px solid #fed7aa; border-radius: 8px; padding: 16px; margin-bottom: 24px; text-align: left;">
@@ -576,6 +611,104 @@
                     <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 32px; color: #64748b; font-size: 14px;">
                       <span>📊</span>
                       <span>Detailed report will be saved to compatibility-reports</span>
+                    </div>
+
+                    <!-- App Mode Testing Section (Development Only) -->
+                    <div id="app-mode-testing-section" style="display: none; background: #f0f9ff; border: 2px dashed #0ea5e9; border-radius: 12px; padding: 24px; margin-bottom: 32px; text-align: left;">
+                      <div style="text-align: center; margin-bottom: 20px;">
+                        <h3 style="margin: 0; color: #0c4a6e; font-size: 18px; font-weight: 600;">🧪 App Mode Testing Panel</h3>
+                        <p style="margin: 5px 0 0 0; color: #075985; font-size: 14px;">Development Mode - Test app mode detection</p>
+                      </div>
+                      
+                      <!-- Test Scenarios -->
+                      <div style="margin-bottom: 20px;">
+                        <h4 style="margin: 0 0 10px 0; font-size: 14px; font-weight: 600; color: #0c4a6e;">Test Scenarios</h4>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+                          <button class="scenario-btn" data-scenario="current" style="
+                            background: #3b82f6; color: white; border: none; padding: 8px 12px; border-radius: 6px; 
+                            font-size: 12px; cursor: pointer; text-align: left; transition: background 0.2s;
+                          " onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
+                            <div style="font-weight: 600;">Current System</div>
+                            <div style="opacity: 0.8; font-size: 11px;">With overrides</div>
+                          </button>
+                          <button class="scenario-btn" data-scenario="highEnd" style="
+                            background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 8px 12px; border-radius: 6px; 
+                            font-size: 12px; cursor: pointer; text-align: left; transition: all 0.2s;
+                          " onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
+                            <div style="font-weight: 600;">High-End PC</div>
+                            <div style="opacity: 0.8; font-size: 11px;">16GB RAM, i7 CPU</div>
+                          </button>
+                          <button class="scenario-btn" data-scenario="midRange" style="
+                            background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 8px 12px; border-radius: 6px; 
+                            font-size: 12px; cursor: pointer; text-align: left; transition: all 0.2s;
+                          " onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
+                            <div style="font-weight: 600;">Mid-Range PC</div>
+                            <div style="opacity: 0.8; font-size: 11px;">8GB RAM, i5 CPU</div>
+                          </button>
+                          <button class="scenario-btn" data-scenario="lowEnd" style="
+                            background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 8px 12px; border-radius: 6px; 
+                            font-size: 12px; cursor: pointer; text-align: left; transition: all 0.2s;
+                          " onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
+                            <div style="font-weight: 600;">Low-End PC</div>
+                            <div style="opacity: 0.8; font-size: 11px;">4GB RAM, i3 CPU</div>
+                          </button>
+                        </div>
+                      </div>
+
+                      <!-- Override Controls (only visible for current scenario) -->
+                      <div id="override-controls" style="margin-bottom: 20px;">
+                        <h4 style="margin: 0 0 10px 0; font-size: 14px; font-weight: 600; color: #0c4a6e;">System Overrides</h4>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                          <div>
+                            <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #0c4a6e;">Force RAM (GB)</label>
+                            <select id="force-ram" style="width: 100%; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px;">
+                              <option value="">Auto-detect</option>
+                              <option value="4">4 GB</option>
+                              <option value="8">8 GB</option>
+                              <option value="16" selected>16 GB</option>
+                              <option value="32">32 GB</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #0c4a6e;">Force CPU</label>
+                            <select id="force-cpu" style="width: 100%; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px;">
+                              <option value="">Auto-detect</option>
+                              <option value="i3">Intel i3</option>
+                              <option value="i5">Intel i5</option>
+                              <option value="i7" selected>Intel i7</option>
+                              <option value="i9">Intel i9</option>
+                              <option value="ryzen5">AMD Ryzen 5</option>
+                              <option value="ryzen7">AMD Ryzen 7</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #0c4a6e;">Force Scan Result</label>
+                            <select id="force-scan-result" style="width: 100%; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px;">
+                              <option value="">Run actual test</option>
+                              <option value="pass" selected>Force Pass</option>
+                              <option value="fail">Force Fail</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #0c4a6e;">Simulate Slow Scan</label>
+                            <input type="checkbox" id="slow-scan" style="margin-left: 4px;">
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Test Button and Results -->
+                      <div style="text-align: center;">
+                        <button id="run-app-mode-test" style="
+                          background: #059669; color: white; border: none; padding: 10px 20px; border-radius: 6px; 
+                          font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s; margin-bottom: 16px;
+                        " onmouseover="this.style.background='#047857'" onmouseout="this.style.background='#059669'">
+                          🚀 Run Mode Detection Test
+                        </button>
+                        
+                        <div id="app-mode-test-result" style="display: none; background: white; border: 1px solid #cbd5e1; border-radius: 8px; padding: 16px; text-align: left;">
+                          <!-- Test results will be displayed here -->
+                        </div>
+                      </div>
                     </div>
 
                     <!-- Action Buttons -->
@@ -752,6 +885,20 @@
         showStep3() {
           this.currentStep = 3;
           this.render();
+          
+          // Display app mode detection results
+          this.displayAppModeResult();
+          
+          // Show app mode testing section in development mode
+          if (process.env.NODE_ENV === 'development') {
+            const testingSection = document.getElementById('app-mode-testing-section');
+            if (testingSection) {
+              testingSection.style.display = 'block';
+            }
+            
+            // Set up app mode testing functionality
+            this.setupAppModeTesting();
+          }
         }
 
         async handleUserDecision(decision) {
@@ -847,6 +994,161 @@
           `).join('');
         }
 
+        // Display app mode detection results
+        displayAppModeResult() {
+          if (!this.testResults || !this.testResults.appMode) {
+            console.log('No app mode results to display');
+            return;
+          }
+
+          const appMode = this.testResults.appMode;
+          const appModeResult = document.getElementById('app-mode-result');
+          
+          if (!appModeResult) {
+            console.warn('App mode result element not found');
+            return;
+          }
+
+          // Show the app mode result section
+          appModeResult.style.display = 'block';
+
+          // Update mode icon based on determined mode
+          const modeIcon = document.getElementById('mode-icon');
+          const modeIcons = {
+            'SCAN': '✅',
+            'UNSCAN': '⚡', 
+            'HYBRID': '🔄',
+            'ERROR': '❌'
+          };
+          if (modeIcon) {
+            modeIcon.textContent = modeIcons[appMode.determined] || '🎯';
+          }
+
+          // Update determined mode display
+          const determinedMode = document.getElementById('determined-mode');
+          if (determinedMode) {
+            determinedMode.textContent = appMode.determined || 'UNKNOWN';
+            
+            // Apply mode-specific colors
+            const modeColors = {
+              'SCAN': 'var(--cypheridge-success)',
+              'UNSCAN': 'var(--cypheridge-warning)',
+              'HYBRID': 'var(--cypheridge-blue)',
+              'ERROR': 'var(--cypheridge-error)'
+            };
+            determinedMode.style.color = modeColors[appMode.determined] || 'var(--cypheridge-blue)';
+          }
+
+          // Update confidence display
+          const modeConfidence = document.getElementById('mode-confidence');
+          if (modeConfidence) {
+            const confidence = appMode.confidence || 'unknown';
+            modeConfidence.textContent = `Confidence: ${confidence.charAt(0).toUpperCase() + confidence.slice(1)}`;
+          }
+
+          // Update mode description
+          const modeDescription = document.getElementById('mode-description');
+          if (modeDescription) {
+            modeDescription.textContent = appMode.userMessage || this.getDefaultModeDescription(appMode.determined);
+          }
+
+          // Update mode features
+          this.displayModeFeatures(appMode.determined);
+
+          console.log('App mode results displayed:', appMode);
+        }
+
+        // Get default mode description if userMessage not available
+        getDefaultModeDescription(mode) {
+          const descriptions = {
+            'SCAN': 'Full offline processing with ML scanning enabled',
+            'UNSCAN': 'Lightweight offline processing (ML scanning disabled)',
+            'HYBRID': 'Cloud-assisted processing required for this hardware',
+            'ERROR': 'Unable to determine optimal mode for your system'
+          };
+          return descriptions[mode] || 'Mode-specific information not available';
+        }
+
+        // Display mode-specific features
+        displayModeFeatures(mode) {
+          const modeFeatures = document.getElementById('mode-features');
+          if (!modeFeatures) return;
+
+          const features = {
+            'SCAN': [
+              { text: 'Full ML Scanning', color: 'var(--cypheridge-success)' },
+              { text: 'Advanced Analytics', color: 'var(--cypheridge-success)' },
+              { text: 'Offline Processing', color: 'var(--cypheridge-success)' }
+            ],
+            'UNSCAN': [
+              { text: 'Basic Processing', color: 'var(--cypheridge-warning)' },
+              { text: 'Manual Categorization', color: 'var(--cypheridge-warning)' },
+              { text: 'Offline Operation', color: 'var(--cypheridge-success)' }
+            ],
+            'HYBRID': [
+              { text: 'Cloud Processing', color: 'var(--cypheridge-blue)' },
+              { text: 'Internet Required', color: 'var(--cypheridge-warning)' },
+              { text: 'Subscription Needed', color: 'var(--cypheridge-warning)' }
+            ],
+            'ERROR': [
+              { text: 'Mode Detection Failed', color: 'var(--cypheridge-error)' }
+            ]
+          };
+
+          const modeFeaturesList = features[mode] || [];
+          modeFeatures.innerHTML = modeFeaturesList.map(feature => `
+            <span style="
+              background: rgba(0, 0, 0, 0.05); 
+              color: ${feature.color}; 
+              padding: 4px 8px; 
+              border-radius: 4px; 
+              font-size: 12px; 
+              font-weight: 500;
+            ">${feature.text}</span>
+          `).join('');
+        }
+
+        // Show mode notification overlay
+        showModeNotification(notificationData) {
+          console.log('Displaying mode notification:', notificationData);
+          this.modeNotificationActive = true;
+          
+          // Create overlay container if it doesn't exist
+          let overlay = document.getElementById('mode-notification-overlay');
+          if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'mode-notification-overlay';
+            overlay.style.cssText = `
+              position: fixed;
+              top: 0;
+              left: 0;
+              width: 100vw;
+              height: 100vh;
+              z-index: 20000;
+              pointer-events: auto;
+            `;
+            document.body.appendChild(overlay);
+          }
+          
+          // Display the notification HTML
+          overlay.innerHTML = notificationData.html;
+          overlay.style.display = 'flex';
+          
+          // Log notification display
+          console.log(`Mode notification displayed: ${notificationData.type}`);
+        }
+
+        // Hide mode notification overlay
+        hideModeNotification() {
+          const overlay = document.getElementById('mode-notification-overlay');
+          if (overlay) {
+            overlay.style.display = 'none';
+            overlay.innerHTML = '';
+          }
+          this.modeNotificationActive = false;
+          console.log('Mode notification hidden');
+        }
+
         // Window control functions for frameless window
         minimizeWindow() {
           const { remote } = require('electron');
@@ -866,6 +1168,145 @@
             // Fallback - send cancel decision
             this.handleUserDecision('cancel');
           }
+        }
+
+        // App Mode Testing Setup
+        setupAppModeTesting() {
+          this.selectedScenario = 'current';
+          this.appModeOverrides = {
+            forceRAM: 16,
+            forceCPU: 'i7',
+            forceScanResult: 'pass',
+            simulateSlowScan: false
+          };
+
+          // Set up scenario buttons
+          const scenarioBtns = document.querySelectorAll('.scenario-btn');
+          scenarioBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              this.selectScenario(e.currentTarget.dataset.scenario);
+            });
+          });
+
+          // Set up override controls
+          document.getElementById('force-ram').addEventListener('change', (e) => {
+            this.appModeOverrides.forceRAM = e.target.value ? parseInt(e.target.value) : null;
+          });
+
+          document.getElementById('force-cpu').addEventListener('change', (e) => {
+            this.appModeOverrides.forceCPU = e.target.value || null;
+          });
+
+          document.getElementById('force-scan-result').addEventListener('change', (e) => {
+            this.appModeOverrides.forceScanResult = e.target.value || null;
+          });
+
+          document.getElementById('slow-scan').addEventListener('change', (e) => {
+            this.appModeOverrides.simulateSlowScan = e.target.checked;
+          });
+
+          // Set up test button
+          document.getElementById('run-app-mode-test').addEventListener('click', () => {
+            this.runAppModeTest();
+          });
+
+          // Show/hide override controls based on scenario
+          this.updateOverrideVisibility();
+        }
+
+        selectScenario(scenario) {
+          this.selectedScenario = scenario;
+          
+          // Update button states
+          document.querySelectorAll('.scenario-btn').forEach(btn => {
+            if (btn.dataset.scenario === scenario) {
+              btn.style.background = '#3b82f6';
+              btn.style.color = 'white';
+              btn.style.border = 'none';
+            } else {
+              btn.style.background = '#f8fafc';
+              btn.style.color = '#475569';
+              btn.style.border = '1px solid #e2e8f0';
+            }
+          });
+
+          this.updateOverrideVisibility();
+        }
+
+        updateOverrideVisibility() {
+          const overrideControls = document.getElementById('override-controls');
+          if (overrideControls) {
+            overrideControls.style.display = this.selectedScenario === 'current' ? 'block' : 'none';
+          }
+        }
+
+        async runAppModeTest() {
+          const testBtn = document.getElementById('run-app-mode-test');
+          const resultDiv = document.getElementById('app-mode-test-result');
+          
+          testBtn.textContent = '🔄 Running Test...';
+          testBtn.disabled = true;
+          resultDiv.style.display = 'none';
+
+          try {
+            const testOptions = {
+              scenario: this.selectedScenario,
+              overrides: this.selectedScenario === 'current' ? this.appModeOverrides : null
+            };
+
+            const result = await window.electronAPI.invoke('app-mode:run-detection', testOptions);
+            this.displayAppModeTestResult(result);
+          } catch (error) {
+            console.error('App mode test failed:', error);
+            this.displayAppModeTestResult({
+              error: true,
+              message: error.message || 'Test failed'
+            });
+          } finally {
+            testBtn.textContent = '🚀 Run Mode Detection Test';
+            testBtn.disabled = false;
+          }
+        }
+
+        displayAppModeTestResult(result) {
+          const resultDiv = document.getElementById('app-mode-test-result');
+          
+          if (result.error) {
+            resultDiv.innerHTML = `
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <span style="color: #ef4444; font-size: 16px;">❌</span>
+                <strong style="color: #ef4444;">Test Failed</strong>
+              </div>
+              <div style="color: #6b7280; font-size: 14px;">${result.message}</div>
+            `;
+          } else {
+            const modeColor = result.mode === 'SCAN' ? '#22c55e' : 
+                            result.mode === 'UNSCAN' ? '#f59e0b' : 
+                            result.mode === 'HYBRID' ? '#3b82f6' : '#6b7280';
+                            
+            resultDiv.innerHTML = `
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                <span style="background: ${modeColor}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">
+                  ${result.mode || 'UNKNOWN'} MODE
+                </span>
+              </div>
+              <div style="font-size: 14px; margin-bottom: 8px;">
+                <strong>Result:</strong> ${result.userMessage || 'Mode detection completed'}
+              </div>
+              ${result.confidence ? `
+                <div style="font-size: 13px; color: #6b7280; margin-bottom: 4px;">
+                  <strong>Confidence:</strong> ${result.confidence}
+                </div>
+              ` : ''}
+              ${result.reasoning ? `
+                <div style="font-size: 13px; color: #6b7280;">
+                  <strong>Reasoning:</strong> ${result.reasoning}
+                </div>
+              ` : ''}
+            `;
+          }
+          
+          resultDiv.style.display = 'block';
         }
       }
 

@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CypherEdge - App Mode Testing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .window-controls {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            z-index: 1000;
+            display: flex;
+            gap: 8px;
+        }
+
+        .window-btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .window-btn:hover {
+            opacity: 0.8;
+        }
+
+        .minimize-btn {
+            background-color: #ffbd2e;
+        }
+
+        .close-btn {
+            background-color: #ff5f56;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            gap: 20px;
+            overflow-y: auto;
+        }
+
+        .left-panel {
+            flex: 2;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
+        .right-panel {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
+        .section {
+            margin-bottom: 25px;
+        }
+
+        .section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 16px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+        }
+
+        .scenario-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .scenario-btn {
+            background: #ecf0f1;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .scenario-btn:hover {
+            background: #d5dbdb;
+            border-color: #95a5a6;
+        }
+
+        .scenario-btn.active {
+            background: #3498db;
+            border-color: #2980b9;
+            color: white;
+        }
+
+        .scenario-name {
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .scenario-specs {
+            font-size: 11px;
+            opacity: 0.8;
+            margin-top: 3px;
+        }
+
+        .override-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .override-item label {
+            display: block;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+
+        .override-item select,
+        .override-item input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .run-test-btn {
+            width: 100%;
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-bottom: 15px;
+        }
+
+        .run-test-btn:hover:not(:disabled) {
+            background: #229954;
+        }
+
+        .run-test-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .mode-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .mode-scan {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .mode-unscan {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+
+        .mode-hybrid {
+            background: #cce5ff;
+            color: #004085;
+            border: 1px solid #99d6ff;
+        }
+
+        .result-details {
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .result-details strong {
+            color: #2c3e50;
+        }
+
+        .proceed-btn {
+            width: 100%;
+            background: #0056b3;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .proceed-btn:hover {
+            background: #004494;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .config-section {
+            font-size: 11px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 15px;
+        }
+
+        .config-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .config-key {
+            font-weight: bold;
+        }
+
+        .config-value {
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="window-controls">
+        <button class="window-btn minimize-btn" onclick="minimizeWindow()"></button>
+        <button class="window-btn close-btn" onclick="closeWindow()"></button>
+    </div>
+
+    <div class="header">
+        <h1>🧪 CypherEdge App Mode Testing Panel</h1>
+        <p>Development Mode Active - Test system compatibility and mode detection</p>
+    </div>
+
+    <div class="main-content">
+        <div class="left-panel">
+            <div class="section">
+                <h3>🎯 Test Scenarios</h3>
+                <div class="scenario-grid">
+                    <div class="scenario-btn active" onclick="selectScenario('current')">
+                        <div class="scenario-name">Current System</div>
+                        <div class="scenario-specs">With overrides applied</div>
+                    </div>
+                    <div class="scenario-btn" onclick="selectScenario('highEndPC')">
+                        <div class="scenario-name">High-End PC</div>
+                        <div class="scenario-specs">16GB RAM, i7 CPU</div>
+                    </div>
+                    <div class="scenario-btn" onclick="selectScenario('midRangePC')">
+                        <div class="scenario-name">Mid-Range PC</div>
+                        <div class="scenario-specs">8GB RAM, i5 CPU</div>
+                    </div>
+                    <div class="scenario-btn" onclick="selectScenario('lowEndPC')">
+                        <div class="scenario-name">Low-End PC</div>
+                        <div class="scenario-specs">4GB RAM, i3 CPU</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>⚙️ System Overrides</h3>
+                <div class="override-grid">
+                    <div class="override-item">
+                        <label>Force RAM (GB)</label>
+                        <select id="forceRAM" onchange="updateOverride('forceRAM', this.value)">
+                            <option value="">Auto-detect</option>
+                            <option value="4">4 GB</option>
+                            <option value="8">8 GB</option>
+                            <option value="16" selected>16 GB</option>
+                            <option value="32">32 GB</option>
+                        </select>
+                    </div>
+                    <div class="override-item">
+                        <label>Force CPU</label>
+                        <select id="forceCPU" onchange="updateOverride('forceCPU', this.value)">
+                            <option value="">Auto-detect</option>
+                            <option value="i3">Intel i3</option>
+                            <option value="i5">Intel i5</option>
+                            <option value="i7" selected>Intel i7</option>
+                            <option value="i9">Intel i9</option>
+                            <option value="ryzen3">AMD Ryzen 3</option>
+                            <option value="ryzen5">AMD Ryzen 5</option>
+                            <option value="ryzen7">AMD Ryzen 7</option>
+                        </select>
+                    </div>
+                    <div class="override-item">
+                        <label>Force Scan Result</label>
+                        <select id="forceScanResult" onchange="updateOverride('forceScanResult', this.value)">
+                            <option value="">Run actual test</option>
+                            <option value="pass" selected>Force Pass</option>
+                            <option value="fail">Force Fail</option>
+                        </select>
+                    </div>
+                    <div class="override-item">
+                        <label>Simulate Slow Scan</label>
+                        <input type="checkbox" id="simulateSlowScan" onchange="updateOverride('simulateSlowScan', this.checked)">
+                    </div>
+                </div>
+            </div>
+
+            <button class="run-test-btn" onclick="runTest()" id="runTestBtn">
+                🚀 Run Detection Test
+            </button>
+        </div>
+
+        <div class="right-panel">
+            <div class="section">
+                <h3>📊 Test Results</h3>
+                <div id="testResults">
+                    <div style="text-align: center; padding: 40px; color: #666;">
+                        Run a test to see results
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>⚙️ Current Configuration</h3>
+                <div class="config-section" id="configDisplay">
+                    Loading configuration...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+        const remote = require('@electron/remote');
+
+        let currentScenario = 'current';
+        let config = null;
+        let overrides = {
+            forceRAM: 16,
+            forceCPU: 'i7',
+            forceScanResult: 'pass',
+            simulateSlowScan: false
+        };
+
+        // Window controls
+        function minimizeWindow() {
+            remote.getCurrentWindow().minimize();
+        }
+
+        function closeWindow() {
+            remote.getCurrentWindow().close();
+        }
+
+        // Load configuration on startup
+        async function loadConfig() {
+            try {
+                config = await ipcRenderer.invoke('app-mode:load-config');
+                displayConfig();
+            } catch (error) {
+                console.error('Failed to load config:', error);
+            }
+        }
+
+        function displayConfig() {
+            if (!config) return;
+            
+            const configDiv = document.getElementById('configDisplay');
+            configDiv.innerHTML = `
+                <div class="config-row">
+                    <span class="config-key">Min RAM (Full Mode):</span>
+                    <span class="config-value">${config.hardwareThresholds.fullMode.minRAM}GB</span>
+                </div>
+                <div class="config-row">
+                    <span class="config-key">Min CPU (Full Mode):</span>
+                    <span class="config-value">${config.hardwareThresholds.fullMode.minProcessor}</span>
+                </div>
+                <div class="config-row">
+                    <span class="config-key">Scan Timeout:</span>
+                    <span class="config-value">${config.hardwareThresholds.fullMode.scanTestTimeout}ms</span>
+                </div>
+                <div class="config-row">
+                    <span class="config-key">Development Mode:</span>
+                    <span class="config-value">${config.developmentMode.enabled ? 'Enabled' : 'Disabled'}</span>
+                </div>
+            `;
+        }
+
+        function selectScenario(scenario) {
+            currentScenario = scenario;
+            
+            // Update UI
+            document.querySelectorAll('.scenario-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.closest('.scenario-btn').classList.add('active');
+        }
+
+        function updateOverride(key, value) {
+            overrides[key] = value === '' ? null : value;
+        }
+
+        async function runTest() {
+            const btn = document.getElementById('runTestBtn');
+            const resultsDiv = document.getElementById('testResults');
+            
+            btn.disabled = true;
+            btn.textContent = 'Running Detection...';
+            
+            resultsDiv.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div>Detecting app mode...</div>
+                </div>
+            `;
+
+            try {
+                const result = await ipcRenderer.invoke('app-mode:run-detection', {
+                    scenario: currentScenario,
+                    overrides: currentScenario === 'current' ? overrides : null
+                });
+
+                displayResults(result);
+            } catch (error) {
+                console.error('Test failed:', error);
+                resultsDiv.innerHTML = `
+                    <div class="result-card">
+                        <strong style="color: #e74c3c;">❌ Test Failed</strong>
+                        <div style="margin-top: 8px; font-size: 12px; color: #666;">
+                            ${error.message}
+                        </div>
+                    </div>
+                `;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🚀 Run Detection Test';
+            }
+        }
+
+        function displayResults(result) {
+            const resultsDiv = document.getElementById('testResults');
+            
+            if (result.error) {
+                resultsDiv.innerHTML = `
+                    <div class="result-card">
+                        <strong style="color: #e74c3c;">❌ Detection Failed</strong>
+                        <div style="margin-top: 8px;">${result.error}</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const modeClass = `mode-${result.determinedMode.toLowerCase()}`;
+            
+            resultsDiv.innerHTML = `
+                <div class="result-card">
+                    <div class="mode-badge ${modeClass}">
+                        ${result.determinedMode} MODE
+                    </div>
+                    <div class="result-details">
+                        <strong>Result:</strong> ${result.userMessage}<br>
+                        <strong>Confidence:</strong> ${result.modeDecision.confidence}<br>
+                        <strong>Duration:</strong> ${result.modeDecision.duration}ms<br>
+                        <strong>Reason:</strong> ${result.modeDecision.reason}
+                    </div>
+                </div>
+                
+                <button class="proceed-btn" onclick="proceedToApp()">
+                    ✅ Proceed to CypherEdge
+                </button>
+            `;
+        }
+
+        function proceedToApp() {
+            closeWindow();
+        }
+
+        // Initialize
+        loadConfig();
+    </script>
+</body>
+</html>

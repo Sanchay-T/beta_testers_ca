@@ -6,6 +6,8 @@ const { CompatibilityTests } = require("./compatibility/CompatibilityTests");
 const { ReportGenerator } = require("./compatibility/ReportGenerator");
 const { CompatibilityLogger } = require("./compatibility/CompatibilityLogger");
 const { DetailedReportGenerator } = require("./compatibility/DetailedReportGenerator");
+const { AppModeManager } = require("./compatibility/AppModeManager");
+const { ModeNotificationUI } = require("./compatibility/ui/ModeNotificationUI");
 
 class SystemCompatibilityChecker {
   constructor(loggerOptions = {}) {
@@ -18,6 +20,8 @@ class SystemCompatibilityChecker {
     this.tests = null; // Will be initialized when needed
     this.reportGenerator = null; // Will be initialized when needed
     this.detailedReportGenerator = null; // Will be initialized when needed
+    this.appModeManager = null; // Will be initialized when window is available
+    this.modeNotificationUI = null; // Will be initialized when window is available
     this.userDecision = null;
     this.results = {
       startTime: Date.now(),
@@ -44,9 +48,120 @@ class SystemCompatibilityChecker {
       this.tests = new CompatibilityTests(this.logger, this.window);
       this.reportGenerator = new ReportGenerator(this.logger);
       this.detailedReportGenerator = new DetailedReportGenerator(this.logger);
+      this.appModeManager = new AppModeManager(this.logger, this.window);
+      this.modeNotificationUI = new ModeNotificationUI(this.logger, this.window);
 
       // Step 2: Wait for user to start tests
       const userDecision = await this.waitForUserDecision();
+
+      // Step 2.5: Run app mode detection after compatibility tests
+      let modeDetectionResult = null;
+      if (userDecision === 'proceed') {
+        this.logger.info('MODE_DETECTION_START', 'Starting app mode detection after compatibility tests');
+        log.info("🎯 [COMPAT] Running app mode detection...");
+        
+        try {
+          modeDetectionResult = await this.appModeManager.runModeDetection();
+          
+          this.logger.info('MODE_DETECTION_COMPLETE', 'App mode detection completed', {
+            determinedMode: modeDetectionResult.determinedMode,
+            canProceed: modeDetectionResult.canProceed
+          });
+          
+          log.info(`🎯 [COMPAT] Mode determined: ${modeDetectionResult.determinedMode} (canProceed: ${modeDetectionResult.canProceed})`);
+          
+          // Verify mode result persistence
+          this.verifyModeResultPersistence(modeDetectionResult);
+          
+          // Step 2.6: Handle mode-specific user notification flows
+          this.logger.info('MODE_NOTIFICATION_START', 'Starting mode-specific notification flow');
+          log.info("🔔 [COMPAT] Running mode notification flow...");
+          
+          let notificationResult = null;
+          try {
+            notificationResult = await this.modeNotificationUI.handleModeNotificationFlow(modeDetectionResult);
+            
+            this.logger.info('MODE_NOTIFICATION_COMPLETE', 'Mode notification flow completed', {
+              outcome: notificationResult.outcome,
+              canProceed: notificationResult.canProceed
+            });
+            
+            log.info(`🔔 [COMPAT] Mode notification completed: ${notificationResult.outcome} (canProceed: ${notificationResult.canProceed})`);
+          } catch (error) {
+            this.logger.error('MODE_NOTIFICATION_ERROR', 'Mode notification flow failed', {
+              error: error.message,
+              stack: error.stack
+            });
+            log.error("❌ [COMPAT] Mode notification flow failed:", error);
+            
+            // Continue with default behavior if notification fails
+            notificationResult = {
+              outcome: 'notification_error',
+              canProceed: true,
+              message: `Notification error: ${error.message}`
+            };
+          }
+          
+          // Update results with mode information
+          this.results.appMode = {
+            determined: modeDetectionResult.determinedMode,
+            canProceed: modeDetectionResult.canProceed && notificationResult.canProceed,
+            confidence: modeDetectionResult.confidence,
+            userMessage: modeDetectionResult.userMessage,
+            nextSteps: modeDetectionResult.nextSteps,
+            details: modeDetectionResult.modeDecision,
+            timestamp: modeDetectionResult.timestamp,
+            duration: modeDetectionResult.duration,
+            notificationFlow: {
+              outcome: notificationResult.outcome,
+              message: notificationResult.message,
+              userChoices: notificationResult.userChoices
+            }
+          };
+          
+          // Check if either mode detection or notification flow blocks startup
+          if (!modeDetectionResult.canProceed) {
+            this.logger.info('MODE_DETECTION_BLOCKED', 'Mode detection blocked app startup', {
+              reason: modeDetectionResult.reason || 'Mode detection failed'
+            });
+            log.warn(`⚠️ [COMPAT] Mode detection blocked startup: ${modeDetectionResult.reason}`);
+            
+            this.results.canProceed = false;
+            this.results.blockReason = modeDetectionResult.reason || 'App mode detection failed';
+          } else if (!notificationResult.canProceed) {
+            this.logger.info('MODE_NOTIFICATION_BLOCKED', 'Mode notification flow blocked app startup', {
+              reason: notificationResult.message || 'User chose not to proceed'
+            });
+            log.warn(`⚠️ [COMPAT] Mode notification blocked startup: ${notificationResult.message}`);
+            
+            this.results.canProceed = false;
+            this.results.blockReason = notificationResult.message || 'Mode notification flow blocked startup';
+          } else {
+            this.results.canProceed = true;
+          }
+          
+        } catch (error) {
+          this.logger.error('MODE_DETECTION_ERROR', 'App mode detection failed', {
+            error: error.message,
+            stack: error.stack
+          });
+          log.error("❌ [COMPAT] App mode detection failed:", error);
+          
+          // Don't block startup if mode detection fails - fallback to normal operation
+          this.logger.info('MODE_DETECTION_FALLBACK', 'Continuing with normal startup despite mode detection failure');
+          log.info("⚠️ [COMPAT] Continuing with normal startup (mode detection failed)");
+          
+          this.results.appMode = {
+            determined: 'ERROR',
+            canProceed: true, // Don't block on detection failure
+            error: error.message,
+            fallback: true
+          };
+          this.results.canProceed = true;
+        }
+      } else {
+        this.results.canProceed = false;
+      }
 
       // Step 3: Finalize and cleanup
       this.results.endTime = Date.now();
@@ -54,6 +169,16 @@ class SystemCompatibilityChecker {
 
       if (this.window && !this.window.isDestroyed()) {
         this.window.close();
+      }
+
+      // Cleanup app mode manager
+      if (this.appModeManager) {
+        this.appModeManager.cleanup();
+      }
+
+      // Cleanup mode notification UI
+      if (this.modeNotificationUI) {
+        this.modeNotificationUI.cleanup();
       }
 
       // Generate comprehensive logs and reports
@@ -78,11 +203,12 @@ class SystemCompatibilityChecker {
       });
 
       return { 
-        canProceed: userDecision, 
+        canProceed: this.results.canProceed, 
         results: this.results,
         sessionSummary,
         logPaths: this.logger.getLogPaths(),
-        reportPath
+        reportPath,
+        modeDetection: modeDetectionResult
       };
     } catch (error) {
       this.logger.critical('SESSION_ERROR', 'Compatibility check failed', { error: error.message, stack: error.stack });
@@ -90,6 +216,16 @@ class SystemCompatibilityChecker {
       
       if (this.window && !this.window.isDestroyed()) {
         this.window.close();
+      }
+
+      // Cleanup app mode manager
+      if (this.appModeManager) {
+        this.appModeManager.cleanup();
+      }
+
+      // Cleanup mode notification UI
+      if (this.modeNotificationUI) {
+        this.modeNotificationUI.cleanup();
       }
       
       // Try to generate error report
@@ -115,11 +251,12 @@ class SystemCompatibilityChecker {
       width: 900,
       height: 700,
       center: true,
-      resizable: false,
-      frame: false,  // Completely frameless
+      resizable: true,   // Enable resizing
+      movable: true,     // Enable moving/dragging
+      frame: false,      // Completely frameless
       transparent: false,
       alwaysOnTop: true,
-      show: true,  // Show immediately
+      show: true,        // Show immediately
       focusable: true,
       skipTaskbar: false,
       titleBarStyle: 'hidden',  // Hide title bar on macOS
@@ -165,21 +302,29 @@ class SystemCompatibilityChecker {
 
   setupIPC() {
     // Auto-start tests after 2 seconds if user doesn't click Continue (reduced for testing)
-    setTimeout(() => {
-      if (this.window && !this.window.isDestroyed() && this.userDecision === null) {
-        this.logger.info('AUTO_START', 'Auto-starting compatibility tests after 2 second delay');
-        log.info("🤖 [COMPAT] Auto-starting compatibility tests after 2 second delay");
-        this.window.webContents.executeJavaScript(`
-          const continueBtn = document.getElementById('continue-btn');
-          if (continueBtn) {
-            continueBtn.textContent = 'Auto-starting...';
-            setTimeout(() => {
-              continueBtn.click();
-            }, 500);
-          }
-        `);
-      }
-    }, 2000); // Reduced from 5000 to 2000 for testing
+    // Skip auto-start in development mode when showing testing panel
+    const isDevelopmentMode = process.env.NODE_ENV === 'development';
+    
+    if (!isDevelopmentMode) {
+      setTimeout(() => {
+        if (this.window && !this.window.isDestroyed() && this.userDecision === null) {
+          this.logger.info('AUTO_START', 'Auto-starting compatibility tests after 2 second delay');
+          log.info("🤖 [COMPAT] Auto-starting compatibility tests after 2 second delay");
+          this.window.webContents.executeJavaScript(`
+            const continueBtn = document.getElementById('continue-btn');
+            if (continueBtn) {
+              continueBtn.textContent = 'Auto-starting...';
+              setTimeout(() => {
+                continueBtn.click();
+              }, 500);
+            }
+          `);
+        }
+      }, 2000); // Reduced from 5000 to 2000 for testing
+    } else {
+      this.logger.info('DEV_MODE', 'Auto-start disabled in development mode');
+      log.info("🧪 [COMPAT] Auto-start disabled - development mode active");
+    }
 
     // React app requests to start tests
     ipcMain.handle("compatibility:start-tests", async () => {
@@ -482,6 +627,127 @@ class SystemCompatibilityChecker {
     return true;
   }
 
+  /**
+   * Show app mode testing panel in development mode
+   * @returns {Promise<Object>} Testing panel result
+   */
+  async showAppModeTestingPanel() {
+    this.logger.info('TESTING_PANEL', 'Showing app mode testing panel');
+    log.info("🧪 [COMPAT] Displaying app mode testing panel");
+
+    try {
+      // Send testing panel HTML to the compatibility window
+      const testingPanel = this.appModeManager.testingPanel;
+      const testingHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>App Mode Testing Panel</title>
+          <style>
+            body { margin: 0; padding: 20px; font-family: 'Segoe UI', sans-serif; background: #f5f5f5; }
+            .dev-header { background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; }
+            .dev-header h1 { margin: 0; color: #1976d2; }
+            .dev-header p { margin: 5px 0 0 0; color: #666; }
+          </style>
+        </head>
+        <body>
+          <div class="dev-header">
+            <h1>🧪 CypherEdge App Mode Testing Panel</h1>
+            <p>Development Mode Active - NODE_ENV=development</p>
+          </div>
+          ${testingPanel.generateTestingPanelHTML()}
+          <script>
+            // Set up Electron API bridge
+            const { ipcRenderer } = require('electron');
+            window.electronAPI = {
+              invoke: ipcRenderer.invoke.bind(ipcRenderer),
+              on: ipcRenderer.on.bind(ipcRenderer)
+            };
+          </script>
+        </body>
+        </html>
+      `;
+
+      // Load the testing HTML into the window
+      await this.window.webContents.loadURL('data:text/html,' + encodeURIComponent(testingHTML));
+
+      // Initialize the testing panel IPC handlers
+      testingPanel.initialize();
+
+      // Wait for user to complete testing or exit
+      return await this.waitForTestingCompletion();
+
+    } catch (error) {
+      this.logger.error('TESTING_PANEL_ERROR', 'Failed to show testing panel', {
+        error: error.message,
+        stack: error.stack
+      });
+
+      return {
+        canProceed: false,
+        error: error.message,
+        modeDecision: { determined: 'ERROR', canProceed: false }
+      };
+    }
+  }
+
+  /**
+   * Wait for testing completion in development mode
+   * @returns {Promise<Object>} Testing result
+   */
+  async waitForTestingCompletion() {
+    return new Promise((resolve) => {
+      let resolved = false;
+
+      // Listen for proceed signal (user completed testing)
+      this.window.webContents.on('compatibility:proceed', () => {
+        if (resolved) return;
+        resolved = true;
+        
+        this.logger.info('TESTING_COMPLETE', 'User completed testing and chose to proceed');
+        log.info("✅ [COMPAT] Testing completed - user chose to proceed");
+        
+        // Get the stored mode decision
+        const storedDecision = this.appModeManager.loadStoredDecision();
+        resolve({
+          canProceed: true,
+          modeDecision: storedDecision,
+          source: 'testing_panel'
+        });
+      });
+
+      // Listen for cancel signal (user chose to exit)
+      this.window.webContents.on('compatibility:cancel', () => {
+        if (resolved) return;
+        resolved = true;
+        
+        this.logger.info('TESTING_CANCELLED', 'User cancelled testing');
+        log.info("❌ [COMPAT] Testing cancelled by user");
+        
+        resolve({
+          canProceed: false,
+          modeDecision: { determined: 'CANCELLED', canProceed: false },
+          source: 'testing_panel'
+        });
+      });
+
+      // Timeout after 10 minutes
+      setTimeout(() => {
+        if (resolved) return;
+        resolved = true;
+        
+        this.logger.warn('TESTING_TIMEOUT', 'Testing panel timed out after 10 minutes');
+        log.warn("⏱️ [COMPAT] Testing panel timed out");
+        
+        resolve({
+          canProceed: false,
+          modeDecision: { determined: 'TIMEOUT', canProceed: false },
+          source: 'timeout'
+        });
+      }, 600000); // 10 minutes
+    });
+  }
+
   async waitForUserDecision() {
     this.logger.info('USER_WAIT', 'Waiting for user decision');
     log.info("⏳ [COMPAT] Waiting for user decision...");
@@ -761,6 +1027,68 @@ class SystemCompatibilityChecker {
     }
     
     return recommendations;
+  }
+
+  /**
+   * Verify mode result persistence to JSON storage
+   * @param {Object} modeDetectionResult - Mode detection result
+   */
+  verifyModeResultPersistence(modeDetectionResult) {
+    try {
+      this.logger.info('MODE_PERSISTENCE_VERIFY', 'Verifying mode result storage');
+      log.info('📁 [COMPAT] Verifying mode result persistence...');
+
+      // Check if AppModeManager has storage manager
+      if (this.appModeManager && this.appModeManager.storageManager) {
+        const storageStatus = this.appModeManager.getStorageStatus();
+        
+        this.logger.info('MODE_PERSISTENCE_STATUS', 'Storage manager status checked', {
+          storageDirectory: storageStatus.directory,
+          storageExists: storageStatus.exists,
+          files: Object.keys(storageStatus.files || {})
+        });
+
+        log.info('📁 [COMPAT] Mode storage directory:', storageStatus.directory);
+        log.info('📁 [COMPAT] Storage directory exists:', storageStatus.exists);
+
+        // Log expected JSON file location
+        const expectedFiles = [
+          'appModeDecision.json (main decision file)',
+          'modeDecisionLog.json (detailed log)',
+          'decisionHistory.json (historical records)'
+        ];
+        
+        log.info('📁 [COMPAT] Expected storage files:', expectedFiles);
+
+        // Check if we have the necessary data for storage
+        const hasRequiredData = !!(modeDetectionResult.determinedMode && 
+                                   modeDetectionResult.confidence && 
+                                   modeDetectionResult.timestamp);
+        
+        log.info('📁 [COMPAT] Mode result has required data for storage:', hasRequiredData);
+        
+        if (hasRequiredData) {
+          log.info('📁 [COMPAT] Mode detection result ready for JSON storage:', {
+            mode: modeDetectionResult.determinedMode,
+            confidence: modeDetectionResult.confidence,
+            userMessage: modeDetectionResult.userMessage || 'No user message',
+            duration: modeDetectionResult.duration || 'No duration'
+          });
+        } else {
+          log.warn('⚠️ [COMPAT] Mode detection result missing required data for storage');
+        }
+
+      } else {
+        log.warn('⚠️ [COMPAT] AppModeManager or StorageManager not available for verification');
+      }
+
+    } catch (error) {
+      this.logger.error('MODE_PERSISTENCE_ERROR', 'Failed to verify mode result persistence', {
+        error: error.message,
+        stack: error.stack
+      });
+      log.error('❌ [COMPAT] Mode persistence verification failed:', error.message);
+    }
   }
 }
 
