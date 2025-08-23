@@ -91,6 +91,10 @@
       {
         "from": "gatewayServer/gatewayService.exe",
         "to": "gatewayService.exe"
+      },
+      {
+        "from": "build/vcredist_x64.exe",
+        "to": "vcredist_x64.exe"
       }
     ],
     "extraMetadata": {
