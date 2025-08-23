@@ -772,6 +772,7 @@ function generateReportIpc(tmpdir_path) {
   const baseUrl = getBaseUrl();
   const generateReportEndpoint = `${baseUrl}/analyze-statements/`;
   const editPdfEndpoint = `${baseUrl}/column-rectify-add-pdf/`;
+  const generateReportEndpointServer = `${baseUrl}/analyze-statements-pdf/`;
 
   ipcMain.handle(
     "generate-report",
@@ -905,6 +906,40 @@ function generateReportIpc(tmpdir_path) {
           whole_transaction_sheet = updatedTransactions || null;
         }
 
+        const FormData = require("form-data");
+        const form = new FormData();
+
+        fileDetails.forEach((d, i) => {
+          form.append("bank_names", d.bankName);
+          form.append("passwords", d.passwords || "");
+          form.append("start_date", d.start_date || "");
+          form.append("end_date", d.end_date || "");
+          form.append("is_ocr", String(d.is_ocr || false));
+
+          // Attach the actual file
+          form.append("files", fs.createReadStream(d.pdf_paths), {
+            filename: path.basename(d.pdf_paths),
+            contentType: "application/pdf",
+          });
+        });
+
+        // Optional blobs as JSON strings:
+        if (whole_transaction_sheet) {
+          form.append(
+            "whole_transaction_sheet",
+            JSON.stringify(whole_transaction_sheet)
+          );
+        }
+        // If you have rectification columns for first run:
+        if (Array.isArray(receivedResult.aiyaz_array_of_array)) {
+          form.append(
+            "aiyazs_array_of_array",
+            JSON.stringify(receivedResult.aiyaz_array_of_array)
+          );
+        }
+
+        form.append("ca_id", caseName || "DEFAULT_CASE");
+
         // Step 2: Send API request
         const payload = {
           bank_names: fileDetails.map((d) => d.bankName),
@@ -919,11 +954,24 @@ function generateReportIpc(tmpdir_path) {
 
         log.info("Sending API request with payload:", payload);
 
-        const response = await axios.post(generateReportEndpoint, payload, {
-          headers: { "Content-Type": "application/json" },
-          // timeout: 300000,
-          validateStatus: (status) => status === 200,
-        });
+        let response = null;
+        // const IS_CAPABLE = process.env.IS_CAPABLE;
+        const IS_CAPABLE = false;
+
+        if (!IS_CAPABLE) {
+          response = await axios.post(generateReportEndpointServer, form, {
+            headers: form.getHeaders(),
+            maxBodyLength: Infinity,
+            maxContentLength: Infinity,
+            validateStatus: (s) => s === 200,
+          });
+        } else {
+          response = await axios.post(generateReportEndpoint, payload, {
+            headers: { "Content-Type": "application/json" },
+            // timeout: 300000,
+            validateStatus: (status) => status === 200,
+          });
+        }
 
         if (response.data.status == "failed") {
           log.info("API response failed:", response.data);

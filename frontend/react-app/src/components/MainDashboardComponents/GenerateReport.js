@@ -345,6 +345,7 @@ export default function GenerateReport({ activeTab }) {
       const updatedRecentReportData = reportData.recentReportsData;
       updateReportData({ recentReportsData: updatedRecentReportData });
     } finally {
+      setLoading(false);
       return true;
     }
   };
