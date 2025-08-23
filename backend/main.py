@@ -132,36 +132,46 @@ async def analyze_bank_statements_pdf(
 ):
     
     pdf_paths = []
-    for pdf_file in files:
-        file_path = os.path.join(TEMP_SAVED_PDF_DIR, pdf_file.filename)
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(pdf_file.file, buffer)
-        pdf_paths.append(file_path)
+    try:
+        for pdf_file in files:
+            file_path = os.path.join(TEMP_SAVED_PDF_DIR, pdf_file.filename)
+            print("file_path", file_path)
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(pdf_file.file, buffer)
+            pdf_paths.append(file_path)
 
-    is_ocr_bool = [val.lower() == 'true' for val in is_ocr]
+        is_ocr_bool = [val.lower() == 'true' for val in is_ocr]
 
-    whole_transaction_sheet_data = None
-    if whole_transaction_sheet:
-        whole_transaction_sheet_data = json.loads(whole_transaction_sheet)
+        whole_transaction_sheet_data = None
+        if whole_transaction_sheet:
+            whole_transaction_sheet_data = json.loads(whole_transaction_sheet)
+            
+        aiyazs_array_of_array_data = None
+        if aiyazs_array_of_array:
+            aiyazs_array_of_array_data = json.loads(aiyazs_array_of_array)
+
+        request_data = {
+            "bank_names": bank_names,
+            "pdf_paths": pdf_paths,
+            "passwords": passwords,
+            "start_date": start_date,
+            "end_date": end_date,
+            "ca_id": ca_id,
+            "is_ocr": is_ocr_bool,
+            "whole_transaction_sheet": whole_transaction_sheet_data,
+            "aiyazs_array_of_array": aiyazs_array_of_array_data
+        }
         
-    aiyazs_array_of_array_data = None
-    if aiyazs_array_of_array:
-        aiyazs_array_of_array_data = json.loads(aiyazs_array_of_array)
-
-    request_data = {
-        "bank_names": bank_names,
-        "pdf_paths": pdf_paths,
-        "passwords": passwords,
-        "start_date": start_date,
-        "end_date": end_date,
-        "ca_id": ca_id,
-        "is_ocr": is_ocr_bool,
-        "whole_transaction_sheet": whole_transaction_sheet_data,
-        "aiyazs_array_of_array": aiyazs_array_of_array_data
-    }
-    
-    request = BankStatementRequest(**request_data)
-    return await analyze_bank_statements(request)
+        request = BankStatementRequest(**request_data)
+        return await analyze_bank_statements(request)
+    finally:
+        # Clean up the saved PDF files
+        for path in pdf_paths:
+            try:
+                os.remove(path)
+                logger.info(f"Successfully deleted temporary file: {path}")
+            except OSError as e:
+                logger.error(f"Error deleting file {path}: {e.strerror}")
 
 @app.post("/analyze-statements/")
 async def analyze_bank_statements(request: BankStatementRequest):
