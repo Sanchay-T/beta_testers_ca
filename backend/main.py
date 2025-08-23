@@ -169,27 +169,28 @@ async def analyze_bank_statements(request: BankStatementRequest):
             fetched_name = None
             fetched_acc_num = None
 
-            name_entities = extract_entities(pdf)
-            acc_number_ifsc = extract_accno_ifsc(pdf)
+            # name_entities = extract_entities(pdf)
+            # acc_number_ifsc = extract_accno_ifsc(pdf)
 
-            print("name_entities:- ",name_entities)
+            # print("name_entities:- ",name_entities)
 
-            fetched_acc_num=acc_number_ifsc["acc"]
+            # fetched_acc_num=acc_number_ifsc["acc"]
 
-            if name_entities:
-                for entity in name_entities:
-                    if fetched_name==None:
-                        fetched_name=entity
+            # if name_entities:
+            #     for entity in name_entities:
+            #         if fetched_name==None:
+            #             fetched_name=entity
 
-            if fetched_name:
-                ner_results["Name"].append(fetched_name)
-            else:
-                ner_results["Name"].append(f"Statement {person_count}")
+            # if fetched_name:
+            #     ner_results["Name"].append(fetched_name)
+            # else:
+            ner_results["Name"].append(f"Statement {person_count}")
                 
-            if fetched_acc_num:
-                ner_results["Acc Number"].append(fetched_acc_num)
-            else:
-                ner_results["Acc Number"].append("XXXXXXXXXXX")
+            # if fetched_acc_num:
+            #     ner_results["Acc Number"].append(fetched_acc_num)
+            # else:
+            ner_results["Acc Number"].append("XXXXXXXXXXX")
+            
         print("Ner results", ner_results)
         end_ner = time.time()
         print("Time taken to process NER", end_ner-start_ner)
