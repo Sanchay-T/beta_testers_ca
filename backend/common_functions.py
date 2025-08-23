@@ -57,7 +57,7 @@ p.add_argument(
     "--customer-sheet-path",
     default=os.path.join(BASE_DIR, "Customer_category.xlsx"),
 )
-args = p.parse_args()
+args,_ = p.parse_known_args()
 
 # CUSTOMER_SHEET_PATH = os.environ.get(
 #     "CUSTOMER_SHEET_PATH",

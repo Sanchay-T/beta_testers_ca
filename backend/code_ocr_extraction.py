@@ -49,14 +49,14 @@ TEMP_SAVED_PDF_DIR = get_saved_pdf_dir()
 # # ─────────────────────────────────────────────────────────────────────────────\
 
 # DETDIR_server = os.path.join(BASE_DIR,"models", "PP-OCRv5_server_det_infer")
-DETDIR_mobile = os.path.join(BASE_DIR,"models", "PP-OCRv5_mobile_det_infer")
+# DETDIR_mobile = os.path.join(BASE_DIR,"models", "PP-OCRv5_mobile_det_infer")
 # RECDIR_server = os.path.join(BASE_DIR,"models", "PP-OCRv5_server_rec_infer")
-RECDIR_mobile = os.path.join(BASE_DIR,"models", "PP-OCRv5_mobile_rec_infer")
+# RECDIR_mobile = os.path.join(BASE_DIR,"models", "PP-OCRv5_mobile_rec_infer")
 
 # det_model = TextDetection(model_name="PP-OCRv5_server_det", model_dir= DETDIR_server)
-det_model_mobile = TextDetection(model_name="PP-OCRv5_mobile_det", model_dir=DETDIR_mobile)
+# det_model_mobile = TextDetection(model_name="PP-OCRv5_mobile_det", model_dir=DETDIR_mobile)
 # rec_model = TextRecognition(model_name="PP-OCRv5_server_rec", model_dir=RECDIR_server)
-rec_model_mobile = TextRecognition(model_name="PP-OCRv5_mobile_rec", model_dir=RECDIR_mobile)
+# rec_model_mobile = TextRecognition(model_name="PP-OCRv5_mobile_rec", model_dir=RECDIR_mobile)
 # # ─────────────────────────────────────────────────────────────────────────────
 
 

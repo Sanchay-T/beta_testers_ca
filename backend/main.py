@@ -29,8 +29,8 @@ from pydantic import Field
 from backend.tax_professional.banks.CA_Statement_Analyzer import start_extraction_add_pdf, refresh_category_all_sheets, save_to_excel,individual_summary
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from backend.account_number_ifsc_extraction import extract_accno_ifsc
-from backend.pdf_to_name import extract_entities
+# from backend.account_number_ifsc_extraction import extract_accno_ifsc
+# from backend.pdf_to_name import extract_entities
 import time
 
 logging.basicConfig(level=logging.INFO)
