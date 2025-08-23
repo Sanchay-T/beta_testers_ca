@@ -666,7 +666,7 @@ def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_
 
         else:
             dfs[bank], name_dfs[bank], errorz[bank] = extraction_process(bank, pdf_path, pdf_password, start_date,
-                                                                         end_date,isthis_ocr)
+                                                                         end_date,isthis_ocr,CA_ID)
             
         
         print("heyyyy",dfs)

@@ -347,8 +347,8 @@ def convert_csv_to_excel(csv_path, CA_ID):
     return excel_path
 
 
-def extraction_process(bank, pdf_path, pdf_password, start_date, end_date, isthis_ocr):
-    CA_ID = "1234_temp"
+def extraction_process(bank, pdf_path, pdf_password, start_date, end_date, isthis_ocr,CA_ID):
+    # CA_ID = "1234_temp"
     empty_idf = pd.DataFrame()
     default_name_n_num = ["_", "XXXXXXXXXX"]
     a = ""
@@ -435,7 +435,7 @@ def extraction_process(bank, pdf_path, pdf_password, start_date, end_date, isthi
 
 
 def extraction_process_explicit_lines(bank, pdf_path, pdf_password, start_date, end_date, explicit_lines, labels):
-    CA_ID = "1234_temp"
+    # CA_ID = "1234_temp"
     empty_idf = pd.DataFrame()
     default_name_n_num = ["_", "XXXXXXXXXX"]
     # bank = re.sub(r"\d+", "", bank)

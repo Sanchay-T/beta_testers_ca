@@ -108,8 +108,8 @@ def load_new_first_page_function(pdf_document):
 
     return None  # Terminate if keywords are not found on the first three pages
 
-def load_first_page_into_memory(pdf_path):
-    ca_id = "1234_temp"
+def load_first_page_into_memory(pdf_path,ca_id):
+    # ca_id = "1234_temp"
     # Compile regex patterns for date and balance keywords for fast searching
     # date_pattern = re.compile(r'\b(date|value date|value)\b', re.IGNORECASE)
     # balance_pattern = re.compile(r'\b(balance|total amount)\b', re.IGNORECASE)
@@ -353,7 +353,7 @@ def unlock_and_add_margins_to_pdf(
         # ----------------------------------------------------------
         # 7.  Save result
         # ----------------------------------------------------------
-        out_name = f"{timestamp}-{CA_ID}_{uuid.uuid4().hex}.pdf"
+        out_name = f"{CA_ID}_{timestamp}_{uuid.uuid4().hex}.pdf"
         out_path = os.path.join(TEMP_SAVED_PDF_DIR, out_name)
         pdf_document.save(out_path)
 
@@ -1383,11 +1383,11 @@ def old_bank_extraction(page_path):
     pass
 
 # Function to add column separators (optimized to avoid file I/O)
-def add_column_separators_in_memory(page):
-    CA_ID = "1234_temp"
+def add_column_separators_in_memory(page,ca_id):
+    # CA_ID = "1234_temp"
     # Simulate adding column separators to the in-memory page
     output_pdf, coordinates, llama = process_pdf_and_annotate(page, os.path.join(TEMP_SAVED_PDF_DIR,
-                                                                                      f"{CA_ID}_only_columns_add_{uuid.uuid4().hex}.pdf"))
+                                                                                      f"{ca_id}_only_columns_add_{uuid.uuid4().hex}.pdf"))
     return output_pdf, coordinates, llama  # Return the modified page and coordinates
 
 def add_column_separators_with_coordinates(pdf_path, coordinates):
@@ -1494,11 +1494,11 @@ def run_test_case_E(bank, pdf_path, timestamp, CA_ID):
     # df = customer.custom_extraction(bank, pdf_path, 0, timestamp)
     return df, lists
 
-def process_pdf_with_test_cases(pdf_path):
+def process_pdf_with_test_cases(pdf_path,ca_id):
     print("Starting Test Case Processing...")
 
     # Load the first page of the PDF into memory once
-    page = load_first_page_into_memory(pdf_path)
+    page = load_first_page_into_memory(pdf_path,ca_id)
     reader = PdfReader(page)
     writer = PdfWriter()
     age = reader.pages[0]
@@ -1540,7 +1540,7 @@ def process_pdf_with_test_cases(pdf_path):
         return ["C", 0, lists, explicit_lines_x]  # Test Case C passed
 
     # Test Case C
-    page_with_columns, coordinates_C, explicit_lines = add_column_separators_in_memory(page)
+    page_with_columns, coordinates_C, explicit_lines = add_column_separators_in_memory(page,ca_id)
     model_df_C, lists = run_test_case_C(page_with_columns, explicit_lines)
     if model_df_C is not None:
         print("Test Case C passed")
@@ -1699,7 +1699,7 @@ def is_pdf_encoded(pdf_path,password=""):
 def extract_with_test_cases(bank_name, pdf_path, pdf_password, CA_ID):
     timestamp = "1234_temp"
     pdf_in_saved_pdf = unlock_and_add_margins_to_pdf(pdf_path, pdf_password, timestamp, CA_ID)
-    list_test = process_pdf_with_test_cases(pdf_in_saved_pdf)
+    list_test = process_pdf_with_test_cases(pdf_in_saved_pdf,CA_ID)
     text = extract_text_from_pdf(pdf_in_saved_pdf)
     idf, explicit_lines = run_test_output_on_whole_pdf(list_test, pdf_in_saved_pdf, bank_name, timestamp, CA_ID)
     return idf, text, explicit_lines

@@ -22,7 +22,7 @@ import pandas as pd
 # import matplotlib
 # matplotlib.use('Agg')
 # from findaddy.exceptions import ExtractionError
-from backend.utils import get_saved_pdf_dir
+from backend.utils import get_saved_pdf_dir, cleanup_temp_files
 TEMP_SAVED_PDF_DIR = get_saved_pdf_dir()
 from pydantic import Field
 # If you have other custom imports:
@@ -172,6 +172,9 @@ async def analyze_bank_statements_pdf(
                 logger.info(f"Successfully deleted temporary file: {path}")
             except OSError as e:
                 logger.error(f"Error deleting file {path}: {e.strerror}")
+        
+        # Clean up all temporary files for this ca_id
+        cleanup_temp_files(ca_id)
 
 @app.post("/analyze-statements/")
 async def analyze_bank_statements(request: BankStatementRequest):
