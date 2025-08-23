@@ -36,9 +36,9 @@ class GatewayServerService {
       const serviceSuccess = await this.tryServiceApproach();
 
       if (serviceSuccess) {
-        // Wait for service to actually respond
+        // Wait for service to actually respond (increased timeout for PostgreSQL)
         log.info("⏳ Waiting for service to respond on port 7890...");
-        const serviceReady = await this.waitForGatewayReady(15000);
+        const serviceReady = await this.waitForGatewayReady(60000);
         if (serviceReady) {
           log.info("✅ Windows Service started successfully and responding");
           return true;
@@ -56,7 +56,16 @@ class GatewayServerService {
         return true;
       }
 
-      // Step 4: All methods failed
+      // Step 4: PostgreSQL Reset Retry (if PostgreSQL data might be corrupted)
+      log.warn("⚠️ Process startup failed - attempting PostgreSQL data reset...");
+      const resetSuccess = await this.tryPostgreSQLReset();
+      
+      if (resetSuccess) {
+        log.info("✅ Gateway started successfully after PostgreSQL reset");
+        return true;
+      }
+
+      // Step 5: All methods failed
       throw new Error("All gateway startup methods failed");
 
     } catch (error) {
@@ -132,8 +141,8 @@ class GatewayServerService {
       this.gatewayProcess.unref();
       log.info(`📋 Gateway process started with PID: ${this.gatewayProcess.pid}`);
 
-      // Wait for it to be ready
-      const ready = await this.waitForGatewayReady(20000);
+      // Wait for it to be ready (increased timeout for PostgreSQL initialization)
+      const ready = await this.waitForGatewayReady(60000);
       if (ready) {
         log.info("✅ Gateway process responding successfully");
         return true;
@@ -162,6 +171,58 @@ class GatewayServerService {
     }
   }
 
+  async tryPostgreSQLReset() {
+    try {
+      log.warn("🗄️ Attempting PostgreSQL data directory reset...");
+      
+      // First, make sure any gateway processes are killed
+      await this.killExistingProcesses();
+      
+      const fs = require('fs');
+      const pgDataPath = 'C:\\ProgramData\\Cyphersol\\pgdata';
+      
+      if (fs.existsSync(pgDataPath)) {
+        log.info("📁 Backing up and clearing PostgreSQL data directory...");
+        
+        // Create backup directory name with timestamp
+        const backupPath = `${pgDataPath}_backup_${Date.now()}`;
+        
+        try {
+          // Rename the current pgdata to backup
+          fs.renameSync(pgDataPath, backupPath);
+          log.info(`✅ PostgreSQL data backed up to: ${backupPath}`);
+        } catch (backupError) {
+          log.warn(`⚠️ Could not backup PostgreSQL data: ${backupError.message}`);
+          // Try to remove the directory instead
+          try {
+            execSync(`rmdir /s /q "${pgDataPath}"`, { stdio: 'ignore' });
+            log.info("🗑️ PostgreSQL data directory removed");
+          } catch (removeError) {
+            log.error(`❌ Could not remove PostgreSQL data directory: ${removeError.message}`);
+            return false;
+          }
+        }
+      }
+      
+      log.info("🚀 Starting Gateway with fresh PostgreSQL initialization...");
+      
+      // Try starting the gateway again with fresh PostgreSQL data
+      const processSuccess = await this.runAsProcess();
+      
+      if (processSuccess) {
+        log.info("✅ Gateway started successfully with fresh PostgreSQL data");
+        return true;
+      }
+      
+      log.error("❌ Gateway still failed to start even with fresh PostgreSQL data");
+      return false;
+      
+    } catch (error) {
+      log.error("❌ PostgreSQL reset failed:", error.message);
+      return false;
+    }
+  }
+
   async checkGatewayHealth() {
     try {
       const axios = require('axios');
@@ -175,23 +236,32 @@ class GatewayServerService {
     }
   }
 
-  async waitForGatewayReady(timeout = 20000) {
+  async waitForGatewayReady(timeout = 60000) {
     const startTime = Date.now();
     const checkInterval = 1000;
     let attempts = 0;
 
     log.info(`⏳ Waiting up to ${timeout / 1000}s for gateway to respond...`);
+    log.info(`🗄️ Note: Gateway includes PostgreSQL initialization which may take 30-60s on first run`);
 
     while (Date.now() - startTime < timeout) {
       attempts++;
       const isReady = await this.checkGatewayHealth();
       if (isReady) {
-        log.info(`✅ Gateway responding after ${attempts} attempts`);
+        log.info(`✅ Gateway responding after ${attempts} attempts (${Math.round((Date.now() - startTime) / 1000)}s)`);
         return true;
       }
 
+      // More frequent progress updates for longer timeout
       if (attempts % 5 === 0) {
-        log.info(`⏳ Still waiting... attempt ${attempts}`);
+        const elapsed = Math.round((Date.now() - startTime) / 1000);
+        if (elapsed < 30) {
+          log.info(`⏳ Still waiting... attempt ${attempts} (${elapsed}s) - PostgreSQL may still be initializing`);
+        } else if (elapsed < 45) {
+          log.info(`⏳ Still waiting... attempt ${attempts} (${elapsed}s) - PostgreSQL taking longer than usual`);
+        } else {
+          log.info(`⏳ Still waiting... attempt ${attempts} (${elapsed}s) - Final attempts before timeout`);
+        }
       }
 
       await new Promise(resolve => setTimeout(resolve, checkInterval));

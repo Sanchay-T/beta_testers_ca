@@ -10,7 +10,10 @@ class IsolatedCompatibilityBubble {
   constructor(logger = null, compatibilityWindow = null) {
     this.logger = logger;
     this.compatibilityWindow = compatibilityWindow;
-    this.isDev = !require("electron").app.isPackaged;
+    
+    // Mode detection and configuration
+    this.mode = this.detectMode();
+    this.paths = this.initializePaths();
     
     // Our controlled processes
     this.controlledProcesses = {
@@ -30,6 +33,75 @@ class IsolatedCompatibilityBubble {
       shutdown: 5000,    // 5 seconds to clean up our processes
       gateway: 30000     // 30 seconds specifically for Gateway (includes PostgreSQL startup)
     };
+    
+    // Log mode and paths on initialization
+    this.logModeConfiguration();
+  }
+
+  // Mode detection - match main app logic exactly
+  detectMode() {
+    const { app } = require("electron");
+    const appIsPackaged = app.isPackaged;
+    const nodeEnv = process.env.NODE_ENV;
+    
+    // Match main app logic: isDevelopment = !appIsPackaged || nodeEnv === "development"
+    const isDevelopment = !appIsPackaged || nodeEnv === "development";
+    
+    if (isDevelopment) {
+      return "dev";
+    } else {
+      return "prod";
+    }
+  }
+
+  // Initialize all paths based on detected mode
+  initializePaths() {
+    const mode = this.mode;
+    
+    if (mode === "dev") {
+      return {
+        mode: "dev",
+        python: {
+          executable: path.join(__dirname, '../../dist/main/main.exe'),
+          workingDir: path.join(__dirname, '../../dist/main')
+        },
+        gateway: {
+          executable: path.join(__dirname, '../gatewayServer/gatewayService.exe'),
+          workingDir: path.join(__dirname, '../gatewayServer'),
+          config: path.join(__dirname, '../gatewayServer/appsettings.json')
+        },
+        description: "Development mode - running from source directory"
+      };
+    } else {
+      return {
+        mode: "prod",
+        python: {
+          executable: path.join(process.resourcesPath, 'backend', 'main', 'main.exe'),
+          workingDir: path.join(process.resourcesPath, 'backend', 'main')
+        },
+        gateway: {
+          executable: path.join(process.resourcesPath, 'gatewayService.exe'),
+          workingDir: process.resourcesPath, // C:\Program Files\CypherEdge\resources
+          config: path.join(process.resourcesPath, 'appsettings.json')
+        },
+        description: "Production mode - installed to Program Files"
+      };
+    }
+  }
+
+  // Log the current mode configuration for debugging
+  logModeConfiguration() {
+    const { app } = require("electron");
+    const appIsPackaged = app.isPackaged;
+    const nodeEnv = process.env.NODE_ENV;
+    const isDevelopment = !appIsPackaged || nodeEnv === "development";
+    
+    this.sendLiveUpdate(`🔧 Compatibility checker mode: ${this.paths.mode.toUpperCase()}`);
+    this.sendLiveUpdate(`📊 Detection: isPackaged=${appIsPackaged} | NODE_ENV=${nodeEnv} | isDev=${isDevelopment}`);
+    this.sendLiveUpdate(`📋 ${this.paths.description}`);
+    this.sendLiveUpdate(`🐍 Python executable: ${this.paths.python.executable}`);
+    this.sendLiveUpdate(`🚪 Gateway executable: ${this.paths.gateway.executable}`);
+    this.sendLiveUpdate(`📂 Gateway working dir: ${this.paths.gateway.workingDir}`);
   }
 
   // Enhanced live updates to the compatibility UI with detailed context
@@ -197,31 +269,9 @@ class IsolatedCompatibilityBubble {
         }
       }
       
-      // Kill Gateway processes (adapted from stopEverythingNeatly)
-      this.sendLiveUpdate('🧹 Terminating existing Gateway processes...');
-      if (process.platform === "win32") {
-        const gatewayKillCommands = [
-          'taskkill /IM "gatewayService.exe" /F',
-          'taskkill /IM "gatewayService.exe" /F /T',
-          'wmic process where "name like \'%gateway%\'" delete',
-          'powershell -Command "Get-Process | Where-Object {$_.ProcessName -like \'*gateway*\'} | Stop-Process -Force"'
-        ];
-        
-        for (const cmd of gatewayKillCommands) {
-          try {
-            execSync(cmd, { timeout: 5000, windowsHide: true, shell: true });
-          } catch (e) {
-            // Process might not exist - not an error
-          }
-        }
-        
-        // Stop Gateway service
-        try {
-          execSync('sc stop "LicensingServer"', { timeout: 5000, windowsHide: true });
-        } catch (e) {
-          // Service might not exist - not an error
-        }
-      }
+      // Kill Gateway processes using proven stopEverythingNeatly logic
+      this.sendLiveUpdate('🧹 Terminating existing Gateway processes using proven method...');
+      await this.robustGatewayCleanup('existing');
       
       // Wait for processes to fully terminate
       this.sendLiveUpdate('⏱️ Waiting for complete process termination...');
@@ -238,11 +288,12 @@ class IsolatedCompatibilityBubble {
   async startControlledPythonBackend() {
     return new Promise((resolve) => {
       try {
-        const pythonPath = this.isDev
-          ? path.join(__dirname, '../../dist/main/main.exe')
-          : path.join(process.resourcesPath, 'backend/main/main.exe');
+        const pythonPath = this.paths.python.executable;
+        const pythonWorkingDir = this.paths.python.workingDir;
         
-        this.sendLiveUpdate(`🐍 Starting controlled Python backend at ${pythonPath}...`);
+        this.sendLiveUpdate(`🐍 Starting controlled Python backend...`);
+        this.sendLiveUpdate(`📂 Mode: ${this.paths.mode.toUpperCase()} | Executable: ${pythonPath}`);
+        this.sendLiveUpdate(`📁 Working directory: ${pythonWorkingDir}`);
         
         if (!fs.existsSync(pythonPath)) {
           resolve({
@@ -256,7 +307,7 @@ class IsolatedCompatibilityBubble {
         const spawnOptions = {
           stdio: 'pipe',
           detached: false,
-          cwd: path.dirname(pythonPath)  // Set working directory to executable location
+          cwd: pythonWorkingDir  // Use mode-specific working directory
         };
         
         const command = pythonPath;  // Always use the executable path
@@ -320,11 +371,14 @@ class IsolatedCompatibilityBubble {
   async startControlledGatewayService() {
     return new Promise((resolve) => {
       try {
-        const gatewayPath = this.isDev
-          ? path.join(__dirname, '../gatewayServer/gatewayService.exe')
-          : path.join(process.resourcesPath, 'gatewayService.exe');
+        const gatewayPath = this.paths.gateway.executable;
+        const gatewayWorkingDir = this.paths.gateway.workingDir;
+        const gatewayConfig = this.paths.gateway.config;
         
-        this.sendLiveUpdate(`🚪 Starting controlled Gateway service at ${gatewayPath}...`);
+        this.sendLiveUpdate(`🚪 Starting controlled Gateway service...`);
+        this.sendLiveUpdate(`📂 Mode: ${this.paths.mode.toUpperCase()} | Executable: ${gatewayPath}`);
+        this.sendLiveUpdate(`📁 Working directory: ${gatewayWorkingDir}`);
+        this.sendLiveUpdate(`⚙️ Configuration file: ${gatewayConfig}`);
         
         if (!fs.existsSync(gatewayPath)) {
           resolve({
@@ -335,28 +389,19 @@ class IsolatedCompatibilityBubble {
           return;
         }
         
-        // Set working directory to match main application behavior
-        const gatewayWorkingDir = this.isDev
-          ? path.join(__dirname, '../gatewayServer')
-          : process.resourcesPath;
-        
         this.controlledProcesses.gateway = spawn(gatewayPath, [], {
           stdio: 'pipe',
           detached: false,
-          cwd: gatewayWorkingDir  // Critical: Gateway needs correct working directory for config files
+          cwd: gatewayWorkingDir  // Use mode-specific working directory for config files
         });
         
         this.sendLiveUpdate(`🔧 Gateway working directory set to: ${gatewayWorkingDir}`);
         
         // Verify Gateway configuration files exist (critical for startup)
-        const appSettingsPath = this.isDev 
-          ? path.join(__dirname, '../gatewayServer/appsettings.json')
-          : path.join(process.resourcesPath, 'appsettings.json');
-        
-        if (fs.existsSync(appSettingsPath)) {
-          this.sendLiveUpdate(`✅ Gateway configuration found: ${path.basename(appSettingsPath)}`);
+        if (fs.existsSync(gatewayConfig)) {
+          this.sendLiveUpdate(`✅ Gateway configuration found: ${path.basename(gatewayConfig)}`);
         } else {
-          this.sendLiveUpdate(`⚠️ Gateway configuration missing: ${appSettingsPath}`);
+          this.sendLiveUpdate(`⚠️ Gateway configuration missing: ${gatewayConfig}`);
         }
         
         // Check PostgreSQL data directory (source of startup hangs)
@@ -707,28 +752,26 @@ class IsolatedCompatibilityBubble {
         }, 3000);
       }
       
-      // Kill our controlled Gateway process
-      if (this.controlledProcesses.gateway && !this.controlledProcesses.gateway.killed) {
-        this.sendLiveUpdate('🧹 Terminating controlled Gateway process...');
-        this.controlledProcesses.gateway.kill('SIGTERM');
-        
-        // Force kill after timeout
-        setTimeout(() => {
-          if (this.controlledProcesses.gateway && !this.controlledProcesses.gateway.killed) {
-            this.controlledProcesses.gateway.kill('SIGKILL');
-          }
-        }, 3000);
-      }
+      // Kill our controlled Gateway process using robust method - CRITICAL for splash screen
+      this.sendLiveUpdate('🏭 Using robust Gateway cleanup for main app startup...');
+      await this.robustGatewayCleanup('controlled');
       
-      // Wait for cleanup
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Additional cleanup to ensure ports are free for main app
+      this.sendLiveUpdate('🔍 Verifying ports are free for main app startup...');
+      await this.verifyPortsAreClean();
       
-      this.sendLiveUpdate('✅ Controlled processes cleaned up successfully!');
-      this.logger?.info('BUBBLE_CLEANUP', 'Controlled processes cleanup completed');
+      // Wait for complete cleanup
+      this.sendLiveUpdate('⏱️ Waiting for complete cleanup before main app...');
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      this.sendLiveUpdate('✅ Controlled processes cleaned up - main app can start safely!');
+      this.logger?.info('BUBBLE_CLEANUP', 'CRITICAL: Controlled processes cleanup completed - main app ready');
       
     } catch (error) {
-      this.logger?.warn('BUBBLE_CLEANUP', 'Some cleanup operations failed', { error: error.message });
-      this.sendLiveUpdate(`⚠️ Cleanup completed with warnings: ${error.message}`);
+      this.logger?.error('BUBBLE_CLEANUP', 'CRITICAL: Cleanup failed - may affect main app startup', { error: error.message });
+      this.sendLiveUpdate(`❌ CRITICAL: Cleanup failed - may affect splash screen: ${error.message}`);
+      // Still try robust cleanup even if controlled process cleanup fails
+      await this.robustGatewayCleanup('emergency');
     }
   }
 
@@ -741,6 +784,113 @@ class IsolatedCompatibilityBubble {
       details,
       severity: success ? 'success' : 'critical'
     };
+  }
+
+  // ROBUST GATEWAY CLEANUP - Based on main.js stopEverythingNeatly
+  // This ensures compatibility tests don't interfere with splash screen
+  async robustGatewayCleanup(context = 'general') {
+    this.logger?.info('BUBBLE_GATEWAY_CLEANUP', `Starting robust Gateway cleanup - context: ${context}`);
+    
+    if (process.platform !== "win32") {
+      this.logger?.info('BUBBLE_GATEWAY_CLEANUP', 'Non-Windows platform - skipping Windows-specific cleanup');
+      return;
+    }
+
+    try {
+      // 1. Stop Gateway Windows Service (try both possible service names)
+      const serviceNames = ["LicensingServer"];
+      this.sendLiveUpdate(`🛑 Stopping Gateway Windows Service (${context})...`);
+      
+      for (const serviceName of serviceNames) {
+        try {
+          this.logger?.info('BUBBLE_GATEWAY_CLEANUP', `Attempting to stop service: ${serviceName}`);
+          execSync(`sc stop "${serviceName}"`, { timeout: 10000, windowsHide: true });
+          this.sendLiveUpdate(`✅ Service ${serviceName} stopped successfully`);
+        } catch (stopError) {
+          // Check if service is already stopped or doesn't exist
+          if (stopError.message.includes("1062") || 
+              stopError.message.includes("not started") ||
+              stopError.message.includes("1052") ||
+              stopError.message.includes("1060")) {
+            this.logger?.info('BUBBLE_GATEWAY_CLEANUP', `Service ${serviceName} was already stopped or doesn't exist`);
+          } else {
+            this.logger?.warn('BUBBLE_GATEWAY_CLEANUP', `Failed to stop service ${serviceName}`, { error: stopError.message });
+          }
+        }
+
+        // Wait for service to stop
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+
+      // 2. Use multiple aggressive kill methods (from main.js)
+      this.sendLiveUpdate(`⚔️ Using multiple Gateway process termination methods (${context})...`);
+      
+      const killMethods = [
+        'taskkill /IM "gatewayService.exe" /F',
+        'taskkill /IM "gatewayService.exe" /F /T',
+        "wmic process where \"name like '%gateway%'\" delete",
+        "powershell -Command \"Get-Process | Where-Object {$_.ProcessName -like '*gateway*'} | Stop-Process -Force\"",
+      ];
+
+      let killed = false;
+      for (const method of killMethods) {
+        try {
+          this.logger?.info('BUBBLE_GATEWAY_CLEANUP', `Trying kill method: ${method}`);
+          execSync(method, { timeout: 5000, windowsHide: true, shell: true });
+          this.sendLiveUpdate(`✅ Gateway kill method succeeded: ${method.substring(0, 30)}...`);
+          killed = true;
+        } catch (killError) {
+          this.logger?.info('BUBBLE_GATEWAY_CLEANUP', `Kill method failed (expected): ${method}`, { error: killError.message });
+        }
+      }
+
+      // 3. Final verification
+      this.sendLiveUpdate(`🔍 Verifying Gateway termination (${context})...`);
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      
+      try {
+        execSync('tasklist | findstr /I "gatewayService.exe"', { shell: true, timeout: 3000, windowsHide: true });
+        this.logger?.warn('BUBBLE_GATEWAY_CLEANUP', 'Gateway process might still be running after all kill attempts');
+        this.sendLiveUpdate(`⚠️ Gateway process may still be running - main app will handle`);
+      } catch (e) {
+        this.logger?.info('BUBBLE_GATEWAY_CLEANUP', 'Gateway process successfully terminated - verified');
+        this.sendLiveUpdate(`✅ Gateway completely terminated - main app ready (${context})`);
+      }
+
+    } catch (error) {
+      this.logger?.error('BUBBLE_GATEWAY_CLEANUP', 'Robust Gateway cleanup error', { error: error.message, context });
+      this.sendLiveUpdate(`❌ Gateway cleanup error: ${error.message}`);
+    }
+  }
+
+  // Verify ports are clean for main app
+  async verifyPortsAreClean() {
+    const portsToCheck = [this.ports.python, this.ports.gateway];
+    
+    for (const port of portsToCheck) {
+      try {
+        const net = require('net');
+        const server = net.createServer();
+        
+        await new Promise((resolve, reject) => {
+          server.listen(port, () => {
+            server.close();
+            this.logger?.info('BUBBLE_PORT_CHECK', `Port ${port} is available for main app`);
+            resolve();
+          });
+          
+          server.on('error', (err) => {
+            if (err.code === 'EADDRINUSE') {
+              this.logger?.warn('BUBBLE_PORT_CHECK', `Port ${port} still in use - main app may have conflicts`);
+            }
+            reject(err);
+          });
+        });
+        
+      } catch (error) {
+        this.logger?.warn('BUBBLE_PORT_CHECK', `Port ${port} check failed`, { error: error.message });
+      }
+    }
   }
 }
 
