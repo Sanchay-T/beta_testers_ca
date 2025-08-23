@@ -89,6 +89,11 @@ Uses Drizzle ORM with SQLite for:
 1. Python 3.x with PyInstaller
 2. Node.js with npm
 3. .NET Runtime for gateway service
+4. **CRITICAL**: Ensure Python dependencies are installed in virtual environment:
+   ```bash
+   cd C:\Users\admin\Desktop\beta_testers_ca
+   .venv\Scripts\pip install -r backend\requirements.txt
+   ```
 
 ### Production Build Steps
 1. Build Python backend: `pyinstaller --onefile backend/main.py`
@@ -96,6 +101,31 @@ Uses Drizzle ORM with SQLite for:
 3. Build Electron app: `cd frontend && npm run build`
 
 The build process creates distributable packages for Windows (.exe), macOS (.dmg), and Linux (.AppImage).
+
+### Common Startup Issues & Solutions
+
+#### Gateway Service Startup Failure
+**Problem**: Application hangs after clicking "Launch CypherEdge" due to PostgreSQL timeout
+**Root Cause**: Gateway's embedded PostgreSQL takes 30-60s to initialize on first run
+**Solution Applied**: Modified `frontend/InitiateGatewayServer.js:239-271`
+- Increased timeout from 20s to 60s
+- Added PostgreSQL reset mechanism for corrupted data
+- Enhanced progress reporting during initialization
+
+**Critical Code Location**: `frontend/InitiateGatewayServer.js:174-224` - PostgreSQL reset logic
+
+#### Python Backend Missing Dependencies
+**Problem**: `ModuleNotFoundError: No module named 'psutil'` during startup
+**Solution**: Install missing dependencies in virtual environment
+```bash
+cd C:\Users\admin\Desktop\beta_testers_ca
+.venv\Scripts\pip install -r backend\requirements.txt
+```
+
+**Verification**: Check that all services start properly:
+- Gateway Service: port 7890 responds to `/api/health`
+- Python Backend: port 7500 responds after 2-3 seconds
+- Database: SQLite connection established
 
 ## Key Implementation Notes
 
