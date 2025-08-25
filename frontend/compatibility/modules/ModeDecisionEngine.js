@@ -32,7 +32,16 @@ class ModeDecisionEngine {
       // Step 2: Apply forced mode override if set (for testing)
       const config = AppModeConfigManager.getConfig();
       const forcedMode = config.testingOverrides?.forceMode;
+      
+      this.logger?.info('MODE_DECISION', 'Testing override check', {
+        forcedMode: forcedMode,
+        developmentMode: config.developmentMode?.enabled,
+        activeScenario: this.activeScenario,
+        testingOverrides: config.testingOverrides
+      });
+      
       if (forcedMode && config.developmentMode?.enabled) {
+        this.logger?.info('MODE_DECISION', `Applying forced mode override: ${forcedMode}`);
         return this.createForcedResult(forcedMode, systemSpecs, startTime);
       }
 

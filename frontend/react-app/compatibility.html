@@ -56,6 +56,82 @@
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
       }
+
+      /* Professional Modal Animations */
+      @keyframes overlayFadeIn {
+        0% { 
+          opacity: 0; 
+          backdrop-filter: blur(0px); 
+        }
+        100% { 
+          opacity: 1; 
+          backdrop-filter: blur(12px); 
+        }
+      }
+
+      /* Responsive Design for Professional Modals */
+      @media (max-width: 768px) {
+        .hybrid-modal-content {
+          margin: 10px !important;
+          padding: 24px !important;
+          max-width: calc(100vw - 20px) !important;
+          width: calc(100vw - 20px) !important;
+        }
+        
+        .hybrid-choice-grid {
+          grid-template-columns: 1fr !important;
+          gap: 12px !important;
+        }
+        
+        .hybrid-modal-buttons {
+          flex-direction: column !important;
+          gap: 12px !important;
+        }
+        
+        .hybrid-modal-buttons button {
+          width: 100% !important;
+        }
+      }
+
+      @media (max-height: 700px) {
+        .hybrid-modal-overlay {
+          align-items: flex-start !important;
+          padding-top: 20px !important;
+        }
+      }
+
+      @keyframes modalSlideIn {
+        0% { 
+          opacity: 0; 
+          transform: translateY(20px) scale(0.95); 
+          filter: blur(1px);
+        }
+        100% { 
+          opacity: 1; 
+          transform: translateY(0) scale(1); 
+          filter: blur(0px);
+        }
+      }
+
+      @keyframes fadeOut {
+        0% { 
+          opacity: 1; 
+          transform: scale(1); 
+        }
+        100% { 
+          opacity: 0; 
+          transform: scale(0.95); 
+        }
+      }
+
+      @keyframes fadeIn {
+        0% { 
+          opacity: 0; 
+        }
+        100% { 
+          opacity: 1; 
+        }
+      }
       
       /* Tailwind-like utility classes for compatibility */
       .min-h-screen { min-height: 100vh; }
@@ -1182,10 +1258,7 @@
         }
 
         async runAppModeTest() {
-          console.log('🧪 ==================== TEST SESSION STARTED ====================');
-          console.log('🧪 [STEP 1] User clicked "Run Mode Detection Test" button');
-          console.log('🧪 [STEP 1] Selected Scenario:', this.selectedScenario);
-          console.log('🧪 [STEP 1] App Mode Overrides:', this.appModeOverrides);
+          console.log('🧪 Mode Detection Test Started - Scenario:', this.selectedScenario);
           
           const testBtn = document.getElementById('run-app-mode-test');
           const resultDiv = document.getElementById('app-mode-test-result');
@@ -1194,17 +1267,14 @@
           testBtn.disabled = true;
           resultDiv.style.display = 'none';
           
-          console.log('🧪 [STEP 2] Button disabled, running detection...');
-
           try {
             const testOptions = {
               scenario: this.selectedScenario,
               overrides: this.selectedScenario === 'current' ? this.appModeOverrides : null
             };
             
-            console.log('🧪 [STEP 3] Sending test options to backend:', testOptions);
             const result = await window.electronAPI.invoke('app-mode:run-detection', testOptions);
-            console.log('🧪 [STEP 4] Received result from backend:', result);
+            console.log('🧪 Detection Result:', result.determinedMode || result.mode);
             
             this.displayAppModeTestResult(result);
           } catch (error) {
@@ -1220,13 +1290,11 @@
           } finally {
             testBtn.textContent = '🚀 Run Mode Detection Test';
             testBtn.disabled = false;
-            console.log('🧪 [STEP 5] Button re-enabled, test complete');
           }
         }
 
         displayAppModeTestResult(result) {
-          console.log('🧪 [STEP 6] ============== DISPLAYING TEST RESULT ==============');
-          console.log('🧪 [STEP 6] Full result object:', result);
+          console.log('🧪 Displaying Test Result:', result.determinedMode || result.mode || 'Unknown');
           
           const resultDiv = document.getElementById('app-mode-test-result');
           
@@ -1538,30 +1606,39 @@
         showHybridModeFlow(result) {
           console.log('🤔 [HYBRID DECISION] ============== SHOWING HYBRID DECISION MODAL ==============');
           
-          // Create modal overlay with proper scrolling
+          // Create modal overlay with professional backdrop
           const modalOverlay = document.createElement('div');
+          modalOverlay.className = 'hybrid-modal-overlay';
           modalOverlay.style.cssText = `
             position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 20000;
-            background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(8px);
-            padding: 20px; animation: fadeIn 0.3s ease-out;
+            background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px);
+            display: flex; align-items: center; justify-content: center; padding: 20px;
+            animation: overlayFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             overflow-y: auto; overflow-x: hidden;
           `;
           
-          // Create modal content container
+          // Create modal content container with perfect centering
           const modalContainer = document.createElement('div');
           modalContainer.style.cssText = `
-            min-height: calc(100vh - 40px); display: flex; align-items: center; justify-content: center;
+            width: 100%; max-width: 520px; margin: auto;
+            position: relative; min-height: 0;
           `;
           
-          // Create modal content
+          // Create modal content with premium design
           const modalContent = document.createElement('div');
+          modalContent.className = 'hybrid-modal-content';
           modalContent.style.cssText = `
-            background: #ffffff; border-radius: 12px; padding: 24px; text-align: center;
-            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.12), 0 2px 12px rgba(0, 0, 0, 0.08);
-            max-width: 480px; width: 100%; position: relative; color: #1a202c;
-            animation: modalSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            margin: 20px 0; max-height: none;
+            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            border-radius: 16px; padding: 32px; text-align: center;
+            box-shadow: 
+              0 32px 64px rgba(15, 23, 42, 0.15),
+              0 16px 32px rgba(15, 23, 42, 0.1),
+              0 0 0 1px rgba(15, 23, 42, 0.05),
+              inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative; color: #0f172a;
+            animation: modalSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            border: 1px solid rgba(148, 163, 184, 0.1);
           `;
           
           modalContent.innerHTML = `
@@ -1614,7 +1691,7 @@
             </div>
 
             <!-- Choice Cards -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+            <div class="hybrid-choice-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
               <!-- Try Another PC Card -->
               <div id="hybrid-try-another-pc" style="
                 border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px; cursor: pointer;
@@ -1693,7 +1770,10 @@
           modalOverlay.appendChild(modalContainer);
           document.body.appendChild(modalOverlay);
           
-          console.log('🤔 [HYBRID DECISION] Decision modal displayed');
+          // Prevent body scroll when modal is open
+          document.body.style.overflow = 'hidden';
+          
+          console.log('🤔 [HYBRID DECISION] Professional decision modal displayed');
           
           // Handle button clicks
           document.getElementById('hybrid-try-another-pc').addEventListener('click', () => {
@@ -1714,6 +1794,7 @@
           if (choice === 'try_another_pc') {
             // User wants to try on another PC - close the application
             console.log('🚪 [HYBRID EXIT] Showing exit message and closing app');
+            document.body.style.overflow = ''; // Restore body scroll
             
             modalOverlay.querySelector('div').innerHTML = `
               <div style="
@@ -1850,8 +1931,9 @@
             // Handle payment flow buttons
             document.getElementById('payment-back').addEventListener('click', () => {
               console.log('💳 [HYBRID PAYMENT] User clicked Back - returning to decision');
-              this.showHybridModeFlow(result); // Re-show decision modal
+              document.body.style.overflow = ''; // Restore body scroll
               modalOverlay.remove(); // Remove current modal
+              this.showHybridModeFlow(result); // Re-show decision modal
             });
             
             document.getElementById('proceed-payment').addEventListener('click', () => {
@@ -1866,17 +1948,23 @@
           console.log('📱 [QR PAYMENT] ============== SHOWING QR PAYMENT SCREEN ==============');
           
           // Smooth transition - fade out current content
-          const currentContent = modalOverlay.querySelector('div');
+          const currentContent = modalOverlay.querySelector('div div');
           currentContent.style.animation = 'fadeOut 0.3s ease-out forwards';
           
           setTimeout(() => {
-            // Update modal content for QR payment
+            // Update modal content for QR payment with premium design
             currentContent.style.cssText = `
-              background: white; border-radius: 12px; padding: 20px; text-align: center;
-              box-shadow: 0 20px 40px rgba(0, 123, 255, 0.15), 0 0 0 1px rgba(0, 123, 255, 0.1);
-              max-width: 460px; width: 100%; position: relative; color: #1a202c;
-              animation: modalSlideIn 0.4s ease-out; max-height: none;
+              background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+              border-radius: 16px; padding: 32px; text-align: center;
+              box-shadow: 
+                0 32px 64px rgba(15, 23, 42, 0.15),
+                0 16px 32px rgba(15, 23, 42, 0.1),
+                0 0 0 1px rgba(15, 23, 42, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+              position: relative; color: #0f172a;
+              animation: modalSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+              border: 1px solid rgba(148, 163, 184, 0.1);
             `;
             
             // Generate system ID for payment
@@ -2143,15 +2231,22 @@
         handlePaymentComplete(modalOverlay, systemId) {
           console.log('✅ [PAYMENT COMPLETE] ============== HANDLING PAYMENT COMPLETION ==============');
           
-          const currentContent = modalOverlay.querySelector('div');
+          const currentContent = modalOverlay.querySelector('div div');
           currentContent.style.animation = 'fadeOut 0.3s ease-out forwards';
           
           setTimeout(() => {
             currentContent.style.cssText = `
-              background: white; border-radius: 16px; padding: 40px 32px; text-align: center;
-              box-shadow: 0 20px 40px rgba(0, 123, 255, 0.15), 0 0 0 1px rgba(0, 123, 255, 0.1);
-              max-width: 480px; width: 100%; position: relative; color: #2c3e50;
-              animation: modalSlideIn 0.4s ease-out;
+              background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+              border-radius: 16px; padding: 40px 32px; text-align: center;
+              box-shadow: 
+                0 32px 64px rgba(15, 23, 42, 0.15),
+                0 16px 32px rgba(15, 23, 42, 0.1),
+                0 0 0 1px rgba(15, 23, 42, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+              position: relative; color: #0f172a;
+              animation: modalSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+              border: 1px solid rgba(148, 163, 184, 0.1);
             `;
             
             currentContent.innerHTML = `
@@ -2350,6 +2445,7 @@
             // Handle close application button (only option for HYBRID users)
             document.getElementById('close-application').addEventListener('click', () => {
               console.log('✅ [PAYMENT COMPLETE] HYBRID user must close - Standard Mode not available');
+              document.body.style.overflow = ''; // Restore body scroll
               modalOverlay.style.animation = 'fadeOut 0.3s ease-out forwards';
               setTimeout(() => {
                 if (modalOverlay.parentNode) modalOverlay.remove();

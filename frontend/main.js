@@ -8,8 +8,6 @@ const {
 } = require("electron");
 const fs = require("fs");
 
-// 🐛 DEBUG: Confirm we're running the updated version
-console.log("🚀 [STARTUP] Running UPDATED main.js with SessionManager fix - timestamp:", new Date().toISOString());
 const { registerOpenFileIpc } = require("./ipc/fileHandler.js");
 require("dotenv").config();
 const path = require("path");
@@ -22,11 +20,8 @@ const { registerCaseDashboardIpc } = require("./ipc/caseDashboard.js");
 const { registerReportHandlers } = require("./ipc/reportHandlers.js");
 const { registerAuthHandlers } = require("./ipc/authHandlers.js");
 const { registerEditReportHandlers } = require("./ipc/editReportHandlers.js");
-// Import and create SessionManager instance
-const SessionManager = require("./SessionManager");
-console.log('✅ [MAIN] SessionManager loaded successfully');
-const sessionManager = SessionManager.getInstance();
-console.log('✅ [MAIN] SessionManager instance created:', sessionManager instanceof require('events').EventEmitter);
+// Import SessionManager singleton instance
+const sessionManager = require("./SessionManager");
 const licenseManager = require("./LicenseManager");
 const { generateReportIpc } = require("./ipc/generateReport");
 const { registerOpportunityToEarnIpc } = require("./ipc/opportunityToEarn");
@@ -2484,9 +2479,9 @@ app.whenReady().then(async () => {
         
         // Map UI scenario names to config scenario names
         const scenarioMapping = {
-          'highEnd': 'highEndPC',
-          'midRange': 'midRangePC', 
-          'lowEnd': 'lowEndPC'
+          'highEnd': 'highEnd',
+          'midRange': 'midRange', 
+          'lowEnd': 'lowEnd'
         };
         
         const mappedScenario = scenarioMapping[options.scenario] || options.scenario;
@@ -2759,9 +2754,22 @@ app.whenReady().then(async () => {
     try {
       const sessionStartTime = Date.now();
       log.info("🚀 PHASE 3: Initializing Session Manager");
-      await sessionManager.init();
+      
+      // Verify SessionManager instance and methods
+      if (!sessionManager) {
+        throw new Error("SessionManager instance not found");
+      }
+      
+      if (typeof sessionManager.init !== 'function') {
+        log.warn("⚠️ SessionManager.init method not found, skipping initialization");
+        log.info("✅ SessionManager loaded without init (singleton pattern)");
+      } else {
+        await sessionManager.init();
+        log.info("✅ SessionManager initialized successfully");
+      }
+      
       const sessionEndTime = Date.now();
-      log.info("✅ SessionManager initialized successfully", {
+      log.info("✅ SessionManager phase completed", {
         duration: sessionEndTime - sessionStartTime,
       });
     } catch (error) {

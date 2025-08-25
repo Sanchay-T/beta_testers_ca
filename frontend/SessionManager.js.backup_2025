@@ -18,6 +18,7 @@ class SessionManager extends EventEmitter {
         this.interval = null;
 
         SessionManager.instance = this;
+        console.log('✅ [SESSIONMANAGER] Instance created successfully');
     }
 
     async init() {
@@ -146,6 +147,6 @@ class SessionManager extends EventEmitter {
     }
 }
 
-// Create and export singleton instance
-const sessionManagerInstance = new SessionManager();
-module.exports = sessionManagerInstance;
+console.log('✅ [SESSIONMANAGER] Class defined successfully');
+module.exports = SessionManager;
+console.log('✅ [SESSIONMANAGER] Export completed successfully');
