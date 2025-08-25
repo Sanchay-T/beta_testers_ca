@@ -355,81 +355,81 @@ def extraction_process(bank, pdf_path, pdf_password, start_date, end_date, isthi
     # bank = re.sub(r"\d+", "", bank)
     ext = extract_extension(pdf_path)
 
-    # if isthis_ocr:
-    #     try:
-    #         if ext == ".pdf":
-    #             idf, text, explicit_lines = extract_with_test_cases_ocr(bank, pdf_path, pdf_password, CA_ID)
+    if isthis_ocr:
+        try:
+            if ext == ".pdf":
+                idf, text, explicit_lines = extract_with_test_cases_ocr(bank, pdf_path, pdf_password, CA_ID)
 
-    #             if idf.empty:
-    #                 print("Empty result from ocr detection")
-    #                 raise Exception("Rectify PDF")
+                if idf.empty:
+                    print("Empty result from ocr detection")
+                    raise Exception("Rectify PDF")
 
-    #             name_n_num = explicit_lines if idf.empty else extract_account_details(text)
+                name_n_num = explicit_lines if idf.empty else extract_account_details(text)
 
-    #         if not idf.empty:
-    #             a = validate_bank_statement_returns_error_message_ocr(idf)
-    #             idf = add_start_n_end_date_v2(idf, start_date, end_date, bank)
+            if not idf.empty:
+                a = validate_bank_statement_returns_error_message_ocr(idf)
+                idf = add_start_n_end_date_v2(idf, start_date, end_date, bank)
 
-    #         return idf, name_n_num, a
+            return idf, name_n_num, a
 
-    #     except Exception as e:
-    #         return empty_idf, default_name_n_num, str(e)
-    
-    # else:
-    try:
-        if ext == ".pdf":
-            idf, text, explicit_lines = extract_with_test_cases(bank, pdf_path, pdf_password, CA_ID)
-
-            if idf.empty:
-                # SECOND CHECK: Check if PDF is encoded
-                encoding_result = is_pdf_encoded(pdf_path,pdf_password)
-                print("Encoding Result:", encoding_result)
-                if encoding_result != "PDF text is readable and not encoded.":
-                    raise Exception("The PDF appears to be encoded or obfuscated. Please upload a readable PDF.")
-
-            name_n_num = explicit_lines if idf.empty else extract_account_details(text)
-
-        elif ext == ".csv":
-            pdf_path = convert_csv_to_excel(pdf_path, CA_ID)
-            df = pd.read_excel(pdf_path)
-            df = pd.concat([pd.DataFrame([df.columns], columns=df.columns), df], ignore_index=True)
-            df.columns = range(df.shape[1])
-
-            start_index = df.apply(
-                lambda row: (
-                    row.astype(str).str.contains("date", case=False).any() and
-                    row.astype(str).str.contains("balance|total amount", case=False).any()) or
-                    row.astype(str).str.contains("balance|total amount", case=False).any(),
-                axis=1
-            ).idxmax()
-            df = df.loc[start_index:] if start_index is not None else pd.DataFrame()
-            idf, _ = model_for_pdf(df)
-            name_n_num = extract_account_details(extract_text_from_file(pdf_path))
-
-        else:
-            df = pd.read_excel(pdf_path)
-            df = pd.concat([pd.DataFrame([df.columns], columns=df.columns), df], ignore_index=True)
-            df.columns = range(df.shape[1])
-
-            start_index = df.apply(
-                lambda row: (
-                    row.astype(str).str.contains("date", case=False).any() and
-                    row.astype(str).str.contains("balance|total amount", case=False).any()) or
-                    row.astype(str).str.contains("balance|total amount", case=False).any(),
-                axis=1
-            ).idxmax()
-            df = df.loc[start_index:] if start_index is not None else pd.DataFrame()
-            idf, _ = model_for_pdf(df)
-            name_n_num = extract_account_details(extract_text_from_file(pdf_path))
-
-        if not idf.empty:
-            a = validate_bank_statement_returns_error_message(idf)
-            idf = add_start_n_end_date_v2(idf, start_date, end_date, bank)
-
-        return idf, name_n_num, a
-
-    except Exception as e:
+        except Exception as e:
             return empty_idf, default_name_n_num, str(e)
+    
+    else:
+        try:
+            if ext == ".pdf":
+                idf, text, explicit_lines = extract_with_test_cases(bank, pdf_path, pdf_password, CA_ID)
+
+                if idf.empty:
+                    # SECOND CHECK: Check if PDF is encoded
+                    encoding_result = is_pdf_encoded(pdf_path,pdf_password)
+                    print("Encoding Result:", encoding_result)
+                    if encoding_result != "PDF text is readable and not encoded.":
+                        raise Exception("The PDF appears to be encoded or obfuscated. Please upload a readable PDF.")
+
+                name_n_num = explicit_lines if idf.empty else extract_account_details(text)
+
+            elif ext == ".csv":
+                pdf_path = convert_csv_to_excel(pdf_path, CA_ID)
+                df = pd.read_excel(pdf_path)
+                df = pd.concat([pd.DataFrame([df.columns], columns=df.columns), df], ignore_index=True)
+                df.columns = range(df.shape[1])
+
+                start_index = df.apply(
+                    lambda row: (
+                        row.astype(str).str.contains("date", case=False).any() and
+                        row.astype(str).str.contains("balance|total amount", case=False).any()) or
+                        row.astype(str).str.contains("balance|total amount", case=False).any(),
+                    axis=1
+                ).idxmax()
+                df = df.loc[start_index:] if start_index is not None else pd.DataFrame()
+                idf, _ = model_for_pdf(df)
+                name_n_num = extract_account_details(extract_text_from_file(pdf_path))
+
+            else:
+                df = pd.read_excel(pdf_path)
+                df = pd.concat([pd.DataFrame([df.columns], columns=df.columns), df], ignore_index=True)
+                df.columns = range(df.shape[1])
+
+                start_index = df.apply(
+                    lambda row: (
+                        row.astype(str).str.contains("date", case=False).any() and
+                        row.astype(str).str.contains("balance|total amount", case=False).any()) or
+                        row.astype(str).str.contains("balance|total amount", case=False).any(),
+                    axis=1
+                ).idxmax()
+                df = df.loc[start_index:] if start_index is not None else pd.DataFrame()
+                idf, _ = model_for_pdf(df)
+                name_n_num = extract_account_details(extract_text_from_file(pdf_path))
+
+            if not idf.empty:
+                a = validate_bank_statement_returns_error_message(idf)
+                idf = add_start_n_end_date_v2(idf, start_date, end_date, bank)
+
+            return idf, name_n_num, a
+
+        except Exception as e:
+                return empty_idf, default_name_n_num, str(e)
 
 
 

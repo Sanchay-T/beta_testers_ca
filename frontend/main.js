@@ -60,6 +60,7 @@ global.AppConfig = {
   // or inside the packaged application.
   // Use app.isPackaged as primary check, fallback to NODE_ENV
   isDev: isDevelopment,
+  isCapable:process.env.IS_CAPABLE.toLowerCase()==="true" ? true : false,
 
   // Resolve the base directory based on the environment.
   get baseDir() {
@@ -1997,6 +1998,10 @@ async function createWindow() {
       log.error("Error reading file:", error);
       throw error;
     }
+  });
+
+  ipcMain.handle("is-capable", () => {
+    return global.AppConfig.isCapable;
   });
 
   ipcMain.handle("preview-file", async (_event, filePath) => {

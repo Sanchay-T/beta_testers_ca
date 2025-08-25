@@ -35,7 +35,7 @@ import uuid
 import logging
 from .utils import get_base_dir
 
-# from paddleocr import PaddleOCR, TextDetection, TextRecognition
+from paddleocr import PaddleOCR, TextDetection, TextRecognition
 
 
 logger = logging.getLogger(__name__)
@@ -48,17 +48,20 @@ TEMP_SAVED_PDF_DIR = get_saved_pdf_dir()
 # # 1. Paths to Your Model Folders and Sample Image
 # # ─────────────────────────────────────────────────────────────────────────────\
 
-# DETDIR_server = os.path.join(BASE_DIR,"models", "PP-OCRv5_server_det_infer")
-# DETDIR_mobile = os.path.join(BASE_DIR,"models", "PP-OCRv5_mobile_det_infer")
-# RECDIR_server = os.path.join(BASE_DIR,"models", "PP-OCRv5_server_rec_infer")
-# RECDIR_mobile = os.path.join(BASE_DIR,"models", "PP-OCRv5_mobile_rec_infer")
+try:
+    # DETDIR_server = os.path.join(BASE_DIR,"models", "PP-OCRv5_server_det_infer")
+    DETDIR_mobile = os.path.join(BASE_DIR,"models", "PP-OCRv5_mobile_det_infer")
+    # RECDIR_server = os.path.join(BASE_DIR,"models", "PP-OCRv5_server_rec_infer")
+    RECDIR_mobile = os.path.join(BASE_DIR,"models", "PP-OCRv5_mobile_rec_infer")
 
-# det_model = TextDetection(model_name="PP-OCRv5_server_det", model_dir= DETDIR_server)
-# det_model_mobile = TextDetection(model_name="PP-OCRv5_mobile_det", model_dir=DETDIR_mobile)
-# rec_model = TextRecognition(model_name="PP-OCRv5_server_rec", model_dir=RECDIR_server)
-# rec_model_mobile = TextRecognition(model_name="PP-OCRv5_mobile_rec", model_dir=RECDIR_mobile)
-# # ─────────────────────────────────────────────────────────────────────────────
-
+    # det_model = TextDetection(model_name="PP-OCRv5_server_det", model_dir= DETDIR_server)
+    det_model_mobile = TextDetection(model_name="PP-OCRv5_mobile_det", model_dir=DETDIR_mobile)
+    # rec_model = TextRecognition(model_name="PP-OCRv5_server_rec", model_dir=RECDIR_server)
+    rec_model_mobile = TextRecognition(model_name="PP-OCRv5_mobile_rec", model_dir=RECDIR_mobile)
+    # # ─────────────────────────────────────────────────────────────────────────────
+except Exception as e:
+    logger.error(f"Error loading PaddleOCR models: {e}")
+    
 
 def add_start_n_end_date_v2(df, start_date, end_date, bank):
 
@@ -2778,111 +2781,111 @@ def extract_with_test_cases_ocr(bank_name, pdf_path, pdf_password, CA_ID, encode
    text = extract_text_from_pdf_ocr(pdf_in_saved_pdf)
    return idf, text, explicit_lines
 
-# def extraction_process_only_rectify(bank, pdf_path, pdf_password, start_date, end_date, only_lines, labels, encoded_pdf=False):
+def extraction_process_only_rectify(bank, pdf_path, pdf_password, start_date, end_date, only_lines, labels, encoded_pdf=False):
     
-#     # only_lines = [360.12442452566955, 466.55299595424094, 277.2672816685267, 85.83871023995533, 567.2672816685266, 24.410138811383923]
+    # only_lines = [360.12442452566955, 466.55299595424094, 277.2672816685267, 85.83871023995533, 567.2672816685266, 24.410138811383923]
     
-#     CA_ID = "1234_temp"
-#     empty_idf = pd.DataFrame()
-#     default_name_n_num = ["_", "XXXXXXXXXX"]
-#     # bank = re.sub(r"\d+", "", bank)
-#     a = ""
+    CA_ID = "1234_temp"
+    empty_idf = pd.DataFrame()
+    default_name_n_num = ["_", "XXXXXXXXXX"]
+    # bank = re.sub(r"\d+", "", bank)
+    a = ""
 
-#     print("______________________________qwerty_______________________")
+    print("______________________________qwerty_______________________")
 
-#     # explicit_lines = [(x, 0, 0, 0) for x in only_lines]
-#     pdf_to_images = pdf_to_numpy_arrays(pdf_path)
+    # explicit_lines = [(x, 0, 0, 0) for x in only_lines]
+    pdf_to_images = pdf_to_numpy_arrays(pdf_path)
 
-#     # page_h = pdf_to_images[0].shape[0]   # if numpy array, otherwise use image height
-#     # explicit_lines = [(int(round(x+20)), 0, 2, page_h) for x in only_lines] #coz vertical lines look like this
+    # page_h = pdf_to_images[0].shape[0]   # if numpy array, otherwise use image height
+    # explicit_lines = [(int(round(x+20)), 0, 2, page_h) for x in only_lines] #coz vertical lines look like this
 
-#     # --- FIX IS HERE ---
-#     # 1. Recalculate the SAME zoom factor that the function uses internally.
-#     zoom = 300 / 72.0 
+    # --- FIX IS HERE ---
+    # 1. Recalculate the SAME zoom factor that the function uses internally.
+    zoom = 300 / 72.0 
 
-#     # 2. Get the height of the new, high-res image
-#     page_h = pdf_to_images[0].shape[0]
+    # 2. Get the height of the new, high-res image
+    page_h = pdf_to_images[0].shape[0]
 
-#     # 3. Scale your original coordinates using the zoom factor
-#     explicit_lines = [(int(round((x) * zoom)), 0, int(round(2 * zoom)), page_h) for x in only_lines]
+    # 3. Scale your original coordinates using the zoom factor
+    explicit_lines = [(int(round((x) * zoom)), 0, int(round(2 * zoom)), page_h) for x in only_lines]
 
-#     print("Only Lines:", only_lines)
-#     print("Explicit lines for rectify:", explicit_lines)
+    print("Only Lines:", only_lines)
+    print("Explicit lines for rectify:", explicit_lines)
 
-#     print("Detection Started for rectify")
-#     start = time.time() 
-#     if encoded_pdf:
-#         detected_original_bboxs = [] # replace wil new textboxes detected directly from pdf_pages
-#     else:
-#         detected_original_bboxs = det_model_mobile.predict(pdf_to_images)
-#     end = time.time()
-#     print(f"Time taken for detection rectify: {end - start} seconds")
+    print("Detection Started for rectify")
+    start = time.time() 
+    if encoded_pdf:
+        detected_original_bboxs = [] # replace wil new textboxes detected directly from pdf_pages
+    else:
+        detected_original_bboxs = det_model_mobile.predict(pdf_to_images)
+    end = time.time()
+    print(f"Time taken for detection rectify: {end - start} seconds")
 
-#     doc_rectify = returns_doc_according_to_columns(pdf_to_images, detected_original_bboxs, explicit_lines, [], encoded_pdf, first_page=False) # rec3
-#     print(f"Document after text processing for (transformer model): {doc_rectify}")
+    doc_rectify = returns_doc_according_to_columns(pdf_to_images, detected_original_bboxs, explicit_lines, [], encoded_pdf, first_page=False) # rec3
+    print(f"Document after text processing for (transformer model): {doc_rectify}")
 
-#     coordinates_after_ocr = get_ocr_column_coordinates(doc_rectify)
-#     explicit_lines = coordinates_after_ocr
+    coordinates_after_ocr = get_ocr_column_coordinates(doc_rectify)
+    explicit_lines = coordinates_after_ocr
 
-#     try:
-#         df = extract_dataframe_from_pdf_ocr(doc_rectify, table_settings={
-#             "vertical_strategy": "explicit",
-#             "explicit_vertical_lines": explicit_lines,
-#             "horizontal_strategy": "text",
-#             "intersection_x_tolerance": 200,
-#         })
+    try:
+        df = extract_dataframe_from_pdf_ocr(doc_rectify, table_settings={
+            "vertical_strategy": "explicit",
+            "explicit_vertical_lines": explicit_lines,
+            "horizontal_strategy": "text",
+            "intersection_x_tolerance": 200,
+        })
 
-#         all_null = all(label[1] == "null" for label in labels)
+        all_null = all(label[1] == "null" for label in labels)
 
-#         if not all_null and not df.empty:
-#             new_row = [None] * len(df.columns)  # Create a blank row with the same number of columns
-#             for index, label_type in labels:
-#                 if index < len(new_row):
-#                     new_row[index] = label_type
+        if not all_null and not df.empty:
+            new_row = [None] * len(df.columns)  # Create a blank row with the same number of columns
+            for index, label_type in labels:
+                if index < len(new_row):
+                    new_row[index] = label_type
 
-#             # Insert the new row at the top of the DataFrame
-#             df.loc[-1] = new_row  # Add the new row with a negative index to place it at the top
-#             df.index = df.index + 1  # Shift all indices by 1
-#             df.sort_index(inplace=True)  # Reorder the DataFrame to update the row positions
+            # Insert the new row at the top of the DataFrame
+            df.loc[-1] = new_row  # Add the new row with a negative index to place it at the top
+            df.index = df.index + 1  # Shift all indices by 1
+            df.sort_index(inplace=True)  # Reorder the DataFrame to update the row positions
 
-#         try:
-#             idf, _ = model_for_pdf_ocr(df)
-#         except Exception as e:
-#             idf = empty_idf
+        try:
+            idf, _ = model_for_pdf_ocr(df)
+        except Exception as e:
+            idf = empty_idf
             
-#         # Add start and end date
-#         if idf.empty:
-#             df = extract_dataframe_from_pdf_ocr(doc_rectify, table_settings={
-#                 "vertical_strategy": "explicit",
-#                 "explicit_vertical_lines": explicit_lines,
-#                 "horizontal_strategy": "lines",
-#                 "intersection_x_tolerance": 200,
-#             })
+        # Add start and end date
+        if idf.empty:
+            df = extract_dataframe_from_pdf_ocr(doc_rectify, table_settings={
+                "vertical_strategy": "explicit",
+                "explicit_vertical_lines": explicit_lines,
+                "horizontal_strategy": "lines",
+                "intersection_x_tolerance": 200,
+            })
 
-#             all_null = all(label[1] == "null" for label in labels)
+            all_null = all(label[1] == "null" for label in labels)
 
-#             if not all_null:
-#                 new_row = [None] * len(df.columns)  # Create a blank row with the same number of columns
-#                 for index, label_type in labels:
-#                     if index < len(new_row):
-#                         new_row[index] = label_type
+            if not all_null:
+                new_row = [None] * len(df.columns)  # Create a blank row with the same number of columns
+                for index, label_type in labels:
+                    if index < len(new_row):
+                        new_row[index] = label_type
 
-#                 # Insert the new row at the top of the DataFrame
-#                 df.loc[-1] = new_row  # Add the new row with a negative index to place it at the top
-#                 df.index = df.index + 1  # Shift all indices by 1
-#                 df.sort_index(inplace=True)  # Reorder the DataFrame to update the row positions
+                # Insert the new row at the top of the DataFrame
+                df.loc[-1] = new_row  # Add the new row with a negative index to place it at the top
+                df.index = df.index + 1  # Shift all indices by 1
+                df.sort_index(inplace=True)  # Reorder the DataFrame to update the row positions
 
-#             idf, _ = model_for_pdf_ocr(df)
+            idf, _ = model_for_pdf_ocr(df)
 
-#         # idf = add_start_n_end_date_v2(idf, start_date, end_date, bank)
-#         # name_n_num = []
-#         idf = add_start_n_end_date_v2(idf, start_date, end_date, bank)
-#         name_n_num = extract_account_details(extract_text_from_pdf_ocr(pdf_path))
-#         a = validate_bank_statement_returns_error_message_ocr(idf)
+        # idf = add_start_n_end_date_v2(idf, start_date, end_date, bank)
+        # name_n_num = []
+        idf = add_start_n_end_date_v2(idf, start_date, end_date, bank)
+        name_n_num = extract_account_details(extract_text_from_pdf_ocr(pdf_path))
+        a = validate_bank_statement_returns_error_message_ocr(idf)
 
-#         return idf, name_n_num, a
+        return idf, name_n_num, a
 
-#     except Exception as e:
-#         er = "There was an exception error, please contact Support team for help."
-#         return empty_idf, default_name_n_num, er
+    except Exception as e:
+        er = "There was an exception error, please contact Support team for help."
+        return empty_idf, default_name_n_num, er
     

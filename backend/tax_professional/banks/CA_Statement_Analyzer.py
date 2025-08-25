@@ -10,7 +10,7 @@ import pandas as pd
 import regex as re
 import fitz
 import os
-# from ...code_ocr_extraction import extraction_process_only_rectify
+from ...code_ocr_extraction import extraction_process_only_rectify
 
 
 bold_font = Font(bold=True)
@@ -655,14 +655,14 @@ def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_
             explicit_lines = list(
                 {coord for item in aiyaz_array_of_array for coord in (item["bounds"]["start"], item["bounds"]["end"])})
             labels = [[entry["index"], entry["column_type"]] for entry in aiyaz_array_of_array]
-            # if isthis_ocr:
-            #     dfs[bank], name_dfs[bank], errorz[bank] = extraction_process_only_rectify(bank, pdf_path, pdf_password,
-            #                                                                             start_date, end_date,
-            #                                                                             explicit_lines, labels, encoded_pdf=False)
-            # else:
-            dfs[bank], name_dfs[bank], errorz[bank] = extraction_process_explicit_lines(bank, pdf_path, pdf_password,
-                                                                                            start_date, end_date,
-                                                                                            explicit_lines, labels)
+            if isthis_ocr:
+                dfs[bank], name_dfs[bank], errorz[bank] = extraction_process_only_rectify(bank, pdf_path, pdf_password,
+                                                                                        start_date, end_date,
+                                                                                        explicit_lines, labels, encoded_pdf=False)
+            else:
+                dfs[bank], name_dfs[bank], errorz[bank] = extraction_process_explicit_lines(bank, pdf_path, pdf_password,
+                                                                                                start_date, end_date,
+                                                                                                explicit_lines, labels)
 
         else:
             dfs[bank], name_dfs[bank], errorz[bank] = extraction_process(bank, pdf_path, pdf_password, start_date,

@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld("electron", {
   openFileDialog: () => ipcRenderer.invoke("open-file-dialog"),
   previewFile: (filePath) => ipcRenderer.invoke("preview-file", filePath),
   getFileContent: (filePath) => ipcRenderer.invoke("get-file-content", filePath),
+  isCapable: () => ipcRenderer.invoke("is-capable"),
   fetchPdfContent: (filePath, caseName) =>
     ipcRenderer.invoke("fetch-pdf-content", filePath, caseName),
 

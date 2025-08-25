@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { Bell, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
 import GenerateReportForm from "../Elements/ReportForm";
 import RecentReports from "./RecentReports";
@@ -34,6 +34,7 @@ export default function GenerateReport({ activeTab }) {
   const [warning, setWarning] = useState([]);
   const [warningExpanded, setWarningExpanded] = useState(false);
   const [dateRangeWarning, setDateRangeWarning] = useState(null);
+  const [isCapable, setIsCapable] = useState(true);
 
   const hasScannedOrEncodedWarning = useMemo(() => {
     if (!Array.isArray(warning)) return false;
@@ -49,14 +50,21 @@ export default function GenerateReport({ activeTab }) {
   );
 
   // everything else stays “red”
-  const otherErrors = warning.filter(
-    (msg) =>
-      !msg.startsWith("Balance mismatch") &&
-      !/image-only|scanned|non-text|encoded/i.test(msg)
-  );
-
-  // put next to your other helpers
+  // const otherErrors = warning.filter(
+  //   (msg) =>
+  //     !msg.startsWith("Balance mismatch") &&
+  //     !/image-only|scanned|non-text|encoded/i.test(msg)
+  // );
   const OCR_REASON_RE = /(image-only|scanned|non-text|encoded)/i;
+
+  const otherErrors = useMemo(() => {
+    if (!Array.isArray(warning)) return [];
+    // always hide “Balance mismatch” from this bucket
+    const base = warning.filter((msg) => !msg.startsWith("Balance mismatch"));
+    // when OCR is allowed -> hide scanned warnings (old behavior)
+    // when OCR is NOT allowed -> show scanned warnings (what you want now)
+    return isCapable ? base.filter((msg) => !OCR_REASON_RE.test(msg)) : base;
+  }, [warning, isCapable]);
 
   const onlyOcrableFailures = (reasons = []) =>
     reasons.length > 0 && reasons.every((r) => OCR_REASON_RE.test(r));
@@ -305,6 +313,324 @@ export default function GenerateReport({ activeTab }) {
         // setFailedStatements(result.pdf_paths_not_extracted || []); // Store failed
         setSelectedFiles([]);
         setFileDetails([]);
+
+        // Handle Scanned and encoded files
+        console.log({ aiyaz: result.data.failedStatements });
+        const failedStatementsFromBackend = result.data.failedStatements || [];
+        console.log({ tyope: typeof failedStatementsFromBackend });
+
+        const paths = failedStatementsFromBackend.paths || [];
+        const reasons =
+          failedStatementsFromBackend.respective_reasons_for_error || [];
+        const bankNames = failedStatementsFromBackend.bank_names || [];
+        const passwords = failedStatementsFromBackend.passwords || [];
+        const startDates = failedStatementsFromBackend.start_dates || [];
+        const endDates = failedStatementsFromBackend.end_dates || [];
+
+        // Helper: Match OCR-triggering reasons
+        const isOcrCandidate = (reason = "") => {
+          const r = reason.toLowerCase();
+          return (
+            r.includes("image-only") ||
+            r.includes("scanned") ||
+            r.includes("non-text") ||
+            r.includes("encoded")
+          );
+        };
+
+        // ✅ Filter out null or undefined pdfs and match OCR-triggering reasons
+        const eligibleIndexes = reasons
+          .map((reason, idx) =>
+            isOcrCandidate(reason) && paths[idx] ? idx : null
+          )
+          .filter((i) => i !== null);
+        console.log({ eligibleIndexes });
+        const scannedOCRFiles = eligibleIndexes.map((i) => ({
+          bankName: bankNames[i],
+          pdf_paths: paths[i],
+          passwords: passwords[i],
+          start_date: startDates[i],
+          end_date: endDates[i],
+          ca_id: result.data.caseId,
+          is_ocr: isOcrCandidate(reasons[i]),
+        }));
+
+        console.log({ scannedOCRFiles });
+        // If any OCR-worthy files found
+        if (eligibleIndexes.length > 0) {
+          const tempIsCapable = await window.electron.isCapable();
+          setIsCapable(tempIsCapable);
+          console.log({ tempIsCapable });
+          if (tempIsCapable === false) {
+            // toast({
+            //   title: "Error",
+            //   description:
+            //     "This is a scanned PDF and cannot be processed by our servers. Please use the desktop app for scanned PDFs.",
+            //   variant: "destructive",
+            //   duration: 5000,
+            // });
+            // setLoading(false);
+            // clearInterval(progressIntervalRef.current);
+            // toast.dismiss(newToastId);
+            return;
+          }
+          const newData = {
+            id: result.data.caseId,
+            name: caseName,
+            userId: null,
+            status: "Processing",
+            pages: null,
+            createdAt: new Date().toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            }),
+            // statements: null,
+          };
+
+          updateReportData({
+            recentReportsData: [newData, ...reportData.recentReportsData],
+          });
+
+          toast({
+            id: newToastId,
+            title: "Running OCR",
+            description: (
+              <div className="mt-2 w-full flex items-center gap-2">
+                <div className="flex items-center gap-4">
+                  <CircularProgress className="w-full" />
+                </div>
+                <p className="text-sm text-gray-500">
+                  Processing scanned/encoded PDFs…
+                </p>
+              </div>
+            ),
+            variant: "default",
+            duration: Infinity,
+          });
+          // toast({
+          //   title: "OCR Triggered",
+          //   description: `Detected scanned or encoded PDFs.`,
+          //   variant: "default",
+          //   duration: 5000,
+          // });
+
+          console.log({
+            files: scannedOCRFiles,
+            caseName,
+            is_ocr: true,
+            soure: "add-pdf",
+          });
+          try {
+            const ocrResult = await window.electron.generateReportIpc(
+              { files: scannedOCRFiles },
+              caseName,
+              "add-pdf"
+            );
+
+            setFailedStatements([]);
+            setSuccessfulStatements([]);
+            setShowRectifyButton(false);
+            setShowAnalysisButton(false);
+            setMissingMonthsList([]);
+            setWarning([]);
+            setDateRangeWarning(null); // Reset date range warning
+            setWarningExpanded(false); // Reset warning expansion state
+
+            console.log("OCR Result:", ocrResult);
+
+            if (
+              ocrResult.data.missingMonthsList &&
+              ocrResult.data.missingMonthsList.length > 0
+            ) {
+              setMissingMonthsList(ocrResult.data.missingMonthsList);
+            }
+
+            if (ocrResult.data.warning && ocrResult.data.warning.length > 0) {
+              const formatted = ocrResult.data.warning.filter(
+                (w) => w && w.trim()
+              );
+
+              // regex to find your date-overlap error
+              const re =
+                /The period for Bank:[^)]+\((\d{2}-\d{2}-\d{4}) to (\d{2}-\d{2}-\d{4})\)[^()]*\((\d{2}-\d{2}-\d{4}) to (\d{2}-\d{2}-\d{4})\)/;
+
+              // split into dateErrors vs. rest
+              let drWarn = null;
+              const rest = formatted.filter((msg) => {
+                const m = msg.match(re);
+                if (m) {
+                  const [, fetchedStart, fetchedEnd, userStart, userEnd] = m;
+                  drWarn = { fetchedStart, fetchedEnd, userStart, userEnd };
+                  return false; // remove from “rest”
+                }
+                return true; // keep everything else
+              });
+
+              setDateRangeWarning(drWarn); // either an object or null
+              setWarning(Array.from(new Set(rest))); // your existing red/amber logic
+            }
+
+            // setCurrentCaseId(ocrResult.data.caseId); // Store caseId
+            console.log({ ocrResult });
+            if (ocrResult.success) {
+              setDialogOpen(true); // Open the Dialog
+              toast.dismiss(newToastId);
+
+              console.log("ocrResult generated successfully:", ocrResult.data);
+              if (ocrResult.data.failedFiles.length > 0) {
+                setShowRectifyButton(true);
+                const failedFiles = ocrResult.data.failedFiles.map(
+                  (file_path) => {
+                    // Get the filename from the path and remove the timestamp
+                    const filename = file_path.split("\\").pop(); // Get filename from path
+                    const filenameWithoutTimestamp = filename.substring(
+                      filename.indexOf("-") + 1
+                    ); // Remove everything before first hyphen
+                    return filenameWithoutTimestamp;
+                  }
+                );
+                setFailedStatements(failedFiles || []); // Store failed
+
+                const newData = {
+                  id: ocrResult.data.caseId,
+                  name: caseName,
+                  userId: null,
+                  status: "Failed",
+                  pages: null,
+                  createdAt: new Date().toLocaleDateString("en-GB", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  }),
+                  statements: null,
+                };
+
+                // setShowRectifyButton(true);
+                const successfulFiles = ocrResult.data.successfulFiles.map(
+                  (file_path) => {
+                    // Get the filename from the path and remove the timestamp
+                    const filename = file_path.split("\\").pop(); // Get filename from path
+                    const filenameWithoutTimestamp = filename.substring(
+                      filename.indexOf("-") + 1
+                    ); // Remove everything before first hyphen
+                    return filenameWithoutTimestamp;
+                  }
+                );
+                setSuccessfulStatements(successfulFiles || []); // Store successful
+
+                updateReportData({
+                  recentReportsData: [newData, ...reportData.recentReportsData],
+                });
+
+                if (activeTab !== "Generate Report")
+                  toast({
+                    title: "Failed",
+                    description: `${caseName} report had some issues!`,
+                    variant: "destructive",
+                  });
+              } else {
+                // setShowRectifyButton(true);
+                const successfulFiles = ocrResult.data.successfulFiles.map(
+                  (file_path) => {
+                    // Get the filename from the path and remove the timestamp
+                    const filename = file_path.split("\\").pop(); // Get filename from path
+                    const filenameWithoutTimestamp = filename.substring(
+                      filename.indexOf("-") + 1
+                    ); // Remove everything before first hyphen
+                    return filenameWithoutTimestamp;
+                  }
+                );
+                setSuccessfulStatements(successfulFiles || []); // Store successful
+
+                const newData = {
+                  id: ocrResult.data.caseId,
+                  name: caseName,
+                  userId: null,
+                  status: "Success",
+                  pages: null,
+                  createdAt: new Date().toLocaleDateString("en-GB", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  }),
+                  // statements: null,
+                };
+
+                updateReportData({
+                  recentReportsData: [newData, ...reportData.recentReportsData],
+                });
+              }
+
+              if (
+                ocrResult.data.totalTransactions &&
+                activeTab !== "Generate Report"
+              ) {
+                toast({
+                  title: "Success",
+                  description: `${caseName} report generated successfully!`,
+                  duration: Infinity,
+                  variant: "success",
+                });
+              }
+
+              if (ocrResult.data.totalTransactions > 0) {
+                setShowAnalysisButton(true);
+              }
+
+              // setFailedStatements(ocrResult.pdf_paths_not_extracted || []); // Store failed
+              setSelectedFiles([]);
+              setFileDetails([]);
+
+              clearInterval(progressIntervalRef.current);
+              setProgress(100);
+              toast.dismiss(newToastId);
+
+              // open dialog and everything
+
+              setLoading(false);
+              localStorage.removeItem("dashboardData");
+              // refreshPage();
+              progressIntervalRef.current = null;
+
+              // Trigger a page refresh
+              // refreshPage();
+            } else {
+              const errorMessage = result.error
+                ? typeof result.error === "object"
+                  ? JSON.stringify(result.error, null, 2)
+                  : result.error
+                : "Unknown error occurred";
+
+              throw new Error(errorMessage);
+            }
+
+            // toast({
+            //   title: "OCR Completed",
+            //   variant: "success",
+            // });
+          } catch (ocrErr) {
+            toast({
+              title: "OCR Failed",
+              description: "OCR retry failed for scanned/encoded PDFs.",
+              variant: "destructive",
+            });
+            console.error("OCR error:", ocrErr);
+          }
+        }
+        clearInterval(progressIntervalRef.current);
+        setProgress(100);
+        toast.dismiss(newToastId);
+
+        // open dialog and everything
+
+        setLoading(false);
+        localStorage.removeItem("dashboardData");
+        // refreshPage();
+        progressIntervalRef.current = null;
+
+        // Trigger a page refresh
+        // refreshPage();
       } else {
         const errorMessage = result.error
           ? typeof result.error === "object"
@@ -538,7 +864,7 @@ export default function GenerateReport({ activeTab }) {
               </ul>
             </div>
           )}
-          {hasScannedOrEncodedWarning && (
+          {hasScannedOrEncodedWarning && isCapable && (
             <div className="mb-4 mt-2">
               {/* <h3 className="text-md font-semibold flex items-center gap-x-2 mb-2">
                 <AlertCircle className="text-blue-500 w-5 h-5" />

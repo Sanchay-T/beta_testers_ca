@@ -955,8 +955,8 @@ function generateReportIpc(tmpdir_path) {
         log.info("Sending API request with payload:", payload);
 
         let response = null;
-        // const IS_CAPABLE = process.env.IS_CAPABLE;
-        const IS_CAPABLE = false;
+        const IS_CAPABLE = process.env.IS_CAPABLE.toLowerCase()==="true" ? true : false;
+        // const IS_CAPABLE = false;
 
         if (!IS_CAPABLE) {
           response = await axios.post(generateReportEndpointServer, form, {
