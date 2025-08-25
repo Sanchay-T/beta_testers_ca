@@ -7,6 +7,9 @@ const {
   dialog,
 } = require("electron");
 const fs = require("fs");
+
+// 🐛 DEBUG: Confirm we're running the updated version
+console.log("🚀 [STARTUP] Running UPDATED main.js with SessionManager fix - timestamp:", new Date().toISOString());
 const { registerOpenFileIpc } = require("./ipc/fileHandler.js");
 require("dotenv").config();
 const path = require("path");
@@ -19,7 +22,11 @@ const { registerCaseDashboardIpc } = require("./ipc/caseDashboard.js");
 const { registerReportHandlers } = require("./ipc/reportHandlers.js");
 const { registerAuthHandlers } = require("./ipc/authHandlers.js");
 const { registerEditReportHandlers } = require("./ipc/editReportHandlers.js");
-const sessionManager = require("./SessionManager");
+// Import and create SessionManager instance
+const SessionManager = require("./SessionManager");
+console.log('✅ [MAIN] SessionManager loaded successfully');
+const sessionManager = SessionManager.getInstance();
+console.log('✅ [MAIN] SessionManager instance created:', sessionManager instanceof require('events').EventEmitter);
 const licenseManager = require("./LicenseManager");
 const { generateReportIpc } = require("./ipc/generateReport");
 const { registerOpportunityToEarnIpc } = require("./ipc/opportunityToEarn");
@@ -2015,8 +2022,30 @@ async function createWindow() {
   // }, 5000)
 
   win.on("closed", () => {
-    sessionManager.stopLicenseCountdown();
-    sessionManager.removeAllListeners();
+    console.log('🔍 [WINDOW_CLOSE] Window closed event triggered');
+    console.log('🔍 [WINDOW_CLOSE] sessionManager defined:', !!sessionManager);
+    console.log('🔍 [WINDOW_CLOSE] sessionManager type:', typeof sessionManager);
+    console.log('🔍 [WINDOW_CLOSE] sessionManager stopLicenseCountdown:', typeof sessionManager?.stopLicenseCountdown);
+    console.log('🔍 [WINDOW_CLOSE] sessionManager removeAllListeners:', typeof sessionManager?.removeAllListeners);
+    
+    try {
+      sessionManager.stopLicenseCountdown();
+      console.log('🔍 [WINDOW_CLOSE] stopLicenseCountdown called successfully');
+    } catch (error) {
+      console.error('🔍 [WINDOW_CLOSE] ERROR calling stopLicenseCountdown:', error);
+    }
+    
+    try {
+      if (typeof sessionManager.removeAllListeners === 'function') {
+        sessionManager.removeAllListeners();
+        console.log('🔍 [WINDOW_CLOSE] removeAllListeners called successfully');
+      } else {
+        console.error('🔍 [WINDOW_CLOSE] removeAllListeners is not a function:', typeof sessionManager.removeAllListeners);
+      }
+    } catch (error) {
+      console.error('🔍 [WINDOW_CLOSE] ERROR calling removeAllListeners:', error);
+    }
+    
     win = null;
     log.info("Window closed");
     app.quit();
@@ -2478,6 +2507,17 @@ app.whenReady().then(async () => {
           const tempConfigPath = path.join(__dirname, "compatibility", "config", "temp_appModeConfig.json");
           fs.writeFileSync(tempConfigPath, JSON.stringify(config, null, 2));
           
+          // Debug logging to verify scenario override
+          log.info("🧪 DEBUG: Scenario overrides applied", {
+            scenario: options.scenario,
+            mappedScenario: mappedScenario,
+            expectedMode: scenario.expectedMode,
+            forceMode: config.testingOverrides.forceMode,
+            forceRAM: config.testingOverrides.forceRAM,
+            forceCPU: config.testingOverrides.forceCPU,
+            developmentMode: config.developmentMode?.enabled
+          });
+          
           // Run detection with scenario
           const result = await manager.runModeDetection({ scenario: options.scenario });
           
@@ -2899,9 +2939,11 @@ app.on("will-quit", (event) => {
 
   // Clean up SessionManager listeners before quit
   try {
-    sessionManager.removeAllListeners("remainingSecondsUpdated");
-    sessionManager.removeAllListeners("licenseExpired");
-    log.info("SessionManager listeners cleaned up on quit");
+    if (sessionManager && typeof sessionManager.removeAllListeners === 'function') {
+      sessionManager.removeAllListeners("remainingSecondsUpdated");
+      sessionManager.removeAllListeners("licenseExpired");
+      log.info("SessionManager listeners cleaned up on quit");
+    }
   } catch (err) {
     log.error("Error cleaning up SessionManager listeners on quit:", err);
   }
@@ -2910,7 +2952,14 @@ app.on("will-quit", (event) => {
     log.info("Auto install update on quit");
   }
 
-  sessionManager.logoutUser();
+  // Clean logout on quit
+  try {
+    if (sessionManager && typeof sessionManager.logoutUser === 'function') {
+      sessionManager.logoutUser();
+    }
+  } catch (error) {
+    log.error("Error calling sessionManager.logoutUser():", error);
+  }
   if (pythonProcess) {
     log.info("Stopping Python process...");
     pythonProcess.kill("SIGTERM");

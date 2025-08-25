@@ -295,3 +295,159 @@ Both development (`npm run start`) and production (`npm run build`) modes now wo
 **Key insight**: The entire startup chain from compatibility check to login screen now works reliably. Gateway Service PostgreSQL initialization and Python backend dependency issues have been permanently resolved.
 
 **Architecture decision**: Maintain the proven coordinator pattern and IPC communication while building Phase 3 features on top of the robust Phase 2 foundation with startup reliability fixes.
+
+## ✅ HYBRID MODE PAYMENT FLOW (August 2025)
+
+### Overview
+**Status**: ✅ FULLY IMPLEMENTED  
+**Goal**: Professional mode detection and payment system for HYBRID Mode activation  
+**Integration**: Seamlessly integrated into system compatibility checker workflow
+
+### HYBRID Mode Flow Architecture
+
+#### 1. Mode Detection System
+**Trigger**: Automatically triggers when system assessment determines HYBRID Mode required
+**Location**: `frontend/react-app/compatibility.html` - `triggerModeSpecificFlow()` method
+**Backend**: Uses `AppModeManager.runModeDetection()` returning `result.determinedMode`
+
+**Mode Types**:
+- **SCAN**: High-end PC → Auto-launch directly  
+- **UNSCAN**: Mid-range PC → Show notification modal → Auto-launch after 5s
+- **HYBRID**: Low-end PC → Payment flow → Team verification required
+
+#### 2. Professional HYBRID Payment Flow (4 Steps)
+
+##### Step 1: System Assessment Decision Modal
+**Design**: Professional desktop UI with card-based layout
+**Options**: 
+- **"Use Another Computer"** (Recommended) → Graceful exit with encouraging message
+- **"Enable HYBRID Mode"** → Proceeds to payment flow
+
+**Key Features**:
+- Professional SVG icons (no emojis)
+- System status cards with color-coded indicators
+- Clean white background with blue accents (#007bff)
+- Hover animations and smooth transitions
+
+##### Step 2: Payment Information & QR Code
+**Design**: Progress indicator showing 3-step process (Scan & Pay → Mark Complete → Team Verification)
+**Components**:
+- Professional QR code placeholder with SVG design
+- Reference ID generation (`CYP-` + timestamp)
+- Step-by-step payment instructions
+- Action buttons: Back, Help, "Mark Payment as Completed"
+
+##### Step 3: Team Verification Screen
+**Design**: Timeline-based status display with animated progress
+**Key Message**: "Our team will verify and contact you within 2-4 hours"
+**Timeline Steps**:
+1. ✅ Payment Information Received (Completed)
+2. 🔄 Team Verification & Processing (In Progress - 2-4 hours)
+3. ⏳ Contact & HYBRID Mode Activation (Pending)
+
+##### Step 4: Final Action (CRITICAL BUSINESS LOGIC)
+**Important**: HYBRID users CANNOT use Standard Mode
+**Only Option**: "Close Application" 
+**Reasoning**: System requires HYBRID Mode for optimal performance - Standard Mode not available
+**User Experience**: Clear messaging that team will contact within 2-4 hours
+
+#### 3. Responsive Design Implementation
+
+##### Modal System Architecture
+**Problem Solved**: Modal cutting off at top/bottom on different screen sizes
+**Solution**: 
+```javascript
+// Overlay with proper scrolling
+modalOverlay.style.cssText = `
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  padding: 20px; overflow-y: auto; overflow-x: hidden;
+`;
+
+// Container for proper centering
+modalContainer.style.cssText = `
+  min-height: calc(100vh - 40px); 
+  display: flex; align-items: center; justify-content: center;
+`;
+
+// Content with no max-height restrictions
+modalContent.style.cssText = `
+  max-width: 480px; width: 100%; max-height: none;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto;
+`;
+```
+
+##### Design System
+- **Typography**: System fonts for professional desktop appearance
+- **Colors**: Blue (#007bff), Green (#22c55e), Red (#dc2626) for status indicators
+- **Animations**: Subtle hover effects with `translateY(-1px)` and box-shadow changes
+- **Layout**: CSS Grid and Flexbox for responsive button arrangements
+- **Icons**: Professional SVG icons instead of emojis
+
+#### 4. Business Logic Integration
+
+##### Mode-Specific Behavior
+```javascript
+// UNSCAN Mode: 5s auto-launch with progress bar
+showUnscanModeNotification() {
+  // Beautiful centered modal with countdown
+  // Auto-launch after 5 seconds
+  // "Launch Now" button for immediate action
+}
+
+// HYBRID Mode: Payment required, no Standard Mode option
+showHybridModeFlow() {
+  // Professional decision modal
+  // Payment flow with team verification
+  // NO Standard Mode option - users must wait for team activation
+}
+```
+
+##### Critical Business Rule
+**HYBRID users cannot use Standard Mode** - this is the core reason for building this system:
+- System assessment determines HYBRID Mode required
+- Payment submission triggers team verification process
+- Users must wait 2-4 hours for team to activate HYBRID Mode
+- No bypass or Standard Mode fallback available
+- Application closes after payment submission - team will contact user
+
+#### 5. Error Handling & User Experience
+
+##### Responsive Modal Fixes
+- **Container Structure**: Overlay → Container → Content for proper scrolling
+- **Viewport Handling**: `min-height: calc(100vh - 40px)` prevents cutoffs
+- **Scroll Behavior**: `overflow-y: auto` on overlay allows scrolling when needed
+- **Content Sizing**: `max-height: none` removes artificial restrictions
+
+##### Professional Messaging
+- **No Warning Language**: Removed aggressive red alerts and warning tones
+- **Encouraging Communication**: Professional, supportive messaging throughout
+- **Clear Expectations**: Proper timeline and next steps communication
+- **Business-Appropriate**: Enterprise-grade language and design
+
+#### 6. Technical Implementation Details
+
+##### File Locations
+- **Main Flow**: `frontend/react-app/compatibility.html` (lines 1537-2360)
+- **Mode Detection**: `frontend/compatibility/AppModeManager.js`
+- **IPC Integration**: `frontend/main.js` (`app-mode:run-detection` handler)
+- **Backend**: Returns `result.determinedMode` (not `result.mode`)
+
+##### Key Methods
+- `showHybridModeFlow()` - Initial decision modal
+- `showHybridPaymentFlow()` - Payment information screen  
+- `showHybridQRPayment()` - QR code and instructions
+- `handlePaymentComplete()` - Team verification screen
+- `addModalAnimations()` - CSS animation system
+
+### Production Status
+**✅ Fully Implemented**: Professional HYBRID Mode payment flow with proper responsive design
+**✅ Business Logic**: HYBRID users must wait for team activation - no Standard Mode bypass
+**✅ User Experience**: Clean, professional desktop application interface
+**✅ Technical Integration**: Seamlessly integrated into existing compatibility checker
+**✅ Responsive Design**: Properly handles all screen sizes without modal cutoffs
+
+### Future Considerations
+- **Payment Gateway Integration**: Replace demo QR with real payment processing
+- **Team Notification System**: Automate team alerts when payments are submitted  
+- **Status Tracking**: Allow users to check activation status
+- **Customer Communication**: Automated email/SMS updates during verification process

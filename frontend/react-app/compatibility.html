@@ -171,36 +171,7 @@
           return `
             <div style="background: white; height: 100vh; width: 100vw; position: relative; overflow-y: auto;">
               
-              <!-- Frameless Window Controls -->
-              <div style="position: absolute; top: 15px; right: 15px; z-index: 1000; display: flex; gap: 8px;">
-                <button onclick="window.compatApp.minimizeWindow()" style="
-                  background: rgba(156, 163, 175, 0.8);
-                  color: white;
-                  border: none;
-                  width: 30px;
-                  height: 30px;
-                  border-radius: 50%;
-                  cursor: pointer;
-                  font-size: 16px;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  font-weight: bold;
-                " onmouseover="this.style.background='rgba(156, 163, 175, 1)'" onmouseout="this.style.background='rgba(156, 163, 175, 0.8)'">−</button>
-                <button onclick="window.compatApp.closeWindow()" style="
-                  background: rgba(239, 68, 68, 0.8);
-                  color: white;
-                  border: none;
-                  width: 30px;
-                  height: 30px;
-                  border-radius: 50%;
-                  cursor: pointer;
-                  font-size: 16px;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                " onmouseover="this.style.background='rgba(239, 68, 68, 1)'" onmouseout="this.style.background='rgba(239, 68, 68, 0.8)'">×</button>
-              </div>
+              <!-- Native window controls will be handled by the OS frame -->
               
               <div style="padding: 60px 40px 40px 40px; max-width: 700px; margin: 0 auto; display: flex; justify-content: center; align-items: center; min-height: 100vh;">
                 <div style="width: 100%;">
@@ -292,40 +263,7 @@
           return `
             <div style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); height: 100vh; width: 100vw; position: relative; overflow-y: auto;">
               
-              <!-- Frameless Window Controls -->
-              <div style="position: absolute; top: 15px; right: 15px; z-index: 1000; display: flex; gap: 8px;">
-                <button onclick="window.compatApp.minimizeWindow()" style="
-                  background: rgba(156, 163, 175, 0.8);
-                  color: white;
-                  border: none;
-                  width: 32px;
-                  height: 32px;
-                  border-radius: 6px;
-                  cursor: pointer;
-                  font-size: 16px;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  font-weight: bold;
-                  backdrop-filter: blur(10px);
-                  transition: all 0.2s;
-                " onmouseover="this.style.background='rgba(156, 163, 175, 1)'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='rgba(156, 163, 175, 0.8)'; this.style.transform='scale(1)'">−</button>
-                <button onclick="window.compatApp.closeWindow()" style="
-                  background: rgba(239, 68, 68, 0.8);
-                  color: white;
-                  border: none;
-                  width: 32px;
-                  height: 32px;
-                  border-radius: 6px;
-                  cursor: pointer;
-                  font-size: 16px;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  backdrop-filter: blur(10px);
-                  transition: all 0.2s;
-                " onmouseover="this.style.background='rgba(239, 68, 68, 1)'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='rgba(239, 68, 68, 0.8)'; this.style.transform='scale(1)'">×</button>
-              </div>
+              <!-- Native window controls will be handled by the OS frame -->
               
               <div style="padding: 60px 40px 40px 40px; max-width: 900px; margin: 0 auto;">
                   
@@ -490,36 +428,7 @@
           return `
             <div style="background: white; height: 100vh; width: 100vw; position: relative; overflow-y: auto;">
               
-              <!-- Frameless Window Controls -->
-              <div style="position: absolute; top: 15px; right: 15px; z-index: 1000; display: flex; gap: 8px;">
-                <button onclick="window.compatApp.minimizeWindow()" style="
-                  background: rgba(156, 163, 175, 0.8);
-                  color: white;
-                  border: none;
-                  width: 30px;
-                  height: 30px;
-                  border-radius: 50%;
-                  cursor: pointer;
-                  font-size: 16px;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  font-weight: bold;
-                " onmouseover="this.style.background='rgba(156, 163, 175, 1)'" onmouseout="this.style.background='rgba(156, 163, 175, 0.8)'">−</button>
-                <button onclick="window.compatApp.closeWindow()" style="
-                  background: rgba(239, 68, 68, 0.8);
-                  color: white;
-                  border: none;
-                  width: 30px;
-                  height: 30px;
-                  border-radius: 50%;
-                  cursor: pointer;
-                  font-size: 16px;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                " onmouseover="this.style.background='rgba(239, 68, 68, 1)'" onmouseout="this.style.background='rgba(239, 68, 68, 0.8)'">×</button>
-              </div>
+              <!-- Native window controls will be handled by the OS frame -->
               
               <div style="padding: 60px 40px 40px 40px; max-width: 800px; margin: 0 auto;">
                   
@@ -566,7 +475,7 @@
                           Estimated Startup Time: ${Math.round(results.duration / 1000) + 8} seconds
                         </div>
                         <div style="font-size: 14px; color: #64748b;">
-                          Configuration: ${results.warnings.length > 0 ? 'Fallback Mode' : 'Standard Mode'}
+                          Configuration: <span id="configuration-mode">Standard Mode</span>
                         </div>
                       </div>
                     </div>
@@ -737,7 +646,7 @@
                         cursor: pointer;
                         transition: background 0.2s;
                       " onmouseover="this.style.background='#004494'" onmouseout="this.style.background='var(--cypheridge-blue)'">
-                        ${results.canProceed === false ? 'Exit Application' : 'Launch CypherEdge'} →
+                        <span id="launch-btn-text">${results.canProceed === false ? 'Exit Application' : 'Launch CypherEdge'}</span> →
                       </button>
                     </div>
                   </div>
@@ -902,8 +811,25 @@
         }
 
         async handleUserDecision(decision) {
-          console.log("User decision:", decision);
-          await window.electronAPI.sendUserDecision(decision);
+          console.log('🔚 [USER DECISION] ============== FINAL USER DECISION ==============');
+          console.log('🔚 [USER DECISION] Decision type:', decision);
+          console.log('🔚 [USER DECISION] Timestamp:', new Date().toISOString());
+          console.log('🔚 [USER DECISION] Sending to main process via electronAPI...');
+          
+          try {
+            await window.electronAPI.sendUserDecision(decision);
+            console.log('🔚 [USER DECISION] Successfully sent to main process');
+            
+            if (decision === 'proceed') {
+              console.log('🔚 [USER DECISION] PROCEEDING TO LAUNCH CYPHEREDGE');
+            } else if (decision === 'cancel') {
+              console.log('🔚 [USER DECISION] CANCELLING - APPLICATION WILL EXIT');
+            } else {
+              console.log('🔚 [USER DECISION] OTHER DECISION:', decision);
+            }
+          } catch (error) {
+            console.error('🔚 [USER DECISION ERROR] Failed to send decision:', error);
+          }
         }
 
         updateOverallProgress(progress) {
@@ -1039,6 +965,31 @@
             determinedMode.style.color = modeColors[appMode.determined] || 'var(--cypheridge-blue)';
           }
 
+          // Update configuration mode display in results summary
+          const configurationMode = document.getElementById('configuration-mode');
+          if (configurationMode) {
+            const modeLabels = {
+              'SCAN': 'Standard Mode',
+              'UNSCAN': 'UNSCAN Mode', 
+              'HYBRID': 'HYBRID Mode',
+              'ERROR': 'Fallback Mode'
+            };
+            configurationMode.textContent = modeLabels[appMode.determined] || 'Standard Mode';
+            configurationMode.style.color = modeColors[appMode.determined] || '#64748b';
+          }
+
+          // Update launch button text with mode
+          const launchBtnText = document.getElementById('launch-btn-text');
+          if (launchBtnText && appMode.canProceed) {
+            const modeButtons = {
+              'SCAN': 'Launch CypherEdge (Standard Mode)',
+              'UNSCAN': 'Launch CypherEdge (UNSCAN Mode)',
+              'HYBRID': 'Launch CypherEdge (HYBRID Mode)',
+              'ERROR': 'Launch CypherEdge (Fallback Mode)'
+            };
+            launchBtnText.textContent = modeButtons[appMode.determined] || 'Launch CypherEdge';
+          }
+
           // Update confidence display
           const modeConfidence = document.getElementById('mode-confidence');
           if (modeConfidence) {
@@ -1149,26 +1100,7 @@
           console.log('Mode notification hidden');
         }
 
-        // Window control functions for frameless window
-        minimizeWindow() {
-          const { remote } = require('electron');
-          if (remote && remote.getCurrentWindow) {
-            remote.getCurrentWindow().minimize();
-          } else {
-            // Fallback for newer Electron versions
-            window.electronAPI.sendUserDecision('minimize');
-          }
-        }
-
-        closeWindow() {
-          const { remote } = require('electron');
-          if (remote && remote.getCurrentWindow) {
-            remote.getCurrentWindow().close();
-          } else {
-            // Fallback - send cancel decision
-            this.handleUserDecision('cancel');
-          }
-        }
+        // Window controls are now handled by native OS frame
 
         // App Mode Testing Setup
         setupAppModeTesting() {
@@ -1215,11 +1147,19 @@
         }
 
         selectScenario(scenario) {
+          console.log('🎛️ [SCENARIO] ============== SCENARIO SELECTION ==============');
+          console.log('🎛️ [SCENARIO] Previous scenario:', this.selectedScenario);
+          console.log('🎛️ [SCENARIO] New scenario selected:', scenario);
+          
           this.selectedScenario = scenario;
           
           // Update button states
-          document.querySelectorAll('.scenario-btn').forEach(btn => {
+          const scenarioButtons = document.querySelectorAll('.scenario-btn');
+          console.log('🎛️ [SCENARIO] Found', scenarioButtons.length, 'scenario buttons');
+          
+          scenarioButtons.forEach(btn => {
             if (btn.dataset.scenario === scenario) {
+              console.log('🎛️ [SCENARIO] Activating button for:', scenario);
               btn.style.background = '#3b82f6';
               btn.style.color = 'white';
               btn.style.border = 'none';
@@ -1231,6 +1171,7 @@
           });
 
           this.updateOverrideVisibility();
+          console.log('🎛️ [SCENARIO] Scenario selection complete');
         }
 
         updateOverrideVisibility() {
@@ -1241,23 +1182,37 @@
         }
 
         async runAppModeTest() {
+          console.log('🧪 ==================== TEST SESSION STARTED ====================');
+          console.log('🧪 [STEP 1] User clicked "Run Mode Detection Test" button');
+          console.log('🧪 [STEP 1] Selected Scenario:', this.selectedScenario);
+          console.log('🧪 [STEP 1] App Mode Overrides:', this.appModeOverrides);
+          
           const testBtn = document.getElementById('run-app-mode-test');
           const resultDiv = document.getElementById('app-mode-test-result');
           
           testBtn.textContent = '🔄 Running Test...';
           testBtn.disabled = true;
           resultDiv.style.display = 'none';
+          
+          console.log('🧪 [STEP 2] Button disabled, running detection...');
 
           try {
             const testOptions = {
               scenario: this.selectedScenario,
               overrides: this.selectedScenario === 'current' ? this.appModeOverrides : null
             };
-
+            
+            console.log('🧪 [STEP 3] Sending test options to backend:', testOptions);
             const result = await window.electronAPI.invoke('app-mode:run-detection', testOptions);
+            console.log('🧪 [STEP 4] Received result from backend:', result);
+            
             this.displayAppModeTestResult(result);
           } catch (error) {
-            console.error('App mode test failed:', error);
+            console.error('🧪 [ERROR] App mode test failed:', error);
+            console.error('🧪 [ERROR] Error details:', {
+              message: error.message,
+              stack: error.stack
+            });
             this.displayAppModeTestResult({
               error: true,
               message: error.message || 'Test failed'
@@ -1265,13 +1220,18 @@
           } finally {
             testBtn.textContent = '🚀 Run Mode Detection Test';
             testBtn.disabled = false;
+            console.log('🧪 [STEP 5] Button re-enabled, test complete');
           }
         }
 
         displayAppModeTestResult(result) {
+          console.log('🧪 [STEP 6] ============== DISPLAYING TEST RESULT ==============');
+          console.log('🧪 [STEP 6] Full result object:', result);
+          
           const resultDiv = document.getElementById('app-mode-test-result');
           
           if (result.error) {
+            console.log('🧪 [ERROR] Test result contains error:', result.message);
             resultDiv.innerHTML = `
               <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                 <span style="color: #ef4444; font-size: 16px;">❌</span>
@@ -1279,34 +1239,1178 @@
               </div>
               <div style="color: #6b7280; font-size: 14px;">${result.message}</div>
             `;
-          } else {
-            const modeColor = result.mode === 'SCAN' ? '#22c55e' : 
-                            result.mode === 'UNSCAN' ? '#f59e0b' : 
-                            result.mode === 'HYBRID' ? '#3b82f6' : '#6b7280';
-                            
-            resultDiv.innerHTML = `
-              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                <span style="background: ${modeColor}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">
-                  ${result.mode || 'UNKNOWN'} MODE
-                </span>
-              </div>
-              <div style="font-size: 14px; margin-bottom: 8px;">
-                <strong>Result:</strong> ${result.userMessage || 'Mode detection completed'}
-              </div>
-              ${result.confidence ? `
-                <div style="font-size: 13px; color: #6b7280; margin-bottom: 4px;">
-                  <strong>Confidence:</strong> ${result.confidence}
-                </div>
-              ` : ''}
-              ${result.reasoning ? `
-                <div style="font-size: 13px; color: #6b7280;">
-                  <strong>Reasoning:</strong> ${result.reasoning}
-                </div>
-              ` : ''}
-            `;
+            resultDiv.style.display = 'block';
+            console.log('🧪 [ERROR] Error result displayed, stopping flow');
+            return;
           }
+
+          // DEBUG: Let's see what properties the backend is actually sending
+          console.log('🧪 [STEP 6] All result properties:', Object.keys(result));
+          console.log('🧪 [STEP 6] result.mode:', result.mode);
+          console.log('🧪 [STEP 6] result.determined:', result.determined);
+          console.log('🧪 [STEP 6] result.determinedMode:', result.determinedMode);
+          console.log('🧪 [STEP 6] User Message:', result.userMessage);
+          console.log('🧪 [STEP 6] Confidence:', result.confidence);
           
+          // Use the correct property name from AppModeManager
+          const actualMode = result.determinedMode;
+          console.log('🧪 [STEP 6] Extracted actual mode:', actualMode);
+
+          const modeColor = actualMode === 'SCAN' ? '#22c55e' : 
+                          actualMode === 'UNSCAN' ? '#f59e0b' : 
+                          actualMode === 'HYBRID' ? '#3b82f6' : '#6b7280';
+
+          // 1. IMMEDIATELY UPDATE CONFIGURATION DISPLAY
+          console.log('🧪 [STEP 7] ============== UPDATING UI ELEMENTS ==============');
+          const configurationMode = document.getElementById('configuration-mode');
+          if (configurationMode) {
+            const modeLabels = {
+              'SCAN': 'Standard Mode',
+              'UNSCAN': 'UNSCAN Mode', 
+              'HYBRID': 'HYBRID Mode',
+              'ERROR': 'Fallback Mode'
+            };
+            const oldText = configurationMode.textContent;
+            const newText = modeLabels[actualMode] || 'Standard Mode';
+            
+            console.log('🧪 [STEP 7] Configuration display UPDATE:');
+            console.log('🧪 [STEP 7]   - Old text:', oldText);
+            console.log('🧪 [STEP 7]   - New text:', newText);
+            console.log('🧪 [STEP 7]   - Color:', modeColor);
+            
+            configurationMode.textContent = newText;
+            configurationMode.style.color = modeColor;
+            configurationMode.style.fontWeight = '600'; // Make it bold to highlight the change
+          } else {
+            console.log('🧪 [WARNING] Configuration mode element not found!');
+          }
+
+          // 2. UPDATE LAUNCH BUTTON TEXT
+          const launchBtnText = document.getElementById('launch-btn-text');
+          if (launchBtnText) {
+            const modeButtons = {
+              'SCAN': 'Launch CypherEdge (Standard Mode)',
+              'UNSCAN': 'Launch CypherEdge (UNSCAN Mode)',
+              'HYBRID': 'Launch CypherEdge (HYBRID Mode)',
+              'ERROR': 'Launch CypherEdge (Fallback Mode)'
+            };
+            const oldBtnText = launchBtnText.textContent;
+            const newBtnText = modeButtons[actualMode] || 'Launch CypherEdge';
+            
+            console.log('🧪 [STEP 7] Launch button text UPDATE:');
+            console.log('🧪 [STEP 7]   - Old text:', oldBtnText);
+            console.log('🧪 [STEP 7]   - New text:', newBtnText);
+            
+            launchBtnText.textContent = newBtnText;
+          } else {
+            console.log('🧪 [WARNING] Launch button text element not found!');
+          }
+
+          // 3. DISPLAY TEST RESULT
+          console.log('🧪 [STEP 8] ============== DISPLAYING RESULT BOX ==============');
+          resultDiv.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+              <span style="background: ${modeColor}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">
+                ${actualMode || 'UNKNOWN'} MODE DETECTED
+              </span>
+            </div>
+            <div style="font-size: 14px; margin-bottom: 8px;">
+              <strong>Result:</strong> ${result.userMessage || 'Mode detection completed'}
+            </div>
+            ${result.confidence ? `
+              <div style="font-size: 13px; color: #6b7280; margin-bottom: 4px;">
+                <strong>Confidence:</strong> ${result.confidence}
+              </div>
+            ` : ''}
+            ${result.reasoning ? `
+              <div style="font-size: 13px; color: #6b7280;">
+                <strong>Reasoning:</strong> ${result.reasoning}
+              </div>
+            ` : ''}
+          `;
           resultDiv.style.display = 'block';
+          console.log('🧪 [STEP 8] Test result box displayed with mode:', actualMode);
+
+          // 4. TRIGGER MODE-SPECIFIC FLOWS
+          console.log('🧪 [STEP 9] ============== TRIGGERING FLOW IN 1.5s ==============');
+          console.log('🧪 [STEP 9] Will trigger flow for mode:', actualMode);
+          console.log('🧪 [STEP 9] Setting timeout for triggerModeSpecificFlow...');
+          
+          setTimeout(() => {
+            this.triggerModeSpecificFlow(actualMode, result);
+          }, 1500); // Give user 1.5s to see the mode detection result
+        }
+
+        // NEW: Trigger appropriate flow based on detected mode
+        triggerModeSpecificFlow(mode, result) {
+          console.log('🎯 ==================== MODE FLOW TRIGGERED ====================');
+          console.log('🎯 [STEP 10] triggerModeSpecificFlow called with:', {
+            mode: mode,
+            result: result,
+            timestamp: new Date().toISOString()
+          });
+          
+          switch(mode) {
+            case 'SCAN':
+              console.log('🎯 [SCAN FLOW] High-End PC detected - Auto launch flow');
+              console.log('🎯 [SCAN FLOW] Step 1: Showing success message');
+              this.showModeMessage('🚀 Excellent system detected! Auto-launching in Standard Mode...', '#22c55e');
+              
+              console.log('🎯 [SCAN FLOW] Step 2: Setting 2s timeout for auto-launch');
+              setTimeout(() => {
+                console.log('🎯 [SCAN FLOW] Step 3: Executing auto-launch (handleUserDecision proceed)');
+                this.handleUserDecision('proceed');
+              }, 2000);
+              break;
+              
+            case 'UNSCAN':
+              console.log('🎯 [UNSCAN FLOW] Mid-Range PC detected - Notification then auto launch');
+              console.log('🎯 [UNSCAN FLOW] Step 1: Showing optimization message');
+              this.showModeMessage('⚡ Good system detected! Switching to optimized UNSCAN Mode...', '#f59e0b');
+              
+              console.log('🎯 [UNSCAN FLOW] Step 2: Setting 2s timeout for notification');
+              setTimeout(() => {
+                console.log('🎯 [UNSCAN FLOW] Step 3: Showing UNSCAN mode notification');
+                this.showUnscanModeNotification(result);
+              }, 2000);
+              break;
+              
+            case 'HYBRID':
+              console.log('🎯 [HYBRID FLOW] Low-End PC detected - Payment flow, NO auto launch');
+              console.log('🎯 [HYBRID FLOW] Step 1: Showing hybrid setup message');
+              this.showModeMessage('⚠️ System requires HYBRID Mode. Initiating setup process...', '#3b82f6');
+              
+              console.log('🎯 [HYBRID FLOW] Step 2: Setting 2s timeout for payment flow');
+              setTimeout(() => {
+                console.log('🎯 [HYBRID FLOW] Step 3: Showing hybrid mode payment flow');
+                this.showHybridModeFlow(result);
+              }, 2000);
+              break;
+              
+            default:
+              console.warn('🎯 [WARNING] Unknown mode detected:', mode);
+              console.warn('🎯 [WARNING] Available modes: SCAN, UNSCAN, HYBRID');
+              console.warn('🎯 [WARNING] No flow will be triggered');
+              break;
+          }
+        }
+
+        // NEW: Show temporary mode message
+        showModeMessage(message, color) {
+          console.log('💬 [MESSAGE] ============== SHOWING MODE MESSAGE ==============');
+          console.log('💬 [MESSAGE] Text:', message);
+          console.log('💬 [MESSAGE] Color:', color);
+          
+          const messageDiv = document.createElement('div');
+          messageDiv.style.cssText = `
+            position: fixed; top: 20px; right: 20px; z-index: 10000;
+            background: ${color}; color: white; padding: 12px 20px;
+            border-radius: 8px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease-out;
+          `;
+          messageDiv.textContent = message;
+          document.body.appendChild(messageDiv);
+          
+          console.log('💬 [MESSAGE] Mode message displayed, will auto-remove in 3s');
+          
+          setTimeout(() => {
+            if (messageDiv.parentNode) {
+              messageDiv.remove();
+              console.log('💬 [MESSAGE] Mode message removed after 3s');
+            }
+          }, 3000);
+        }
+
+        // ENHANCED: Show beautiful UNSCAN mode modal with auto-launch
+        showUnscanModeNotification(result) {
+          console.log('📢 [UNSCAN MODAL] ============== CREATING CENTERED UNSCAN MODAL ==============');
+          
+          // Create modal overlay
+          const modalOverlay = document.createElement('div');
+          modalOverlay.style.cssText = `
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 20000;
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
+            display: flex; justify-content: center; align-items: center; padding: 20px;
+            animation: fadeIn 0.3s ease-out;
+          `;
+          
+          // Create modal content
+          const modalContent = document.createElement('div');
+          modalContent.style.cssText = `
+            background: white; border-radius: 16px; padding: 40px 32px; text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 123, 255, 0.15), 0 0 0 1px rgba(0, 123, 255, 0.1);
+            max-width: 480px; width: 100%; position: relative;
+            animation: modalSlideIn 0.4s ease-out; color: #2c3e50;
+          `;
+          
+          modalContent.innerHTML = `
+            <div style="
+              width: 80px; height: 80px; background: linear-gradient(45deg, #007bff, #28a745);
+              border-radius: 50%; display: flex; align-items: center; justify-content: center;
+              margin: 0 auto 24px; font-size: 36px;
+            ">⚡</div>
+            <h2 style="margin: 0 0 16px 0; font-size: 24px; font-weight: 600; color: #2c3e50;">
+              Optimized Mode Ready
+            </h2>
+            <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6; color: #6c757d;">
+              Your system is configured for <strong style="color: #007bff;">UNSCAN Mode</strong> - 
+              an optimized experience designed for enhanced performance and efficiency.
+            </p>
+            <div style="
+              background: #f8f9fa; border-radius: 12px; border: 1px solid #e9ecef;
+              padding: 20px; margin: 20px 0;
+            ">
+              <p style="margin: 0 0 12px 0; font-size: 15px; color: #495057; font-weight: 500;">
+                🚀 <strong>Auto-launching in <span id="unscan-countdown">5</span> seconds</strong>
+              </p>
+              <div style="
+                width: 100%; height: 6px; background: #e9ecef;
+                border-radius: 3px; overflow: hidden;
+              ">
+                <div id="unscan-progress" style="
+                  width: 0%; height: 100%; background: linear-gradient(45deg, #007bff, #28a745);
+                  border-radius: 3px; transition: width 0.1s ease;
+                "></div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+              <button id="unscan-launch-now" style="
+                background: #007bff; color: white; border: none; padding: 12px 28px;
+                border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;
+                transition: all 0.2s ease; min-width: 140px;
+                box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
+              " onmouseover="this.style.background='#0056b3'; this.style.transform='translateY(-1px)'" 
+                 onmouseout="this.style.background='#007bff'; this.style.transform='translateY(0)'">
+                Launch Now 🚀
+              </button>
+            </div>
+          `;
+          
+          modalOverlay.appendChild(modalContent);
+          document.body.appendChild(modalOverlay);
+          
+          console.log('📢 [UNSCAN MODAL] Modal displayed - starting 5s countdown');
+          
+          // Countdown and progress animation
+          let countdown = 5;
+          const countdownEl = document.getElementById('unscan-countdown');
+          const progressEl = document.getElementById('unscan-progress');
+          const launchBtn = document.getElementById('unscan-launch-now');
+          
+          const countdownInterval = setInterval(() => {
+            countdown--;
+            if (countdownEl) countdownEl.textContent = countdown;
+            if (progressEl) progressEl.style.width = `${((5 - countdown) / 5) * 100}%`;
+            
+            if (countdown <= 0) {
+              clearInterval(countdownInterval);
+              this.launchFromUnscanModal(modalOverlay);
+            }
+          }, 1000);
+          
+          // Launch now button
+          launchBtn.addEventListener('click', () => {
+            console.log('📢 [UNSCAN MODAL] User clicked Launch Now button');
+            clearInterval(countdownInterval);
+            this.launchFromUnscanModal(modalOverlay);
+          });
+          
+          // Add CSS animations
+          this.addModalAnimations();
+        }
+        
+        launchFromUnscanModal(modalOverlay) {
+          console.log('📢 [UNSCAN MODAL] Launching CypherEdge...');
+          
+          // Fade out modal
+          modalOverlay.style.animation = 'fadeOut 0.3s ease-out forwards';
+          
+          setTimeout(() => {
+            if (modalOverlay.parentNode) {
+              modalOverlay.remove();
+            }
+            console.log('📢 [UNSCAN MODAL] Modal removed, executing auto-launch');
+            this.handleUserDecision('proceed');
+          }, 300);
+        }
+
+        // PROFESSIONAL: Show HYBRID mode decision flow with modern design
+        showHybridModeFlow(result) {
+          console.log('🤔 [HYBRID DECISION] ============== SHOWING HYBRID DECISION MODAL ==============');
+          
+          // Create modal overlay with proper scrolling
+          const modalOverlay = document.createElement('div');
+          modalOverlay.style.cssText = `
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 20000;
+            background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(8px);
+            padding: 20px; animation: fadeIn 0.3s ease-out;
+            overflow-y: auto; overflow-x: hidden;
+          `;
+          
+          // Create modal content container
+          const modalContainer = document.createElement('div');
+          modalContainer.style.cssText = `
+            min-height: calc(100vh - 40px); display: flex; align-items: center; justify-content: center;
+          `;
+          
+          // Create modal content
+          const modalContent = document.createElement('div');
+          modalContent.style.cssText = `
+            background: #ffffff; border-radius: 12px; padding: 24px; text-align: center;
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.12), 0 2px 12px rgba(0, 0, 0, 0.08);
+            max-width: 480px; width: 100%; position: relative; color: #1a202c;
+            animation: modalSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            margin: 20px 0; max-height: none;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+          `;
+          
+          modalContent.innerHTML = `
+            <!-- Professional Header -->
+            <div style="
+              display: flex; align-items: center; justify-content: center; margin-bottom: 24px;
+            ">
+              <div style="
+                width: 56px; height: 56px; background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+                border-radius: 12px; display: flex; align-items: center; justify-content: center;
+                margin-right: 16px; box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+              ">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: white;">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+              </div>
+              <div style="text-align: left;">
+                <h2 style="margin: 0; font-size: 24px; font-weight: 700; color: #1a202c; line-height: 1.2;">
+                  System Assessment
+                </h2>
+                <p style="margin: 4px 0 0 0; font-size: 15px; color: #718096;">
+                  Performance optimization available
+                </p>
+              </div>
+            </div>
+
+            <!-- System Status Card -->
+            <div style="
+              background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+              border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 24px;
+              text-align: left;
+            ">
+              <h3 style="margin: 0 0 12px 0; font-size: 16px; color: #2d3748; font-weight: 600;">
+                Current System Configuration
+              </h3>
+              <div style="display: grid; gap: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e2e8f0;">
+                  <span style="font-size: 14px; color: #4a5568;">Processing Capability</span>
+                  <span style="background: #fed7d7; color: #c53030; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600;">
+                    Enhanced Mode Recommended
+                  </span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
+                  <span style="font-size: 14px; color: #4a5568;">Optimization Available</span>
+                  <span style="background: #c6f6d5; color: #22543d; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600;">
+                    HYBRID Mode
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Choice Cards -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+              <!-- Try Another PC Card -->
+              <div id="hybrid-try-another-pc" style="
+                border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px; cursor: pointer;
+                transition: all 0.3s ease; background: white; text-align: left;
+                position: relative; overflow: hidden;
+              " onmouseover="this.style.borderColor='#007bff'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(0,123,255,0.15)'" 
+                 onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                <div style="
+                  position: absolute; top: 0; right: 0; width: 40px; height: 40px;
+                  background: linear-gradient(135deg, #805ad5, #9f7aea); border-radius: 0 12px 0 12px;
+                  display: flex; align-items: center; justify-content: center;
+                ">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: white;">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                    <line x1="8" y1="21" x2="16" y2="21"/>
+                    <line x1="12" y1="17" x2="12" y2="21"/>
+                  </svg>
+                </div>
+                <h4 style="margin: 0 0 8px 0; font-size: 16px; color: #2d3748; font-weight: 600;">
+                  Use Another Computer
+                </h4>
+                <p style="margin: 0 0 12px 0; font-size: 14px; color: #4a5568; line-height: 1.4;">
+                  Run CypherEdge on a higher-specification computer for optimal performance.
+                </p>
+                <div style="
+                  background: #edf2f7; color: #4a5568; padding: 8px 12px; border-radius: 6px;
+                  font-size: 12px; font-weight: 600; display: inline-block;
+                ">
+                  RECOMMENDED
+                </div>
+              </div>
+
+              <!-- HYBRID Mode Card -->
+              <div id="hybrid-get-access" style="
+                border: 2px solid #007bff; border-radius: 12px; padding: 20px; cursor: pointer;
+                transition: all 0.3s ease; background: linear-gradient(135deg, #f7fafc 0%, #e3f2fd 100%);
+                text-align: left; position: relative; overflow: hidden;
+                box-shadow: 0 4px 12px rgba(0, 123, 255, 0.1);
+              " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(0,123,255,0.2)'" 
+                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,123,255,0.1)'">
+                <div style="
+                  position: absolute; top: 0; right: 0; width: 40px; height: 40px;
+                  background: linear-gradient(135deg, #007bff, #0056b3); border-radius: 0 12px 0 12px;
+                  display: flex; align-items: center; justify-content: center;
+                ">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: white;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                  </svg>
+                </div>
+                <h4 style="margin: 0 0 8px 0; font-size: 16px; color: #2d3748; font-weight: 600;">
+                  Enable HYBRID Mode
+                </h4>
+                <p style="margin: 0 0 12px 0; font-size: 14px; color: #4a5568; line-height: 1.4;">
+                  Unlock cloud processing and priority support for this device.
+                </p>
+                <div style="
+                  background: linear-gradient(135deg, #007bff, #0056b3); color: white; padding: 8px 12px; border-radius: 6px;
+                  font-size: 12px; font-weight: 600; display: inline-block;
+                ">
+                  ₹2,499 ONE-TIME
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div style="
+              text-align: center; padding-top: 16px; border-top: 1px solid #e2e8f0;
+            ">
+              <p style="margin: 0; font-size: 13px; color: #718096; line-height: 1.4;">
+                HYBRID Mode includes cloud acceleration, priority processing, and dedicated support
+              </p>
+            </div>
+          `;
+          
+          modalContainer.appendChild(modalContent);
+          modalOverlay.appendChild(modalContainer);
+          document.body.appendChild(modalOverlay);
+          
+          console.log('🤔 [HYBRID DECISION] Decision modal displayed');
+          
+          // Handle button clicks
+          document.getElementById('hybrid-try-another-pc').addEventListener('click', () => {
+            console.log('🤔 [HYBRID DECISION] User chose: Try Another PC - closing application');
+            this.handleHybridDecision('try_another_pc', modalOverlay);
+          });
+          
+          document.getElementById('hybrid-get-access').addEventListener('click', () => {
+            console.log('🤔 [HYBRID DECISION] User chose: Get HYBRID Access - showing payment flow');
+            this.handleHybridDecision('get_access', modalOverlay, result);
+          });
+          
+          // Add CSS animations
+          this.addModalAnimations();
+        }
+        
+        handleHybridDecision(choice, modalOverlay, result = null) {
+          if (choice === 'try_another_pc') {
+            // User wants to try on another PC - close the application
+            console.log('🚪 [HYBRID EXIT] Showing exit message and closing app');
+            
+            modalOverlay.querySelector('div').innerHTML = `
+              <div style="
+                width: 80px; height: 80px; background: linear-gradient(45deg, #28a745, #20c997);
+                border-radius: 50%; display: flex; align-items: center; justify-content: center;
+                margin: 0 auto 24px; font-size: 36px;
+              ">👋</div>
+              <h2 style="margin: 0 0 16px 0; font-size: 24px; font-weight: 600; color: #2c3e50;">
+                Thank You!
+              </h2>
+              <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6; color: #6c757d;">
+                We recommend trying CypherEdge on a higher-specification computer for the optimal experience. 
+                The application will close shortly.
+              </p>
+              <div style="
+                background: #f8f9fa; border-radius: 12px; border: 1px solid #e9ecef;
+                padding: 20px; margin: 20px 0;
+              ">
+                <p style="margin: 0; font-size: 15px; color: #495057; font-weight: 500;">
+                  Closing in <span id="exit-countdown">3</span> seconds...
+                </p>
+              </div>
+            `;
+            
+            let countdown = 3;
+            const countdownEl = document.getElementById('exit-countdown');
+            const exitInterval = setInterval(() => {
+              countdown--;
+              if (countdownEl) countdownEl.textContent = countdown;
+              
+              if (countdown <= 0) {
+                clearInterval(exitInterval);
+                modalOverlay.style.animation = 'fadeOut 0.3s ease-out forwards';
+                setTimeout(() => {
+                  if (modalOverlay.parentNode) modalOverlay.remove();
+                  this.handleUserDecision('cancel'); // This will close the app
+                }, 300);
+              }
+            }, 1000);
+            
+          } else if (choice === 'get_access') {
+            // User wants HYBRID access - show payment flow
+            console.log('💳 [HYBRID PAYMENT] Transitioning to payment flow');
+            this.showHybridPaymentFlow(modalOverlay, result);
+          }
+        }
+        
+        showHybridPaymentFlow(modalOverlay, result) {
+          console.log('💳 [HYBRID PAYMENT] ============== SHOWING PAYMENT FLOW ==============');
+          
+          // Smooth transition - fade out current content
+          const currentContent = modalOverlay.querySelector('div');
+          currentContent.style.animation = 'fadeOut 0.3s ease-out forwards';
+          
+          setTimeout(() => {
+            // Update modal content for payment flow
+            currentContent.style.cssText = `
+              background: white; border-radius: 12px; padding: 24px; text-align: center;
+              box-shadow: 0 20px 40px rgba(0, 123, 255, 0.15), 0 0 0 1px rgba(0, 123, 255, 0.1);
+              max-width: 480px; width: 100%; position: relative; color: #1a202c;
+              animation: modalSlideIn 0.4s ease-out; max-height: none;
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            `;
+            
+            currentContent.innerHTML = `
+              <div style="
+                width: 80px; height: 80px; background: linear-gradient(45deg, #007bff, #28a745);
+                border-radius: 50%; display: flex; align-items: center; justify-content: center;
+                margin: 0 auto 24px; font-size: 36px;
+              ">💳</div>
+              <h2 style="margin: 0 0 16px 0; font-size: 24px; font-weight: 600; color: #2c3e50;">
+                HYBRID Mode Access
+              </h2>
+              <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6; color: #6c757d;">
+                Unlock cloud-enhanced performance, priority processing, and advanced features 
+                for your device with HYBRID Mode.
+              </p>
+              
+              <div style="
+                background: #f8f9fa; border-radius: 12px; border: 1px solid #e9ecef;
+                padding: 24px; margin: 24px 0; text-align: left;
+              ">
+                <h3 style="margin: 0 0 16px 0; font-size: 18px; text-align: center; color: #495057; font-weight: 600;">
+                  Features Included
+                </h3>
+                <div style="display: grid; gap: 8px;">
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="color: #007bff;">⚡</span>
+                    <span style="font-size: 14px; color: #495057;">Cloud processing acceleration</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="color: #28a745;">🎯</span>
+                    <span style="font-size: 14px; color: #495057;">Priority support & faster processing</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="color: #6f42c1;">🔄</span>
+                    <span style="font-size: 14px; color: #495057;">Automatic performance optimization</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="color: #fd7e14;">📞</span>
+                    <span style="font-size: 14px; color: #495057;">Direct team support access</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div style="
+                background: linear-gradient(45deg, #007bff, #28a745); 
+                border-radius: 12px; padding: 20px; margin: 20px 0; color: white;
+              ">
+                <h3 style="margin: 0 0 8px 0; font-size: 28px; font-weight: 700;">₹2,499</h3>
+                <p style="margin: 0; font-size: 14px; opacity: 0.9;">One-time payment for HYBRID Mode access</p>
+              </div>
+              
+              <div style="display: grid; grid-template-columns: auto 1fr; gap: 12px; margin-top: 24px;">
+                <button id="payment-back" style="
+                  background: #6c757d; color: white; border: none; padding: 12px 20px;
+                  border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+                  transition: all 0.2s ease; min-height: 44px;
+                " onmouseover="this.style.background='#5a6268'; this.style.transform='translateY(-1px)'" 
+                   onmouseout="this.style.background='#6c757d'; this.style.transform='translateY(0)'">
+                  ← Back
+                </button>
+                <button id="proceed-payment" style="
+                  background: #007bff; color: white; border: none; padding: 12px 24px;
+                  border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;
+                  transition: all 0.2s ease; min-height: 44px; box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
+                " onmouseover="this.style.background='#0056b3'; this.style.transform='translateY(-1px)'" 
+                   onmouseout="this.style.background='#007bff'; this.style.transform='translateY(0)'">
+                  Proceed to Payment →
+                </button>
+              </div>
+            `;
+            
+            // Handle payment flow buttons
+            document.getElementById('payment-back').addEventListener('click', () => {
+              console.log('💳 [HYBRID PAYMENT] User clicked Back - returning to decision');
+              this.showHybridModeFlow(result); // Re-show decision modal
+              modalOverlay.remove(); // Remove current modal
+            });
+            
+            document.getElementById('proceed-payment').addEventListener('click', () => {
+              console.log('💳 [HYBRID PAYMENT] User clicked Proceed - showing QR payment');
+              this.showHybridQRPayment(modalOverlay);
+            });
+            
+          }, 300);
+        }
+        
+        showHybridQRPayment(modalOverlay) {
+          console.log('📱 [QR PAYMENT] ============== SHOWING QR PAYMENT SCREEN ==============');
+          
+          // Smooth transition - fade out current content
+          const currentContent = modalOverlay.querySelector('div');
+          currentContent.style.animation = 'fadeOut 0.3s ease-out forwards';
+          
+          setTimeout(() => {
+            // Update modal content for QR payment
+            currentContent.style.cssText = `
+              background: white; border-radius: 12px; padding: 20px; text-align: center;
+              box-shadow: 0 20px 40px rgba(0, 123, 255, 0.15), 0 0 0 1px rgba(0, 123, 255, 0.1);
+              max-width: 460px; width: 100%; position: relative; color: #1a202c;
+              animation: modalSlideIn 0.4s ease-out; max-height: none;
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            `;
+            
+            // Generate system ID for payment
+            const systemId = 'CYP-' + Date.now().toString().slice(-8);
+            
+            currentContent.innerHTML = `
+              <!-- Professional Header -->
+              <div style="
+                display: flex; align-items: center; justify-content: center; margin-bottom: 24px;
+              ">
+                <div style="
+                  width: 48px; height: 48px; background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+                  border-radius: 12px; display: flex; align-items: center; justify-content: center;
+                  margin-right: 12px; box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+                ">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: white;">
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                    <line x1="1" y1="10" x2="23" y2="10"/>
+                  </svg>
+                </div>
+                <div style="text-align: left;">
+                  <h2 style="margin: 0; font-size: 22px; font-weight: 700; color: #1a202c; line-height: 1.2;">
+                    Payment Process
+                  </h2>
+                  <p style="margin: 4px 0 0 0; font-size: 14px; color: #718096;">
+                    Secure HYBRID Mode activation
+                  </p>
+                </div>
+              </div>
+
+              <!-- Payment Steps Progress -->
+              <div style="
+                background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 12px; 
+                padding: 20px; margin-bottom: 24px;
+              ">
+                <div style="display: grid; grid-template-columns: auto 1fr auto 1fr auto; gap: 12px; align-items: center;">
+                  <div style="
+                    width: 32px; height: 32px; background: #007bff; color: white; border-radius: 50%;
+                    display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600;
+                  ">1</div>
+                  <div style="height: 2px; background: #007bff; border-radius: 1px;"></div>
+                  <div style="
+                    width: 32px; height: 32px; background: #007bff; color: white; border-radius: 50%;
+                    display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600;
+                  ">2</div>
+                  <div style="height: 2px; background: #e2e8f0; border-radius: 1px;"></div>
+                  <div style="
+                    width: 32px; height: 32px; background: #e2e8f0; color: #a0aec0; border-radius: 50%;
+                    display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600;
+                  ">3</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 8px; text-align: center;">
+                  <span style="font-size: 12px; color: #4a5568; font-weight: 600;">Scan & Pay</span>
+                  <span style="font-size: 12px; color: #4a5568; font-weight: 600;">Mark Complete</span>
+                  <span style="font-size: 12px; color: #a0aec0;">Team Verification</span>
+                </div>
+              </div>
+              
+              <!-- QR Code Section -->
+              <div style="
+                background: white; border: 2px solid #e2e8f0; border-radius: 16px; 
+                padding: 24px; margin-bottom: 24px; text-align: center;
+              ">
+                <div style="
+                  width: 160px; height: 160px; background: #f7fafc; margin: 0 auto 16px;
+                  border: 3px dashed #007bff; border-radius: 12px;
+                  display: flex; flex-direction: column; align-items: center; justify-content: center;
+                  color: #007bff; font-weight: 600;
+                ">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: #007bff; margin-bottom: 8px;">
+                    <rect x="3" y="3" width="5" height="5"/>
+                    <rect x="3" y="16" width="5" height="5"/>
+                    <rect x="16" y="3" width="5" height="5"/>
+                    <path d="m5 5 3 3"/>
+                    <path d="m5 19 3-3"/>
+                    <path d="m19 5-3 3"/>
+                    <path d="m12 12 1 1"/>
+                    <path d="m12 18 1-1"/>
+                    <path d="m16 16-1 1"/>
+                  </svg>
+                  <span style="font-size: 14px;">QR Payment Code</span>
+                  <span style="font-size: 12px; color: #718096;">(Demo Mode)</span>
+                </div>
+                <div style="
+                  background: #edf2f7; border: 1px solid #e2e8f0; border-radius: 8px;
+                  padding: 12px; display: inline-block;
+                ">
+                  <span style="font-size: 13px; color: #4a5568; font-weight: 600;">
+                    Reference ID: ${systemId}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Payment Instructions -->
+              <div style="
+                background: #fffbeb; border: 1px solid #f59e0b; border-radius: 12px; 
+                padding: 16px; margin-bottom: 24px; text-align: left;
+              ">
+                <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: #f59e0b; margin-right: 8px;">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="m9 12 2 2 4-4"/>
+                  </svg>
+                  <span style="font-size: 15px; color: #92400e; font-weight: 600;">Payment Instructions</span>
+                </div>
+                <ol style="margin: 0; padding-left: 20px; color: #92400e; font-size: 14px; line-height: 1.5;">
+                  <li style="margin-bottom: 4px;">Open any UPI app (PhonePe, GPay, Paytm)</li>
+                  <li style="margin-bottom: 4px;">Scan the QR code above</li>
+                  <li style="margin-bottom: 4px;">Enter amount: <strong>₹2,499</strong></li>
+                  <li style="margin-bottom: 4px;">Add reference ID: <strong>${systemId}</strong></li>
+                  <li>Complete payment and click "Mark as Completed" below</li>
+                </ol>
+              </div>
+
+              <!-- Action Buttons -->
+              <div style="display: grid; grid-template-columns: auto auto 1fr; gap: 12px;">
+                <button id="qr-back" style="
+                  background: #718096; color: white; border: none; padding: 12px 16px;
+                  border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+                  transition: all 0.2s ease; display: flex; align-items: center; gap: 6px;
+                " onmouseover="this.style.background='#4a5568'; this.style.transform='translateY(-1px)'" 
+                   onmouseout="this.style.background='#718096'; this.style.transform='translateY(0)'">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="m15 18-6-6 6-6"/>
+                  </svg>
+                  Back
+                </button>
+                <button id="payment-help" style="
+                  background: #f59e0b; color: white; border: none; padding: 12px 16px;
+                  border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+                  transition: all 0.2s ease; display: flex; align-items: center; gap: 6px;
+                " onmouseover="this.style.background='#d97706'; this.style.transform='translateY(-1px)'" 
+                   onmouseout="this.style.background='#f59e0b'; this.style.transform='translateY(0)'">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                    <path d="M12 17h.01"/>
+                  </svg>
+                  Help
+                </button>
+                <button id="payment-completed" style="
+                  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: white; border: none;
+                  padding: 14px 20px; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;
+                  transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px;
+                  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+                " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 8px 20px rgba(34, 197, 94, 0.3)'" 
+                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(34, 197, 94, 0.2)'">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M9 12l2 2 4-4"/>
+                    <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3"/>
+                    <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3"/>
+                  </svg>
+                  Mark Payment as Completed
+                </button>
+              </div>
+            `;
+            
+            // Handle payment screen buttons
+            document.getElementById('qr-back').addEventListener('click', () => {
+              console.log('📱 [QR PAYMENT] User clicked Back - returning to payment flow');
+              this.showHybridPaymentFlow(modalOverlay, {});
+            });
+            
+            document.getElementById('payment-help').addEventListener('click', () => {
+              console.log('📱 [QR PAYMENT] User clicked Need Help - showing support options');
+              this.showPaymentSupport(modalOverlay, systemId);
+            });
+            
+            document.getElementById('payment-completed').addEventListener('click', () => {
+              console.log('📱 [QR PAYMENT] User clicked I\'ve Paid - verifying payment');
+              this.handlePaymentComplete(modalOverlay, systemId);
+            });
+            
+          }, 300);
+        }
+        
+        showPaymentSupport(modalOverlay, systemId) {
+          console.log('🤝 [PAYMENT SUPPORT] ============== SHOWING SUPPORT OPTIONS ==============');
+          
+          const currentContent = modalOverlay.querySelector('div');
+          currentContent.style.animation = 'fadeOut 0.2s ease-out forwards';
+          
+          setTimeout(() => {
+            currentContent.style.cssText = `
+              background: white; border-radius: 12px; padding: 24px; text-align: center;
+              box-shadow: 0 20px 40px rgba(0, 123, 255, 0.15), 0 0 0 1px rgba(0, 123, 255, 0.1);
+              max-width: 460px; width: 100%; position: relative; color: #1a202c;
+              animation: modalSlideIn 0.3s ease-out; max-height: none;
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            `;
+            
+            currentContent.innerHTML = `
+              <div style="
+                width: 80px; height: 80px; background: linear-gradient(45deg, #28a745, #20c997);
+                border-radius: 50%; display: flex; align-items: center; justify-content: center;
+                margin: 0 auto 20px; font-size: 36px;
+              ">🤝</div>
+              <h2 style="margin: 0 0 12px 0; font-size: 24px; font-weight: 600; color: #2c3e50;">
+                Need Payment Help?
+              </h2>
+              <p style="margin: 0 0 20px 0; font-size: 16px; color: #6c757d;">
+                Our support team is here to assist you with HYBRID Mode setup
+              </p>
+              
+              <div style="
+                background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 12px; 
+                padding: 20px; margin: 20px 0; text-align: left;
+              ">
+                <p style="margin: 0 0 8px 0; font-size: 15px; color: #495057; font-weight: 600;">
+                  <strong>Your System ID:</strong> ${systemId}
+                </p>
+                <p style="margin: 0; font-size: 13px; color: #6c757d;">
+                  Please mention this ID when contacting support
+                </p>
+              </div>
+              
+              <div style="display: grid; gap: 10px; margin: 20px 0;">
+                <button onclick="window.open('mailto:support@cypheredge.com?subject=HYBRID Payment Help - ${systemId}', '_blank')" style="
+                  background: #007bff; color: white; border: none; padding: 14px 18px;
+                  border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+                  transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px;
+                " onmouseover="this.style.background='#0056b3'; this.style.transform='translateY(-1px)'" 
+                   onmouseout="this.style.background='#007bff'; this.style.transform='translateY(0)'">
+                  <span>📧</span> Email Support Team
+                </button>
+                <button onclick="window.open('https://wa.me/911234567890?text=Hi, I need help with HYBRID Mode payment. System ID: ${systemId}', '_blank')" style="
+                  background: #25d366; color: white; border: none; padding: 14px 18px;
+                  border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+                  transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px;
+                " onmouseover="this.style.background='#128c7e'; this.style.transform='translateY(-1px)'" 
+                   onmouseout="this.style.background='#25d366'; this.style.transform='translateY(0)'">
+                  <span>💬</span> WhatsApp Support
+                </button>
+                <button onclick="window.open('tel:+911234567890', '_blank')" style="
+                  background: #fd7e14; color: white; border: none; padding: 14px 18px;
+                  border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+                  transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px;
+                " onmouseover="this.style.background='#e8590c'; this.style.transform='translateY(-1px)'" 
+                   onmouseout="this.style.background='#fd7e14'; this.style.transform='translateY(0)'">
+                  <span>📞</span> Call Support: +91-12345-67890
+                </button>
+              </div>
+              
+              <button id="support-back" style="
+                background: #6c757d; color: white; border: none;
+                padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+                transition: all 0.2s ease; margin-top: 16px;
+              " onmouseover="this.style.background='#5a6268'; this.style.transform='translateY(-1px)'" 
+                 onmouseout="this.style.background='#6c757d'; this.style.transform='translateY(0)'">
+                ← Back to Payment
+              </button>
+              
+              <p style="margin-top: 16px; font-size: 13px; color: #6c757d;">
+                Support available 24/7 for HYBRID Mode assistance
+              </p>
+            `;
+            
+            document.getElementById('support-back').addEventListener('click', () => {
+              this.showHybridQRPayment(modalOverlay);
+            });
+            
+          }, 200);
+        }
+        
+        handlePaymentComplete(modalOverlay, systemId) {
+          console.log('✅ [PAYMENT COMPLETE] ============== HANDLING PAYMENT COMPLETION ==============');
+          
+          const currentContent = modalOverlay.querySelector('div');
+          currentContent.style.animation = 'fadeOut 0.3s ease-out forwards';
+          
+          setTimeout(() => {
+            currentContent.style.cssText = `
+              background: white; border-radius: 16px; padding: 40px 32px; text-align: center;
+              box-shadow: 0 20px 40px rgba(0, 123, 255, 0.15), 0 0 0 1px rgba(0, 123, 255, 0.1);
+              max-width: 480px; width: 100%; position: relative; color: #2c3e50;
+              animation: modalSlideIn 0.4s ease-out;
+            `;
+            
+            currentContent.innerHTML = `
+              <!-- Success Header -->
+              <div style="
+                display: flex; align-items: center; justify-content: center; margin-bottom: 32px;
+              ">
+                <div style="
+                  width: 64px; height: 64px; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+                  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+                  margin-right: 16px; box-shadow: 0 8px 24px rgba(34, 197, 94, 0.3);
+                ">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: white;">
+                    <path d="M9 12l2 2 4-4"/>
+                    <path d="m9 12 2 2 4-4"/>
+                  </svg>
+                </div>
+                <div style="text-align: left;">
+                  <h2 style="margin: 0; font-size: 26px; font-weight: 700; color: #1a202c; line-height: 1.2;">
+                    Payment Submitted
+                  </h2>
+                  <p style="margin: 4px 0 0 0; font-size: 16px; color: #22c55e; font-weight: 600;">
+                    Verification in progress
+                  </p>
+                </div>
+              </div>
+
+              <!-- Status Timeline -->
+              <div style="
+                background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 16px; 
+                padding: 24px; margin-bottom: 24px;
+              ">
+                <h3 style="margin: 0 0 20px 0; font-size: 18px; color: #2d3748; font-weight: 600; text-align: center;">
+                  What happens next?
+                </h3>
+                
+                <div style="position: relative;">
+                  <!-- Timeline Line -->
+                  <div style="
+                    position: absolute; left: 16px; top: 20px; bottom: 20px; width: 2px; 
+                    background: linear-gradient(to bottom, #22c55e 0%, #22c55e 33%, #e2e8f0 33%, #e2e8f0 100%);
+                  "></div>
+                  
+                  <!-- Timeline Items -->
+                  <div style="display: grid; gap: 24px;">
+                    <!-- Step 1: Completed -->
+                    <div style="display: flex; align-items: flex-start; gap: 16px; position: relative;">
+                      <div style="
+                        width: 32px; height: 32px; background: #22c55e; border-radius: 50%;
+                        display: flex; align-items: center; justify-content: center; z-index: 1;
+                      ">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: white;">
+                          <path d="M9 12l2 2 4-4"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 style="margin: 0 0 4px 0; font-size: 15px; color: #2d3748; font-weight: 600;">
+                          Payment Information Received
+                        </h4>
+                        <p style="margin: 0; font-size: 13px; color: #22c55e; font-weight: 600;">Completed now</p>
+                      </div>
+                    </div>
+
+                    <!-- Step 2: In Progress -->
+                    <div style="display: flex; align-items: flex-start; gap: 16px; position: relative;">
+                      <div style="
+                        width: 32px; height: 32px; background: #f59e0b; border-radius: 50%;
+                        display: flex; align-items: center; justify-content: center; z-index: 1;
+                        animation: pulse 2s infinite;
+                      ">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: white;">
+                          <circle cx="12" cy="12" r="10"/>
+                          <path d="M12 6v6l4 2"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 style="margin: 0 0 4px 0; font-size: 15px; color: #2d3748; font-weight: 600;">
+                          Team Verification & Processing
+                        </h4>
+                        <p style="margin: 0; font-size: 13px; color: #f59e0b; font-weight: 600;">Within 2-4 hours</p>
+                      </div>
+                    </div>
+
+                    <!-- Step 3: Pending -->
+                    <div style="display: flex; align-items: flex-start; gap: 16px; position: relative;">
+                      <div style="
+                        width: 32px; height: 32px; background: #e2e8f0; border-radius: 50%;
+                        display: flex; align-items: center; justify-content: center; z-index: 1;
+                      ">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: #a0aec0;">
+                          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 style="margin: 0 0 4px 0; font-size: 15px; color: #a0aec0; font-weight: 600;">
+                          Contact & HYBRID Mode Activation
+                        </h4>
+                        <p style="margin: 0; font-size: 13px; color: #a0aec0;">After verification</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Reference Information -->
+              <div style="
+                background: white; border: 2px solid #e2e8f0; border-radius: 12px; 
+                padding: 20px; margin-bottom: 24px; text-align: left;
+              ">
+                <h4 style="margin: 0 0 16px 0; font-size: 16px; color: #2d3748; font-weight: 600;">
+                  Reference Information
+                </h4>
+                <div style="display: grid; gap: 12px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f7fafc; border-radius: 6px;">
+                    <span style="font-size: 14px; color: #4a5568;">Payment Reference</span>
+                    <span style="font-size: 14px; color: #2d3748; font-weight: 600; font-family: monospace;">${systemId}</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f7fafc; border-radius: 6px;">
+                    <span style="font-size: 14px; color: #4a5568;">Amount</span>
+                    <span style="font-size: 14px; color: #2d3748; font-weight: 600;">₹2,499</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f7fafc; border-radius: 6px;">
+                    <span style="font-size: 14px; color: #4a5568;">Expected Contact</span>
+                    <span style="font-size: 14px; color: #2d3748; font-weight: 600;">2-4 hours</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Support Contact -->
+              <div style="
+                background: #fffbeb; border: 1px solid #f59e0b; border-radius: 12px; 
+                padding: 16px; margin-bottom: 24px; text-align: center;
+              ">
+                <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: #f59e0b; margin-right: 8px;">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                  </svg>
+                  <span style="font-size: 15px; color: #92400e; font-weight: 600;">Need immediate assistance?</span>
+                </div>
+                <p style="margin: 0 0 8px 0; font-size: 13px; color: #92400e;">
+                  Our team will contact you shortly. For urgent queries, reach us at:
+                </p>
+                <p style="margin: 0; font-size: 14px; color: #92400e; font-weight: 600;">
+                  support@cypheredge.com | +91-12345-67890
+                </p>
+              </div>
+
+              <!-- Important Notice -->
+              <div style="
+                background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; 
+                padding: 20px; margin-bottom: 24px; text-align: center;
+              ">
+                <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: #d97706; margin-right: 8px;">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 8v4"/>
+                    <path d="M12 16h.01"/>
+                  </svg>
+                  <span style="font-size: 18px; color: #92400e; font-weight: 700;">Important Notice</span>
+                </div>
+                <p style="margin: 0; font-size: 15px; color: #92400e; line-height: 1.5; font-weight: 600;">
+                  Your system requires HYBRID Mode for optimal performance. CypherEdge cannot run in Standard Mode on this device. 
+                  Please wait for our team to activate HYBRID Mode or try using a higher-specification computer.
+                </p>
+              </div>
+
+              <!-- Action Buttons -->
+              <div style="text-align: center;">
+                <button id="close-application" style="
+                  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white; border: none; 
+                  padding: 16px 32px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer;
+                  transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 8px;
+                  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+                " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(220, 38, 38, 0.3)'" 
+                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(220, 38, 38, 0.2)'">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M18 6L6 18"/>
+                    <path d="M6 6l12 12"/>
+                  </svg>
+                  Close Application
+                </button>
+                <p style="margin: 16px 0 0 0; font-size: 13px; color: #6b7280;">
+                  Our team will contact you within 2-4 hours to activate HYBRID Mode
+                </p>
+              </div>
+
+              <!-- CSS Animations -->
+              <style>
+                @keyframes pulse {
+                  0%, 100% { opacity: 1; }
+                  50% { opacity: 0.5; }
+                }
+              </style>
+            `;
+            
+            // Handle close application button (only option for HYBRID users)
+            document.getElementById('close-application').addEventListener('click', () => {
+              console.log('✅ [PAYMENT COMPLETE] HYBRID user must close - Standard Mode not available');
+              modalOverlay.style.animation = 'fadeOut 0.3s ease-out forwards';
+              setTimeout(() => {
+                if (modalOverlay.parentNode) modalOverlay.remove();
+                this.handleUserDecision('cancel'); // Close the app - HYBRID users cannot use Standard Mode
+              }, 300);
+            });
+            
+          }, 300);
+        }
+        
+        launchHybridMode(modalOverlay) {
+          console.log('🚀 [HYBRID LAUNCH] Launching CypherEdge in HYBRID Mode...');
+          
+          modalOverlay.style.animation = 'fadeOut 0.4s ease-out forwards';
+          
+          setTimeout(() => {
+            if (modalOverlay.parentNode) {
+              modalOverlay.remove();
+            }
+            console.log('🚀 [HYBRID LAUNCH] Modal removed, executing HYBRID launch');
+            this.handleUserDecision('proceed'); // Launch the app
+          }, 400);
+        }
+        
+        addModalAnimations() {
+          // Add CSS animations if not already present
+          if (!document.getElementById('modal-animations')) {
+            const style = document.createElement('style');
+            style.id = 'modal-animations';
+            style.textContent = `
+              @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+              }
+              @keyframes fadeOut {
+                from { opacity: 1; }
+                to { opacity: 0; }
+              }
+              @keyframes modalSlideIn {
+                from { 
+                  opacity: 0; 
+                  transform: scale(0.8) translateY(-20px); 
+                }
+                to { 
+                  opacity: 1; 
+                  transform: scale(1) translateY(0); 
+                }
+              }
+              @keyframes slideIn {
+                from { 
+                  opacity: 0; 
+                  transform: translateX(20px); 
+                }
+                to { 
+                  opacity: 1; 
+                  transform: translateX(0); 
+                }
+              }
+            `;
+            document.head.appendChild(style);
+          }
         }
       }
 

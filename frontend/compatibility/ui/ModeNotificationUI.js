@@ -152,8 +152,17 @@ class ModeNotificationUI {
             <!-- Header -->
             <div class="notification-header">
               <div class="notification-icon">⚡</div>
-              <h2>Optimized Mode Enabled</h2>
-              <p class="notification-subtitle">${messages.optimizedModeMessage || 'Your system has been configured for lightweight processing mode.'}</p>
+              <h2>UNSCAN Mode - System Optimization</h2>
+              <p class="notification-subtitle">Your device configuration is good but can be improved. You're being shifted to a version without ML scanning features.</p>
+            </div>
+
+            <!-- Improvement Notice -->
+            <div class="improvement-notice">
+              <div class="notice-icon">💡</div>
+              <div class="notice-content">
+                <h3>Hardware Upgrade Recommendation</h3>
+                <p>To unlock full CypherEdge features including advanced ML scanning, please consider upgrading your hardware or running on a more powerful system.</p>
+              </div>
             </div>
 
             <!-- System Info -->
@@ -217,7 +226,7 @@ class ModeNotificationUI {
 
             <!-- Auto-dismiss info -->
             <div class="auto-dismiss-info">
-              <p>This notification will auto-dismiss in <span id="unscan-countdown">5</span> seconds</p>
+              <p>This notification will auto-dismiss in <span id="unscan-countdown">10</span> seconds</p>
             </div>
 
             ${this.getTestModeIndicator()}
@@ -276,6 +285,34 @@ class ModeNotificationUI {
           color: #6b7280;
           font-size: 1em;
           line-height: 1.5;
+        }
+
+        .improvement-notice {
+          background: linear-gradient(135deg, #fef3c7, #fde68a);
+          border: 1px solid #f59e0b;
+          border-radius: 8px;
+          padding: 16px;
+          margin-bottom: 24px;
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+        }
+
+        .notice-icon {
+          font-size: 1.5em;
+          color: #f59e0b;
+        }
+
+        .notice-content h3 {
+          color: #92400e;
+          margin: 0 0 8px 0;
+          font-size: 1.1em;
+        }
+
+        .notice-content p {
+          color: #78350f;
+          margin: 0;
+          line-height: 1.4;
         }
 
         .system-info-section, .features-section {
@@ -465,7 +502,7 @@ class ModeNotificationUI {
       </style>
 
       <script>
-        let unscanCountdown = 5;
+        let unscanCountdown = 10;
         let countdownInterval;
 
         function acknowledgeUnscanMode() {

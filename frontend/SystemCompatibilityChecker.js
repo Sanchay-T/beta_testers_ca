@@ -8,6 +8,7 @@ const { CompatibilityLogger } = require("./compatibility/CompatibilityLogger");
 const { DetailedReportGenerator } = require("./compatibility/DetailedReportGenerator");
 const { AppModeManager } = require("./compatibility/AppModeManager");
 const { ModeNotificationUI } = require("./compatibility/ui/ModeNotificationUI");
+const { EnhancedReportCollector } = require("./compatibility/EnhancedReportCollector");
 
 class SystemCompatibilityChecker {
   constructor(loggerOptions = {}) {
@@ -22,6 +23,7 @@ class SystemCompatibilityChecker {
     this.detailedReportGenerator = null; // Will be initialized when needed
     this.appModeManager = null; // Will be initialized when window is available
     this.modeNotificationUI = null; // Will be initialized when window is available
+    this.enhancedReportCollector = new EnhancedReportCollector(this.logger);
     this.userDecision = null;
     this.results = {
       startTime: Date.now(),
@@ -40,6 +42,9 @@ class SystemCompatibilityChecker {
     this.logger.info('SESSION_START', 'Starting comprehensive compatibility check');
     log.info("🔍 [COMPAT] Starting comprehensive compatibility check...");
 
+    // Start enhanced report collection
+    this.enhancedReportCollector.startCompatibilityCheck();
+
     try {
       // Step 1: Create the compatibility checker window
       await this.createCompatibilityWindow();
@@ -54,14 +59,48 @@ class SystemCompatibilityChecker {
       // Step 2: Wait for user to start tests
       const userDecision = await this.waitForUserDecision();
 
+      this.logger.info('USER_DECISION_DEBUG', 'User decision received in main flow', {
+        userDecision: userDecision,
+        userDecisionType: typeof userDecision,
+        rawUserDecision: this.userDecision
+      });
+      log.info(`🐛 [COMPAT] User decision debug: ${userDecision} (type: ${typeof userDecision}), raw: ${this.userDecision}`);
+
       // Step 2.5: Run app mode detection after compatibility tests
       let modeDetectionResult = null;
-      if (userDecision === 'proceed') {
+      if (userDecision === true || userDecision === 'proceed') {
         this.logger.info('MODE_DETECTION_START', 'Starting app mode detection after compatibility tests');
         log.info("🎯 [COMPAT] Running app mode detection...");
         
         try {
-          modeDetectionResult = await this.appModeManager.runModeDetection();
+          // First, try to use stored decision from compatibility window testing
+          const storedDecision = this.appModeManager.loadStoredDecision();
+          const isRecentDecision = storedDecision && storedDecision.timestamp && 
+            (Date.now() - storedDecision.timestamp < 5 * 60 * 1000); // 5 minutes
+          
+          if (isRecentDecision && storedDecision.determinedMode) {
+            this.logger.info('MODE_DETECTION_STORED', 'Using stored mode decision from compatibility testing', {
+              determinedMode: storedDecision.determinedMode,
+              timestamp: storedDecision.timestamp,
+              confidence: storedDecision.confidence
+            });
+            log.info(`🎯 [COMPAT] Using stored mode decision: ${storedDecision.determinedMode} (from testing)`);
+            
+            // Add missing properties that SystemCompatibilityChecker expects
+            modeDetectionResult = {
+              ...storedDecision,
+              success: true,
+              canProceed: storedDecision.determinedMode === 'SCAN' ? true : (storedDecision.determinedMode === 'UNSCAN' ? true : false),
+              userMessage: storedDecision.userMessage || `${storedDecision.determinedMode} mode selected from compatibility testing`,
+              duration: 0, // No duration since we're using stored result
+              phase: 'complete',
+              source: 'stored_decision'
+            };
+          } else {
+            this.logger.info('MODE_DETECTION_FRESH', 'No recent stored decision found, running fresh detection');
+            log.info(`🎯 [COMPAT] Running fresh mode detection...`);
+            modeDetectionResult = await this.appModeManager.runModeDetection();
+          }
           
           this.logger.info('MODE_DETECTION_COMPLETE', 'App mode detection completed', {
             determinedMode: modeDetectionResult.determinedMode,
@@ -69,6 +108,12 @@ class SystemCompatibilityChecker {
           });
           
           log.info(`🎯 [COMPAT] Mode determined: ${modeDetectionResult.determinedMode} (canProceed: ${modeDetectionResult.canProceed})`);
+          
+          // Set mode detection result in enhanced report
+          this.enhancedReportCollector.setModeDetectionResult(modeDetectionResult);
+          
+          // Update window title based on detected mode
+          this.updateWindowTitle(modeDetectionResult.determinedMode);
           
           // Verify mode result persistence
           this.verifyModeResultPersistence(modeDetectionResult);
@@ -160,12 +205,48 @@ class SystemCompatibilityChecker {
           this.results.canProceed = true;
         }
       } else {
+        // User decided not to proceed or cancelled
         this.results.canProceed = false;
+        this.results.blockReason = 'User chose not to proceed with compatibility check';
       }
 
       // Step 3: Finalize and cleanup
       this.results.endTime = Date.now();
       this.results.duration = this.results.endTime - this.results.startTime;
+
+      // Set final outcome in enhanced report
+      const finalOutcome = this.results.canProceed ? 
+        (userDecision === true ? 'proceed' : 'cancelled') : 
+        'blocked';
+      this.enhancedReportCollector.setFinalOutcome(finalOutcome, {
+        canProceed: this.results.canProceed,
+        blockReason: this.results.blockReason,
+        userDecision: this.userDecision,
+        duration: this.results.duration
+      });
+
+      // Save enhanced report before cleanup
+      try {
+        const reportResult = await this.enhancedReportCollector.saveReport();
+        if (reportResult.success) {
+          this.logger.info('ENHANCED_REPORT_SAVED', 'Enhanced compatibility report saved successfully', {
+            sessionId: reportResult.sessionId,
+            files: reportResult.files.map(f => f.path)
+          });
+          log.info(`📊 [COMPAT] Enhanced report saved (Session: ${reportResult.sessionId})`);
+        } else {
+          this.logger.error('ENHANCED_REPORT_SAVE_FAILED', 'Failed to save enhanced report', {
+            error: reportResult.error
+          });
+          log.error(`❌ [COMPAT] Failed to save enhanced report: ${reportResult.error}`);
+        }
+      } catch (error) {
+        this.logger.error('ENHANCED_REPORT_ERROR', 'Error saving enhanced report', {
+          error: error.message,
+          stack: error.stack
+        });
+        log.error(`❌ [COMPAT] Error saving enhanced report: ${error.message}`);
+      }
 
       if (this.window && !this.window.isDestroyed()) {
         this.window.close();
@@ -253,13 +334,12 @@ class SystemCompatibilityChecker {
       center: true,
       resizable: true,   // Enable resizing
       movable: true,     // Enable moving/dragging
-      frame: false,      // Completely frameless
+      frame: true,       // Enable native window frame
       transparent: false,
       alwaysOnTop: true,
       show: true,        // Show immediately
       focusable: true,
       skipTaskbar: false,
-      titleBarStyle: 'hidden',  // Hide title bar on macOS
       webPreferences: {
         nodeIntegration: true,
         contextIsolation: false,
@@ -269,8 +349,6 @@ class SystemCompatibilityChecker {
       icon: path.join(__dirname, "assets", "cyphersol-icon.png"),
       title: "CypherEdge Compatibility Check",
       backgroundColor: '#f0f4f8',
-      thickFrame: false,  // Remove thick frame on Windows
-      hasShadow: false,   // Remove drop shadow
     });
 
     // Load the compatibility HTML page
@@ -1027,6 +1105,44 @@ class SystemCompatibilityChecker {
     }
     
     return recommendations;
+  }
+
+  /**
+   * Update window title based on detected mode
+   * @param {string} mode - Detected mode (SCAN, UNSCAN, HYBRID)
+   */
+  updateWindowTitle(mode) {
+    try {
+      if (this.window && !this.window.isDestroyed()) {
+        let newTitle;
+        switch (mode) {
+          case 'SCAN':
+            newTitle = 'CypherEdge - Standard Mode';
+            break;
+          case 'UNSCAN':
+            newTitle = 'CypherEdge - UNSCAN Mode';
+            break;
+          case 'HYBRID':
+            newTitle = 'CypherEdge - HYBRID Mode';
+            break;
+          default:
+            newTitle = 'CypherEdge Compatibility Check';
+        }
+        
+        this.window.setTitle(newTitle);
+        this.logger.info('WINDOW_TITLE_UPDATE', 'Updated window title for mode', {
+          mode: mode,
+          newTitle: newTitle
+        });
+        log.info(`🪟 [COMPAT] Window title updated to: ${newTitle}`);
+      }
+    } catch (error) {
+      this.logger.error('WINDOW_TITLE_ERROR', 'Failed to update window title', {
+        error: error.message,
+        mode: mode
+      });
+      log.error('❌ [COMPAT] Failed to update window title:', error.message);
+    }
   }
 
   /**

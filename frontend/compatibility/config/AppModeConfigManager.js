@@ -4,7 +4,11 @@ const path = require('path');
 
 class AppModeConfigManager {
   constructor() {
-    this.configPath = path.join(__dirname, 'appModeConfig.json');
+    // Check if temp config exists (for testing scenarios), otherwise use main config
+    const tempConfigPath = path.join(__dirname, 'temp_appModeConfig.json');
+    const mainConfigPath = path.join(__dirname, 'appModeConfig.json');
+    
+    this.configPath = fs.existsSync(tempConfigPath) ? tempConfigPath : mainConfigPath;
     this.config = null;
     this.isLoaded = false;
   }
@@ -22,6 +26,14 @@ class AppModeConfigManager {
       const configData = fs.readFileSync(this.configPath, 'utf8');
       this.config = JSON.parse(configData);
       this.isLoaded = true;
+
+      // Debug log which config is being used
+      const configType = this.configPath.includes('temp_') ? 'TEMP (scenario testing)' : 'MAIN';
+      console.log(`🧪 [CONFIG] Using ${configType} config: ${path.basename(this.configPath)}`);
+      
+      if (configType === 'TEMP (scenario testing)') {
+        console.log(`🧪 [CONFIG] Temp config overrides:`, this.config.testingOverrides);
+      }
 
       // Validate configuration structure
       this.validateConfig();
@@ -62,7 +74,14 @@ class AppModeConfigManager {
    * @returns {Object} Configuration object
    */
   getConfig() {
-    if (!this.isLoaded) {
+    // Always check for temp config in case it was created after instantiation
+    const tempConfigPath = path.join(__dirname, 'temp_appModeConfig.json');
+    const mainConfigPath = path.join(__dirname, 'appModeConfig.json');
+    const currentBestPath = fs.existsSync(tempConfigPath) ? tempConfigPath : mainConfigPath;
+    
+    // Reload if path changed or not loaded yet
+    if (!this.isLoaded || this.configPath !== currentBestPath) {
+      this.configPath = currentBestPath;
       return this.loadConfig();
     }
     return this.config;

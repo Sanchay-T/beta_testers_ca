@@ -39,21 +39,31 @@ class CompatibilityLogger {
 
   initializeLogFiles() {
     try {
-      // Create logs directory in compatibility/log folder for comprehensive tracking
-      const compatLogDir = path.join(__dirname, 'log');
+      // Determine environment and set appropriate paths
+      const isDev = !app.isPackaged;
       const userDataPath = app.getPath('userData');
       
-      // Primary log directory in compatibility/log folder
-      this.logDir = compatLogDir;
-      this.userLogDir = path.join(userDataPath, 'logs', 'compatibility');
+      if (isDev) {
+        // Development paths
+        this.logDir = path.join(__dirname, 'log');  // Project directory
+        this.userLogDir = path.join(userDataPath, 'logs', 'compatibility');
+        this.reportsDir = path.join(__dirname, 'log', 'reports');
+        this.sessionsDir = path.join(userDataPath, 'sessions');
+      } else {
+        // Production paths - all under CypherEdge directory
+        const cypherEdgeDir = path.join(userDataPath, '..', 'CypherEdge');
+        this.logDir = path.join(cypherEdgeDir, 'logs', 'compatibility');
+        this.userLogDir = path.join(cypherEdgeDir, 'logs', 'compatibility');
+        this.reportsDir = path.join(cypherEdgeDir, 'compatibility-reports');
+        this.sessionsDir = path.join(cypherEdgeDir, 'sessions');
+      }
       
-      // Create both directories
-      if (!fs.existsSync(this.logDir)) {
-        fs.mkdirSync(this.logDir, { recursive: true });
-      }
-      if (!fs.existsSync(this.userLogDir)) {
-        fs.mkdirSync(this.userLogDir, { recursive: true });
-      }
+      // Create all necessary directories
+      [this.logDir, this.userLogDir, this.reportsDir, this.sessionsDir].forEach(dir => {
+        if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir, { recursive: true });
+        }
+      });
 
       // Create log files with timestamps
       const timestamp = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
@@ -427,7 +437,29 @@ class CompatibilityLogger {
       jsonLog: this.jsonLogFile,
       debugLog: this.debugLogFile,
       logDir: this.logDir,
-      userLogDir: this.userLogDir
+      userLogDir: this.userLogDir,
+      reportsDir: this.reportsDir,
+      sessionsDir: this.sessionsDir
+    };
+  }
+
+  /**
+   * Get environment-aware storage information
+   * @returns {Object} Storage information
+   */
+  getStorageInfo() {
+    const isDev = !require('electron').app.isPackaged;
+    return {
+      environment: isDev ? 'development' : 'production',
+      paths: {
+        compatibilityLogs: this.logDir,
+        userLogs: this.userLogDir,
+        reports: this.reportsDir,
+        sessions: this.sessionsDir
+      },
+      description: isDev 
+        ? 'Development: Logs in project directory, user data in %APPDATA%/electronapp'
+        : 'Production: All data in %APPDATA%/CypherEdge directory structure'
     };
   }
   
