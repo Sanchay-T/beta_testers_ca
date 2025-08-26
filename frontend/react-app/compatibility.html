@@ -929,6 +929,10 @@
                 this.emailVerified = true;
                 this.showEmailVerification = false;
                 this.render();
+                // Start auto countdown after email verification is complete
+                setTimeout(() => {
+                  this.startAutoCountdown();
+                }, 100);
               }, 1500);
             } else {
               this.showEmailStatus('❌ Email not authorized. Please contact support.', 'error');
@@ -1027,6 +1031,36 @@
             verifyBtn.innerHTML = 'Verify & Continue';
             verifyBtn.style.background = 'var(--cypheridge-blue)';
             verifyBtn.style.cursor = 'pointer';
+          }
+        }
+
+        startAutoCountdown() {
+          // Start countdown timer for auto-start (reduced for testing)
+          let countdown = 2; // Reduced from 5 to 2 for faster testing
+          const countdownInterval = setInterval(() => {
+            countdown--;
+            const countdownElement = document.getElementById('countdown');
+            if (countdownElement) {
+              countdownElement.textContent = countdown;
+            }
+            
+            if (countdown <= 0) {
+              clearInterval(countdownInterval);
+              const countdownContainer = document.getElementById('auto-start-countdown');
+              if (countdownContainer) {
+                countdownContainer.textContent = 'Auto-starting now...';
+              }
+              // Auto-start the tests
+              this.startTests();
+            }
+          }, 1000);
+          
+          // Clear countdown if user clicks Continue
+          const continueBtn = document.getElementById('continue-btn');
+          if (continueBtn) {
+            continueBtn.addEventListener('click', () => {
+              clearInterval(countdownInterval);
+            });
           }
         }
 
@@ -2366,10 +2400,91 @@
                   display: flex; align-items: center; justify-content: center;
                   background: white; padding: 8px;
                 ">
-                  <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAYAAACtWK6eAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAGUlEQVR4nO3BMQEAAADCoPVPbQsvoAAAAOBuEAAAyKmF1QAAAABJRU5ErkJggg==" alt="QR Code" style="width: 180px; height: 180px; border: 1px solid #ddd;"/>
-                  <div style="position: absolute; background: white; padding: 4px 8px; border-radius: 4px; font-size: 10px; color: #666; bottom: 10px;">
-                    Scan to Pay ₹2,499
-                  </div>
+                  <svg width="180" height="180" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg" style="border: 1px solid #ddd;">
+                    <rect width="180" height="180" fill="white"/>
+                    
+                    <!-- Top-left finder pattern -->
+                    <rect x="0" y="0" width="63" height="63" fill="black"/>
+                    <rect x="9" y="9" width="45" height="45" fill="white"/>
+                    <rect x="18" y="18" width="27" height="27" fill="black"/>
+                    
+                    <!-- Top-right finder pattern -->
+                    <rect x="117" y="0" width="63" height="63" fill="black"/>
+                    <rect x="126" y="9" width="45" height="45" fill="white"/>
+                    <rect x="135" y="18" width="27" height="27" fill="black"/>
+                    
+                    <!-- Bottom-left finder pattern -->
+                    <rect x="0" y="117" width="63" height="63" fill="black"/>
+                    <rect x="9" y="126" width="45" height="45" fill="white"/>
+                    <rect x="18" y="135" width="27" height="27" fill="black"/>
+                    
+                    <!-- Data modules (random pattern to look like real QR) -->
+                    <rect x="72" y="0" width="9" height="9" fill="black"/>
+                    <rect x="90" y="0" width="9" height="9" fill="black"/>
+                    <rect x="108" y="0" width="9" height="9" fill="black"/>
+                    <rect x="81" y="9" width="9" height="9" fill="black"/>
+                    <rect x="99" y="9" width="9" height="9" fill="black"/>
+                    <rect x="72" y="18" width="9" height="9" fill="black"/>
+                    <rect x="90" y="18" width="9" height="9" fill="black"/>
+                    <rect x="108" y="18" width="9" height="9" fill="black"/>
+                    
+                    <!-- Vertical data columns -->
+                    <rect x="72" y="72" width="9" height="9" fill="black"/>
+                    <rect x="81" y="72" width="9" height="9" fill="black"/>
+                    <rect x="90" y="72" width="9" height="9" fill="black"/>
+                    <rect x="99" y="72" width="9" height="9" fill="black"/>
+                    <rect x="108" y="72" width="9" height="9" fill="black"/>
+                    
+                    <!-- More data pattern -->
+                    <rect x="72" y="81" width="9" height="9" fill="black"/>
+                    <rect x="90" y="81" width="9" height="9" fill="black"/>
+                    <rect x="108" y="81" width="9" height="9" fill="black"/>
+                    <rect x="81" y="90" width="9" height="9" fill="black"/>
+                    <rect x="99" y="90" width="9" height="9" fill="black"/>
+                    
+                    <!-- Right side data -->
+                    <rect x="126" y="72" width="9" height="9" fill="black"/>
+                    <rect x="135" y="72" width="9" height="9" fill="black"/>
+                    <rect x="144" y="72" width="9" height="9" fill="black"/>
+                    <rect x="153" y="72" width="9" height="9" fill="black"/>
+                    <rect x="162" y="72" width="9" height="9" fill="black"/>
+                    <rect x="171" y="72" width="9" height="9" fill="black"/>
+                    
+                    <!-- Bottom data -->
+                    <rect x="72" y="117" width="9" height="9" fill="black"/>
+                    <rect x="90" y="117" width="9" height="9" fill="black"/>
+                    <rect x="108" y="117" width="9" height="9" fill="black"/>
+                    <rect x="126" y="117" width="9" height="9" fill="black"/>
+                    <rect x="144" y="117" width="9" height="9" fill="black"/>
+                    <rect x="162" y="117" width="9" height="9" fill="black"/>
+                    
+                    <!-- Additional data pattern to make it look more realistic -->
+                    <rect x="72" y="126" width="9" height="9" fill="black"/>
+                    <rect x="90" y="126" width="9" height="9" fill="black"/>
+                    <rect x="108" y="126" width="9" height="9" fill="black"/>
+                    <rect x="144" y="126" width="9" height="9" fill="black"/>
+                    <rect x="162" y="126" width="9" height="9" fill="black"/>
+                    
+                    <rect x="81" y="135" width="9" height="9" fill="black"/>
+                    <rect x="99" y="135" width="9" height="9" fill="black"/>
+                    <rect x="126" y="135" width="9" height="9" fill="black"/>
+                    <rect x="153" y="135" width="9" height="9" fill="black"/>
+                    
+                    <!-- Left side data -->
+                    <rect x="0" y="72" width="9" height="9" fill="black"/>
+                    <rect x="18" y="72" width="9" height="9" fill="black"/>
+                    <rect x="36" y="72" width="9" height="9" fill="black"/>
+                    <rect x="54" y="72" width="9" height="9" fill="black"/>
+                    
+                    <rect x="9" y="81" width="9" height="9" fill="black"/>
+                    <rect x="27" y="81" width="9" height="9" fill="black"/>
+                    <rect x="45" y="81" width="9" height="9" fill="black"/>
+                    
+                    <rect x="0" y="90" width="9" height="9" fill="black"/>
+                    <rect x="18" y="90" width="9" height="9" fill="black"/>
+                    <rect x="36" y="90" width="9" height="9" fill="black"/>
+                    <rect x="54" y="90" width="9" height="9" fill="black"/>
+                  </svg>
                 </div>
                 
                 <div style="
@@ -2840,35 +2955,9 @@
         window.compatApp = app; // Make app globally accessible for window controls
         app.init();
         
-        // Start countdown timer for auto-start (reduced for testing)
-        let countdown = 2; // Reduced from 5 to 2 for faster testing
-        const countdownInterval = setInterval(() => {
-          countdown--;
-          const countdownElement = document.getElementById('countdown');
-          if (countdownElement) {
-            countdownElement.textContent = countdown;
-          }
-          
-          if (countdown <= 0) {
-            clearInterval(countdownInterval);
-            const countdownContainer = document.getElementById('auto-start-countdown');
-            if (countdownContainer) {
-              countdownContainer.textContent = 'Auto-starting now...';
-            }
-            // Auto-start the tests
-            const app = window.compatApp;
-            if (app) {
-              app.startTests();
-            }
-          }
-        }, 1000);
-        
-        // Clear countdown if user clicks Continue
-        const continueBtn = document.getElementById('continue-btn');
-        if (continueBtn) {
-          continueBtn.addEventListener('click', () => {
-            clearInterval(countdownInterval);
-          });
+        // Only start countdown if email verification is not needed
+        if (app.emailVerified || !app.showEmailVerification) {
+          app.startAutoCountdown();
         }
       });
     </script>
