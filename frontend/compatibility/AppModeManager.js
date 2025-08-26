@@ -22,6 +22,11 @@ class AppModeManager {
     this.currentPhase = 'idle';
     this.results = null;
     
+    // Scenario persistence for testing mode
+    this.lastUsedScenario = null;
+    this.sessionStartTime = Date.now();
+    this.SCENARIO_PERSISTENCE_TIMEOUT = 300000; // 5 minutes
+    
     this.logger?.info('APP_MODE_MANAGER', 'AppModeManager initialized');
   }
 
@@ -42,6 +47,9 @@ class AppModeManager {
 
     try {
       this.logger?.info('APP_MODE_MANAGER', 'Starting complete mode detection process');
+
+      // [MODE_DEBUG] Enhanced scenario persistence logic
+      this.handleScenarioPersistence(options);
 
       // Phase 1: Load configuration and check development mode
       this.currentPhase = 'configuration';
@@ -103,6 +111,58 @@ class AppModeManager {
       this.isRunning = false;
       this.currentPhase = 'idle';
     }
+  }
+
+  /**
+   * Handle scenario persistence logic for testing mode
+   * @param {Object} options - Detection options (modified in-place)
+   */
+  handleScenarioPersistence(options) {
+    const config = AppModeConfigManager.getConfig();
+    const isDevelopmentMode = config.developmentMode?.enabled;
+
+    if (!isDevelopmentMode) {
+      // Not in development mode, no scenario persistence needed
+      this.logger?.info('APP_MODE_MANAGER', '[MODE_DEBUG] Not in development mode, skipping scenario persistence');
+      return;
+    }
+
+    // Check if we're within session timeout
+    const isWithinSession = this.isWithinSessionTimeout();
+
+    // Log current state
+    this.logger?.info('APP_MODE_MANAGER', '[MODE_DEBUG] Scenario persistence check', {
+      providedScenario: options.scenario,
+      lastUsedScenario: this.lastUsedScenario,
+      isWithinSession: isWithinSession,
+      sessionAge: Date.now() - this.sessionStartTime
+    });
+
+    // If no scenario provided, try to use persisted scenario
+    if (!options.scenario && this.lastUsedScenario && isWithinSession) {
+      options.scenario = this.lastUsedScenario;
+      this.logger?.info('APP_MODE_MANAGER', '[MODE_DEBUG] Using persisted scenario from previous detection', {
+        persistedScenario: options.scenario,
+        source: 'previous_test_session'
+      });
+    }
+
+    // Store scenario for future use (only if provided and within development mode)
+    if (options.scenario && options.scenario !== 'current') {
+      this.lastUsedScenario = options.scenario;
+      this.logger?.info('APP_MODE_MANAGER', '[MODE_DEBUG] Storing scenario for future detections', {
+        storedScenario: options.scenario,
+        sessionTimeout: this.SCENARIO_PERSISTENCE_TIMEOUT
+      });
+    }
+  }
+
+  /**
+   * Check if we're within the scenario persistence timeout
+   * @returns {boolean} Whether we're within session timeout
+   */
+  isWithinSessionTimeout() {
+    return (Date.now() - this.sessionStartTime) < this.SCENARIO_PERSISTENCE_TIMEOUT;
   }
 
   /**
@@ -459,6 +519,10 @@ class AppModeManager {
     this.results = null;
     this.decisionEngine.reset();
     this.hybridFlow.cleanup();
+    
+    // Reset scenario persistence
+    this.lastUsedScenario = null;
+    this.sessionStartTime = Date.now();
     
     this.logger?.info('APP_MODE_MANAGER', 'Manager state reset');
   }

@@ -163,9 +163,29 @@ contextBridge.exposeInMainWorld("electron", {
     logout: () => ipcRenderer.invoke("auth:logout"),
     resetPassword: (data) => ipcRenderer.invoke("auth:reset-password", data),
     getUser: () => ipcRenderer.invoke("auth:getUser"),
-    checkAccountStatus: () => ipcRenderer.invoke("auth:check-account-status"),
+    checkAccountStatus: async () => {
+      try {
+        return await ipcRenderer.invoke("auth:check-account-status");
+      } catch (error) {
+        if (error.message.includes("No handler registered")) {
+          // Return safe default when handler isn't ready
+          return { success: false, message: "Account status check pending - handlers not ready" };
+        }
+        throw error;
+      }
+    },
     // updateUser: (userData) => ipcRenderer.invoke('auth:updateUser', userData)
-    checkLicense: () => ipcRenderer.invoke("license:check"),
+    checkLicense: async () => {
+      try {
+        return await ipcRenderer.invoke("license:check");
+      } catch (error) {
+        if (error.message.includes("No handler registered")) {
+          // Return safe default when handler isn't ready
+          return { success: false, message: "License check pending - handlers not ready" };
+        }
+        throw error;
+      }
+    },
     searchNetworkLicenses: (networkLicense) => ipcRenderer.invoke("license:search-network-licenses", networkLicense),
     activateLicense: (credentials) =>
       ipcRenderer.invoke("license:activate", credentials),

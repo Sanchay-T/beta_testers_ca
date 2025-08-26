@@ -24,30 +24,52 @@ export const AuthProvider = ({ children }) => {
 
     checkAuth();
   }, []);
-  const checkAccountStatus = async () => {
-    try {
-      const result = await window.electron.auth.checkAccountStatus();
-      console.log("Check account status:", result);
-      setIsSignedUp(result.success);
-    } catch (err) {
-      throw err
+  const checkAccountStatus = async (retries = 3, delay = 500) => {
+    for (let i = 0; i < retries; i++) {
+      try {
+        const result = await window.electron.auth.checkAccountStatus();
+        console.log("Check account status:", result);
+        setIsSignedUp(result.success);
+        return; // Success - exit retry loop
+      } catch (err) {
+        if (err.message.includes("No handler registered") && i < retries - 1) {
+          // Handler not ready yet, wait and retry
+          console.warn(`Account status check failed (attempt ${i + 1}/${retries}): Handler not ready, retrying in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        // Final retry failed or different error
+        console.error(`Account status check failed after ${i + 1} attempts:`, err);
+        throw err;
+      }
     }
   };
 
-  const checkLicenseStatus = async () => {
-    try {
-      const result = await window.electron.auth.checkLicense();
-      const activated = result.success;
-      // console.log("Check license key isActivated:", result);
-      setIsActivated(activated);
-      if (activated) {
-        // console.log("License key is activated");
-        const userData = await window.electron.auth.getUser();
-        // console.log("User data:", userData);
-        if (userData) setUser(userData);
+  const checkLicenseStatus = async (retries = 3, delay = 500) => {
+    for (let i = 0; i < retries; i++) {
+      try {
+        const result = await window.electron.auth.checkLicense();
+        const activated = result.success;
+        // console.log("Check license key isActivated:", result);
+        setIsActivated(activated);
+        if (activated) {
+          // console.log("License key is activated");
+          const userData = await window.electron.auth.getUser();
+          // console.log("User data:", userData);
+          if (userData) setUser(userData);
+        }
+        return; // Success - exit retry loop
+      } catch (err) {
+        if (err.message.includes("No handler registered") && i < retries - 1) {
+          // Handler not ready yet, wait and retry
+          console.warn(`License check failed (attempt ${i + 1}/${retries}): Handler not ready, retrying in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        // Final retry failed or different error
+        console.error(`License check failed after ${i + 1} attempts:`, err);
+        throw err;
       }
-    } catch (err) {
-      throw err
     }
   };
 

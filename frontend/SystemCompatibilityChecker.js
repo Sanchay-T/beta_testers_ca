@@ -6,7 +6,7 @@ const { CompatibilityTests } = require("./compatibility/CompatibilityTests");
 const { ReportGenerator } = require("./compatibility/ReportGenerator");
 const { CompatibilityLogger } = require("./compatibility/CompatibilityLogger");
 const { DetailedReportGenerator } = require("./compatibility/DetailedReportGenerator");
-const { AppModeManager } = require("./compatibility/AppModeManager");
+const { getSharedAppModeManager } = require("./compatibility/SharedAppModeManager");
 const { ModeNotificationUI } = require("./compatibility/ui/ModeNotificationUI");
 const { EnhancedReportCollector } = require("./compatibility/EnhancedReportCollector");
 
@@ -53,7 +53,7 @@ class SystemCompatibilityChecker {
       this.tests = new CompatibilityTests(this.logger, this.window);
       this.reportGenerator = new ReportGenerator(this.logger);
       this.detailedReportGenerator = new DetailedReportGenerator(this.logger);
-      this.appModeManager = new AppModeManager(this.logger, this.window);
+      this.appModeManager = getSharedAppModeManager(this.logger, this.window);
       this.modeNotificationUI = new ModeNotificationUI(this.logger, this.window);
 
       // Step 2: Wait for user to start tests
@@ -99,6 +99,14 @@ class SystemCompatibilityChecker {
           } else {
             this.logger.info('MODE_DETECTION_FRESH', 'No recent stored decision found, running fresh detection');
             log.info(`🎯 [COMPAT] Running fresh mode detection...`);
+            
+            // [MODE_DEBUG] Log shared instance state before running detection
+            this.logger.info('MODE_DETECTION_DEBUG', 'Running detection with shared AppModeManager', {
+              hasSharedInstance: !!this.appModeManager,
+              lastUsedScenario: this.appModeManager.lastUsedScenario,
+              sessionAge: this.appModeManager ? Date.now() - this.appModeManager.sessionStartTime : null
+            });
+            
             modeDetectionResult = await this.appModeManager.runModeDetection();
           }
           

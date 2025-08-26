@@ -300,3 +300,1791 @@
 2025-08-26 00:35:05.011 +05:30 [INF] Hosting environment: Production
 2025-08-26 00:35:05.011 +05:30 [INF] Content root path: C:\Users\sanch\Desktop\Offlinesuite\beta_testers_ca\frontend\gatewayServer
 2025-08-26 00:35:05.012 +05:30 [INF] Re-advertising mDNS service...
+2025-08-26 12:06:44.136 +05:30 [INF] Starting service in Production...
+2025-08-26 12:06:44.284 +05:30 [INF] Actual log path: C:\Users\admin\Desktop\beta_testers_ca\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-08-26 12:06:44.320 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-08-26 12:06:44.540 +05:30 [INF] [DeviceInfo Init] UUID: B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 12:06:44.541 +05:30 [INF] [DeviceInfo Init] MAC Address: 44:03:2C:9D:15:52
+2025-08-26 12:06:44.541 +05:30 [INF] [DeviceInfo Init] Hostname: DESKTOP-8M0JENC
+2025-08-26 12:06:44.541 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-21-2566959089-793452566-1152153924-1001
+2025-08-26 12:06:44.541 +05:30 [INF] [DeviceInfo Init] Username: admin
+2025-08-26 12:06:44.548 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-08-26 12:06:44.562 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 208 bytes
+2025-08-26 12:06:44.568 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 12:06:44.930 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 1905812 to 64029609
+2025-08-26 12:06:44.978 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "25-Aug-2025 06:51:18 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756128078.984778,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 64029609
+}
+2025-08-26 12:06:44.978 +05:30 [INF] LicenseInfoProvider initialized.
+2025-08-26 12:06:44.979 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "25-Aug-2025 06:51:18 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756128078.984778,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 64029609
+}
+2025-08-26 12:06:44.979 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 0
+2025-08-26 12:06:44.980 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\session-cache.enc
+2025-08-26 12:06:44.987 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 12:06:45.251 +05:30 [ERR] Decryption failed. The license file may be corrupted or tampered with: Padding is invalid and cannot be removed.
+2025-08-26 12:06:45.254 +05:30 [ERR] Failed to load session cache: Exception of type 'System.Exception' was thrown.
+2025-08-26 12:06:45.267 +05:30 [INF] Initializing MdnsAdvertiser...
+2025-08-26 12:06:45.279 +05:30 [INF] MdnsAdvertiser initialized successfully
+2025-08-26 12:06:45.280 +05:30 [INF] UdpDiscoveryService initialized for license service LicenseServer on port 7890, listening on UDP port 41234
+2025-08-26 12:06:45.281 +05:30 [INF] Worker initialized.
+2025-08-26 12:06:45.303 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-08-26 12:06:45.304 +05:30 [INF] Waiting for network to be ready...
+2025-08-26 12:06:45.377 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.18
+2025-08-26 12:06:45.378 +05:30 [INF] Network is ready with IP: 192.168.1.18
+2025-08-26 12:06:45.421 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.18
+2025-08-26 12:06:45.422 +05:30 [INF] Registered mDNS event handlers for traffic monitoring
+2025-08-26 12:06:45.519 +05:30 [INF] Discovered network interface: Wi-Fi ({E105B734-B669-4F24-92C8-0648DB9E08D3})
+2025-08-26 12:06:45.519 +05:30 [INF] Discovered network interface: Local Area Connection* 7-WFP Native MAC Layer LightWeight Filter-0000 ({F4956517-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:06:45.519 +05:30 [INF] Discovered network interface: Local Area Connection* 7-QoS Packet Scheduler-0000 ({F4956518-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:06:45.519 +05:30 [INF] Discovered network interface: Local Area Connection* 8-WFP Native MAC Layer LightWeight Filter-0000 ({F495651E-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:06:45.519 +05:30 [INF] Discovered network interface: Local Area Connection* 8-QoS Packet Scheduler-0000 ({F495651F-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:06:45.519 +05:30 [INF] Discovered network interface: Local Area Connection* 9-WFP Native MAC Layer LightWeight Filter-0000 ({F4956521-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:06:45.519 +05:30 [INF] Discovered network interface: Local Area Connection* 9-QoS Packet Scheduler-0000 ({F4956522-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:06:45.520 +05:30 [INF] Discovered network interface: Local Area Connection* 7 ({5D9C2979-6EE7-41DB-805B-8ED991AF2D3C})
+2025-08-26 12:06:45.520 +05:30 [INF] Discovered network interface: Local Area Connection* 8 ({52A58791-E9E5-43DD-B56B-B21867E1E7C7})
+2025-08-26 12:06:45.520 +05:30 [INF] Discovered network interface: Local Area Connection* 9 ({7CF6F235-EDEB-41B6-839B-E174ADD2EC30})
+2025-08-26 12:06:45.520 +05:30 [INF] Discovered network interface: Wi-Fi-WFP Native MAC Layer LightWeight Filter-0000 ({F49564AA-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:06:45.520 +05:30 [INF] Discovered network interface: Wi-Fi-Virtual WiFi Filter Driver-0000 ({0554C6CB-F336-11EF-A39F-C47753E4DF9B})
+2025-08-26 12:06:45.520 +05:30 [INF] Discovered network interface: Wi-Fi-Native WiFi Filter Driver-0000 ({0554C6CC-F336-11EF-A39F-C47753E4DF9B})
+2025-08-26 12:06:45.520 +05:30 [INF] Discovered network interface: Wi-Fi-QoS Packet Scheduler-0000 ({F49564AB-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:06:45.520 +05:30 [INF] Discovered network interface: Wi-Fi-WFP 802.3 MAC Layer LightWeight Filter-0000 ({F49564AC-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:06:45.523 +05:30 [INF] mDNS service started
+2025-08-26 12:06:45.526 +05:30 [INF] mDNS advertisement task started with interval: 60 seconds
+2025-08-26 12:06:45.571 +05:30 [INF] Django base URL: https://cyphersol.co.in
+2025-08-26 12:06:45.599 +05:30 [INF] Database configuration loaded from C:\ProgramData\Cyphersol\database_config.json
+2025-08-26 12:06:45.600 +05:30 [INF] Found database configuration, attempting to start PostgreSQL server 17.4.0 5432 "11111111-2222-3333-4444-555555555555" C:\ProgramData\Cyphersol\pgdata
+2025-08-26 12:06:45.609 +05:30 [INF] Starting embedded Postgres…
+2025-08-26 12:07:19.062 +05:30 [ERR] Failed to auto-start PostgreSQL server from configuration
+System.Exception: Exception occurred while starting Pg server
+ ---> System.IO.IOException: Gave up waiting for server to start after 30000ms
+   at MysticMind.PostgresEmbed.PgServer.WaitForServerStartup(Stopwatch watch)
+   at MysticMind.PostgresEmbed.PgServer.StartServer()
+   --- End of inner exception stack trace ---
+   at MysticMind.PostgresEmbed.PgServer.StartServer()
+   at MysticMind.PostgresEmbed.PgServer.StartAsync(CancellationToken token)
+   at MysticMind.PostgresEmbed.PgServer.StartAsync()
+   at MyLanService.EmbeddedPostgresManager.StartAsync(String version, Int32 port, Guid InstanceId, String dbDir)
+   at MyLanService.EmbeddedPostgresManager.AutoStartFromConfigAsync()
+2025-08-26 12:07:19.197 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 12:07:19.367 +05:30 [INF] License Loaded: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "25-Aug-2025 06:51:18 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756128078.984778,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 64029609
+}
+2025-08-26 12:07:19.550 +05:30 [INF] Starting license polling...
+2025-08-26 12:07:19.567 +05:30 [INF] License is present: true
+2025-08-26 12:07:19.578 +05:30 [INF] [License Polling] Enriched JSON: { license_key = Testing2, used_statements = 0 }
+2025-08-26 12:07:19.632 +05:30 [INF] HTTP API Server started on port 7890
+2025-08-26 12:07:19.634 +05:30 [INF] Starting UDP discovery listener on port 41234...
+2025-08-26 12:07:19.641 +05:30 [INF] UdpDiscoveryService started on port 41234
+2025-08-26 12:07:19.642 +05:30 [INF] UDP discovery service started.
+2025-08-26 12:07:19.645 +05:30 [INF] IP address: 192.168.1.18
+2025-08-26 12:07:19.712 +05:30 [INF] mDNS advertisement started for license server (key: license-server:7890) using hostname: DESKTOP-8M0JENC and IP: 192.168.1.18:7890
+2025-08-26 12:07:19.712 +05:30 [INF] mDNS advertisement started using hostname: DESKTOP-8M0JENC and IP: 192.168.1.18:7890
+2025-08-26 12:07:19.713 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2025-08-26 12:07:19.713 +05:30 [INF] Hosting environment: Production
+2025-08-26 12:07:19.713 +05:30 [INF] Content root path: C:\Users\admin\Desktop\beta_testers_ca\frontend\gatewayServer
+2025-08-26 12:07:21.790 +05:30 [INF] [License Polling] Expiry: 1757658635.560683
+2025-08-26 12:07:21.790 +05:30 [INF] License is present: true
+2025-08-26 12:07:21.791 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1757658635.560683 to 1757658635.560683
+2025-08-26 12:07:21.791 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1756128078.984778 to 1756190234.329048
+2025-08-26 12:07:21.791 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 64029609 to 64066468
+2025-08-26 12:07:21.791 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-26 12:07:21.793 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"Testing2","current_timestamp":1756190234.329048,"expiry_timestamp":1757658635.560683,"number_of_users":1,"number_of_statements":100,"role":"CA","UsedStatements":0,"system_up_time":64066468}
+2025-08-26 12:07:21.794 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 12:07:22.475 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-26 12:07:22.476 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-26 12:07:22.476 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-26 12:07:22.481 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 12:07:14 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756190234.329048,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 64066468
+}
+2025-08-26 12:07:22.485 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-26 12:10:03.941 +05:30 [INF] Starting service in Production...
+2025-08-26 12:10:03.997 +05:30 [INF] Actual log path: C:\Users\admin\Desktop\beta_testers_ca\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-08-26 12:10:04.040 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-08-26 12:10:04.226 +05:30 [INF] [DeviceInfo Init] UUID: B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 12:10:04.227 +05:30 [INF] [DeviceInfo Init] MAC Address: 44:03:2C:9D:15:52
+2025-08-26 12:10:04.228 +05:30 [INF] [DeviceInfo Init] Hostname: DESKTOP-8M0JENC
+2025-08-26 12:10:04.228 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-21-2566959089-793452566-1152153924-1001
+2025-08-26 12:10:04.228 +05:30 [INF] [DeviceInfo Init] Username: admin
+2025-08-26 12:10:04.233 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-08-26 12:10:04.233 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 208 bytes
+2025-08-26 12:10:04.238 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 12:10:04.600 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 64066468 to 64229281
+2025-08-26 12:10:04.645 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 12:07:14 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756190234.329048,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 64229281
+}
+2025-08-26 12:10:04.645 +05:30 [INF] LicenseInfoProvider initialized.
+2025-08-26 12:10:04.647 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 12:07:14 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756190234.329048,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 64229281
+}
+2025-08-26 12:10:04.647 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 0
+2025-08-26 12:10:04.648 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\session-cache.enc
+2025-08-26 12:10:04.648 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 12:10:04.892 +05:30 [ERR] Decryption failed. The license file may be corrupted or tampered with: Padding is invalid and cannot be removed.
+2025-08-26 12:10:04.892 +05:30 [ERR] Failed to load session cache: Exception of type 'System.Exception' was thrown.
+2025-08-26 12:10:04.894 +05:30 [INF] Initializing MdnsAdvertiser...
+2025-08-26 12:10:04.902 +05:30 [INF] MdnsAdvertiser initialized successfully
+2025-08-26 12:10:04.903 +05:30 [INF] UdpDiscoveryService initialized for license service LicenseServer on port 7890, listening on UDP port 41234
+2025-08-26 12:10:04.905 +05:30 [INF] Worker initialized.
+2025-08-26 12:10:04.918 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-08-26 12:10:04.919 +05:30 [INF] Waiting for network to be ready...
+2025-08-26 12:10:04.983 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.18
+2025-08-26 12:10:04.983 +05:30 [INF] Network is ready with IP: 192.168.1.18
+2025-08-26 12:10:05.023 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.18
+2025-08-26 12:10:05.024 +05:30 [INF] Registered mDNS event handlers for traffic monitoring
+2025-08-26 12:10:05.091 +05:30 [INF] Discovered network interface: Wi-Fi ({E105B734-B669-4F24-92C8-0648DB9E08D3})
+2025-08-26 12:10:05.091 +05:30 [INF] Discovered network interface: Local Area Connection* 7-WFP Native MAC Layer LightWeight Filter-0000 ({F4956517-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:10:05.091 +05:30 [INF] Discovered network interface: Local Area Connection* 7-QoS Packet Scheduler-0000 ({F4956518-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:10:05.091 +05:30 [INF] Discovered network interface: Local Area Connection* 8-WFP Native MAC Layer LightWeight Filter-0000 ({F495651E-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:10:05.091 +05:30 [INF] Discovered network interface: Local Area Connection* 8-QoS Packet Scheduler-0000 ({F495651F-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:10:05.091 +05:30 [INF] Discovered network interface: Local Area Connection* 9-WFP Native MAC Layer LightWeight Filter-0000 ({F4956521-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:10:05.091 +05:30 [INF] Discovered network interface: Local Area Connection* 9-QoS Packet Scheduler-0000 ({F4956522-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:10:05.092 +05:30 [INF] Discovered network interface: Local Area Connection* 7 ({5D9C2979-6EE7-41DB-805B-8ED991AF2D3C})
+2025-08-26 12:10:05.092 +05:30 [INF] Discovered network interface: Local Area Connection* 8 ({52A58791-E9E5-43DD-B56B-B21867E1E7C7})
+2025-08-26 12:10:05.092 +05:30 [INF] Discovered network interface: Local Area Connection* 9 ({7CF6F235-EDEB-41B6-839B-E174ADD2EC30})
+2025-08-26 12:10:05.092 +05:30 [INF] Discovered network interface: Wi-Fi-WFP Native MAC Layer LightWeight Filter-0000 ({F49564AA-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:10:05.092 +05:30 [INF] Discovered network interface: Wi-Fi-Virtual WiFi Filter Driver-0000 ({0554C6CB-F336-11EF-A39F-C47753E4DF9B})
+2025-08-26 12:10:05.092 +05:30 [INF] Discovered network interface: Wi-Fi-Native WiFi Filter Driver-0000 ({0554C6CC-F336-11EF-A39F-C47753E4DF9B})
+2025-08-26 12:10:05.092 +05:30 [INF] Discovered network interface: Wi-Fi-QoS Packet Scheduler-0000 ({F49564AB-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:10:05.092 +05:30 [INF] Discovered network interface: Wi-Fi-WFP 802.3 MAC Layer LightWeight Filter-0000 ({F49564AC-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:10:05.094 +05:30 [INF] mDNS service started
+2025-08-26 12:10:05.095 +05:30 [INF] mDNS advertisement task started with interval: 60 seconds
+2025-08-26 12:10:05.110 +05:30 [INF] Django base URL: https://cyphersol.co.in
+2025-08-26 12:10:05.123 +05:30 [INF] Database configuration loaded from C:\ProgramData\Cyphersol\database_config.json
+2025-08-26 12:10:05.123 +05:30 [INF] Found database configuration, attempting to start PostgreSQL server 17.4.0 5432 "11111111-2222-3333-4444-555555555555" C:\ProgramData\Cyphersol\pgdata
+2025-08-26 12:10:05.126 +05:30 [INF] Starting embedded Postgres…
+2025-08-26 12:10:38.401 +05:30 [ERR] Failed to auto-start PostgreSQL server from configuration
+System.Exception: Exception occurred while starting Pg server
+ ---> System.IO.IOException: Gave up waiting for server to start after 30000ms
+   at MysticMind.PostgresEmbed.PgServer.WaitForServerStartup(Stopwatch watch)
+   at MysticMind.PostgresEmbed.PgServer.StartServer()
+   --- End of inner exception stack trace ---
+   at MysticMind.PostgresEmbed.PgServer.StartServer()
+   at MysticMind.PostgresEmbed.PgServer.StartAsync(CancellationToken token)
+   at MysticMind.PostgresEmbed.PgServer.StartAsync()
+   at MyLanService.EmbeddedPostgresManager.StartAsync(String version, Int32 port, Guid InstanceId, String dbDir)
+   at MyLanService.EmbeddedPostgresManager.AutoStartFromConfigAsync()
+2025-08-26 12:10:38.500 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 12:10:38.666 +05:30 [INF] License Loaded: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 12:07:14 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756190234.329048,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 64229281
+}
+2025-08-26 12:10:38.813 +05:30 [INF] Starting license polling...
+2025-08-26 12:10:38.819 +05:30 [INF] License is present: true
+2025-08-26 12:10:38.822 +05:30 [INF] [License Polling] Enriched JSON: { license_key = Testing2, used_statements = 0 }
+2025-08-26 12:10:38.921 +05:30 [INF] HTTP API Server started on port 7890
+2025-08-26 12:10:38.925 +05:30 [INF] Starting UDP discovery listener on port 41234...
+2025-08-26 12:10:38.931 +05:30 [INF] UdpDiscoveryService started on port 41234
+2025-08-26 12:10:38.931 +05:30 [INF] UDP discovery service started.
+2025-08-26 12:10:38.932 +05:30 [INF] IP address: 192.168.1.18
+2025-08-26 12:10:39.003 +05:30 [INF] mDNS advertisement started for license server (key: license-server:7890) using hostname: DESKTOP-8M0JENC and IP: 192.168.1.18:7890
+2025-08-26 12:10:39.003 +05:30 [INF] mDNS advertisement started using hostname: DESKTOP-8M0JENC and IP: 192.168.1.18:7890
+2025-08-26 12:10:39.005 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2025-08-26 12:10:39.005 +05:30 [INF] Hosting environment: Production
+2025-08-26 12:10:39.005 +05:30 [INF] Content root path: C:\Users\admin\Desktop\beta_testers_ca\frontend\gatewayServer
+2025-08-26 12:10:39.034 +05:30 [INF] [License Polling] Expiry: 1757658635.560683
+2025-08-26 12:10:39.034 +05:30 [INF] License is present: true
+2025-08-26 12:10:39.034 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1757658635.560683 to 1757658635.560683
+2025-08-26 12:10:39.034 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1756190234.329048 to 1756190431.592389
+2025-08-26 12:10:39.034 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 64229281 to 64263703
+2025-08-26 12:10:39.034 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-26 12:10:39.036 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"Testing2","current_timestamp":1756190431.592389,"expiry_timestamp":1757658635.560683,"number_of_users":1,"number_of_statements":100,"role":"CA","UsedStatements":0,"system_up_time":64263703}
+2025-08-26 12:10:39.037 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 12:10:39.390 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-26 12:10:39.391 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-26 12:10:39.391 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-26 12:10:39.393 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 12:10:31 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756190431.592389,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 64263703
+}
+2025-08-26 12:10:39.394 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-26 12:19:31.374 +05:30 [INF] Starting service in Production...
+2025-08-26 12:19:31.439 +05:30 [INF] Actual log path: C:\Users\admin\Desktop\beta_testers_ca\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-08-26 12:19:31.481 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-08-26 12:19:31.695 +05:30 [INF] [DeviceInfo Init] UUID: B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 12:19:31.697 +05:30 [INF] [DeviceInfo Init] MAC Address: 44:03:2C:9D:15:52
+2025-08-26 12:19:31.697 +05:30 [INF] [DeviceInfo Init] Hostname: DESKTOP-8M0JENC
+2025-08-26 12:19:31.697 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-21-2566959089-793452566-1152153924-1001
+2025-08-26 12:19:31.697 +05:30 [INF] [DeviceInfo Init] Username: admin
+2025-08-26 12:19:31.703 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-08-26 12:19:31.704 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 208 bytes
+2025-08-26 12:19:31.710 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 12:19:32.106 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 64263703 to 64796781
+2025-08-26 12:19:32.156 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 12:10:31 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756190431.592389,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 64796781
+}
+2025-08-26 12:19:32.156 +05:30 [INF] LicenseInfoProvider initialized.
+2025-08-26 12:19:32.157 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 12:10:31 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756190431.592389,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 64796781
+}
+2025-08-26 12:19:32.157 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 0
+2025-08-26 12:19:32.158 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\session-cache.enc
+2025-08-26 12:19:32.158 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 12:19:32.424 +05:30 [ERR] Decryption failed. The license file may be corrupted or tampered with: Padding is invalid and cannot be removed.
+2025-08-26 12:19:32.425 +05:30 [ERR] Failed to load session cache: Exception of type 'System.Exception' was thrown.
+2025-08-26 12:19:32.426 +05:30 [INF] Initializing MdnsAdvertiser...
+2025-08-26 12:19:32.434 +05:30 [INF] MdnsAdvertiser initialized successfully
+2025-08-26 12:19:32.435 +05:30 [INF] UdpDiscoveryService initialized for license service LicenseServer on port 7890, listening on UDP port 41234
+2025-08-26 12:19:32.437 +05:30 [INF] Worker initialized.
+2025-08-26 12:19:32.450 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-08-26 12:19:32.451 +05:30 [INF] Waiting for network to be ready...
+2025-08-26 12:19:32.518 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.18
+2025-08-26 12:19:32.518 +05:30 [INF] Network is ready with IP: 192.168.1.18
+2025-08-26 12:19:32.561 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.18
+2025-08-26 12:19:32.562 +05:30 [INF] Registered mDNS event handlers for traffic monitoring
+2025-08-26 12:19:32.640 +05:30 [INF] Discovered network interface: Wi-Fi ({E105B734-B669-4F24-92C8-0648DB9E08D3})
+2025-08-26 12:19:32.640 +05:30 [INF] Discovered network interface: Local Area Connection* 7-WFP Native MAC Layer LightWeight Filter-0000 ({F4956517-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:19:32.640 +05:30 [INF] Discovered network interface: Local Area Connection* 7-QoS Packet Scheduler-0000 ({F4956518-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:19:32.640 +05:30 [INF] Discovered network interface: Local Area Connection* 8-WFP Native MAC Layer LightWeight Filter-0000 ({F495651E-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:19:32.640 +05:30 [INF] Discovered network interface: Local Area Connection* 8-QoS Packet Scheduler-0000 ({F495651F-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:19:32.640 +05:30 [INF] Discovered network interface: Local Area Connection* 9-WFP Native MAC Layer LightWeight Filter-0000 ({F4956521-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:19:32.640 +05:30 [INF] Discovered network interface: Local Area Connection* 9-QoS Packet Scheduler-0000 ({F4956522-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:19:32.640 +05:30 [INF] Discovered network interface: Local Area Connection* 7 ({5D9C2979-6EE7-41DB-805B-8ED991AF2D3C})
+2025-08-26 12:19:32.640 +05:30 [INF] Discovered network interface: Local Area Connection* 8 ({52A58791-E9E5-43DD-B56B-B21867E1E7C7})
+2025-08-26 12:19:32.640 +05:30 [INF] Discovered network interface: Local Area Connection* 9 ({7CF6F235-EDEB-41B6-839B-E174ADD2EC30})
+2025-08-26 12:19:32.640 +05:30 [INF] Discovered network interface: Wi-Fi-WFP Native MAC Layer LightWeight Filter-0000 ({F49564AA-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:19:32.640 +05:30 [INF] Discovered network interface: Wi-Fi-Virtual WiFi Filter Driver-0000 ({0554C6CB-F336-11EF-A39F-C47753E4DF9B})
+2025-08-26 12:19:32.640 +05:30 [INF] Discovered network interface: Wi-Fi-Native WiFi Filter Driver-0000 ({0554C6CC-F336-11EF-A39F-C47753E4DF9B})
+2025-08-26 12:19:32.640 +05:30 [INF] Discovered network interface: Wi-Fi-QoS Packet Scheduler-0000 ({F49564AB-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:19:32.640 +05:30 [INF] Discovered network interface: Wi-Fi-WFP 802.3 MAC Layer LightWeight Filter-0000 ({F49564AC-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:19:32.643 +05:30 [INF] mDNS service started
+2025-08-26 12:19:32.644 +05:30 [INF] mDNS advertisement task started with interval: 60 seconds
+2025-08-26 12:19:32.661 +05:30 [INF] Django base URL: https://cyphersol.co.in
+2025-08-26 12:19:32.674 +05:30 [INF] Database configuration loaded from C:\ProgramData\Cyphersol\database_config.json
+2025-08-26 12:19:32.674 +05:30 [INF] Found database configuration, attempting to start PostgreSQL server 17.4.0 5432 "11111111-2222-3333-4444-555555555555" C:\ProgramData\Cyphersol\pgdata
+2025-08-26 12:19:32.678 +05:30 [INF] Starting embedded Postgres…
+2025-08-26 12:20:05.987 +05:30 [ERR] Failed to auto-start PostgreSQL server from configuration
+System.Exception: Exception occurred while starting Pg server
+ ---> System.IO.IOException: Gave up waiting for server to start after 30000ms
+   at MysticMind.PostgresEmbed.PgServer.WaitForServerStartup(Stopwatch watch)
+   at MysticMind.PostgresEmbed.PgServer.StartServer()
+   --- End of inner exception stack trace ---
+   at MysticMind.PostgresEmbed.PgServer.StartServer()
+   at MysticMind.PostgresEmbed.PgServer.StartAsync(CancellationToken token)
+   at MysticMind.PostgresEmbed.PgServer.StartAsync()
+   at MyLanService.EmbeddedPostgresManager.StartAsync(String version, Int32 port, Guid InstanceId, String dbDir)
+   at MyLanService.EmbeddedPostgresManager.AutoStartFromConfigAsync()
+2025-08-26 12:20:06.060 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 12:20:06.687 +05:30 [INF] License Loaded: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 12:10:31 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756190431.592389,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 64796781
+}
+2025-08-26 12:20:07.018 +05:30 [INF] Starting license polling...
+2025-08-26 12:20:07.024 +05:30 [INF] License is present: true
+2025-08-26 12:20:07.034 +05:30 [INF] [License Polling] Enriched JSON: { license_key = Testing2, used_statements = 0 }
+2025-08-26 12:20:07.092 +05:30 [INF] HTTP API Server started on port 7890
+2025-08-26 12:20:07.097 +05:30 [INF] Starting UDP discovery listener on port 41234...
+2025-08-26 12:20:07.101 +05:30 [INF] UdpDiscoveryService started on port 41234
+2025-08-26 12:20:07.101 +05:30 [INF] UDP discovery service started.
+2025-08-26 12:20:07.102 +05:30 [INF] IP address: 192.168.1.18
+2025-08-26 12:20:07.165 +05:30 [INF] mDNS advertisement started for license server (key: license-server:7890) using hostname: DESKTOP-8M0JENC and IP: 192.168.1.18:7890
+2025-08-26 12:20:07.166 +05:30 [INF] mDNS advertisement started using hostname: DESKTOP-8M0JENC and IP: 192.168.1.18:7890
+2025-08-26 12:20:07.168 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2025-08-26 12:20:07.168 +05:30 [INF] Hosting environment: Production
+2025-08-26 12:20:07.168 +05:30 [INF] Content root path: C:\Users\admin\Desktop\beta_testers_ca\frontend\gatewayServer
+2025-08-26 12:20:07.882 +05:30 [INF] [License Polling] Expiry: 1757658635.560683
+2025-08-26 12:20:07.882 +05:30 [INF] License is present: true
+2025-08-26 12:20:07.883 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1757658635.560683 to 1757658635.560683
+2025-08-26 12:20:07.883 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1756190431.592389 to 1756191000.448256
+2025-08-26 12:20:07.883 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 64796781 to 64832562
+2025-08-26 12:20:07.883 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-26 12:20:07.884 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"Testing2","current_timestamp":1756191000.448256,"expiry_timestamp":1757658635.560683,"number_of_users":1,"number_of_statements":100,"role":"CA","UsedStatements":0,"system_up_time":64832562}
+2025-08-26 12:20:07.885 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 12:20:08.586 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-26 12:20:08.589 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-26 12:20:08.589 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-26 12:20:08.614 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 12:20:00 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756191000.448256,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 64832562
+}
+2025-08-26 12:20:08.615 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-26 12:51:26.121 +05:30 [INF] Starting service in Production...
+2025-08-26 12:51:26.232 +05:30 [INF] Actual log path: C:\Users\admin\Desktop\beta_testers_ca\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-08-26 12:51:26.271 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-08-26 12:51:26.508 +05:30 [INF] [DeviceInfo Init] UUID: B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 12:51:26.510 +05:30 [INF] [DeviceInfo Init] MAC Address: 44:03:2C:9D:15:52
+2025-08-26 12:51:26.510 +05:30 [INF] [DeviceInfo Init] Hostname: DESKTOP-8M0JENC
+2025-08-26 12:51:26.510 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-21-2566959089-793452566-1152153924-1001
+2025-08-26 12:51:26.510 +05:30 [INF] [DeviceInfo Init] Username: admin
+2025-08-26 12:51:26.515 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-08-26 12:51:26.516 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 208 bytes
+2025-08-26 12:51:26.521 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 12:51:26.867 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 64832562 to 66711546
+2025-08-26 12:51:26.912 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 12:20:00 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756191000.448256,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 66711546
+}
+2025-08-26 12:51:26.912 +05:30 [INF] LicenseInfoProvider initialized.
+2025-08-26 12:51:26.913 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 12:20:00 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756191000.448256,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 66711546
+}
+2025-08-26 12:51:26.914 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 0
+2025-08-26 12:51:26.915 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\session-cache.enc
+2025-08-26 12:51:26.915 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 12:51:27.156 +05:30 [ERR] Decryption failed. The license file may be corrupted or tampered with: Padding is invalid and cannot be removed.
+2025-08-26 12:51:27.157 +05:30 [ERR] Failed to load session cache: Exception of type 'System.Exception' was thrown.
+2025-08-26 12:51:27.159 +05:30 [INF] Initializing MdnsAdvertiser...
+2025-08-26 12:51:27.165 +05:30 [INF] MdnsAdvertiser initialized successfully
+2025-08-26 12:51:27.166 +05:30 [INF] UdpDiscoveryService initialized for license service LicenseServer on port 7890, listening on UDP port 41234
+2025-08-26 12:51:27.167 +05:30 [INF] Worker initialized.
+2025-08-26 12:51:27.181 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-08-26 12:51:27.182 +05:30 [INF] Waiting for network to be ready...
+2025-08-26 12:51:27.249 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.18
+2025-08-26 12:51:27.249 +05:30 [INF] Network is ready with IP: 192.168.1.18
+2025-08-26 12:51:27.292 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.18
+2025-08-26 12:51:27.294 +05:30 [INF] Registered mDNS event handlers for traffic monitoring
+2025-08-26 12:51:27.368 +05:30 [INF] Discovered network interface: Wi-Fi ({E105B734-B669-4F24-92C8-0648DB9E08D3})
+2025-08-26 12:51:27.368 +05:30 [INF] Discovered network interface: Local Area Connection* 7-WFP Native MAC Layer LightWeight Filter-0000 ({F4956517-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:51:27.368 +05:30 [INF] Discovered network interface: Local Area Connection* 7-QoS Packet Scheduler-0000 ({F4956518-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:51:27.368 +05:30 [INF] Discovered network interface: Local Area Connection* 8-WFP Native MAC Layer LightWeight Filter-0000 ({F495651E-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:51:27.368 +05:30 [INF] Discovered network interface: Local Area Connection* 8-QoS Packet Scheduler-0000 ({F495651F-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:51:27.368 +05:30 [INF] Discovered network interface: Local Area Connection* 9-WFP Native MAC Layer LightWeight Filter-0000 ({F4956521-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:51:27.368 +05:30 [INF] Discovered network interface: Local Area Connection* 9-QoS Packet Scheduler-0000 ({F4956522-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:51:27.368 +05:30 [INF] Discovered network interface: Local Area Connection* 7 ({5D9C2979-6EE7-41DB-805B-8ED991AF2D3C})
+2025-08-26 12:51:27.368 +05:30 [INF] Discovered network interface: Local Area Connection* 8 ({52A58791-E9E5-43DD-B56B-B21867E1E7C7})
+2025-08-26 12:51:27.368 +05:30 [INF] Discovered network interface: Local Area Connection* 9 ({7CF6F235-EDEB-41B6-839B-E174ADD2EC30})
+2025-08-26 12:51:27.368 +05:30 [INF] Discovered network interface: Wi-Fi-WFP Native MAC Layer LightWeight Filter-0000 ({F49564AA-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:51:27.368 +05:30 [INF] Discovered network interface: Wi-Fi-Virtual WiFi Filter Driver-0000 ({0554C6CB-F336-11EF-A39F-C47753E4DF9B})
+2025-08-26 12:51:27.368 +05:30 [INF] Discovered network interface: Wi-Fi-Native WiFi Filter Driver-0000 ({0554C6CC-F336-11EF-A39F-C47753E4DF9B})
+2025-08-26 12:51:27.368 +05:30 [INF] Discovered network interface: Wi-Fi-QoS Packet Scheduler-0000 ({F49564AB-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:51:27.369 +05:30 [INF] Discovered network interface: Wi-Fi-WFP 802.3 MAC Layer LightWeight Filter-0000 ({F49564AC-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 12:51:27.370 +05:30 [INF] mDNS service started
+2025-08-26 12:51:27.372 +05:30 [INF] mDNS advertisement task started with interval: 60 seconds
+2025-08-26 12:51:27.386 +05:30 [INF] Django base URL: https://cyphersol.co.in
+2025-08-26 12:51:27.397 +05:30 [INF] Database configuration loaded from C:\ProgramData\Cyphersol\database_config.json
+2025-08-26 12:51:27.398 +05:30 [INF] Found database configuration, attempting to start PostgreSQL server 17.4.0 5432 "11111111-2222-3333-4444-555555555555" C:\ProgramData\Cyphersol\pgdata
+2025-08-26 12:51:27.401 +05:30 [INF] Starting embedded Postgres…
+2025-08-26 12:52:00.981 +05:30 [ERR] Failed to auto-start PostgreSQL server from configuration
+System.Exception: Exception occurred while starting Pg server
+ ---> System.IO.IOException: Gave up waiting for server to start after 30000ms
+   at MysticMind.PostgresEmbed.PgServer.WaitForServerStartup(Stopwatch watch)
+   at MysticMind.PostgresEmbed.PgServer.StartServer()
+   --- End of inner exception stack trace ---
+   at MysticMind.PostgresEmbed.PgServer.StartServer()
+   at MysticMind.PostgresEmbed.PgServer.StartAsync(CancellationToken token)
+   at MysticMind.PostgresEmbed.PgServer.StartAsync()
+   at MyLanService.EmbeddedPostgresManager.StartAsync(String version, Int32 port, Guid InstanceId, String dbDir)
+   at MyLanService.EmbeddedPostgresManager.AutoStartFromConfigAsync()
+2025-08-26 12:52:01.110 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 12:52:01.251 +05:30 [INF] License Loaded: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 12:20:00 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756191000.448256,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 66711546
+}
+2025-08-26 12:52:01.401 +05:30 [INF] Starting license polling...
+2025-08-26 12:52:01.415 +05:30 [INF] License is present: true
+2025-08-26 12:52:01.431 +05:30 [INF] [License Polling] Enriched JSON: { license_key = Testing2, used_statements = 0 }
+2025-08-26 12:52:01.501 +05:30 [INF] HTTP API Server started on port 7890
+2025-08-26 12:52:01.503 +05:30 [INF] Starting UDP discovery listener on port 41234...
+2025-08-26 12:52:01.509 +05:30 [INF] UdpDiscoveryService started on port 41234
+2025-08-26 12:52:01.509 +05:30 [INF] UDP discovery service started.
+2025-08-26 12:52:01.510 +05:30 [INF] IP address: 192.168.1.18
+2025-08-26 12:52:01.590 +05:30 [INF] mDNS advertisement started for license server (key: license-server:7890) using hostname: DESKTOP-8M0JENC and IP: 192.168.1.18:7890
+2025-08-26 12:52:01.590 +05:30 [INF] mDNS advertisement started using hostname: DESKTOP-8M0JENC and IP: 192.168.1.18:7890
+2025-08-26 12:52:01.592 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2025-08-26 12:52:01.592 +05:30 [INF] Hosting environment: Production
+2025-08-26 12:52:01.592 +05:30 [INF] Content root path: C:\Users\admin\Desktop\beta_testers_ca\frontend\gatewayServer
+2025-08-26 12:52:01.606 +05:30 [INF] [License Polling] Expiry: 1757658635.560683
+2025-08-26 12:52:01.606 +05:30 [INF] License is present: true
+2025-08-26 12:52:01.606 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1757658635.560683 to 1757658635.560683
+2025-08-26 12:52:01.606 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1756191000.448256 to 1756192914.250029
+2025-08-26 12:52:01.606 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 66711546 to 66746281
+2025-08-26 12:52:01.606 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-26 12:52:01.607 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"Testing2","current_timestamp":1756192914.250029,"expiry_timestamp":1757658635.560683,"number_of_users":1,"number_of_statements":100,"role":"CA","UsedStatements":0,"system_up_time":66746281}
+2025-08-26 12:52:01.608 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 12:52:01.859 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-26 12:52:01.860 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-26 12:52:01.860 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-26 12:52:01.862 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 12:51:54 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756192914.250029,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 66746281
+}
+2025-08-26 12:52:01.862 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-26 13:05:44.311 +05:30 [INF] Starting service in Production...
+2025-08-26 13:05:44.385 +05:30 [INF] Actual log path: C:\Users\admin\Desktop\beta_testers_ca\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-08-26 13:05:44.423 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-08-26 13:05:44.623 +05:30 [INF] [DeviceInfo Init] UUID: B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:05:44.624 +05:30 [INF] [DeviceInfo Init] MAC Address: 44:03:2C:9D:15:52
+2025-08-26 13:05:44.624 +05:30 [INF] [DeviceInfo Init] Hostname: DESKTOP-8M0JENC
+2025-08-26 13:05:44.624 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-21-2566959089-793452566-1152153924-1001
+2025-08-26 13:05:44.624 +05:30 [INF] [DeviceInfo Init] Username: admin
+2025-08-26 13:05:44.629 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:05:44.629 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 208 bytes
+2025-08-26 13:05:44.636 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:05:45.046 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 66746281 to 67569718
+2025-08-26 13:05:45.097 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 12:51:54 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756192914.250029,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 67569718
+}
+2025-08-26 13:05:45.097 +05:30 [INF] LicenseInfoProvider initialized.
+2025-08-26 13:05:45.100 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 12:51:54 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756192914.250029,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 67569718
+}
+2025-08-26 13:05:45.100 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 0
+2025-08-26 13:05:45.101 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\session-cache.enc
+2025-08-26 13:05:45.101 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:05:45.369 +05:30 [ERR] Decryption failed. The license file may be corrupted or tampered with: Padding is invalid and cannot be removed.
+2025-08-26 13:05:45.369 +05:30 [ERR] Failed to load session cache: Exception of type 'System.Exception' was thrown.
+2025-08-26 13:05:45.371 +05:30 [INF] Initializing MdnsAdvertiser...
+2025-08-26 13:05:45.378 +05:30 [INF] MdnsAdvertiser initialized successfully
+2025-08-26 13:05:45.379 +05:30 [INF] UdpDiscoveryService initialized for license service LicenseServer on port 7890, listening on UDP port 41234
+2025-08-26 13:05:45.380 +05:30 [INF] Worker initialized.
+2025-08-26 13:05:45.395 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-08-26 13:05:45.396 +05:30 [INF] Waiting for network to be ready...
+2025-08-26 13:05:45.462 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.18
+2025-08-26 13:05:45.462 +05:30 [INF] Network is ready with IP: 192.168.1.18
+2025-08-26 13:05:45.505 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.18
+2025-08-26 13:05:45.506 +05:30 [INF] Registered mDNS event handlers for traffic monitoring
+2025-08-26 13:05:45.580 +05:30 [INF] Discovered network interface: Wi-Fi ({E105B734-B669-4F24-92C8-0648DB9E08D3})
+2025-08-26 13:05:45.582 +05:30 [INF] Discovered network interface: Local Area Connection* 7-WFP Native MAC Layer LightWeight Filter-0000 ({F4956517-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:05:45.582 +05:30 [INF] Discovered network interface: Local Area Connection* 7-QoS Packet Scheduler-0000 ({F4956518-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:05:45.582 +05:30 [INF] Discovered network interface: Local Area Connection* 8-WFP Native MAC Layer LightWeight Filter-0000 ({F495651E-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:05:45.583 +05:30 [INF] Discovered network interface: Local Area Connection* 8-QoS Packet Scheduler-0000 ({F495651F-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:05:45.583 +05:30 [INF] Discovered network interface: Local Area Connection* 9-WFP Native MAC Layer LightWeight Filter-0000 ({F4956521-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:05:45.583 +05:30 [INF] Discovered network interface: Local Area Connection* 9-QoS Packet Scheduler-0000 ({F4956522-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:05:45.583 +05:30 [INF] Discovered network interface: Local Area Connection* 7 ({5D9C2979-6EE7-41DB-805B-8ED991AF2D3C})
+2025-08-26 13:05:45.583 +05:30 [INF] Discovered network interface: Local Area Connection* 8 ({52A58791-E9E5-43DD-B56B-B21867E1E7C7})
+2025-08-26 13:05:45.583 +05:30 [INF] Discovered network interface: Local Area Connection* 9 ({7CF6F235-EDEB-41B6-839B-E174ADD2EC30})
+2025-08-26 13:05:45.583 +05:30 [INF] Discovered network interface: Wi-Fi-WFP Native MAC Layer LightWeight Filter-0000 ({F49564AA-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:05:45.583 +05:30 [INF] Discovered network interface: Wi-Fi-Virtual WiFi Filter Driver-0000 ({0554C6CB-F336-11EF-A39F-C47753E4DF9B})
+2025-08-26 13:05:45.583 +05:30 [INF] Discovered network interface: Wi-Fi-Native WiFi Filter Driver-0000 ({0554C6CC-F336-11EF-A39F-C47753E4DF9B})
+2025-08-26 13:05:45.583 +05:30 [INF] Discovered network interface: Wi-Fi-QoS Packet Scheduler-0000 ({F49564AB-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:05:45.583 +05:30 [INF] Discovered network interface: Wi-Fi-WFP 802.3 MAC Layer LightWeight Filter-0000 ({F49564AC-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:05:45.586 +05:30 [INF] mDNS service started
+2025-08-26 13:05:45.587 +05:30 [INF] mDNS advertisement task started with interval: 60 seconds
+2025-08-26 13:05:45.604 +05:30 [INF] Django base URL: https://cyphersol.co.in
+2025-08-26 13:05:45.617 +05:30 [INF] Database configuration loaded from C:\ProgramData\Cyphersol\database_config.json
+2025-08-26 13:05:45.618 +05:30 [INF] Found database configuration, attempting to start PostgreSQL server 17.4.0 5432 "11111111-2222-3333-4444-555555555555" C:\ProgramData\Cyphersol\pgdata
+2025-08-26 13:05:45.621 +05:30 [INF] Starting embedded Postgres…
+2025-08-26 13:06:19.221 +05:30 [ERR] Failed to auto-start PostgreSQL server from configuration
+System.Exception: Exception occurred while starting Pg server
+ ---> System.IO.IOException: Gave up waiting for server to start after 30000ms
+   at MysticMind.PostgresEmbed.PgServer.WaitForServerStartup(Stopwatch watch)
+   at MysticMind.PostgresEmbed.PgServer.StartServer()
+   --- End of inner exception stack trace ---
+   at MysticMind.PostgresEmbed.PgServer.StartServer()
+   at MysticMind.PostgresEmbed.PgServer.StartAsync(CancellationToken token)
+   at MysticMind.PostgresEmbed.PgServer.StartAsync()
+   at MyLanService.EmbeddedPostgresManager.StartAsync(String version, Int32 port, Guid InstanceId, String dbDir)
+   at MyLanService.EmbeddedPostgresManager.AutoStartFromConfigAsync()
+2025-08-26 13:06:19.322 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:06:19.416 +05:30 [INF] License Loaded: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 12:51:54 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756192914.250029,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 67569718
+}
+2025-08-26 13:06:19.605 +05:30 [INF] Starting license polling...
+2025-08-26 13:06:19.633 +05:30 [INF] License is present: true
+2025-08-26 13:06:19.637 +05:30 [INF] [License Polling] Enriched JSON: { license_key = Testing2, used_statements = 0 }
+2025-08-26 13:06:19.715 +05:30 [INF] HTTP API Server started on port 7890
+2025-08-26 13:06:19.738 +05:30 [INF] Starting UDP discovery listener on port 41234...
+2025-08-26 13:06:19.756 +05:30 [INF] UdpDiscoveryService started on port 41234
+2025-08-26 13:06:19.756 +05:30 [INF] UDP discovery service started.
+2025-08-26 13:06:19.756 +05:30 [INF] IP address: 192.168.1.18
+2025-08-26 13:06:19.901 +05:30 [INF] mDNS advertisement started for license server (key: license-server:7890) using hostname: DESKTOP-8M0JENC and IP: 192.168.1.18:7890
+2025-08-26 13:06:19.901 +05:30 [INF] mDNS advertisement started using hostname: DESKTOP-8M0JENC and IP: 192.168.1.18:7890
+2025-08-26 13:06:19.903 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2025-08-26 13:06:19.903 +05:30 [INF] Hosting environment: Production
+2025-08-26 13:06:19.904 +05:30 [INF] Content root path: C:\Users\admin\Desktop\beta_testers_ca\frontend\gatewayServer
+2025-08-26 13:06:20.054 +05:30 [INF] [License Polling] Expiry: 1757658635.560683
+2025-08-26 13:06:20.055 +05:30 [INF] License is present: true
+2025-08-26 13:06:20.055 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1757658635.560683 to 1757658635.560683
+2025-08-26 13:06:20.055 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1756192914.250029 to 1756193772.691411
+2025-08-26 13:06:20.055 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 67569718 to 67604734
+2025-08-26 13:06:20.055 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-26 13:06:20.067 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"Testing2","current_timestamp":1756193772.691411,"expiry_timestamp":1757658635.560683,"number_of_users":1,"number_of_statements":100,"role":"CA","UsedStatements":0,"system_up_time":67604734}
+2025-08-26 13:06:20.067 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:06:21.156 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:06:21.158 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:06:21.158 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:06:21.166 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:06:12 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756193772.691411,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 67604734
+}
+2025-08-26 13:06:21.167 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-26 13:18:29.911 +05:30 [INF] Starting service in Production...
+2025-08-26 13:18:29.972 +05:30 [INF] Actual log path: C:\Users\admin\Desktop\beta_testers_ca\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-08-26 13:18:30.015 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-08-26 13:18:30.231 +05:30 [INF] [DeviceInfo Init] UUID: B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:18:30.232 +05:30 [INF] [DeviceInfo Init] MAC Address: 44:03:2C:9D:15:52
+2025-08-26 13:18:30.232 +05:30 [INF] [DeviceInfo Init] Hostname: DESKTOP-8M0JENC
+2025-08-26 13:18:30.232 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-21-2566959089-793452566-1152153924-1001
+2025-08-26 13:18:30.232 +05:30 [INF] [DeviceInfo Init] Username: admin
+2025-08-26 13:18:30.237 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:18:30.237 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 208 bytes
+2025-08-26 13:18:30.245 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:18:30.683 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 67604734 to 68335359
+2025-08-26 13:18:30.730 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:06:12 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756193772.691411,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 68335359
+}
+2025-08-26 13:18:30.730 +05:30 [INF] LicenseInfoProvider initialized.
+2025-08-26 13:18:30.731 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:06:12 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756193772.691411,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 68335359
+}
+2025-08-26 13:18:30.731 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 0
+2025-08-26 13:18:30.732 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\session-cache.enc
+2025-08-26 13:18:30.733 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:18:31.004 +05:30 [ERR] Decryption failed. The license file may be corrupted or tampered with: Padding is invalid and cannot be removed.
+2025-08-26 13:18:31.005 +05:30 [ERR] Failed to load session cache: Exception of type 'System.Exception' was thrown.
+2025-08-26 13:18:31.009 +05:30 [INF] Initializing MdnsAdvertiser...
+2025-08-26 13:18:31.016 +05:30 [INF] MdnsAdvertiser initialized successfully
+2025-08-26 13:18:31.016 +05:30 [INF] UdpDiscoveryService initialized for license service LicenseServer on port 7890, listening on UDP port 41234
+2025-08-26 13:18:31.018 +05:30 [INF] Worker initialized.
+2025-08-26 13:18:31.033 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-08-26 13:18:31.034 +05:30 [INF] Waiting for network to be ready...
+2025-08-26 13:18:31.110 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.18
+2025-08-26 13:18:31.110 +05:30 [INF] Network is ready with IP: 192.168.1.18
+2025-08-26 13:18:31.158 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.18
+2025-08-26 13:18:31.160 +05:30 [INF] Registered mDNS event handlers for traffic monitoring
+2025-08-26 13:18:31.238 +05:30 [INF] Discovered network interface: Wi-Fi ({E105B734-B669-4F24-92C8-0648DB9E08D3})
+2025-08-26 13:18:31.238 +05:30 [INF] Discovered network interface: Local Area Connection* 7-WFP Native MAC Layer LightWeight Filter-0000 ({F4956517-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:18:31.238 +05:30 [INF] Discovered network interface: Local Area Connection* 7-QoS Packet Scheduler-0000 ({F4956518-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:18:31.243 +05:30 [INF] Discovered network interface: Local Area Connection* 8-WFP Native MAC Layer LightWeight Filter-0000 ({F495651E-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:18:31.243 +05:30 [INF] Discovered network interface: Local Area Connection* 8-QoS Packet Scheduler-0000 ({F495651F-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:18:31.243 +05:30 [INF] Discovered network interface: Local Area Connection* 9-WFP Native MAC Layer LightWeight Filter-0000 ({F4956521-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:18:31.243 +05:30 [INF] Discovered network interface: Local Area Connection* 9-QoS Packet Scheduler-0000 ({F4956522-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:18:31.243 +05:30 [INF] Discovered network interface: Local Area Connection* 7 ({5D9C2979-6EE7-41DB-805B-8ED991AF2D3C})
+2025-08-26 13:18:31.243 +05:30 [INF] Discovered network interface: Local Area Connection* 8 ({52A58791-E9E5-43DD-B56B-B21867E1E7C7})
+2025-08-26 13:18:31.243 +05:30 [INF] Discovered network interface: Local Area Connection* 9 ({7CF6F235-EDEB-41B6-839B-E174ADD2EC30})
+2025-08-26 13:18:31.244 +05:30 [INF] Discovered network interface: Wi-Fi-WFP Native MAC Layer LightWeight Filter-0000 ({F49564AA-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:18:31.244 +05:30 [INF] Discovered network interface: Wi-Fi-Virtual WiFi Filter Driver-0000 ({0554C6CB-F336-11EF-A39F-C47753E4DF9B})
+2025-08-26 13:18:31.244 +05:30 [INF] Discovered network interface: Wi-Fi-Native WiFi Filter Driver-0000 ({0554C6CC-F336-11EF-A39F-C47753E4DF9B})
+2025-08-26 13:18:31.244 +05:30 [INF] Discovered network interface: Wi-Fi-QoS Packet Scheduler-0000 ({F49564AB-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:18:31.244 +05:30 [INF] Discovered network interface: Wi-Fi-WFP 802.3 MAC Layer LightWeight Filter-0000 ({F49564AC-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:18:31.246 +05:30 [INF] mDNS service started
+2025-08-26 13:18:31.247 +05:30 [INF] mDNS advertisement task started with interval: 60 seconds
+2025-08-26 13:18:31.264 +05:30 [INF] Django base URL: https://cyphersol.co.in
+2025-08-26 13:18:31.277 +05:30 [INF] Database configuration loaded from C:\ProgramData\Cyphersol\database_config.json
+2025-08-26 13:18:31.278 +05:30 [INF] Found database configuration, attempting to start PostgreSQL server 17.4.0 5432 "11111111-2222-3333-4444-555555555555" C:\ProgramData\Cyphersol\pgdata
+2025-08-26 13:18:31.282 +05:30 [INF] Starting embedded Postgres…
+2025-08-26 13:19:04.764 +05:30 [ERR] Failed to auto-start PostgreSQL server from configuration
+System.Exception: Exception occurred while starting Pg server
+ ---> System.IO.IOException: Gave up waiting for server to start after 30000ms
+   at MysticMind.PostgresEmbed.PgServer.WaitForServerStartup(Stopwatch watch)
+   at MysticMind.PostgresEmbed.PgServer.StartServer()
+   --- End of inner exception stack trace ---
+   at MysticMind.PostgresEmbed.PgServer.StartServer()
+   at MysticMind.PostgresEmbed.PgServer.StartAsync(CancellationToken token)
+   at MysticMind.PostgresEmbed.PgServer.StartAsync()
+   at MyLanService.EmbeddedPostgresManager.StartAsync(String version, Int32 port, Guid InstanceId, String dbDir)
+   at MyLanService.EmbeddedPostgresManager.AutoStartFromConfigAsync()
+2025-08-26 13:19:04.810 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:19:04.901 +05:30 [INF] License Loaded: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:06:12 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756193772.691411,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 68335359
+}
+2025-08-26 13:19:05.047 +05:30 [INF] Starting license polling...
+2025-08-26 13:19:05.058 +05:30 [INF] License is present: true
+2025-08-26 13:19:05.062 +05:30 [INF] [License Polling] Enriched JSON: { license_key = Testing2, used_statements = 0 }
+2025-08-26 13:19:05.144 +05:30 [INF] HTTP API Server started on port 7890
+2025-08-26 13:19:05.148 +05:30 [INF] Starting UDP discovery listener on port 41234...
+2025-08-26 13:19:05.158 +05:30 [INF] UdpDiscoveryService started on port 41234
+2025-08-26 13:19:05.158 +05:30 [INF] UDP discovery service started.
+2025-08-26 13:19:05.158 +05:30 [INF] IP address: 192.168.1.18
+2025-08-26 13:19:05.237 +05:30 [INF] mDNS advertisement started for license server (key: license-server:7890) using hostname: DESKTOP-8M0JENC and IP: 192.168.1.18:7890
+2025-08-26 13:19:05.237 +05:30 [INF] mDNS advertisement started using hostname: DESKTOP-8M0JENC and IP: 192.168.1.18:7890
+2025-08-26 13:19:05.239 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2025-08-26 13:19:05.239 +05:30 [INF] Hosting environment: Production
+2025-08-26 13:19:05.239 +05:30 [INF] Content root path: C:\Users\admin\Desktop\beta_testers_ca\frontend\gatewayServer
+2025-08-26 13:21:08.237 +05:30 [INF] Starting service in Production...
+2025-08-26 13:21:08.301 +05:30 [INF] Actual log path: C:\Users\admin\Desktop\beta_testers_ca\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-08-26 13:21:08.342 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-08-26 13:21:08.563 +05:30 [INF] [DeviceInfo Init] UUID: B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:21:08.565 +05:30 [INF] [DeviceInfo Init] MAC Address: 44:03:2C:9D:15:52
+2025-08-26 13:21:08.565 +05:30 [INF] [DeviceInfo Init] Hostname: DESKTOP-8M0JENC
+2025-08-26 13:21:08.565 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-21-2566959089-793452566-1152153924-1001
+2025-08-26 13:21:08.565 +05:30 [INF] [DeviceInfo Init] Username: admin
+2025-08-26 13:21:08.570 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:21:08.570 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 208 bytes
+2025-08-26 13:21:08.576 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:21:08.964 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 67604734 to 68493640
+2025-08-26 13:21:09.016 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:06:12 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756193772.691411,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 68493640
+}
+2025-08-26 13:21:09.016 +05:30 [INF] LicenseInfoProvider initialized.
+2025-08-26 13:21:09.017 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:06:12 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756193772.691411,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 68493640
+}
+2025-08-26 13:21:09.017 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 0
+2025-08-26 13:21:09.018 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\session-cache.enc
+2025-08-26 13:21:09.019 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:21:09.304 +05:30 [ERR] Decryption failed. The license file may be corrupted or tampered with: Padding is invalid and cannot be removed.
+2025-08-26 13:21:09.305 +05:30 [ERR] Failed to load session cache: Exception of type 'System.Exception' was thrown.
+2025-08-26 13:21:09.307 +05:30 [INF] Initializing MdnsAdvertiser...
+2025-08-26 13:21:09.315 +05:30 [INF] MdnsAdvertiser initialized successfully
+2025-08-26 13:21:09.317 +05:30 [INF] UdpDiscoveryService initialized for license service LicenseServer on port 7890, listening on UDP port 41234
+2025-08-26 13:21:09.319 +05:30 [INF] Worker initialized.
+2025-08-26 13:21:09.337 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-08-26 13:21:09.338 +05:30 [INF] Waiting for network to be ready...
+2025-08-26 13:21:09.409 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.18
+2025-08-26 13:21:09.409 +05:30 [INF] Network is ready with IP: 192.168.1.18
+2025-08-26 13:21:09.457 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.18
+2025-08-26 13:21:09.458 +05:30 [INF] Registered mDNS event handlers for traffic monitoring
+2025-08-26 13:21:09.536 +05:30 [INF] Discovered network interface: Wi-Fi ({E105B734-B669-4F24-92C8-0648DB9E08D3})
+2025-08-26 13:21:09.536 +05:30 [INF] Discovered network interface: Local Area Connection* 7-WFP Native MAC Layer LightWeight Filter-0000 ({F4956517-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:21:09.540 +05:30 [INF] Discovered network interface: Local Area Connection* 7-QoS Packet Scheduler-0000 ({F4956518-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:21:09.540 +05:30 [INF] Discovered network interface: Local Area Connection* 8-WFP Native MAC Layer LightWeight Filter-0000 ({F495651E-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:21:09.540 +05:30 [INF] Discovered network interface: Local Area Connection* 8-QoS Packet Scheduler-0000 ({F495651F-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:21:09.540 +05:30 [INF] Discovered network interface: Local Area Connection* 9-WFP Native MAC Layer LightWeight Filter-0000 ({F4956521-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:21:09.541 +05:30 [INF] Discovered network interface: Local Area Connection* 9-QoS Packet Scheduler-0000 ({F4956522-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:21:09.541 +05:30 [INF] Discovered network interface: Local Area Connection* 7 ({5D9C2979-6EE7-41DB-805B-8ED991AF2D3C})
+2025-08-26 13:21:09.541 +05:30 [INF] Discovered network interface: Local Area Connection* 8 ({52A58791-E9E5-43DD-B56B-B21867E1E7C7})
+2025-08-26 13:21:09.541 +05:30 [INF] Discovered network interface: Local Area Connection* 9 ({7CF6F235-EDEB-41B6-839B-E174ADD2EC30})
+2025-08-26 13:21:09.541 +05:30 [INF] Discovered network interface: Wi-Fi-WFP Native MAC Layer LightWeight Filter-0000 ({F49564AA-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:21:09.541 +05:30 [INF] Discovered network interface: Wi-Fi-Virtual WiFi Filter Driver-0000 ({0554C6CB-F336-11EF-A39F-C47753E4DF9B})
+2025-08-26 13:21:09.541 +05:30 [INF] Discovered network interface: Wi-Fi-Native WiFi Filter Driver-0000 ({0554C6CC-F336-11EF-A39F-C47753E4DF9B})
+2025-08-26 13:21:09.541 +05:30 [INF] Discovered network interface: Wi-Fi-QoS Packet Scheduler-0000 ({F49564AB-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:21:09.541 +05:30 [INF] Discovered network interface: Wi-Fi-WFP 802.3 MAC Layer LightWeight Filter-0000 ({F49564AC-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:21:09.557 +05:30 [INF] mDNS service started
+2025-08-26 13:21:09.558 +05:30 [INF] mDNS advertisement task started with interval: 60 seconds
+2025-08-26 13:21:09.580 +05:30 [INF] Django base URL: https://cyphersol.co.in
+2025-08-26 13:21:09.591 +05:30 [INF] Database configuration loaded from C:\ProgramData\Cyphersol\database_config.json
+2025-08-26 13:21:09.592 +05:30 [INF] Found database configuration, attempting to start PostgreSQL server 17.4.0 5432 "11111111-2222-3333-4444-555555555555" C:\ProgramData\Cyphersol\pgdata
+2025-08-26 13:21:09.599 +05:30 [INF] Starting embedded Postgres…
+2025-08-26 13:21:43.151 +05:30 [ERR] Failed to auto-start PostgreSQL server from configuration
+System.Exception: Exception occurred while starting Pg server
+ ---> System.IO.IOException: Gave up waiting for server to start after 30000ms
+   at MysticMind.PostgresEmbed.PgServer.WaitForServerStartup(Stopwatch watch)
+   at MysticMind.PostgresEmbed.PgServer.StartServer()
+   --- End of inner exception stack trace ---
+   at MysticMind.PostgresEmbed.PgServer.StartServer()
+   at MysticMind.PostgresEmbed.PgServer.StartAsync(CancellationToken token)
+   at MysticMind.PostgresEmbed.PgServer.StartAsync()
+   at MyLanService.EmbeddedPostgresManager.StartAsync(String version, Int32 port, Guid InstanceId, String dbDir)
+   at MyLanService.EmbeddedPostgresManager.AutoStartFromConfigAsync()
+2025-08-26 13:21:43.259 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:21:43.456 +05:30 [INF] License Loaded: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:06:12 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756193772.691411,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 68493640
+}
+2025-08-26 13:21:43.661 +05:30 [INF] Starting license polling...
+2025-08-26 13:21:43.664 +05:30 [INF] License is present: true
+2025-08-26 13:21:43.666 +05:30 [INF] [License Polling] Enriched JSON: { license_key = Testing2, used_statements = 0 }
+2025-08-26 13:21:43.719 +05:30 [INF] HTTP API Server started on port 7890
+2025-08-26 13:21:43.724 +05:30 [INF] Starting UDP discovery listener on port 41234...
+2025-08-26 13:21:43.731 +05:30 [INF] UdpDiscoveryService started on port 41234
+2025-08-26 13:21:43.731 +05:30 [INF] UDP discovery service started.
+2025-08-26 13:21:43.731 +05:30 [INF] IP address: 192.168.1.18
+2025-08-26 13:21:43.823 +05:30 [INF] mDNS advertisement started for license server (key: license-server:7890) using hostname: DESKTOP-8M0JENC and IP: 192.168.1.18:7890
+2025-08-26 13:21:43.823 +05:30 [INF] mDNS advertisement started using hostname: DESKTOP-8M0JENC and IP: 192.168.1.18:7890
+2025-08-26 13:21:43.827 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2025-08-26 13:21:43.827 +05:30 [INF] Hosting environment: Production
+2025-08-26 13:21:43.828 +05:30 [INF] Content root path: C:\Users\admin\Desktop\beta_testers_ca\frontend\gatewayServer
+2025-08-26 13:21:45.081 +05:30 [INF] [License Polling] Expiry: 1757658635.560683
+2025-08-26 13:21:45.081 +05:30 [INF] License is present: true
+2025-08-26 13:21:45.081 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1757658635.560683 to 1757658635.560683
+2025-08-26 13:21:45.081 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1756193772.691411 to 1756194697.775607
+2025-08-26 13:21:45.081 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 68493640 to 68529750
+2025-08-26 13:21:45.081 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-26 13:21:45.085 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"Testing2","current_timestamp":1756194697.775607,"expiry_timestamp":1757658635.560683,"number_of_users":1,"number_of_statements":100,"role":"CA","UsedStatements":0,"system_up_time":68529750}
+2025-08-26 13:21:45.087 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:21:45.362 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:21:45.362 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:21:45.362 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:21:45.365 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:21:37 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756194697.775607,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 68529750
+}
+2025-08-26 13:21:45.366 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-26 13:22:09.613 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-26 13:23:09.636 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-26 13:23:45.378 +05:30 [INF] License is present: true
+2025-08-26 13:23:45.378 +05:30 [INF] [License Polling] Enriched JSON: { license_key = Testing2, used_statements = 0 }
+2025-08-26 13:23:45.514 +05:30 [INF] [License Polling] Expiry: 1757658635.560683
+2025-08-26 13:23:45.514 +05:30 [INF] License is present: true
+2025-08-26 13:23:45.514 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1757658635.560683 to 1757658635.560683
+2025-08-26 13:23:45.514 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1756194697.775607 to 1756194818.206051
+2025-08-26 13:23:45.514 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 68529750 to 68650187
+2025-08-26 13:23:45.514 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-26 13:23:45.515 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"Testing2","current_timestamp":1756194818.206051,"expiry_timestamp":1757658635.560683,"number_of_users":1,"number_of_statements":100,"role":"CA","UsedStatements":0,"system_up_time":68650187}
+2025-08-26 13:23:45.518 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:23:45.892 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:23:45.892 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:23:45.892 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:23:45.892 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:23:38 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756194818.206051,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 68650187
+}
+2025-08-26 13:23:45.892 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-26 13:24:09.651 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-26 13:25:09.655 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-26 13:25:45.899 +05:30 [INF] License is present: true
+2025-08-26 13:25:45.899 +05:30 [INF] [License Polling] Enriched JSON: { license_key = Testing2, used_statements = 0 }
+2025-08-26 13:25:45.964 +05:30 [INF] [License Polling] Expiry: 1757658635.560683
+2025-08-26 13:25:45.964 +05:30 [INF] License is present: true
+2025-08-26 13:25:45.964 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1757658635.560683 to 1757658635.560683
+2025-08-26 13:25:45.964 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1756194818.206051 to 1756194938.682713
+2025-08-26 13:25:45.965 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 68650187 to 68770640
+2025-08-26 13:25:45.965 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-26 13:25:45.965 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"Testing2","current_timestamp":1756194938.682713,"expiry_timestamp":1757658635.560683,"number_of_users":1,"number_of_statements":100,"role":"CA","UsedStatements":0,"system_up_time":68770640}
+2025-08-26 13:25:45.966 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:25:46.256 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:25:46.257 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:25:46.257 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:25:46.261 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:25:38 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756194938.682713,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 68770640
+}
+2025-08-26 13:25:46.261 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-26 13:26:09.659 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-26 13:27:09.675 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-26 13:27:46.272 +05:30 [INF] License is present: true
+2025-08-26 13:27:46.272 +05:30 [INF] [License Polling] Enriched JSON: { license_key = Testing2, used_statements = 0 }
+2025-08-26 13:27:47.730 +05:30 [INF] [License Polling] Expiry: 1757658635.560683
+2025-08-26 13:27:47.731 +05:30 [INF] License is present: true
+2025-08-26 13:27:47.731 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1757658635.560683 to 1757658635.560683
+2025-08-26 13:27:47.731 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1756194938.682713 to 1756195060.454976
+2025-08-26 13:27:47.731 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 68770640 to 68892406
+2025-08-26 13:27:47.731 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-26 13:27:47.731 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"Testing2","current_timestamp":1756195060.454976,"expiry_timestamp":1757658635.560683,"number_of_users":1,"number_of_statements":100,"role":"CA","UsedStatements":0,"system_up_time":68892406}
+2025-08-26 13:27:47.733 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:27:48.005 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:27:48.006 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:27:48.006 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:27:48.008 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:27:40 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756195060.454976,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 68892406
+}
+2025-08-26 13:27:48.008 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-26 13:28:09.683 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-26 13:29:09.697 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-26 13:29:48.026 +05:30 [INF] License is present: true
+2025-08-26 13:29:48.026 +05:30 [INF] [License Polling] Enriched JSON: { license_key = Testing2, used_statements = 0 }
+2025-08-26 13:29:49.256 +05:30 [INF] [License Polling] Expiry: 1757658635.560683
+2025-08-26 13:29:49.256 +05:30 [INF] License is present: true
+2025-08-26 13:29:49.256 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1757658635.560683 to 1757658635.560683
+2025-08-26 13:29:49.256 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1756195060.454976 to 1756195181.986132
+2025-08-26 13:29:49.256 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 68892406 to 69013937
+2025-08-26 13:29:49.256 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-26 13:29:49.256 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"Testing2","current_timestamp":1756195181.986132,"expiry_timestamp":1757658635.560683,"number_of_users":1,"number_of_statements":100,"role":"CA","UsedStatements":0,"system_up_time":69013937}
+2025-08-26 13:29:49.257 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:29:49.547 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:29:49.547 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:29:49.547 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:29:49.548 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:29:41 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756195181.986132,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 69013937
+}
+2025-08-26 13:29:49.548 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-26 13:30:09.704 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-26 13:31:09.709 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-26 13:31:49.554 +05:30 [INF] License is present: true
+2025-08-26 13:31:49.554 +05:30 [INF] [License Polling] Enriched JSON: { license_key = Testing2, used_statements = 0 }
+2025-08-26 13:31:51.536 +05:30 [INF] [License Polling] Expiry: 1757658635.560683
+2025-08-26 13:31:51.536 +05:30 [INF] License is present: true
+2025-08-26 13:31:51.536 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1757658635.560683 to 1757658635.560683
+2025-08-26 13:31:51.536 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1756195181.986132 to 1756195304.268791
+2025-08-26 13:31:51.536 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 69013937 to 69136218
+2025-08-26 13:31:51.536 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-26 13:31:51.537 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"Testing2","current_timestamp":1756195304.268791,"expiry_timestamp":1757658635.560683,"number_of_users":1,"number_of_statements":100,"role":"CA","UsedStatements":0,"system_up_time":69136218}
+2025-08-26 13:31:51.538 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:31:51.817 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:31:51.817 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:31:51.818 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:31:51.820 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:31:44 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756195304.268791,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 69136218
+}
+2025-08-26 13:31:51.820 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-26 13:32:09.720 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-26 13:33:09.726 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-26 13:33:51.829 +05:30 [INF] License is present: true
+2025-08-26 13:33:51.829 +05:30 [INF] [License Polling] Enriched JSON: { license_key = Testing2, used_statements = 0 }
+2025-08-26 13:33:52.150 +05:30 [INF] [License Polling] Expiry: 1757658635.560683
+2025-08-26 13:33:52.151 +05:30 [INF] License is present: true
+2025-08-26 13:33:52.151 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1757658635.560683 to 1757658635.560683
+2025-08-26 13:33:52.151 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1756195304.268791 to 1756195424.886864
+2025-08-26 13:33:52.151 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 69136218 to 69256828
+2025-08-26 13:33:52.151 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-26 13:33:52.151 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"Testing2","current_timestamp":1756195424.886864,"expiry_timestamp":1757658635.560683,"number_of_users":1,"number_of_statements":100,"role":"CA","UsedStatements":0,"system_up_time":69256828}
+2025-08-26 13:33:52.154 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:33:52.434 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:33:52.435 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:33:52.435 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:33:52.438 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:33:44 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756195424.886864,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 69256828
+}
+2025-08-26 13:33:52.438 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-26 13:34:09.732 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-26 13:35:25.576 +05:30 [INF] Starting service in Production...
+2025-08-26 13:35:25.646 +05:30 [INF] Actual log path: C:\Users\admin\Desktop\beta_testers_ca\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-08-26 13:35:25.690 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-08-26 13:35:25.919 +05:30 [INF] [DeviceInfo Init] UUID: B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:35:25.921 +05:30 [INF] [DeviceInfo Init] MAC Address: 44:03:2C:9D:15:52
+2025-08-26 13:35:25.921 +05:30 [INF] [DeviceInfo Init] Hostname: DESKTOP-8M0JENC
+2025-08-26 13:35:25.921 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-21-2566959089-793452566-1152153924-1001
+2025-08-26 13:35:25.921 +05:30 [INF] [DeviceInfo Init] Username: admin
+2025-08-26 13:35:25.926 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:35:25.926 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 208 bytes
+2025-08-26 13:35:25.934 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:35:26.340 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 69256828 to 69351015
+2025-08-26 13:35:26.389 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:33:44 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756195424.886864,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 69351015
+}
+2025-08-26 13:35:26.389 +05:30 [INF] LicenseInfoProvider initialized.
+2025-08-26 13:35:26.390 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:33:44 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756195424.886864,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 69351015
+}
+2025-08-26 13:35:26.390 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 0
+2025-08-26 13:35:26.391 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\session-cache.enc
+2025-08-26 13:35:26.391 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:35:26.672 +05:30 [ERR] Decryption failed. The license file may be corrupted or tampered with: Padding is invalid and cannot be removed.
+2025-08-26 13:35:26.672 +05:30 [ERR] Failed to load session cache: Exception of type 'System.Exception' was thrown.
+2025-08-26 13:35:26.675 +05:30 [INF] Initializing MdnsAdvertiser...
+2025-08-26 13:35:26.684 +05:30 [INF] MdnsAdvertiser initialized successfully
+2025-08-26 13:35:26.685 +05:30 [INF] UdpDiscoveryService initialized for license service LicenseServer on port 7890, listening on UDP port 41234
+2025-08-26 13:35:26.687 +05:30 [INF] Worker initialized.
+2025-08-26 13:35:26.702 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-08-26 13:35:26.703 +05:30 [INF] Waiting for network to be ready...
+2025-08-26 13:35:26.785 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.18
+2025-08-26 13:35:26.785 +05:30 [INF] Network is ready with IP: 192.168.1.18
+2025-08-26 13:35:26.834 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.18
+2025-08-26 13:35:26.835 +05:30 [INF] Registered mDNS event handlers for traffic monitoring
+2025-08-26 13:35:26.916 +05:30 [INF] Discovered network interface: Wi-Fi ({E105B734-B669-4F24-92C8-0648DB9E08D3})
+2025-08-26 13:35:26.916 +05:30 [INF] Discovered network interface: Local Area Connection* 7-WFP Native MAC Layer LightWeight Filter-0000 ({F4956517-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:35:26.916 +05:30 [INF] Discovered network interface: Local Area Connection* 7-QoS Packet Scheduler-0000 ({F4956518-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:35:26.916 +05:30 [INF] Discovered network interface: Local Area Connection* 8-WFP Native MAC Layer LightWeight Filter-0000 ({F495651E-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:35:26.916 +05:30 [INF] Discovered network interface: Local Area Connection* 8-QoS Packet Scheduler-0000 ({F495651F-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:35:26.916 +05:30 [INF] Discovered network interface: Local Area Connection* 9-WFP Native MAC Layer LightWeight Filter-0000 ({F4956521-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:35:26.916 +05:30 [INF] Discovered network interface: Local Area Connection* 9-QoS Packet Scheduler-0000 ({F4956522-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:35:26.916 +05:30 [INF] Discovered network interface: Local Area Connection* 7 ({5D9C2979-6EE7-41DB-805B-8ED991AF2D3C})
+2025-08-26 13:35:26.916 +05:30 [INF] Discovered network interface: Local Area Connection* 8 ({52A58791-E9E5-43DD-B56B-B21867E1E7C7})
+2025-08-26 13:35:26.916 +05:30 [INF] Discovered network interface: Local Area Connection* 9 ({7CF6F235-EDEB-41B6-839B-E174ADD2EC30})
+2025-08-26 13:35:26.917 +05:30 [INF] Discovered network interface: Wi-Fi-WFP Native MAC Layer LightWeight Filter-0000 ({F49564AA-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:35:26.917 +05:30 [INF] Discovered network interface: Wi-Fi-Virtual WiFi Filter Driver-0000 ({0554C6CB-F336-11EF-A39F-C47753E4DF9B})
+2025-08-26 13:35:26.917 +05:30 [INF] Discovered network interface: Wi-Fi-Native WiFi Filter Driver-0000 ({0554C6CC-F336-11EF-A39F-C47753E4DF9B})
+2025-08-26 13:35:26.917 +05:30 [INF] Discovered network interface: Wi-Fi-QoS Packet Scheduler-0000 ({F49564AB-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:35:26.917 +05:30 [INF] Discovered network interface: Wi-Fi-WFP 802.3 MAC Layer LightWeight Filter-0000 ({F49564AC-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:35:26.918 +05:30 [INF] mDNS service started
+2025-08-26 13:35:26.920 +05:30 [INF] mDNS advertisement task started with interval: 60 seconds
+2025-08-26 13:35:26.936 +05:30 [INF] Django base URL: https://cyphersol.co.in
+2025-08-26 13:35:26.949 +05:30 [INF] Database configuration loaded from C:\ProgramData\Cyphersol\database_config.json
+2025-08-26 13:35:26.950 +05:30 [INF] Found database configuration, attempting to start PostgreSQL server 17.4.0 5432 "11111111-2222-3333-4444-555555555555" C:\ProgramData\Cyphersol\pgdata
+2025-08-26 13:35:26.954 +05:30 [INF] Starting embedded Postgres…
+2025-08-26 13:36:00.579 +05:30 [ERR] Failed to auto-start PostgreSQL server from configuration
+System.Exception: Exception occurred while starting Pg server
+ ---> System.IO.IOException: Gave up waiting for server to start after 30000ms
+   at MysticMind.PostgresEmbed.PgServer.WaitForServerStartup(Stopwatch watch)
+   at MysticMind.PostgresEmbed.PgServer.StartServer()
+   --- End of inner exception stack trace ---
+   at MysticMind.PostgresEmbed.PgServer.StartServer()
+   at MysticMind.PostgresEmbed.PgServer.StartAsync(CancellationToken token)
+   at MysticMind.PostgresEmbed.PgServer.StartAsync()
+   at MyLanService.EmbeddedPostgresManager.StartAsync(String version, Int32 port, Guid InstanceId, String dbDir)
+   at MyLanService.EmbeddedPostgresManager.AutoStartFromConfigAsync()
+2025-08-26 13:36:00.689 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:36:00.969 +05:30 [INF] License Loaded: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:33:44 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756195424.886864,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 69351015
+}
+2025-08-26 13:36:01.099 +05:30 [INF] Starting license polling...
+2025-08-26 13:36:01.112 +05:30 [INF] License is present: true
+2025-08-26 13:36:01.116 +05:30 [INF] [License Polling] Enriched JSON: { license_key = Testing2, used_statements = 0 }
+2025-08-26 13:36:01.182 +05:30 [INF] HTTP API Server started on port 7890
+2025-08-26 13:36:01.185 +05:30 [INF] Starting UDP discovery listener on port 41234...
+2025-08-26 13:36:01.192 +05:30 [INF] UdpDiscoveryService started on port 41234
+2025-08-26 13:36:01.192 +05:30 [INF] UDP discovery service started.
+2025-08-26 13:36:01.193 +05:30 [INF] IP address: 192.168.1.18
+2025-08-26 13:36:01.249 +05:30 [INF] mDNS advertisement started for license server (key: license-server:7890) using hostname: DESKTOP-8M0JENC and IP: 192.168.1.18:7890
+2025-08-26 13:36:01.249 +05:30 [INF] mDNS advertisement started using hostname: DESKTOP-8M0JENC and IP: 192.168.1.18:7890
+2025-08-26 13:36:01.251 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2025-08-26 13:36:01.251 +05:30 [INF] Hosting environment: Production
+2025-08-26 13:36:01.251 +05:30 [INF] Content root path: C:\Users\admin\Desktop\beta_testers_ca\frontend\gatewayServer
+2025-08-26 13:37:44.320 +05:30 [INF] Starting service in Production...
+2025-08-26 13:37:44.493 +05:30 [INF] Actual log path: C:\Users\admin\Desktop\beta_testers_ca\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-08-26 13:37:44.602 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-08-26 13:37:44.879 +05:30 [INF] [DeviceInfo Init] UUID: B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:37:44.881 +05:30 [INF] [DeviceInfo Init] MAC Address: 44:03:2C:9D:15:52
+2025-08-26 13:37:44.881 +05:30 [INF] [DeviceInfo Init] Hostname: DESKTOP-8M0JENC
+2025-08-26 13:37:44.881 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-21-2566959089-793452566-1152153924-1001
+2025-08-26 13:37:44.881 +05:30 [INF] [DeviceInfo Init] Username: admin
+2025-08-26 13:37:44.886 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:37:44.886 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 208 bytes
+2025-08-26 13:37:44.895 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:37:45.308 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 69256828 to 69489984
+2025-08-26 13:37:45.355 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:33:44 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756195424.886864,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 69489984
+}
+2025-08-26 13:37:45.355 +05:30 [INF] LicenseInfoProvider initialized.
+2025-08-26 13:37:45.359 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:33:44 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756195424.886864,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 69489984
+}
+2025-08-26 13:37:45.359 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 0
+2025-08-26 13:37:45.360 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\session-cache.enc
+2025-08-26 13:37:45.360 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:37:45.636 +05:30 [ERR] Decryption failed. The license file may be corrupted or tampered with: Padding is invalid and cannot be removed.
+2025-08-26 13:37:45.636 +05:30 [ERR] Failed to load session cache: Exception of type 'System.Exception' was thrown.
+2025-08-26 13:37:45.638 +05:30 [INF] Initializing MdnsAdvertiser...
+2025-08-26 13:37:45.646 +05:30 [INF] MdnsAdvertiser initialized successfully
+2025-08-26 13:37:45.647 +05:30 [INF] UdpDiscoveryService initialized for license service LicenseServer on port 7890, listening on UDP port 41234
+2025-08-26 13:37:45.649 +05:30 [INF] Worker initialized.
+2025-08-26 13:37:45.663 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-08-26 13:37:45.664 +05:30 [INF] Waiting for network to be ready...
+2025-08-26 13:37:45.738 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.18
+2025-08-26 13:37:45.738 +05:30 [INF] Network is ready with IP: 192.168.1.18
+2025-08-26 13:37:45.790 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.18
+2025-08-26 13:37:45.792 +05:30 [INF] Registered mDNS event handlers for traffic monitoring
+2025-08-26 13:37:45.869 +05:30 [INF] Discovered network interface: Wi-Fi ({E105B734-B669-4F24-92C8-0648DB9E08D3})
+2025-08-26 13:37:45.869 +05:30 [INF] Discovered network interface: Local Area Connection* 7-WFP Native MAC Layer LightWeight Filter-0000 ({F4956517-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:37:45.870 +05:30 [INF] Discovered network interface: Local Area Connection* 7-QoS Packet Scheduler-0000 ({F4956518-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:37:45.870 +05:30 [INF] Discovered network interface: Local Area Connection* 8-WFP Native MAC Layer LightWeight Filter-0000 ({F495651E-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:37:45.870 +05:30 [INF] Discovered network interface: Local Area Connection* 8-QoS Packet Scheduler-0000 ({F495651F-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:37:45.870 +05:30 [INF] Discovered network interface: Local Area Connection* 9-WFP Native MAC Layer LightWeight Filter-0000 ({F4956521-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:37:45.870 +05:30 [INF] Discovered network interface: Local Area Connection* 9-QoS Packet Scheduler-0000 ({F4956522-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:37:45.870 +05:30 [INF] Discovered network interface: Local Area Connection* 7 ({5D9C2979-6EE7-41DB-805B-8ED991AF2D3C})
+2025-08-26 13:37:45.870 +05:30 [INF] Discovered network interface: Local Area Connection* 8 ({52A58791-E9E5-43DD-B56B-B21867E1E7C7})
+2025-08-26 13:37:45.870 +05:30 [INF] Discovered network interface: Local Area Connection* 9 ({7CF6F235-EDEB-41B6-839B-E174ADD2EC30})
+2025-08-26 13:37:45.870 +05:30 [INF] Discovered network interface: Wi-Fi-WFP Native MAC Layer LightWeight Filter-0000 ({F49564AA-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:37:45.870 +05:30 [INF] Discovered network interface: Wi-Fi-Virtual WiFi Filter Driver-0000 ({0554C6CB-F336-11EF-A39F-C47753E4DF9B})
+2025-08-26 13:37:45.870 +05:30 [INF] Discovered network interface: Wi-Fi-Native WiFi Filter Driver-0000 ({0554C6CC-F336-11EF-A39F-C47753E4DF9B})
+2025-08-26 13:37:45.870 +05:30 [INF] Discovered network interface: Wi-Fi-QoS Packet Scheduler-0000 ({F49564AB-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:37:45.870 +05:30 [INF] Discovered network interface: Wi-Fi-WFP 802.3 MAC Layer LightWeight Filter-0000 ({F49564AC-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:37:45.875 +05:30 [INF] mDNS service started
+2025-08-26 13:37:45.876 +05:30 [INF] mDNS advertisement task started with interval: 60 seconds
+2025-08-26 13:37:45.894 +05:30 [INF] Django base URL: https://cyphersol.co.in
+2025-08-26 13:37:45.906 +05:30 [INF] Database configuration loaded from C:\ProgramData\Cyphersol\database_config.json
+2025-08-26 13:37:45.907 +05:30 [INF] Found database configuration, attempting to start PostgreSQL server 17.4.0 5432 "11111111-2222-3333-4444-555555555555" C:\ProgramData\Cyphersol\pgdata
+2025-08-26 13:37:45.911 +05:30 [INF] Starting embedded Postgres…
+2025-08-26 13:38:19.477 +05:30 [ERR] Failed to auto-start PostgreSQL server from configuration
+System.Exception: Exception occurred while starting Pg server
+ ---> System.IO.IOException: Gave up waiting for server to start after 30000ms
+   at MysticMind.PostgresEmbed.PgServer.WaitForServerStartup(Stopwatch watch)
+   at MysticMind.PostgresEmbed.PgServer.StartServer()
+   --- End of inner exception stack trace ---
+   at MysticMind.PostgresEmbed.PgServer.StartServer()
+   at MysticMind.PostgresEmbed.PgServer.StartAsync(CancellationToken token)
+   at MysticMind.PostgresEmbed.PgServer.StartAsync()
+   at MyLanService.EmbeddedPostgresManager.StartAsync(String version, Int32 port, Guid InstanceId, String dbDir)
+   at MyLanService.EmbeddedPostgresManager.AutoStartFromConfigAsync()
+2025-08-26 13:38:19.546 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:38:19.773 +05:30 [INF] License Loaded: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:33:44 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756195424.886864,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 69489984
+}
+2025-08-26 13:38:19.981 +05:30 [INF] Starting license polling...
+2025-08-26 13:38:19.986 +05:30 [INF] License is present: true
+2025-08-26 13:38:19.988 +05:30 [INF] [License Polling] Enriched JSON: { license_key = Testing2, used_statements = 0 }
+2025-08-26 13:38:20.038 +05:30 [INF] HTTP API Server started on port 7890
+2025-08-26 13:38:20.041 +05:30 [INF] Starting UDP discovery listener on port 41234...
+2025-08-26 13:38:20.047 +05:30 [INF] UdpDiscoveryService started on port 41234
+2025-08-26 13:38:20.047 +05:30 [INF] UDP discovery service started.
+2025-08-26 13:38:20.047 +05:30 [INF] IP address: 192.168.1.18
+2025-08-26 13:38:20.113 +05:30 [INF] mDNS advertisement started for license server (key: license-server:7890) using hostname: DESKTOP-8M0JENC and IP: 192.168.1.18:7890
+2025-08-26 13:38:20.113 +05:30 [INF] mDNS advertisement started using hostname: DESKTOP-8M0JENC and IP: 192.168.1.18:7890
+2025-08-26 13:38:20.115 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2025-08-26 13:38:20.115 +05:30 [INF] Hosting environment: Production
+2025-08-26 13:38:20.115 +05:30 [INF] Content root path: C:\Users\admin\Desktop\beta_testers_ca\frontend\gatewayServer
+2025-08-26 13:38:21.198 +05:30 [INF] [License Polling] Expiry: 1757658635.560683
+2025-08-26 13:38:21.198 +05:30 [INF] License is present: true
+2025-08-26 13:38:21.198 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1757658635.560683 to 1757658635.560683
+2025-08-26 13:38:21.198 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1756195424.886864 to 1756195693.93638
+2025-08-26 13:38:21.198 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 69489984 to 69525875
+2025-08-26 13:38:21.200 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-26 13:38:21.202 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"Testing2","current_timestamp":1756195693.93638,"expiry_timestamp":1757658635.560683,"number_of_users":1,"number_of_statements":100,"role":"CA","UsedStatements":0,"system_up_time":69525875}
+2025-08-26 13:38:21.202 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:38:21.493 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:38:21.493 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:38:21.493 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:38:21.497 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:38:13 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756195693.93638,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 69525875
+}
+2025-08-26 13:38:21.498 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-26 13:38:45.896 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-26 13:40:03.583 +05:30 [INF] Starting service in Production...
+2025-08-26 13:40:03.641 +05:30 [INF] Actual log path: C:\Users\admin\Desktop\beta_testers_ca\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-08-26 13:40:03.728 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-08-26 13:40:04.218 +05:30 [INF] [DeviceInfo Init] UUID: B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:40:04.219 +05:30 [INF] [DeviceInfo Init] MAC Address: 44:03:2C:9D:15:52
+2025-08-26 13:40:04.219 +05:30 [INF] [DeviceInfo Init] Hostname: DESKTOP-8M0JENC
+2025-08-26 13:40:04.219 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-21-2566959089-793452566-1152153924-1001
+2025-08-26 13:40:04.219 +05:30 [INF] [DeviceInfo Init] Username: admin
+2025-08-26 13:40:04.225 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:40:04.225 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 208 bytes
+2025-08-26 13:40:04.232 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:40:04.600 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 69525875 to 69629281
+2025-08-26 13:40:04.648 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:38:13 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756195693.93638,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 69629281
+}
+2025-08-26 13:40:04.648 +05:30 [INF] LicenseInfoProvider initialized.
+2025-08-26 13:40:04.650 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:38:13 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756195693.93638,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 69629281
+}
+2025-08-26 13:40:04.650 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 0
+2025-08-26 13:40:04.651 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\session-cache.enc
+2025-08-26 13:40:04.651 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:40:04.906 +05:30 [ERR] Decryption failed. The license file may be corrupted or tampered with: Padding is invalid and cannot be removed.
+2025-08-26 13:40:04.906 +05:30 [ERR] Failed to load session cache: Exception of type 'System.Exception' was thrown.
+2025-08-26 13:40:04.909 +05:30 [INF] Initializing MdnsAdvertiser...
+2025-08-26 13:40:04.918 +05:30 [INF] MdnsAdvertiser initialized successfully
+2025-08-26 13:40:04.919 +05:30 [INF] UdpDiscoveryService initialized for license service LicenseServer on port 7890, listening on UDP port 41234
+2025-08-26 13:40:04.921 +05:30 [INF] Worker initialized.
+2025-08-26 13:40:04.935 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-08-26 13:40:04.936 +05:30 [INF] Waiting for network to be ready...
+2025-08-26 13:40:05.007 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.18
+2025-08-26 13:40:05.007 +05:30 [INF] Network is ready with IP: 192.168.1.18
+2025-08-26 13:40:05.053 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.18
+2025-08-26 13:40:05.054 +05:30 [INF] Registered mDNS event handlers for traffic monitoring
+2025-08-26 13:40:05.128 +05:30 [INF] Discovered network interface: Wi-Fi ({E105B734-B669-4F24-92C8-0648DB9E08D3})
+2025-08-26 13:40:05.128 +05:30 [INF] Discovered network interface: Local Area Connection* 7-WFP Native MAC Layer LightWeight Filter-0000 ({F4956517-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:40:05.128 +05:30 [INF] Discovered network interface: Local Area Connection* 7-QoS Packet Scheduler-0000 ({F4956518-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:40:05.128 +05:30 [INF] Discovered network interface: Local Area Connection* 8-WFP Native MAC Layer LightWeight Filter-0000 ({F495651E-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:40:05.128 +05:30 [INF] Discovered network interface: Local Area Connection* 8-QoS Packet Scheduler-0000 ({F495651F-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:40:05.128 +05:30 [INF] Discovered network interface: Local Area Connection* 9-WFP Native MAC Layer LightWeight Filter-0000 ({F4956521-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:40:05.132 +05:30 [INF] Discovered network interface: Local Area Connection* 9-QoS Packet Scheduler-0000 ({F4956522-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:40:05.133 +05:30 [INF] Discovered network interface: Local Area Connection* 7 ({5D9C2979-6EE7-41DB-805B-8ED991AF2D3C})
+2025-08-26 13:40:05.133 +05:30 [INF] Discovered network interface: Local Area Connection* 8 ({52A58791-E9E5-43DD-B56B-B21867E1E7C7})
+2025-08-26 13:40:05.133 +05:30 [INF] Discovered network interface: Local Area Connection* 9 ({7CF6F235-EDEB-41B6-839B-E174ADD2EC30})
+2025-08-26 13:40:05.133 +05:30 [INF] Discovered network interface: Wi-Fi-WFP Native MAC Layer LightWeight Filter-0000 ({F49564AA-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:40:05.133 +05:30 [INF] Discovered network interface: Wi-Fi-Virtual WiFi Filter Driver-0000 ({0554C6CB-F336-11EF-A39F-C47753E4DF9B})
+2025-08-26 13:40:05.133 +05:30 [INF] Discovered network interface: Wi-Fi-Native WiFi Filter Driver-0000 ({0554C6CC-F336-11EF-A39F-C47753E4DF9B})
+2025-08-26 13:40:05.133 +05:30 [INF] Discovered network interface: Wi-Fi-QoS Packet Scheduler-0000 ({F49564AB-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:40:05.133 +05:30 [INF] Discovered network interface: Wi-Fi-WFP 802.3 MAC Layer LightWeight Filter-0000 ({F49564AC-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:40:05.136 +05:30 [INF] mDNS service started
+2025-08-26 13:40:05.138 +05:30 [INF] mDNS advertisement task started with interval: 60 seconds
+2025-08-26 13:40:05.153 +05:30 [INF] Django base URL: https://cyphersol.co.in
+2025-08-26 13:40:05.166 +05:30 [INF] Database configuration loaded from C:\ProgramData\Cyphersol\database_config.json
+2025-08-26 13:40:05.167 +05:30 [INF] Found database configuration, attempting to start PostgreSQL server 17.4.0 5432 "11111111-2222-3333-4444-555555555555" C:\ProgramData\Cyphersol\pgdata
+2025-08-26 13:40:05.171 +05:30 [INF] Starting embedded Postgres…
+2025-08-26 13:40:38.780 +05:30 [ERR] Failed to auto-start PostgreSQL server from configuration
+System.Exception: Exception occurred while starting Pg server
+ ---> System.IO.IOException: Gave up waiting for server to start after 30000ms
+   at MysticMind.PostgresEmbed.PgServer.WaitForServerStartup(Stopwatch watch)
+   at MysticMind.PostgresEmbed.PgServer.StartServer()
+   --- End of inner exception stack trace ---
+   at MysticMind.PostgresEmbed.PgServer.StartServer()
+   at MysticMind.PostgresEmbed.PgServer.StartAsync(CancellationToken token)
+   at MysticMind.PostgresEmbed.PgServer.StartAsync()
+   at MyLanService.EmbeddedPostgresManager.StartAsync(String version, Int32 port, Guid InstanceId, String dbDir)
+   at MyLanService.EmbeddedPostgresManager.AutoStartFromConfigAsync()
+2025-08-26 13:40:38.866 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:40:39.033 +05:30 [INF] License Loaded: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:38:13 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756195693.93638,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 69629281
+}
+2025-08-26 13:40:39.142 +05:30 [INF] Starting license polling...
+2025-08-26 13:40:39.145 +05:30 [INF] License is present: true
+2025-08-26 13:40:39.147 +05:30 [INF] [License Polling] Enriched JSON: { license_key = Testing2, used_statements = 0 }
+2025-08-26 13:40:39.192 +05:30 [INF] HTTP API Server started on port 7890
+2025-08-26 13:40:39.195 +05:30 [INF] Starting UDP discovery listener on port 41234...
+2025-08-26 13:40:39.201 +05:30 [INF] UdpDiscoveryService started on port 41234
+2025-08-26 13:40:39.201 +05:30 [INF] UDP discovery service started.
+2025-08-26 13:40:39.201 +05:30 [INF] IP address: 192.168.1.18
+2025-08-26 13:40:39.261 +05:30 [INF] mDNS advertisement started for license server (key: license-server:7890) using hostname: DESKTOP-8M0JENC and IP: 192.168.1.18:7890
+2025-08-26 13:40:39.261 +05:30 [INF] mDNS advertisement started using hostname: DESKTOP-8M0JENC and IP: 192.168.1.18:7890
+2025-08-26 13:40:39.262 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2025-08-26 13:40:39.262 +05:30 [INF] Hosting environment: Production
+2025-08-26 13:40:39.262 +05:30 [INF] Content root path: C:\Users\admin\Desktop\beta_testers_ca\frontend\gatewayServer
+2025-08-26 13:40:40.438 +05:30 [INF] [License Polling] Expiry: 1757658635.560683
+2025-08-26 13:40:40.439 +05:30 [INF] License is present: true
+2025-08-26 13:40:40.439 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1757658635.560683 to 1757658635.560683
+2025-08-26 13:40:40.439 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1756195693.93638 to 1756195833.173614
+2025-08-26 13:40:40.439 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 69629281 to 69665109
+2025-08-26 13:40:40.439 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-26 13:40:40.442 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"Testing2","current_timestamp":1756195833.173614,"expiry_timestamp":1757658635.560683,"number_of_users":1,"number_of_statements":100,"role":"CA","UsedStatements":0,"system_up_time":69665109}
+2025-08-26 13:40:40.443 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:40:40.704 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:40:40.704 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:40:40.705 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:40:40.709 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:40:33 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756195833.173614,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 69665109
+}
+2025-08-26 13:40:40.709 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-26 13:41:05.152 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-08-26 13:42:26.077 +05:30 [INF] Starting service in Production...
+2025-08-26 13:42:26.147 +05:30 [INF] Actual log path: C:\Users\admin\Desktop\beta_testers_ca\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-08-26 13:42:26.192 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-08-26 13:42:26.421 +05:30 [INF] [DeviceInfo Init] UUID: B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:42:26.422 +05:30 [INF] [DeviceInfo Init] MAC Address: 44:03:2C:9D:15:52
+2025-08-26 13:42:26.422 +05:30 [INF] [DeviceInfo Init] Hostname: DESKTOP-8M0JENC
+2025-08-26 13:42:26.422 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-21-2566959089-793452566-1152153924-1001
+2025-08-26 13:42:26.422 +05:30 [INF] [DeviceInfo Init] Username: admin
+2025-08-26 13:42:26.428 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:42:26.429 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 208 bytes
+2025-08-26 13:42:26.439 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:42:26.863 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 69665109 to 69771531
+2025-08-26 13:42:26.915 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:40:33 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756195833.173614,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 69771531
+}
+2025-08-26 13:42:26.915 +05:30 [INF] LicenseInfoProvider initialized.
+2025-08-26 13:42:26.916 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:40:33 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756195833.173614,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 69771531
+}
+2025-08-26 13:42:26.916 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 0
+2025-08-26 13:42:26.917 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\session-cache.enc
+2025-08-26 13:42:26.920 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:42:27.207 +05:30 [ERR] Decryption failed. The license file may be corrupted or tampered with: Padding is invalid and cannot be removed.
+2025-08-26 13:42:27.209 +05:30 [ERR] Failed to load session cache: Exception of type 'System.Exception' was thrown.
+2025-08-26 13:42:27.211 +05:30 [INF] Initializing MdnsAdvertiser...
+2025-08-26 13:42:27.220 +05:30 [INF] MdnsAdvertiser initialized successfully
+2025-08-26 13:42:27.221 +05:30 [INF] UdpDiscoveryService initialized for license service LicenseServer on port 7890, listening on UDP port 41234
+2025-08-26 13:42:27.222 +05:30 [INF] Worker initialized.
+2025-08-26 13:42:27.238 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-08-26 13:42:27.241 +05:30 [INF] Waiting for network to be ready...
+2025-08-26 13:42:27.323 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.18
+2025-08-26 13:42:27.323 +05:30 [INF] Network is ready with IP: 192.168.1.18
+2025-08-26 13:42:27.371 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.18
+2025-08-26 13:42:27.372 +05:30 [INF] Registered mDNS event handlers for traffic monitoring
+2025-08-26 13:42:27.450 +05:30 [INF] Discovered network interface: Wi-Fi ({E105B734-B669-4F24-92C8-0648DB9E08D3})
+2025-08-26 13:42:27.450 +05:30 [INF] Discovered network interface: Local Area Connection* 7-WFP Native MAC Layer LightWeight Filter-0000 ({F4956517-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:42:27.450 +05:30 [INF] Discovered network interface: Local Area Connection* 7-QoS Packet Scheduler-0000 ({F4956518-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:42:27.450 +05:30 [INF] Discovered network interface: Local Area Connection* 8-WFP Native MAC Layer LightWeight Filter-0000 ({F495651E-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:42:27.450 +05:30 [INF] Discovered network interface: Local Area Connection* 8-QoS Packet Scheduler-0000 ({F495651F-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:42:27.450 +05:30 [INF] Discovered network interface: Local Area Connection* 9-WFP Native MAC Layer LightWeight Filter-0000 ({F4956521-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:42:27.450 +05:30 [INF] Discovered network interface: Local Area Connection* 9-QoS Packet Scheduler-0000 ({F4956522-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:42:27.450 +05:30 [INF] Discovered network interface: Local Area Connection* 7 ({5D9C2979-6EE7-41DB-805B-8ED991AF2D3C})
+2025-08-26 13:42:27.453 +05:30 [INF] Discovered network interface: Local Area Connection* 8 ({52A58791-E9E5-43DD-B56B-B21867E1E7C7})
+2025-08-26 13:42:27.453 +05:30 [INF] Discovered network interface: Local Area Connection* 9 ({7CF6F235-EDEB-41B6-839B-E174ADD2EC30})
+2025-08-26 13:42:27.453 +05:30 [INF] Discovered network interface: Wi-Fi-WFP Native MAC Layer LightWeight Filter-0000 ({F49564AA-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:42:27.453 +05:30 [INF] Discovered network interface: Wi-Fi-Virtual WiFi Filter Driver-0000 ({0554C6CB-F336-11EF-A39F-C47753E4DF9B})
+2025-08-26 13:42:27.453 +05:30 [INF] Discovered network interface: Wi-Fi-Native WiFi Filter Driver-0000 ({0554C6CC-F336-11EF-A39F-C47753E4DF9B})
+2025-08-26 13:42:27.453 +05:30 [INF] Discovered network interface: Wi-Fi-QoS Packet Scheduler-0000 ({F49564AB-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:42:27.453 +05:30 [INF] Discovered network interface: Wi-Fi-WFP 802.3 MAC Layer LightWeight Filter-0000 ({F49564AC-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:42:27.455 +05:30 [INF] mDNS service started
+2025-08-26 13:42:27.458 +05:30 [INF] mDNS advertisement task started with interval: 60 seconds
+2025-08-26 13:42:27.474 +05:30 [INF] Django base URL: https://cyphersol.co.in
+2025-08-26 13:42:27.486 +05:30 [INF] Database configuration loaded from C:\ProgramData\Cyphersol\database_config.json
+2025-08-26 13:42:27.487 +05:30 [INF] Found database configuration, attempting to start PostgreSQL server 17.4.0 5432 "11111111-2222-3333-4444-555555555555" C:\ProgramData\Cyphersol\pgdata
+2025-08-26 13:42:27.491 +05:30 [INF] Starting embedded Postgres…
+2025-08-26 13:43:01.123 +05:30 [ERR] Failed to auto-start PostgreSQL server from configuration
+System.Exception: Exception occurred while starting Pg server
+ ---> System.IO.IOException: Gave up waiting for server to start after 30000ms
+   at MysticMind.PostgresEmbed.PgServer.WaitForServerStartup(Stopwatch watch)
+   at MysticMind.PostgresEmbed.PgServer.StartServer()
+   --- End of inner exception stack trace ---
+   at MysticMind.PostgresEmbed.PgServer.StartServer()
+   at MysticMind.PostgresEmbed.PgServer.StartAsync(CancellationToken token)
+   at MysticMind.PostgresEmbed.PgServer.StartAsync()
+   at MyLanService.EmbeddedPostgresManager.StartAsync(String version, Int32 port, Guid InstanceId, String dbDir)
+   at MyLanService.EmbeddedPostgresManager.AutoStartFromConfigAsync()
+2025-08-26 13:43:01.154 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:43:01.224 +05:30 [INF] License Loaded: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:40:33 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756195833.173614,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 69771531
+}
+2025-08-26 13:43:01.376 +05:30 [INF] Starting license polling...
+2025-08-26 13:43:01.385 +05:30 [INF] License is present: true
+2025-08-26 13:43:01.394 +05:30 [INF] [License Polling] Enriched JSON: { license_key = Testing2, used_statements = 0 }
+2025-08-26 13:43:01.478 +05:30 [INF] HTTP API Server started on port 7890
+2025-08-26 13:43:01.481 +05:30 [INF] Starting UDP discovery listener on port 41234...
+2025-08-26 13:43:01.487 +05:30 [INF] UdpDiscoveryService started on port 41234
+2025-08-26 13:43:01.487 +05:30 [INF] UDP discovery service started.
+2025-08-26 13:43:01.487 +05:30 [INF] IP address: 192.168.1.18
+2025-08-26 13:43:01.600 +05:30 [INF] mDNS advertisement started for license server (key: license-server:7890) using hostname: DESKTOP-8M0JENC and IP: 192.168.1.18:7890
+2025-08-26 13:43:01.600 +05:30 [INF] mDNS advertisement started using hostname: DESKTOP-8M0JENC and IP: 192.168.1.18:7890
+2025-08-26 13:43:01.602 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2025-08-26 13:43:01.602 +05:30 [INF] Hosting environment: Production
+2025-08-26 13:43:01.602 +05:30 [INF] Content root path: C:\Users\admin\Desktop\beta_testers_ca\frontend\gatewayServer
+2025-08-26 13:43:01.630 +05:30 [INF] [License Polling] Expiry: 1757658635.560683
+2025-08-26 13:43:01.631 +05:30 [INF] License is present: true
+2025-08-26 13:43:01.631 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1757658635.560683 to 1757658635.560683
+2025-08-26 13:43:01.631 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1756195833.173614 to 1756195974.357006
+2025-08-26 13:43:01.631 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 69771531 to 69806312
+2025-08-26 13:43:01.631 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-26 13:43:01.634 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"Testing2","current_timestamp":1756195974.357006,"expiry_timestamp":1757658635.560683,"number_of_users":1,"number_of_statements":100,"role":"CA","UsedStatements":0,"system_up_time":69806312}
+2025-08-26 13:43:01.635 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:43:02.630 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:43:02.631 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:43:02.631 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:43:02.653 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:42:54 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756195974.357006,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 69806312
+}
+2025-08-26 13:43:02.654 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-26 13:44:32.344 +05:30 [INF] Starting service in Production...
+2025-08-26 13:44:32.420 +05:30 [INF] Actual log path: C:\Users\admin\Desktop\beta_testers_ca\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-08-26 13:44:32.457 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-08-26 13:44:32.680 +05:30 [INF] [DeviceInfo Init] UUID: B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:44:32.681 +05:30 [INF] [DeviceInfo Init] MAC Address: 44:03:2C:9D:15:52
+2025-08-26 13:44:32.681 +05:30 [INF] [DeviceInfo Init] Hostname: DESKTOP-8M0JENC
+2025-08-26 13:44:32.681 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-21-2566959089-793452566-1152153924-1001
+2025-08-26 13:44:32.681 +05:30 [INF] [DeviceInfo Init] Username: admin
+2025-08-26 13:44:32.686 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:44:32.686 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 208 bytes
+2025-08-26 13:44:32.693 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:44:33.089 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 69806312 to 69897765
+2025-08-26 13:44:33.138 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:42:54 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756195974.357006,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 69897765
+}
+2025-08-26 13:44:33.139 +05:30 [INF] LicenseInfoProvider initialized.
+2025-08-26 13:44:33.142 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:42:54 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756195974.357006,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 69897765
+}
+2025-08-26 13:44:33.142 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 0
+2025-08-26 13:44:33.144 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\session-cache.enc
+2025-08-26 13:44:33.144 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:44:33.428 +05:30 [ERR] Decryption failed. The license file may be corrupted or tampered with: Padding is invalid and cannot be removed.
+2025-08-26 13:44:33.428 +05:30 [ERR] Failed to load session cache: Exception of type 'System.Exception' was thrown.
+2025-08-26 13:44:33.430 +05:30 [INF] Initializing MdnsAdvertiser...
+2025-08-26 13:44:33.436 +05:30 [INF] MdnsAdvertiser initialized successfully
+2025-08-26 13:44:33.437 +05:30 [INF] UdpDiscoveryService initialized for license service LicenseServer on port 7890, listening on UDP port 41234
+2025-08-26 13:44:33.439 +05:30 [INF] Worker initialized.
+2025-08-26 13:44:33.455 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-08-26 13:44:33.462 +05:30 [INF] Waiting for network to be ready...
+2025-08-26 13:44:33.536 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.18
+2025-08-26 13:44:33.536 +05:30 [INF] Network is ready with IP: 192.168.1.18
+2025-08-26 13:44:33.582 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.18
+2025-08-26 13:44:33.583 +05:30 [INF] Registered mDNS event handlers for traffic monitoring
+2025-08-26 13:44:33.658 +05:30 [INF] Discovered network interface: Wi-Fi ({E105B734-B669-4F24-92C8-0648DB9E08D3})
+2025-08-26 13:44:33.658 +05:30 [INF] Discovered network interface: Local Area Connection* 7-WFP Native MAC Layer LightWeight Filter-0000 ({F4956517-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:44:33.658 +05:30 [INF] Discovered network interface: Local Area Connection* 7-QoS Packet Scheduler-0000 ({F4956518-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:44:33.658 +05:30 [INF] Discovered network interface: Local Area Connection* 8-WFP Native MAC Layer LightWeight Filter-0000 ({F495651E-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:44:33.658 +05:30 [INF] Discovered network interface: Local Area Connection* 8-QoS Packet Scheduler-0000 ({F495651F-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:44:33.662 +05:30 [INF] Discovered network interface: Local Area Connection* 9-WFP Native MAC Layer LightWeight Filter-0000 ({F4956521-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:44:33.662 +05:30 [INF] Discovered network interface: Local Area Connection* 9-QoS Packet Scheduler-0000 ({F4956522-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:44:33.662 +05:30 [INF] Discovered network interface: Local Area Connection* 7 ({5D9C2979-6EE7-41DB-805B-8ED991AF2D3C})
+2025-08-26 13:44:33.662 +05:30 [INF] Discovered network interface: Local Area Connection* 8 ({52A58791-E9E5-43DD-B56B-B21867E1E7C7})
+2025-08-26 13:44:33.662 +05:30 [INF] Discovered network interface: Local Area Connection* 9 ({7CF6F235-EDEB-41B6-839B-E174ADD2EC30})
+2025-08-26 13:44:33.662 +05:30 [INF] Discovered network interface: Wi-Fi-WFP Native MAC Layer LightWeight Filter-0000 ({F49564AA-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:44:33.663 +05:30 [INF] Discovered network interface: Wi-Fi-Virtual WiFi Filter Driver-0000 ({0554C6CB-F336-11EF-A39F-C47753E4DF9B})
+2025-08-26 13:44:33.663 +05:30 [INF] Discovered network interface: Wi-Fi-Native WiFi Filter Driver-0000 ({0554C6CC-F336-11EF-A39F-C47753E4DF9B})
+2025-08-26 13:44:33.663 +05:30 [INF] Discovered network interface: Wi-Fi-QoS Packet Scheduler-0000 ({F49564AB-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:44:33.663 +05:30 [INF] Discovered network interface: Wi-Fi-WFP 802.3 MAC Layer LightWeight Filter-0000 ({F49564AC-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:44:33.666 +05:30 [INF] mDNS service started
+2025-08-26 13:44:33.667 +05:30 [INF] mDNS advertisement task started with interval: 60 seconds
+2025-08-26 13:44:33.684 +05:30 [INF] Django base URL: https://cyphersol.co.in
+2025-08-26 13:44:33.698 +05:30 [INF] Database configuration loaded from C:\ProgramData\Cyphersol\database_config.json
+2025-08-26 13:44:33.698 +05:30 [INF] Found database configuration, attempting to start PostgreSQL server 17.4.0 5432 "11111111-2222-3333-4444-555555555555" C:\ProgramData\Cyphersol\pgdata
+2025-08-26 13:44:33.702 +05:30 [INF] Starting embedded Postgres…
+2025-08-26 13:45:21.164 +05:30 [INF] Starting service in Production...
+2025-08-26 13:45:21.222 +05:30 [INF] Actual log path: C:\Users\admin\Desktop\beta_testers_ca\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-08-26 13:45:21.257 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-08-26 13:45:21.448 +05:30 [INF] [DeviceInfo Init] UUID: B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:45:21.449 +05:30 [INF] [DeviceInfo Init] MAC Address: 44:03:2C:9D:15:52
+2025-08-26 13:45:21.449 +05:30 [INF] [DeviceInfo Init] Hostname: DESKTOP-8M0JENC
+2025-08-26 13:45:21.449 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-21-2566959089-793452566-1152153924-1001
+2025-08-26 13:45:21.449 +05:30 [INF] [DeviceInfo Init] Username: admin
+2025-08-26 13:45:21.455 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-08-26 13:45:21.455 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 208 bytes
+2025-08-26 13:45:21.460 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:45:21.844 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 69806312 to 69946515
+2025-08-26 13:45:21.891 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:42:54 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756195974.357006,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 69946515
+}
+2025-08-26 13:45:21.891 +05:30 [INF] LicenseInfoProvider initialized.
+2025-08-26 13:45:21.892 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:42:54 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756195974.357006,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 69946515
+}
+2025-08-26 13:45:21.892 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 0
+2025-08-26 13:45:21.893 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\session-cache.enc
+2025-08-26 13:45:21.894 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:45:22.159 +05:30 [ERR] Decryption failed. The license file may be corrupted or tampered with: Padding is invalid and cannot be removed.
+2025-08-26 13:45:22.160 +05:30 [ERR] Failed to load session cache: Exception of type 'System.Exception' was thrown.
+2025-08-26 13:45:22.162 +05:30 [INF] Initializing MdnsAdvertiser...
+2025-08-26 13:45:22.169 +05:30 [INF] MdnsAdvertiser initialized successfully
+2025-08-26 13:45:22.170 +05:30 [INF] UdpDiscoveryService initialized for license service LicenseServer on port 7890, listening on UDP port 41234
+2025-08-26 13:45:22.171 +05:30 [INF] Worker initialized.
+2025-08-26 13:45:22.183 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-08-26 13:45:22.185 +05:30 [INF] Waiting for network to be ready...
+2025-08-26 13:45:22.249 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.18
+2025-08-26 13:45:22.249 +05:30 [INF] Network is ready with IP: 192.168.1.18
+2025-08-26 13:45:22.292 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.18
+2025-08-26 13:45:22.293 +05:30 [INF] Registered mDNS event handlers for traffic monitoring
+2025-08-26 13:45:22.365 +05:30 [INF] Discovered network interface: Wi-Fi ({E105B734-B669-4F24-92C8-0648DB9E08D3})
+2025-08-26 13:45:22.365 +05:30 [INF] Discovered network interface: Local Area Connection* 7-WFP Native MAC Layer LightWeight Filter-0000 ({F4956517-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:45:22.365 +05:30 [INF] Discovered network interface: Local Area Connection* 7-QoS Packet Scheduler-0000 ({F4956518-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:45:22.365 +05:30 [INF] Discovered network interface: Local Area Connection* 8-WFP Native MAC Layer LightWeight Filter-0000 ({F495651E-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:45:22.365 +05:30 [INF] Discovered network interface: Local Area Connection* 8-QoS Packet Scheduler-0000 ({F495651F-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:45:22.365 +05:30 [INF] Discovered network interface: Local Area Connection* 9-WFP Native MAC Layer LightWeight Filter-0000 ({F4956521-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:45:22.365 +05:30 [INF] Discovered network interface: Local Area Connection* 9-QoS Packet Scheduler-0000 ({F4956522-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:45:22.365 +05:30 [INF] Discovered network interface: Local Area Connection* 7 ({5D9C2979-6EE7-41DB-805B-8ED991AF2D3C})
+2025-08-26 13:45:22.366 +05:30 [INF] Discovered network interface: Local Area Connection* 8 ({52A58791-E9E5-43DD-B56B-B21867E1E7C7})
+2025-08-26 13:45:22.366 +05:30 [INF] Discovered network interface: Local Area Connection* 9 ({7CF6F235-EDEB-41B6-839B-E174ADD2EC30})
+2025-08-26 13:45:22.366 +05:30 [INF] Discovered network interface: Wi-Fi-WFP Native MAC Layer LightWeight Filter-0000 ({F49564AA-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:45:22.366 +05:30 [INF] Discovered network interface: Wi-Fi-Virtual WiFi Filter Driver-0000 ({0554C6CB-F336-11EF-A39F-C47753E4DF9B})
+2025-08-26 13:45:22.366 +05:30 [INF] Discovered network interface: Wi-Fi-Native WiFi Filter Driver-0000 ({0554C6CC-F336-11EF-A39F-C47753E4DF9B})
+2025-08-26 13:45:22.366 +05:30 [INF] Discovered network interface: Wi-Fi-QoS Packet Scheduler-0000 ({F49564AB-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:45:22.366 +05:30 [INF] Discovered network interface: Wi-Fi-WFP 802.3 MAC Layer LightWeight Filter-0000 ({F49564AC-81B1-11F0-A3C1-ACE2D39B7858})
+2025-08-26 13:45:22.369 +05:30 [INF] mDNS service started
+2025-08-26 13:45:22.370 +05:30 [INF] mDNS advertisement task started with interval: 60 seconds
+2025-08-26 13:45:22.384 +05:30 [INF] Django base URL: https://cyphersol.co.in
+2025-08-26 13:45:22.396 +05:30 [INF] Database configuration loaded from C:\ProgramData\Cyphersol\database_config.json
+2025-08-26 13:45:22.396 +05:30 [INF] Found database configuration, attempting to start PostgreSQL server 17.4.0 5432 "11111111-2222-3333-4444-555555555555" C:\ProgramData\Cyphersol\pgdata
+2025-08-26 13:45:22.400 +05:30 [INF] Starting embedded Postgres…
+2025-08-26 13:45:55.935 +05:30 [ERR] Failed to auto-start PostgreSQL server from configuration
+System.Exception: Exception occurred while starting Pg server
+ ---> System.IO.IOException: Gave up waiting for server to start after 30000ms
+   at MysticMind.PostgresEmbed.PgServer.WaitForServerStartup(Stopwatch watch)
+   at MysticMind.PostgresEmbed.PgServer.StartServer()
+   --- End of inner exception stack trace ---
+   at MysticMind.PostgresEmbed.PgServer.StartServer()
+   at MysticMind.PostgresEmbed.PgServer.StartAsync(CancellationToken token)
+   at MysticMind.PostgresEmbed.PgServer.StartAsync()
+   at MyLanService.EmbeddedPostgresManager.StartAsync(String version, Int32 port, Guid InstanceId, String dbDir)
+   at MyLanService.EmbeddedPostgresManager.AutoStartFromConfigAsync()
+2025-08-26 13:45:56.044 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E
+2025-08-26 13:45:56.265 +05:30 [INF] License Loaded: {
+  "LicenseKey": "Testing2",
+  "CurrentTimestampIST": "26-Aug-2025 01:42:54 PM IST",
+  "ExpiryTimestampIST": "12-Sep-2025 12:00:35 PM IST",
+  "CurrentTimestamp": 1756195974.357006,
+  "ExpiryTimestamp": 1757658635.560683,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 100,
+  "Role": "CA",
+  "UsedStatements": 0,
+  "SystemUpTime": 69946515
+}
+2025-08-26 13:45:56.389 +05:30 [INF] Starting license polling...
+2025-08-26 13:45:56.405 +05:30 [INF] License is present: true
+2025-08-26 13:45:56.408 +05:30 [INF] [License Polling] Enriched JSON: { license_key = Testing2, used_statements = 0 }
+2025-08-26 13:45:56.480 +05:30 [INF] HTTP API Server started on port 7890
+2025-08-26 13:45:56.484 +05:30 [INF] Starting UDP discovery listener on port 41234...
+2025-08-26 13:45:56.489 +05:30 [INF] UdpDiscoveryService started on port 41234
+2025-08-26 13:45:56.489 +05:30 [INF] UDP discovery service started.
+2025-08-26 13:45:56.490 +05:30 [INF] IP address: 192.168.1.18
+2025-08-26 13:45:56.547 +05:30 [INF] mDNS advertisement started for license server (key: license-server:7890) using hostname: DESKTOP-8M0JENC and IP: 192.168.1.18:7890
+2025-08-26 13:45:56.547 +05:30 [INF] mDNS advertisement started using hostname: DESKTOP-8M0JENC and IP: 192.168.1.18:7890
+2025-08-26 13:45:56.549 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2025-08-26 13:45:56.549 +05:30 [INF] Hosting environment: Production
+2025-08-26 13:45:56.549 +05:30 [INF] Content root path: C:\Users\admin\Desktop\beta_testers_ca\frontend\gatewayServer
+2025-08-26 13:45:59.076 +05:30 [INF] [License Polling] Expiry: 1757658635.560683
+2025-08-26 13:45:59.076 +05:30 [INF] License is present: true
+2025-08-26 13:45:59.076 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1757658635.560683 to 1757658635.560683
+2025-08-26 13:45:59.077 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1756195974.357006 to 1756196151.828259
+2025-08-26 13:45:59.077 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 69946515 to 69983750
+2025-08-26 13:45:59.077 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-08-26 13:45:59.078 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"Testing2","current_timestamp":1756196151.828259,"expiry_timestamp":1757658635.560683,"number_of_users":1,"number_of_statements":100,"role":"CA","UsedStatements":0,"system_up_time":69983750}
+2025-08-26 13:45:59.079 +05:30 [INF] Fingerprint: DESKTOP-8M0JENCadminS-1-5-21-2566959089-793452566-1152153924-1001B044AE73-C816-11E7-8105-8C0E7201803E

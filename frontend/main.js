@@ -2106,6 +2106,7 @@ async function createWindow() {
   registerOpenFileIpc(global.AppConfig.baseDir, global.AppConfig.userDataDir);
   registerReportHandlers(TMP_DIR);
   registerAuthHandlers(app.getPath("userData"));
+  log.info("🔐 Auth handlers registered (including license:check)");
   registerOpportunityToEarnIpc();
   registerTallyIpc();
   registerVoucherIpc();
@@ -2469,8 +2470,8 @@ app.whenReady().then(async () => {
   ipcMain.handle("app-mode:run-detection", async (event, options = {}) => {
     try {
       log.info("🧪 App mode detection requested from compatibility window", options);
-      const { AppModeManager } = require("./compatibility/AppModeManager");
-      const manager = new AppModeManager(log, null);
+      const { getSharedAppModeManager } = require("./compatibility/SharedAppModeManager");
+      const manager = getSharedAppModeManager(log, null);
       
       if (options.scenario && options.scenario !== 'current') {
         // Load test scenario with proper mapping
@@ -2944,6 +2945,15 @@ app.on("window-all-closed", () => {
 app.on("will-quit", (event) => {
   log.info("App is quitting");
   log.info("isUpdating flag:", isUpdating);
+  
+  // Clean up shared AppModeManager instance
+  try {
+    const { resetSharedAppModeManager } = require("./compatibility/SharedAppModeManager");
+    resetSharedAppModeManager();
+    log.info("Shared AppModeManager instance cleaned up");
+  } catch (error) {
+    log.warn("Error cleaning up shared AppModeManager:", error.message);
+  }
 
   // Clean up SessionManager listeners before quit
   try {
