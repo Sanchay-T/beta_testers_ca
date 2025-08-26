@@ -1,6 +1,6 @@
 import shutil
 import os
-from lib2to3.pytree import convert
+# from lib2to3.pytree import convert
 from openpyxl.styles import Font
 import logging
 from openpyxl import Workbook, load_workbook
@@ -10,7 +10,19 @@ import pandas as pd
 import regex as re
 import fitz
 import os
-from ...code_ocr_extraction import extraction_process_only_rectify
+import numpy as np
+# Library for calculating dates
+from datetime import datetime, timedelta
+import matplotlib.pyplot as plt
+# To get the path of the temp directory
+import tempfile
+from sklearn.preprocessing import MinMaxScaler
+from itertools import groupby
+import io
+import warnings
+from typing import Dict, Any, List, Optional, Tuple, Union, Callable
+import time
+from backend.utils import get_saved_pdf_dir
 
 
 bold_font = Font(bold=True)
@@ -39,13 +51,13 @@ from ...common_functions import (process_excel_to_json, process_name_n_num_df, c
                                  Cash_Deposit_note, Emi_note, Refund_note, Suspense_Credit_note, Suspense_Debit_note,
                                  add_filters_to_excel, create_excel_sheet, color_excel_tabs_inplace,
                                  sort_dataframes_by_date,
-                                 extraction_process_explicit_lines, process_transactions, get_total_pdf_pages)
+                                 extraction_process_explicit_lines, process_transactions, get_total_pdf_pages,get_latest_month_emis, BankwiseEli,calculate_fixed_day_average,add_start_n_end_date_v2)
 
 
 def save_to_excel(df, name_n_num_df, account_number):
     # Generate all necessary DataFrames
     eod_sheet_df = eod(df)
-    opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df,df)
+    opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df)
 
     summary_df_list, missing_months_list = summary_sheet(df, opening_bal, closing_bal, df)
 
@@ -433,7 +445,7 @@ def save_to_excel(df, name_n_num_df, account_number):
 def returns_json_output_of_all_sheets(df, name_n_num_df,category_master_data_df):
     # Generate all necessary DataFrames
     eod_sheet_df = eod(df)
-    opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df,df)
+    opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df)
 
     summary_df_list, missing_months_list = summary_sheet(df, opening_bal, closing_bal, df,category_master_data_df)
 
@@ -457,6 +469,8 @@ def returns_json_output_of_all_sheets(df, name_n_num_df,category_master_data_df)
     cash_deposit_df = cash_depo(df)
     dividend_int_df = div_int(df)
     emi_df = emi(df)
+    latest_emi = get_latest_month_emis(emi_df)
+    date_wise_avg_balance = calculate_fixed_day_average(eod_sheet_df)
     refund_df = refund_reversal(df)
     suspense_credit_df = suspense_credit(df)
     suspense_debit_df = suspense_debit(df)
@@ -464,8 +478,15 @@ def returns_json_output_of_all_sheets(df, name_n_num_df,category_master_data_df)
     receipt_df = receipt(df)
     pay_n_receipt_df = process_transactions(df)
 
-    bank_avg_balance_df = calculate_fixed_day_average(eod_sheet_df)
-    loan_value_df = process_avg_last_6_months(bank_avg_balance_df, eod_sheet_df)
+    # bank_avg_balance_df = calculate_fixed_day_average(eod_sheet_df)
+    loan_value_df = process_avg_last_6_months(date_wise_avg_balance, eod_sheet_df)
+    secured_Loan_df = BankwiseEli(eod_sheet_df)
+
+    print("secured_Loan_df", secured_Loan_df)
+
+    print(emi_df)
+    print("donenenenenenenenen 1")
+    # print(latest_emi)
 
     # Build a dictionary to hold the labeled DataFrames
     result_dict = {
@@ -488,30 +509,36 @@ def returns_json_output_of_all_sheets(df, name_n_num_df,category_master_data_df)
         "Cash Deposit": cash_deposit_df.to_dict(orient="records"),
         "Redemption, Dividend & Interest": dividend_int_df.to_dict(orient="records"),
         "Probable EMI": emi_df.to_dict(orient="records"),
+        "Latest EMI": latest_emi.to_dict(orient="records"),
+        "Date Wise Average Balance": date_wise_avg_balance.to_dict(orient="records"),
         "Refund-Reversal": refund_df.to_dict(orient="records"),
         "Suspense Credit": suspense_credit_df.to_dict(orient="records"),
         "Suspense Debit": suspense_debit_df.to_dict(orient="records"),
         "Payment & Receipt Voucher": pay_n_receipt_df.to_dict(orient="records"),
         "Payment Voucher": payment_df.to_dict(orient="records"),
         "Receipt Voucher": receipt_df.to_dict(orient="records"),
+        "Secured Loan": secured_Loan_df.to_dict(orient="records"),
     }
     print("donenenenenenenenen 2")
 
+    # print("result_dict", result_dict)
     # Convert the entire dictionary to JSON
-    json_output = json.dumps(result_dict, indent=4)
-    # with open("new_output.json", "w") as file:
-    #     file.write(json_output)
+    json_output = json.dumps(result_dict,default=str, indent=4)
+    print("donenenenenenenenen 3")
+    with open("new_output.json", "w") as file:
+        file.write(json_output)
+    print("donenenenenenenenen 4")
     return json_output, missing_months_list
 
 
 def refresh_category_all_sheets(df,eod_sheet_df, new_categories,category_master_data_df):
     # eod_sheet_df = eod(df)
-    opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df,df)
+    opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df)
 
     if not new_categories:
         summary_df_list, missing_months_list = summary_sheet(df, opening_bal, closing_bal, df,category_master_data_df)
     else:
-        summary_df_list, missing_months_list = summary_sheet(df, opening_bal, closing_bal, df, category_master_data_df,new_categories)
+        summary_df_list, missing_months_list = summary_sheet(df, opening_bal, closing_bal, df,category_master_data_df, new_categories)
 
     particulars_df = summary_df_list[0]
     income_receipts_df = summary_df_list[1]
@@ -587,7 +614,7 @@ def individual_summary(transactions_df,category_master_data_df):
     
     eod_sheet_df = eod(transactions_df)
     print(eod_sheet_df.head(10))
-    opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df,transactions_df)
+    opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df)
     # named print 
     print("opening_bal", opening_bal)
     print("closing_bal", closing_bal)
@@ -595,19 +622,19 @@ def individual_summary(transactions_df,category_master_data_df):
 
     summary_df_list,mission_months = summary_sheet(transactions_df, opening_bal, closing_bal, transactions_df,category_master_data_df)
 
-    # print("summary_df_list", len(summary_df_list))
+    print("summary_df_list", len(summary_df_list))
     particulars_df = summary_df_list[0]
-    # print("particulars_df", particulars_df)
+    print("particulars_df", particulars_df)
     income_receipts_df = summary_df_list[1]
-    # print("income_receipts_df", income_receipts_df)
+    print("income_receipts_df", income_receipts_df)
     imp_expenses_payments_df = summary_df_list[2]
-    # print("imp_expenses_payments_df", imp_expenses_payments_df)
+    print("imp_expenses_payments_df", imp_expenses_payments_df)
     other_expenses_df = summary_df_list[3]
-    # print("other_expenses_df", other_expenses_df)
+    print("other_expenses_df", other_expenses_df)
     contra_credit_df = summary_df_list[4]
-    # print("contra_credit_df", contra_credit_df)
+    print("contra_credit_df", contra_credit_df)
     contra_debit_df = summary_df_list[5]
-    # print("contra_debit_df", contra_debit_df)
+    print("contra_debit_df", contra_debit_df)
 
     result_dict = {
         "Particulars": particulars_df.to_dict(orient="records"),
@@ -623,12 +650,15 @@ def individual_summary(transactions_df,category_master_data_df):
     return json_output
     
 
-def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_dates, CA_ID, category_master_data_df,progress_data,is_ocr,
+def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_dates, CA_ID, progress_data,category_master_data_df,
                              whole_transaction_sheet=None, aiyazs_array_of_array=None):
     account_number = ""
     dfs = {}
     name_dfs = {}
     errorz = {}
+    print("ddsfgdrb")
+
+    # print("category_master_datacs", category_master_data)
 
     pdf_paths_not_extracted = {
         "bank_names": [],
@@ -647,7 +677,6 @@ def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_
         pdf_password = passwords[i]
         start_date = start_dates[i]
         end_date = end_dates[i]
-        isthis_ocr=is_ocr[i]
 
         if aiyazs_array_of_array:
             aiyaz_array_of_array = aiyazs_array_of_array[i]
@@ -656,31 +685,15 @@ def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_
             explicit_lines = list(
                 {coord for item in aiyaz_array_of_array for coord in (item["bounds"]["start"], item["bounds"]["end"])})
             labels = [[entry["index"], entry["column_type"]] for entry in aiyaz_array_of_array]
-            if isthis_ocr:
-                dfs[bank], name_dfs[bank], errorz[bank] = extraction_process_only_rectify(bank, pdf_path, pdf_password,
+            dfs[bank], name_dfs[bank], errorz[bank] = extraction_process_explicit_lines(bank, pdf_path, pdf_password,
                                                                                         start_date, end_date,
-                                                                                        explicit_lines, labels, encoded_pdf=False)
-            else:
-                dfs[bank], name_dfs[bank], errorz[bank] = extraction_process_explicit_lines(bank, pdf_path, pdf_password,
-                                                                                                start_date, end_date,
-                                                                                                explicit_lines, labels)
+                                                                                        explicit_lines, labels)
 
         else:
             dfs[bank], name_dfs[bank], errorz[bank] = extraction_process(bank, pdf_path, pdf_password, start_date,
-                                                                         end_date,isthis_ocr,CA_ID)
-            
-        
-        print("heyyyy",dfs)
-        print("*******************************************************")
-        print("name_dfs", name_dfs)
-        print("*******************************************************")
-        print("errorz", errorz)
+                                                                         end_date)
 
         print(f"Extracted {bank} bank statement successfully")
-      
-        pdf_paths_not_extracted["respective_reasons_for_error"].append(errorz[bank])
-
-        print("one")
         # account_number += f"{name_dfs[bank][1][:4]}x{name_dfs[bank][1][-4:]}_"
         # Check if the extracted dataframe is empty
         if dfs[bank].empty:
@@ -709,13 +722,13 @@ def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_
             pdf_paths_not_extracted["respective_reasons_for_error"].append(errorz[bank])
             del dfs[bank]
             del name_dfs[bank]
-        print("two")
+
         i += 1
 
     print("|------------------------------|")
     print(account_number)
     print("|------------------------------|")
-    print("three")
+
     if not dfs:
         folder_path = "saved_pdf"
         try:
@@ -730,8 +743,6 @@ def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_
     else:
         data = []
         # num_pairs = len(pd.Series(dfs).to_dict())
-
-        print("four")
 
         for key, value in name_dfs.items():
             bank_name = key
@@ -786,6 +797,200 @@ def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_
 
         return {"sheets_in_json": json_lists_of_df, 'pdf_paths_not_extracted': pdf_paths_not_extracted,
                 'success_page_number': time_saved_pages, 'missing_months_list': missing_months_list}
+
+
+def acc_name_n_acc_num_from_pdf_df(name_dfs):
+    print("name_dfs", name_dfs)
+    data = []
+    for key, value in name_dfs.items():
+        bank_name = key
+        acc_name = value[0]
+        acc_num = value[1]
+        if str(acc_num) == "None":
+            masked_acc_num = "None"
+        else:
+            masked_acc_num = "X" * (len(acc_num) - 4) + acc_num[-4:]
+        data.append([masked_acc_num, acc_name, bank_name])
+        for item in data:
+            item[2] = "".join(
+                character for character in item[2] if character.isalpha()
+            )
+
+    name_n_num_df = process_name_n_num_df(data)
+    return name_n_num_df
+
+
+def process_extraction_add_edit(accounts_input, CA_ID, progress_data,category_master_data_df, whole_transaction_sheet=None):
+    
+    account_numb = ""
+    dataframes_account_wise = {}
+    pdf_paths_not_extracted = {}
+    name_dfs_dict = {}
+
+    for account_name, account_info in accounts_input.items():
+        acc_name = account_name
+        bank_name = account_info['bank_name']
+        password = account_info['password']
+        start_date = account_info['start_date']
+        end_date = account_info['end_date']
+        pdfs = account_info['pdfs']
+
+        pdf_paths_not_extracted[acc_name] = {
+            "bank_name": bank_name,
+            "password": password,
+            "start_date": start_date,
+            "end_date": end_date,
+            "pdfs": [],
+            "date_range_error": "", #if empty no date range
+        }
+
+        extracted_dfs = []
+
+        for pdf_info in pdfs:
+            pdf_path = pdf_info['pdf_path']
+            file_counter = pdf_info['file_counter']
+
+            print("pdf_info ",pdf_info)
+
+            if "aiyaz_q_array_of_array" in pdf_info and pdf_info["aiyaz_q_array_of_array"] is not None:
+                aiyaz_q_array_of_array = pdf_info['aiyaz_q_array_of_array']
+                print("aiyaz_array_of_array from ca statement analyzer - ", aiyaz_q_array_of_array)
+                explicit_lines = list( {coord for item in aiyaz_q_array_of_array for coord in (item["bounds"]["start"], item["bounds"]["end"])})
+                labels = [[entry["index"], entry["column_type"]] for entry in aiyaz_q_array_of_array]
+                df, name_df, errorz = extraction_process_explicit_lines(bank_name, pdf_path, password, explicit_lines, labels)
+
+            else:
+                df, name_df, errorz = extraction_process(bank_name, pdf_path, password)
+
+            name_dfs_dict[bank_name] = name_df
+
+            if df.empty:
+                pdf_document = fitz.open(pdf_path)
+                skip = False
+
+                if pdf_document.is_encrypted:
+                    if not pdf_document.authenticate(password):
+                        skip = True
+
+                if not skip:
+                    # Save (unlocked or already unlocked) PDF
+                    temp_path = pdf_path + ".unlocked.pdf"
+                    pdf_document.save(temp_path)
+                    pdf_document.close()
+
+                    # Replace original file
+                    shutil.move(temp_path, pdf_path)
+                    print("PDF unlocked and saved in the same path")
+
+                print("error", errorz)
+                print("************************************************")
+
+                pdf_paths_not_extracted[acc_name]['pdfs'].append({
+                    "path": pdf_path,
+                    "file_counter": file_counter,
+                    "respective_list_of_columns": name_df,
+                    "respective_reasons_for_error": errorz
+                })
+
+                del name_dfs_dict[bank_name]
+
+            else:
+                df['File Counter'] = file_counter
+                extracted_dfs.append(df)
+
+       
+        if not extracted_dfs:
+            # {Acc_1 : empty dataframe}
+            print("EMPTY DATAFRAMES")
+            dataframes_account_wise[acc_name] = pd.DataFrame()
+        else:
+            # arrange dfs
+            initial_df = pd.concat(sort_dataframes_by_date(extracted_dfs)).fillna("").reset_index(drop=True)
+            idf = initial_df.drop_duplicates(keep="first")
+            try:
+                print("ZAAAEOEOEOEOEOOEOEO1")
+                idf = add_start_n_end_date_v2(idf, start_date, end_date, bank_name)
+                print("ZAAAEOEOEOEOEOOEOEO2")
+                idf['Account Type'] = acc_name
+                dataframes_account_wise[acc_name] = idf
+            except Exception as e:
+                dataframes_account_wise[acc_name] = pd.DataFrame()
+                pdf_paths_not_extracted[acc_name]["date_range_error"] += f"{str(e)}"
+
+        if pdf_paths_not_extracted[acc_name]["date_range_error"] == "" and len(pdf_paths_not_extracted[acc_name]["pdfs"])==0:
+            pdf_paths_not_extracted.pop(acc_name)
+                
+    print("IM HERE")
+
+    # Check if all dataframes are empty
+    if all(df.empty for df in dataframes_account_wise.values()):
+        print("All dataframes are empty")
+        folder_path = "saved_pdf"
+        try:
+            shutil.rmtree(folder_path)
+            print(f"Removed all contents in '{folder_path}'")
+        except Exception as e:
+            print(f"Failed to remove '{folder_path}': {e}")
+        
+        return {"sheets_in_json": None, 'pdf_paths_not_extracted': pdf_paths_not_extracted, 'success_page_number': 0,
+            'missing_months_list': []}
+        
+    else:
+        # Get only non-empty dataframes from the account dictionary
+        list_of_dataframes = []
+        
+        if whole_transaction_sheet is not None:
+            print("whole_transaction_sheet aq")
+            print(whole_transaction_sheet.head())
+            unique_accounts = whole_transaction_sheet["Account Type"].unique()
+            for account in unique_accounts:
+                account_df = whole_transaction_sheet[whole_transaction_sheet["Account Type"] == account]
+                account_df = account_df.reset_index(drop=True)
+                list_of_dataframes.append(account_df)
+            
+        non_empty_dataframes_list = [df for df in dataframes_account_wise.values() if not df.empty]
+        list_of_dataframes.extend(non_empty_dataframes_list)
+
+        initial_df = pd.concat(sort_dataframes_by_date(list_of_dataframes)).fillna("").reset_index(drop=True)
+        initial_df = initial_df.drop_duplicates(keep="first")
+
+        # initial_df.to_excel("initial_df_hello.xlsx", index=False)
+        print("HEYYY aq")
+        print(initial_df.head()) 
+        df = category_add_ca(initial_df,category_master_data_df)
+        print("HEYYY 2")
+
+        print(df.head()) 
+
+        new_tran_df = another_method(df)
+        new_tran_df = Upi(new_tran_df)
+
+        name_n_num_df = acc_name_n_acc_num_from_pdf_df(name_dfs_dict)
+
+        json_lists_of_df, missing_months_list = returns_json_output_of_all_sheets(new_tran_df, name_n_num_df,category_master_data_df)
+
+        # excel_file_path = save_to_excel(new_tran_df, name_n_num_df, account_numb)
+        # print(excel_file_path)
+
+        # all_pdf_pages = get_total_pdf_pages(pdf_paths)
+        # not_extracted_pages = get_total_pdf_pages(pdf_paths_not_extracted['paths'])
+        # time_saved_pages = all_pdf_pages - not_extracted_pages
+
+        folder_path = "saved_pdf"
+        try:
+            shutil.rmtree(folder_path)
+            print(f"Removed all contents in '{folder_path}'")
+        except Exception as e:
+            print(f"Failed to remove '{folder_path}': {e}")
+
+
+        print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+        print(pdf_paths_not_extracted)
+        print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+
+        return {"sheets_in_json": json_lists_of_df, 'pdf_paths_not_extracted': pdf_paths_not_extracted,
+                'success_page_number': 2, 'missing_months_list': missing_months_list}
+
 
 # # #
 # bank_names = ["ICICI"]

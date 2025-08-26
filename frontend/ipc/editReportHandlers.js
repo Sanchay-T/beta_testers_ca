@@ -11,10 +11,12 @@ const { eod } = require("../db/schema/EodSchema");
 const { opportunityToEarn } = require("../db/schema/OpportunityToEarn");
 const { eq, and, SQL, sql, inArray } = require("drizzle-orm");
 const axios = require("axios");
+const { Category_Master } = require("../db/schema/Category_Master");
 const getBaseUrl = require("../getBaseUrl");
 
 function registerEditReportHandlers() {
   const db = databaseManager.getInstance().getDatabase();
+  log.info("Database instance : ", db);
 
   async function processOpportunityToEarnData(opportunityToEarnData, caseId) {
     try {
@@ -341,8 +343,24 @@ function registerEditReportHandlers() {
       }
     );
 
-    log.info("Updated transactions:", updatedTransactions.slice(0, 5));
-    log.info("Updated transactions:", updatedTransactions[aiyaz]);
+    // log.info("Updated transactions:", updatedTransactions.slice(0, 5));
+    log.info("Example of Updated transaction:", updatedTransactions[aiyaz]);
+
+    try {
+      const { finalSql, ids } = await prepareTransactionsForDB(frontendData);
+
+      // Insert transactions
+      await bulkUpdateTransactions(finalSql, ids);
+
+      // db.run("SELECT * FROM transactions").then((result) => {
+      //     log.info("Transactions fetched successfully", result);
+      // });
+      log.info("Transactions updated successfully");
+    } catch (error) {
+      log.error("Error inserting transactions in batch:", error);
+      throw error;
+    }
+
     log.info({ frontendData });
     const newCategories = Object.values(frontendData).reduce((acc, item) => {
       log.info({ item });
@@ -351,6 +369,7 @@ function registerEditReportHandlers() {
         "Debit / Credit": item.type == "debit" ? "Debit" : "Credit",
         Category: item.category || "Uncategorized",
         Particulars: item.classification || "Others",
+        Preferences: "default",
       };
 
       if (item.is_new) {
@@ -360,6 +379,21 @@ function registerEditReportHandlers() {
 
       return acc;
     }, []);
+
+    for (const item of newCategories) {
+      if (
+        item.Description !== "Unknown" ||
+        item.Preferences === "non_default"
+      ) {
+        await db.insert(Category_Master).values({
+          description: item.Description,
+          debit_credit: item["Debit / Credit"],
+          category: item.Category,
+          particulars: item.Particulars,
+          preferences: item.Preferences,
+        });
+      }
+    }
 
     console.log(
       "New categories: ",
@@ -378,6 +412,22 @@ function registerEditReportHandlers() {
     }
 
     try {
+      const categoryMasterData = await db.select().from(Category_Master);
+      log.info("Category Master Data:", categoryMasterData);
+      const transformedCategoryMasterData = categoryMasterData.map((item) => ({
+        id: item.id,
+        Category: item.category,
+        Description: item.description,
+        Particulars: item.particulars,
+        Preferences: item.preferences,
+        debit_credit: item.debit_credit,
+      }));
+
+      log.info(
+        "Transformed Category Master Data:",
+        transformedCategoryMasterData
+      );
+
       // make api call
       const baseUrl = getBaseUrl();
       const serverEndpoint = `${baseUrl}/edit-category/`;
@@ -386,6 +436,7 @@ function registerEditReportHandlers() {
         transaction_data: updatedTransactions,
         new_categories: newCategories,
         eod_data: eod_data,
+        categoryMasterData: transformedCategoryMasterData,
       };
 
       log.info({ serverEndpoint, payload });
@@ -434,21 +485,6 @@ function registerEditReportHandlers() {
       }
 
       // log.info("API response:", parsedData);
-
-      try {
-        const { finalSql, ids } = await prepareTransactionsForDB(frontendData);
-
-        // Insert transactions
-        await bulkUpdateTransactions(finalSql, ids);
-
-        // db.run("SELECT * FROM transactions").then((result) => {
-        //     log.info("Transactions fetched successfully", result);
-        // });
-        log.info("Transactions updated successfully");
-      } catch (error) {
-        log.error("Error inserting transactions in batch:", error);
-        throw error;
-      }
     } catch (error) {
       log.error("API call failed:", error);
     }

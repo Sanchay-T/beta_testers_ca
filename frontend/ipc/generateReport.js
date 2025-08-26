@@ -15,6 +15,7 @@ const { failedStatements } = require("../db/schema/FailedStatements");
 const { eq, and, inArray } = require("drizzle-orm");
 const { opportunityToEarn } = require("../db/schema/OpportunityToEarn");
 const getBaseUrl = require("../getBaseUrl");
+const { Category_Master } = require("../db/schema/Category_Master");
 
 let db = null;
 
@@ -905,7 +906,18 @@ function generateReportIpc(tmpdir_path) {
 
           whole_transaction_sheet = updatedTransactions || null;
         }
+        const categoryMasterData = await db.select().from(Category_Master);
 
+        const transformedCategoryMasterData = categoryMasterData.map(
+          (item) => ({
+            id: item.id,
+            Category: item.category,
+            Description: item.description,
+            Particulars: item.particulars,
+            Preferences: item.preferences,
+            debit_credit: item.debit_credit,
+          })
+        );
         const FormData = require("form-data");
         const form = new FormData();
 
@@ -915,7 +927,10 @@ function generateReportIpc(tmpdir_path) {
           form.append("start_date", d.start_date || "");
           form.append("end_date", d.end_date || "");
           form.append("is_ocr", String(d.is_ocr || false));
-
+          form.append(
+            "categoryMasterData",
+            JSON.stringify(transformedCategoryMasterData)
+          );
           // Attach the actual file
           form.append("files", fs.createReadStream(d.pdf_paths), {
             filename: path.basename(d.pdf_paths),
@@ -949,13 +964,15 @@ function generateReportIpc(tmpdir_path) {
           end_date: fileDetails.map((d) => d.end_date || ""),
           ca_id: caseName || "DEFAULT_CASE",
           whole_transaction_sheet,
+          categoryMasterData: transformedCategoryMasterData,
           is_ocr: fileDetails.map((d) => d.is_ocr || false),
         };
 
         log.info("Sending API request with payload:", payload);
 
         let response = null;
-        const IS_CAPABLE = process.env.IS_CAPABLE.toLowerCase()==="true" ? true : false;
+        const IS_CAPABLE =
+          process.env.IS_CAPABLE.toLowerCase() === "true" ? true : false;
         // const IS_CAPABLE = false;
 
         if (!IS_CAPABLE) {
@@ -1305,6 +1322,17 @@ function generateReportIpc(tmpdir_path) {
       );
 
       whole_transaction_sheet = updatedTransactions || null;
+      const categoryMasterData = await db.select().from(Category_Master);
+      log.info("Category Master Data:", categoryMasterData);
+      const transformedCategoryMasterData = categoryMasterData.map((item) => ({
+        id: item.id,
+        Category: item.category,
+        Description: item.description,
+        Particulars: item.particulars,
+        Preferences: item.preferences,
+        debit_credit: item.debit_credit,
+      }));
+
       // log.info("Whole Transaction Sheet: ",whole_transaction_sheet.length);
       const isOcrCandidate = (reason = "") => {
         const r = reason.toLowerCase();
@@ -1324,6 +1352,7 @@ function generateReportIpc(tmpdir_path) {
         ca_id: caseId || "DEFAULT_CASE",
         aiyazs_array_of_array: result.map((d) => d.rectifiedColumns || ""),
         whole_transaction_sheet: whole_transaction_sheet,
+        categoryMasterData: transformedCategoryMasterData,
         is_ocr: result.map((d) => isOcrCandidate(d.respectiveReasonsForError)),
         // whole_transaction_sheet:result.map((d) => d.whole_transaction_sheet || ""),
       };

@@ -104,21 +104,16 @@ class DatabaseManager {
       }
 
       this.#db = drizzle(dbUrl);
-      // this.#initialized = true;
-
       const migrationsFolder = path.resolve(__dirname, "../drizzle");
       log.info("migrationsFolder : ", migrationsFolder);
 
-      migrate(this.#db, {
+      await migrate(this.#db, {
         migrationsFolder: migrationsFolder, // Ensure this path points to your migrations folder
-      })
-        .then(() => {
-          log.info("Migrations completed successfully.");
-        })
-        .catch((error) => {
-          log.error("Error running migrations:", error);
-          throw error;
-        });
+      });
+
+      this.#initialized = true;
+      log.info("Migrations completed successfully.");
+      return this.#db;
     } catch (error) {
       log.error("Error initializing database:", error);
       throw error;

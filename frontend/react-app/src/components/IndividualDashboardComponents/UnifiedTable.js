@@ -634,21 +634,23 @@ const DataTable = ({
       setFilteredData(dataOnUi);
 
       if (categoryUpdates.length > 0) {
-        const updatedTransactions = categoryUpdates.map((change) => {
-          const updatedTransaction = filteredData.find(
-            (tx) => tx.id === change.id
-          );
-          if (updatedTransaction) {
-            updatedTransaction.oldCategory = change.oldCategory;
-            updatedTransaction.category = change.newCategory;
-            updatedTransaction.classification = change.classification;
-            updatedTransaction.reasoning = "";
-            updatedTransaction.is_new = updatedTransaction.classification
-              ? true
-              : false;
-          }
-          return updatedTransaction;
-        });
+        const updatedTransactions = categoryUpdates
+          .map((change) => {
+            const updatedTransaction = filteredData.find(
+              (tx) => tx.id === change.id
+            );
+            if (updatedTransaction) {
+              updatedTransaction.oldCategory = change.oldCategory;
+              updatedTransaction.category = change.newCategory;
+              updatedTransaction.classification = change.classification;
+              updatedTransaction.reasoning = "";
+              updatedTransaction.is_new = updatedTransaction.classification
+                ? true
+                : false;
+            }
+            return updatedTransaction;
+          })
+          .filter(Boolean);
 
         const categoryPayload = convertArrayToObject(updatedTransactions);
         // console.log("Payload", payload);
@@ -837,6 +839,7 @@ const DataTable = ({
     ) {
       modifiedObject = { ...modifiedObject, voucher_type: "Contra" };
     }
+
     if (selectedCategorySimilarTransactions.size > 0) {
       modifiedObject = { ...modifiedObject, is_new: false };
       setModifiedData((prevData) => [...prevData, modifiedObject]);
@@ -886,14 +889,12 @@ const DataTable = ({
 
   // --- Bulk Update: Find each row by its id ---
   const handleBulkCategoryChange = (source, transactionId) => {
-    const ids =
+    const base =
       source === "similarCategory"
         ? selectedCategorySimilarTransactions
         : globalSelectedRows;
-
-    if (transactionId) {
-      ids.add(transactionId);
-    }
+    const ids = new Set(base); // clone first
+    if (transactionId) ids.add(transactionId);
 
     const newCategory =
       source === "similarCategory"
@@ -1279,6 +1280,7 @@ const DataTable = ({
         setPendingCategories([]);
       }
       setHasChanges(false);
+      setModifiedData([]); 
       toast({
         title: "Changes saved successfully",
         description: "All category updates have been saved",
@@ -1941,7 +1943,7 @@ const DataTable = ({
                 <span>Clear Filters</span>
               </Button>
 
-              {source === "transactions" &&
+              {/* {source === "transactions" &&
                 reportData?.individualId &&
                 reportData?.individualId !== "combined" && (
                   <TooltipProvider>
@@ -1959,7 +1961,7 @@ const DataTable = ({
                       <TooltipContent>Preview Statement</TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
-                )}
+                )} */}
 
               {["suspense", "upi-dr", "upi-cr", "transactions"].includes(
                 source

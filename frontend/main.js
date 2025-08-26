@@ -28,6 +28,7 @@ const { registerVoucherIpc } = require("./ipc/VoucherHandlers.js");
 const { registerExcelDownloadHandlers } = require("./ipc/excelDownloadHandler");
 const { registerAppLevelIPCHandlers } = require("./ipc/appLevelIPC");
 const DatabaseMigration = require("./utils/databaseMigration");
+const ExcelJS = require("exceljs");
 // Moved database require to after AppConfig initialization
 const { spawn, execFile, exec, execSync } = require("child_process");
 const log = require("electron-log");
@@ -38,6 +39,7 @@ const bonjour = require("bonjour")();
 const gatewayServer = require("./InitiateGatewayServer.js");
 const systemInfo = require("./SystemInformation");
 const userDataDir = app.getPath("userData");
+const { Category_Master } = require("./db/schema/Category_Master.js");
 
 // -------------------------------------------------------------
 // Initialise global configuration EARLY so all subsequently
@@ -50,17 +52,17 @@ const appIsPackaged = app.isPackaged;
 const nodeEnv = process.env.NODE_ENV;
 const isDevelopment = !appIsPackaged || nodeEnv === "development";
 
-console.log("=== AppConfig Initialization ===");
-console.log("app.isPackaged:", appIsPackaged);
-console.log("process.env.NODE_ENV:", nodeEnv);
-console.log("Determined isDev:", isDevelopment);
+log.info("=== AppConfig Initialization ===");
+log.info("app.isPackaged:", appIsPackaged);
+log.info("process.env.NODE_ENV:", nodeEnv);
+log.info("Determined isDev:", isDevelopment);
 
 global.AppConfig = {
   // Flag that indicates whether we are running in development
   // or inside the packaged application.
   // Use app.isPackaged as primary check, fallback to NODE_ENV
   isDev: isDevelopment,
-  isCapable:process.env.IS_CAPABLE.toLowerCase()==="true" ? true : false,
+  isCapable: process.env.IS_CAPABLE.toLowerCase() === "true" ? true : false,
 
   // Resolve the base directory based on the environment.
   get baseDir() {
@@ -72,11 +74,11 @@ global.AppConfig = {
 };
 
 // Log the final configuration
-console.log("=== Final AppConfig ===");
-console.log("isDev:", global.AppConfig.isDev);
-console.log("baseDir:", global.AppConfig.baseDir);
-console.log("userDataDir:", global.AppConfig.userDataDir);
-console.log("========================");
+log.info("=== Final AppConfig ===");
+log.info("isDev:", global.AppConfig.isDev);
+log.info("baseDir:", global.AppConfig.baseDir);
+log.info("userDataDir:", global.AppConfig.userDataDir);
+log.info("========================");
 
 // NOW it's safe to require database after AppConfig is set
 const databaseManager = require("./db/db");
@@ -223,7 +225,7 @@ autoUpdater.on("update-available", (info) => {
   const systemRequirementsCheck = systemInfo.getSystemRequirementsCheck();
   if (systemRequirementsCheck && systemRequirementsCheck.shouldBlockUpdates) {
     performanceTracker.end("update-download-process");
-    
+
     logWithTimestamp(
       "warn",
       UPDATE_LOG_PREFIX,
@@ -233,14 +235,14 @@ autoUpdater.on("update-available", (info) => {
         issues: systemRequirementsCheck.issues,
         memoryGB: systemRequirementsCheck.memoryGB,
         hasInsufficientRAM: systemRequirementsCheck.hasInsufficientRAM,
-        hasLowEndCPU: systemRequirementsCheck.hasLowEndCPU
+        hasLowEndCPU: systemRequirementsCheck.hasLowEndCPU,
       }
     );
 
     // Only show notification to user once per session to avoid annoyance
     if (!systemRequirementsNotificationShown) {
       systemRequirementsNotificationShown = true;
-      
+
       // Send system requirements notification to frontend
       const systemRequirementsNotification = {
         status: "system-requirements-failed",
@@ -251,7 +253,7 @@ autoUpdater.on("update-available", (info) => {
       };
 
       logWithTimestamp(
-        "warn", 
+        "warn",
         UPDATE_LOG_PREFIX,
         "Update blocked due to system requirements - showing notification to user",
         {
@@ -259,19 +261,22 @@ autoUpdater.on("update-available", (info) => {
           currentVersion: app.getVersion(),
           memoryGB: systemRequirementsCheck.memoryGB,
           issues: systemRequirementsCheck.issues,
-          blockingUpdates: systemRequirementsCheck.shouldBlockUpdates
+          blockingUpdates: systemRequirementsCheck.shouldBlockUpdates,
         }
       );
-      
+
       logWithTimestamp(
         "info",
         USER_LOG_PREFIX,
         "Sending system requirements notification to frontend (first time this session)",
         systemRequirementsNotification
       );
-      
+
       win?.webContents.send("update-status", systemRequirementsNotification);
-      win?.webContents.send("system-requirements-check", systemRequirementsCheck);
+      win?.webContents.send(
+        "system-requirements-check",
+        systemRequirementsCheck
+      );
     } else {
       logWithTimestamp(
         "info",
@@ -279,7 +284,7 @@ autoUpdater.on("update-available", (info) => {
         "Update blocked due to system requirements - notification already shown this session, skipping UI notification"
       );
     }
-    
+
     // Don't proceed with download
     return;
   }
@@ -293,7 +298,7 @@ autoUpdater.on("update-available", (info) => {
       availableVersion: info.version,
       currentVersion: app.getVersion(),
       memoryGB: systemRequirementsCheck.memoryGB,
-      meetsRequirements: systemRequirementsCheck.meetsRequirements
+      meetsRequirements: systemRequirementsCheck.meetsRequirements,
     }
   );
 
@@ -1362,9 +1367,9 @@ async function startPythonExecutable() {
 
             // Copy the default into userData
             fs.copyFileSync(defaultSheet, userSheet);
-            console.log("Copied default user sheet to userData:", userSheet);
+            log.info("Copied default user sheet to userData:", userSheet);
           } else {
-            console.error("Bundled sheet not found at:", defaultSheet);
+            log.error("Bundled sheet not found at:", defaultSheet);
           }
         }
       }
@@ -1864,13 +1869,13 @@ async function createWindow() {
       const requirements = systemInfo.getSystemRequirementsCheck();
       const memoryGB = systemInfo.getMemoryGB();
       const cpuModel = systemInfo.getCPUModel();
-      
+
       return {
         requirements,
         memoryGB,
         cpuModel,
         shouldBlockUpdates: systemInfo.shouldBlockUpdates(),
-        meetsRequirements: systemInfo.meetsMinimumRequirements()
+        meetsRequirements: systemInfo.meetsMinimumRequirements(),
       };
     } catch (err) {
       log.error("System requirements check failed:", err);
@@ -1882,9 +1887,11 @@ async function createWindow() {
     log.warn("System requirements override requested by user");
     // This could be used for advanced users to bypass the check
     // For now, we'll just log it - the implementation can be added later if needed
-    return { overridden: false, message: "Override not implemented for security" };
+    return {
+      overridden: false,
+      message: "Override not implemented for security",
+    };
   });
-
 
   ipcMain.handle("download-update", async () => {
     log.info("Update download requested");
@@ -1979,7 +1986,7 @@ async function createWindow() {
         "dontAddToRecent",
       ],
       filters: [
-        { name: "Documents", extensions: ["pdf", "xlsx","csv"] },
+        { name: "Documents", extensions: ["pdf", "xlsx", "csv"] },
         { name: "All Files", extensions: ["*"] },
       ],
     });
@@ -1992,7 +1999,7 @@ async function createWindow() {
 
   ipcMain.handle("get-file-content", async (event, filePath) => {
     try {
-      const content = await fs.promises.readFile(filePath);
+      const content = await fs.promises.readFile(filePath, "utf-8");
       return content;
     } catch (error) {
       log.error("Error reading file:", error);
@@ -2037,6 +2044,108 @@ console.log("GATEWAY EXECUTABLE DIR:", GATEWAY_EXECUTABLE_DIR);
 
 app.setName("CypherSol Dev");
 
+async function initializeDatabase() {
+  const dbManager = databaseManager.getInstance();
+  const db = await dbManager.initialize(app.getPath("userData"));
+
+  // Helper function to check if table has data
+  async function hasData(table) {
+    try {
+      const result = await db.select().from(table).limit(1);
+      return result.length > 0;
+    } catch (err) {
+      log.error(`Error checking data in table: ${err.message}`);
+      return false;
+    }
+  }
+
+  // Read master data file
+  const masterDataPath = path.join(
+    isDev ? __dirname : process.resourcesPath,
+    "Master_data.json"
+  );
+  log.info("Master data path:", process.resourcesPath);
+  log.info(`Reading master data from: ${masterDataPath}`);
+
+  if (!fs.existsSync(masterDataPath)) {
+    log.error(`Master data file not found at: ${masterDataPath}`);
+    return;
+  }
+  let dataInserted = false;
+
+  try {
+    const rawData = fs.readFileSync(masterDataPath, "utf8");
+    const masterData = JSON.parse(rawData);
+    log.info("Master data loaded successfully");
+    const categoryData = await hasData(Category_Master);
+
+    if (
+      !categoryData &&
+      masterData.category &&
+      Array.isArray(masterData.category)
+    ) {
+      log.info("Inserting Category data");
+      for (const item of masterData.category) {
+        try {
+          await db.insert(Category_Master).values({
+            description: item.Description,
+            debit_credit: item.Debit_Credit,
+            category: item.Category,
+            particulars: item.Particulars,
+            preferences: item.Preferences,
+          });
+        } catch (err) {
+          log.error(`Error inserting Category record: ${err.message}`);
+        }
+      }
+      log.info("Category data inserted successfully");
+      dataInserted = true;
+    } else {
+      log.info("Category table already has data or no data to insert");
+    }
+
+    const customerCategoryPath = path.join(
+      userDataDir,
+      "Customer_category.xlsx"
+    );
+    if (fs.existsSync(customerCategoryPath)) {
+      log.info("Found Customer_category.xlsx, migrating data...");
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.readFile(customerCategoryPath);
+      const worksheet = workbook.getWorksheet(1);
+      const headerRow = worksheet.getRow(1).values;
+      const columnMapping = {
+        keywords: headerRow.indexOf("Description"),
+        debit_credit: headerRow.indexOf("Debit / Credit"),
+        category: headerRow.indexOf("Category"),
+        particulars: headerRow.indexOf("Particulars"),
+        preferences: headerRow.indexOf("Preferences"),
+      };
+
+      worksheet.eachRow({ includeEmpty: false }, async (row, rowNumber) => {
+        if (rowNumber > 1) {
+          // Skip header row
+          const rowData = row.values;
+          await db.insert(Category_Master).values({
+            category: rowData[columnMapping.category],
+            sub_category: rowData[columnMapping.sub_category],
+            keywords: rowData[columnMapping.keywords],
+            debit_credit: rowData[columnMapping.debit_credit],
+            is_editable: true, // Assuming custom categories are always editable
+          });
+        }
+      });
+
+      fs.renameSync(
+        customerCategoryPath,
+        path.join(userDataDir, "Customer_category.xlsx.migrated")
+      );
+      log.info("Customer_category.xlsx migrated and renamed.");
+    }
+  } catch (error) {
+    log.error("Error initializing Category_Master:", error);
+  }
+}
 app.whenReady().then(async () => {
   log.info("🚀 APP READY - STARTING INITIALIZATION SEQUENCE", {
     userDataDir: userDataDir,
@@ -2055,6 +2164,7 @@ app.whenReady().then(async () => {
     try {
       const dbManager = databaseManager.getInstance();
       await dbManager.initialize(userDataDir);
+      await initializeDatabase();
       log.info("✅ Database initialized successfully");
     } catch (error) {
       log.error("❌ Database initialization failed:", error);
