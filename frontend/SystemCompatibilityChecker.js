@@ -46,7 +46,7 @@ class SystemCompatibilityChecker {
     this.enhancedReportCollector.startCompatibilityCheck();
 
     try {
-      // Step 1: Create the compatibility checker window
+      // Step 1: Create the compatibility checker window (email verification will be first screen inside)
       await this.createCompatibilityWindow();
 
       // Initialize tests with logger and window reference (after window is created)
@@ -76,7 +76,7 @@ class SystemCompatibilityChecker {
           // First, try to use stored decision from compatibility window testing
           const storedDecision = this.appModeManager.loadStoredDecision();
           const isRecentDecision = storedDecision && storedDecision.timestamp && 
-            (Date.now() - storedDecision.timestamp < 5 * 60 * 1000); // 5 minutes
+            (Date.now() - new Date(storedDecision.timestamp).getTime() < 5 * 60 * 1000); // 5 minutes
           
           if (isRecentDecision && storedDecision.determinedMode) {
             this.logger.info('MODE_DETECTION_STORED', 'Using stored mode decision from compatibility testing', {
@@ -99,6 +99,11 @@ class SystemCompatibilityChecker {
           } else {
             this.logger.info('MODE_DETECTION_FRESH', 'No recent stored decision found, running fresh detection');
             log.info(`🎯 [COMPAT] Running fresh mode detection...`);
+            log.info(`🔍 [MODE_DEBUG] Fresh detection parameters:`, {
+              storedDecision: storedDecision ? 'exists' : 'null',
+              isRecentDecision: isRecentDecision,
+              storedMode: storedDecision?.determinedMode || 'none'
+            });
             
             // [MODE_DEBUG] Log shared instance state before running detection
             this.logger.info('MODE_DETECTION_DEBUG', 'Running detection with shared AppModeManager', {
@@ -107,7 +112,14 @@ class SystemCompatibilityChecker {
               sessionAge: this.appModeManager ? Date.now() - this.appModeManager.sessionStartTime : null
             });
             
+            log.info(`🔍 [MODE_DEBUG] About to call appModeManager.runModeDetection() for REAL hardware detection`);
             modeDetectionResult = await this.appModeManager.runModeDetection();
+            log.info(`🔍 [MODE_DEBUG] appModeManager.runModeDetection() returned:`, {
+              success: modeDetectionResult?.success,
+              determinedMode: modeDetectionResult?.determinedMode,
+              canProceed: modeDetectionResult?.canProceed,
+              userMessage: modeDetectionResult?.userMessage
+            });
           }
           
           this.logger.info('MODE_DETECTION_COMPLETE', 'App mode detection completed', {
@@ -256,21 +268,33 @@ class SystemCompatibilityChecker {
         log.error(`❌ [COMPAT] Error saving enhanced report: ${error.message}`);
       }
 
-      if (this.window && !this.window.isDestroyed()) {
-        this.window.close();
+      // Step 4: Auto-report results to server and email
+      try {
+        this.logger.info('AUTO_REPORT_START', 'Starting auto-reporting of compatibility results');
+        log.info("📧 [COMPAT] Auto-reporting compatibility results to server...");
+        
+        const autoReportResult = await this.autoReportResults(this.results, modeDetectionResult);
+        if (autoReportResult.success) {
+          this.logger.info('AUTO_REPORT_SUCCESS', 'Compatibility results successfully reported', {
+            sessionId: autoReportResult.sessionId,
+            endpoint: autoReportResult.endpoint
+          });
+          log.info(`📧 [COMPAT] Auto-report successful - Session: ${autoReportResult.sessionId}`);
+        } else {
+          this.logger.warn('AUTO_REPORT_FAILED', 'Auto-reporting failed but continuing', {
+            error: autoReportResult.error
+          });
+          log.warn(`📧 [COMPAT] Auto-report failed: ${autoReportResult.error}`);
+        }
+      } catch (error) {
+        this.logger.error('AUTO_REPORT_ERROR', 'Auto-reporting encountered an error', {
+          error: error.message,
+          stack: error.stack
+        });
+        log.error(`📧 [COMPAT] Auto-reporting error: ${error.message}`);
       }
 
-      // Cleanup app mode manager
-      if (this.appModeManager) {
-        this.appModeManager.cleanup();
-      }
-
-      // Cleanup mode notification UI
-      if (this.modeNotificationUI) {
-        this.modeNotificationUI.cleanup();
-      }
-
-      // Generate comprehensive logs and reports
+      // Generate comprehensive logs and reports  
       const sessionSummary = this.logger.endSession(this.results);
       const reportPath = this.logger.generateSummaryReport(this.results);
       
@@ -291,7 +315,7 @@ class SystemCompatibilityChecker {
         reportPath
       });
 
-      return { 
+      const result = { 
         canProceed: this.results.canProceed, 
         results: this.results,
         sessionSummary,
@@ -299,6 +323,35 @@ class SystemCompatibilityChecker {
         reportPath,
         modeDetection: modeDetectionResult
       };
+
+      log.info("🔍 [FINAL_RESULT_DEBUG] Final compatibility result being returned to main.js:", {
+        canProceed: result.canProceed,
+        modeDetectionExists: !!result.modeDetection,
+        determinedMode: result.modeDetection?.determinedMode,
+        modeCanProceed: result.modeDetection?.canProceed,
+        autoLaunchExpected: result.modeDetection?.determinedMode === 'SCAN' || result.modeDetection?.determinedMode === 'UNSCAN'
+      });
+
+      // ✅ CRITICAL FIX: Close window AFTER returning result to avoid app.quit() race condition
+      // Delay window closure to ensure main.js receives the result first
+      setTimeout(() => {
+        // Cleanup app mode manager
+        if (this.appModeManager) {
+          this.appModeManager.cleanup();
+        }
+
+        // Cleanup mode notification UI  
+        if (this.modeNotificationUI) {
+          this.modeNotificationUI.cleanup();
+        }
+
+        // Close window last
+        if (this.window && !this.window.isDestroyed()) {
+          this.window.close();
+        }
+      }, 100); // 100ms delay to let main.js process the result
+
+      return result;
     } catch (error) {
       this.logger.critical('SESSION_ERROR', 'Compatibility check failed', { error: error.message, stack: error.stack });
       log.error("💥 [COMPAT] Compatibility check failed:", error);
@@ -429,10 +482,46 @@ class SystemCompatibilityChecker {
       return true;
     });
 
+    // Email verification handlers (integrated into compatibility window)
+    ipcMain.handle("email-verification:verify", async (event, email) => {
+      this.logger.info('EMAIL_VERIFICATION', 'Verifying email within compatibility window', { email });
+      log.info(`🔐 [COMPAT] Verifying email: ${email}`);
+      
+      try {
+        // Simulate backend email verification (demo logic)
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        const validEmails = [
+          'valid@test.com',
+          'admin@cyphersol.co.in', 
+          'test@cypheredge.com',
+          'demo@example.com'
+        ];
+        
+        const isValid = validEmails.includes(email.toLowerCase());
+        
+        if (isValid) {
+          this.verifiedEmail = email;
+          this.logger.info('EMAIL_VERIFICATION', 'Email verification successful', { email });
+          log.info(`🔐 [COMPAT] Email verified successfully: ${email}`);
+        } else {
+          this.logger.warn('EMAIL_VERIFICATION', 'Email verification failed', { email });
+          log.warn(`🔐 [COMPAT] Email verification failed: ${email}`);
+        }
+        
+        return { valid: isValid };
+      } catch (error) {
+        this.logger.error('EMAIL_VERIFICATION', 'Email verification error', { error: error.message });
+        log.error(`🔐 [COMPAT] Email verification error: ${error.message}`);
+        return { valid: false, error: error.message };
+      }
+    });
+
     // Clean up IPC handlers when done
     this.cleanupIPC = () => {
       ipcMain.removeHandler("compatibility:start-tests");
       ipcMain.removeHandler("compatibility:user-decision");
+      ipcMain.removeHandler("email-verification:verify");
     };
   }
 
@@ -1212,6 +1301,95 @@ class SystemCompatibilityChecker {
         stack: error.stack
       });
       log.error('❌ [COMPAT] Mode persistence verification failed:', error.message);
+    }
+  }
+
+
+  /**
+   * Send compatibility results to server and email report
+   * @param {Object} results - Compatibility check results
+   * @param {Object} modeDetectionResult - Mode detection result
+   * @returns {Promise<Object>} Report submission result
+   */
+  async autoReportResults(results, modeDetectionResult) {
+    this.logger.info('AUTO_REPORT', 'Starting auto-reporting of compatibility results');
+    log.info("📧 [COMPAT] Auto-reporting compatibility results...");
+
+    try {
+      // Prepare report data
+      const reportData = {
+        timestamp: new Date().toISOString(),
+        sessionId: `compat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        systemInfo: {
+          platform: process.platform,
+          arch: process.arch,
+          nodeVersion: process.version,
+          electronVersion: process.versions.electron,
+          appVersion: app.getVersion()
+        },
+        compatibilityResults: {
+          canProceed: results.canProceed,
+          totalTests: results.successes.length + results.warnings.length + results.issues.length,
+          successes: results.successes.length,
+          warnings: results.warnings.length,
+          issues: results.issues.length,
+          duration: results.duration,
+          performanceLevel: this.getPerformanceLevel(),
+          startupMode: this.getStartupMode()
+        },
+        modeDetection: modeDetectionResult ? {
+          determinedMode: modeDetectionResult.determinedMode,
+          confidence: modeDetectionResult.confidence,
+          canProceed: modeDetectionResult.canProceed,
+          userMessage: modeDetectionResult.userMessage
+        } : null,
+        detailedResults: {
+          successes: results.successes.map(s => ({ test: s.test, message: s.message })),
+          warnings: results.warnings.map(w => ({ test: w.test, message: w.message })),
+          issues: results.issues.map(i => ({ test: i.test, message: i.message, severity: i.severity }))
+        }
+      };
+
+      // TODO: Replace with actual server endpoint
+      const serverEndpoint = 'https://api.cyphersol.co.in/compatibility-report';
+      
+      this.logger.info('AUTO_REPORT', 'Prepared report data for submission', {
+        sessionId: reportData.sessionId,
+        canProceed: reportData.compatibilityResults.canProceed,
+        determinedMode: reportData.modeDetection?.determinedMode || 'unknown'
+      });
+
+      // Simulate server submission for now
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      this.logger.info('AUTO_REPORT', 'Compatibility report submitted successfully', {
+        sessionId: reportData.sessionId,
+        endpoint: serverEndpoint
+      });
+      
+      log.info(`📧 [COMPAT] Compatibility report submitted - Session: ${reportData.sessionId}`);
+
+      return {
+        success: true,
+        sessionId: reportData.sessionId,
+        timestamp: reportData.timestamp,
+        endpoint: serverEndpoint,
+        reportData: reportData
+      };
+
+    } catch (error) {
+      this.logger.error('AUTO_REPORT', 'Failed to auto-report compatibility results', {
+        error: error.message,
+        stack: error.stack
+      });
+      
+      log.error("📧 [COMPAT] Auto-reporting failed:", error.message);
+
+      return {
+        success: false,
+        error: error.message,
+        timestamp: new Date().toISOString()
+      };
     }
   }
 }

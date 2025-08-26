@@ -148,6 +148,18 @@
         --cypheridge-warning: #f59e0b;
         --cypheridge-error: #ef4444;
       }
+
+      /* Email verification animations */
+      @keyframes slideIn {
+        0% {
+          opacity: 0;
+          transform: translateY(30px) scale(0.95);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
     </style>
   </head>
   <body>
@@ -171,6 +183,7 @@
           ipcRenderer.invoke("compatibility:user-decision", decision),
         startTests: () => ipcRenderer.invoke("compatibility:start-tests"),
         invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
+        verifyEmail: (email) => ipcRenderer.invoke("email-verification:verify", email),
         onModeNotification: (callback) => {
           ipcRenderer.on("mode-notification:show-unscan", callback);
           ipcRenderer.on("hybrid-flow:show-screen", callback);
@@ -192,6 +205,8 @@
           this.testProgress = {};
           this.isTestingComplete = false;
           this.modeNotificationActive = false;
+          this.emailVerified = false;
+          this.showEmailVerification = true;
           this.setupEventListeners();
         }
 
@@ -231,6 +246,11 @@
         }
 
         getCurrentStepHTML() {
+          // Show email verification first if not verified
+          if (this.showEmailVerification && !this.emailVerified) {
+            return this.getEmailVerificationHTML();
+          }
+          
           switch (this.currentStep) {
             case 1:
               return this.getStep1HTML();
@@ -241,6 +261,147 @@
             default:
               return this.getStep1HTML();
           }
+        }
+
+        getEmailVerificationHTML() {
+          return `
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 100vh; width: 100vw; position: relative; overflow-y: auto;">
+              <div style="padding: 60px 40px 40px 40px; max-width: 500px; margin: 0 auto; display: flex; justify-content: center; align-items: center; min-height: 100vh;">
+                <div style="
+                  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+                  border-radius: 16px;
+                  padding: 48px;
+                  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.15);
+                  width: 100%;
+                  text-align: center;
+                  animation: slideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+                ">
+                  
+                  <!-- Logo Section -->
+                  <div style="margin-bottom: 32px;">
+                    <div style="font-size: 28px; font-weight: 700; color: var(--cypheridge-blue); margin-bottom: 8px;">
+                      CypherEdge
+                    </div>
+                    <div style="color: #64748b; font-size: 16px;">
+                      Email Verification Required
+                    </div>
+                  </div>
+                  
+                  <!-- Email Form -->
+                  <div style="margin-bottom: 24px;">
+                    <div style="margin-bottom: 20px; text-align: left;">
+                      <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #1e293b; font-size: 14px;">
+                        Email Address
+                      </label>
+                      <input 
+                        type="email" 
+                        id="email-input"
+                        style="
+                          width: 100%;
+                          padding: 12px 16px;
+                          border: 2px solid #e2e8f0;
+                          border-radius: 8px;
+                          font-size: 16px;
+                          transition: all 0.2s;
+                          background: #f8fafc;
+                          box-sizing: border-box;
+                        " 
+                        placeholder="Enter your email address"
+                        onfocus="this.style.borderColor='var(--cypheridge-blue)'; this.style.background='white'; this.style.boxShadow='0 0 0 3px rgba(0, 86, 179, 0.1)'"
+                        onblur="this.style.borderColor='#e2e8f0'; this.style.background='#f8fafc'; this.style.boxShadow='none'"
+                        required
+                      />
+                    </div>
+                    
+                    <div id="email-status" style="
+                      padding: 12px;
+                      border-radius: 8px;
+                      margin-bottom: 16px;
+                      font-weight: 500;
+                      display: none;
+                    "></div>
+                    
+                    <button id="verify-email-btn" style="
+                      width: 100%;
+                      padding: 14px 24px;
+                      background: var(--cypheridge-blue);
+                      color: white;
+                      border: none;
+                      border-radius: 8px;
+                      font-size: 16px;
+                      font-weight: 600;
+                      cursor: pointer;
+                      transition: all 0.2s;
+                      margin-bottom: 16px;
+                    " onmouseover="this.style.background='#004494'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(0, 86, 179, 0.3)'" 
+                       onmouseout="this.style.background='var(--cypheridge-blue)'; this.style.transform='translateY(0)'; this.style.boxShadow='none'"
+                       onclick="window.compatApp.handleEmailVerification()">
+                      Verify & Continue
+                    </button>
+                  </div>
+                  
+                  <!-- Demo Section -->
+                  <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+                    <div style="font-size: 14px; font-weight: 600; color: #64748b; margin-bottom: 12px;">
+                      Demo & Testing
+                    </div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                      <button onclick="window.compatApp.testEmail('valid@test.com', true)" style="
+                        flex: 1;
+                        padding: 8px 12px;
+                        border: 1px solid #e2e8f0;
+                        background: white;
+                        color: #64748b;
+                        border-radius: 6px;
+                        font-size: 12px;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                        min-width: 100px;
+                      " onmouseover="this.style.borderColor='var(--cypheridge-blue)'; this.style.color='var(--cypheridge-blue)'"
+                         onmouseout="this.style.borderColor='#e2e8f0'; this.style.color='#64748b'">
+                        ✅ Valid Email
+                      </button>
+                      <button onclick="window.compatApp.testEmail('invalid@test.com', false)" style="
+                        flex: 1;
+                        padding: 8px 12px;
+                        border: 1px solid #e2e8f0;
+                        background: white;
+                        color: #64748b;
+                        border-radius: 6px;
+                        font-size: 12px;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                        min-width: 100px;
+                      " onmouseover="this.style.borderColor='var(--cypheridge-blue)'; this.style.color='var(--cypheridge-blue)'"
+                         onmouseout="this.style.borderColor='#e2e8f0'; this.style.color='#64748b'">
+                        ❌ Invalid Email
+                      </button>
+                      <button onclick="window.compatApp.testEmail('admin@cyphersol.co.in', true)" style="
+                        flex: 1;
+                        padding: 8px 12px;
+                        border: 1px solid #e2e8f0;
+                        background: white;
+                        color: #64748b;
+                        border-radius: 6px;
+                        font-size: 12px;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                        min-width: 100px;
+                      " onmouseover="this.style.borderColor='var(--cypheridge-blue)'; this.style.color='var(--cypheridge-blue)'"
+                         onmouseout="this.style.borderColor='#e2e8f0'; this.style.color='#64748b'">
+                        👑 Admin Email
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <!-- Footer -->
+                  <div style="margin-top: 24px; font-size: 12px; color: #94a3b8;">
+                    Secure email verification powered by CypherEdge
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
         }
 
         getStep1HTML() {
@@ -732,7 +893,161 @@
           `;
         }
 
+        // Email verification methods
+        async handleEmailVerification() {
+          const emailInput = document.getElementById('email-input');
+          const verifyBtn = document.getElementById('verify-email-btn');
+          const statusDiv = document.getElementById('email-status');
+          
+          const email = emailInput.value.trim();
+          
+          if (!email) {
+            this.showEmailStatus('Please enter an email address', 'error');
+            return;
+          }
+          
+          if (!this.isValidEmail(email)) {
+            this.showEmailStatus('Please enter a valid email address', 'error');
+            return;
+          }
+          
+          console.log('🔐 [EMAIL_VERIFICATION] Starting verification for:', email);
+          
+          this.showEmailStatus('Verifying email with server...', 'loading');
+          this.setEmailButtonLoading(true);
+          
+          try {
+            const result = await window.electronAPI.verifyEmail(email);
+            
+            if (result.valid) {
+              this.showEmailStatus('✅ Email verified successfully!', 'success');
+              
+              console.log('🔐 [EMAIL_VERIFICATION] ✅ Email verified - proceeding to compatibility check');
+              
+              // Wait 1.5 seconds to show success, then proceed
+              setTimeout(() => {
+                this.emailVerified = true;
+                this.showEmailVerification = false;
+                this.render();
+              }, 1500);
+            } else {
+              this.showEmailStatus('❌ Email not authorized. Please contact support.', 'error');
+              this.setEmailButtonLoading(false);
+              
+              console.log('🔐 [EMAIL_VERIFICATION] ❌ Email verification failed');
+            }
+          } catch (error) {
+            console.error('🔐 [EMAIL_VERIFICATION] Error during verification:', error);
+            this.showEmailStatus('❌ Verification failed. Please check your connection and try again.', 'error');
+            this.setEmailButtonLoading(false);
+          }
+        }
+        
+        testEmail(email, expectedResult) {
+          const emailInput = document.getElementById('email-input');
+          if (emailInput) {
+            emailInput.value = email;
+            console.log(`🧪 [DEMO] Testing email: ${email} (expected: ${expectedResult ? '✅' : '❌'})`);
+          }
+        }
+        
+        isValidEmail(email) {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          return emailRegex.test(email);
+        }
+        
+        showEmailStatus(message, type) {
+          const statusDiv = document.getElementById('email-status');
+          if (!statusDiv) return;
+          
+          statusDiv.textContent = message;
+          statusDiv.className = `email-status-${type}`;
+          statusDiv.style.display = 'block';
+          
+          // Apply type-specific styles
+          switch(type) {
+            case 'success':
+              statusDiv.style.background = '#f0fdf4';
+              statusDiv.style.color = 'var(--cypheridge-success)';
+              statusDiv.style.border = '1px solid #bbf7d0';
+              break;
+            case 'error':
+              statusDiv.style.background = '#fef2f2';
+              statusDiv.style.color = 'var(--cypheridge-error)';
+              statusDiv.style.border = '1px solid #fecaca';
+              break;
+            case 'loading':
+              statusDiv.style.background = '#fffbeb';
+              statusDiv.style.color = 'var(--cypheridge-warning)';
+              statusDiv.style.border = '1px solid #fed7aa';
+              statusDiv.innerHTML = `
+                <span style="
+                  display: inline-block;
+                  width: 20px;
+                  height: 20px;
+                  border: 2px solid #f3f4f6;
+                  border-radius: 50%;
+                  border-top-color: var(--cypheridge-blue);
+                  animation: spin 1s ease-in-out infinite;
+                  margin-right: 8px;
+                  vertical-align: middle;
+                "></span>
+                ${message}
+              `;
+              break;
+          }
+        }
+        
+        setEmailButtonLoading(loading) {
+          const verifyBtn = document.getElementById('verify-email-btn');
+          if (!verifyBtn) return;
+          
+          if (loading) {
+            verifyBtn.disabled = true;
+            verifyBtn.innerHTML = `
+              <span style="
+                display: inline-block;
+                width: 20px;
+                height: 20px;
+                border: 2px solid rgba(255, 255, 255, 0.3);
+                border-radius: 50%;
+                border-top-color: white;
+                animation: spin 1s ease-in-out infinite;
+                margin-right: 8px;
+                vertical-align: middle;
+              "></span>
+              Verifying...
+            `;
+            verifyBtn.style.background = '#94a3b8';
+            verifyBtn.style.cursor = 'not-allowed';
+            verifyBtn.style.transform = 'none';
+            verifyBtn.style.boxShadow = 'none';
+          } else {
+            verifyBtn.disabled = false;
+            verifyBtn.innerHTML = 'Verify & Continue';
+            verifyBtn.style.background = 'var(--cypheridge-blue)';
+            verifyBtn.style.cursor = 'pointer';
+          }
+        }
+
         attachEventListeners() {
+          // Email verification events
+          const emailInput = document.getElementById('email-input');
+          if (emailInput) {
+            emailInput.addEventListener('keypress', (e) => {
+              if (e.key === 'Enter') {
+                this.handleEmailVerification();
+              }
+            });
+            
+            emailInput.addEventListener('input', () => {
+              const statusDiv = document.getElementById('email-status');
+              if (statusDiv) {
+                statusDiv.style.display = 'none';
+              }
+            });
+          }
+          
           const continueBtn = document.getElementById("continue-btn");
           if (continueBtn) {
             continueBtn.addEventListener("click", () => {
@@ -742,9 +1057,13 @@
 
           const launchBtn = document.getElementById("launch-btn");
           if (launchBtn) {
+            console.log('🔍 [PRODUCTION_DEBUG] Adding click listener to Launch button');
             launchBtn.addEventListener("click", () => {
+              console.log('🔍 [PRODUCTION_DEBUG] ✅ LAUNCH BUTTON CLICKED! About to call handleUserDecision("proceed")');
               this.handleUserDecision("proceed");
             });
+          } else {
+            console.log('🔍 [PRODUCTION_DEBUG] ❌ Launch button not found - cannot add click listener');
           }
 
           const viewReportBtn = document.getElementById("view-report-btn");
@@ -890,6 +1209,8 @@
           console.log('🔚 [USER DECISION] ============== FINAL USER DECISION ==============');
           console.log('🔚 [USER DECISION] Decision type:', decision);
           console.log('🔚 [USER DECISION] Timestamp:', new Date().toISOString());
+          console.log('🔚 [USER DECISION] 🔍 PRODUCTION_DEBUG: handleUserDecision called with:', decision);
+          console.log('🔚 [USER DECISION] 🔍 PRODUCTION_DEBUG: About to call electronAPI.sendUserDecision...');
           console.log('🔚 [USER DECISION] Sending to main process via electronAPI...');
           
           try {
@@ -2028,26 +2349,29 @@
                 background: white; border: 2px solid #e2e8f0; border-radius: 16px; 
                 padding: 24px; margin-bottom: 24px; text-align: center;
               ">
-                <div style="
-                  width: 160px; height: 160px; background: #f7fafc; margin: 0 auto 16px;
-                  border: 3px dashed #007bff; border-radius: 12px;
-                  display: flex; flex-direction: column; align-items: center; justify-content: center;
-                  color: #007bff; font-weight: 600;
-                ">
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: #007bff; margin-bottom: 8px;">
-                    <rect x="3" y="3" width="5" height="5"/>
-                    <rect x="3" y="16" width="5" height="5"/>
-                    <rect x="16" y="3" width="5" height="5"/>
-                    <path d="m5 5 3 3"/>
-                    <path d="m5 19 3-3"/>
-                    <path d="m19 5-3 3"/>
-                    <path d="m12 12 1 1"/>
-                    <path d="m12 18 1-1"/>
-                    <path d="m16 16-1 1"/>
-                  </svg>
-                  <span style="font-size: 14px;">QR Payment Code</span>
-                  <span style="font-size: 12px; color: #718096;">(Demo Mode)</span>
+                <!-- Company Header -->
+                <div style="margin-bottom: 16px; font-weight: 600; color: #1e293b; font-size: 14px;">
+                  CYPHERSOL FINTECH INDIA PRIVATE LIMITED
                 </div>
+                
+                <!-- VPA Display -->
+                <div style="margin-bottom: 16px; font-size: 13px; color: #4a5568; font-weight: 500;">
+                  VPA: cyphersolfint@kbl
+                </div>
+                
+                <!-- Actual QR Code -->
+                <div style="
+                  width: 200px; height: 200px; margin: 0 auto 16px;
+                  border: 1px solid #e2e8f0; border-radius: 8px;
+                  display: flex; align-items: center; justify-content: center;
+                  background: white; padding: 8px;
+                ">
+                  <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAYAAACtWK6eAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAGUlEQVR4nO3BMQEAAADCoPVPbQsvoAAAAOBuEAAAyKmF1QAAAABJRU5ErkJggg==" alt="QR Code" style="width: 180px; height: 180px; border: 1px solid #ddd;"/>
+                  <div style="position: absolute; background: white; padding: 4px 8px; border-radius: 4px; font-size: 10px; color: #666; bottom: 10px;">
+                    Scan to Pay ₹2,499
+                  </div>
+                </div>
+                
                 <div style="
                   background: #edf2f7; border: 1px solid #e2e8f0; border-radius: 8px;
                   padding: 12px; display: inline-block;

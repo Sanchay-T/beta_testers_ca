@@ -56,8 +56,8 @@ class AppModeManager {
       const config = AppModeConfigManager.getConfig();
       const isDevelopmentMode = config.developmentMode?.enabled;
 
-      if (isDevelopmentMode && config.developmentMode?.showTestingPanel) {
-        // Development mode - show testing panel instead of auto-detection
+      if (isDevelopmentMode && config.developmentMode?.showTestingPanel && !options.scenario) {
+        // Development mode - show testing panel ONLY if no specific scenario is being tested
         return await this.runDevelopmentModeFlow(config);
       }
 

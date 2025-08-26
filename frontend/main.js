@@ -1938,6 +1938,9 @@ function setupEventListeners(win) {
 }
 
 async function createWindow() {
+  log.info("🔍 [CREATEWINDOW_DEBUG] createWindow() function called");
+  log.info("🔍 [CREATEWINDOW_DEBUG] Creating new BrowserWindow with dimensions 1800x1000");
+  
   win = new BrowserWindow({
     width: 1800,
     height: 1000,
@@ -1968,6 +1971,8 @@ async function createWindow() {
   }
 
   setupEventListeners(win);
+  log.info("🔍 [CREATEWINDOW_DEBUG] Event listeners setup completed");
+  log.info("🔍 [CREATEWINDOW_DEBUG] About to set up window.on('close') handler");
 
   win.on("close", (event) => {
     log.info("Close event triggered");
@@ -2407,10 +2412,106 @@ app.whenReady().then(async () => {
     commandLineArgs: process.argv,
   });
 
+  log.info("🔍 [CREATEWINDOW_DEBUG] Main window setup nearly complete - about to register IPC handlers");
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // 🔐 EMAIL VERIFICATION & AUTO-REPORTING IPC HANDLERS
+  // ═══════════════════════════════════════════════════════════════════════════════
+  
+  let verifiedEmail = null;
+  
+  // Store verified email for compatibility reporting
+  ipcMain.handle("email-verification:store", async (event, email) => {
+    try {
+      verifiedEmail = email;
+      log.info("🔐 Email stored for compatibility reporting:", email);
+      return { success: true };
+    } catch (error) {
+      log.error("❌ Failed to store verified email:", error);
+      return { success: false, error: error.message };
+    }
+  });
+  
+  // Start compatibility check after email verification
+  ipcMain.handle("email-verification:start-compatibility", async () => {
+    try {
+      log.info("🔐 Starting compatibility check after email verification");
+      
+      // Close email verification window and start compatibility check
+      if (win && !win.isDestroyed()) {
+        win.close();
+      }
+      
+      // Start the compatibility checker
+      const { SystemCompatibilityChecker } = require("./SystemCompatibilityChecker");
+      const compatChecker = new SystemCompatibilityChecker();
+      
+      // Run compatibility check (this will create its own window)
+      const compatResult = await compatChecker.runFullCheck();
+      
+      return { success: true, result: compatResult };
+    } catch (error) {
+      log.error("❌ Failed to start compatibility check:", error);
+      return { success: false, error: error.message };
+    }
+  });
+  
+  // Auto-report compatibility results to server
+  ipcMain.handle("compatibility:auto-report", async (event, compatibilityResult) => {
+    try {
+      log.info("📊 Auto-reporting compatibility results to server");
+      
+      const reportData = {
+        timestamp: new Date().toISOString(),
+        userEmail: verifiedEmail,
+        systemInfo: {
+          hostname: require('os').hostname(),
+          platform: process.platform,
+          arch: process.arch,
+          nodeVersion: process.version,
+          electronVersion: process.versions.electron,
+          appVersion: app.getVersion()
+        },
+        compatibilityResult: compatibilityResult,
+        modeDetection: compatibilityResult.modeDetection || null
+      };
+      
+      // 🔧 DEMO - Replace with real API endpoint
+      console.log("📊 [AUTO_REPORT] Report data prepared:", reportData);
+      
+      /* 
+      // 🚀 PRODUCTION - Replace with real server call:
+      const response = await fetch('https://api.cyphersol.co.in/compatibility-report', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(reportData)
+      });
+      
+      if (response.ok) {
+        log.info("✅ Compatibility report sent to server successfully");
+      } else {
+        throw new Error(`Server responded with status: ${response.status}`);
+      }
+      */
+      
+      // Simulate successful report
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      log.info("✅ Compatibility report sent to server successfully (demo)");
+      
+      return { success: true, reportData };
+    } catch (error) {
+      log.error("❌ Failed to send compatibility report:", error);
+      return { success: false, error: error.message };
+    }
+  });
+
   // ═══════════════════════════════════════════════════════════════════════════════
   // 🧪 REGISTER APP MODE TESTING IPC HANDLERS (Before System Compatibility Check)
   // ═══════════════════════════════════════════════════════════════════════════════
   
+  log.info("🔍 [CREATEWINDOW_DEBUG] Registering app-mode IPC handlers");
   ipcMain.handle("app-mode:load-config", async () => {
     try {
       const configPath = path.join(__dirname, "compatibility", "config", "appModeConfig.json");
@@ -2580,6 +2681,19 @@ app.whenReady().then(async () => {
       canProceed: compatResult.canProceed,
     });
     
+    // 🔍 DEBUG: Log mode detection result from compatibility check
+    if (compatResult.modeDetection) {
+      log.info("🎯 [MODE_DEBUG] Mode detection result from compatibility:", {
+        determinedMode: compatResult.modeDetection.determinedMode,
+        canProceed: compatResult.modeDetection.canProceed,
+        confidence: compatResult.modeDetection.confidence,
+        userMessage: compatResult.modeDetection.userMessage,
+        nextSteps: compatResult.modeDetection.nextSteps
+      });
+    } else {
+      log.warn("⚠️ [MODE_DEBUG] No mode detection result from compatibility check");
+    }
+    
     if (compatResult.results.warnings.length > 0) {
       log.warn("⚠️ Compatibility warnings detected - proceeding with fallback configuration", {
         warnings: compatResult.results.warnings.map(w => w.test),
@@ -2598,6 +2712,8 @@ app.whenReady().then(async () => {
 
   // 🎯 STEP 0: CREATE SPLASH SCREEN FIRST
   log.info("📋 INITIALIZATION STEP 0: SPLASH SCREEN CREATION");
+  log.info("🔍 [STARTUP_DEBUG] About to create splash screen - checking mode detection status");
+  
   try {
     const splashStartTime = Date.now();
     createSplashWindow();
@@ -2606,8 +2722,10 @@ app.whenReady().then(async () => {
       duration: splashEndTime - splashStartTime,
       splashPath: path.join(__dirname, "/react-app/splash.html"),
     });
+    log.info("🔍 [STARTUP_DEBUG] Splash screen creation completed - continuing with startup");
   } catch (error) {
     log.error("❌ Splash screen creation failed:", error);
+    log.error("🔍 [STARTUP_DEBUG] Splash screen failed, but continuing anyway");
     // Continue anyway - splash is not critical
   }
 
@@ -2819,17 +2937,24 @@ app.whenReady().then(async () => {
 
     // 6. Main Window Creation
     log.info("📋 INITIALIZATION STEP 8: MAIN WINDOW CREATION");
+    log.info("🔍 [STARTUP_DEBUG] About to create main window - checking app state");
+    
     try {
       const windowStartTime = Date.now();
+      log.info("🔍 [STARTUP_DEBUG] Calling createWindow() function...");
       createWindow();
       const windowEndTime = Date.now();
       log.info("✅ Main window created successfully", {
         duration: windowEndTime - windowStartTime,
       });
+      log.info("🔍 [STARTUP_DEBUG] Main window creation completed - should show window soon");
     } catch (error) {
       log.error("❌ Main window creation failed:", error);
+      log.error("🔍 [STARTUP_DEBUG] CRITICAL: Main window creation failed - this is likely why no auto-launch");
       throw error;
     }
+    
+    log.info("🔍 [STARTUP_DEBUG] ✅ ENTIRE STARTUP SEQUENCE COMPLETED SUCCESSFULLY");
 
     // 7. Window Ready Event Setup
     win.once("ready-to-show", () => {
