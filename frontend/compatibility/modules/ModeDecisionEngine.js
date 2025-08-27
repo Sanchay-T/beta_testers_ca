@@ -22,52 +22,92 @@ class ModeDecisionEngine {
   async determineAppMode(options = {}) {
     this.activeScenario = options.scenario;
     const startTime = Date.now();
-    this.logger?.info('MODE_DECISION', 'Starting app mode determination process');
+    this.logger?.info('MODE_DECISION', '=== STARTING MODE DETERMINATION ===');
+    this.logger?.info('MODE_DECISION', 'Input options:', {
+      scenario: options.scenario,
+      hasOverrides: !!options.overrides,
+      timestamp: new Date().toISOString()
+    });
     
     try {
       // Step 1: Get system specifications
       this.updateProgress('Detecting system specifications...', 10);
+      this.logger?.info('MODE_DECISION', 'Getting system specifications...');
       const systemSpecs = await this.hardwareDetector.getSystemSpecs();
+      
+      this.logger?.info('MODE_DECISION', 'System specs detected:', {
+        ram: systemSpecs.ram?.total || 'unknown',
+        cpu: systemSpecs.cpu?.class || 'unknown',
+        overridden: systemSpecs.overridden || false
+      });
 
       // Step 2: Apply forced mode override if set (for testing)
       const config = AppModeConfigManager.getConfig();
       const forcedMode = config.testingOverrides?.forceMode;
       
-      this.logger?.info('MODE_DECISION', 'Testing override check', {
+      this.logger?.info('MODE_DECISION', '[OVERRIDE_CHECK] Testing overrides:', {
         forcedMode: forcedMode,
         developmentMode: config.developmentMode?.enabled,
         activeScenario: this.activeScenario,
-        testingOverrides: config.testingOverrides
+        testingOverrides: config.testingOverrides,
+        configVersion: config.version
       });
       
       if (forcedMode && config.developmentMode?.enabled) {
-        this.logger?.info('MODE_DECISION', `Applying forced mode override: ${forcedMode}`);
+        this.logger?.info('MODE_DECISION', `[FORCED_MODE] Applying override: ${forcedMode}`);
+        this.logger?.info('MODE_DECISION', '[FORCED_MODE] Creating forced result...');
         return this.createForcedResult(forcedMode, systemSpecs, startTime);
       }
 
       // Step 2.5: Apply scenario-based mode forcing (for testing scenarios)
+      this.logger?.info('MODE_DECISION', '[SCENARIO_CHECK] Checking for scenario-based mode...');
       const scenarioMode = this.checkScenarioBasedMode(config);
+      
       if (scenarioMode && config.developmentMode?.enabled) {
-        this.logger?.info('MODE_DECISION', `Applying scenario-based mode: ${scenarioMode}`);
+        this.logger?.info('MODE_DECISION', `[SCENARIO_MODE] Applying scenario-based mode: ${scenarioMode}`);
+        this.logger?.info('MODE_DECISION', '[SCENARIO_MODE] Source scenario:', this.activeScenario);
         return this.createForcedResult(scenarioMode, systemSpecs, startTime);
+      } else {
+        this.logger?.info('MODE_DECISION', '[SCENARIO_CHECK] No scenario mode to apply', {
+          scenarioMode,
+          developmentMode: config.developmentMode?.enabled
+        });
       }
 
       // Step 3: Check hardware requirements for full mode
       this.updateProgress('Checking hardware requirements...', 20);
+      this.logger?.info('MODE_DECISION', '[HARDWARE_CHECK] Starting hardware requirements check...');
       const hardwareCheck = await this.checkHardwareRequirements(systemSpecs);
+      
+      this.logger?.info('MODE_DECISION', '[HARDWARE_CHECK] Results:', {
+        meetsRequirements: hardwareCheck.meetsFullModeRequirements,
+        ram: hardwareCheck.ram,
+        cpu: hardwareCheck.cpu
+      });
 
       // Step 4: Apply decision logic
+      this.logger?.info('MODE_DECISION', '[DECISION_LOGIC] Applying decision rules...');
       const decision = await this.applyDecisionLogic(hardwareCheck, systemSpecs);
+      
+      this.logger?.info('MODE_DECISION', '[DECISION_LOGIC] Decision made:', {
+        mode: decision.mode,
+        confidence: decision.confidence,
+        reason: decision.reason
+      });
 
       // Step 5: Finalize result
+      this.logger?.info('MODE_DECISION', '[FINALIZE] Creating final result...');
       const finalResult = this.finalizeDecision(decision, startTime);
 
       this.decisionResult = finalResult;
-      this.logger?.info('MODE_DECISION', 'Mode determination completed', {
+      this.logger?.info('MODE_DECISION', '=== MODE DETERMINATION COMPLETED ===');
+      this.logger?.info('MODE_DECISION', 'Summary:', {
         determinedMode: finalResult.mode,
-        duration: finalResult.duration,
+        confidence: finalResult.confidence,
+        duration: `${finalResult.duration}ms`,
         hardwareMeetsRequirements: finalResult.analysis.hardware.meetsFullModeRequirements,
-        scanTestPassed: finalResult.analysis.scanTest?.passed
+        scanTestPassed: finalResult.analysis.scanTest?.passed,
+        decisionPath: finalResult.analysis.decisionPath
       });
 
       return finalResult;
@@ -135,17 +175,24 @@ class ModeDecisionEngine {
    * @returns {Promise<Object>} Decision logic result
    */
   async applyDecisionLogic(hardwareCheck, systemSpecs) {
-    this.logger?.info('MODE_DECISION', 'Applying mode decision logic');
+    this.logger?.info('MODE_DECISION', '[LOGIC] Applying decision rules...');
+    this.logger?.info('MODE_DECISION', '[LOGIC] Hardware status:', {
+      meetsRequirements: hardwareCheck.meetsFullModeRequirements,
+      ram: `${hardwareCheck.ram.actual}GB (needs ${hardwareCheck.ram.required}GB)`,
+      cpu: `${hardwareCheck.cpu.actual} (needs ${hardwareCheck.cpu.required}+)`
+    });
 
     // Core Logic: IF (RAM >= 8GB AND CPU >= i5) → Test Scan → SCAN/UNSCAN ELSE → HYBRID
     if (hardwareCheck.meetsFullModeRequirements) {
       this.updateProgress('Hardware meets requirements, testing scan performance...', 40);
+      this.logger?.info('MODE_DECISION', '[LOGIC] Hardware sufficient - running scan test...');
       
       // Hardware is good enough, now test scan performance
       const scanTestResult = await this.runScanPerformanceTest();
       
       if (scanTestResult.passed) {
         // Scan test passed -> SCAN MODE
+        this.logger?.info('MODE_DECISION', '[LOGIC] Scan test PASSED -> SCAN MODE');
         return {
           mode: 'SCAN',
           reason: 'Hardware meets requirements and scan test passed',
@@ -156,6 +203,7 @@ class ModeDecisionEngine {
         };
       } else {
         // Scan test failed -> UNSCAN MODE
+        this.logger?.info('MODE_DECISION', '[LOGIC] Scan test FAILED -> UNSCAN MODE');
         return {
           mode: 'UNSCAN', 
           reason: 'Hardware meets requirements but scan test failed/slow',
@@ -168,6 +216,7 @@ class ModeDecisionEngine {
     } else {
       // Hardware doesn't meet requirements -> HYBRID MODE
       this.updateProgress('Hardware below requirements, hybrid mode required...', 70);
+      this.logger?.info('MODE_DECISION', '[LOGIC] Hardware insufficient -> HYBRID MODE');
       
       return {
         mode: 'HYBRID',
@@ -445,7 +494,12 @@ class ModeDecisionEngine {
    * @returns {string|null} Forced mode based on scenario, or null
    */
   checkScenarioBasedMode(config) {
+    this.logger?.info('MODE_DECISION', '[SCENARIO_MAP] Checking scenario mapping...', {
+      activeScenario: this.activeScenario
+    });
+    
     if (!this.activeScenario) {
+      this.logger?.info('MODE_DECISION', '[SCENARIO_MAP] No active scenario');
       return null;
     }
 
@@ -456,21 +510,29 @@ class ModeDecisionEngine {
       'current': null // Use actual detection for current system
     };
 
+    this.logger?.info('MODE_DECISION', '[SCENARIO_MAP] Default mappings:', scenarioModeMap);
+
     // Also check the config-defined scenarios
     const configScenarios = config.testing?.scenarios;
     if (configScenarios) {
+      this.logger?.info('MODE_DECISION', '[SCENARIO_MAP] Config has custom scenarios:', Object.keys(configScenarios));
+      
       for (const [scenarioKey, scenarioConfig] of Object.entries(configScenarios)) {
         if (this.activeScenario === scenarioKey || this.activeScenario === scenarioKey.replace('PC', '')) {
+          this.logger?.info('MODE_DECISION', '[SCENARIO_MAP] Found config match:', {
+            scenarioKey,
+            expectedMode: scenarioConfig.expectedMode
+          });
           return scenarioConfig.expectedMode;
         }
       }
     }
 
     const forcedMode = scenarioModeMap[this.activeScenario];
-    this.logger?.info('MODE_DECISION', 'Scenario-based mode check', {
+    this.logger?.info('MODE_DECISION', '[SCENARIO_MAP] Final result:', {
       activeScenario: this.activeScenario,
       forcedMode: forcedMode,
-      availableScenarios: Object.keys(scenarioModeMap)
+      source: forcedMode ? 'default_map' : 'none'
     });
 
     return forcedMode;

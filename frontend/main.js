@@ -2469,14 +2469,28 @@ app.whenReady().then(async () => {
 
   ipcMain.handle("app-mode:run-detection", async (event, options = {}) => {
     try {
-      log.info("🧪 App mode detection requested from compatibility window", options);
+      log.info("=== APP MODE DETECTION IPC HANDLER ===");
+      log.info("🧪 Detection request received:", {
+        scenario: options.scenario,
+        hasOverrides: !!options.overrides,
+        timestamp: new Date().toISOString()
+      });
+      
       const { getSharedAppModeManager } = require("./compatibility/SharedAppModeManager");
       const manager = getSharedAppModeManager(log, null);
       
       if (options.scenario && options.scenario !== 'current') {
+        log.info("[IPC] Processing test scenario:", options.scenario);
+        
         // Load test scenario with proper mapping
         const configPath = path.join(__dirname, "compatibility", "config", "appModeConfig.json");
         const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        
+        log.info("[IPC] Loaded config:", {
+          developmentMode: config.developmentMode?.enabled,
+          hasTestScenarios: !!config.testing?.scenarios,
+          availableScenarios: Object.keys(config.testing?.scenarios || {})
+        });
         
         // Map UI scenario names to config scenario names
         const scenarioMapping = {
@@ -2488,23 +2502,43 @@ app.whenReady().then(async () => {
         const mappedScenario = scenarioMapping[options.scenario] || options.scenario;
         const scenario = config.testing.scenarios[mappedScenario];
         
+        log.info("[IPC] Scenario mapping:", {
+          original: options.scenario,
+          mapped: mappedScenario,
+          found: !!scenario
+        });
+        
         if (scenario) {
+          log.info("[IPC] Scenario found in config:", {
+            name: scenario.name,
+            expectedMode: scenario.expectedMode,
+            hardwareProfile: scenario.hardwareProfile
+          });
+          
           // Override test scenario in config
           const originalOverrides = config.testingOverrides;
           config.testingOverrides = {
             ...originalOverrides,
-            forceRAM: scenario.ram,
-            forceCPU: scenario.cpu,
-            forceScanResult: scenario.scanTime !== null ? 'pass' : 'fail',
+            forceRAM: scenario.hardwareProfile?.ram,
+            forceCPU: scenario.hardwareProfile?.processor,
+            forceScanResult: 'pass',  // Always pass scan for test scenarios
             forceMode: scenario.expectedMode
           };
+          
+          log.info("[IPC] Creating testing overrides:", {
+            forceRAM: config.testingOverrides.forceRAM,
+            forceCPU: config.testingOverrides.forceCPU,
+            forceScanResult: config.testingOverrides.forceScanResult,
+            forceMode: config.testingOverrides.forceMode
+          });
           
           // Temporarily save scenario config
           const tempConfigPath = path.join(__dirname, "compatibility", "config", "temp_appModeConfig.json");
           fs.writeFileSync(tempConfigPath, JSON.stringify(config, null, 2));
+          log.info("[IPC] Temp config created at:", tempConfigPath);
           
           // Debug logging to verify scenario override
-          log.info("🧪 DEBUG: Scenario overrides applied", {
+          log.info("🧪 [IPC] Final scenario configuration:", {
             scenario: options.scenario,
             mappedScenario: mappedScenario,
             expectedMode: scenario.expectedMode,
@@ -2515,30 +2549,59 @@ app.whenReady().then(async () => {
           });
           
           // Run detection with scenario
-          const result = await manager.runModeDetection({ scenario: options.scenario });
+          log.info("[IPC] Starting mode detection with mapped scenario:", mappedScenario);
+          const result = await manager.runModeDetection({ scenario: mappedScenario });
+          
+          log.info("[IPC] Detection completed:", {
+            success: result.success,
+            determinedMode: result.determinedMode,
+            canProceed: result.canProceed,
+            forced: result.modeDecision?.forced
+          });
           
           // Clean up temp config
           if (fs.existsSync(tempConfigPath)) {
             fs.unlinkSync(tempConfigPath);
+            log.info("[IPC] Temp config cleaned up");
           }
           
+          log.info("=== APP MODE DETECTION IPC COMPLETE ===");
           return result;
+        } else {
+          log.warn("[IPC] Scenario not found in config:", mappedScenario);
         }
       }
       
       // Run with current system/overrides
       if (options.overrides) {
+        log.info("[IPC] Applying manual overrides:", options.overrides);
+        
         // Update config with overrides
         const configPath = path.join(__dirname, "compatibility", "config", "appModeConfig.json");
         const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
         config.testingOverrides = { ...config.testingOverrides, ...options.overrides };
         fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+        
+        log.info("[IPC] Config updated with overrides");
       }
       
-      return await manager.runModeDetection({ scenario: options.scenario || 'current' });
+      log.info("[IPC] Running standard detection with scenario:", options.scenario || 'current');
+      const result = await manager.runModeDetection({ scenario: options.scenario || 'current' });
+      
+      log.info("[IPC] Standard detection completed:", {
+        success: result.success,
+        determinedMode: result.determinedMode,
+        canProceed: result.canProceed
+      });
+      
+      log.info("=== APP MODE DETECTION IPC COMPLETE ===");
+      return result;
       
     } catch (error) {
-      log.error("App mode detection failed:", error);
+      log.error("[IPC ERROR] App mode detection failed:", {
+        message: error.message,
+        stack: error.stack
+      });
       throw new Error(`Detection failed: ${error.message}`);
     }
   });
