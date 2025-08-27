@@ -293,4 +293,15 @@ contextBridge.exposeInMainWorld("electron", {
     loadConfig: () => ipcRenderer.invoke("app-mode:load-config"),
     runDetection: (options) => ipcRenderer.invoke("app-mode:run-detection", options),
   },
+
+  // Email verification
+  emailVerification: {
+    submitEmail: (data) => ipcRenderer.invoke("email:submit", data),
+  },
+
+  // Window controls
+  window: {
+    minimize: () => ipcRenderer.send("window:minimize"),
+    close: () => ipcRenderer.send("window:close"),
+  },
 });

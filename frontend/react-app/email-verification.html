@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Email Verification - CypherEdge</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+          "Oxygen", "Ubuntu", "Cantarell", sans-serif;
+        background: #ffffff;
+        overflow: hidden;
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+      }
+      
+      * {
+        box-sizing: border-box;
+      }
+
+      /* Window Controls */
+      .window-controls {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        display: flex;
+        gap: 8px;
+        z-index: 100;
+      }
+
+      .window-control {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        transition: opacity 0.2s;
+      }
+
+      .window-control:hover {
+        opacity: 0.7;
+      }
+
+      .minimize-btn {
+        background: #ffbd2e;
+        color: #995700;
+      }
+
+      .close-btn {
+        background: #ff5f57;
+        color: #8b0000;
+      }
+
+      /* Main Container */
+      .email-container {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 40px;
+        max-width: 400px;
+        width: 100%;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        border: 1px solid #e1e5e9;
+      }
+
+      .logo-section {
+        margin-bottom: 30px;
+      }
+
+      .logo {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #0056b3 0%, #007bff 100%);
+        border-radius: 12px;
+        margin: 0 auto 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 24px;
+        font-weight: bold;
+      }
+
+      .title {
+        font-size: 24px;
+        font-weight: 600;
+        color: #2d3748;
+        margin: 0 0 8px 0;
+      }
+
+      .subtitle {
+        font-size: 14px;
+        color: #718096;
+        margin: 0 0 30px 0;
+        line-height: 1.4;
+      }
+
+      /* Form Styles */
+      .email-form {
+        width: 100%;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+        text-align: left;
+      }
+
+      .form-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 6px;
+      }
+
+      .form-input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #e1e5e9;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        background: #ffffff;
+      }
+
+      .form-input:focus {
+        outline: none;
+        border-color: #0056b3;
+        box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1);
+      }
+
+      .form-input:invalid {
+        border-color: #dc2626;
+      }
+
+      /* Button Styles */
+      .button-group {
+        display: flex;
+        gap: 12px;
+        margin-top: 30px;
+      }
+
+      .btn {
+        flex: 1;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #0056b3 0%, #007bff 100%);
+        color: white;
+      }
+
+      .btn-primary:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 86, 179, 0.3);
+      }
+
+      .btn-primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .btn-secondary {
+        background: #f8f9fa;
+        color: #6c757d;
+        border: 1px solid #dee2e6;
+      }
+
+      .btn-secondary:hover {
+        background: #e9ecef;
+        transform: translateY(-1px);
+      }
+
+      /* Loading State */
+      .loading-spinner {
+        display: none;
+        width: 16px;
+        height: 16px;
+        border: 2px solid transparent;
+        border-top: 2px solid currentColor;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-right: 8px;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      .loading .loading-spinner {
+        display: inline-block;
+      }
+
+      .loading .btn-text {
+        opacity: 0.7;
+      }
+
+      /* Status Messages */
+      .status-message {
+        margin-top: 15px;
+        padding: 10px 12px;
+        border-radius: 6px;
+        font-size: 13px;
+        display: none;
+      }
+
+      .status-message.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+        display: block;
+      }
+
+      .status-message.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Window Controls -->
+    <div class="window-controls">
+      <button class="window-control minimize-btn" onclick="minimizeWindow()" title="Minimize">−</button>
+      <button class="window-control close-btn" onclick="closeWindow()" title="Close">×</button>
+    </div>
+
+    <!-- Email Verification Container -->
+    <div class="email-container">
+      <!-- Logo Section -->
+      <div class="logo-section">
+        <div class="logo">C</div>
+        <h1 class="title">Welcome to CypherEdge</h1>
+        <p class="subtitle">Please verify your email address to continue</p>
+      </div>
+
+      <!-- Email Form -->
+      <form class="email-form" id="emailForm">
+        <div class="form-group">
+          <label for="email" class="form-label">Email Address</label>
+          <input 
+            type="email" 
+            id="email" 
+            name="email" 
+            class="form-input" 
+            placeholder="Enter your email address"
+            required
+          />
+        </div>
+
+        <div class="button-group">
+          <button type="button" class="btn btn-secondary" onclick="closeWindow()">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary" id="submitBtn">
+            <span class="loading-spinner"></span>
+            <span class="btn-text">Continue</span>
+          </button>
+        </div>
+
+        <div class="status-message" id="statusMessage"></div>
+      </form>
+    </div>
+
+    <script>
+      // Email Verification Logic
+      let isSubmitting = false;
+
+      // Form submission handler
+      document.getElementById('emailForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        console.log('📧 [DEBUG] Form submission triggered');
+        
+        if (isSubmitting) {
+          console.log('📧 [DEBUG] Already submitting, ignoring');
+          return;
+        }
+        
+        const emailInput = document.getElementById('email');
+        const submitBtn = document.getElementById('submitBtn');
+        const statusMessage = document.getElementById('statusMessage');
+        
+        const email = emailInput.value.trim();
+        console.log('📧 [DEBUG] Email entered:', email);
+        
+        // Basic email validation
+        if (!email || !isValidEmail(email)) {
+          console.log('📧 [DEBUG] Email validation failed');
+          showStatus('Please enter a valid email address', 'error');
+          return;
+        }
+        
+        console.log('📧 [DEBUG] Email validation passed');
+
+        // Start loading state
+        isSubmitting = true;
+        submitBtn.classList.add('loading');
+        submitBtn.disabled = true;
+        hideStatus();
+
+        try {
+          // Check if electron API is available
+          if (!window.electron || !window.electron.emailVerification) {
+            throw new Error('Electron API not available');
+          }
+
+          // Submit email for verification
+          console.log('Submitting email:', email);
+          const result = await window.electron.emailVerification.submitEmail({ email });
+          console.log('Result received:', result);
+          
+          if (result && result.success) {
+            showStatus('Email verification successful!', 'success');
+            
+            // Close window after short delay
+            setTimeout(() => {
+              window.close();
+            }, 1000);
+          } else {
+            showStatus(result?.message || 'Verification failed. Please try again.', 'error');
+          }
+        } catch (error) {
+          console.error('Email verification error:', error);
+          showStatus(`Error: ${error.message}`, 'error');
+        } finally {
+          // Reset loading state
+          isSubmitting = false;
+          submitBtn.classList.remove('loading');
+          submitBtn.disabled = false;
+        }
+      });
+
+      // Email validation helper
+      function isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+      }
+
+      // Status message helpers
+      function showStatus(message, type) {
+        const statusElement = document.getElementById('statusMessage');
+        statusElement.textContent = message;
+        statusElement.className = `status-message ${type}`;
+      }
+
+      function hideStatus() {
+        const statusElement = document.getElementById('statusMessage');
+        statusElement.style.display = 'none';
+      }
+
+      // Window control functions
+      function minimizeWindow() {
+        if (window.electron && window.electron.window) {
+          window.electron.window.minimize();
+        }
+      }
+
+      function closeWindow() {
+        if (confirm('Are you sure you want to cancel email verification?')) {
+          window.close();
+        }
+      }
+
+      // Auto-focus email input
+      document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('email').focus();
+      });
+
+      // Enter key handling for better UX
+      document.getElementById('email').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !isSubmitting) {
+          document.getElementById('emailForm').dispatchEvent(new Event('submit'));
+        }
+      });
+    </script>
+  </body>
+</html>

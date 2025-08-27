@@ -177,8 +177,7 @@ frontend/ats_db.sqlite3
 
 frontend/logs/
 gatewayServer/logs/
-frontend/gatewayServer/logs/gateway/gateway_20250508.txt
-frontend/gatewayServer/logs/gateway/gateway_20250509.txt
+frontend/gatewayServer/logs/gateway/*.txt
 
 # Heavy files and executables (to avoid LFS issues)
 frontend/gatewayServer/gatewayService.exe

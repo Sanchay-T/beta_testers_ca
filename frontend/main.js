@@ -2108,6 +2108,9 @@ async function createWindow() {
   registerReportHandlers(TMP_DIR);
   registerAuthHandlers(app.getPath("userData"));
   log.info("🔐 Auth handlers registered (including license:check)");
+
+  // Email verification IPC handler registered earlier in startup sequence
+
   registerOpportunityToEarnIpc();
   registerTallyIpc();
   registerVoucherIpc();
@@ -2606,6 +2609,20 @@ app.whenReady().then(async () => {
       throw new Error(`Detection failed: ${error.message}`);
     }
   });
+
+  // Register email verification IPC handler BEFORE compatibility check
+  ipcMain.handle("email:submit", async (event, data) => {
+    const { email } = data;
+    log.info("📧 [EMAIL] User submitted email:", email);
+    
+    // For now, always return success (pass-through as requested)
+    return {
+      success: true,
+      email: email,
+      message: "Email received successfully"
+    };
+  });
+  log.info("📧 Email verification IPC handler registered");
 
   // 🔍 STEP -1: SYSTEM COMPATIBILITY CHECK (CRITICAL FIRST STEP)
   log.info("📋 INITIALIZATION STEP -1: SYSTEM COMPATIBILITY CHECK");
