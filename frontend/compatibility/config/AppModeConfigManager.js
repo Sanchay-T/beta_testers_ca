@@ -82,9 +82,34 @@ class AppModeConfigManager {
     // Reload if path changed or not loaded yet
     if (!this.isLoaded || this.configPath !== currentBestPath) {
       this.configPath = currentBestPath;
-      return this.loadConfig();
+      this.loadConfig();
     }
-    return this.config;
+
+    // Create a copy of the config to avoid modifying the original
+    const config = JSON.parse(JSON.stringify(this.config));
+    
+    // Override development mode based on NODE_ENV
+    const isProduction = process.env.NODE_ENV === 'production';
+    if (isProduction) {
+      // Force disable development mode in production
+      config.developmentMode = {
+        enabled: false,
+        showTestingPanel: false,
+        testingOverrides: {}
+      };
+      
+      // Clear any testing overrides to ensure real hardware detection
+      config.testingOverrides = {};
+      
+      console.log('🚀 [CONFIG] NODE_ENV=production detected - disabling development features');
+      console.log('🚀 [CONFIG] Testing panel, scenarios, and overrides disabled');
+      console.log('🚀 [CONFIG] Using real hardware detection for mode classification');
+    } else {
+      // Development mode - use config as-is
+      console.log('🧪 [CONFIG] NODE_ENV=development - testing features enabled');
+    }
+    
+    return config;
   }
 
   /**
