@@ -66,14 +66,24 @@ class AppModeManager {
         isDevelopmentMode,
         showTestingPanel: config.developmentMode?.showTestingPanel,
         hasTestScenario,
-        scenario: options.scenario
+        skipTestingPanel: options.skipTestingPanel,
+        scenario: options.scenario,
+        source: options.source
       });
 
-      // Only show testing panel if no specific test scenario is selected
-      if (isDevelopmentMode && config.developmentMode?.showTestingPanel && !hasTestScenario) {
+      // Only show testing panel if no specific test scenario is selected and not explicitly skipped
+      if (isDevelopmentMode && config.developmentMode?.showTestingPanel && !hasTestScenario && !options.skipTestingPanel) {
         this.logger?.info('APP_MODE_MANAGER', 'Showing testing panel (no specific scenario selected)');
         // Development mode - show testing panel instead of auto-detection
         return await this.runDevelopmentModeFlow(config);
+      }
+
+      // Log when we skip the testing panel
+      if (options.skipTestingPanel) {
+        this.logger?.info('APP_MODE_MANAGER', 'Skipping testing panel due to skipTestingPanel flag', {
+          source: options.source,
+          reason: 'User already decided to proceed'
+        });
       }
 
       // If we have a test scenario, proceed with detection
@@ -262,13 +272,16 @@ class AppModeManager {
       const proceedHandler = () => {
         const lastDecision = this.storageManager.loadLastModeDecision();
         if (lastDecision) {
+          // For testing scenarios, we need to return the mode result 
+          // but let the compatibility.html handle the actual UI flows
           resolve({
             success: true,
             determinedMode: lastDecision.determinedMode,
-            canProceed: true,
+            canProceed: true, // Always proceed for testing to show UI flows
             developmentMode: true,
             lastDecision: lastDecision,
             userMessage: `🧪 Testing Mode: ${lastDecision.determinedMode} selected`,
+            testingMode: true, // Flag to indicate this is from testing
             timestamp: new Date().toISOString()
           });
         } else {

@@ -107,7 +107,10 @@ class SystemCompatibilityChecker {
               sessionAge: this.appModeManager ? Date.now() - this.appModeManager.sessionStartTime : null
             });
             
-            modeDetectionResult = await this.appModeManager.runModeDetection();
+            modeDetectionResult = await this.appModeManager.runModeDetection({
+              skipTestingPanel: true,  // Skip testing panel since user already clicked "Launch CypherEdge"
+              source: 'compatibility_proceed'  // Context for why we're running detection
+            });
           }
           
           this.logger.info('MODE_DETECTION_COMPLETE', 'App mode detection completed', {

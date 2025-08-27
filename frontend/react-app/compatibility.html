@@ -263,7 +263,7 @@
                         <div style="width: 32px; height: 32px; border-radius: 50%; background: #e2e8f0; color: #94a3b8; display: flex; align-items: center; justify-content: center; font-weight: 600;">3</div>
                       </div>
                     </div>
-                    <div style="color: #64748b; font-size: 14px;">Step 1 of 3</div>
+                    <div style="color: #64748b; font-size: 14px;">System Check</div>
                   </div>
 
                   <!-- Main Content -->
@@ -357,7 +357,7 @@
                         <div style="width: 40px; height: 40px; border-radius: 50%; background: #e2e8f0; color: #94a3b8; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 16px;">3</div>
                       </div>
                     </div>
-                    <div style="color: #64748b; font-size: 14px; font-weight: 500;">Step 2 of 3 • Running System Validation</div>
+                    <div style="color: #64748b; font-size: 14px; font-weight: 500;">Preparing Application</div>
                   </div>
 
                   <!-- Main Status Card -->
@@ -458,7 +458,7 @@
             },
             {
               name: "Basic Port Availability",
-              tests: ["Python Backend Port (7500)", "Gateway Service Port (7890)", "FastAPI Health Check"]
+              tests: ["Application Services", "Security Services", "Service Health Check"]
             },
             {
               name: "File System Tests", 
@@ -466,7 +466,7 @@
             },
             {
               name: "API Dependencies",
-              tests: ["FastAPI Dependencies", "PDF Processing Capability"]
+              tests: ["Application Dependencies", "Document Processing Capability"]
             }
           ];
 
@@ -519,7 +519,7 @@
                         <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--cypheridge-success); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">3</div>
                       </div>
                     </div>
-                    <div style="color: #64748b; font-size: 14px;">Step 3 of 3</div>
+                    <div style="color: #64748b; font-size: 14px;">Ready to Launch</div>
                   </div>
 
                   <!-- Main Content -->
@@ -890,10 +890,11 @@
           console.log('🔚 [USER DECISION] ============== FINAL USER DECISION ==============');
           console.log('🔚 [USER DECISION] Decision type:', decision);
           console.log('🔚 [USER DECISION] Timestamp:', new Date().toISOString());
-          console.log('🔚 [USER DECISION] Sending to main process via electronAPI...');
+          console.log('🔚 [USER DECISION] Sending to main process via IPC...');
           
           try {
-            await window.electronAPI.sendUserDecision(decision);
+            const { ipcRenderer } = require('electron');
+            await ipcRenderer.invoke('compatibility:user-decision', decision);
             console.log('🔚 [USER DECISION] Successfully sent to main process');
             
             if (decision === 'proceed') {
@@ -905,6 +906,17 @@
             }
           } catch (error) {
             console.error('🔚 [USER DECISION ERROR] Failed to send decision:', error);
+            // Show immediate feedback even if IPC fails
+            if (decision === 'proceed') {
+              console.log('🔚 [USER DECISION] PROCEEDING TO LAUNCH CYPHEREDGE (FALLBACK)');
+            }
+          }
+          
+          // Immediate UI feedback - hide compatibility window to prevent glitch
+          if (decision === 'proceed') {
+            console.log('🔚 [USER DECISION] Hiding compatibility window immediately...');
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.2s ease-out';
           }
         }
 
@@ -952,7 +964,7 @@
             {
               name: "Basic Port Availability",
               icon: "🌐",
-              tests: ["Python Backend Port (7500)", "Gateway Service Port (7890)", "FastAPI Health Check"]
+              tests: ["Application Services", "Security Services", "Service Health Check"]
             },
             {
               name: "File System Tests",
@@ -962,7 +974,7 @@
             {
               name: "API Dependencies",
               icon: "🔧",
-              tests: ["FastAPI Dependencies", "PDF Processing Capability"]
+              tests: ["Application Dependencies", "Document Processing Capability"]
             }
           ];
 

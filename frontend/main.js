@@ -1624,6 +1624,7 @@ let win = null;
 let splashWindow = null;
 let pythonProcess = null;
 let isPerformingCleanup = false; // Add this flag
+let isStartingUp = true; // Prevent window-all-closed during startup sequence
 
 const BACKEND_PORT = 5000; // Replace with the port your backend is listening to
 
@@ -2935,6 +2936,9 @@ app.whenReady().then(async () => {
 
     // Calculate total startup time
     const totalStartupTime = Date.now() - appStartTime;
+    // Mark startup as complete - allow window-all-closed to quit the app normally
+    isStartingUp = false;
+    
     log.info(
       "════════════════════════════════════════════════════════════════"
     );
@@ -2990,16 +2994,17 @@ app.on("window-all-closed", () => {
   log.info("[DEBUG] window-all-closed event fired");
   log.info("[DEBUG] isUpdating value:", isUpdating);
   log.info("[DEBUG] isPerformingCleanup value:", isPerformingCleanup);
+  log.info("[DEBUG] isStartingUp value:", isStartingUp);
   log.info("[DEBUG] platform:", process.platform);
 
   if (process.platform !== "darwin") {
-    // Don't quit if we're in the middle of an update or cleanup
-    if (!isUpdating && !isPerformingCleanup) {
-      log.info("[DEBUG] Neither updating nor cleaning up, calling app.quit()");
+    // Don't quit if we're in the middle of an update, cleanup, or startup
+    if (!isUpdating && !isPerformingCleanup && !isStartingUp) {
+      log.info("[DEBUG] Neither updating, cleaning up, nor starting up, calling app.quit()");
       app.quit();
     } else {
       log.info(
-        "Skipping quit during update/cleanup process - installer will handle it"
+        "Skipping quit during update/cleanup/startup process - will continue with initialization"
       );
     }
   }

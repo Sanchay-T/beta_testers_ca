@@ -671,3 +671,875 @@
 2025-08-27 21:33:09.906 +05:30 [INF] Re-advertising mDNS service...
 2025-08-27 21:34:09.920 +05:30 [INF] Re-advertising mDNS service...
 2025-08-27 21:35:09.931 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 21:36:09.944 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 21:37:09.953 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 21:38:09.968 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 21:39:09.968 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 21:40:09.977 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 21:41:09.987 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 21:42:10.001 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 21:43:10.014 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 21:44:10.026 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 21:45:10.039 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 21:46:10.049 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 21:47:10.055 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 21:48:10.068 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 21:49:10.074 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 21:50:10.084 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 22:06:08.028 +05:30 [INF] Starting service...
+2025-08-27 22:06:08.103 +05:30 [INF] Actual log path: C:\Users\sanch\Desktop\Offlinesuite\beta_testers_ca\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-08-27 22:06:08.137 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-08-27 22:06:08.348 +05:30 [INF] [DeviceInfo Init] UUID: 6F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:06:08.349 +05:30 [INF] [DeviceInfo Init] MAC Address: 00:50:56:C0:00:01
+2025-08-27 22:06:08.349 +05:30 [INF] [DeviceInfo Init] Hostname: SAN
+2025-08-27 22:06:08.349 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-21-4075903880-4100643163-549963829-1001
+2025-08-27 22:06:08.349 +05:30 [INF] [DeviceInfo Init] Username: sanch
+2025-08-27 22:06:08.355 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-08-27 22:06:08.355 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 272 bytes
+2025-08-27 22:06:08.360 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:06:08.525 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 86886281
+}
+2025-08-27 22:06:08.525 +05:30 [INF] LicenseInfoProvider initialized.
+2025-08-27 22:06:08.526 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 86886281
+}
+2025-08-27 22:06:08.526 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 1
+2025-08-27 22:06:08.527 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\session-cache.enc
+2025-08-27 22:06:08.528 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:06:08.603 +05:30 [ERR] Decryption failed. The license file may be corrupted or tampered with: Padding is invalid and cannot be removed.
+2025-08-27 22:06:08.604 +05:30 [ERR] Failed to load session cache: Exception of type 'System.Exception' was thrown.
+2025-08-27 22:06:08.609 +05:30 [INF] Worker initialized.
+2025-08-27 22:06:08.620 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-08-27 22:06:08.621 +05:30 [INF] Waiting for network to be ready...
+2025-08-27 22:06:08.736 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.5
+2025-08-27 22:06:08.736 +05:30 [INF] Network is ready with IP: 192.168.1.5
+2025-08-27 22:06:08.829 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.5
+2025-08-27 22:06:08.847 +05:30 [INF] Django base URL: https://cyphersol.co.in
+2025-08-27 22:06:08.852 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:06:08.918 +05:30 [INF] License Loaded: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 86886281
+}
+2025-08-27 22:06:09.039 +05:30 [INF] Starting license polling...
+2025-08-27 22:06:09.126 +05:30 [INF] HTTP API Server started on port 7890
+2025-08-27 22:06:09.127 +05:30 [INF] UDP broadcast listener started on port 41234.
+2025-08-27 22:06:09.132 +05:30 [INF] IP address: 192.168.1.5
+2025-08-27 22:06:09.281 +05:30 [INF] [License Polling] Expiry: 1786775146.534516
+2025-08-27 22:06:09.283 +05:30 [INF] [SetExpiry] Updating license expiry from 1786775146.534516 to 1786775146.534516
+2025-08-27 22:06:09.284 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1755672870.569008 to 1756312569.195274
+2025-08-27 22:06:09.284 +05:30 [INF] [SetSystemUpTime] Updating license system up time from 86886281 to 86887062
+2025-08-27 22:06:09.285 +05:30 [INF] [License Polling] LicenseInfo: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1756312569.195274,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 86887062
+}
+2025-08-27 22:06:09.285 +05:30 [INF] [License Polling] LicenseInfo: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1756312569.195274,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 86887062
+}
+2025-08-27 22:06:09.286 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-27 22:06:09.359 +05:30 [INF] mDNS advertisement started using hostname: San and IP: 192.168.1.5:7890
+2025-08-27 22:06:09.361 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2025-08-27 22:06:09.361 +05:30 [INF] Hosting environment: Production
+2025-08-27 22:06:09.361 +05:30 [INF] Content root path: C:\Users\sanch\Desktop\Offlinesuite\beta_testers_ca\frontend\gatewayServer
+2025-08-27 22:06:09.363 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 22:11:02.390 +05:30 [INF] Starting service...
+2025-08-27 22:11:02.464 +05:30 [INF] Actual log path: C:\Users\sanch\Desktop\Offlinesuite\beta_testers_ca\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-08-27 22:11:02.498 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-08-27 22:11:02.739 +05:30 [INF] [DeviceInfo Init] UUID: 6F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:11:02.740 +05:30 [INF] [DeviceInfo Init] MAC Address: 00:50:56:C0:00:01
+2025-08-27 22:11:02.740 +05:30 [INF] [DeviceInfo Init] Hostname: SAN
+2025-08-27 22:11:02.740 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-21-4075903880-4100643163-549963829-1001
+2025-08-27 22:11:02.740 +05:30 [INF] [DeviceInfo Init] Username: sanch
+2025-08-27 22:11:02.747 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-08-27 22:11:02.747 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 272 bytes
+2025-08-27 22:11:02.754 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:11:02.907 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 87180671
+}
+2025-08-27 22:11:02.907 +05:30 [INF] LicenseInfoProvider initialized.
+2025-08-27 22:11:02.908 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 87180671
+}
+2025-08-27 22:11:02.908 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 1
+2025-08-27 22:11:02.909 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\session-cache.enc
+2025-08-27 22:11:02.909 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:11:02.987 +05:30 [ERR] Decryption failed. The license file may be corrupted or tampered with: Padding is invalid and cannot be removed.
+2025-08-27 22:11:02.988 +05:30 [ERR] Failed to load session cache: Exception of type 'System.Exception' was thrown.
+2025-08-27 22:11:02.994 +05:30 [INF] Worker initialized.
+2025-08-27 22:11:03.007 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-08-27 22:11:03.008 +05:30 [INF] Waiting for network to be ready...
+2025-08-27 22:11:03.125 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.5
+2025-08-27 22:11:03.125 +05:30 [INF] Network is ready with IP: 192.168.1.5
+2025-08-27 22:11:03.228 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.5
+2025-08-27 22:11:03.245 +05:30 [INF] Django base URL: https://cyphersol.co.in
+2025-08-27 22:11:03.252 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:11:03.317 +05:30 [INF] License Loaded: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 87180671
+}
+2025-08-27 22:11:03.411 +05:30 [INF] Starting license polling...
+2025-08-27 22:11:03.473 +05:30 [INF] HTTP API Server started on port 7890
+2025-08-27 22:11:03.475 +05:30 [INF] UDP broadcast listener started on port 41234.
+2025-08-27 22:11:03.479 +05:30 [INF] IP address: 192.168.1.5
+2025-08-27 22:11:03.571 +05:30 [INF] [License Polling] Expiry: 1786775146.534516
+2025-08-27 22:11:03.571 +05:30 [INF] [SetExpiry] Updating license expiry from 1786775146.534516 to 1786775146.534516
+2025-08-27 22:11:03.572 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1755672870.569008 to 1756312863.476793
+2025-08-27 22:11:03.572 +05:30 [INF] [SetSystemUpTime] Updating license system up time from 87180671 to 87181343
+2025-08-27 22:11:03.573 +05:30 [INF] [License Polling] LicenseInfo: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1756312863.476793,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 87181343
+}
+2025-08-27 22:11:03.573 +05:30 [INF] [License Polling] LicenseInfo: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1756312863.476793,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 87181343
+}
+2025-08-27 22:11:03.574 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-27 22:11:03.706 +05:30 [INF] mDNS advertisement started using hostname: San and IP: 192.168.1.5:7890
+2025-08-27 22:11:03.708 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2025-08-27 22:11:03.708 +05:30 [INF] Hosting environment: Production
+2025-08-27 22:11:03.708 +05:30 [INF] Content root path: C:\Users\sanch\Desktop\Offlinesuite\beta_testers_ca\frontend\gatewayServer
+2025-08-27 22:11:03.709 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 22:11:04.385 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1756312863.476793,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 87181343
+}
+2025-08-27 22:12:21.653 +05:30 [INF] Starting service...
+2025-08-27 22:12:21.736 +05:30 [INF] Actual log path: C:\Users\sanch\Desktop\Offlinesuite\beta_testers_ca\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-08-27 22:12:21.786 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-08-27 22:12:22.038 +05:30 [INF] [DeviceInfo Init] UUID: 6F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:12:22.039 +05:30 [INF] [DeviceInfo Init] MAC Address: 00:50:56:C0:00:01
+2025-08-27 22:12:22.039 +05:30 [INF] [DeviceInfo Init] Hostname: SAN
+2025-08-27 22:12:22.039 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-21-4075903880-4100643163-549963829-1001
+2025-08-27 22:12:22.039 +05:30 [INF] [DeviceInfo Init] Username: sanch
+2025-08-27 22:12:22.045 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-08-27 22:12:22.045 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 272 bytes
+2025-08-27 22:12:22.053 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:12:22.238 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 87259984
+}
+2025-08-27 22:12:22.238 +05:30 [INF] LicenseInfoProvider initialized.
+2025-08-27 22:12:22.240 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 87259984
+}
+2025-08-27 22:12:22.240 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 1
+2025-08-27 22:12:22.241 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\session-cache.enc
+2025-08-27 22:12:22.241 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:12:22.330 +05:30 [ERR] Decryption failed. The license file may be corrupted or tampered with: Padding is invalid and cannot be removed.
+2025-08-27 22:12:22.331 +05:30 [ERR] Failed to load session cache: Exception of type 'System.Exception' was thrown.
+2025-08-27 22:12:22.338 +05:30 [INF] Worker initialized.
+2025-08-27 22:12:22.346 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-08-27 22:12:22.348 +05:30 [INF] Waiting for network to be ready...
+2025-08-27 22:12:22.471 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.5
+2025-08-27 22:12:22.471 +05:30 [INF] Network is ready with IP: 192.168.1.5
+2025-08-27 22:12:22.561 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.5
+2025-08-27 22:12:22.576 +05:30 [INF] Django base URL: https://cyphersol.co.in
+2025-08-27 22:12:22.581 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:12:22.645 +05:30 [INF] License Loaded: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 87259984
+}
+2025-08-27 22:12:22.739 +05:30 [INF] Starting license polling...
+2025-08-27 22:12:22.801 +05:30 [INF] HTTP API Server started on port 7890
+2025-08-27 22:12:22.801 +05:30 [INF] UDP broadcast listener started on port 41234.
+2025-08-27 22:12:22.806 +05:30 [INF] IP address: 192.168.1.5
+2025-08-27 22:12:22.891 +05:30 [INF] [License Polling] Expiry: 1786775146.534516
+2025-08-27 22:12:22.891 +05:30 [INF] [SetExpiry] Updating license expiry from 1786775146.534516 to 1786775146.534516
+2025-08-27 22:12:22.892 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1755672870.569008 to 1756312942.79458
+2025-08-27 22:12:22.892 +05:30 [INF] [SetSystemUpTime] Updating license system up time from 87259984 to 87260671
+2025-08-27 22:12:22.892 +05:30 [INF] [License Polling] LicenseInfo: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1756312942.79458,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 87260671
+}
+2025-08-27 22:12:22.892 +05:30 [INF] [License Polling] LicenseInfo: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1756312942.79458,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 87260671
+}
+2025-08-27 22:12:22.893 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-27 22:12:23.011 +05:30 [INF] mDNS advertisement started using hostname: San and IP: 192.168.1.5:7890
+2025-08-27 22:12:23.012 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2025-08-27 22:12:23.013 +05:30 [INF] Hosting environment: Production
+2025-08-27 22:12:23.013 +05:30 [INF] Content root path: C:\Users\sanch\Desktop\Offlinesuite\beta_testers_ca\frontend\gatewayServer
+2025-08-27 22:12:23.014 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 22:13:54.232 +05:30 [INF] Starting service...
+2025-08-27 22:13:54.320 +05:30 [INF] Actual log path: C:\Users\sanch\Desktop\Offlinesuite\beta_testers_ca\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-08-27 22:13:54.356 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-08-27 22:13:54.580 +05:30 [INF] [DeviceInfo Init] UUID: 6F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:13:54.582 +05:30 [INF] [DeviceInfo Init] MAC Address: 00:50:56:C0:00:01
+2025-08-27 22:13:54.582 +05:30 [INF] [DeviceInfo Init] Hostname: SAN
+2025-08-27 22:13:54.582 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-21-4075903880-4100643163-549963829-1001
+2025-08-27 22:13:54.582 +05:30 [INF] [DeviceInfo Init] Username: sanch
+2025-08-27 22:13:54.588 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-08-27 22:13:54.588 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 272 bytes
+2025-08-27 22:13:54.594 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:13:54.744 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 87352500
+}
+2025-08-27 22:13:54.744 +05:30 [INF] LicenseInfoProvider initialized.
+2025-08-27 22:13:54.745 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 87352500
+}
+2025-08-27 22:13:54.745 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 1
+2025-08-27 22:13:54.746 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\session-cache.enc
+2025-08-27 22:13:54.746 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:13:54.830 +05:30 [ERR] Decryption failed. The license file may be corrupted or tampered with: Padding is invalid and cannot be removed.
+2025-08-27 22:13:54.831 +05:30 [ERR] Failed to load session cache: Exception of type 'System.Exception' was thrown.
+2025-08-27 22:13:54.839 +05:30 [INF] Worker initialized.
+2025-08-27 22:13:54.851 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-08-27 22:13:54.853 +05:30 [INF] Waiting for network to be ready...
+2025-08-27 22:13:54.973 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.5
+2025-08-27 22:13:54.973 +05:30 [INF] Network is ready with IP: 192.168.1.5
+2025-08-27 22:13:55.070 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.5
+2025-08-27 22:13:55.087 +05:30 [INF] Django base URL: https://cyphersol.co.in
+2025-08-27 22:13:55.092 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:13:55.161 +05:30 [INF] License Loaded: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 87352500
+}
+2025-08-27 22:13:55.279 +05:30 [INF] Starting license polling...
+2025-08-27 22:13:55.342 +05:30 [INF] HTTP API Server started on port 7890
+2025-08-27 22:13:55.343 +05:30 [INF] UDP broadcast listener started on port 41234.
+2025-08-27 22:13:55.348 +05:30 [INF] IP address: 192.168.1.5
+2025-08-27 22:13:55.450 +05:30 [INF] [License Polling] Expiry: 1786775146.534516
+2025-08-27 22:13:55.450 +05:30 [INF] [SetExpiry] Updating license expiry from 1786775146.534516 to 1786775146.534516
+2025-08-27 22:13:55.450 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1755672870.569008 to 1756313035.353027
+2025-08-27 22:13:55.450 +05:30 [INF] [SetSystemUpTime] Updating license system up time from 87352500 to 87353218
+2025-08-27 22:13:55.451 +05:30 [INF] [License Polling] LicenseInfo: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1756313035.353027,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 87353218
+}
+2025-08-27 22:13:55.452 +05:30 [INF] [License Polling] LicenseInfo: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1756313035.353027,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 87353218
+}
+2025-08-27 22:13:55.453 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-27 22:13:55.633 +05:30 [INF] mDNS advertisement started using hostname: San and IP: 192.168.1.5:7890
+2025-08-27 22:13:55.636 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2025-08-27 22:13:55.636 +05:30 [INF] Hosting environment: Production
+2025-08-27 22:13:55.636 +05:30 [INF] Content root path: C:\Users\sanch\Desktop\Offlinesuite\beta_testers_ca\frontend\gatewayServer
+2025-08-27 22:13:55.636 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 22:13:56.292 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1756313035.353027,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 87353218
+}
+2025-08-27 22:14:55.660 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 22:15:55.669 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 22:16:55.670 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 22:17:55.674 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 22:18:55.684 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 22:19:55.694 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 22:20:55.707 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 22:21:55.721 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 22:22:33.853 +05:30 [INF] Starting service...
+2025-08-27 22:22:33.911 +05:30 [INF] Actual log path: C:\Users\sanch\Desktop\Offlinesuite\beta_testers_ca\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-08-27 22:22:33.942 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-08-27 22:22:34.146 +05:30 [INF] [DeviceInfo Init] UUID: 6F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:22:34.147 +05:30 [INF] [DeviceInfo Init] MAC Address: 00:50:56:C0:00:01
+2025-08-27 22:22:34.147 +05:30 [INF] [DeviceInfo Init] Hostname: SAN
+2025-08-27 22:22:34.147 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-21-4075903880-4100643163-549963829-1001
+2025-08-27 22:22:34.147 +05:30 [INF] [DeviceInfo Init] Username: sanch
+2025-08-27 22:22:34.152 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-08-27 22:22:34.153 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 272 bytes
+2025-08-27 22:22:34.157 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:22:34.297 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 87872046
+}
+2025-08-27 22:22:34.297 +05:30 [INF] LicenseInfoProvider initialized.
+2025-08-27 22:22:34.298 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 87872046
+}
+2025-08-27 22:22:34.298 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 1
+2025-08-27 22:22:34.299 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\session-cache.enc
+2025-08-27 22:22:34.299 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:22:34.377 +05:30 [ERR] Decryption failed. The license file may be corrupted or tampered with: Padding is invalid and cannot be removed.
+2025-08-27 22:22:34.378 +05:30 [ERR] Failed to load session cache: Exception of type 'System.Exception' was thrown.
+2025-08-27 22:22:34.385 +05:30 [INF] Worker initialized.
+2025-08-27 22:22:34.397 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-08-27 22:22:34.399 +05:30 [INF] Waiting for network to be ready...
+2025-08-27 22:22:34.507 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.5
+2025-08-27 22:22:34.507 +05:30 [INF] Network is ready with IP: 192.168.1.5
+2025-08-27 22:22:34.595 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.5
+2025-08-27 22:22:34.612 +05:30 [INF] Django base URL: https://cyphersol.co.in
+2025-08-27 22:22:34.617 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:22:34.687 +05:30 [INF] License Loaded: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 87872046
+}
+2025-08-27 22:22:34.799 +05:30 [INF] Starting license polling...
+2025-08-27 22:22:34.868 +05:30 [INF] HTTP API Server started on port 7890
+2025-08-27 22:22:34.870 +05:30 [INF] UDP broadcast listener started on port 41234.
+2025-08-27 22:22:34.874 +05:30 [INF] IP address: 192.168.1.5
+2025-08-27 22:22:35.023 +05:30 [INF] [License Polling] Expiry: 1786775146.534516
+2025-08-27 22:22:35.023 +05:30 [INF] [SetExpiry] Updating license expiry from 1786775146.534516 to 1786775146.534516
+2025-08-27 22:22:35.023 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1755672870.569008 to 1756313554.909911
+2025-08-27 22:22:35.024 +05:30 [INF] [SetSystemUpTime] Updating license system up time from 87872046 to 87872796
+2025-08-27 22:22:35.024 +05:30 [INF] [License Polling] LicenseInfo: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1756313554.909911,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 87872796
+}
+2025-08-27 22:22:35.024 +05:30 [INF] [License Polling] LicenseInfo: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1756313554.909911,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 87872796
+}
+2025-08-27 22:22:35.025 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-27 22:22:35.115 +05:30 [INF] mDNS advertisement started using hostname: San and IP: 192.168.1.5:7890
+2025-08-27 22:22:35.118 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2025-08-27 22:22:35.118 +05:30 [INF] Hosting environment: Production
+2025-08-27 22:22:35.118 +05:30 [INF] Content root path: C:\Users\sanch\Desktop\Offlinesuite\beta_testers_ca\frontend\gatewayServer
+2025-08-27 22:22:35.118 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 22:28:53.254 +05:30 [INF] Starting service...
+2025-08-27 22:28:53.325 +05:30 [INF] Actual log path: C:\Users\sanch\Desktop\Offlinesuite\beta_testers_ca\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-08-27 22:28:53.357 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-08-27 22:28:53.578 +05:30 [INF] [DeviceInfo Init] UUID: 6F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:28:53.579 +05:30 [INF] [DeviceInfo Init] MAC Address: 00:50:56:C0:00:01
+2025-08-27 22:28:53.579 +05:30 [INF] [DeviceInfo Init] Hostname: SAN
+2025-08-27 22:28:53.579 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-21-4075903880-4100643163-549963829-1001
+2025-08-27 22:28:53.579 +05:30 [INF] [DeviceInfo Init] Username: sanch
+2025-08-27 22:28:53.584 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-08-27 22:28:53.585 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 272 bytes
+2025-08-27 22:28:53.592 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:28:53.728 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 88251484
+}
+2025-08-27 22:28:53.728 +05:30 [INF] LicenseInfoProvider initialized.
+2025-08-27 22:28:53.729 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 88251484
+}
+2025-08-27 22:28:53.730 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 1
+2025-08-27 22:28:53.731 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\session-cache.enc
+2025-08-27 22:28:53.731 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:28:53.801 +05:30 [ERR] Decryption failed. The license file may be corrupted or tampered with: Padding is invalid and cannot be removed.
+2025-08-27 22:28:53.802 +05:30 [ERR] Failed to load session cache: Exception of type 'System.Exception' was thrown.
+2025-08-27 22:28:53.809 +05:30 [INF] Worker initialized.
+2025-08-27 22:28:53.819 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-08-27 22:28:53.820 +05:30 [INF] Waiting for network to be ready...
+2025-08-27 22:28:53.928 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.5
+2025-08-27 22:28:53.928 +05:30 [INF] Network is ready with IP: 192.168.1.5
+2025-08-27 22:28:54.030 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.5
+2025-08-27 22:28:54.048 +05:30 [INF] Django base URL: https://cyphersol.co.in
+2025-08-27 22:28:54.053 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:28:54.125 +05:30 [INF] License Loaded: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 88251484
+}
+2025-08-27 22:28:54.223 +05:30 [INF] Starting license polling...
+2025-08-27 22:28:54.274 +05:30 [INF] HTTP API Server started on port 7890
+2025-08-27 22:28:54.277 +05:30 [INF] UDP broadcast listener started on port 41234.
+2025-08-27 22:28:54.280 +05:30 [INF] IP address: 192.168.1.5
+2025-08-27 22:28:54.373 +05:30 [INF] [License Polling] Expiry: 1786775146.534516
+2025-08-27 22:28:54.374 +05:30 [INF] [SetExpiry] Updating license expiry from 1786775146.534516 to 1786775146.534516
+2025-08-27 22:28:54.374 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1755672870.569008 to 1756313934.249902
+2025-08-27 22:28:54.375 +05:30 [INF] [SetSystemUpTime] Updating license system up time from 88251484 to 88252156
+2025-08-27 22:28:54.375 +05:30 [INF] [License Polling] LicenseInfo: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1756313934.249902,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 88252156
+}
+2025-08-27 22:28:54.375 +05:30 [INF] [License Polling] LicenseInfo: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1756313934.249902,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 88252156
+}
+2025-08-27 22:28:54.376 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-27 22:28:54.498 +05:30 [INF] mDNS advertisement started using hostname: San and IP: 192.168.1.5:7890
+2025-08-27 22:28:54.500 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2025-08-27 22:28:54.500 +05:30 [INF] Hosting environment: Production
+2025-08-27 22:28:54.500 +05:30 [INF] Content root path: C:\Users\sanch\Desktop\Offlinesuite\beta_testers_ca\frontend\gatewayServer
+2025-08-27 22:28:54.501 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 22:28:55.245 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1756313934.249902,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 88252156
+}
+2025-08-27 22:29:54.518 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 22:30:54.524 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 22:31:54.525 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 22:32:54.526 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 22:33:54.535 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 22:34:54.535 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 22:35:54.540 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 22:36:54.546 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 22:37:53.648 +05:30 [INF] Starting service...
+2025-08-27 22:37:53.717 +05:30 [INF] Actual log path: C:\Users\sanch\Desktop\Offlinesuite\beta_testers_ca\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-08-27 22:37:53.749 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-08-27 22:37:53.969 +05:30 [INF] [DeviceInfo Init] UUID: 6F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:37:53.970 +05:30 [INF] [DeviceInfo Init] MAC Address: 00:50:56:C0:00:01
+2025-08-27 22:37:53.970 +05:30 [INF] [DeviceInfo Init] Hostname: SAN
+2025-08-27 22:37:53.970 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-21-4075903880-4100643163-549963829-1001
+2025-08-27 22:37:53.970 +05:30 [INF] [DeviceInfo Init] Username: sanch
+2025-08-27 22:37:53.975 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-08-27 22:37:53.975 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 272 bytes
+2025-08-27 22:37:53.981 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:37:54.105 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 88791859
+}
+2025-08-27 22:37:54.105 +05:30 [INF] LicenseInfoProvider initialized.
+2025-08-27 22:37:54.106 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 88791859
+}
+2025-08-27 22:37:54.106 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 1
+2025-08-27 22:37:54.107 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\session-cache.enc
+2025-08-27 22:37:54.107 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:37:54.181 +05:30 [ERR] Decryption failed. The license file may be corrupted or tampered with: Padding is invalid and cannot be removed.
+2025-08-27 22:37:54.182 +05:30 [ERR] Failed to load session cache: Exception of type 'System.Exception' was thrown.
+2025-08-27 22:37:54.188 +05:30 [INF] Worker initialized.
+2025-08-27 22:37:54.201 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-08-27 22:37:54.203 +05:30 [INF] Waiting for network to be ready...
+2025-08-27 22:37:54.319 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.5
+2025-08-27 22:37:54.319 +05:30 [INF] Network is ready with IP: 192.168.1.5
+2025-08-27 22:37:54.418 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.5
+2025-08-27 22:37:54.437 +05:30 [INF] Django base URL: https://cyphersol.co.in
+2025-08-27 22:37:54.445 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:37:54.520 +05:30 [INF] License Loaded: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 88791859
+}
+2025-08-27 22:37:54.627 +05:30 [INF] Starting license polling...
+2025-08-27 22:37:54.708 +05:30 [INF] HTTP API Server started on port 7890
+2025-08-27 22:37:54.711 +05:30 [INF] UDP broadcast listener started on port 41234.
+2025-08-27 22:37:54.714 +05:30 [INF] IP address: 192.168.1.5
+2025-08-27 22:37:54.981 +05:30 [INF] mDNS advertisement started using hostname: San and IP: 192.168.1.5:7890
+2025-08-27 22:37:54.985 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2025-08-27 22:37:54.985 +05:30 [INF] Hosting environment: Production
+2025-08-27 22:37:54.985 +05:30 [INF] Content root path: C:\Users\sanch\Desktop\Offlinesuite\beta_testers_ca\frontend\gatewayServer
+2025-08-27 22:37:54.986 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 22:37:54.997 +05:30 [INF] [License Polling] Expiry: 1786775146.534516
+2025-08-27 22:37:54.997 +05:30 [INF] [SetExpiry] Updating license expiry from 1786775146.534516 to 1786775146.534516
+2025-08-27 22:37:54.998 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1755672870.569008 to 1756314474.793162
+2025-08-27 22:37:54.998 +05:30 [INF] [SetSystemUpTime] Updating license system up time from 88791859 to 88792765
+2025-08-27 22:37:54.998 +05:30 [INF] [License Polling] LicenseInfo: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1756314474.793162,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 88792765
+}
+2025-08-27 22:37:54.998 +05:30 [INF] [License Polling] LicenseInfo: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1756314474.793162,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 88792765
+}
+2025-08-27 22:37:54.999 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-27 22:39:12.431 +05:30 [INF] Starting service...
+2025-08-27 22:39:12.489 +05:30 [INF] Actual log path: C:\Users\sanch\Desktop\Offlinesuite\beta_testers_ca\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-08-27 22:39:12.521 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-08-27 22:39:12.718 +05:30 [INF] [DeviceInfo Init] UUID: 6F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:39:12.719 +05:30 [INF] [DeviceInfo Init] MAC Address: 00:50:56:C0:00:01
+2025-08-27 22:39:12.719 +05:30 [INF] [DeviceInfo Init] Hostname: SAN
+2025-08-27 22:39:12.719 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-21-4075903880-4100643163-549963829-1001
+2025-08-27 22:39:12.719 +05:30 [INF] [DeviceInfo Init] Username: sanch
+2025-08-27 22:39:12.724 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-08-27 22:39:12.724 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 272 bytes
+2025-08-27 22:39:12.730 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:39:12.852 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 88870609
+}
+2025-08-27 22:39:12.852 +05:30 [INF] LicenseInfoProvider initialized.
+2025-08-27 22:39:12.853 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 88870609
+}
+2025-08-27 22:39:12.853 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 1
+2025-08-27 22:39:12.854 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\session-cache.enc
+2025-08-27 22:39:12.855 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:39:12.919 +05:30 [ERR] Decryption failed. The license file may be corrupted or tampered with: Padding is invalid and cannot be removed.
+2025-08-27 22:39:12.920 +05:30 [ERR] Failed to load session cache: Exception of type 'System.Exception' was thrown.
+2025-08-27 22:39:12.927 +05:30 [INF] Worker initialized.
+2025-08-27 22:39:12.935 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-08-27 22:39:12.936 +05:30 [INF] Waiting for network to be ready...
+2025-08-27 22:39:13.036 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.5
+2025-08-27 22:39:13.036 +05:30 [INF] Network is ready with IP: 192.168.1.5
+2025-08-27 22:39:13.139 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.5
+2025-08-27 22:39:13.157 +05:30 [INF] Django base URL: https://cyphersol.co.in
+2025-08-27 22:39:13.164 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:39:13.235 +05:30 [INF] License Loaded: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 88870609
+}
+2025-08-27 22:39:13.333 +05:30 [INF] Starting license polling...
+2025-08-27 22:39:13.388 +05:30 [INF] HTTP API Server started on port 7890
+2025-08-27 22:39:13.391 +05:30 [INF] UDP broadcast listener started on port 41234.
+2025-08-27 22:39:13.394 +05:30 [INF] IP address: 192.168.1.5
+2025-08-27 22:39:13.486 +05:30 [INF] [License Polling] Expiry: 1786775146.534516
+2025-08-27 22:39:13.486 +05:30 [INF] [SetExpiry] Updating license expiry from 1786775146.534516 to 1786775146.534516
+2025-08-27 22:39:13.487 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1755672870.569008 to 1756314553.348711
+2025-08-27 22:39:13.487 +05:30 [INF] [SetSystemUpTime] Updating license system up time from 88870609 to 88871265
+2025-08-27 22:39:13.488 +05:30 [INF] [License Polling] LicenseInfo: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1756314553.348711,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 88871265
+}
+2025-08-27 22:39:13.488 +05:30 [INF] [License Polling] LicenseInfo: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1756314553.348711,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 88871265
+}
+2025-08-27 22:39:13.489 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-27 22:39:13.674 +05:30 [INF] mDNS advertisement started using hostname: San and IP: 192.168.1.5:7890
+2025-08-27 22:39:13.678 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 22:39:13.678 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2025-08-27 22:39:13.678 +05:30 [INF] Hosting environment: Production
+2025-08-27 22:39:13.678 +05:30 [INF] Content root path: C:\Users\sanch\Desktop\Offlinesuite\beta_testers_ca\frontend\gatewayServer
+2025-08-27 22:39:14.512 +05:30 [INF] Middleware LicenseInfo: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1756314553.348711,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 88871265
+}
+2025-08-27 22:42:11.472 +05:30 [INF] Starting service...
+2025-08-27 22:42:11.575 +05:30 [INF] Actual log path: C:\Users\sanch\Desktop\Offlinesuite\beta_testers_ca\frontend\gatewayServer\logs\gateway\gateway_.txt
+2025-08-27 22:42:11.623 +05:30 [INF] >>> ENVIRONMENT: Production
+2025-08-27 22:42:11.911 +05:30 [INF] [DeviceInfo Init] UUID: 6F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:42:11.913 +05:30 [INF] [DeviceInfo Init] MAC Address: 00:50:56:C0:00:01
+2025-08-27 22:42:11.913 +05:30 [INF] [DeviceInfo Init] Hostname: SAN
+2025-08-27 22:42:11.913 +05:30 [INF] [DeviceInfo Init] Windows User SID: S-1-5-21-4075903880-4100643163-549963829-1001
+2025-08-27 22:42:11.913 +05:30 [INF] [DeviceInfo Init] Username: sanch
+2025-08-27 22:42:11.918 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\license.enc
+2025-08-27 22:42:11.919 +05:30 [INF] Successfully read encrypted license from C:\ProgramData\Cyphersol\license.enc 272 bytes
+2025-08-27 22:42:11.925 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:42:12.070 +05:30 [INF] LicenseInfoProvider initialized with LicenseKey: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 89049828
+}
+2025-08-27 22:42:12.070 +05:30 [INF] LicenseInfoProvider initialized.
+2025-08-27 22:42:12.071 +05:30 [INF] [LicenseStateManager] License info loaded: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 89049828
+}
+2025-08-27 22:42:12.071 +05:30 [INF] [LicenseStateManager] Max licenses: 1, Current used statements: 1
+2025-08-27 22:42:12.072 +05:30 [INF] Reading license file from C:\ProgramData\Cyphersol\session-cache.enc
+2025-08-27 22:42:12.073 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:42:12.159 +05:30 [ERR] Decryption failed. The license file may be corrupted or tampered with: Padding is invalid and cannot be removed.
+2025-08-27 22:42:12.160 +05:30 [ERR] Failed to load session cache: Exception of type 'System.Exception' was thrown.
+2025-08-27 22:42:12.166 +05:30 [INF] Worker initialized.
+2025-08-27 22:42:12.180 +05:30 [INF] Environment DOTNET_ENVIRONMENT: 
+2025-08-27 22:42:12.182 +05:30 [INF] Waiting for network to be ready...
+2025-08-27 22:42:12.312 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.5
+2025-08-27 22:42:12.312 +05:30 [INF] Network is ready with IP: 192.168.1.5
+2025-08-27 22:42:12.408 +05:30 [INF] Found active network interface: Wi-Fi with IP: 192.168.1.5
+2025-08-27 22:42:12.424 +05:30 [INF] Django base URL: https://cyphersol.co.in
+2025-08-27 22:42:12.429 +05:30 [INF] Fingerprint: SANsanchS-1-5-21-4075903880-4100643163-549963829-10016F61EC60-14F7-EA11-80D7-089798BED797
+2025-08-27 22:42:12.486 +05:30 [INF] License Loaded: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1755672870.569008,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 89049828
+}
+2025-08-27 22:42:12.566 +05:30 [INF] Starting license polling...
+2025-08-27 22:42:12.647 +05:30 [INF] HTTP API Server started on port 7890
+2025-08-27 22:42:12.648 +05:30 [INF] UDP broadcast listener started on port 41234.
+2025-08-27 22:42:12.654 +05:30 [INF] IP address: 192.168.1.5
+2025-08-27 22:42:12.745 +05:30 [INF] [License Polling] Expiry: 1786775146.534516
+2025-08-27 22:42:12.745 +05:30 [INF] [SetExpiry] Updating license expiry from 1786775146.534516 to 1786775146.534516
+2025-08-27 22:42:12.746 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1755672870.569008 to 1756314732.606913
+2025-08-27 22:42:12.746 +05:30 [INF] [SetSystemUpTime] Updating license system up time from 89049828 to 89050515
+2025-08-27 22:42:12.747 +05:30 [INF] [License Polling] LicenseInfo: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1756314732.606913,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 89050515
+}
+2025-08-27 22:42:12.747 +05:30 [INF] [License Polling] LicenseInfo: {
+  "license_key": "1da09c2c4d2a5063f876d87c037205d1c7c9b722290783b16d5964ba5f06ed50",
+  "current_timestamp": 1756314732.606913,
+  "expiry_timestamp": 1786775146.534516,
+  "number_of_users": 1,
+  "number_of_statements": 500,
+  "role": "CA",
+  "UsedStatements": 1,
+  "SystemUpTime": 89050515
+}
+2025-08-27 22:42:12.748 +05:30 [INF] [License Polling] License resynced successfully.
+2025-08-27 22:42:12.887 +05:30 [INF] mDNS advertisement started using hostname: San and IP: 192.168.1.5:7890
+2025-08-27 22:42:12.890 +05:30 [INF] Re-advertising mDNS service...
+2025-08-27 22:42:12.890 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2025-08-27 22:42:12.890 +05:30 [INF] Hosting environment: Production
+2025-08-27 22:42:12.890 +05:30 [INF] Content root path: C:\Users\sanch\Desktop\Offlinesuite\beta_testers_ca\frontend\gatewayServer
