@@ -162,6 +162,56 @@
       // Bridge for Electron IPC
       const { ipcRenderer } = require("electron");
 
+      // UI Flow Logger for Compatibility Page
+      window.CypherEdgeLogger = {
+        logPageEvent: function(eventType, data) {
+          console.log('🔍 [COMPATIBILITY_UI]', eventType, data);
+          
+          // Send to main process for centralized logging
+          if (ipcRenderer) {
+            ipcRenderer.invoke('ui-logger:log-event', {
+              page: 'compatibility.html',
+              eventType: eventType,
+              data: data,
+              timestamp: new Date().toISOString(),
+              url: window.location.href
+            });
+          }
+        },
+        
+        logButtonClick: function(buttonId, buttonText, action, context) {
+          this.logPageEvent('BUTTON_CLICK', {
+            buttonId: buttonId,
+            buttonText: buttonText,
+            action: action,
+            context: context || {}
+          });
+        },
+        
+        logFlowStep: function(step, mode, data) {
+          this.logPageEvent('FLOW_STEP', {
+            step: step,
+            mode: mode,
+            data: data || {}
+          });
+        },
+        
+        logModalAction: function(modalName, action, data) {
+          this.logPageEvent('MODAL_ACTION', {
+            modalName: modalName,
+            action: action,
+            data: data || {}
+          });
+        },
+
+        logPageNavigation: function(page, trigger) {
+          this.logPageEvent('PAGE_NAVIGATION', {
+            page: page,
+            trigger: trigger || 'unknown'
+          });
+        }
+      };
+
       // Global API for React components to communicate with main process
       window.electronAPI = {
         onTestProgress: (callback) => ipcRenderer.on("test-progress", callback),
@@ -195,6 +245,53 @@
           this.isTestingComplete = false;
           this.modeNotificationActive = false;
           this.setupEventListeners();
+          this.setupAutoButtonLogging();
+        }
+
+        // Auto-logging setup for all button clicks
+        setupAutoButtonLogging() {
+          // Log page load
+          window.CypherEdgeLogger.logPageNavigation('CompatibilityChecker', 'page-load');
+          
+          // Auto-log all button clicks throughout the page
+          document.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON' || e.target.type === 'button' || e.target.onclick) {
+              const buttonId = e.target.id || 'unnamed-button';
+              const buttonText = e.target.textContent || e.target.value || 'No Text';
+              const buttonAction = e.target.onclick ? e.target.onclick.name : 'click';
+              
+              window.CypherEdgeLogger.logButtonClick(buttonId, buttonText, buttonAction, {
+                className: e.target.className,
+                currentStep: this.currentStep,
+                modeNotificationActive: this.modeNotificationActive,
+                isTestingComplete: this.isTestingComplete,
+                tagName: e.target.tagName,
+                type: e.target.type
+              });
+            }
+          });
+
+          // Auto-log form submissions
+          document.addEventListener('submit', (e) => {
+            window.CypherEdgeLogger.logPageEvent('FORM_SUBMIT', {
+              formId: e.target.id || 'unnamed-form',
+              action: e.target.action,
+              method: e.target.method,
+              currentStep: this.currentStep
+            });
+          });
+
+          // Auto-log input focus events for form fields
+          document.addEventListener('focus', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+              window.CypherEdgeLogger.logPageEvent('INPUT_FOCUS', {
+                inputId: e.target.id || 'unnamed-input',
+                inputType: e.target.type || 'text',
+                inputName: e.target.name || 'unnamed',
+                currentStep: this.currentStep
+              });
+            }
+          }, true);
         }
 
         setupEventListeners() {
@@ -1615,11 +1712,26 @@
             result: result,
             timestamp: new Date().toISOString()
           });
+
+          // Log the mode-specific flow trigger
+          window.CypherEdgeLogger.logFlowStep('triggerModeSpecificFlow', mode, {
+            mode: mode,
+            result: result,
+            step: 'MODE_FLOW_START'
+          });
           
           switch(mode) {
             case 'SCAN':
               console.log('🎯 [SCAN FLOW] High-End PC detected - Auto launch flow');
               console.log('🎯 [SCAN FLOW] Step 1: Showing success message');
+              
+              // Log SCAN mode flow
+              window.CypherEdgeLogger.logFlowStep('SCAN_MODE', 'HIGH_END', {
+                step: 'SHOWING_SUCCESS_MESSAGE',
+                autoLaunch: true,
+                hardware: result.hardware
+              });
+              
               this.showModeMessage('🚀 Excellent system detected! Auto-launching in Standard Mode...', '#22c55e');
               
               console.log('🎯 [SCAN FLOW] Step 2: Setting 2s timeout for auto-launch');
@@ -1632,6 +1744,14 @@
             case 'UNSCAN':
               console.log('🎯 [UNSCAN FLOW] Mid-Range PC detected - Notification then auto launch');
               console.log('🎯 [UNSCAN FLOW] Step 1: Showing optimization message');
+              
+              // Log UNSCAN mode flow
+              window.CypherEdgeLogger.logFlowStep('UNSCAN_MODE', 'MID_RANGE', {
+                step: 'SHOWING_OPTIMIZATION_MESSAGE',
+                optimizedMode: true,
+                hardware: result.hardware
+              });
+              
               this.showModeMessage('⚡ Good system detected! Switching to optimized UNSCAN Mode...', '#f59e0b');
               
               console.log('🎯 [UNSCAN FLOW] Step 2: Setting 2s timeout for notification');
@@ -1644,6 +1764,15 @@
             case 'HYBRID':
               console.log('🎯 [HYBRID FLOW] Low-End PC detected - Payment flow, NO auto launch');
               console.log('🎯 [HYBRID FLOW] Step 1: Showing hybrid setup message');
+              
+              // Log HYBRID mode flow
+              window.CypherEdgeLogger.logFlowStep('HYBRID_MODE', 'LOW_END', {
+                step: 'SHOWING_HYBRID_SETUP',
+                paymentRequired: true,
+                cloudProcessing: true,
+                hardware: result.hardware
+              });
+              
               this.showModeMessage('⚠️ System requires HYBRID Mode. Initiating setup process...', '#3b82f6');
               
               console.log('🎯 [HYBRID FLOW] Step 2: Setting 2s timeout for payment flow');
@@ -1690,6 +1819,13 @@
         // ENHANCED: Show beautiful UNSCAN mode modal with auto-launch
         showUnscanModeNotification(result) {
           console.log('📢 [UNSCAN MODAL] ============== CREATING CENTERED UNSCAN MODAL ==============');
+          
+          // Log UNSCAN modal action
+          window.CypherEdgeLogger.logModalAction('UnscanModeNotification', 'open', {
+            mode: 'UNSCAN',
+            hardware: result.hardware,
+            autoLaunch: true
+          });
           
           // Create modal overlay
           const modalOverlay = document.createElement('div');
@@ -1803,6 +1939,13 @@
         // PROFESSIONAL: Show HYBRID mode decision flow with modern design
         showHybridModeFlow(result) {
           console.log('🤔 [HYBRID DECISION] ============== SHOWING HYBRID DECISION MODAL ==============');
+          
+          // Log HYBRID decision modal action
+          window.CypherEdgeLogger.logModalAction('HybridModeDecision', 'open', {
+            mode: 'HYBRID',
+            hardware: result.hardware,
+            step: 'DECISION_MODAL'
+          });
           
           // Create modal overlay with professional backdrop
           const modalOverlay = document.createElement('div');

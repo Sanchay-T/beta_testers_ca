@@ -41,6 +41,14 @@ const gatewayServer = require("./InitiateGatewayServer.js");
 const systemInfo = require("./SystemInformation");
 const userDataDir = app.getPath("userData");
 
+// Initialize UI Flow Logger
+const { initializeUIFlowLogging } = require("./utils/UILoggerIntegrations");
+const uiLogger = initializeUIFlowLogging({
+  enableMainProcess: true,
+  enableIpcLogging: true,
+  logLevel: 'info'
+});
+
 // -------------------------------------------------------------
 // Initialise global configuration EARLY so all subsequently
 // required local modules can rely on it without throwing
@@ -2113,6 +2121,10 @@ async function createWindow() {
   registerReportHandlers(TMP_DIR);
   registerAuthHandlers(app.getPath("userData"));
   log.info("🔐 Auth handlers registered (including license:check)");
+  
+  // Initialize UI Flow Logger IPC integration AFTER all handlers are registered
+  uiLogger.integrateMainProcess(ipcMain);
+  log.info("📊 UI Flow Logger integrated with IPC handlers");
 
   // Email verification IPC handler registered earlier in startup sequence
 

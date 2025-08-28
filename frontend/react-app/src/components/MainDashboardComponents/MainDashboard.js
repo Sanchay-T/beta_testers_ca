@@ -11,8 +11,12 @@ import Card3 from "../Elements/Card3";
 import { useAuth } from "../../contexts/AuthContext";
 import MSME_Card3 from "../Elements/MSME_Card3";
 import CustomContainer from "./CustomContainer";
+import { useUILogger } from "../../hooks/useUILogger";
 
 const MainDashboard = ({ handleTabChange }) => {
+  // Initialize UI Logger for this component
+  const logger = useUILogger('MainDashboard', { handleTabChange: !!handleTabChange });
+  
   const { theme, setTheme } = useTheme();
   const [allData, setAllData] = useState([]);
   const [pagesData, setPagesData] = useState([]);
@@ -545,6 +549,11 @@ const MainDashboard = ({ handleTabChange }) => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
+        // Log dashboard data loading start
+        logger.logCustomEvent('dashboard_data_loading_start', {
+          hasCachedData: !!localStorage.getItem("dashboardData")
+        });
+
         // Check if cached data exists
         const cachedData = localStorage.getItem("dashboardData");
 
@@ -553,6 +562,12 @@ const MainDashboard = ({ handleTabChange }) => {
 
           setAllData(parsedData.allData);
           setPagesData(parsedData.pagesData);
+          
+          logger.logCustomEvent('dashboard_cached_data_loaded', {
+            dataKeys: Object.keys(parsedData),
+            allDataCount: parsedData.allData?.length || 0,
+            pagesDataCount: parsedData.pagesData?.length || 0
+          });
           setReportsMetrics(parsedData.reportsMetrics);
           setPagesMetrics(parsedData.pagesMetrics);
           setTotalEligibility(parsedData.totalEligibility || 0);
@@ -568,17 +583,31 @@ const MainDashboard = ({ handleTabChange }) => {
           return; // Exit the function if cache exists
         }
 
-        // Fetch fresh data
+        // Fetch fresh data with logging
+        const backendLogger1 = logger.logBackendCall('getReportsProcessed', 'mainDashboard.js');
         const reports = await window.electron.getReportsProcessed();
         console.log("Reports:", reports);
+        backendLogger1.logResponse(reports);
+
+        const backendLogger2 = logger.logBackendCall('getStatementsProcessed', 'mainDashboard.js');
         const statements = await window.electron.getStatementsProcessed();
         console.log("Statements:", statements);
+        backendLogger2.logResponse(statements);
+
+        const backendLogger3 = logger.logBackendCall('getTransactionsProcessed', 'mainDashboard.js');
         const transactions = await window.electron.getTransactionsProcessed();
         console.log("Transactions:", transactions);
+        backendLogger3.logResponse(transactions);
+
+        const backendLogger4 = logger.logBackendCall('getPages', 'mainDashboard.js');
         const pages = await window.electron.getPages();
         console.log("Pages:", pages);
+        backendLogger4.logResponse(pages);
+
+        const backendLogger5 = logger.logBackendCall('getOpportunityToEarn', 'opportunityToEarn.js');
         const opportunityToEarn = await window.electron.getOpportunityToEarn();
         console.log("Opportunity to Earn:", opportunityToEarn);
+        backendLogger5.logResponse(opportunityToEarn);
         let totalEligibility1 = 0;
 
         let totalCommission1 = 0;
@@ -825,7 +854,14 @@ const MainDashboard = ({ handleTabChange }) => {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+              onClick={() => {
+                const newTheme = theme === "light" ? "dark" : "light";
+                logger.logClick('theme-toggle', 'Theme Toggle', 'toggleTheme', {
+                  fromTheme: theme,
+                  toTheme: newTheme
+                });
+                setTheme(newTheme);
+              }}
             >
               {theme === "light" ? (
                 <Moon className="h-4 w-4" />
