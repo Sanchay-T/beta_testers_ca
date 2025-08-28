@@ -113,7 +113,10 @@ class SystemCompatibilityChecker {
             });
             
             log.info(`🔍 [MODE_DEBUG] About to call appModeManager.runModeDetection() for REAL hardware detection`);
-            modeDetectionResult = await this.appModeManager.runModeDetection();
+            modeDetectionResult = await this.appModeManager.runModeDetection({
+              skipTestingPanel: true,  // Skip testing panel since user already clicked "Launch CypherEdge"
+              source: 'compatibility_proceed'  // Context for why we're running detection
+            });
             log.info(`🔍 [MODE_DEBUG] appModeManager.runModeDetection() returned:`, {
               success: modeDetectionResult?.success,
               determinedMode: modeDetectionResult?.determinedMode,

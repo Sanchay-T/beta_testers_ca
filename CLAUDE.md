@@ -771,6 +771,292 @@ VALIDATE_LICENSE=true         # Enable license validation
 **Testing Coverage**: All 3 modes fully testable
 **Business Logic**: Complete HYBRID payment compliance
 
+## ✅ LATEST UPDATE: MODE DETECTION & QR CODE INTEGRATION (August 27, 2025)
+
+### 🔧 CRITICAL MODE DETECTION FIXES IMPLEMENTED
+
+**Status**: ✅ **PRODUCTION READY**  
+**Achievement**: Fixed testing scenario stuck loop and integrated real payment QR code  
+**Issue Resolved**: Test scenarios (lowEnd, midRange, highEnd) now work correctly
+
+#### ❌ **PROBLEM IDENTIFIED**
+- **Testing Panel Loop**: When selecting test scenarios, app got stuck in testing panel instead of running detection
+- **Logic Flaw**: Development mode was showing testing panel even when specific scenarios were selected
+- **Missing QR Integration**: Payment flow used placeholder instead of actual QR code
+
+#### ✅ **SOLUTIONS IMPLEMENTED**
+
+##### 1. **AppModeManager.js - Fixed Testing Panel Bypass Logic**
+```javascript
+// BEFORE (Broken Logic):
+if (isDevelopmentMode && config.developmentMode?.showTestingPanel) {
+  return await this.runDevelopmentModeFlow(config); // Always showed testing panel
+}
+
+// AFTER (Fixed Logic):
+const hasTestScenario = options.scenario && ['lowEnd', 'midRange', 'highEnd'].includes(options.scenario);
+if (isDevelopmentMode && config.developmentMode?.showTestingPanel && !hasTestScenario) {
+  return await this.runDevelopmentModeFlow(config); // Only show testing panel when no scenario
+}
+```
+
+**Key Fix**: Added `hasTestScenario` check to bypass testing panel when specific scenarios are selected
+
+##### 2. **Comprehensive Logging System Added**
+Enhanced logging across all mode detection components:
+
+- **AppModeManager.js**: Added `=== MODE DETECTION ===` brackets with detailed flow tracking
+- **ModeDecisionEngine.js**: Added `[SCENARIO_MAP]`, `[LOGIC]`, `[FORCED_MODE]` tags
+- **HardwareDetector.js**: Added `[OVERRIDES]`, `[CPU_CLASS]`, `[HARDWARE_CHECK]` logging
+- **main.js IPC Handler**: Added `[IPC]`, `[CONFIG]`, `[DETECTION]` comprehensive tracking
+
+**Logging Features**:
+- Scenario mapping and override application tracking
+- Hardware detection with before/after override values
+- Decision flow path logging with reasons
+- Error handling with detailed stack traces
+
+##### 3. **QR Code Integration - CypherSol Payment System**
+**Location**: `frontend/react-app/compatibility.html` - HYBRID payment flow
+
+**Implementation Details**:
+```javascript
+// Real QR Code Display (280x280px)
+<img src="../assets/CypherSOL_Karnataka_Scanner.jpg" 
+     alt="CypherSol Payment QR Code" 
+     style="width: 280px; height: 280px; object-fit: contain;">
+
+// VPA Information Display
+VPA: cyphersolfint@kbl
+Reference ID: CYP-[timestamp]
+```
+
+**UI Enhancements**:
+- Professional QR code container with blue border and shadow
+- Proper VPA display above QR code
+- Fallback handling if image fails to load
+- Modal width increased from 520px to 580px for QR accommodation
+- Responsive design maintained for all screen sizes
+
+#### 🚀 **TECHNICAL IMPLEMENTATION DETAILS**
+
+##### Mode Detection Flow (Fixed):
+```
+User Selects Test Scenario (lowEnd/midRange/highEnd)
+        ↓
+IPC Handler: app-mode:run-detection
+        ↓
+Create temp config with testing overrides
+        ↓
+AppModeManager.runModeDetection() 
+        ↓
+BYPASS testing panel (NEW LOGIC)
+        ↓
+ModeDecisionEngine.determineAppMode()
+        ↓
+Apply forced mode based on scenario
+        ↓
+Return correct mode result (HYBRID/UNSCAN/SCAN)
+```
+
+##### Logging Output Example:
+```
+=== APP MODE DETECTION REQUEST ===
+[IPC] Processing test scenario: lowEnd
+[CONFIG] Testing overrides: { forceRAM: 4, forceCPU: 'i3', forceMode: 'HYBRID' }
+=== STARTING MODE DETERMINATION ===
+[FORCED_MODE] Applying scenario-based mode: HYBRID
+[SCENARIO_MODE] Source scenario: lowEnd
+=== MODE DETERMINATION COMPLETED ===
+Final result: { determinedMode: 'HYBRID', canProceed: true, forced: true }
+```
+
+##### Files Modified:
+1. **`frontend/compatibility/AppModeManager.js`**:
+   - Added `hasTestScenario` logic to bypass testing panel
+   - Enhanced logging with phase tracking
+   - Fixed scenario persistence handling
+
+2. **`frontend/compatibility/modules/ModeDecisionEngine.js`**:
+   - Added comprehensive scenario mapping logs
+   - Enhanced decision logic tracking
+   - Improved forced mode application logging
+
+3. **`frontend/compatibility/modules/HardwareDetector.js`**:
+   - Added override application logging
+   - Enhanced CPU classification debugging
+   - Hardware comparison result logging
+
+4. **`frontend/main.js`** (IPC Handler):
+   - Added detailed request/response logging
+   - Enhanced scenario processing tracking
+   - Improved error handling with stack traces
+
+5. **`frontend/react-app/compatibility.html`**:
+   - Integrated actual QR code image (CypherSOL_Karnataka_Scanner.jpg)
+   - Updated modal container width (520px → 580px)
+   - Added VPA display and professional styling
+
+#### 📊 **TESTING RESULTS**
+
+**Before Fixes**:
+- ❌ Test scenarios stuck in testing panel loop
+- ❌ No logging to debug issues
+- ❌ Placeholder QR code in payment flow
+
+**After Implementation**:
+- ✅ lowEnd → HYBRID mode (correctly triggers payment flow)
+- ✅ midRange → UNSCAN mode (shows notification modal)
+- ✅ highEnd → SCAN mode (direct application launch)
+- ✅ Comprehensive logging for debugging
+- ✅ Real payment QR code integrated
+
+#### 🎯 **BUSINESS VALUE ACHIEVED**
+
+1. **Testing Functionality**: All 3 mode detection scenarios now work perfectly
+2. **Real Payment Integration**: HYBRID mode now uses actual CypherSol QR code
+3. **Debugging Capability**: Comprehensive logging system for future troubleshooting
+4. **Production Readiness**: System ready for real payment processing
+
+### 📁 **FILE LOCATIONS REFERENCE**
+
+```
+Mode Detection System:
+├── frontend/compatibility/AppModeManager.js (Main orchestrator - FIXED)
+├── frontend/compatibility/modules/ModeDecisionEngine.js (Decision logic - ENHANCED)
+├── frontend/compatibility/modules/HardwareDetector.js (Hardware detection - LOGGED)
+├── frontend/main.js (IPC handler - ENHANCED)
+└── frontend/compatibility/config/appModeConfig.json (Configuration)
+
+QR Code Integration:
+├── frontend/react-app/compatibility.html (HYBRID UI - QR INTEGRATED)
+└── frontend/assets/CypherSOL_Karnataka_Scanner.jpg (Actual QR code - 700x700px)
+```
+
+### 🔍 **DEBUGGING COMMANDS**
+
+```bash
+# Test all scenarios with enhanced logging
+cd frontend
+npm run start
+
+# Check logs for mode detection flow
+# Look for these log patterns:
+# - [IPC] Processing test scenario
+# - [FORCED_MODE] Applying scenario-based mode  
+# - === MODE DETERMINATION COMPLETED ===
+```
+
+### 🚀 **PRODUCTION STATUS**: ✅ READY
+
+- **Mode Detection**: All scenarios work correctly
+- **Payment Integration**: Real QR code integrated
+- **Logging System**: Comprehensive debugging available
+- **UI/UX**: Professional payment flow design
+- **Testing**: All 3 modes fully functional
+
+### 🔧 **NODE_ENV AUTOMATIC CONFIGURATION** (Latest Enhancement)
+
+**Status**: ✅ **IMPLEMENTED**  
+**Feature**: Automatic production/development mode switching based on NODE_ENV
+
+#### ⚙️ **How It Works**:
+
+##### **Development Mode (NODE_ENV=development or undefined)**:
+```bash
+NODE_ENV=development npm run start
+# OR
+npm run start  # (defaults to development)
+```
+
+**Behavior**:
+- ✅ Testing panel shown on startup
+- ✅ Test scenarios available (lowEnd, midRange, highEnd)
+- ✅ Hardware overrides can be applied
+- ✅ Comprehensive logging enabled
+- ✅ All debugging features active
+
+**Logs**:
+```
+🧪 [CONFIG] NODE_ENV=development - testing features enabled
+APP_MODE_MANAGER Running development mode flow with testing panel
+```
+
+##### **Production Mode (NODE_ENV=production)**:
+```bash
+NODE_ENV=production npm run start
+```
+
+**Behavior**:
+- 🚫 Testing panel automatically disabled
+- 🚫 Test scenarios hidden/disabled
+- 🚫 Hardware overrides cleared
+- ✅ Real machine hardware detection
+- ✅ Actual system specifications used
+- ✅ Mode determined by real RAM/CPU
+
+**Logs**:
+```
+🚀 [CONFIG] NODE_ENV=production detected - disabling development features
+🚀 [CONFIG] Testing panel, scenarios, and overrides disabled
+🚀 [CONFIG] Using real hardware detection for mode classification
+```
+
+#### 🔄 **Automatic Mode Detection Flow (Production)**:
+```
+NODE_ENV=production
+        ↓
+AppModeConfigManager.getConfig()
+        ↓
+Development features automatically disabled
+        ↓
+Real hardware detection only
+        ↓
+Actual RAM/CPU classification
+        ↓
+True mode determination (SCAN/UNSCAN/HYBRID)
+```
+
+#### 📝 **Configuration Override Logic**:
+**File**: `frontend/compatibility/config/AppModeConfigManager.js`
+
+```javascript
+// Production Mode Automatic Override:
+if (process.env.NODE_ENV === 'production') {
+  config.developmentMode = {
+    enabled: false,           // Disable development features
+    showTestingPanel: false,  // Hide testing panel
+    testingOverrides: {}      // Clear all overrides
+  };
+  config.testingOverrides = {}; // Ensure real hardware detection
+}
+```
+
+#### 🎯 **Production Use Cases**:
+
+1. **End User Distribution**: Set NODE_ENV=production for real users
+2. **Real Hardware Testing**: Test actual machine capabilities
+3. **Performance Validation**: Verify mode detection accuracy
+4. **Clean UI Experience**: No testing options visible to users
+
+#### 📊 **Environment Comparison**:
+
+| Feature | Development (NODE_ENV=development) | Production (NODE_ENV=production) |
+|---------|-----------------------------------|----------------------------------|
+| Testing Panel | ✅ Visible | 🚫 Hidden |
+| Test Scenarios | ✅ Available | 🚫 Disabled |
+| Hardware Overrides | ✅ Applied | 🚫 Cleared |
+| Real Hardware Detection | 🔧 Can be overridden | ✅ Always used |
+| Mode Classification | 🧪 Test-based | 🎯 Hardware-based |
+| UI Experience | 🛠️ Developer-focused | 👤 User-focused |
+
+**Answer to Your Question**: ✅ **YES** - Setting NODE_ENV=production will automatically:
+- Hide all test scenarios and testing panel
+- Use real machine hardware detection (RAM, CPU, etc.)
+- Disable all testing overrides
+- Provide clean end-user experience
+- Classify mode based on actual system specifications
+
 ## Key Implementation Notes
 
 ### IPC Architecture

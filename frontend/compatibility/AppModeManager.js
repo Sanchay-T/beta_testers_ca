@@ -46,7 +46,12 @@ class AppModeManager {
     this.currentPhase = 'starting';
 
     try {
-      this.logger?.info('APP_MODE_MANAGER', 'Starting complete mode detection process');
+      this.logger?.info('APP_MODE_MANAGER', '=== STARTING MODE DETECTION ===');
+      this.logger?.info('APP_MODE_MANAGER', 'Initial options:', {
+        scenario: options.scenario,
+        hasOverrides: !!options.overrides,
+        timestamp: new Date().toISOString()
+      });
 
       // [MODE_DEBUG] Enhanced scenario persistence logic
       this.handleScenarioPersistence(options);
@@ -55,21 +60,60 @@ class AppModeManager {
       this.currentPhase = 'configuration';
       const config = AppModeConfigManager.getConfig();
       const isDevelopmentMode = config.developmentMode?.enabled;
+      const hasTestScenario = options.scenario && ['lowEnd', 'midRange', 'highEnd'].includes(options.scenario);
 
-      if (isDevelopmentMode && config.developmentMode?.showTestingPanel && !options.scenario) {
-        // Development mode - show testing panel ONLY if no specific scenario is being tested
+      this.logger?.info('APP_MODE_MANAGER', 'Configuration check:', {
+        isDevelopmentMode,
+        showTestingPanel: config.developmentMode?.showTestingPanel,
+        hasTestScenario,
+        skipTestingPanel: options.skipTestingPanel,
+        scenario: options.scenario,
+        source: options.source
+      });
+
+      // Only show testing panel if no specific test scenario is selected and not explicitly skipped
+      if (isDevelopmentMode && config.developmentMode?.showTestingPanel && !hasTestScenario && !options.skipTestingPanel) {
+        this.logger?.info('APP_MODE_MANAGER', 'Showing testing panel (no specific scenario selected)');
+        // Development mode - show testing panel instead of auto-detection
         return await this.runDevelopmentModeFlow(config);
+      }
+
+      // Log when we skip the testing panel
+      if (options.skipTestingPanel) {
+        this.logger?.info('APP_MODE_MANAGER', 'Skipping testing panel due to skipTestingPanel flag', {
+          source: options.source,
+          reason: 'User already decided to proceed'
+        });
+      }
+
+      // If we have a test scenario, proceed with detection
+      if (hasTestScenario) {
+        this.logger?.info('APP_MODE_MANAGER', `Running detection with test scenario: ${options.scenario}`);
       }
 
       // Phase 2: Run mode detection
       this.currentPhase = 'detection';
       this.updateProgress('Determining optimal app mode for your system...', 10);
       
+      this.logger?.info('APP_MODE_MANAGER', 'Starting decision engine with options:', options);
       const decisionResult = await this.decisionEngine.determineAppMode(options);
+      
+      this.logger?.info('APP_MODE_MANAGER', 'Decision engine result:', {
+        mode: decisionResult.mode,
+        confidence: decisionResult.confidence,
+        forced: decisionResult.forced,
+        reason: decisionResult.reason
+      });
 
       // Phase 3: Handle mode-specific flows
       this.currentPhase = 'mode_handling';
+      this.logger?.info('APP_MODE_MANAGER', `Handling mode-specific flow for: ${decisionResult.mode}`);
       const flowResult = await this.handleModeSpecificFlow(decisionResult);
+      
+      this.logger?.info('APP_MODE_MANAGER', 'Mode flow result:', {
+        outcome: flowResult.outcome,
+        canProceed: flowResult.canProceed
+      });
 
       // Phase 4: Save results
       this.currentPhase = 'saving';
@@ -90,10 +134,13 @@ class AppModeManager {
       );
 
       this.results = finalResult;
-      this.logger?.info('APP_MODE_MANAGER', 'Mode detection completed successfully', {
-        mode: finalResult.determinedMode,
+      this.logger?.info('APP_MODE_MANAGER', '=== MODE DETECTION COMPLETED ===');
+      this.logger?.info('APP_MODE_MANAGER', 'Final result:', {
+        determinedMode: finalResult.determinedMode,
         canProceed: finalResult.canProceed,
-        duration: finalResult.duration
+        duration: finalResult.duration,
+        scenario: options.scenario,
+        forced: decisionResult.forced
       });
 
       return finalResult;
@@ -121,9 +168,15 @@ class AppModeManager {
     const config = AppModeConfigManager.getConfig();
     const isDevelopmentMode = config.developmentMode?.enabled;
 
+    this.logger?.info('APP_MODE_MANAGER', '[SCENARIO_PERSISTENCE] Starting check', {
+      isDevelopmentMode,
+      providedScenario: options.scenario,
+      lastUsedScenario: this.lastUsedScenario
+    });
+
     if (!isDevelopmentMode) {
       // Not in development mode, no scenario persistence needed
-      this.logger?.info('APP_MODE_MANAGER', '[MODE_DEBUG] Not in development mode, skipping scenario persistence');
+      this.logger?.info('APP_MODE_MANAGER', '[SCENARIO_PERSISTENCE] Skipped - not in development mode');
       return;
     }
 
@@ -131,7 +184,7 @@ class AppModeManager {
     const isWithinSession = this.isWithinSessionTimeout();
 
     // Log current state
-    this.logger?.info('APP_MODE_MANAGER', '[MODE_DEBUG] Scenario persistence check', {
+    this.logger?.info('APP_MODE_MANAGER', '[SCENARIO_PERSISTENCE] Session state', {
       providedScenario: options.scenario,
       lastUsedScenario: this.lastUsedScenario,
       isWithinSession: isWithinSession,
@@ -141,7 +194,7 @@ class AppModeManager {
     // If no scenario provided, try to use persisted scenario
     if (!options.scenario && this.lastUsedScenario && isWithinSession) {
       options.scenario = this.lastUsedScenario;
-      this.logger?.info('APP_MODE_MANAGER', '[MODE_DEBUG] Using persisted scenario from previous detection', {
+      this.logger?.info('APP_MODE_MANAGER', '[SCENARIO_PERSISTENCE] Using persisted scenario', {
         persistedScenario: options.scenario,
         source: 'previous_test_session'
       });
@@ -150,11 +203,13 @@ class AppModeManager {
     // Store scenario for future use (only if provided and within development mode)
     if (options.scenario && options.scenario !== 'current') {
       this.lastUsedScenario = options.scenario;
-      this.logger?.info('APP_MODE_MANAGER', '[MODE_DEBUG] Storing scenario for future detections', {
+      this.logger?.info('APP_MODE_MANAGER', '[SCENARIO_PERSISTENCE] Storing scenario', {
         storedScenario: options.scenario,
         sessionTimeout: this.SCENARIO_PERSISTENCE_TIMEOUT
       });
     }
+
+    this.logger?.info('APP_MODE_MANAGER', '[SCENARIO_PERSISTENCE] Final scenario:', options.scenario);
   }
 
   /**
@@ -217,13 +272,16 @@ class AppModeManager {
       const proceedHandler = () => {
         const lastDecision = this.storageManager.loadLastModeDecision();
         if (lastDecision) {
+          // For testing scenarios, we need to return the mode result 
+          // but let the compatibility.html handle the actual UI flows
           resolve({
             success: true,
             determinedMode: lastDecision.determinedMode,
-            canProceed: true,
+            canProceed: true, // Always proceed for testing to show UI flows
             developmentMode: true,
             lastDecision: lastDecision,
             userMessage: `🧪 Testing Mode: ${lastDecision.determinedMode} selected`,
+            testingMode: true, // Flag to indicate this is from testing
             timestamp: new Date().toISOString()
           });
         } else {

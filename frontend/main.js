@@ -1624,6 +1624,7 @@ let win = null;
 let splashWindow = null;
 let pythonProcess = null;
 let isPerformingCleanup = false; // Add this flag
+let isStartingUp = true; // Prevent window-all-closed during startup sequence
 
 const BACKEND_PORT = 5000; // Replace with the port your backend is listening to
 
@@ -2112,6 +2113,9 @@ async function createWindow() {
   registerReportHandlers(TMP_DIR);
   registerAuthHandlers(app.getPath("userData"));
   log.info("🔐 Auth handlers registered (including license:check)");
+
+  // Email verification IPC handler registered earlier in startup sequence
+
   registerOpportunityToEarnIpc();
   registerTallyIpc();
   registerVoucherIpc();
@@ -2570,14 +2574,28 @@ app.whenReady().then(async () => {
 
   ipcMain.handle("app-mode:run-detection", async (event, options = {}) => {
     try {
-      log.info("🧪 App mode detection requested from compatibility window", options);
+      log.info("=== APP MODE DETECTION IPC HANDLER ===");
+      log.info("🧪 Detection request received:", {
+        scenario: options.scenario,
+        hasOverrides: !!options.overrides,
+        timestamp: new Date().toISOString()
+      });
+      
       const { getSharedAppModeManager } = require("./compatibility/SharedAppModeManager");
       const manager = getSharedAppModeManager(log, null);
       
       if (options.scenario && options.scenario !== 'current') {
+        log.info("[IPC] Processing test scenario:", options.scenario);
+        
         // Load test scenario with proper mapping
         const configPath = path.join(__dirname, "compatibility", "config", "appModeConfig.json");
         const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        
+        log.info("[IPC] Loaded config:", {
+          developmentMode: config.developmentMode?.enabled,
+          hasTestScenarios: !!config.testing?.scenarios,
+          availableScenarios: Object.keys(config.testing?.scenarios || {})
+        });
         
         // Map UI scenario names to config scenario names
         const scenarioMapping = {
@@ -2589,23 +2607,43 @@ app.whenReady().then(async () => {
         const mappedScenario = scenarioMapping[options.scenario] || options.scenario;
         const scenario = config.testing.scenarios[mappedScenario];
         
+        log.info("[IPC] Scenario mapping:", {
+          original: options.scenario,
+          mapped: mappedScenario,
+          found: !!scenario
+        });
+        
         if (scenario) {
+          log.info("[IPC] Scenario found in config:", {
+            name: scenario.name,
+            expectedMode: scenario.expectedMode,
+            hardwareProfile: scenario.hardwareProfile
+          });
+          
           // Override test scenario in config
           const originalOverrides = config.testingOverrides;
           config.testingOverrides = {
             ...originalOverrides,
-            forceRAM: scenario.ram,
-            forceCPU: scenario.cpu,
-            forceScanResult: scenario.scanTime !== null ? 'pass' : 'fail',
+            forceRAM: scenario.hardwareProfile?.ram,
+            forceCPU: scenario.hardwareProfile?.processor,
+            forceScanResult: 'pass',  // Always pass scan for test scenarios
             forceMode: scenario.expectedMode
           };
+          
+          log.info("[IPC] Creating testing overrides:", {
+            forceRAM: config.testingOverrides.forceRAM,
+            forceCPU: config.testingOverrides.forceCPU,
+            forceScanResult: config.testingOverrides.forceScanResult,
+            forceMode: config.testingOverrides.forceMode
+          });
           
           // Temporarily save scenario config
           const tempConfigPath = path.join(__dirname, "compatibility", "config", "temp_appModeConfig.json");
           fs.writeFileSync(tempConfigPath, JSON.stringify(config, null, 2));
+          log.info("[IPC] Temp config created at:", tempConfigPath);
           
           // Debug logging to verify scenario override
-          log.info("🧪 DEBUG: Scenario overrides applied", {
+          log.info("🧪 [IPC] Final scenario configuration:", {
             scenario: options.scenario,
             mappedScenario: mappedScenario,
             expectedMode: scenario.expectedMode,
@@ -2616,33 +2654,76 @@ app.whenReady().then(async () => {
           });
           
           // Run detection with scenario
-          const result = await manager.runModeDetection({ scenario: options.scenario });
+          log.info("[IPC] Starting mode detection with mapped scenario:", mappedScenario);
+          const result = await manager.runModeDetection({ scenario: mappedScenario });
+          
+          log.info("[IPC] Detection completed:", {
+            success: result.success,
+            determinedMode: result.determinedMode,
+            canProceed: result.canProceed,
+            forced: result.modeDecision?.forced
+          });
           
           // Clean up temp config
           if (fs.existsSync(tempConfigPath)) {
             fs.unlinkSync(tempConfigPath);
+            log.info("[IPC] Temp config cleaned up");
           }
           
+          log.info("=== APP MODE DETECTION IPC COMPLETE ===");
           return result;
+        } else {
+          log.warn("[IPC] Scenario not found in config:", mappedScenario);
         }
       }
       
       // Run with current system/overrides
       if (options.overrides) {
+        log.info("[IPC] Applying manual overrides:", options.overrides);
+        
         // Update config with overrides
         const configPath = path.join(__dirname, "compatibility", "config", "appModeConfig.json");
         const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
         config.testingOverrides = { ...config.testingOverrides, ...options.overrides };
         fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+        
+        log.info("[IPC] Config updated with overrides");
       }
       
-      return await manager.runModeDetection({ scenario: options.scenario || 'current' });
+      log.info("[IPC] Running standard detection with scenario:", options.scenario || 'current');
+      const result = await manager.runModeDetection({ scenario: options.scenario || 'current' });
+      
+      log.info("[IPC] Standard detection completed:", {
+        success: result.success,
+        determinedMode: result.determinedMode,
+        canProceed: result.canProceed
+      });
+      
+      log.info("=== APP MODE DETECTION IPC COMPLETE ===");
+      return result;
       
     } catch (error) {
-      log.error("App mode detection failed:", error);
+      log.error("[IPC ERROR] App mode detection failed:", {
+        message: error.message,
+        stack: error.stack
+      });
       throw new Error(`Detection failed: ${error.message}`);
     }
   });
+
+  // Register email verification IPC handler BEFORE compatibility check
+  ipcMain.handle("email:submit", async (event, data) => {
+    const { email } = data;
+    log.info("📧 [EMAIL] User submitted email:", email);
+    
+    // For now, always return success (pass-through as requested)
+    return {
+      success: true,
+      email: email,
+      message: "Email received successfully"
+    };
+  });
+  log.info("📧 Email verification IPC handler registered");
 
   // 🔍 STEP -1: SYSTEM COMPATIBILITY CHECK (CRITICAL FIRST STEP)
   log.info("📋 INITIALIZATION STEP -1: SYSTEM COMPATIBILITY CHECK");
@@ -2997,6 +3078,9 @@ app.whenReady().then(async () => {
 
     // Calculate total startup time
     const totalStartupTime = Date.now() - appStartTime;
+    // Mark startup as complete - allow window-all-closed to quit the app normally
+    isStartingUp = false;
+    
     log.info(
       "════════════════════════════════════════════════════════════════"
     );
@@ -3052,16 +3136,17 @@ app.on("window-all-closed", () => {
   log.info("[DEBUG] window-all-closed event fired");
   log.info("[DEBUG] isUpdating value:", isUpdating);
   log.info("[DEBUG] isPerformingCleanup value:", isPerformingCleanup);
+  log.info("[DEBUG] isStartingUp value:", isStartingUp);
   log.info("[DEBUG] platform:", process.platform);
 
   if (process.platform !== "darwin") {
-    // Don't quit if we're in the middle of an update or cleanup
-    if (!isUpdating && !isPerformingCleanup) {
-      log.info("[DEBUG] Neither updating nor cleaning up, calling app.quit()");
+    // Don't quit if we're in the middle of an update, cleanup, or startup
+    if (!isUpdating && !isPerformingCleanup && !isStartingUp) {
+      log.info("[DEBUG] Neither updating, cleaning up, nor starting up, calling app.quit()");
       app.quit();
     } else {
       log.info(
-        "Skipping quit during update/cleanup process - installer will handle it"
+        "Skipping quit during update/cleanup/startup process - will continue with initialization"
       );
     }
   }

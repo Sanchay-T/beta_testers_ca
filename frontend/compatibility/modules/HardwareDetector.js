@@ -18,21 +18,35 @@ class HardwareDetector {
   async getSystemSpecs(forceRefresh = false) {
     // Return cached data if available and not forcing refresh
     if (this.cachedSpecs && !forceRefresh) {
-      this.logger?.info('HARDWARE_DETECTION', 'Using cached system specifications');
+      this.logger?.info('HARDWARE_DETECTION', '[CACHE] Using cached system specifications');
       return this.cachedSpecs;
     }
 
     try {
       const startTime = Date.now();
-      this.logger?.info('HARDWARE_DETECTION', 'Starting hardware detection...');
+      this.logger?.info('HARDWARE_DETECTION', '=== STARTING HARDWARE DETECTION ===');
 
       // Get basic info from os module
+      this.logger?.info('HARDWARE_DETECTION', '[BASIC] Getting basic specs from OS module...');
       const basicSpecs = this.getBasicSpecs();
+      
+      this.logger?.info('HARDWARE_DETECTION', '[BASIC] Basic specs:', {
+        ram: `${basicSpecs.ram.total}GB`,
+        cpu: basicSpecs.cpu.model,
+        cores: basicSpecs.cpu.cores
+      });
 
       // Get detailed info from systeminformation
+      this.logger?.info('HARDWARE_DETECTION', '[DETAILED] Getting detailed specs from systeminformation...');
       const detailedSpecs = await this.getDetailedSpecs();
+      
+      this.logger?.info('HARDWARE_DETECTION', '[DETAILED] CPU classification:', {
+        cpuClass: detailedSpecs.cpu?.class || 'unknown',
+        cpuBrand: detailedSpecs.cpu?.brand || 'unknown'
+      });
 
       // Apply testing overrides if in development mode
+      this.logger?.info('HARDWARE_DETECTION', '[OVERRIDES] Checking for testing overrides...');
       const finalSpecs = this.applyTestingOverrides({
         ...basicSpecs,
         ...detailedSpecs,
@@ -43,11 +57,13 @@ class HardwareDetector {
       this.cachedSpecs = finalSpecs;
       this.detectionTimestamp = Date.now();
 
-      this.logger?.info('HARDWARE_DETECTION', 'Hardware detection completed', {
-        detectionTime: finalSpecs.detectionTime,
-        ram: finalSpecs.ram,
-        cpu: finalSpecs.cpu.model,
-        processorClass: finalSpecs.cpu.class
+      this.logger?.info('HARDWARE_DETECTION', '=== HARDWARE DETECTION COMPLETED ===');
+      this.logger?.info('HARDWARE_DETECTION', 'Final specs:', {
+        detectionTime: `${finalSpecs.detectionTime}ms`,
+        ram: `${finalSpecs.ram?.total || finalSpecs.memory?.total}GB`,
+        cpuClass: finalSpecs.cpu.class,
+        cpuModel: finalSpecs.cpu.model,
+        wasOverridden: finalSpecs.overridden || false
       });
 
       return finalSpecs;
@@ -161,7 +177,7 @@ class HardwareDetector {
       .replace(/\s+/g, ' ')       // Normalize whitespace
       .trim();
 
-    this.logger?.info('HARDWARE_DETECTION', 'CPU classification attempt', {
+    this.logger?.info('HARDWARE_DETECTION', '[CPU_CLASS] Classification attempt:', {
       originalBrand: cpuBrand,
       cleanedBrand: brand
     });
@@ -189,7 +205,7 @@ class HardwareDetector {
     }
 
     // Log unclassified processors for debugging
-    this.logger?.warn('HARDWARE_DETECTION', 'CPU classification failed - defaulting to other', {
+    this.logger?.warn('HARDWARE_DETECTION', '[CPU_CLASS] Classification failed - defaulting to other:', {
       originalBrand: cpuBrand,
       cleanedBrand: brand
     });
@@ -205,31 +221,55 @@ class HardwareDetector {
   applyTestingOverrides(specs) {
     const config = AppModeConfigManager.getConfig();
     const overrides = config.testingOverrides || {};
+    
+    this.logger?.info('HARDWARE_DETECTION', '[OVERRIDES] Config overrides:', {
+      hasForceRAM: !!overrides.forceRAM,
+      hasForceCPU: !!overrides.forceCPU,
+      forceRAM: overrides.forceRAM,
+      forceCPU: overrides.forceCPU
+    });
 
     let modifiedSpecs = { ...specs };
+    let overridesApplied = false;
 
     // Apply RAM override
     if (overrides.forceRAM && typeof overrides.forceRAM === 'number') {
+      const originalRAM = modifiedSpecs.ram.total;
       modifiedSpecs.ram.total = overrides.forceRAM;
       modifiedSpecs.memory = modifiedSpecs.memory || {};
       modifiedSpecs.memory.total = overrides.forceRAM;
-      this.logger?.info('HARDWARE_DETECTION', `Applied RAM override: ${overrides.forceRAM}GB`);
+      overridesApplied = true;
+      
+      this.logger?.info('HARDWARE_DETECTION', '[OVERRIDES] RAM override applied:', {
+        original: `${originalRAM}GB`,
+        override: `${overrides.forceRAM}GB`
+      });
     }
 
     // Apply CPU override
     if (overrides.forceCPU && typeof overrides.forceCPU === 'string') {
+      const originalCPU = modifiedSpecs.cpu.class;
       modifiedSpecs.cpu.class = overrides.forceCPU;
       modifiedSpecs.cpu.model = `Overridden ${overrides.forceCPU.toUpperCase()} Processor`;
-      this.logger?.info('HARDWARE_DETECTION', `Applied CPU override: ${overrides.forceCPU}`);
+      overridesApplied = true;
+      
+      this.logger?.info('HARDWARE_DETECTION', '[OVERRIDES] CPU override applied:', {
+        original: originalCPU,
+        override: overrides.forceCPU
+      });
     }
 
     // Mark as overridden for debugging
-    if (overrides.forceRAM || overrides.forceCPU) {
+    if (overridesApplied) {
       modifiedSpecs.overridden = true;
       modifiedSpecs.originalSpecs = {
         ram: specs.ram.total,
         cpu: specs.cpu.class
       };
+      
+      this.logger?.info('HARDWARE_DETECTION', '[OVERRIDES] Specs modified for testing');
+    } else {
+      this.logger?.info('HARDWARE_DETECTION', '[OVERRIDES] No overrides applied - using actual hardware');
     }
 
     return modifiedSpecs;
@@ -327,8 +367,17 @@ class HardwareDetector {
 
     const actualScore = cpuHierarchy[actualCPU.toLowerCase()] || 0;
     const requiredScore = cpuHierarchy[requiredCPU.toLowerCase()] || 0;
+    const meets = actualScore >= requiredScore;
+    
+    this.logger?.info('HARDWARE_DETECTION', '[CPU_COMPARE] CPU comparison:', {
+      actual: actualCPU,
+      required: requiredCPU,
+      actualScore,
+      requiredScore,
+      meets
+    });
 
-    return actualScore >= requiredScore;
+    return meets;
   }
 
   /**
