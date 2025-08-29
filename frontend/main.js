@@ -2460,10 +2460,10 @@ app.whenReady().then(async () => {
       
       // Start the compatibility checker
       const { SystemCompatibilityChecker } = require("./SystemCompatibilityChecker");
-      const compatChecker = new SystemCompatibilityChecker();
+      globalCompatChecker = new SystemCompatibilityChecker();
       
       // Run compatibility check (this will create its own window)
-      const compatResult = await compatChecker.runFullCheck();
+      const compatResult = await globalCompatChecker.runFullCheck();
       
       return { success: true, result: compatResult };
     } catch (error) {
@@ -2563,19 +2563,9 @@ app.whenReady().then(async () => {
     }
   });
 
-  ipcMain.handle("hybrid-flow:payment-choice", async (event, agreedToPay) => {
-    try {
-      log.info("📢 [MODE] HYBRID flow payment choice:", agreedToPay);
-      return { success: true, choice: agreedToPay };
-    } catch (error) {
-      log.error("❌ [MODE] Error handling payment choice:", error);
-      throw error;
-    }
-  });
-
   ipcMain.handle("hybrid-flow:close-app", async (event) => {
     try {
-      log.info("📢 [MODE] HYBRID flow requested app close");
+      log.info("📢 [MODE] HYBRID flow requested app close - user chose to try another PC");
       app.quit();
       return { success: true };
     } catch (error) {
@@ -2723,12 +2713,31 @@ app.whenReady().then(async () => {
     }
   });
 
+  // Global compatibility checker instance for email capture
+  let globalCompatChecker = null;
+
   // Register email verification IPC handler BEFORE compatibility check
   ipcMain.handle("email:submit", async (event, data) => {
     const { email } = data;
+    console.log("📧 🎯 === EMAIL SUBMIT IPC HANDLER TRIGGERED ===");
+    console.log("📧 🎯 Received email:", email);
+    console.log("📧 🎯 globalCompatChecker exists:", !!globalCompatChecker);
+    console.log("📧 🎯 setUserEmail method exists:", !!(globalCompatChecker && typeof globalCompatChecker.setUserEmail === 'function'));
+    
     log.info("📧 [EMAIL] User submitted email:", email);
     
-    // For now, always return success (pass-through as requested)
+    // Store email in global compatibility checker if available
+    if (globalCompatChecker && typeof globalCompatChecker.setUserEmail === 'function') {
+      console.log("📧 🎯 Calling setUserEmail on compatibility checker...");
+      globalCompatChecker.setUserEmail(email);
+      console.log("📧 🎯 Email stored successfully in compatibility checker");
+      log.info("📧 [EMAIL] Email stored in compatibility checker for audit");
+    } else {
+      console.log("📧 ⚠️ globalCompatChecker or setUserEmail method not available");
+      console.log("📧 ⚠️ globalCompatChecker:", globalCompatChecker);
+      console.log("📧 ⚠️ setUserEmail type:", globalCompatChecker ? typeof globalCompatChecker.setUserEmail : 'N/A');
+    }
+    
     return {
       success: true,
       email: email,
@@ -2746,8 +2755,11 @@ app.whenReady().then(async () => {
     const compatStartTime = Date.now();
     
     log.info("🔍 Starting comprehensive system compatibility check...");
-    const compatChecker = new SystemCompatibilityChecker();
-    const compatResult = await compatChecker.runFullCheck();
+    console.log("📧 🎯 === CREATING GLOBAL COMPATIBILITY CHECKER ===");
+    globalCompatChecker = new SystemCompatibilityChecker();
+    console.log("📧 🎯 globalCompatChecker created:", !!globalCompatChecker);
+    console.log("📧 🎯 setUserEmail method available:", !!(globalCompatChecker && typeof globalCompatChecker.setUserEmail === 'function'));
+    const compatResult = await globalCompatChecker.runFullCheck();
     
     const compatEndTime = Date.now();
     const compatDuration = compatEndTime - compatStartTime;

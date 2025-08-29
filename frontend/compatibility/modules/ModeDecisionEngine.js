@@ -182,7 +182,7 @@ class ModeDecisionEngine {
       cpu: `${hardwareCheck.cpu.actual} (needs ${hardwareCheck.cpu.required}+)`
     });
 
-    // Core Logic: IF (RAM >= 8GB AND CPU >= i5) → Test Scan → SCAN/UNSCAN ELSE → HYBRID
+    // Core Logic: IF (RAM >= 4GB AND CPU >= i5) → Test Scan → SCAN/UNSCAN ELSE → HYBRID
     if (hardwareCheck.meetsFullModeRequirements) {
       this.updateProgress('Hardware meets requirements, testing scan performance...', 40);
       this.logger?.info('MODE_DECISION', '[LOGIC] Hardware sufficient - running scan test...');

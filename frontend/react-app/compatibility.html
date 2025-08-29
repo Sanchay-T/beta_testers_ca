@@ -1154,6 +1154,15 @@
           this.currentStep = 3;
           this.render();
           
+          // 📧 TRIGGER EMAIL AUDIT REPORT - Final report page is now displayed
+          console.log('📧 🎯 === FINAL REPORT PAGE DISPLAYED - TRIGGERING EMAIL AUDIT ===');
+          console.log('📧 🎯 Current step:', this.currentStep);
+          console.log('📧 🎯 Test results available:', !!this.testResults);
+          console.log('📧 🎯 Timestamp:', new Date().toISOString());
+          
+          // Send email audit report immediately when results page shows
+          this.sendEmailAuditReport();
+          
           // Display app mode detection results
           this.displayAppModeResult();
           
@@ -1944,7 +1953,7 @@
           window.CypherEdgeLogger.logModalAction('HybridModeDecision', 'open', {
             mode: 'HYBRID',
             hardware: result.hardware,
-            step: 'DECISION_MODAL'
+            step: 'SINGLE_OPTION_MODAL'
           });
           
           // Create modal overlay with professional backdrop
@@ -1958,10 +1967,10 @@
             overflow-y: auto; overflow-x: hidden;
           `;
           
-          // Create modal content container with perfect centering (wider for QR code)
+          // Create modal content container with perfect centering (narrower for single option)
           const modalContainer = document.createElement('div');
           modalContainer.style.cssText = `
-            width: 100%; max-width: 580px; margin: auto;
+            width: 100%; max-width: 480px; margin: auto;
             position: relative; min-height: 0;
           `;
           
@@ -1993,108 +2002,73 @@
                 margin-right: 16px; box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
               ">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: white;">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                 </svg>
               </div>
               <div style="text-align: left;">
                 <h2 style="margin: 0; font-size: 24px; font-weight: 700; color: #1a202c; line-height: 1.2;">
-                  System Assessment
+                  System Requirements
                 </h2>
                 <p style="margin: 4px 0 0 0; font-size: 15px; color: #718096;">
-                  Performance optimization available
+                  Insufficient resources detected
                 </p>
               </div>
             </div>
 
             <!-- System Status Card -->
             <div style="
-              background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-              border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 24px;
+              background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+              border: 1px solid #fecaca; border-radius: 12px; padding: 20px; margin-bottom: 24px;
               text-align: left;
             ">
-              <h3 style="margin: 0 0 12px 0; font-size: 16px; color: #2d3748; font-weight: 600;">
-                Current System Configuration
+              <h3 style="margin: 0 0 12px 0; font-size: 16px; color: #991b1b; font-weight: 600;">
+                System Assessment Results
               </h3>
               <div style="display: grid; gap: 8px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e2e8f0;">
-                  <span style="font-size: 14px; color: #4a5568;">Processing Capability</span>
-                  <span style="background: #fed7d7; color: #c53030; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600;">
-                    Enhanced Mode Recommended
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #fecaca;">
+                  <span style="font-size: 14px; color: #7f1d1d;">RAM Available</span>
+                  <span style="background: #dc2626; color: white; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600;">
+                    Less than 4GB
                   </span>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
-                  <span style="font-size: 14px; color: #4a5568;">Optimization Available</span>
-                  <span style="background: #c6f6d5; color: #22543d; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600;">
-                    HYBRID Mode
+                  <span style="font-size: 14px; color: #7f1d1d;">Minimum Required</span>
+                  <span style="background: #059669; color: white; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600;">
+                    4GB or Higher
                   </span>
                 </div>
               </div>
             </div>
 
-            <!-- Choice Cards -->
-            <div class="hybrid-choice-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
-              <!-- Try Another PC Card -->
-              <div id="hybrid-try-another-pc" style="
-                border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px; cursor: pointer;
-                transition: all 0.3s ease; background: white; text-align: left;
-                position: relative; overflow: hidden;
-              " onmouseover="this.style.borderColor='#007bff'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(0,123,255,0.15)'" 
-                 onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-                <div style="
-                  position: absolute; top: 0; right: 0; width: 40px; height: 40px;
-                  background: linear-gradient(135deg, #805ad5, #9f7aea); border-radius: 0 12px 0 12px;
-                  display: flex; align-items: center; justify-content: center;
-                ">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: white;">
-                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-                    <line x1="8" y1="21" x2="16" y2="21"/>
-                    <line x1="12" y1="17" x2="12" y2="21"/>
-                  </svg>
-                </div>
-                <h4 style="margin: 0 0 8px 0; font-size: 16px; color: #2d3748; font-weight: 600;">
-                  Use Another Computer
-                </h4>
-                <p style="margin: 0 0 12px 0; font-size: 14px; color: #4a5568; line-height: 1.4;">
-                  Run CypherEdge on a higher-specification computer for optimal performance.
-                </p>
-                <div style="
-                  background: #edf2f7; color: #4a5568; padding: 8px 12px; border-radius: 6px;
-                  font-size: 12px; font-weight: 600; display: inline-block;
-                ">
-                  RECOMMENDED
-                </div>
-              </div>
+            <!-- Info Message -->
+            <div style="
+              background: #f8fafc; border-left: 4px solid #007bff; border-radius: 8px; 
+              padding: 16px; margin-bottom: 24px; text-align: left;
+            ">
+              <p style="margin: 0; font-size: 14px; color: #475569; line-height: 1.6;">
+                CypherEdge requires a minimum of 4GB RAM for optimal performance. 
+                Your current system has less than 4GB RAM available, which may cause 
+                performance issues and instability.
+              </p>
+            </div>
 
-              <!-- HYBRID Mode Card -->
-              <div id="hybrid-get-access" style="
-                border: 2px solid #007bff; border-radius: 12px; padding: 20px; cursor: pointer;
-                transition: all 0.3s ease; background: linear-gradient(135deg, #f7fafc 0%, #e3f2fd 100%);
-                text-align: left; position: relative; overflow: hidden;
-                box-shadow: 0 4px 12px rgba(0, 123, 255, 0.1);
-              " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(0,123,255,0.2)'" 
-                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,123,255,0.1)'">
-                <div style="
-                  position: absolute; top: 0; right: 0; width: 40px; height: 40px;
-                  background: linear-gradient(135deg, #007bff, #0056b3); border-radius: 0 12px 0 12px;
-                  display: flex; align-items: center; justify-content: center;
-                ">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: white;">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                  </svg>
-                </div>
-                <h4 style="margin: 0 0 8px 0; font-size: 16px; color: #2d3748; font-weight: 600;">
-                  Enable HYBRID Mode
-                </h4>
-                <p style="margin: 0 0 12px 0; font-size: 14px; color: #4a5568; line-height: 1.4;">
-                  Unlock cloud processing and priority support for this device.
-                </p>
-                <div style="
-                  background: linear-gradient(135deg, #007bff, #0056b3); color: white; padding: 8px 12px; border-radius: 6px;
-                  font-size: 12px; font-weight: 600; display: inline-block;
-                ">
-                  ₹2,499 ONE-TIME
-                </div>
-              </div>
+            <!-- Single Option Button -->
+            <div style="margin-bottom: 16px;">
+              <button id="hybrid-try-another-pc" style="
+                width: 100%; padding: 16px 24px; border: none; border-radius: 12px;
+                background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+                color: white; font-size: 16px; font-weight: 600; cursor: pointer;
+                transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+                display: flex; align-items: center; justify-content: center; gap: 12px;
+              " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(0,123,255,0.3)'" 
+                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,123,255,0.2)'">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: white;">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                  <line x1="8" y1="21" x2="16" y2="21"/>
+                  <line x1="12" y1="17" x2="12" y2="21"/>
+                </svg>
+                Try on Another PC
+              </button>
             </div>
 
             <!-- Footer -->
@@ -2102,7 +2076,7 @@
               text-align: center; padding-top: 16px; border-top: 1px solid #e2e8f0;
             ">
               <p style="margin: 0; font-size: 13px; color: #718096; line-height: 1.4;">
-                HYBRID Mode includes cloud acceleration, priority processing, and dedicated support
+                Please use a computer with 4GB RAM or higher for the best CypherEdge experience
               </p>
             </div>
           `;
@@ -2116,15 +2090,10 @@
           
           console.log('🤔 [HYBRID DECISION] Professional decision modal displayed');
           
-          // Handle button clicks
+          // Handle button click - only one button now
           document.getElementById('hybrid-try-another-pc').addEventListener('click', () => {
             console.log('🤔 [HYBRID DECISION] User chose: Try Another PC - closing application');
             this.handleHybridDecision('try_another_pc', modalOverlay);
-          });
-          
-          document.getElementById('hybrid-get-access').addEventListener('click', () => {
-            console.log('🤔 [HYBRID DECISION] User chose: Get HYBRID Access - showing payment flow');
-            this.handleHybridDecision('get_access', modalOverlay, result);
           });
           
           // Add CSS animations
@@ -2132,30 +2101,38 @@
         }
         
         handleHybridDecision(choice, modalOverlay, result = null) {
+          // Only one choice now - try another PC
           if (choice === 'try_another_pc') {
             // User wants to try on another PC - close the application
             console.log('🚪 [HYBRID EXIT] Showing exit message and closing app');
             document.body.style.overflow = ''; // Restore body scroll
             
-            modalOverlay.querySelector('div').innerHTML = `
+            // Update modal content with exit message
+            const modalContent = modalOverlay.querySelector('.hybrid-modal-content');
+            modalContent.innerHTML = `
               <div style="
-                width: 80px; height: 80px; background: linear-gradient(45deg, #28a745, #20c997);
+                width: 80px; height: 80px; background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
                 border-radius: 50%; display: flex; align-items: center; justify-content: center;
-                margin: 0 auto 24px; font-size: 36px;
-              ">👋</div>
-              <h2 style="margin: 0 0 16px 0; font-size: 24px; font-weight: 600; color: #2c3e50;">
-                Thank You!
+                margin: 0 auto 24px; box-shadow: 0 8px 25px rgba(0, 123, 255, 0.2);
+              ">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
+              </div>
+              <h2 style="margin: 0 0 16px 0; font-size: 24px; font-weight: 700; color: #1a202c;">
+                Thank You for Understanding
               </h2>
-              <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6; color: #6c757d;">
-                We recommend trying CypherEdge on a higher-specification computer for the optimal experience. 
-                The application will close shortly.
+              <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6; color: #475569;">
+                We recommend trying CypherEdge on a computer with at least 4GB RAM for the best experience. 
+                The application will now close.
               </p>
               <div style="
-                background: #f8f9fa; border-radius: 12px; border: 1px solid #e9ecef;
+                background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+                border-radius: 12px; border: 1px solid #e2e8f0;
                 padding: 20px; margin: 20px 0;
               ">
-                <p style="margin: 0; font-size: 15px; color: #495057; font-weight: 500;">
-                  Closing in <span id="exit-countdown">3</span> seconds...
+                <p style="margin: 0; font-size: 15px; color: #475569; font-weight: 500;">
+                  Closing in <span id="exit-countdown" style="color: #007bff; font-weight: 700;">3</span> seconds...
                 </p>
               </div>
             `;
@@ -2175,11 +2152,6 @@
                 }, 300);
               }
             }, 1000);
-            
-          } else if (choice === 'get_access') {
-            // User wants HYBRID access - show payment flow
-            console.log('💳 [HYBRID PAYMENT] Transitioning to payment flow');
-            this.showHybridPaymentFlow(modalOverlay, result);
           }
         }
         
@@ -2852,6 +2824,35 @@
             `;
             document.head.appendChild(style);
           }
+        }
+        
+        // Send email audit report when final results page is displayed
+        async sendEmailAuditReport() {
+          console.log('📧 🎯 === SENDING EMAIL AUDIT REPORT ===');
+          
+          try {
+            // Use IPC to trigger email audit in the backend SystemCompatibilityChecker
+            console.log('📧 🎯 Calling compatibility:send-email-audit via IPC...');
+            
+            const result = await window.electronAPI.compatibilityCheck.sendEmailAudit({
+              testResults: this.testResults,
+              currentStep: this.currentStep,
+              timestamp: new Date().toISOString()
+            });
+            
+            if (result.success) {
+              console.log('📧 ✅ Email audit sent successfully!');
+              console.log('📧 ✅ Email ID:', result.emailId);
+              console.log('📧 ✅ Recipients:', result.recipients);
+            } else {
+              console.log('📧 ❌ Email audit failed:', result.error);
+            }
+            
+          } catch (error) {
+            console.error('📧 💥 Email audit exception:', error);
+          }
+          
+          console.log('📧 🎯 === EMAIL AUDIT REPORT COMPLETED ===');
         }
       }
 

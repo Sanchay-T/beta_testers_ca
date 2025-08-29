@@ -20,23 +20,22 @@ class HybridModeFlow {
    * @returns {Promise<Object>} Flow completion result
    */
   async startHybridFlow(decisionResult) {
-    this.logger?.info('HYBRID_FLOW', 'HYBRID mode detected - delegating to frontend UI', {
+    this.logger?.info('HYBRID_FLOW', 'HYBRID mode detected - insufficient RAM (<4GB)', {
       reason: decisionResult.reason,
       specs: decisionResult.analysis?.hardware?.specs
     });
 
-    // ✅ IMPORTANT: Don't block here! The frontend compatibility.html will handle the UI
-    // The backend should just record that HYBRID mode was determined and let frontend show the payment flow
+    // ✅ UPDATED: No payment flow, only "Try another PC" option
+    // The frontend compatibility.html will handle the simplified UI
     
-    this.logger?.info('HYBRID_FLOW', 'Backend HYBRID flow complete - frontend will handle payment UI');
+    this.logger?.info('HYBRID_FLOW', 'Backend HYBRID flow complete - frontend will show "Try another PC" message');
     
     // Return immediately with pending status - frontend will handle user interaction
     return this.createFlowResult('frontend_ui_pending', true, {
-      message: 'HYBRID mode determined - frontend UI will handle payment flow',
+      message: 'HYBRID mode determined - frontend UI will handle "Try another PC" flow',
       reason: decisionResult.reason,
       userChoices: {
-        hasAlternativePC: null,
-        proceedWithPayment: null,
+        tryAnotherPC: null,
         hybridModeEnabled: false
       }
     });

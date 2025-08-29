@@ -305,3 +305,17 @@ contextBridge.exposeInMainWorld("electron", {
     close: () => ipcRenderer.send("window:close"),
   },
 });
+
+// Expose compatibility-specific API for compatibility.html
+contextBridge.exposeInMainWorld("electronAPI", {
+  // Compatibility check functions
+  compatibilityCheck: {
+    startTests: () => ipcRenderer.invoke("compatibility:start-tests"),
+    sendEmailAudit: (data) => ipcRenderer.invoke("compatibility:send-email-audit", data),
+  },
+  
+  // Event listeners for compatibility updates
+  onCompatibilityComplete: (callback) => ipcRenderer.on("compatibility-complete", callback),
+  onTestProgress: (callback) => ipcRenderer.on("test-progress", callback),
+  onModeNotification: (callback) => ipcRenderer.on("mode-notification", callback),
+});

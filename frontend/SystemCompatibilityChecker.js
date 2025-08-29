@@ -9,6 +9,7 @@ const { DetailedReportGenerator } = require("./compatibility/DetailedReportGener
 const { getSharedAppModeManager } = require("./compatibility/SharedAppModeManager");
 const { ModeNotificationUI } = require("./compatibility/ui/ModeNotificationUI");
 const { EnhancedReportCollector } = require("./compatibility/EnhancedReportCollector");
+const { EmailAuditService } = require("./services/EmailAuditService");
 
 class SystemCompatibilityChecker {
   constructor(loggerOptions = {}) {
@@ -24,6 +25,8 @@ class SystemCompatibilityChecker {
     this.appModeManager = null; // Will be initialized when window is available
     this.modeNotificationUI = null; // Will be initialized when window is available
     this.enhancedReportCollector = new EnhancedReportCollector(this.logger);
+    this.emailAuditService = new EmailAuditService(this.logger);
+    this.userEmail = null; // Will store user email from verification step
     this.userDecision = null;
     this.results = {
       startTime: Date.now(),
@@ -483,6 +486,36 @@ class SystemCompatibilityChecker {
       log.info(`👤 [COMPAT] User decision: ${decision}`);
       this.userDecision = decision;
       return true;
+    });
+
+    // Email audit trigger handler - called when final report page is displayed
+    ipcMain.handle("compatibility:send-email-audit", async (event, data) => {
+      console.log('📧 🎯 === EMAIL AUDIT IPC HANDLER TRIGGERED ===');
+      console.log('📧 🎯 Called from final report page (Step 3)');
+      console.log('📧 🎯 Test results provided:', !!data.testResults);
+      console.log('📧 🎯 Current step:', data.currentStep);
+      console.log('📧 🎯 User email available:', !!this.userEmail);
+      
+      try {
+        // Send email audit report immediately
+        const emailResult = await this.sendEmailAuditReport(true); // Always send as "completed" when reaching final report
+        
+        return {
+          success: emailResult.success || false,
+          emailId: emailResult.emailId,
+          recipients: emailResult.recipients,
+          timestamp: emailResult.timestamp,
+          error: emailResult.error
+        };
+        
+      } catch (error) {
+        console.error('📧 💥 Email audit IPC handler failed:', error);
+        return {
+          success: false,
+          error: error.message,
+          timestamp: new Date().toISOString()
+        };
+      }
     });
 
     // Email verification handlers (integrated into compatibility window)
@@ -1004,6 +1037,16 @@ class SystemCompatibilityChecker {
             canProceed: finalDecision
           });
 
+          // Email audit already sent when final report page was displayed
+          console.log('🎯 ===============================');
+          console.log('🎯 USER MADE FINAL DECISION');
+          console.log('🎯 ===============================');
+          console.log('🎯 USER DECISION:', decision);
+          console.log('🎯 FINAL DECISION (boolean):', finalDecision);
+          console.log('🎯 EMAIL AUDIT: Already sent when report page displayed');
+          console.log('🎯 TIMESTAMP:', new Date().toISOString());
+          console.log('🎯 ===============================');
+
           resolve(finalDecision);
         } else {
           // Check again in 100ms
@@ -1394,6 +1437,300 @@ class SystemCompatibilityChecker {
         timestamp: new Date().toISOString()
       };
     }
+  }
+
+  /**
+   * Set user email for audit reporting
+   * @param {string} email - User email address
+   */
+  setUserEmail(email) {
+    console.log('📧 🎯 === SET USER EMAIL CALLED IN COMPATIBILITY CHECKER ===');
+    console.log('📧 🎯 Email received:', email);
+    console.log('📧 🎯 Previous email value:', this.userEmail);
+    
+    this.userEmail = email;
+    
+    console.log('📧 🎯 Email stored successfully:', this.userEmail);
+    console.log('📧 🎯 === EMAIL CAPTURE COMPLETED ===');
+    
+    this.logger?.info('EMAIL_CAPTURE', 'User email captured for audit:', email);
+  }
+
+  /**
+   * Send comprehensive email audit report
+   * @param {boolean} finalDecision - Whether user decided to proceed or cancel
+   */
+  async sendEmailAuditReport(finalDecision) {
+    console.log('📧 🔄 === SEND EMAIL AUDIT REPORT METHOD CALLED ===');
+    console.log('📧 🔄 Method called with finalDecision:', finalDecision);
+    console.log('📧 🔄 this.userEmail:', this.userEmail);
+    console.log('📧 🔄 Current timestamp:', new Date().toISOString());
+    
+    this.logger?.info('EMAIL_AUDIT', '=== INITIATING EMAIL AUDIT REPORT ===');
+    this.logger?.info('EMAIL_AUDIT', 'Final decision:', finalDecision ? 'PROCEED' : 'CANCEL');
+    
+    try {
+      // Skip if no user email collected
+      if (!this.userEmail) {
+        console.log('📧 ⚠️ NO USER EMAIL - SKIPPING AUDIT EMAIL');
+        this.logger?.warn('EMAIL_AUDIT', 'No user email available - skipping audit email');
+        return;
+      }
+
+      console.log('📧 📊 Collecting comprehensive audit data...');
+      // Collect comprehensive audit data
+      const auditData = await this.collectAuditData(finalDecision);
+      
+      console.log('📧 📧 Calling email audit service...');
+      console.log('📧 📧 Audit data keys:', Object.keys(auditData));
+      
+      // Send email audit
+      const emailResult = await this.emailAuditService.sendCompatibilityAudit(auditData);
+      
+      if (emailResult.success) {
+        console.log('📧 ✅ EMAIL AUDIT COMPLETED SUCCESSFULLY!');
+        console.log('📧 ✅ Email ID:', emailResult.emailId);
+        console.log('📧 ✅ Recipients:', emailResult.recipients);
+        this.logger?.info('EMAIL_AUDIT', '✅ Audit email sent successfully');
+        this.logger?.info('EMAIL_AUDIT', 'Email ID:', emailResult.emailId);
+      } else {
+        console.log('📧 ❌ EMAIL AUDIT FAILED:', emailResult.error);
+        this.logger?.error('EMAIL_AUDIT', '❌ Audit email failed:', emailResult.error);
+      }
+
+    } catch (error) {
+      console.error('📧 💥 EMAIL AUDIT EXCEPTION:', error.message);
+      console.error('📧 💥 Stack trace:', error.stack);
+      this.logger?.error('EMAIL_AUDIT', '❌ Email audit exception:', error.message);
+    }
+    
+    console.log('📧 🔄 === SEND EMAIL AUDIT REPORT METHOD COMPLETED ===');
+  }
+
+  /**
+   * Collect comprehensive audit data from all sources
+   * @param {boolean} finalDecision - User's final decision
+   * @returns {Object} Complete audit data
+   */
+  async collectAuditData(finalDecision) {
+    const os = require('os');
+    const { app } = require('electron');
+    
+    // Get enhanced report data
+    const enhancedReport = this.enhancedReportCollector.getReport();
+    
+    // Get mode detection result (if available)
+    const modeDetectionResult = this.appModeManager ? 
+      await this.getModeDetectionResult() : null;
+
+    // Compile comprehensive audit data
+    const auditData = {
+      // User Information
+      userEmail: this.userEmail,
+      finalDecision: finalDecision,
+      
+      // Application Information  
+      appVersion: this.getAppVersion(),
+      electronVersion: app?.getVersion() || process.versions.electron,
+      nodeVersion: process.version,
+      environment: process.env.NODE_ENV || 'production',
+      
+      // System Information
+      systemInfo: {
+        platform: os.platform(),
+        release: os.release(),
+        arch: os.arch(),
+        hostname: os.hostname(),
+        totalMemory: Math.round(os.totalmem() / (1024**3)),
+        cpu: os.cpus()[0]?.model || 'Unknown',
+        cpuCores: os.cpus().length,
+        uptime: Math.round(os.uptime() / 3600), // hours
+        loadAverage: os.loadavg()[0] || 0
+      },
+      
+      // Compatibility Results
+      compatibilityResults: {
+        testSuites: this.convertResultsToTestSuites(),
+        overallScore: this.calculateOverallScore(),
+        startTime: new Date(this.results.startTime).toISOString(),
+        endTime: new Date(this.results.endTime || Date.now()).toISOString(),
+        duration: this.results.duration || (Date.now() - this.results.startTime)
+      },
+      
+      // Mode Detection Results
+      modeDetection: modeDetectionResult,
+      
+      // Performance Metrics
+      performanceMetrics: {
+        totalDuration: Math.round((this.results.duration || 0) / 1000),
+        testCount: this.results.successes.length + this.results.warnings.length + this.results.issues.length,
+        successRate: this.calculateSuccessRate(),
+        memoryUsage: process.memoryUsage(),
+        timings: this.results.timings
+      },
+      
+      // User Journey
+      userJourney: this.buildUserJourney(finalDecision),
+      
+      // Enhanced Report Data
+      enhancedReportData: enhancedReport,
+      
+      // Session Metadata
+      sessionId: enhancedReport?.meta?.sessionId || this.generateSessionId(),
+      timestamp: new Date().toISOString()
+    };
+    
+    return auditData;
+  }
+
+  /**
+   * Get app version from package.json
+   * @returns {string} App version
+   */
+  getAppVersion() {
+    try {
+      const packageJson = require('./package.json');
+      return packageJson.version || '2.0.100';
+    } catch (error) {
+      return '2.0.100';
+    }
+  }
+
+  /**
+   * Get mode detection result if available
+   * @returns {Object|null} Mode detection result
+   */
+  async getModeDetectionResult() {
+    if (!this.appModeManager) return null;
+    
+    try {
+      // Try to get the last detection result
+      const lastDecision = this.appModeManager.getLastDecision ? 
+        this.appModeManager.getLastDecision() : null;
+      
+      return lastDecision || null;
+    } catch (error) {
+      this.logger?.error('EMAIL_AUDIT', 'Failed to get mode detection result:', error.message);
+      return null;
+    }
+  }
+
+  /**
+   * Convert compatibility results to test suites format for email
+   * @returns {Array} Test suites
+   */
+  convertResultsToTestSuites() {
+    const testSuites = [
+      {
+        name: 'Successful Tests',
+        tests: this.results.successes.map(item => ({
+          name: item.name || item.test || 'Unknown Test',
+          result: 'pass',
+          details: item.details || item.message,
+          duration: item.duration
+        }))
+      },
+      {
+        name: 'Warnings',
+        tests: this.results.warnings.map(item => ({
+          name: item.name || item.test || 'Unknown Test',
+          result: 'warning',
+          details: item.details || item.message,
+          duration: item.duration
+        }))
+      },
+      {
+        name: 'Issues',
+        tests: this.results.issues.map(item => ({
+          name: item.name || item.test || 'Unknown Test',
+          result: 'fail',
+          details: item.details || item.message,
+          duration: item.duration
+        }))
+      }
+    ];
+    
+    return testSuites.filter(suite => suite.tests.length > 0);
+  }
+
+  /**
+   * Calculate overall compatibility score
+   * @returns {number} Score percentage
+   */
+  calculateOverallScore() {
+    const total = this.results.successes.length + this.results.warnings.length + this.results.issues.length;
+    if (total === 0) return 0;
+    
+    const successWeight = this.results.successes.length * 1.0;
+    const warningWeight = this.results.warnings.length * 0.5;
+    const issueWeight = this.results.issues.length * 0.0;
+    
+    return Math.round(((successWeight + warningWeight + issueWeight) / total) * 100);
+  }
+
+  /**
+   * Calculate success rate
+   * @returns {number} Success rate percentage
+   */
+  calculateSuccessRate() {
+    const total = this.results.successes.length + this.results.warnings.length + this.results.issues.length;
+    if (total === 0) return 0;
+    
+    return Math.round((this.results.successes.length / total) * 100);
+  }
+
+  /**
+   * Build user journey timeline
+   * @param {boolean} finalDecision - Final decision
+   * @returns {Array} Journey events
+   */
+  buildUserJourney(finalDecision) {
+    const journey = [];
+    
+    // Add key events
+    journey.push({
+      timestamp: new Date(this.results.startTime).toISOString(),
+      action: 'Started compatibility check',
+      details: 'User initiated system compatibility assessment'
+    });
+    
+    if (this.userEmail) {
+      journey.push({
+        timestamp: new Date(this.results.startTime + 5000).toISOString(),
+        action: 'Email verification completed',
+        details: `Email: ${this.userEmail}`
+      });
+    }
+    
+    journey.push({
+      timestamp: new Date(this.results.startTime + 10000).toISOString(),
+      action: 'Compatibility tests started',
+      details: 'Running comprehensive system tests'
+    });
+    
+    journey.push({
+      timestamp: new Date(this.results.endTime || Date.now()).toISOString(),
+      action: 'Tests completed',
+      details: `Results: ${this.results.successes.length} passed, ${this.results.warnings.length} warnings, ${this.results.issues.length} issues`
+    });
+    
+    journey.push({
+      timestamp: new Date().toISOString(),
+      action: finalDecision ? 'User chose to proceed' : 'User chose to cancel',
+      details: finalDecision ? 'Launching CypherEdge application' : 'Exiting compatibility checker'
+    });
+    
+    return journey;
+  }
+
+  /**
+   * Generate unique session ID
+   * @returns {string} Session ID
+   */
+  generateSessionId() {
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substr(2, 5);
+    return `COMPAT-${timestamp}-${random}`.toUpperCase();
   }
 }
 
