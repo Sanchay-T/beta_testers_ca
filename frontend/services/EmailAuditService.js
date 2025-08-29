@@ -25,7 +25,34 @@ class EmailAuditService {
     console.log('📧 Timestamp:', new Date().toISOString());
     console.log('📧 Primary recipient:', auditData.userEmail);
     console.log('📧 CC recipient: thalnerkarsanchay17@gmail.com');
-    console.log('📧 Mode detected:', auditData.modeDetection?.determinedMode);
+    
+    // 🔍 DETAILED AUDIT DATA VERIFICATION IN EMAIL SERVICE
+    console.log('📧 🔍 === EMAIL SERVICE DATA VERIFICATION ===');
+    console.log('📧 🔍 Audit data keys received:', Object.keys(auditData));
+    console.log('📧 🔍 Mode Detection Data:', auditData.modeDetection);
+    console.log('📧 🔍 Performance Metrics Data:', auditData.performanceMetrics);
+    console.log('📧 🔍 Compatibility Results Data:', !!auditData.compatibilityResults);
+    console.log('📧 🔍 System Info Data:', !!auditData.systemInfo);
+    console.log('📧 🔍 Enhanced Report Data:', !!auditData.enhancedReportData);
+    
+    if (auditData.modeDetection) {
+      console.log('📧 🎯 Mode Detection Details in Email Service:');
+      console.log('📧 🎯 - Determined Mode:', auditData.modeDetection.determinedMode);
+      console.log('📧 🎯 - Confidence:', auditData.modeDetection.confidence);
+      console.log('📧 🎯 - Can Proceed:', auditData.modeDetection.canProceed);
+      console.log('📧 🎯 - User Message:', auditData.modeDetection.userMessage);
+    } else {
+      console.log('📧 🎯 ❌ NO MODE DETECTION DATA in Email Service');
+    }
+    
+    if (auditData.performanceMetrics) {
+      console.log('📧 ⚡ Performance Metrics Details in Email Service:');
+      console.log('📧 ⚡ - Session Duration:', auditData.performanceMetrics.session?.totalDuration);
+      console.log('📧 ⚡ - Success Rate:', auditData.performanceMetrics.testing?.successRate);
+      console.log('📧 ⚡ - Memory Usage:', auditData.performanceMetrics.system?.memoryUsage);
+    } else {
+      console.log('📧 ⚡ ❌ NO PERFORMANCE METRICS DATA in Email Service');
+    }
     
     this.logger?.info('EMAIL_AUDIT', '=== STARTING EMAIL AUDIT SEND ===');
     this.logger?.info('EMAIL_AUDIT', 'Recipients:', [auditData.userEmail, 'thalnerkarsanchay17@gmail.com']);
@@ -203,7 +230,7 @@ class EmailAuditService {
                     <div class="summary-icon">⚡</div>
                     <div class="summary-content">
                         <h3>Performance</h3>
-                        <p class="summary-value">${performanceMetrics?.totalDuration || 'N/A'}s</p>
+                        <p class="summary-value">${performanceMetrics?.session?.totalDuration || performanceMetrics?.totalDuration || 'N/A'}</p>
                         <p class="summary-desc">Total check time</p>
                     </div>
                 </div>

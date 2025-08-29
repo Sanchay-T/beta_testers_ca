@@ -1160,8 +1160,19 @@
           console.log('📧 🎯 Test results available:', !!this.testResults);
           console.log('📧 🎯 Timestamp:', new Date().toISOString());
           
-          // Send email audit report immediately when results page shows
-          this.sendEmailAuditReport();
+          // 📧 TRIGGER EMAIL AUDIT VIA ELECTRON API (IMMEDIATE - BEFORE AUTO-LAUNCH)
+          console.log('📧 🎯 === CALLING EMAIL AUDIT VIA ELECTRON API ===');
+          if (window.electronAPI && window.electronAPI.compatibilityCheck) {
+            window.electronAPI.compatibilityCheck.sendEmailAudit()
+              .then(result => {
+                console.log('📧 ✅ Email audit completed:', result);
+              })
+              .catch(error => {
+                console.error('📧 ❌ Email audit failed:', error);
+              });
+          } else {
+            console.error('📧 ❌ EmailAudit API not available');
+          }
           
           // Display app mode detection results
           this.displayAppModeResult();

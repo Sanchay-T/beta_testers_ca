@@ -26,8 +26,12 @@ class SystemCompatibilityChecker {
     this.modeNotificationUI = null; // Will be initialized when window is available
     this.enhancedReportCollector = new EnhancedReportCollector(this.logger);
     this.emailAuditService = new EmailAuditService(this.logger);
+    this.store = null; // Will be initialized dynamically
     this.userEmail = null; // Will store user email from verification step
     this.userDecision = null;
+    
+    // 📧 EMAIL PERSISTENCE: Initialize store and load previously captured email
+    this.initializeStore();
     this.results = {
       startTime: Date.now(),
       canProceed: false,
@@ -774,6 +778,86 @@ class SystemCompatibilityChecker {
       canProceed: this.results.canProceed,
     });
 
+    // 📧 FALLBACK EMAIL TRIGGER: Send email audit when tests complete (Step 2)
+    // This ensures email is sent even if Step 3 (final report) is never reached
+    console.log('📧 🎯 === TESTS COMPLETED - TRIGGERING FALLBACK EMAIL AUDIT ===');
+    console.log('📧 🎯 Test results: canProceed =', this.results.canProceed);
+    console.log('📧 🎯 User email available:', !!this.userEmail);
+    
+    // 🔧 FIX: Calculate and set duration before sending email
+    if (!this.results.endTime) {
+      this.results.endTime = Date.now();
+    }
+    if (!this.results.duration && this.results.startTime) {
+      this.results.duration = this.results.endTime - this.results.startTime;
+      console.log('📧 🔧 Fixed duration calculation:', this.results.duration, 'ms');
+    }
+    
+    // 🔧 FIX: Run quick mode detection for email if not already done
+    if (this.appModeManager && this.results.canProceed) {
+      try {
+        console.log('📧 🔧 Running quick mode detection for email audit...');
+        
+        // Check if mode detection has already run
+        const storedDecision = this.appModeManager.loadStoredDecision ? 
+          this.appModeManager.loadStoredDecision() : null;
+        
+        if (storedDecision && storedDecision.determinedMode) {
+          console.log('📧 🔧 Found stored mode decision for fallback email:', storedDecision.determinedMode);
+          // Store it in enhanced report collector for email to pick up
+          if (this.enhancedReportCollector && this.enhancedReportCollector.setModeDetectionResult) {
+            this.enhancedReportCollector.setModeDetectionResult(storedDecision);
+            console.log('📧 🔧 Set mode detection result in enhanced report collector');
+          }
+        } else {
+          console.log('📧 🔧 No stored mode decision, running quick detection for email...');
+          
+          // Run a quick mode detection just for the email
+          try {
+            const quickModeResult = await this.appModeManager.runModeDetection({
+              skipTestingPanel: true,
+              skipUI: true,  // Don't show UI, just detect
+              source: 'email_audit_fallback'
+            });
+            
+            if (quickModeResult && quickModeResult.determinedMode) {
+              console.log('📧 🔧 Quick mode detection result:', quickModeResult.determinedMode);
+              
+              // Store in enhanced report collector
+              if (this.enhancedReportCollector && this.enhancedReportCollector.setModeDetectionResult) {
+                this.enhancedReportCollector.setModeDetectionResult(quickModeResult);
+                console.log('📧 🔧 Stored mode detection result for email');
+              }
+              
+              // Also store in results for backward compatibility
+              this.results.appMode = quickModeResult;
+            }
+          } catch (modeError) {
+            console.log('📧 🔧 Quick mode detection failed:', modeError.message);
+          }
+        }
+      } catch (error) {
+        console.log('📧 🔧 Could not retrieve mode detection for fallback:', error.message);
+      }
+    } else if (!this.appModeManager) {
+      console.log('📧 🔧 AppModeManager not available for mode detection');
+    }
+    
+    if (this.userEmail && this.results.canProceed) {
+      console.log('📧 🎯 Sending fallback email audit for successful test completion...');
+      try {
+        await this.sendEmailAuditReport('test-completion-fallback');
+        console.log('📧 ✅ Fallback email audit sent successfully');
+      } catch (error) {
+        console.error('📧 ❌ Fallback email audit failed:', error.message);
+        this.logger?.error('EMAIL_AUDIT', 'Fallback email audit failed:', error.message);
+      }
+    } else if (!this.userEmail) {
+      console.log('📧 ⚠️ Fallback email skipped: No user email available');
+    } else if (!this.results.canProceed) {
+      console.log('📧 ⚠️ Fallback email skipped: Tests failed, user may retry');
+    }
+
     // Cleanup managed server after all tests are complete
     if (this.tests && this.tests.cleanupManagedServer) {
       this.logger.info('TESTS_COMPLETE', 'Initiating managed server cleanup');
@@ -1440,6 +1524,80 @@ class SystemCompatibilityChecker {
   }
 
   /**
+   * Initialize electron-store dynamically (ES module compatibility)
+   */
+  async initializeStore() {
+    try {
+      const { default: Store } = await import('electron-store');
+      this.store = new Store({ name: 'compatibility-session' });
+      console.log('📧 💾 Electron-store initialized successfully');
+      
+      // Load persisted email after store is initialized
+      this.loadPersistedEmail();
+    } catch (error) {
+      console.error('📧 ❌ Error initializing electron-store:', error.message);
+      // Fallback: Use in-memory storage
+      this.store = {
+        get: () => null,
+        set: () => {},
+        delete: () => {}
+      };
+    }
+  }
+
+  /**
+   * Load previously captured email from persistent storage
+   */
+  loadPersistedEmail() {
+    try {
+      if (!this.store) {
+        console.log('📧 📋 Store not initialized yet, skipping email load');
+        return;
+      }
+      
+      const persistedEmail = this.store.get('userEmail');
+      const timestamp = this.store.get('emailTimestamp');
+      
+      // Only use persisted email if it's less than 24 hours old
+      if (persistedEmail && timestamp) {
+        const ageHours = (Date.now() - timestamp) / (1000 * 60 * 60);
+        if (ageHours < 24) {
+          this.userEmail = persistedEmail;
+          console.log('📧 🎯 === EMAIL LOADED FROM STORAGE ===');
+          console.log('📧 🎯 Email:', this.userEmail);
+          console.log('📧 🎯 Age:', ageHours.toFixed(1), 'hours');
+          this.logger?.info('EMAIL_PERSISTENCE', 'Loaded persisted email from storage:', persistedEmail);
+          return;
+        } else {
+          console.log('📧 ⚠️ Persisted email too old (', ageHours.toFixed(1), 'hours), clearing storage');
+          this.clearPersistedEmail();
+        }
+      }
+      console.log('📧 📋 No valid persisted email found');
+    } catch (error) {
+      console.error('📧 ❌ Error loading persisted email:', error.message);
+    }
+  }
+
+  /**
+   * Clear persisted email from storage
+   */
+  clearPersistedEmail() {
+    try {
+      if (!this.store) {
+        console.log('📧 📋 Store not initialized yet, skipping email clear');
+        return;
+      }
+      
+      this.store.delete('userEmail');
+      this.store.delete('emailTimestamp');
+      console.log('📧 🗑️ Cleared persisted email from storage');
+    } catch (error) {
+      console.error('📧 ❌ Error clearing persisted email:', error.message);
+    }
+  }
+
+  /**
    * Set user email for audit reporting
    * @param {string} email - User email address
    */
@@ -1449,6 +1607,19 @@ class SystemCompatibilityChecker {
     console.log('📧 🎯 Previous email value:', this.userEmail);
     
     this.userEmail = email;
+    
+    // 📧 EMAIL PERSISTENCE: Save email to storage for cross-session availability
+    try {
+      if (this.store) {
+        this.store.set('userEmail', email);
+        this.store.set('emailTimestamp', Date.now());
+        console.log('📧 💾 Email persisted to storage successfully');
+      } else {
+        console.log('📧 📋 Store not initialized yet, email persistence skipped');
+      }
+    } catch (error) {
+      console.error('📧 ❌ Error persisting email:', error.message);
+    }
     
     console.log('📧 🎯 Email stored successfully:', this.userEmail);
     console.log('📧 🎯 === EMAIL CAPTURE COMPLETED ===');
@@ -1477,31 +1648,140 @@ class SystemCompatibilityChecker {
         return;
       }
 
+      // 📧 EMAIL DEDUPLICATION: Check if email was already sent for this user/session
+      const emailKey = `email_sent_${this.userEmail}_${new Date().toDateString()}`;
+      const lastEmailSent = this.store ? this.store.get(emailKey) : null;
+      
+      if (lastEmailSent) {
+        const timeSince = Date.now() - lastEmailSent;
+        const minutesSince = Math.floor(timeSince / (1000 * 60));
+        
+        // Don't send another email if one was sent in the last 5 minutes
+        if (timeSince < 5 * 60 * 1000) {
+          console.log('📧 ⏭️ DEDUPLICATION: Email already sent', minutesSince, 'minutes ago, skipping');
+          this.logger?.info('EMAIL_AUDIT', 'Deduplication: Email already sent recently, skipping');
+          return { success: true, skipped: true, reason: 'duplicate_prevention' };
+        } else {
+          console.log('📧 📧 DEDUPLICATION: Previous email sent', minutesSince, 'minutes ago, proceeding');
+        }
+      }
+
       console.log('📧 📊 Collecting comprehensive audit data...');
       // Collect comprehensive audit data
       const auditData = await this.collectAuditData(finalDecision);
       
+      // 🔍 COMPREHENSIVE PRE-EMAIL LOGGING - Verify all data is captured
+      console.log('📧 🔍 ===============================================');
+      console.log('📧 🔍 === PRE-EMAIL SEND DATA VERIFICATION ===');
+      console.log('📧 🔍 ===============================================');
+      console.log('📧 📋 User Email:', auditData.userEmail);
+      console.log('📧 📋 Final Decision:', auditData.finalDecision);
+      console.log('📧 📋 Session ID:', auditData.sessionId);
+      console.log('📧 📋 Timestamp:', auditData.timestamp);
+      
+      // 🎯 MODE DETECTION VERIFICATION
+      console.log('📧 🎯 === MODE DETECTION DATA ===');
+      console.log('📧 🎯 Mode Detection Available:', !!auditData.modeDetection);
+      if (auditData.modeDetection) {
+        console.log('📧 🎯 Determined Mode:', auditData.modeDetection.determinedMode);
+        console.log('📧 🎯 Confidence:', auditData.modeDetection.confidence);
+        console.log('📧 🎯 Can Proceed:', auditData.modeDetection.canProceed);
+        console.log('📧 🎯 User Message:', auditData.modeDetection.userMessage);
+        console.log('📧 🎯 Reason:', auditData.modeDetection.reason);
+        console.log('📧 🎯 Full Mode Data:', JSON.stringify(auditData.modeDetection, null, 2));
+      } else {
+        console.log('📧 🎯 ❌ NO MODE DETECTION DATA FOUND');
+        console.log('📧 🎯 this.appModeManager available:', !!this.appModeManager);
+        console.log('📧 🎯 Enhanced Report Mode Detection:', auditData.enhancedReportData?.modeDetection);
+      }
+      
+      // ⚡ PERFORMANCE METRICS VERIFICATION
+      console.log('📧 ⚡ === PERFORMANCE METRICS DATA ===');
+      console.log('📧 ⚡ Performance Metrics Available:', !!auditData.performanceMetrics);
+      if (auditData.performanceMetrics) {
+        console.log('📧 ⚡ Session Duration:', auditData.performanceMetrics.session?.totalDuration);
+        console.log('📧 ⚡ Test Success Rate:', auditData.performanceMetrics.testing?.successRate);
+        console.log('📧 ⚡ Memory Usage:', auditData.performanceMetrics.system?.memoryUsage);
+        console.log('📧 ⚡ Full Performance Data:', JSON.stringify(auditData.performanceMetrics, null, 2));
+      } else {
+        console.log('📧 ⚡ ❌ NO PERFORMANCE METRICS DATA FOUND');
+      }
+      
+      // 🧪 COMPATIBILITY RESULTS VERIFICATION
+      console.log('📧 🧪 === COMPATIBILITY RESULTS DATA ===');
+      console.log('📧 🧪 Compatibility Results Available:', !!auditData.compatibilityResults);
+      if (auditData.compatibilityResults) {
+        console.log('📧 🧪 Overall Score:', auditData.compatibilityResults.overallScore);
+        console.log('📧 🧪 Test Suites Count:', auditData.compatibilityResults.testSuites?.length);
+        console.log('📧 🧪 Duration:', auditData.compatibilityResults.duration);
+        auditData.compatibilityResults.testSuites?.forEach((suite, index) => {
+          console.log(`📧 🧪 Suite ${index + 1}: ${suite.name} (${suite.tests?.length || 0} tests)`);
+        });
+      } else {
+        console.log('📧 🧪 ❌ NO COMPATIBILITY RESULTS DATA FOUND');
+      }
+      
+      // 💻 SYSTEM INFO VERIFICATION
+      console.log('📧 💻 === SYSTEM INFO DATA ===');
+      console.log('📧 💻 Platform:', auditData.systemInfo?.platform);
+      console.log('📧 💻 Total Memory:', auditData.systemInfo?.totalMemory, 'GB');
+      console.log('📧 💻 CPU:', auditData.systemInfo?.cpu);
+      console.log('📧 💻 CPU Cores:', auditData.systemInfo?.cpuCores);
+      console.log('📧 💻 Architecture:', auditData.systemInfo?.arch);
+      
+      // 📊 ENHANCED REPORT DATA VERIFICATION
+      console.log('📧 📊 === ENHANCED REPORT DATA ===');
+      console.log('📧 📊 Enhanced Report Available:', !!auditData.enhancedReportData);
+      if (auditData.enhancedReportData) {
+        console.log('📧 📊 Enhanced Report Keys:', Object.keys(auditData.enhancedReportData));
+        console.log('📧 📊 Enhanced Report Mode Detection:', auditData.enhancedReportData.modeDetection);
+      }
+      
+      // 🔗 DATA SOURCES VERIFICATION
+      console.log('📧 🔗 === DATA SOURCES STATUS ===');
+      console.log('📧 🔗 this.results available:', !!this.results);
+      console.log('📧 🔗 this.results keys:', this.results ? Object.keys(this.results) : 'N/A');
+      console.log('📧 🔗 this.enhancedReportCollector available:', !!this.enhancedReportCollector);
+      console.log('📧 🔗 this.appModeManager available:', !!this.appModeManager);
+      
+      console.log('📧 🔍 ===============================================');
+      console.log('📧 🔍 === END PRE-EMAIL DATA VERIFICATION ===');
+      console.log('📧 🔍 ===============================================');
+      
       console.log('📧 📧 Calling email audit service...');
-      console.log('📧 📧 Audit data keys:', Object.keys(auditData));
+      console.log('📧 📧 Total audit data keys:', Object.keys(auditData).length);
       
       // Send email audit
       const emailResult = await this.emailAuditService.sendCompatibilityAudit(auditData);
       
       if (emailResult.success) {
+        // 📧 TRACK EMAIL SENT: Record successful email for deduplication
+        const emailKey = `email_sent_${this.userEmail}_${new Date().toDateString()}`;
+        if (this.store) {
+          this.store.set(emailKey, Date.now());
+        }
+        
         console.log('📧 ✅ EMAIL AUDIT COMPLETED SUCCESSFULLY!');
         console.log('📧 ✅ Email ID:', emailResult.emailId);
         console.log('📧 ✅ Recipients:', emailResult.recipients);
+        console.log('📧 ✅ Email tracked for deduplication');
         this.logger?.info('EMAIL_AUDIT', '✅ Audit email sent successfully');
         this.logger?.info('EMAIL_AUDIT', 'Email ID:', emailResult.emailId);
+        
+        return { success: true, emailId: emailResult.emailId, recipients: emailResult.recipients };
       } else {
         console.log('📧 ❌ EMAIL AUDIT FAILED:', emailResult.error);
         this.logger?.error('EMAIL_AUDIT', '❌ Audit email failed:', emailResult.error);
+        
+        return { success: false, error: emailResult.error };
       }
 
     } catch (error) {
       console.error('📧 💥 EMAIL AUDIT EXCEPTION:', error.message);
       console.error('📧 💥 Stack trace:', error.stack);
       this.logger?.error('EMAIL_AUDIT', '❌ Email audit exception:', error.message);
+      
+      return { success: false, error: error.message };
     }
     
     console.log('📧 🔄 === SEND EMAIL AUDIT REPORT METHOD COMPLETED ===');
@@ -1561,13 +1841,7 @@ class SystemCompatibilityChecker {
       modeDetection: modeDetectionResult,
       
       // Performance Metrics
-      performanceMetrics: {
-        totalDuration: Math.round((this.results.duration || 0) / 1000),
-        testCount: this.results.successes.length + this.results.warnings.length + this.results.issues.length,
-        successRate: this.calculateSuccessRate(),
-        memoryUsage: process.memoryUsage(),
-        timings: this.results.timings
-      },
+      performanceMetrics: this.collectPerformanceMetrics(enhancedReport),
       
       // User Journey
       userJourney: this.buildUserJourney(finalDecision),
@@ -1579,6 +1853,13 @@ class SystemCompatibilityChecker {
       sessionId: enhancedReport?.meta?.sessionId || this.generateSessionId(),
       timestamp: new Date().toISOString()
     };
+    
+    // 📧 🔍 DEBUG: Log what data we're sending to email service
+    console.log('📧 🔍 === EMAIL AUDIT DATA DEBUG ===');
+    console.log('📧 📋 Mode Detection Data:', JSON.stringify(auditData.modeDetection, null, 2));
+    console.log('📧 📋 Performance Metrics Data:', JSON.stringify(auditData.performanceMetrics, null, 2));
+    console.log('📧 📋 Enhanced Report Data Available:', !!auditData.enhancedReportData);
+    console.log('📧 📋 Enhanced Report Mode Detection:', JSON.stringify(auditData.enhancedReportData?.modeDetection, null, 2));
     
     return auditData;
   }
@@ -1597,20 +1878,187 @@ class SystemCompatibilityChecker {
   }
 
   /**
+   * Collect comprehensive performance metrics
+   * @param {Object} enhancedReport - Enhanced report data
+   * @returns {Object} Performance metrics
+   */
+  collectPerformanceMetrics(enhancedReport) {
+    console.log('📧 ⚡ === COLLECTING PERFORMANCE METRICS ===');
+    console.log('📧 ⚡ Enhanced report available:', !!enhancedReport);
+    console.log('📧 ⚡ this.results available:', !!this.results);
+    
+    // 🔧 FIX: Use multiple sources for duration, including direct calculation
+    let duration = enhancedReport?.compatibility?.duration || 
+                   this.results.duration || 
+                   (this.results.endTime && this.results.startTime ? 
+                    this.results.endTime - this.results.startTime : 0);
+    
+    // If still 0, calculate from timestamps
+    if (duration === 0 && this.results.startTime) {
+      duration = Date.now() - this.results.startTime;
+      console.log('📧 ⚡ Calculated duration from startTime:', duration, 'ms');
+    }
+    
+    const testCount = this.results.successes.length + this.results.warnings.length + this.results.issues.length;
+    const successCount = this.results.successes.length;
+    
+    console.log('📧 ⚡ Raw duration:', duration);
+    console.log('📧 ⚡ Test count:', testCount);
+    console.log('📧 ⚡ Success count:', successCount);
+    console.log('📧 ⚡ this.results.successes:', this.results.successes.length);
+    console.log('📧 ⚡ this.results.warnings:', this.results.warnings.length);
+    console.log('📧 ⚡ this.results.issues:', this.results.issues.length);
+    
+    // Calculate session statistics
+    const sessionDurationMs = enhancedReport?.finalOutcome?.sessionTime || duration;
+    const sessionDurationSec = Math.round(sessionDurationMs / 1000);
+    const sessionDurationMin = Math.round(sessionDurationSec / 60);
+    
+    // Memory usage information
+    const memoryUsage = process.memoryUsage();
+    const memoryUsageMB = {
+      rss: Math.round(memoryUsage.rss / 1024 / 1024),
+      heapTotal: Math.round(memoryUsage.heapTotal / 1024 / 1024),
+      heapUsed: Math.round(memoryUsage.heapUsed / 1024 / 1024),
+      external: Math.round(memoryUsage.external / 1024 / 1024)
+    };
+    
+    return {
+      session: {
+        totalDuration: `${sessionDurationSec}s (${sessionDurationMin}m)`,
+        startTime: enhancedReport?.compatibility?.startTime || new Date(Date.now() - duration).toISOString(),
+        endTime: enhancedReport?.compatibility?.endTime || new Date().toISOString()
+      },
+      testing: {
+        totalTests: testCount,
+        successfulTests: successCount,
+        successRate: testCount > 0 ? Math.round((successCount / testCount) * 100) + '%' : '0%',
+        failedTests: this.results.issues.length,
+        warningTests: this.results.warnings.length
+      },
+      system: {
+        memoryUsage: memoryUsageMB,
+        peakMemoryUsage: `${memoryUsageMB.rss}MB RSS`,
+        heapUtilization: `${memoryUsageMB.heapUsed}MB/${memoryUsageMB.heapTotal}MB`,
+      },
+      timing: {
+        averageTestDuration: testCount > 0 ? Math.round(duration / testCount) + 'ms' : 'N/A',
+        totalProcessingTime: Math.round(duration) + 'ms',
+        timings: this.results.timings || {}
+      }
+    };
+    
+    console.log('📧 ⚡ === PERFORMANCE METRICS CALCULATED ===');
+    console.log('📧 ⚡ Session Duration:', `${sessionDurationSec}s (${sessionDurationMin}m)`);
+    console.log('📧 ⚡ Success Rate:', testCount > 0 ? Math.round((successCount / testCount) * 100) + '%' : '0%');
+    console.log('📧 ⚡ Memory Usage:', `${memoryUsageMB.rss}MB RSS`);
+    console.log('📧 ⚡ Full performance metrics:', JSON.stringify({
+      session: { totalDuration: `${sessionDurationSec}s (${sessionDurationMin}m)` },
+      testing: { successRate: testCount > 0 ? Math.round((successCount / testCount) * 100) + '%' : '0%' },
+      system: { memoryUsage: memoryUsageMB }
+    }, null, 2));
+    
+    return {
+      session: {
+        totalDuration: `${sessionDurationSec}s (${sessionDurationMin}m)`,
+        startTime: enhancedReport?.compatibility?.startTime || new Date(Date.now() - duration).toISOString(),
+        endTime: enhancedReport?.compatibility?.endTime || new Date().toISOString()
+      },
+      testing: {
+        totalTests: testCount,
+        successfulTests: successCount,
+        successRate: testCount > 0 ? Math.round((successCount / testCount) * 100) + '%' : '0%',
+        failedTests: this.results.issues.length,
+        warningTests: this.results.warnings.length
+      },
+      system: {
+        memoryUsage: memoryUsageMB,
+        peakMemoryUsage: `${memoryUsageMB.rss}MB RSS`,
+        heapUtilization: `${memoryUsageMB.heapUsed}MB/${memoryUsageMB.heapTotal}MB`,
+      },
+      timing: {
+        averageTestDuration: testCount > 0 ? Math.round(duration / testCount) + 'ms' : 'N/A',
+        totalProcessingTime: Math.round(duration) + 'ms',
+        timings: this.results.timings || {}
+      }
+    };
+  }
+
+  /**
    * Get mode detection result if available
    * @returns {Object|null} Mode detection result
    */
   async getModeDetectionResult() {
-    if (!this.appModeManager) return null;
+    console.log('📧 🔍 === GETTING MODE DETECTION RESULT ===');
+    console.log('📧 🔍 this.enhancedReportCollector available:', !!this.enhancedReportCollector);
+    console.log('📧 🔍 this.appModeManager available:', !!this.appModeManager);
     
     try {
-      // Try to get the last detection result
-      const lastDecision = this.appModeManager.getLastDecision ? 
-        this.appModeManager.getLastDecision() : null;
+      // First try to get from enhanced report collector (most reliable)
+      const enhancedReport = this.enhancedReportCollector.getReport();
+      console.log('📧 🔍 Enhanced report available:', !!enhancedReport);
       
-      return lastDecision || null;
+      if (enhancedReport) {
+        console.log('📧 🔍 Enhanced report keys:', Object.keys(enhancedReport));
+        console.log('📧 🔍 Enhanced report modeDetection present:', !!enhancedReport.modeDetection);
+        
+        if (enhancedReport.modeDetection) {
+          console.log('📧 ✅ Retrieved mode detection from enhanced report:');
+          console.log('📧 ✅ Mode:', enhancedReport.modeDetection.determinedMode);
+          console.log('📧 ✅ Confidence:', enhancedReport.modeDetection.confidence);
+          console.log('📧 ✅ Full data:', JSON.stringify(enhancedReport.modeDetection, null, 2));
+          return enhancedReport.modeDetection;
+        }
+      }
+      
+      // Fallback: Try to get from app mode manager if available
+      console.log('📧 🔍 Trying fallback - app mode manager...');
+      if (this.appModeManager) {
+        console.log('📧 🔍 AppModeManager methods available:', Object.getOwnPropertyNames(Object.getPrototypeOf(this.appModeManager)));
+        
+        if (this.appModeManager.getLastDecision) {
+          const lastDecision = this.appModeManager.getLastDecision();
+          console.log('📧 🔍 Last decision from app mode manager:', lastDecision);
+          
+          if (lastDecision) {
+            console.log('📧 ✅ Retrieved mode detection from app mode manager:');
+            console.log('📧 ✅ Mode:', lastDecision.determinedMode);
+            console.log('📧 ✅ Full data:', JSON.stringify(lastDecision, null, 2));
+            return lastDecision;
+          }
+        } else {
+          console.log('📧 🔍 getLastDecision method not available on appModeManager');
+        }
+        
+        // Try alternative methods to get mode data
+        if (this.appModeManager.lastModeResult) {
+          console.log('📧 🔍 lastModeResult available:', this.appModeManager.lastModeResult);
+          return this.appModeManager.lastModeResult;
+        }
+        
+        if (this.appModeManager.currentMode) {
+          console.log('📧 🔍 currentMode available:', this.appModeManager.currentMode);
+          return { determinedMode: this.appModeManager.currentMode, source: 'currentMode' };
+        }
+      } else {
+        console.log('📧 🔍 AppModeManager not available');
+      }
+      
+      // Check if mode detection result is stored elsewhere
+      console.log('📧 🔍 Checking alternative sources...');
+      console.log('📧 🔍 this.results available:', !!this.results);
+      if (this.results && this.results.appMode) {
+        console.log('📧 🔍 this.results.appMode:', this.results.appMode);
+        return this.results.appMode;
+      }
+      
+      console.log('📧 ❌ No mode detection result available from any source');
+      console.log('📧 🔍 === END MODE DETECTION RESULT SEARCH ===');
+      return null;
     } catch (error) {
       this.logger?.error('EMAIL_AUDIT', 'Failed to get mode detection result:', error.message);
+      console.error('📧 ❌ Error getting mode detection result:', error.message);
+      console.error('📧 ❌ Stack trace:', error.stack);
       return null;
     }
   }
