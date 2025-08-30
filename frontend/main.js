@@ -2524,6 +2524,63 @@ app.whenReady().then(async () => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════════
+  // 💾 COMPATIBILITY CACHE MANAGEMENT IPC HANDLERS
+  // ═══════════════════════════════════════════════════════════════════════════════
+  
+  // Get cache status
+  ipcMain.handle("compatibility-cache:get-status", async () => {
+    try {
+      const { CompatibilityCache } = require("./compatibility/CompatibilityCache");
+      const compatCache = new CompatibilityCache(log);
+      return { success: true, status: compatCache.getCacheStatus() };
+    } catch (error) {
+      log.error("❌ Failed to get cache status:", error);
+      return { success: false, error: error.message };
+    }
+  });
+  
+  // Clear compatibility cache (force re-run on next startup)
+  ipcMain.handle("compatibility-cache:clear", async () => {
+    try {
+      const { CompatibilityCache } = require("./compatibility/CompatibilityCache");
+      const compatCache = new CompatibilityCache(log);
+      const cleared = compatCache.clearCache();
+      
+      if (cleared) {
+        log.info("🗑️ Compatibility cache cleared - next startup will run full check");
+        return { success: true, message: "Cache cleared successfully" };
+      } else {
+        return { success: false, error: "Failed to clear cache" };
+      }
+    } catch (error) {
+      log.error("❌ Failed to clear cache:", error);
+      return { success: false, error: error.message };
+    }
+  });
+  
+  // Check if cache exists and is valid
+  ipcMain.handle("compatibility-cache:is-valid", async () => {
+    try {
+      const { CompatibilityCache } = require("./compatibility/CompatibilityCache");
+      const compatCache = new CompatibilityCache(log);
+      const cachedResult = compatCache.getCachedResult();
+      
+      return { 
+        success: true, 
+        isValid: cachedResult !== null,
+        result: cachedResult ? {
+          mode: cachedResult.compatibilityResult.determinedMode,
+          age: compatCache.getCacheAge(cachedResult.timestamp),
+          confidence: cachedResult.compatibilityResult.confidence
+        } : null
+      };
+    } catch (error) {
+      log.error("❌ Failed to check cache validity:", error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════════
   // 🧪 REGISTER APP MODE TESTING IPC HANDLERS (Before System Compatibility Check)
   // ═══════════════════════════════════════════════════════════════════════════════
   
@@ -2751,15 +2808,66 @@ app.whenReady().then(async () => {
   
   // Run system compatibility check for both dev and production
   try {
+    // 🚀 ENHANCED: Check cache first to skip if already completed
+    const { CompatibilityCache } = require("./compatibility/CompatibilityCache");
     const { SystemCompatibilityChecker } = require("./SystemCompatibilityChecker");
+    
+    const compatCache = new CompatibilityCache(log);
     const compatStartTime = Date.now();
     
-    log.info("🔍 Starting comprehensive system compatibility check...");
-    console.log("📧 🎯 === CREATING GLOBAL COMPATIBILITY CHECKER ===");
-    globalCompatChecker = new SystemCompatibilityChecker();
-    console.log("📧 🎯 globalCompatChecker created:", !!globalCompatChecker);
-    console.log("📧 🎯 setUserEmail method available:", !!(globalCompatChecker && typeof globalCompatChecker.setUserEmail === 'function'));
-    const compatResult = await globalCompatChecker.runFullCheck();
+    // Step 1: Check for valid cached result
+    log.info("📂 Checking compatibility cache...");
+    const cachedResult = compatCache.getCachedResult();
+    
+    let compatResult;
+    
+    if (cachedResult) {
+      // ✅ Use cached result - skip full compatibility check
+      log.info("⚡ Using cached compatibility result", {
+        mode: cachedResult.compatibilityResult.determinedMode,
+        age: compatCache.getCacheAge(cachedResult.timestamp),
+        confidence: cachedResult.compatibilityResult.confidence
+      });
+      
+      // Create compatibility result format expected by rest of startup
+      compatResult = {
+        canProceed: cachedResult.compatibilityResult.canProceed,
+        modeDetection: cachedResult.compatibilityResult,
+        results: {
+          successes: [], // Cached results don't have detailed test info
+          warnings: [],
+          issues: []
+        },
+        fromCache: true,
+        cacheAge: compatCache.getCacheAge(cachedResult.timestamp)
+      };
+      
+      // Still create global compatibility checker for email audit functionality
+      console.log("📧 🎯 === CREATING GLOBAL COMPATIBILITY CHECKER (CACHED MODE) ===");
+      globalCompatChecker = new SystemCompatibilityChecker();
+      console.log("📧 🎯 globalCompatChecker created:", !!globalCompatChecker);
+      console.log("📧 🎯 setUserEmail method available:", !!(globalCompatChecker && typeof globalCompatChecker.setUserEmail === 'function'));
+      
+    } else {
+      // ❌ No valid cache - run full compatibility check
+      log.info("🔍 No valid cache found, running full system compatibility check...");
+      console.log("📧 🎯 === CREATING GLOBAL COMPATIBILITY CHECKER ===");
+      globalCompatChecker = new SystemCompatibilityChecker();
+      console.log("📧 🎯 globalCompatChecker created:", !!globalCompatChecker);
+      console.log("📧 🎯 setUserEmail method available:", !!(globalCompatChecker && typeof globalCompatChecker.setUserEmail === 'function'));
+      
+      compatResult = await globalCompatChecker.runFullCheck();
+      
+      // 💾 Cache the result if successful
+      if (compatResult.canProceed && compatResult.modeDetection) {
+        const cacheSuccess = compatCache.saveCachedResult(compatResult.modeDetection);
+        if (cacheSuccess) {
+          log.info("💾 Compatibility result cached for future startups");
+        } else {
+          log.warn("⚠️ Failed to cache compatibility result");
+        }
+      }
+    }
     
     const compatEndTime = Date.now();
     const compatDuration = compatEndTime - compatStartTime;
@@ -2784,6 +2892,8 @@ app.whenReady().then(async () => {
       warnings: compatResult.results.warnings.length,
       issues: compatResult.results.issues.length,
       canProceed: compatResult.canProceed,
+      fromCache: compatResult.fromCache || false,
+      cacheAge: compatResult.cacheAge || null
     });
     
     // 🔍 DEBUG: Log mode detection result from compatibility check
