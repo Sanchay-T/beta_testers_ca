@@ -2082,6 +2082,7 @@ console.log("GATEWAY EXECUTABLE DIR:", GATEWAY_EXECUTABLE_DIR);
 app.setName("CypherSol Dev");
 
 app.whenReady().then(async () => {
+  sessionManager = require("./SessionManager");
   log.info("🚀 APP READY - STARTING INITIALIZATION SEQUENCE", {
     userDataDir: userDataDir,
     appVersion: app.getVersion(),
@@ -2606,10 +2607,10 @@ app.whenReady().then(async () => {
         log.info("✅ SessionManager initialized successfully");
       }
       
-      const sessionEndTime = Date.now();
-      log.info("✅ SessionManager phase completed", {
-        duration: sessionEndTime - sessionStartTime,
-      });
+      // const sessionEndTime = Date.now();
+      // log.info("✅ SessionManager phase completed", {
+      //   duration: sessionEndTime - sessionStartTime,
+      // });
     } catch (error) {
       log.error("❌ SessionManager initialization failed:", error);
       throw error;
@@ -2630,16 +2631,10 @@ app.whenReady().then(async () => {
 
     // 5. Create main window
     log.info("📋 INITIALIZATION STEP 3: CREATING MAIN WINDOW");
-    await createWindow();
-    log.info("✅ Main window created successfully");
-    // 6. Main Window Creation
-    log.info("📋 INITIALIZATION STEP 8: MAIN WINDOW CREATION");
-    log.info("🔍 [STARTUP_DEBUG] About to create main window - checking app state");
-    
     try {
       const windowStartTime = Date.now();
       log.info("🔍 [STARTUP_DEBUG] Calling createWindow() function...");
-      createWindow();
+      await createWindow();
       const windowEndTime = Date.now();
       log.info("✅ Main window created successfully", {
         duration: windowEndTime - windowStartTime,
@@ -2649,6 +2644,8 @@ app.whenReady().then(async () => {
       log.error("❌ Main window creation failed:", error);
       log.error("🔍 [STARTUP_DEBUG] CRITICAL: Main window creation failed - this is likely why no auto-launch");
       throw error;
+    }
+
     // 6. Start Python backend
     log.info("📋 INITIALIZATION STEP 4: STARTING PYTHON BACKEND");
     try {
@@ -2739,48 +2736,6 @@ app.on("window-all-closed", () => {
         "Skipping quit during update/cleanup/startup process - will continue with initialization"
       );
     }
-  }
-});
-
-app.on("will-quit", (event) => {
-  log.info("App is quitting");
-  log.info("isUpdating flag:", isUpdating);
-  
-  // Clean up shared AppModeManager instance
-  try {
-    const { resetSharedAppModeManager } = require("./compatibility/SharedAppModeManager");
-    resetSharedAppModeManager();
-    log.info("Shared AppModeManager instance cleaned up");
-  } catch (error) {
-    log.warn("Error cleaning up shared AppModeManager:", error.message);
-  }
-
-  // Clean up SessionManager listeners before quit
-  try {
-    if (sessionManager && typeof sessionManager.removeAllListeners === 'function') {
-      sessionManager.removeAllListeners("remainingSecondsUpdated");
-      sessionManager.removeAllListeners("licenseExpired");
-      log.info("SessionManager listeners cleaned up on quit");
-    }
-  } catch (err) {
-    log.error("Error cleaning up SessionManager listeners on quit:", err);
-  }
-
-  if (isUpdating) {
-    log.info("Auto install update on quit");
-  }
-
-  // Clean logout on quit
-  try {
-    if (sessionManager && typeof sessionManager.logoutUser === 'function') {
-      sessionManager.logoutUser();
-    }
-  } catch (error) {
-    log.error("Error calling sessionManager.logoutUser():", error);
-  }
-  if (pythonProcess) {
-    log.info("Stopping Python process...");
-    pythonProcess.kill("SIGTERM");
   }
 });
 
@@ -2978,9 +2933,7 @@ const stopEverythingNeatly = async () => {
           logWithTimestamp(
             "error",
             UPDATE_LOG_PREFIX,
-            `[CLEANUP] ❌ Failed to stop and verify service ${serviceName} after ${attempts} attempts and ${
-              Date.now() - startTime
-            }ms`
+            `[CLEANUP] ❌ Failed to stop and verify service ${serviceName} after ${attempts} attempts and ${Date.now() - startTime}ms`
           );
           return false;
         };
@@ -3094,17 +3047,50 @@ const stopEverythingNeatly = async () => {
     );
 
   }
-});
+}
 
-app.on("activate", () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
+app.on("will-quit", async (event) => {
+  log.info("App is quitting");
+  log.info("isUpdating flag:", isUpdating);
+
+  await stopEverythingNeatly();
+  
+  // Clean up shared AppModeManager instance
+  try {
+    const { resetSharedAppModeManager } = require("./compatibility/SharedAppModeManager");
+    resetSharedAppModeManager();
+    log.info("Shared AppModeManager instance cleaned up");
+  } catch (error) {
+    log.warn("Error cleaning up shared AppModeManager:", error.message);
   }
-});
 
-// Graceful shutdown
-app.on("before-quit", (event) => {
-  log.info("Application is about to quit");
+  // Clean up SessionManager listeners before quit
+  try {
+    if (sessionManager && typeof sessionManager.removeAllListeners === 'function') {
+      sessionManager.removeAllListeners("remainingSecondsUpdated");
+      sessionManager.removeAllListeners("licenseExpired");
+      log.info("SessionManager listeners cleaned up on quit");
+    }
+  } catch (err) {
+    log.error("Error cleaning up SessionManager listeners on quit:", err);
+  }
+
+  if (isUpdating) {
+    log.info("Auto install update on quit");
+  }
+
+  // Clean logout on quit
+  try {
+    if (sessionManager && typeof sessionManager.logoutUser === 'function') {
+      sessionManager.logoutUser();
+    }
+  } catch (error) {
+    log.error("Error calling sessionManager.logoutUser():", error);
+  }
+  if (pythonProcess) {
+    log.info("Stopping Python process...");
+    pythonProcess.kill("SIGTERM");
+  }
 
   // Skip confirmation if updating
   if (isUpdating) {
@@ -3125,6 +3111,15 @@ app.on("before-quit", (event) => {
     log.info("Database connection closed");
   }
 });
+
+
+app.on("activate", () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
+  }
+});
+
+
 
 // Performance tracking utility
 const performanceTracker = {
