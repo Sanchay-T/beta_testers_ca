@@ -38,6 +38,7 @@ import {
   TooltipTrigger,
 } from "../ui/tooltip";
 import { generateFinancialReport } from "../ReportExcel";
+import InfoHoverVideo from "../InfoHoverVideo";
 const IndividualTable = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -123,23 +124,28 @@ const IndividualTable = () => {
         processingFilePathRef.current = null;
         return;
       }
+      let startDate = "";
+      let endDate = "";
 
-      const startDate = new Date(selectedFile.startDate)
-        .toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        })
-        .replace(/\//g, "-");
+      if (selectedFile.startDate) {
+        startDate = new Date(selectedFile.startDate)
+          .toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          })
+          .replace(/\//g, "-");
+      }
 
-      const endDate = new Date(selectedFile.endDate)
-        .toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        })
-        .replace(/\//g, "-");
-
+      if (selectedFile.endDate) {
+        endDate = new Date(selectedFile.endDate)
+          .toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          })
+          .replace(/\//g, "-");
+      }
       const tempSelectedFile = {
         bankName: selectedFile.bankName,
         caseId: selectedFile.caseId,
@@ -151,6 +157,7 @@ const IndividualTable = () => {
         startDate: startDate,
         endDate: endDate,
       };
+      console.log("tempSelectedFile", tempSelectedFile);
 
       setSelectedFailedFile(tempSelectedFile);
       setIsMarkerModalOpen(true);
@@ -233,9 +240,13 @@ const IndividualTable = () => {
     }
   };
 
-  const handleDownload = async (caseId, individualId,customerName) => {
+  const handleDownload = async (caseId, individualId, customerName) => {
     try {
-      const success = await generateFinancialReport(caseId, individualId, customerName);
+      const success = await generateFinancialReport(
+        caseId,
+        individualId,
+        customerName
+      );
 
       if (success) {
       } else {
@@ -373,6 +384,7 @@ const IndividualTable = () => {
           <div className="flex justify-between items-center">
             <div>
               <CardTitle>Individual Records</CardTitle>
+
               <CardDescription className="py-3">
                 Search and view individual records for this case
               </CardDescription>
@@ -390,6 +402,7 @@ const IndividualTable = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
+              <InfoHoverVideo videoId="individualTable" />
             </div>
           </div>
         </CardHeader>
@@ -455,7 +468,11 @@ const IndividualTable = () => {
                                 size="icon"
                                 onClick={(e) => {
                                   e.stopPropagation(); // Prevent row click
-                                  handleDownload(caseId, item.id,item.customerName);
+                                  handleDownload(
+                                    caseId,
+                                    item.id,
+                                    item.customerName
+                                  );
                                 }}
                               >
                                 <Download className="h-4 w-4" />
@@ -469,7 +486,10 @@ const IndividualTable = () => {
                             variant="outline"
                             onClick={(e) => {
                               e.stopPropagation(); // Prevent row click
-                              if (item.filePath.includes(".pdf")) {
+                              if (
+                                item.filePath.includes(".pdf") ||
+                                item.filePath.includes(".PDF")
+                              ) {
                                 handleRectify(item.filePath);
                               } else {
                                 toast({

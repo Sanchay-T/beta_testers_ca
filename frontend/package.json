@@ -1,6 +1,6 @@
 {
   "name": "CypherEdge",
-  "version": "2.0.100",
+  "version": "2.2.400",
   "description": "CA OFFLINE APP",
   "main": "main.js",
   "icon": "./assets/cyphersol-icon.png",
@@ -19,7 +19,8 @@
     "build:electron": "electron-builder",
     "deploy": "electron-builder --publish always",
     "release": "npm run build && npm run deploy",
-    "test": "npx mocha test/**/*.test.js"
+    "test": "npx mocha test/**/*.test.js",
+    "rebuild": "npx electron-rebuild"
   },
   "keywords": [],
   "author": "",
@@ -51,7 +52,7 @@
     "publish": {
       "provider": "github",
       "owner": "Shama-Cyphersol",
-      "repo": "beta_testers_ca",
+      "repo": "ca-offline-suite",
       "private": true,
       "releaseType": "release"
     },
@@ -90,6 +91,10 @@
       {
         "from": "gatewayServer/gatewayService.exe",
         "to": "gatewayService.exe"
+      },
+      {
+        "from": "build/vcredist_x64.exe",
+        "to": "vcredist_x64.exe"
       }
     ],
     "extraMetadata": {

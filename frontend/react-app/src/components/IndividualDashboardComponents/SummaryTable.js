@@ -498,7 +498,18 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
                             key={column}
                             className="max-w-[200px] group relative"
                           >
-                            <div className="truncate">{row[column]}</div>
+                            <div className="truncate">
+                              {numericColumns.includes(column) &&
+                              !isNaN(row[column])
+                                ? Number(row[column]).toLocaleString(
+                                    undefined,
+                                    {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    }
+                                  )
+                                : row[column]}
+                            </div>
                             {column.toLowerCase() === "description" && (
                               <div className="absolute left-0 top-10 hidden group-hover:block bg-black text-white text-sm rounded p-2 z-50 whitespace-normal min-w-[200px] max-w-[400px]">
                                 {row[column]}
@@ -550,7 +561,16 @@ const SummaryTable = ({ data = [], source, title, subtitle }) => {
                         }
                       >
                         <TableCell className="max-w-[200px] whitespace-nowrap border-l-2 border-slate-300">
-                          {row[columns[columns.length - 1]]}
+                          {numericColumns.includes(
+                            columns[columns.length - 1]
+                          ) && !isNaN(row[columns[columns.length - 1]])
+                            ? Number(
+                                row[columns[columns.length - 1]]
+                              ).toLocaleString(undefined, {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })
+                            : row[columns[columns.length - 1]]}
                         </TableCell>
                       </TableRow>
                     ))}

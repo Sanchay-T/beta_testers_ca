@@ -1,0 +1,8 @@
+=== CONFLICT SUMMARY ===
+
+Total conflicts by file:
+frontend/main.js: 25
+frontend/package.json: 1
+frontend/react-app/splash.html: 1
+frontend/react-app/src/components/MainDashboardComponents/MainDashboard.js: 1
+frontend/utils/databaseMigration.js: 2

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, Suspense } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -88,6 +88,7 @@ import {
 import { exportToExcel } from "../exportToExcel";
 import * as XLSX from "xlsx";
 import { generateFinancialReport } from "../ReportExcel";
+import InfoHoverVideo from "../InfoHoverVideo";
 
 const RecentReportsComp = ({ key, onReportGenerated }) => {
   const { toast } = useToast();
@@ -123,9 +124,29 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
   const [isHandleDetailsDialogOpen, setIsHandleDetailsDialogOpen] =
     useState(null);
   const { individualId } = useParams();
-  const [warning, setWarning] = useState(false);
+  const [warning, setWarning] = useState([]);
   const [missingMonthsList, setMissingMonthsList] = useState([]);
   const [successfulStatements, setSuccessfulStatements] = useState([]);
+  const [dateRangeWarning, setDateRangeWarning] = useState(null);
+  const [warningExpanded, setWarningExpanded] = useState(false);
+
+  const hasScannedOrEncodedWarning = useMemo(() => {
+    if (!Array.isArray(warning)) return false;
+
+    return warning.some((msg) =>
+      /image-only|scanned|non-text|encoded/i.test(msg)
+    );
+  }, [warning]);
+
+  // extract balance-mismatch errors
+  const balanceMismatchErrors = warning.filter((msg) =>
+    msg.startsWith("Balance mismatch")
+  );
+
+  // everything else stays “red”
+  const otherErrors = warning.filter(
+    (msg) => !msg.startsWith("Balance mismatch")
+  );
 
   const handleSubmitEditPdf = async () => {
     setPdfEditLoading(true);
@@ -135,13 +156,35 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       (statement) => statement.resolved
     );
 
+    // ✅ collect just the statements the user has fixed
+    const statementsToRectify = failedDatasOfCurrentReport.filter(
+      (s) => s.resolved
+    );
+
+    if (statementsToRectify.length === 0) {
+      toast({
+        title: "Nothing to rectify",
+        description: "Please mark at least one PDF as resolved first.",
+        variant: "destructive",
+      });
+      return setPdfEditLoading(false);
+    }
+
     try {
-      if (allRectified) {
-        // Call the API to update the statements
+      if (true) {
+        // Call the API only for the chosen PDFs
         let result = await window.electron.editPdf(
-          failedDatasOfCurrentReport,
+          statementsToRectify,
           currentCaseName
         );
+
+        // try {
+        //   if (true) {
+        //     // Call the API to update the statements
+        //     let result = await window.electron.editPdf(
+        //       failedDatasOfCurrentReport,
+        //       currentCaseName
+        //     );
 
         console.log({ electronResponse: result });
 
@@ -233,8 +276,8 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
             description: (
               <div>
                 <p className="mb-2">
-                  Some statements could not be rectified. Please contact sales
-                  for assistance.
+                  Some statements could not be rectified. Please contact Support
+                  for assistance at +91 97699 51373
                 </p>
                 <p>{result.data.errorMessage}</p>
 
@@ -256,9 +299,8 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         }
       } else {
         toast({
-          title: "Contact Sales",
-          description:
-            "Unable to rectify all statements. Please contact our sales team for assistance.",
+          title: "Error",
+          description: "Unable to rectify all statements.",
           variant: "destructive",
           duration: 5000,
         });
@@ -389,6 +431,8 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100",
       Failed: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100",
       Deleted: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100",
+      Processing:
+        "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100",
     };
 
     return (
@@ -599,8 +643,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       });
       return;
     }
-    setFailedStatements([]);
-    setSuccessfulStatements([]);
     setLoading(true);
     const newToastId = toast({
       title: "Initializing Report Generation",
@@ -631,8 +673,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
           const detail = fileDetails[index];
 
           return {
-            fileContent,
-            pdf_paths: file.name,
+            pdf_paths: file.path,
             bankName: detail.bankName,
             passwords: detail.password || "",
             start_date: convertDateFormat(detail.start_date), // Convert date format
@@ -641,6 +682,15 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
           };
         })
       );
+
+      setFailedStatements([]);
+      setSuccessfulStatements([]);
+      setShowRectifyButton(false);
+      setShowAnalysisButton(false);
+      setMissingMonthsList([]);
+      setWarning([]);
+      setDateRangeWarning(null); // Reset date range warning
+      setWarningExpanded(false); // Reset warning expansion state
 
       const result = await window.electron.generateReportIpc(
         {
@@ -658,19 +708,33 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         setMissingMonthsList(result.data.missingMonthsList);
       }
       if (result.data.warning && result.data.warning.length > 0) {
-        const nonEmptyWarnings = result.data.warning.filter((warn) => {
-          return warn && warn.trim() !== ""; // Return true for non-empty warnings
-        });
-        const uniqueWarningsSet = new Set(nonEmptyWarnings);
+        const formatted = result.data.warning.filter((w) => w && w.trim());
 
-        setWarning([...uniqueWarningsSet]);
+        // regex to find your date-overlap error
+        const re =
+          /The period for Bank:[^)]+\((\d{2}-\d{2}-\d{4}) to (\d{2}-\d{2}-\d{4})\)[^()]*\((\d{2}-\d{2}-\d{4}) to (\d{2}-\d{2}-\d{4})\)/;
+
+        // split into dateErrors vs. rest
+        let drWarn = null;
+        const rest = formatted.filter((msg) => {
+          const m = msg.match(re);
+          if (m) {
+            const [, fetchedStart, fetchedEnd, userStart, userEnd] = m;
+            drWarn = { fetchedStart, fetchedEnd, userStart, userEnd };
+            return false; // remove from “rest”
+          }
+          return true; // keep everything else
+        });
+
+        setDateRangeWarning(drWarn); // either an object or null
+        setWarning(Array.from(new Set(rest))); // your existing red/amber logic
       }
 
       setCurrentCaseId(result.data.caseId); // Store caseId
       if (result.success) {
-        clearInterval(progressIntervalRef.current);
-        setProgress(100);
-        toast.dismiss(newToastId);
+        // clearInterval(progressIntervalRef.current);
+        // setProgress(100);
+        // toast.dismiss(newToastId);
         console.log("Report generated successfully:", result.data);
 
         if (result.data.failedFiles.length > 0) {
@@ -735,6 +799,278 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
 
         setSelectedFiles([]);
         setFileDetails([]);
+
+        // Handle Scanned and encoded files
+        console.log({ aiyaz: result.data.failedStatements });
+        const failedStatementsFromBackend = result.data.failedStatements || [];
+        console.log({ tyope: typeof failedStatementsFromBackend });
+
+        const paths = failedStatementsFromBackend.paths || [];
+        const reasons =
+          failedStatementsFromBackend.respective_reasons_for_error || [];
+        const bankNames = failedStatementsFromBackend.bank_names || [];
+        const passwords = failedStatementsFromBackend.passwords || [];
+        const startDates = failedStatementsFromBackend.start_dates || [];
+        const endDates = failedStatementsFromBackend.end_dates || [];
+
+        // Helper: Match OCR-triggering reasons
+        const isOcrCandidate = (reason = "") => {
+          const r = reason.toLowerCase();
+          return (
+            r.includes("image-only") ||
+            r.includes("scanned") ||
+            r.includes("non-text") ||
+            r.includes("encoded")
+          );
+        };
+
+        // ✅ Filter out null or undefined pdfs and match OCR-triggering reasons
+        const eligibleIndexes = reasons
+          .map((reason, idx) =>
+            isOcrCandidate(reason) && paths[idx] ? idx : null
+          )
+          .filter((i) => i !== null);
+        console.log({ eligibleIndexes });
+        const scannedOCRFiles = eligibleIndexes.map((i) => ({
+          bankName: bankNames[i],
+          pdf_paths: paths[i],
+          passwords: passwords[i],
+          start_date: startDates[i],
+          end_date: endDates[i],
+          ca_id: result.data.caseId,
+          is_ocr: true,
+        }));
+
+        // If any OCR-worthy files found
+        if (eligibleIndexes.length > 0) {
+          const newData = {
+            id: result.data.caseId,
+            name: caseName,
+            userId: null,
+            status: "Processing",
+            pages: null,
+            createdAt: new Date().toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            }),
+            // statements: null,
+          };
+
+          updateReportData({
+            recentReportsData: [newData, ...reportData.recentReportsData],
+          });
+
+          toast({
+            id: newToastId,
+            title: "Running OCR",
+            description: (
+              <div className="mt-2 w-full flex items-center gap-2">
+                <div className="flex items-center gap-4">
+                  <CircularProgress className="w-full" />
+                </div>
+                <p className="text-sm text-gray-500">
+                  Processing scanned/encoded PDFs…
+                </p>
+              </div>
+            ),
+            variant: "default",
+            duration: Infinity,
+          });
+          // toast({
+          //   title: "OCR Triggered",
+          //   description: `Detected scanned or encoded PDFs.`,
+          //   variant: "default",
+          //   duration: 5000,
+          // });
+
+          console.log({
+            files: scannedOCRFiles,
+            caseName,
+            is_ocr: true,
+            soure: "add-pdf",
+          });
+          try {
+            const ocrResult = await window.electron.generateReportIpc(
+              { files: scannedOCRFiles },
+              caseName,
+              "add-pdf"
+            );
+
+            setFailedStatements([]);
+            setSuccessfulStatements([]);
+            setShowRectifyButton(false);
+            setShowAnalysisButton(false);
+            setMissingMonthsList([]);
+            setWarning([]);
+
+            console.log("OCR Result:", ocrResult);
+
+            if (
+              ocrResult.data.missingMonthsList &&
+              ocrResult.data.missingMonthsList.length > 0
+            ) {
+              setMissingMonthsList(ocrResult.data.missingMonthsList);
+            }
+
+            if (ocrResult.data.warning && ocrResult.data.warning.length > 0) {
+              const formattedWarnings = ocrResult.data.warning.filter(
+                (warn) => {
+                  return warn && warn.trim() !== ""; // Return true for non-empty warnings
+                }
+              );
+
+              const uniqueWarnings = Array.from(new Set(formattedWarnings)); // Remove duplicates
+              setWarning(uniqueWarnings);
+            }
+
+            // setCurrentCaseId(ocrResult.data.caseId); // Store caseId
+            console.log({ ocrResult });
+            if (ocrResult.success) {
+              setDialogOpen(true); // Open the Dialog
+              toast.dismiss(newToastId);
+
+              console.log("ocrResult generated successfully:", ocrResult.data);
+              if (ocrResult.data.failedFiles.length > 0) {
+                setShowRectifyButton(true);
+                const failedFiles = ocrResult.data.failedFiles.map(
+                  (file_path) => {
+                    // Get the filename from the path and remove the timestamp
+                    const filename = file_path.split("\\").pop(); // Get filename from path
+                    const filenameWithoutTimestamp = filename.substring(
+                      filename.indexOf("-") + 1
+                    ); // Remove everything before first hyphen
+                    return filenameWithoutTimestamp;
+                  }
+                );
+                setFailedStatements(failedFiles || []); // Store failed
+
+                const newData = {
+                  id: ocrResult.data.caseId,
+                  name: caseName,
+                  userId: null,
+                  status: "Failed",
+                  pages: null,
+                  createdAt: new Date().toLocaleDateString("en-GB", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  }),
+                  statements: null,
+                };
+
+                // setShowRectifyButton(true);
+                const successfulFiles = ocrResult.data.successfulFiles.map(
+                  (file_path) => {
+                    // Get the filename from the path and remove the timestamp
+                    const filename = file_path.split("\\").pop(); // Get filename from path
+                    const filenameWithoutTimestamp = filename.substring(
+                      filename.indexOf("-") + 1
+                    ); // Remove everything before first hyphen
+                    return filenameWithoutTimestamp;
+                  }
+                );
+                setSuccessfulStatements(successfulFiles || []); // Store successful
+
+                updateReportData({
+                  recentReportsData: [newData, ...reportData.recentReportsData],
+                });
+              } else {
+                // setShowRectifyButton(true);
+                const successfulFiles = ocrResult.data.successfulFiles.map(
+                  (file_path) => {
+                    // Get the filename from the path and remove the timestamp
+                    const filename = file_path.split("\\").pop(); // Get filename from path
+                    const filenameWithoutTimestamp = filename.substring(
+                      filename.indexOf("-") + 1
+                    ); // Remove everything before first hyphen
+                    return filenameWithoutTimestamp;
+                  }
+                );
+                setSuccessfulStatements(successfulFiles || []); // Store successful
+
+                const newData = {
+                  id: ocrResult.data.caseId,
+                  name: caseName,
+                  userId: null,
+                  status: "Success",
+                  pages: null,
+                  createdAt: new Date().toLocaleDateString("en-GB", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  }),
+                  // statements: null,
+                };
+
+                updateReportData({
+                  recentReportsData: [newData, ...reportData.recentReportsData],
+                });
+              }
+
+              if (ocrResult.data.totalTransactions) {
+                toast({
+                  title: "Success",
+                  description: `${caseName} report generated successfully!`,
+                  duration: Infinity,
+                  variant: "success",
+                });
+              }
+
+              if (ocrResult.data.totalTransactions > 0) {
+                setShowAnalysisButton(true);
+              }
+
+              // setFailedStatements(ocrResult.pdf_paths_not_extracted || []); // Store failed
+              setSelectedFiles([]);
+              setFileDetails([]);
+
+              clearInterval(progressIntervalRef.current);
+              setProgress(100);
+              toast.dismiss(newToastId);
+
+              // open dialog and everything
+
+              setLoading(false);
+              localStorage.removeItem("dashboardData");
+              // refreshPage();
+              progressIntervalRef.current = null;
+
+              // Trigger a page refresh
+              // refreshPage();
+            } else {
+              const errorMessage = result.error
+                ? typeof result.error === "object"
+                  ? JSON.stringify(result.error, null, 2)
+                  : result.error
+                : "Unknown error occurred";
+
+              throw new Error(errorMessage);
+            }
+
+            // toast({
+            //   title: "OCR Completed",
+            //   variant: "success",
+            // });
+          } catch (ocrErr) {
+            toast({
+              title: "OCR Failed",
+              description: "OCR retry failed for scanned/encoded PDFs.",
+              variant: "destructive",
+            });
+            console.error("OCR error:", ocrErr);
+          }
+        }
+        clearInterval(progressIntervalRef.current);
+        setProgress(100);
+        toast.dismiss(newToastId);
+
+        // open dialog and everything
+
+        setLoading(false);
+        localStorage.removeItem("dashboardData");
+        // refreshPage();
+        progressIntervalRef.current = null;
 
         // Trigger a page refresh
       } else {
@@ -1343,6 +1679,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
             >
               <RotateCw className="w-4 h-4" />
             </Button>
+            <InfoHoverVideo videoId="recent_reports" />
           </div>
           {/* add refresh button */}
         </div>
@@ -1698,25 +2035,72 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                               </div>
                                             }
                                           </div>
-                                          {hasError && (
-                                            <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
-                                              <p className="text-red-600 text-sm">
-                                                <strong>Error:</strong>{" "}
-                                                {
-                                                  statement.respectiveReasonsForError
-                                                }
-                                              </p>
-                                              <p className="text-red-500 text-xs mt-1">
-                                                {statement.respectiveReasonsForError
-                                                  .toLowerCase()
-                                                  .includes(
-                                                    "start and end date"
-                                                  )
-                                                  ? "Please Re-run this statement with correct dates."
-                                                  : "Please contact sales for assistance with this issue."}
-                                              </p>
-                                            </div>
-                                          )}
+                                          {console.log("aiyaz", {
+                                            hasError,
+                                            isDone,
+                                          })}
+                                          {hasError &&
+                                            report.status !== "Success" &&
+                                            (() => {
+                                              const msg =
+                                                statement.respectiveReasonsForError ||
+                                                "";
+                                              // match your date-range error
+                                              const re =
+                                                /The period for Bank:[^()]+\((\d{2}-\d{2}-\d{4}) to (\d{2}-\d{2}-\d{4})\)[^()]*\((\d{2}-\d{2}-\d{4}) to (\d{2}-\d{2}-\d{4})\)/;
+                                              const m = msg.match(re);
+
+                                              return (
+                                                <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
+                                                  <div className="flex items-center gap-2">
+                                                    <XCircle className="w-5 h-5 text-red-500" />
+                                                    <span className="font-semibold text-red-700">
+                                                      Error
+                                                    </span>
+                                                  </div>
+
+                                                  {m ? (
+                                                    // date-range case: nested bullets
+                                                    <ul className="list-disc list-inside mt-2 space-y-1 text-red-600">
+                                                      <li className="font-medium">
+                                                        Inccorect Date Entered:
+                                                      </li>
+                                                      <ul className="list-disc list-inside ml-6 space-y-1">
+                                                        <li>
+                                                          User Input: {m[3]} – 
+                                                          {m[4]}
+                                                        </li>
+                                                        <li>
+                                                          Correct: {m[1]} – 
+                                                          {m[2]}
+                                                        </li>
+                                                        <li>
+                                                          Please Verify and
+                                                          Reupload With Correct
+                                                          Date.
+                                                        </li>
+                                                      </ul>
+                                                    </ul>
+                                                  ) : (
+                                                    // all other errors: single paragraph
+                                                    <p className="mt-2 text-red-600 text-sm">
+                                                      {msg}
+                                                    </p>
+                                                  )}
+
+                                                  {/* your existing “please rerun” vs “contact sales” hint */}
+                                                  <p className="mt-2 text-red-500 text-xs">
+                                                    {msg
+                                                      .toLowerCase()
+                                                      .includes(
+                                                        "start and end date"
+                                                      )
+                                                      ? "Please re-run this statement with correct dates."
+                                                      : ""}
+                                                  </p>
+                                                </div>
+                                              );
+                                            })()}
                                         </div>
                                       );
                                     })}
@@ -1847,7 +2231,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
       {/* Modal for GenerateReportForm & its changes */}
       {isAddPdfModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-          <div className="bg-white rounded-lg shadow-lg max-w-5xl w-full p-6 max-h-[90%] overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-lg max-w-7xl w-full p-6 max-h-[90%] overflow-y-auto">
             <header className="flex justify-between items-center">
               <h2 className="text-lg font-semibold">
                 Add Additional Statements
@@ -1936,7 +2320,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
 
       {/* Dialog for successful report generation */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen} className="">
-        <DialogContent className="max-h-[90vh] overflow-y-auto pb-0">
+        <DialogContent className="max-h-[90vh] overflow-y-auto pb-0 border-none shadow-none">
           <DialogHeader>
             {successfulStatements.length > 0 ? (
               <DialogTitle>
@@ -1974,6 +2358,23 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
               </ul>
             </div>
           )}
+
+          {hasScannedOrEncodedWarning && (
+            <div className="mb-4 mt-2">
+              <h3 className="text-md font-semibold flex items-center gap-x-2 mb-2">
+                <AlertCircle className="text-blue-500 w-5 h-5" />
+                OCR Processing Started
+              </h3>
+              <Card className="p-3 bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700">
+                <p className="text-blue-700 dark:text-blue-300 text-sm">
+                  We detected one or more scanned or encoded PDFs. We're
+                  processing them using OCR in the background. Please allow
+                  approximately 1 minute per page. You'll receive a notification
+                  once it's ready.
+                </p>
+              </Card>
+            </div>
+          )}
           {/* Display Missing Months Section */}
           {missingMonthsList.length > 0 && (
             <div className="mb-4 mt-2">
@@ -2001,29 +2402,71 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
             </div>
           )}
 
-          {/* display any other warning if any */}
-          {warning.length > 0 && (
-            <div className="mb-4 mt-2">
-              <h3 className="text-md font-semibold flex items-center gap-x-2 mb-2">
-                <AlertCircle className="text-red-500 w-5 h-5" />
-                Warning
+          {/* ——— Other errors in red ——— */}
+          {(otherErrors.length > 0 || dateRangeWarning) && (
+            <Card className="p-3 bg-red-50 …">
+              <h3 className="flex gap-2 mb-4 font-semibold">
+                <AlertCircle className="" /> Warning
               </h3>
-              <Card className="p-3 bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800">
-                <ul className="space-y-1">
-                  {warning.map((month, index) => (
-                    <li
-                      key={index}
-                      className="text-red-700 dark:text-red-400 flex items-start"
-                    >
-                      • <span className="ml-1"> {month}</span>
-                    </li>
-                  ))}
-                </ul>
-                {/* <p className="text-sm text-amber-700 dark:text-amber-400 mt-3">
-                        These months are missing from your statements. You may want to
-                        add them for a complete analysis.
-                      </p> */}
-              </Card>
+              <ul className="space-y-1">
+                {otherErrors.map((msg, i) => (
+                  <li key={i} className="text-red-700 flex items-start">
+                    • <span className="ml-1 break-words">{msg}</span>
+                  </li>
+                ))}
+
+                {dateRangeWarning && (
+                  <li className="mt-2 text-red-700">
+                    <p className="font-semibold">Date range mismatch:</p>
+                    <ul className="list-disc list-inside ml-6 space-y-1">
+                      <li>
+                        User Input: {dateRangeWarning.userStart}–
+                        {dateRangeWarning.userEnd}
+                      </li>
+                      <li>
+                        Available: {dateRangeWarning.fetchedStart}–
+                        {dateRangeWarning.fetchedEnd}
+                      </li>
+                    </ul>
+                  </li>
+                )}
+              </ul>
+            </Card>
+          )}
+
+          {/* ——— Balance-mismatch in amber, collapsible ——— */}
+          {balanceMismatchErrors.length > 0 && (
+            <div className="mb-4 mt-2">
+              <div
+                className="flex items-center justify-between cursor-pointer"
+                onClick={() => setWarningExpanded(!warningExpanded)}
+              >
+                <h3 className="text-md font-semibold flex items-center gap-x-2">
+                  <AlertCircle className="text-amber-500 w-5 h-5" />
+                  Balance mismatch details
+                </h3>
+                <ChevronRight
+                  className={cn(
+                    "transition-transform text-amber-500 w-5 h-5",
+                    warningExpanded ? "rotate-90" : ""
+                  )}
+                />
+              </div>
+
+              {warningExpanded && (
+                <Card className="p-3 bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800 mt-2">
+                  <ul className="space-y-1">
+                    {balanceMismatchErrors.map((msg, idx) => (
+                      <li
+                        key={idx}
+                        className="text-amber-700 dark:text-amber-400 flex items-start"
+                      >
+                        • <span className="ml-1 break-all">{msg}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </Card>
+              )}
             </div>
           )}
 

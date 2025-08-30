@@ -247,13 +247,13 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
             <Avatar className="h-8 w-8 rounded-lg">
               <AvatarImage src={user?.avatar} alt={user?.name || "User"} />
               <AvatarFallback className="rounded-lg">
-                {getInitials(user?.name)}
+                {getInitials(user?.email)}
               </AvatarFallback>
             </Avatar>
             {!isCollapsed && (
               <div className="ml-3 flex-1 text-left">
                 <p className="text-sm font-medium hover:text-black">
-                  {user?.name || "User"}
+                  {user?.email || "User"}
                 </p>
               </div>
             )}

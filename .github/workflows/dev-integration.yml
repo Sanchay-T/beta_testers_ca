@@ -1,7 +1,7 @@
 name: Dev Integration Test
 on:
   push:
-    branches: [dev]
+    branches: [uat]
 
 env:
   NODE_VERSION: '18'

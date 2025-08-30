@@ -263,8 +263,6 @@ function registerTallyIpc() {
 
       console.log({ response });
 
-      // const response = await fetchLedgerData(companyName);
-
       const ledgers = response;
       return { success: true, ledgerData: ledgers };
     } catch (error) {

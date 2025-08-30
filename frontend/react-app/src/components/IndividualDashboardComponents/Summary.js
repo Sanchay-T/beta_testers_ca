@@ -10,6 +10,7 @@ import { useReportContext } from "../../contexts/ReportContext";
 import { useToast } from "../../hooks/use-toast";
 import { generateFinancialReport } from "../ReportExcel";
 import { Button } from "../ui/button";
+import InfoHoverVideo from "../InfoHoverVideo";
 
 const formatDecimal = (value) => {
   return Number(parseFloat(value || 0).toFixed(2));
@@ -464,10 +465,13 @@ const Summary = () => {
         <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">
           Summary
         </h1>
-        <Button onClick={() => handleDownload(caseId)} variant="default">
-          <Download className="w-4 h-4 mr-2" />
-          Download Summary
-        </Button>
+        <div className="flex items-center space-x-2">
+          <InfoHoverVideo videoId="summary" />
+          <Button onClick={() => handleDownload(caseId)} variant="default">
+            <Download className="w-4 h-4 mr-2" />
+            Download Summary
+          </Button>
+        </div>
       </div>
       <div className="flex flex-wrap -mx-2">
         {renderChart(

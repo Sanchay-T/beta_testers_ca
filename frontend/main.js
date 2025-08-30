@@ -114,7 +114,7 @@ log.transports.console.level = "debug"; // Set the log level
 log.transports.file.level = "info"; // Only log info level and above in the log file
 
 // Set up detailed logging for updates
-log.transports.file.fileName = "cypheredge.log";
+log.transports.file.fileName = "cyphersol.log";
 log.info("===========================================");
 log.info(`Application starting - Version ${app.getVersion()}`);
 log.info(`User data directory: ${userDataDir}`);
@@ -133,18 +133,13 @@ autoUpdater.autoDownload = true; // Enable automatic background downloads
 autoUpdater.disableWebInstaller = true;
 autoUpdater.allowPrerelease = false;
 
-// Force non-silent installations
-autoUpdater.forceDevUpdateConfig = global.AppConfig.isDev;
-autoUpdater.autoInstallOnAppQuit = false; // Prevent auto-install on quit
-autoUpdater.installOnQuitWithoutPrompt = false; // Force prompts
-
 // Platform specific configurations
 if (process.platform === "darwin") {
   autoUpdater.allowDowngrade = true;
 } else if (process.platform === "win32") {
   // app.setAppUserModelId('com.electron.electronapp');
   app.setAppUserModelId(process.execPath); // changed it to process.execPath from 'com.electron.electronapp' to fix the taskbar icon not showing issue ~ Aiyaz
-  autoUpdater.autoInstallOnAppQuit = false; // Changed from true to prevent silent installs
+  autoUpdater.autoInstallOnAppQuit = true;
   autoUpdater.allowDowngrade = false;
 }
 
@@ -164,15 +159,26 @@ if (global.AppConfig.isDev) {
   autoUpdater.forceDevUpdateConfig = true;
 }
 
-// No runtime override – electron-updater reads
-// publish info from package.json → build.publish.
+// Removed redundant settings - configured above
+
+// Configure autoUpdater for GitHub repository
+autoUpdater.setFeedURL({
+  provider: "github",
+  owner: "Shama-Cyphersol",
+  repo: "ca-offline-suite",
+  token: process.env.GH_TOKEN,
+});
 
 // Log token status (without exposing the token)
-// GH_TOKEN no longer needed for feed configuration
-log.info("Auto-updater configured to use package.json publish settings");
+if (!process.env.GH_TOKEN) {
+  log.error("GH_TOKEN is not set! Updates will not work properly.");
+} else {
+  log.info("GH_TOKEN is configured properly for updates.");
+}
 
 // Add version tracking
 let lastCheckedVersion = null;
+let systemRequirementsNotificationShown = false; // Track if we've shown the notification this session
 
 // Auto-update event handlers with detailed logging
 autoUpdater.on("checking-for-update", () => {
@@ -221,6 +227,84 @@ autoUpdater.on("update-available", (info) => {
     );
     return;
   }
+
+  // Check system requirements before proceeding with update
+  const systemRequirementsCheck = systemInfo.getSystemRequirementsCheck();
+  if (systemRequirementsCheck && systemRequirementsCheck.shouldBlockUpdates) {
+    performanceTracker.end("update-download-process");
+    
+    logWithTimestamp(
+      "warn",
+      UPDATE_LOG_PREFIX,
+      "🚫 UPDATE BLOCKED - System requirements not met",
+      {
+        version: info.version,
+        issues: systemRequirementsCheck.issues,
+        memoryGB: systemRequirementsCheck.memoryGB,
+        hasInsufficientRAM: systemRequirementsCheck.hasInsufficientRAM,
+        hasLowEndCPU: systemRequirementsCheck.hasLowEndCPU
+      }
+    );
+
+    // Only show notification to user once per session to avoid annoyance
+    if (!systemRequirementsNotificationShown) {
+      systemRequirementsNotificationShown = true;
+      
+      // Send system requirements notification to frontend
+      const systemRequirementsNotification = {
+        status: "system-requirements-failed",
+        version: info.version,
+        requirements: systemRequirementsCheck,
+        message: "Update paused due to system requirements",
+        timestamp: new Date().toISOString(),
+      };
+
+      logWithTimestamp(
+        "warn", 
+        UPDATE_LOG_PREFIX,
+        "Update blocked due to system requirements - showing notification to user",
+        {
+          availableVersion: info.version,
+          currentVersion: app.getVersion(),
+          memoryGB: systemRequirementsCheck.memoryGB,
+          issues: systemRequirementsCheck.issues,
+          blockingUpdates: systemRequirementsCheck.shouldBlockUpdates
+        }
+      );
+      
+      logWithTimestamp(
+        "info",
+        USER_LOG_PREFIX,
+        "Sending system requirements notification to frontend (first time this session)",
+        systemRequirementsNotification
+      );
+      
+      win?.webContents.send("update-status", systemRequirementsNotification);
+      win?.webContents.send("system-requirements-check", systemRequirementsCheck);
+    } else {
+      logWithTimestamp(
+        "info",
+        UPDATE_LOG_PREFIX,
+        "Update blocked due to system requirements - notification already shown this session, skipping UI notification"
+      );
+    }
+    
+    // Don't proceed with download
+    return;
+  }
+
+  // System requirements passed - proceed with normal update flow
+  logWithTimestamp(
+    "info",
+    UPDATE_LOG_PREFIX,
+    "✅ System requirements PASSED - proceeding with normal update flow",
+    {
+      availableVersion: info.version,
+      currentVersion: app.getVersion(),
+      memoryGB: systemRequirementsCheck.memoryGB,
+      meetsRequirements: systemRequirementsCheck.meetsRequirements
+    }
+  );
 
   const updateAvailableData = {
     currentVersion: app.getVersion(),
@@ -281,7 +365,7 @@ autoUpdater.on("update-available", (info) => {
   performanceTracker.start("database-backup");
 
   try {
-    const dbPath = path.join(userDataDir, "db.sqlite3");
+    const dbPath = path.join(userDataDir, "database.sqlite");
     const backupDir = path.join(userDataDir, "backups");
 
     logWithTimestamp(
@@ -454,21 +538,8 @@ autoUpdater.on("download-progress", (progress) => {
 let isUpdating = false;
 
 // Cleanup function to ensure all processes are stopped before update
-async function cleanupForUpdate(progressCallback) {
-  // Add immediate entry confirmation
-  logWithTimestamp(
-    "info",
-    UPDATE_LOG_PREFIX,
-    "🚪 CLEANUP FUNCTION ENTRY CONFIRMED - Function is being called!"
-  );
-
-  // Send initial progress update
-  if (progressCallback) {
-    progressCallback("Starting cleanup...", "Preparing to stop services");
-  }
-
+async function cleanupForUpdate() {
   performanceTracker.start("cleanup-process");
-  isPerformingCleanup = true; // Set flag to prevent window-all-closed from quitting
 
   logWithTimestamp(
     "info",
@@ -493,217 +564,33 @@ async function cleanupForUpdate(progressCallback) {
         "Step 1/6: Stopping Gateway Windows Service (Admin Mode)"
       );
 
-      // Update progress
-      if (progressCallback) {
-        progressCallback("Stopping services...", "This may take a moment");
+      try {
+        execSync("sc stop LicensingServer", { timeout: 5000 });
+        logWithTimestamp(
+          "info",
+          SUCCESS_LOG_PREFIX,
+          "Gateway service stopped successfully with admin privileges"
+        );
+        cleanupSteps.push({
+          step: "Gateway Service Stop",
+          status: "SUCCESS",
+          timing: performanceTracker.end("gateway-service-stop"),
+        });
+      } catch (e) {
+        performanceTracker.end("gateway-service-stop");
+        logWithTimestamp(
+          "warn",
+          UPDATE_LOG_PREFIX,
+          "Gateway service already stopped or not running"
+        );
+        cleanupSteps.push({
+          step: "Gateway Service Stop",
+          status: "ALREADY_STOPPED",
+        });
       }
 
-      // Try stopping both services
-      const serviceNames = ["LicensingServer"];
-      for (const serviceName of serviceNames) {
-        // Create a retry function for stopping services
-        const stopServiceWithRetry = (
-          serviceName,
-          maxRetries = 10,
-          timeoutMs = 30000
-        ) => {
-          const startTime = Date.now();
-          let attempts = 0;
-
-          while (attempts < maxRetries && Date.now() - startTime < timeoutMs) {
-            try {
-              attempts++;
-              logWithTimestamp(
-                "info",
-                UPDATE_LOG_PREFIX,
-                `[CLEANUP] Attempt ${attempts}/${maxRetries}: Stopping service ${serviceName}`
-              );
-
-              // First, try to stop the service
-              try {
-                execSync(`sc stop "${serviceName}"`, { timeout: 5000 });
-                logWithTimestamp(
-                  "info",
-                  UPDATE_LOG_PREFIX,
-                  `[CLEANUP] Stop command sent for ${serviceName}`
-                );
-              } catch (stopError) {
-                // Check if service is already stopped or doesn't exist
-                if (
-                  stopError.message.includes("1062") ||
-                  stopError.message.includes("not started") ||
-                  stopError.message.includes("1052") ||
-                  stopError.message.includes("1060")
-                ) {
-                  logWithTimestamp(
-                    "info",
-                    UPDATE_LOG_PREFIX,
-                    `[CLEANUP] Service ${serviceName} was already stopped or doesn't exist`
-                  );
-                  return true;
-                }
-                // If it's a different error, we'll still try to verify status below
-                logWithTimestamp(
-                  "warn",
-                  UPDATE_LOG_PREFIX,
-                  `[CLEANUP] Stop command error for ${serviceName}: ${stopError.message}`
-                );
-              }
-
-              // Now verify the service has actually stopped using sc query
-              let verificationAttempts = 0;
-              const maxVerificationAttempts = 5;
-
-              while (verificationAttempts < maxVerificationAttempts) {
-                try {
-                  verificationAttempts++;
-                  const queryResult = execSync(`sc query "${serviceName}"`, {
-                    timeout: 3000,
-                    encoding: "utf8",
-                  });
-
-                  logWithTimestamp(
-                    "info",
-                    UPDATE_LOG_PREFIX,
-                    `[CLEANUP] Verification attempt ${verificationAttempts}: Checking ${serviceName} status`
-                  );
-
-                  // Check if service is stopped
-                  if (
-                    queryResult.includes("STATE") &&
-                    (queryResult.includes("STOPPED") ||
-                      queryResult.includes("1  STOPPED"))
-                  ) {
-                    logWithTimestamp(
-                      "info",
-                      UPDATE_LOG_PREFIX,
-                      `[CLEANUP] ✅ Service ${serviceName} confirmed STOPPED on attempt ${attempts}`
-                    );
-                    return true;
-                  } else if (
-                    queryResult.includes("STOP_PENDING") ||
-                    queryResult.includes("3  STOP_PENDING")
-                  ) {
-                    logWithTimestamp(
-                      "info",
-                      UPDATE_LOG_PREFIX,
-                      `[CLEANUP] Service ${serviceName} is stopping... waiting`
-                    );
-                    // Wait a bit for the service to finish stopping
-                    try {
-                      execSync(`timeout /t 2 /nobreak > nul 2>&1`, {
-                        stdio: "ignore",
-                      });
-                    } catch (_) {
-                      const start = Date.now();
-                      while (Date.now() - start < 2000) {
-                        // Busy wait 2 seconds
-                      }
-                    }
-                  } else {
-                    logWithTimestamp(
-                      "warn",
-                      UPDATE_LOG_PREFIX,
-                      `[CLEANUP] Service ${serviceName} still running, will retry stop command`
-                    );
-                    break; // Exit verification loop to retry stop command
-                  }
-                } catch (queryError) {
-                  // Service doesn't exist or query failed
-                  if (
-                    queryError.message.includes("1060") ||
-                    queryError.message.includes("does not exist")
-                  ) {
-                    logWithTimestamp(
-                      "info",
-                      UPDATE_LOG_PREFIX,
-                      `[CLEANUP] ✅ Service ${serviceName} doesn't exist (already removed)`
-                    );
-                    return true;
-                  }
-                  logWithTimestamp(
-                    "warn",
-                    UPDATE_LOG_PREFIX,
-                    `[CLEANUP] Query error for ${serviceName}: ${queryError.message}`
-                  );
-                  break; // Exit verification loop to retry
-                }
-              }
-
-              // If we get here, either verification failed or service is still running
-              logWithTimestamp(
-                "warn",
-                UPDATE_LOG_PREFIX,
-                `[CLEANUP] Service ${serviceName} not confirmed stopped, will retry`
-              );
-
-              // Wait before retry (exponential backoff, max 5 seconds)
-              const waitTime = Math.min(1000 * Math.pow(2, attempts - 1), 5000);
-              try {
-                execSync(
-                  `timeout /t ${Math.ceil(
-                    waitTime / 1000
-                  )} /nobreak > nul 2>&1`,
-                  { stdio: "ignore" }
-                );
-              } catch (_) {
-                // Fallback to setTimeout if timeout command fails
-                const start = Date.now();
-                while (Date.now() - start < waitTime) {
-                  // Busy wait
-                }
-              }
-            } catch (error) {
-              logWithTimestamp(
-                "error",
-                UPDATE_LOG_PREFIX,
-                `[CLEANUP] Unexpected error on attempt ${attempts} for ${serviceName}: ${error.message}`
-              );
-
-              // Wait before retry
-              const waitTime = Math.min(1000 * Math.pow(2, attempts - 1), 5000);
-              try {
-                execSync(
-                  `timeout /t ${Math.ceil(
-                    waitTime / 1000
-                  )} /nobreak > nul 2>&1`,
-                  { stdio: "ignore" }
-                );
-              } catch (_) {
-                const start = Date.now();
-                while (Date.now() - start < waitTime) {
-                  // Busy wait
-                }
-              }
-            }
-          }
-
-          logWithTimestamp(
-            "error",
-            UPDATE_LOG_PREFIX,
-            `[CLEANUP] ❌ Failed to stop and verify service ${serviceName} after ${attempts} attempts and ${
-              Date.now() - startTime
-            }ms`
-          );
-          return false;
-        };
-
-        try {
-          stopServiceWithRetry(serviceName);
-        } catch (_) {
-          logWithTimestamp(
-            "info",
-            UPDATE_LOG_PREFIX,
-            `[CLEANUP] Service ${serviceName} retry function completed`
-          );
-        }
-      }
-
-      cleanupSteps.push({
-        step: "Gateway Service Stop",
-        status: "SUCCESS",
-        timing: performanceTracker.end("gateway-service-stop"),
-      });
+      // Short wait for service to stop
+      await new Promise((resolve) => setTimeout(resolve, 2000));
     }
 
     // 2. Close database connections
@@ -713,11 +600,6 @@ async function cleanupForUpdate(progressCallback) {
       UPDATE_LOG_PREFIX,
       "Step 2/6: Closing database connections"
     );
-
-    // Update progress
-    if (progressCallback) {
-      progressCallback("Closing database...", "Saving your data");
-    }
 
     try {
       const dbManager = databaseManager.getInstance();
@@ -754,11 +636,6 @@ async function cleanupForUpdate(progressCallback) {
       "Step 3/6: Terminating Python backend (Admin Mode)"
     );
 
-    // Update progress
-    if (progressCallback) {
-      progressCallback("Stopping backend...", "Terminating Python processes");
-    }
-
     if (pythonProcess && !pythonProcess.killed) {
       pythonProcess.kill("SIGTERM");
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -788,7 +665,7 @@ async function cleanupForUpdate(progressCallback) {
       timing: performanceTracker.end("python-process-cleanup"),
     });
 
-    // 4. Terminate Gateway executable (Admin Mode - Force Kill)
+    // 4. Terminate Gateway executable with admin privileges
     performanceTracker.start("gateway-exe-cleanup");
     logWithTimestamp(
       "info",
@@ -797,53 +674,28 @@ async function cleanupForUpdate(progressCallback) {
     );
 
     if (process.platform === "win32") {
-      // Use multiple aggressive kill methods
-      const killMethods = [
-        'taskkill /IM "gatewayService.exe" /F',
-        'taskkill /IM "gatewayService.exe" /F /T',
-        "wmic process where \"name like '%gateway%'\" delete",
-        "powershell -Command \"Get-Process | Where-Object {$_.ProcessName -like '*gateway*'} | Stop-Process -Force\"",
-      ];
-
-      let killed = false;
-      for (let i = 0; i < killMethods.length; i++) {
-        try {
-          execSync(killMethods[i], {
-            shell: true,
-            windowsHide: true,
-            timeout: 3000,
-          });
-          killed = true;
-          await new Promise((resolve) => setTimeout(resolve, 500));
-        } catch (e) {
-          // Continue with next method
-        }
-      }
-
-      // Verify it's actually dead
-      await new Promise((resolve) => setTimeout(resolve, 1000));
       try {
-        execSync('tasklist | find /I "gatewayService.exe"', { shell: true });
-        logWithTimestamp(
-          "warn",
-          UPDATE_LOG_PREFIX,
-          "Gateway process might still be running after kill attempts"
-        );
-        cleanupSteps.push({
-          step: "Gateway Executable Cleanup",
-          status: "PARTIAL_SUCCESS",
-          timing: performanceTracker.end("gateway-exe-cleanup"),
-        });
-      } catch (e) {
+        execSync("taskkill /F /IM gatewayService.exe", { timeout: 3000 });
         logWithTimestamp(
           "info",
           SUCCESS_LOG_PREFIX,
-          "Gateway executable terminated successfully with admin privileges"
+          "Gateway executable terminated with admin privileges"
         );
         cleanupSteps.push({
           step: "Gateway Executable Cleanup",
           status: "SUCCESS",
           timing: performanceTracker.end("gateway-exe-cleanup"),
+        });
+      } catch (e) {
+        performanceTracker.end("gateway-exe-cleanup");
+        logWithTimestamp(
+          "info",
+          UPDATE_LOG_PREFIX,
+          "Gateway executable already terminated"
+        );
+        cleanupSteps.push({
+          step: "Gateway Executable Cleanup",
+          status: "ALREADY_TERMINATED",
         });
       }
     }
@@ -859,12 +711,10 @@ async function cleanupForUpdate(progressCallback) {
     const openWindows = BrowserWindow.getAllWindows();
     let windowsClosedCount = 0;
     let installationWindowsFound = 0;
-    let mainWindowSkipped = false;
 
-    openWindows.forEach((window, index) => {
-      if (!window.isDestroyed()) {
-        const isInstallationWindow = window.isInstallationWindow === true;
-        const isMainWindow = window === win;
+    openWindows.forEach((win, index) => {
+      if (!win.isDestroyed()) {
+        const isInstallationWindow = win.isInstallationWindow === true;
 
         if (isInstallationWindow) {
           installationWindowsFound++;
@@ -873,23 +723,10 @@ async function cleanupForUpdate(progressCallback) {
             UPDATE_LOG_PREFIX,
             `Preserving installation window ${index + 1}`
           );
-        } else if (isMainWindow) {
-          // CRITICAL: Don't close the main window during update
-          // We need it to stay alive to call quitAndInstall
-          mainWindowSkipped = true;
-          logWithTimestamp(
-            "info",
-            UPDATE_LOG_PREFIX,
-            `Preserving main window during update cleanup`
-          );
         } else {
-          try {
-            window.removeAllListeners("close");
-            window.close();
-            windowsClosedCount++;
-          } catch (e) {
-            // Window might already be closing
-          }
+          win.removeAllListeners("close");
+          win.close();
+          windowsClosedCount++;
         }
       }
     });
@@ -897,11 +734,8 @@ async function cleanupForUpdate(progressCallback) {
     logWithTimestamp(
       "info",
       SUCCESS_LOG_PREFIX,
-      `Closed ${windowsClosedCount} windows, preserved ${installationWindowsFound} installation windows${
-        mainWindowSkipped ? " and main window" : ""
-      }`
+      `Closed ${windowsClosedCount} windows, preserved ${installationWindowsFound} installation windows`
     );
-
     cleanupSteps.push({
       step: "Window Cleanup",
       status: "SUCCESS",
@@ -922,11 +756,6 @@ async function cleanupForUpdate(progressCallback) {
       UPDATE_LOG_PREFIX,
       "Admin privileges ensure clean termination - minimal wait required"
     );
-
-    // Update progress
-    if (progressCallback) {
-      progressCallback("Finalizing cleanup...", "Almost ready to install");
-    }
 
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
@@ -987,9 +816,6 @@ async function cleanupForUpdate(progressCallback) {
       "Continuing with update installation despite cleanup errors"
     );
   }
-
-  // Reset flag after cleanup completes
-  isPerformingCleanup = false;
 }
 
 autoUpdater.on("update-downloaded", (info) => {
@@ -1071,8 +897,9 @@ autoUpdater.on("update-downloaded", (info) => {
       displayTime: new Date().toISOString(),
     }
   );
+
   dialog
-    .showMessageBox(win, dialogOptions)
+    .showMessageBox(dialogOptions)
     .then(async (response) => {
       performanceTracker.end("user-interaction-flow");
 
@@ -1127,9 +954,6 @@ autoUpdater.on("update-downloaded", (info) => {
           `Success flag created: ${updateFlagPath}`
         );
 
-        // CRITICAL: Give UI time to update before starting heavy operations
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
         // Show minimal installation progress BEFORE cleanup
         logWithTimestamp(
           "info",
@@ -1138,15 +962,13 @@ autoUpdater.on("update-downloaded", (info) => {
         );
 
         const installingWindow = new BrowserWindow({
-          width: 450,
-          height: 320,
+          width: 350,
+          height: 100,
           frame: false,
           resizable: false,
           center: true,
           alwaysOnTop: true,
           show: false,
-          transparent: false,
-          backgroundColor: "#ffffff",
           webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
@@ -1160,133 +982,36 @@ autoUpdater.on("update-downloaded", (info) => {
         <html>
           <head>
             <meta charset="UTF-8">
-            <title>Installing CypherEdge Update</title>
+            <title>Installing Update</title>
             <style>
-              * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-              }
               body {
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-                background: #ffffff;
-                background-color: #ffffff;
-                color: #1a1a1a;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                height: 100vh;
-                padding: 20px;
+                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                margin: 0;
+                  padding: 20px;
+                  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                  color: white;
+                  text-align: center;
                 user-select: none;
-                opacity: 1;
               }
-              .container {
-                text-align: center;
-                background: #ffffff;
-                border-radius: 12px;
-                padding: 32px;
-                box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-                border: 1px solid #e5e7eb;
-                max-width: 400px;
-                width: 100%;
-              }
-              .logo {
-                width: 48px;
-                height: 48px;
-                margin: 0 auto 20px;
-                background: #3b82f6;
-                border-radius: 12px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                color: white;
-                font-size: 24px;
-                font-weight: bold;
-              }
-              .spinner {
-                width: 40px;
-                height: 40px;
-                border: 3px solid #f3f4f6;
-                border-top: 3px solid #3b82f6;
+                .spinner {
+                  width: 20px;
+                  height: 20px;
+                  border: 2px solid rgba(255,255,255,0.3);
+                  border-top: 2px solid white;
                 border-radius: 50%;
-                animation: spin 1s linear infinite;
-                margin: 0 auto 24px;
+                  animation: spin 1s linear infinite;
+                  margin: 0 auto 10px;
               }
               @keyframes spin {
                 0% { transform: rotate(0deg); }
                 100% { transform: rotate(360deg); }
               }
-              h3 {
-                font-size: 18px;
-                font-weight: 600;
-                color: #111827;
-                margin-bottom: 8px;
-                letter-spacing: -0.025em;
-              }
-              p {
-                font-size: 14px;
-                color: #6b7280;
-                line-height: 1.5;
-                margin-bottom: 20px;
-              }
-              .progress-bar {
-                width: 100%;
-                height: 6px;
-                background: #f3f4f6;
-                border-radius: 3px;
-                overflow: hidden;
-                margin-top: 24px;
-              }
-              .progress-fill {
-                height: 100%;
-                background: #3b82f6;
-                border-radius: 3px;
-                width: 0%;
-                animation: progress 30s ease-out forwards;
-              }
-              @keyframes progress {
-                0% { width: 0%; }
-                10% { width: 15%; }
-                30% { width: 35%; }
-                50% { width: 55%; }
-                70% { width: 75%; }
-                90% { width: 90%; }
-                100% { width: 95%; }
-              }
-              .step-indicator {
-                display: flex;
-                justify-content: space-between;
-                margin-top: 16px;
-                font-size: 11px;
-                color: #9ca3af;
-              }
+                h3 { margin: 0; font-size: 14px; font-weight: 500; }
             </style>
           </head>
           <body>
-            <div class="container">
-              <div class="logo">C</div>
               <div class="spinner"></div>
-              <h3 id="status">Preparing update...</h3>
-              <p id="detail">Please wait while we prepare your system for the update. This may take a moment.</p>
-              <div class="progress-bar">
-                <div class="progress-fill"></div>
-              </div>
-              <div class="step-indicator">
-                <span>Starting</span>
-                <span>Cleaning up</span>
-                <span>Installing</span>
-              </div>
-            </div>
-            <script>
-              const { ipcRenderer } = require('electron');
-              ipcRenderer.on('update-progress', (event, data) => {
-                document.getElementById('status').textContent = data.status || 'Installing update...';
-                if (data.detail) {
-                  document.getElementById('detail').textContent = data.detail;
-                }
-              });
-            </script>
+              <h3>Installing update...</h3>
           </body>
         </html>
       `;
@@ -1295,7 +1020,6 @@ autoUpdater.on("update-downloaded", (info) => {
           "data:text/html;charset=utf-8," + encodeURIComponent(installHtml)
         );
 
-        // Show window immediately and wait for it to be fully visible
         installingWindow.once("ready-to-show", () => {
           installingWindow.show();
           logWithTimestamp(
@@ -1303,155 +1027,49 @@ autoUpdater.on("update-downloaded", (info) => {
             UPDATE_LOG_PREFIX,
             "Installation progress window displayed to user"
           );
-
-          // Send initial progress update immediately
-          installingWindow.webContents.send("update-progress", {
-            status: "Preparing update...",
-            detail: "Starting cleanup process...",
-          });
         });
 
-        // CRITICAL: Wait for window to be fully shown before starting cleanup
-        await new Promise((resolve) => {
-          if (installingWindow.isVisible()) {
-            resolve();
-          } else {
-            installingWindow.once("show", () => {
-              // Give it a moment to render
-              setTimeout(resolve, 100);
-            });
-          }
-        });
+        // Run cleanup AFTER showing installation window
         logWithTimestamp(
           "info",
           UPDATE_LOG_PREFIX,
-          "Window confirmed visible - proceeding with installation"
+          "Starting pre-installation cleanup sequence"
         );
+        await cleanupForUpdate();
 
-        // Store reference to send progress updates
-        const sendProgressUpdate = (status, detail) => {
-          if (installingWindow && !installingWindow.isDestroyed()) {
-            installingWindow.webContents.send("update-progress", {
-              status,
-              detail,
-            });
-          }
-        };
-
-        // Hand control to updater – cleanup runs later
-        logWithTimestamp(
-          "info",
-          UPDATE_LOG_PREFIX,
-          "[DEBUG] launching installer"
-        );
-
-        try {
-          logWithTimestamp(
-            "info",
-            UPDATE_LOG_PREFIX,
-            "🚀 INITIATING QUIT AND INSTALL SEQUENCE"
-          );
-          logWithTimestamp(
-            "info",
-            UPDATE_LOG_PREFIX,
-            "Application will restart with new version"
-          );
-
-          performanceTracker.end("installation-process");
-
-          // 🧹 CRITICAL: Run cleanup BEFORE quitAndInstall while app is still fully running
-          logWithTimestamp(
-            "info",
-            UPDATE_LOG_PREFIX,
-            "🧹 Starting pre-installation cleanup process..."
-          );
-
-          // Add detailed error handling around cleanup
+        // Install update
+        setTimeout(() => {
           try {
             logWithTimestamp(
               "info",
               UPDATE_LOG_PREFIX,
-              "🔧 About to call cleanupForUpdate()..."
+              "🚀 INITIATING QUIT AND INSTALL SEQUENCE"
             );
-
-            // Send initial cleanup status
-            sendProgressUpdate(
-              "Starting cleanup...",
-              "Preparing to stop services"
-            );
-
-            // Run the comprehensive cleanup function
-            await cleanupForUpdate(sendProgressUpdate);
-
             logWithTimestamp(
               "info",
               UPDATE_LOG_PREFIX,
-              "✅ Pre-installation cleanup completed successfully"
+              "Application will restart with new version"
             );
-          } catch (cleanupError) {
-            // Log cleanup errors but continue with installation
+
+            performanceTracker.end("installation-process");
+            autoUpdater.autoInstallOnAppQuit = false;
+            autoUpdater.quitAndInstall(true, true);
+          } catch (err) {
+            performanceTracker.end("installation-process");
+            const installError = {
+              error: err.message,
+              stack: err.stack,
+              timestamp: new Date().toISOString(),
+            };
             logWithTimestamp(
               "error",
               ERROR_LOG_PREFIX,
-              "❌ Cleanup function failed but continuing with installation",
-              {
-                error: cleanupError.message,
-                stack: cleanupError.stack,
-                timestamp: new Date().toISOString(),
-              }
+              "Critical error during installation",
+              installError
             );
-
-            // Still try to proceed with installation
-            logWithTimestamp(
-              "warn",
-              UPDATE_LOG_PREFIX,
-              "⚠️ Proceeding with installation despite cleanup failure"
-            );
+            app.quit();
           }
-
-          // Simple approach - let electron-updater handle everything
-          logWithTimestamp(
-            "info",
-            UPDATE_LOG_PREFIX,
-            "Calling autoUpdater.quitAndInstall",
-            {
-              isSilent: false,
-              isForceRunAfter: true,
-            }
-          );
-
-          logWithTimestamp(
-            "info",
-            UPDATE_LOG_PREFIX,
-            "🚀 LAUNCHING INSTALLER NOW - Application will close and installer will appear"
-          );
-
-          // Final progress update before installer launches
-          sendProgressUpdate(
-            "Ready to install!",
-            "The installer will launch in a moment..."
-          );
-
-          // Give user a moment to see the message
-          await new Promise((resolve) => setTimeout(resolve, 2000));
-
-          // This will show the installer UI properly now that allowElevation=true
-          autoUpdater.quitAndInstall(false, true);
-        } catch (err) {
-          performanceTracker.end("installation-process");
-          const installError = {
-            error: err.message,
-            stack: err.stack,
-            timestamp: new Date().toISOString(),
-          };
-          logWithTimestamp(
-            "error",
-            ERROR_LOG_PREFIX,
-            "Critical error during installation",
-            installError
-          );
-          app.quit();
-        }
+        }, 1000);
       } else {
         // User clicked "Install Later"
         logWithTimestamp(
@@ -1495,19 +1113,7 @@ autoUpdater.on("error", (err) => {
     performanceTracker.end("update-download-process");
   if (performanceTracker.timers.has("installation-process"))
     performanceTracker.end("installation-process");
-  // Suppress 403 errors (GitHub authentication issues)
-  if (
-    err.message &&
-    (err.message.includes("403") ||
-      err.message.includes("AuthenticationFailed"))
-  ) {
-    log.info(
-      "Update check skipped - GitHub authentication token expired (this is normal after updates)"
-    );
-    win?.webContents.send("update-error", "");
-    win?.setProgressBar(-1);
-    return;
-  }
+
   const errorData = {
     errorMessage: err.message,
     errorCode: err.code || "Unknown",
@@ -1838,31 +1444,208 @@ async function startPythonExecutable() {
   });
 }
 
-const XLSM_SOURCE_DIR = path.join(__dirname, "media", "vouchers", "tallyprime"); // Bundled location
+// ---- Add these helpers near your other constants ----
+const crypto = require("crypto");
+
+const isDev = global.AppConfig?.isDev ?? !app.isPackaged;
+
+const DEV_MEDIA_DIR = path.join(__dirname, "media", "vouchers", "tallyprime");
+const PROD_MEDIA_DIRS = [
+  path.join(process.resourcesPath, "media", "vouchers", "tallyprime"),
+  path.join(
+    process.resourcesPath,
+    "app.asar.unpacked",
+    "media",
+    "vouchers",
+    "tallyprime"
+  ),
+  path.join(__dirname, "media", "vouchers", "tallyprime"),
+];
+
+function firstExistingDir(paths) {
+  for (const p of paths) {
+    try {
+      if (fs.existsSync(p)) return p;
+    } catch {}
+  }
+  return null;
+}
+
+const XLSM_SOURCE_DIR = isDev
+  ? DEV_MEDIA_DIR
+  : firstExistingDir(PROD_MEDIA_DIRS);
 const XLSM_USERDATA_DIR = path.join(app.getPath("userData"), "tallyprime");
+const XLSM_USER_PATCH_DIR = path.join(XLSM_USERDATA_DIR, "update"); // where you (or remote pull) drop patches
+const XLSM_PENDING_DIR = path.join(XLSM_USERDATA_DIR, "pending_updates"); // where we stash conflicting patches
+const XLSM_BACKUP_DIR = path.join(XLSM_USERDATA_DIR, "backups");
+const STATE_FILE = path.join(XLSM_USERDATA_DIR, "state.json"); // remembers last applied hashes
 
-// Copies all .xlsm files from sourceDir to destDir, replacing old files with new ones.
-function syncTallyprimeFilesToUserData() {
-  if (!fs.existsSync(XLSM_SOURCE_DIR)) {
-    log.error("Source .xlsm directory not found:", XLSM_SOURCE_DIR);
-    return;
-  }
-  if (!fs.existsSync(XLSM_USERDATA_DIR)) {
-    fs.mkdirSync(XLSM_USERDATA_DIR, { recursive: true });
-  }
-  const xlsmFiles = fs
-    .readdirSync(XLSM_SOURCE_DIR)
-    .filter((f) => f.endsWith(".xlsm"));
+function sha256OfFile(filePath) {
+  const hash = crypto.createHash("sha256");
+  hash.update(fs.readFileSync(filePath));
+  return hash.digest("hex");
+}
 
-  log.info({ xlsmFiles });
-  xlsmFiles.forEach((file) => {
-    const src = path.join(XLSM_SOURCE_DIR, file);
-    const dest = path.join(XLSM_USERDATA_DIR, file);
-    log.info({ src, dest });
-    // Always overwrite to ensure latest is shipped on update
-    fs.copyFileSync(src, dest);
-    log.info(`Synced tallyprime file: ${file}`);
+function loadState() {
+  try {
+    if (fs.existsSync(STATE_FILE))
+      return JSON.parse(fs.readFileSync(STATE_FILE, "utf8"));
+  } catch (e) {
+    /* ignore */
+  }
+  return { files: {} }; // { files: { "sales.xlsm": { hash:"...", appliedAt: "ISO" } } }
+}
+
+function saveState(state) {
+  try {
+    fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
+  } catch (e) {
+    // non-fatal
+  }
+}
+
+function ensureDirs() {
+  [
+    XLSM_USERDATA_DIR,
+    XLSM_USER_PATCH_DIR,
+    XLSM_PENDING_DIR,
+    XLSM_BACKUP_DIR,
+  ].forEach((d) => {
+    try {
+      fs.mkdirSync(d, { recursive: true });
+    } catch {}
   });
+}
+
+// ---- REPLACE your syncTallyprimeFilesToUserData with this ----
+function syncTallyprimeFilesToUserData() {
+  log.info("[SYNC] Start");
+
+  ensureDirs();
+  const state = loadState();
+
+  if (!XLSM_SOURCE_DIR || !fs.existsSync(XLSM_SOURCE_DIR)) {
+    log.info(
+      "[SYNC] No packaged source dir found (ok for patch-only flow):",
+      XLSM_SOURCE_DIR
+    );
+  } else {
+    // 1) Seed base vouchers ONLY IF MISSING (never overwrite user edits)
+    const baseFiles = fs
+      .readdirSync(XLSM_SOURCE_DIR)
+      .filter((f) => f.endsWith(".xlsm"));
+    for (const file of baseFiles) {
+      const src = path.join(XLSM_SOURCE_DIR, file);
+      const dst = path.join(XLSM_USERDATA_DIR, file);
+      if (!fs.existsSync(dst)) {
+        try {
+          fs.copyFileSync(src, dst);
+          const h = sha256OfFile(dst);
+          state.files[file] = {
+            hash: h,
+            appliedAt: new Date().toISOString(),
+            source: "seed",
+          };
+          log.info(`[SYNC] Seeded: ${file}`);
+        } catch (e) {
+          log.warn(`[SYNC] Failed seeding ${file}: ${e.message}`);
+        }
+      }
+    }
+  }
+
+  // 2) Apply patches from userData/update (R/W inbox). Policy:
+  //    - If user file is missing: apply
+  //    - If user file exists:
+  //        * If user file hash === lastAppliedHash (unmodified): overwrite (with backup)
+  //        * Else (user-modified): DO NOT overwrite → stash to pending_updates/
+  try {
+    const patches = fs
+      .readdirSync(XLSM_USER_PATCH_DIR)
+      .filter((f) => f.endsWith(".xlsm"));
+    for (const file of patches) {
+      const srcPatch = path.join(XLSM_USER_PATCH_DIR, file);
+      const dst = path.join(XLSM_USERDATA_DIR, file);
+      const patchHash = sha256OfFile(srcPatch);
+
+      const last = state.files[file]; // may be undefined on first-ever apply
+
+      if (!fs.existsSync(dst)) {
+        // No user file → safe apply
+        try {
+          fs.copyFileSync(srcPatch, dst);
+          state.files[file] = {
+            hash: patchHash,
+            appliedAt: new Date().toISOString(),
+            source: "patch",
+          };
+          fs.unlinkSync(srcPatch);
+          log.info(`[SYNC] Applied (new): ${file}`);
+        } catch (e) {
+          log.warn(`[SYNC] Failed applying (new) ${file}: ${e.message}`);
+        }
+        continue;
+      }
+
+      // User file exists → check whether it's unchanged since last time
+      let currentUserHash = null;
+      try {
+        currentUserHash = sha256OfFile(dst);
+      } catch (e) {}
+
+      const userUnmodified =
+        last && currentUserHash && currentUserHash === last.hash;
+
+      if (userUnmodified) {
+        // Safe to overwrite; still back up once
+        try {
+          const ts = new Date().toISOString().replace(/[:.]/g, "-");
+          const bak = path.join(XLSM_BACKUP_DIR, `${file}.${ts}.bak`);
+          fs.copyFileSync(dst, bak);
+
+          fs.copyFileSync(srcPatch, dst);
+          state.files[file] = {
+            hash: patchHash,
+            appliedAt: new Date().toISOString(),
+            source: "patch",
+          };
+          fs.unlinkSync(srcPatch);
+          log.info(`[SYNC] Applied (auto): ${file} (backup created)`);
+        } catch (e) {
+          log.warn(`[SYNC] Failed applying (auto) ${file}: ${e.message}`);
+        }
+      } else {
+        // Detected user modifications → do NOT overwrite
+        try {
+          const ts = new Date().toISOString().replace(/[:.]/g, "-");
+          const pendingName = `${file}.pending-${ts}.xlsm`;
+          const pendingPath = path.join(XLSM_PENDING_DIR, pendingName);
+          fs.copyFileSync(srcPatch, pendingPath);
+          fs.unlinkSync(srcPatch);
+          log.info(
+            `[SYNC] User-modified detected; kept user file. Stashed patch to pending_updates/${pendingName}`
+          );
+          // (Optionally: write a small note file once)
+          const note = path.join(XLSM_PENDING_DIR, "READ_ME.txt");
+          if (!fs.existsSync(note)) {
+            fs.writeFileSync(
+              note,
+              "We detected local edits to your voucher files, so updates were not auto-applied.\n" +
+                "Review files in this folder and replace manually if desired.\n"
+            );
+          }
+        } catch (e) {
+          log.warn(`[SYNC] Failed stashing pending ${file}: ${e.message}`);
+        }
+      }
+    }
+  } catch (e) {
+    log.warn("[SYNC] Patch step skipped:", e.message);
+  }
+
+  // 3) Save state
+  saveState(state);
+  log.info("[SYNC] Done");
 }
 
 // Add this function to handle file protocol
@@ -1879,58 +1662,42 @@ function createProtocol() {
 }
 
 function createSplashWindow() {
-  log.info("🎨 Creating splash window...");
+  splashWindow = new BrowserWindow({
+    width: 400,
+    height: 300,
+    frame: false,
+    transparent: false,
+    resizable: false,
+    skipTaskbar: true,
+    show: false,
+    alwaysOnTop: true,
+    center: true,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+    },
+  });
 
-  try {
-    splashWindow = new BrowserWindow({
-      width: 400,
-      height: 300,
-      frame: false,
-      transparent: false,
-      resizable: false,
-      skipTaskbar: true,
-      show: false,
-      alwaysOnTop: true,
-      center: true,
-      webPreferences: {
-        nodeIntegration: true,
-        contextIsolation: false,
-      },
-    });
+  const splashPath = path.join(__dirname, "/react-app/splash.html");
+  splashWindow.loadFile(splashPath);
 
-    const splashPath = path.join(__dirname, "/react-app/splash.html");
-    log.info("🎨 Loading splash file:", splashPath);
+  splashWindow.once("ready-to-show", () => {
+    log.info("Splashscreen ready to show");
+    splashWindow.show();
+  });
 
-    splashWindow.loadFile(splashPath).catch((error) => {
-      log.error("❌ Failed to load splash file:", error);
-    });
-
-    splashWindow.once("ready-to-show", () => {
-      log.info("✅ Splash screen ready to show - displaying to user");
-      splashWindow.show();
-      log.info("✅ Splash screen is now visible");
-    });
-
-    splashWindow.on("closed", () => {
-      log.info("🔒 Splash screen closed");
-      splashWindow = null;
-    });
-
-    log.info("✅ Splash window instance created successfully");
-  } catch (error) {
-    log.error("❌ Failed to create splash window:", error);
-    throw error;
-  }
+  splashWindow.on("closed", () => {
+    log.info("Splashscreen closed");
+    splashWindow = null;
+  });
 }
 
 // Add this helper anywhere above createWindow():
 function setupEventListeners(win) {
   // Listen for remaining seconds updates
   sessionManager.on("remainingSecondsUpdated", (seconds) => {
-    // Safety check: Only send if window exists and isn't destroyed
-    if (win && !win.isDestroyed()) {
-      win.webContents.send("remainingSecondsUpdated", seconds);
-    }
+    // console.log(`Remaining seconds: ${seconds}`);
+    win.webContents.send("remainingSecondsUpdated", seconds);
   });
 
   // Listen for license expiration
@@ -1939,10 +1706,8 @@ function setupEventListeners(win) {
     // Optionally handle the license expiration, e.g., show a dialog or quit the app
     sessionManager.logoutUser();
 
-    // Safety check: Only send if window exists and isn't destroyed
-    if (win && !win.isDestroyed()) {
-      win.webContents.send("navigateToLogin");
-    }
+    win.webContents.send("navigateToLogin");
+    // win?.destroy();
   });
 }
 
@@ -1962,8 +1727,8 @@ async function createWindow() {
     icon: path.join(__dirname, "assets", "cyphersol-icon.png"),
     autoHideMenuBar: true,
     title: global.AppConfig.isDev
-      ? `CypherEdge Dev v${app.getVersion()}`
-      : `CypherEdge v${app.getVersion()}`,
+      ? `CypherSol Dev v${app.getVersion()}`
+      : `CypherSol v${app.getVersion()}`,
   });
   if (global.AppConfig.isDev) {
     win.loadURL("http://localhost:3000");
@@ -1993,18 +1758,6 @@ async function createWindow() {
       return;
     }
 
-    // CRITICAL: Prevent immediate close and clean up listeners first
-    event.preventDefault();
-
-    // Remove all SessionManager listeners to prevent "Object destroyed" errors
-    try {
-      sessionManager.removeAllListeners("remainingSecondsUpdated");
-      sessionManager.removeAllListeners("licenseExpired");
-      log.info("SessionManager listeners removed before close dialog");
-    } catch (err) {
-      log.error("Error removing SessionManager listeners:", err);
-    }
-
     const choice = dialog.showMessageBoxSync(win, {
       type: "warning",
       buttons: ["Yes", "Cancel"],
@@ -2017,11 +1770,9 @@ async function createWindow() {
     if (choice === 0) {
       log.info("User confirmed app close. Logging out...");
       sessionManager.logoutUser();
-      win.destroy(); // Explicitly destroy the window
     } else {
       log.info("User canceled app close.");
-      // Re-establish the event listeners since user cancelled
-      setupEventListeners(win);
+      event.preventDefault();
     }
   });
   // setTimeout(() => {
@@ -2117,7 +1868,7 @@ async function createWindow() {
   registerMainDashboardIpc(TMP_DIR);
   registerCaseDashboardIpc();
   generateReportIpc(TMP_DIR);
-  registerOpenFileIpc(global.AppConfig.baseDir, global.AppConfig.userDataDir);
+  registerOpenFileIpc(app.getPath("userData"));
   registerReportHandlers(TMP_DIR);
   registerAuthHandlers(app.getPath("userData"));
   log.info("🔐 Auth handlers registered (including license:check)");
@@ -2145,20 +1896,49 @@ async function createWindow() {
       return msg;
     }
     try {
-      // Use checkForUpdates which respects grace period
-      checkForUpdates();
-      return { checking: true, message: "Update check started" };
+      const result = await autoUpdater.checkForUpdates();
+      log.info("Check for updates result:", result);
+      return result;
     } catch (err) {
       log.error("Check for updates failed:", err);
       throw err;
     }
   });
 
+  // System requirements IPC handlers
+  ipcMain.handle("get-system-requirements", () => {
+    log.info("System requirements check requested");
+    try {
+      const requirements = systemInfo.getSystemRequirementsCheck();
+      const memoryGB = systemInfo.getMemoryGB();
+      const cpuModel = systemInfo.getCPUModel();
+      
+      return {
+        requirements,
+        memoryGB,
+        cpuModel,
+        shouldBlockUpdates: systemInfo.shouldBlockUpdates(),
+        meetsRequirements: systemInfo.meetsMinimumRequirements()
+      };
+    } catch (err) {
+      log.error("System requirements check failed:", err);
+      throw err;
+    }
+  });
+
+  ipcMain.handle("override-system-requirements", () => {
+    log.warn("System requirements override requested by user");
+    // This could be used for advanced users to bypass the check
+    // For now, we'll just log it - the implementation can be added later if needed
+    return { overridden: false, message: "Override not implemented for security" };
+  });
+
+
   ipcMain.handle("download-update", async () => {
     log.info("Update download requested");
     try {
       // Backup database before update
-      const dbPath = path.join(userDataDir, "db.sqlite3");
+      const dbPath = path.join(userDataDir, "database.sqlite");
       const backupDir = path.join(userDataDir, "backups");
 
       log.info("Creating backup directory:", backupDir);
@@ -2192,7 +1972,7 @@ async function createWindow() {
     );
     if (process.platform === "win32") {
       // For Windows, we want to restart the app after update
-      autoUpdater.quitAndInstall(false, true);
+      autoUpdater.quitAndInstall(true, true);
     } else {
       // For macOS, let the user choose when to restart
       autoUpdater.quitAndInstall(false, true);
@@ -2237,6 +2017,46 @@ async function createWindow() {
     }
   });
 
+  ipcMain.handle("open-file-dialog", async () => {
+    const result = await dialog.showOpenDialog(win, {
+      properties: [
+        "openFile",
+        "multiSelections",
+        "showHiddenFiles",
+        "treatPackageAsDirectory",
+        "dontAddToRecent",
+      ],
+      filters: [
+        { name: "Documents", extensions: ["pdf", "xlsx","csv"] },
+        { name: "All Files", extensions: ["*"] },
+      ],
+    });
+
+    if (!result.canceled) {
+      return result.filePaths;
+    }
+    return [];
+  });
+
+  ipcMain.handle("get-file-content", async (event, filePath) => {
+    try {
+      const content = await fs.promises.readFile(filePath);
+      return content;
+    } catch (error) {
+      log.error("Error reading file:", error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle("preview-file", async (_event, filePath) => {
+    // This opens the file with the system default app (e.g., your PDF viewer)
+    const result = await shell.openPath(filePath);
+    // result is an error string on failure, or '' on success
+    if (result) {
+      throw new Error(result);
+    }
+    return true;
+  });
 
   // Check for updates after window is ready
   win.webContents.on("did-finish-load", () => {
@@ -2259,173 +2079,13 @@ const GATEWAY_EXECUTABLE_DIR = isPackaged
 
 console.log("GATEWAY EXECUTABLE DIR:", GATEWAY_EXECUTABLE_DIR);
 
-app.setName("CypherEdge");
-
-// Add this function before app.whenReady()
-async function performUserDataMigration() {
-  const migrationStartTime = Date.now();
-
-  try {
-    log.info("🚀 [USER-DATA-MIGRATION] === STARTING MIGRATION PROCESS ===");
-    log.info("[USER-DATA-MIGRATION] SYSTEM CONTEXT", {
-      appVersion: app.getVersion(),
-      appName: app.getName(),
-      platform: process.platform,
-      arch: process.arch,
-      isPackaged: app.isPackaged,
-      userDataDir: app.getPath("userData"),
-      tempDir: app.getPath("temp"),
-      processId: process.pid,
-      startTime: new Date().toISOString(),
-    });
-
-    const migration = new DatabaseMigration();
-
-    // Get initial status
-    const initialStatus = migration.getMigrationStatus();
-    log.info("[USER-DATA-MIGRATION] INITIAL STATUS", initialStatus);
-
-    // Perform migration
-    log.info("[USER-DATA-MIGRATION] CALLING MIGRATION FUNCTION");
-    const result = await migration.performMigration();
-
-    const migrationEndTime = Date.now();
-    const totalDuration = migrationEndTime - migrationStartTime;
-
-    // Log results based on outcome
-    if (result.alreadyCompleted) {
-      log.info("✅ [USER-DATA-MIGRATION] ALREADY COMPLETED", {
-        totalDurationMs: totalDuration,
-      });
-    } else if (result.freshInstall) {
-      log.info("ℹ️ [USER-DATA-MIGRATION] FRESH INSTALLATION DETECTED", {
-        totalDurationMs: totalDuration,
-      });
-    } else if (result.success) {
-      log.info("🎉 [USER-DATA-MIGRATION] MIGRATION SUCCESSFUL!", {
-        oldApp: result.oldAppName,
-        totalItems: result.totalItems,
-        successfulMigrations: result.successfulMigrations,
-        failedMigrations: result.failedMigrations,
-        preservedOriginal: result.preservedOriginal,
-        migrationDurationMs: result.migrationDurationMs,
-        totalProcessDurationMs: totalDuration,
-      });
-
-      // Log detailed success information
-      if (result.successfulMigrations > 0) {
-        const migratedFiles = result.migratedItems
-          .filter((item) => item.migrationSuccess)
-          .map((item) => ({
-            name: item.fileName,
-            type: item.type,
-            description: item.description || "No description",
-            size: item.size || "Unknown",
-            durationMs: item.migrationDurationMs || "Unknown",
-          }));
-
-        log.info("📋 [USER-DATA-MIGRATION] SUCCESSFULLY MIGRATED ITEMS", {
-          count: migratedFiles.length,
-          items: migratedFiles,
-          note: "Original files preserved in old app directory",
-        });
-      }
-
-      // Log any failures for debugging
-      if (result.failedMigrations > 0) {
-        const failedFiles = result.migratedItems
-          .filter((item) => !item.migrationSuccess)
-          .map((item) => ({
-            name: item.fileName,
-            type: item.type,
-            description: item.description || "No description",
-          }));
-
-        log.warn("⚠️ [USER-DATA-MIGRATION] FAILED MIGRATIONS", {
-          count: failedFiles.length,
-          items: failedFiles,
-        });
-      }
-    } else {
-      log.error("❌ [USER-DATA-MIGRATION] MIGRATION FAILED", {
-        totalItems: result.totalItems || "Unknown",
-        successful: result.successfulMigrations || 0,
-        failed: result.failedMigrations || "Unknown",
-        error: result.error || "Unknown error",
-        totalDurationMs: totalDuration,
-      });
-    }
-
-    // Get final status for comparison
-    const finalStatus = migration.getMigrationStatus();
-    log.info("[USER-DATA-MIGRATION] FINAL STATUS", finalStatus);
-
-    log.info("🏁 [USER-DATA-MIGRATION] === MIGRATION PROCESS COMPLETED ===", {
-      totalDurationMs: totalDuration,
-      totalDurationSeconds: (totalDuration / 1000).toFixed(2),
-    });
-
-    return result;
-  } catch (error) {
-    const migrationEndTime = Date.now();
-    const totalDuration = migrationEndTime - migrationStartTime;
-
-    log.error("💥 [USER-DATA-MIGRATION] CRITICAL MIGRATION ERROR", {
-      error: error.message,
-      stack: error.stack,
-      totalDurationMs: totalDuration,
-      timestamp: new Date().toISOString(),
-    });
-
-    // Try to log to a backup location
-    try {
-      const errorLogPath = path.join(
-        app.getPath("temp"),
-        "cyphersol-migration-error.log"
-      );
-      const errorInfo = {
-        timestamp: new Date().toISOString(),
-        error: error.message,
-        stack: error.stack,
-        appVersion: app.getVersion(),
-        platform: process.platform,
-      };
-      fs.writeFileSync(errorLogPath, JSON.stringify(errorInfo, null, 2));
-      log.info("[USER-DATA-MIGRATION] Error details saved to:", errorLogPath);
-    } catch (backupError) {
-      log.error(
-        "[USER-DATA-MIGRATION] Failed to save error backup:",
-        backupError
-      );
-    }
-
-    return { success: false, error: error.message, criticalError: true };
-  }
-}
+app.setName("CypherSol Dev");
 
 app.whenReady().then(async () => {
-  const appStartTime = Date.now();
-
-  // 🚀 ENHANCED STARTUP LOGGING
-  log.info("════════════════════════════════════════════════════════════════");
-  log.info("🚀 CYPHEREDGE APPLICATION STARTUP INITIATED");
-  log.info("════════════════════════════════════════════════════════════════");
-  log.info("📊 STARTUP ENVIRONMENT INFO", {
+  log.info("🚀 APP READY - STARTING INITIALIZATION SEQUENCE", {
     userDataDir: userDataDir,
     appVersion: app.getVersion(),
     timestamp: new Date().toISOString(),
-    platform: process.platform,
-    arch: process.arch,
-    isPackaged: app.isPackaged,
-    execPath: process.execPath,
-    processId: process.pid,
-    nodeVersion: process.version,
-    electronVersion: process.versions.electron,
-    memoryUsage: process.memoryUsage(),
-    isElevated:
-      process.platform === "win32" ? "Checking..." : "N/A (Non-Windows)",
-    workingDirectory: process.cwd(),
-    commandLineArgs: process.argv,
   });
 
   log.info("🔍 [CREATEWINDOW_DEBUG] Main window setup nearly complete - about to register IPC handlers");
@@ -2947,40 +2607,19 @@ app.whenReady().then(async () => {
   try {
     // 🔄 MIGRATE USER DATA FROM OLD APP (Critical first step)
     log.info("📋 INITIALIZATION STEP 1: USER DATA MIGRATION");
-    const migrationStartTime = Date.now();
-    const migrationResult = await performUserDataMigration();
-    const migrationEndTime = Date.now();
-
-    if (migrationResult.criticalError) {
-      log.error("💥 CRITICAL MIGRATION ERROR - CONTINUING WITH CAUTION", {
-        duration: migrationEndTime - migrationStartTime,
-        error: migrationResult,
-      });
-    } else {
-      log.info("✅ User data migration completed", {
-        duration: migrationEndTime - migrationStartTime,
-        result: migrationResult,
-      });
-    }
 
     // 🗄️ Initialize Database AFTER migration (so it uses the migrated data)
-    const dbStartTime = Date.now();
     log.info("📋 INITIALIZATION STEP 2: DATABASE INITIALIZATION");
     try {
       const dbManager = databaseManager.getInstance();
       await dbManager.initialize(userDataDir);
-      const dbEndTime = Date.now();
-      log.info("✅ Database initialized successfully", {
-        duration: dbEndTime - dbStartTime,
-        databasePath: path.join(userDataDir, "db.sqlite3"),
-      });
+      log.info("✅ Database initialized successfully");
     } catch (error) {
       log.error("❌ Database initialization failed:", error);
       throw error;
     }
 
     // 🏁 Check Update Success/Failure Flags
-    log.info("📋 CHECKING UPDATE FLAGS");
     const updateFlagPath = path.join(
       app.getPath("userData"),
       "update-success.txt"
@@ -2990,29 +2629,18 @@ app.whenReady().then(async () => {
         const version = fs.readFileSync(updateFlagPath, "utf8");
         fs.unlinkSync(updateFlagPath); // Remove the flag file
 
-        log.info("✅ UPDATE SUCCESS DETECTED", {
-          previousVersion: version,
-          currentVersion: app.getVersion(),
-          updateSuccessful: true,
-          restartedAfterUpdate: true,
-        });
-
         // Show success message after app fully loads
         setTimeout(() => {
           dialog.showMessageBox({
             type: "info",
             title: "Update Successful",
-            message: `Successfully updated to CypherEdge v${app.getVersion()}`,
-            detail:
-              "Your application has been updated with the latest features and improvements.",
+            message: `Successfully updated to version ${app.getVersion()}`,
             buttons: ["OK"],
           });
-        }, 3000); // Increased delay to ensure app is fully loaded
+        }, 2000);
       } catch (err) {
         log.error("Error reading update flag:", err);
       }
-    } else {
-      log.info("No update success flag found - normal startup");
     }
 
     // Check for update failure flag
@@ -3043,40 +2671,28 @@ app.whenReady().then(async () => {
     // 🚨 CRITICAL: Gateway server MUST start BEFORE license validation
 
     // 1. Start Gateway Server FIRST (needed for license validation)
-    log.info("📋 INITIALIZATION STEP 3: GATEWAY SERVER INITIALIZATION");
     try {
-      const gatewayStartTime = Date.now();
       log.info(
         "🚀 PHASE 1: Initializing Gateway Server (Required for License Validation)"
       );
       gatewayServer.init(GATEWAY_EXECUTABLE_DIR);
-      log.info("✅ Gateway server path configured", {
-        executablePath: GATEWAY_EXECUTABLE_DIR,
-      });
+      log.info("✅ Gateway server path configured");
 
       // 🔧 ROBUST GATEWAY INITIALIZATION with health checks and fallback
       await gatewayServer.initialize();
-      const gatewayEndTime = Date.now();
-      log.info("✅ Gateway server initialized and responding on port 7890", {
-        duration: gatewayEndTime - gatewayStartTime,
-      });
+      log.info("✅ Gateway server initialized and responding on port 7890");
     } catch (error) {
       log.error("❌ GatewayServer initialization failed:", error);
       throw error;
     }
 
     // 2. Initialize License Manager AFTER Gateway Server is ready
-    log.info("📋 INITIALIZATION STEP 4: LICENSE MANAGER INITIALIZATION");
     try {
-      const licenseStartTime = Date.now();
       log.info(
         "🚀 PHASE 2: Initializing License Manager (Gateway Server Available)"
       );
       const isLicenseValid = await licenseManager.init(app.getPath("userData"));
-      const licenseEndTime = Date.now();
-      log.info("✅ License status:", isLicenseValid, {
-        duration: licenseEndTime - licenseStartTime,
-      });
+      log.info("✅ License status:", isLicenseValid);
       log.info("✅ License Info Data:", licenseManager.licenseData);
     } catch (error) {
       log.error("❌ License initialization failed:", error);
@@ -3084,9 +2700,7 @@ app.whenReady().then(async () => {
     }
 
     // 3. Initialize Session Manager
-    log.info("📋 INITIALIZATION STEP 5: SESSION MANAGER INITIALIZATION");
     try {
-      const sessionStartTime = Date.now();
       log.info("🚀 PHASE 3: Initializing Session Manager");
       
       // Verify SessionManager instance and methods
@@ -3111,45 +2725,23 @@ app.whenReady().then(async () => {
       throw error;
     }
 
-    // 4. Initialize System Information (POTENTIAL HANGING POINT - WATCH CLOSELY)
-    log.info("📋 INITIALIZATION STEP 6: SYSTEM INFORMATION GATHERING");
-    log.info(
-      "⚠️  CRITICAL STEP: This is where client machines might hang - monitoring closely..."
-    );
+    // 4. Load System Information
+    log.info("SYSTEM_INFO", "LOADING");
     try {
-      const systemInfoStartTime = Date.now();
-      log.info("🔍 Starting system information collection...");
-
+      const sysInfoStartTime = Date.now();
       await systemInfo.loadData(app.getPath("userData"));
-
-      const systemInfoEndTime = Date.now();
-      log.info("✅ SystemInfo loaded successfully", {
-        duration: systemInfoEndTime - systemInfoStartTime,
+      log.info("SYSTEM_INFO", "SUCCESS", {
         hostname: systemInfo.getHostname(),
-        userSID: systemInfo.getWindowsUserSID(),
-        uuid: systemInfo.getUUID() ? "Present" : "Missing",
-        macAddress: systemInfo.getMACAddress(),
+        userSID: systemInfo.getWindowsUserSID()?.substring(0, 20) + "...",
       });
     } catch (error) {
-      log.error("❌ SystemInfo initialization failed:", error);
-      throw error;
+      log.error("SYSTEM_INFO", "FAILURE", { error: error.message });
     }
 
-    // 5. File System Operations
-    log.info("📋 INITIALIZATION STEP 7: FILE SYSTEM SETUP");
-    try {
-      const fileSystemStartTime = Date.now();
-      syncTallyprimeFilesToUserData();
-      createProtocol();
-      const fileSystemEndTime = Date.now();
-      log.info("✅ File system operations completed", {
-        duration: fileSystemEndTime - fileSystemStartTime,
-      });
-    } catch (error) {
-      log.error("❌ File system setup failed:", error);
-      throw error;
-    }
-
+    // 5. Create main window
+    log.info("📋 INITIALIZATION STEP 3: CREATING MAIN WINDOW");
+    await createWindow();
+    log.info("✅ Main window created successfully");
     // 6. Main Window Creation
     log.info("📋 INITIALIZATION STEP 8: MAIN WINDOW CREATION");
     log.info("🔍 [STARTUP_DEBUG] About to create main window - checking app state");
@@ -3167,47 +2759,35 @@ app.whenReady().then(async () => {
       log.error("❌ Main window creation failed:", error);
       log.error("🔍 [STARTUP_DEBUG] CRITICAL: Main window creation failed - this is likely why no auto-launch");
       throw error;
+    // 6. Start Python backend
+    log.info("📋 INITIALIZATION STEP 4: STARTING PYTHON BACKEND");
+    try {
+      await startPythonExecutable();
+      log.info("✅ Python backend started successfully");
+    } catch (error) {
+      log.error("❌ Python backend failed to start:", error);
+      // Handle backend start failure
     }
     
     log.info("🔍 [STARTUP_DEBUG] ✅ ENTIRE STARTUP SEQUENCE COMPLETED SUCCESSFULLY");
 
-    // 7. Window Ready Event Setup
-    win.once("ready-to-show", () => {
-      log.info("🎯 MAIN WINDOW READY TO SHOW - CLOSING SPLASH");
-      if (splashWindow) {
-        splashWindow.close();
-        log.info("✅ Splash window closed");
-      }
-      win.show();
-      log.info("✅ Main window shown to user");
-    });
+    // 7. Sync TallyPrime files
+    log.info("📋 INITIALIZATION STEP 5: SYNCING TALLYPRIME FILES");
+    syncTallyprimeFilesToUserData();
+    log.info("✅ TallyPrime files synced successfully");
 
-    // 8. Python Backend Initialization
-    log.info("📋 INITIALIZATION STEP 9: PYTHON BACKEND INITIALIZATION");
-    try {
-      const pythonStartTime = Date.now();
-      await startPythonExecutable();
-      const pythonEndTime = Date.now();
-      log.info("✅ Python backend initialized successfully", {
-        duration: pythonEndTime - pythonStartTime,
-      });
-    } catch (error) {
-      log.error("❌ Python initialization failed:", error);
-      throw error;
+    // 8. Show main window
+    log.info("📋 INITIALIZATION STEP 6: SHOWING MAIN WINDOW");
+    if (win) {
+      win.show();
+      log.info("✅ Main window shown");
     }
 
-    // 🔍 VERIFY ALL SERVICES ARE RUNNING
-    log.info("📋 INITIALIZATION STEP 10: SERVICES VERIFICATION");
-    try {
-      const verificationStartTime = Date.now();
-      await verifyAllServicesRunning();
-      const verificationEndTime = Date.now();
-      log.info("✅ All services verified as running", {
-        duration: verificationEndTime - verificationStartTime,
-      });
-    } catch (error) {
-      log.error("❌ Service verification failed:", error);
-      throw error;
+    // 9. Close splash screen
+    log.info("📋 INITIALIZATION STEP 7: CLOSING SPLASH SCREEN");
+    if (splashWindow) {
+      splashWindow.close();
+      log.info("✅ Splash screen closed");
     }
 
     // Calculate total startup time
@@ -3237,31 +2817,17 @@ app.whenReady().then(async () => {
       }, 60 * 1000);
     }
   } catch (error) {
-    log.error(
-      "════════════════════════════════════════════════════════════════"
-    );
-    log.error("💥 CRITICAL STARTUP FAILURE");
-    log.error(
-      "════════════════════════════════════════════════════════════════"
-    );
-    log.error("❌ Failed to initialize App:", error);
-    log.error("🔍 Error details:", {
-      message: error.message,
+    log.error("💥 APP INITIALIZATION FAILED", {
+      error: error.message,
       stack: error.stack,
-      timestamp: new Date().toISOString(),
-      totalTimeBeforeFailure: Date.now() - appStartTime,
     });
-
-    // Show error dialog to user before quitting
     if (splashWindow) {
       splashWindow.close();
     }
-
     dialog.showErrorBox(
-      "CypherEdge Startup Error",
-      `Failed to start the application:\n\n${error.message}\n\nPlease check the logs for more details.`
+      "Application Error",
+      `Failed to initialize the application: ${error.message}`
     );
-
     app.quit();
   }
 });
@@ -3636,21 +3202,8 @@ const stopEverythingNeatly = async () => {
       UPDATE_LOG_PREFIX,
       `[CLEANUP] stopEverythingNeatly error: ${e.message}`
     );
+
   }
-};
-
-// Critical for auto-updater to work!
-app.on("before-quit-for-update", async () => {
-  logWithTimestamp(
-    "info",
-    UPDATE_LOG_PREFIX,
-    "Before quit for update triggered"
-  );
-  // Prevent normal quit behavior during update
-  isUpdating = true;
-
-  // Run cleanup
-  await stopEverythingNeatly();
 });
 
 app.on("activate", () => {
@@ -3659,319 +3212,75 @@ app.on("activate", () => {
   }
 });
 
-// Add these IPC handlers
-ipcMain.handle("start-download", () => {
-  autoUpdater.downloadUpdate();
-});
+// Graceful shutdown
+app.on("before-quit", (event) => {
+  log.info("Application is about to quit");
 
-ipcMain.handle("quit-and-install", () => {
-  log.info("Manual quit and install requested via IPC");
-  autoUpdater.quitAndInstall(false, true);
-});
-
-// Modify the update check function
-function checkForUpdates() {
-  if (global.AppConfig.isDev) {
-    log.info("Skipping update check in development mode");
+  // Skip confirmation if updating
+  if (isUpdating) {
+    log.info("Skipping graceful shutdown for update");
     return;
   }
 
-  // Check if we recently updated (within 15 minutes)
-  const updateFlagPath = path.join(
-    app.getPath("userData"),
-    "update-success.txt"
-  );
-  const gracePeriodPath = path.join(
-    app.getPath("userData"),
-    "update-grace-period.json"
-  );
-
-  try {
-    // Check if update just completed
-    if (fs.existsSync(updateFlagPath)) {
-      // Create grace period file
-      fs.writeFileSync(
-        gracePeriodPath,
-        JSON.stringify({
-          timestamp: Date.now(),
-          version: app.getVersion(),
-        })
-      );
-    }
-
-    // Check if we're in grace period
-    if (fs.existsSync(gracePeriodPath)) {
-      const graceData = JSON.parse(fs.readFileSync(gracePeriodPath, "utf8"));
-      const timeSinceUpdate = Date.now() - graceData.timestamp;
-
-      // Skip update check if within 15 minutes of update
-      if (timeSinceUpdate < 15 * 60 * 1000) {
-        log.info(
-          `Skipping update check - in grace period (${Math.round(
-            timeSinceUpdate / 1000 / 60
-          )} minutes since update)`
-        );
-        return;
-      } else {
-        // Grace period expired, remove file
-        fs.unlinkSync(gracePeriodPath);
-      }
-    }
-  } catch (err) {
-    log.error("Error checking update grace period:", err);
+  // Terminate Python backend
+  if (pythonProcess && !pythonProcess.killed) {
+    log.info("Terminating Python backend...");
+    pythonProcess.kill();
   }
 
-  const currentVersion = app.getVersion();
-
-  // Skip check if we're already on the latest notified version
-  if (lastCheckedVersion && lastCheckedVersion === currentVersion) {
-    log.info("Already on latest notified version:", currentVersion);
-    return;
+  // Close database connection
+  const dbManager = databaseManager.getInstance();
+  if (dbManager && dbManager.getDatabase()) {
+    // dbManager.getDatabase().close();
+    log.info("Database connection closed");
   }
+});
 
-  log.info("Checking for updates...");
-  autoUpdater.checkForUpdates().catch((err) => {
-    log.error("Error checking for updates:", err);
-    // dialog.showMessageBox({
-    //   type: "error",
-    //   title: "Update Error",
-    //   message: `Error checking for updates: ${err.message}`,
-    //   buttons: ["OK"],
-    // });
-  });
-}
+// Performance tracking utility
+const performanceTracker = {
+  timers: new Map(),
+  start(label) {
+    this.timers.set(label, process.hrtime());
+    log.info(`[PERF] Starting: ${label}`);
+  },
+  end(label) {
+    const startTime = this.timers.get(label);
+    if (startTime) {
+      const diff = process.hrtime(startTime);
+      const duration = (diff[0] * 1e9 + diff[1]) / 1e6; // ms
+      log.info(`[PERF] Finished: ${label} in ${duration.toFixed(2)}ms`);
+      this.timers.delete(label);
+      return duration;
+    }
+    return 0;
+  },
+};
 
-// Set up detailed logging for updates
-log.transports.file.fileName = "cyphersol.log";
-
-// ═══════════════════════════════════════════════════════════════════════════════════════
-// 🚀 COMPREHENSIVE AUTO-UPDATE LOGGING SYSTEM v2.0.0
-// ═══════════════════════════════════════════════════════════════════════════════════════
-// Created for: Backend Team Analysis & Software Improvement
-// Purpose: Detailed tracking of update process, user behavior, and system performance
-// ═══════════════════════════════════════════════════════════════════════════════════════
-
-const UPDATE_LOG_PREFIX = "🔄 [AUTO-UPDATE]";
-const PERFORMANCE_LOG_PREFIX = "⚡ [PERFORMANCE]";
-const USER_LOG_PREFIX = "👤 [USER-INTERACTION]";
-const SYSTEM_LOG_PREFIX = "🖥️ [SYSTEM]";
-const ERROR_LOG_PREFIX = "❌ [ERROR]";
-const SUCCESS_LOG_PREFIX = "✅ [SUCCESS]";
-
-// Enhanced logging utility functions
-const logWithTimestamp = (level, prefix, message, data = null) => {
+// Centralized logging function
+const logWithTimestamp = (level, prefix, message, data = {}) => {
   const timestamp = new Date().toISOString();
-  const logMessage = `${prefix} [${timestamp}] ${message}`;
+  const logMessage = `[${timestamp}] [${prefix}] ${message}`;
 
-  if (data) {
-    log[level](`${logMessage}`, JSON.stringify(data, null, 2));
+  if (Object.keys(data).length > 0) {
+    log[level](logMessage, data);
   } else {
     log[level](logMessage);
   }
-
-  // Also log to console in development for immediate feedback
-  if (global.AppConfig.isDev) {
-    console.log(`${prefix} ${message}`, data || "");
-  }
 };
 
-// Performance tracking utilities
-const performanceTracker = {
-  timers: new Map(),
+// Log prefixes
+const UPDATE_LOG_PREFIX = "UPDATE";
+const ERROR_LOG_PREFIX = "ERROR";
+const SUCCESS_LOG_PREFIX = "SUCCESS";
+const USER_LOG_PREFIX = "USER";
+const PERFORMANCE_LOG_PREFIX = "PERFORMANCE";
 
-  start(operationName) {
-    const startTime = Date.now();
-    this.timers.set(operationName, startTime);
-    logWithTimestamp(
-      "info",
-      PERFORMANCE_LOG_PREFIX,
-      `Started: ${operationName}`
-    );
-    return startTime;
-  },
-
-  end(operationName) {
-    const endTime = Date.now();
-    const startTime = this.timers.get(operationName);
-    if (startTime) {
-      const duration = endTime - startTime;
-      this.timers.delete(operationName);
-      logWithTimestamp(
-        "info",
-        PERFORMANCE_LOG_PREFIX,
-        `Completed: ${operationName} | Duration: ${duration}ms`
-      );
-      return duration;
-    }
-    return null;
-  },
-};
-
-// System information logger
-const logSystemInfo = () => {
-  const systemInfo = {
-    platform: process.platform,
-    arch: process.arch,
-    nodeVersion: process.versions.node,
-    electronVersion: process.versions.electron,
-    appVersion: app.getVersion(),
-    userDataDir: userDataDir,
-    isPackaged: app.isPackaged,
-    isDevelopment: global.AppConfig.isDev,
-    totalMemory: process.getSystemMemoryInfo
-      ? process.getSystemMemoryInfo().total
-      : "N/A",
-    availableMemory: process.getSystemMemoryInfo
-      ? process.getSystemMemoryInfo().free
-      : "N/A",
-  };
-
+// Function to check for updates
+function checkForUpdates() {
   logWithTimestamp(
     "info",
-    SYSTEM_LOG_PREFIX,
-    "System Information Collected",
-    systemInfo
+    UPDATE_LOG_PREFIX,
+    "Scheduled update check triggered"
   );
-  return systemInfo;
-};
-
-// Initialize comprehensive logging
-log.info(
-  "═══════════════════════════════════════════════════════════════════════════════════════"
-);
-log.info("🚀 CYPHERSOL AUTO-UPDATE LOGGING SYSTEM v2.0.0 INITIALIZED");
-log.info(
-  "═══════════════════════════════════════════════════════════════════════════════════════"
-);
-log.info(`📅 Session Start Time: ${new Date().toISOString()}`);
-log.info(`🏷️ Application Version: ${app.getVersion()}`);
-log.info(`📁 User Data Directory: ${userDataDir}`);
-log.info(`🖥️ Platform: ${process.platform} (${process.arch})`);
-log.info(`⚡ Node Version: ${process.versions.node}`);
-log.info(`🔋 Electron Version: ${process.versions.electron}`);
-log.info(
-  `🔧 Development Mode: ${global.AppConfig.isDev ? "ENABLED" : "DISABLED"}`
-);
-log.info(
-  "═══════════════════════════════════════════════════════════════════════════════════════"
-);
-
-// Log detailed system information
-logSystemInfo();
-
-// Add service verification function
-async function verifyAllServicesRunning() {
-  log.info("🔍 VERIFYING ALL SERVICES STATUS");
-
-  const serviceStatus = {
-    database: false,
-    gateway: false,
-    license: false,
-    session: false,
-    python: false,
-    timestamp: new Date().toISOString(),
-  };
-
-  try {
-    // Check Database
-    try {
-      const dbManager = databaseManager.getInstance();
-      if (dbManager && dbManager.getDatabase()) {
-        serviceStatus.database = true;
-        log.info("✅ Database service: RUNNING");
-      }
-    } catch (e) {
-      log.error("❌ Database service: FAILED", { error: e.message });
-    }
-
-    // Check Gateway Server (port 7890)
-    try {
-      const isGatewayRunning = await checkPortAvailability(7890);
-      serviceStatus.gateway = isGatewayRunning;
-      if (isGatewayRunning) {
-        log.info("✅ Gateway service: RUNNING (port 7890)");
-      } else {
-        log.error("❌ Gateway service: NOT RESPONDING (port 7890)");
-      }
-    } catch (e) {
-      log.error("❌ Gateway service: CHECK FAILED", { error: e.message });
-    }
-
-    // Check License Manager
-    try {
-      if (licenseManager && licenseManager.licenseData) {
-        serviceStatus.license = true;
-        log.info("✅ License service: VALID", {
-          hasLicenseData: !!licenseManager.licenseData,
-        });
-      } else {
-        log.error("❌ License service: NO VALID LICENSE");
-      }
-    } catch (e) {
-      log.error("❌ License service: CHECK FAILED", { error: e.message });
-    }
-
-    // Check Session Manager
-    try {
-      if (sessionManager) {
-        serviceStatus.session = true;
-        log.info("✅ Session service: RUNNING");
-      }
-    } catch (e) {
-      log.error("❌ Session service: CHECK FAILED", { error: e.message });
-    }
-
-    // Check Python Backend (port 7500)
-    try {
-      const isPythonRunning = await checkPortAvailability(7500);
-      serviceStatus.python = isPythonRunning;
-      if (isPythonRunning) {
-        log.info("✅ Python backend: RUNNING (port 7500)");
-      } else {
-        log.error("❌ Python backend: NOT RESPONDING (port 7500)");
-      }
-    } catch (e) {
-      log.error("❌ Python backend: CHECK FAILED", { error: e.message });
-    }
-
-    // Overall service health
-    const allServicesRunning = Object.values(serviceStatus).every((status) =>
-      typeof status === "boolean" ? status : true
-    );
-
-    log.info("🏥 OVERALL SERVICE HEALTH CHECK", {
-      ...serviceStatus,
-      allServicesHealthy: allServicesRunning,
-      healthPercentage: Math.round(
-        (Object.values(serviceStatus).filter((s) => s === true).length / 5) *
-          100
-      ),
-    });
-
-    if (!allServicesRunning) {
-      log.warn("⚠️ SOME SERVICES ARE NOT RUNNING PROPERLY");
-
-      // Show warning to user if critical services are down
-      if (!serviceStatus.database || !serviceStatus.gateway) {
-        setTimeout(() => {
-          dialog.showMessageBox({
-            type: "warning",
-            title: "Service Warning",
-            message: "Some application services may not be running properly.",
-            detail:
-              "Please check the logs or restart the application if you experience issues.",
-            buttons: ["OK"],
-          });
-        }, 2000);
-      }
-    }
-
-    return serviceStatus;
-  } catch (error) {
-    log.error("💥 SERVICE VERIFICATION FAILED", {
-      error: error.message,
-      stack: error.stack,
-    });
-    return serviceStatus;
-  }
+  autoUpdater.checkForUpdates();
 }

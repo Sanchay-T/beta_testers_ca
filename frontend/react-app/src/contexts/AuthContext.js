@@ -143,7 +143,7 @@ export const AuthProvider = ({ children }) => {
         // After successful login, explicitly fetch the complete user data
         // const userData = await window.electron.auth.getUser();
 
-        setUser({ ...userData, role: credentials.role });
+        setUser({ ...userData.user });
         console.log("Printing Dama user, ", userData)
         // console.log("User logged in:", userData);
         localStorage.removeItem("dashboardData");

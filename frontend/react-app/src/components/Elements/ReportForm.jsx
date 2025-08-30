@@ -22,7 +22,7 @@ import {
 } from "../ui/select";
 import { Input } from "../ui/input";
 
-const GenerateReportForm = ({
+const GenerateReportForm = ({ 
   currentCaseName = null,
   handleReportSubmit,
   onReportGenerated,
@@ -309,9 +309,13 @@ const GenerateReportForm = ({
   useEffect(() => {
     const newFileDetails = selectedFiles.map((file, index) => {
       const existing = fileDetails[index] || {};
+      let previewUrl = existing.previewUrl;
+      if (file instanceof File) {
+        previewUrl = URL.createObjectURL(file);
+      }
       return {
         file,
-        previewUrl: URL.createObjectURL(file),
+        previewUrl,
         password: existing.password || "",
         start_date: existing.start_date || "",
         end_date: existing.end_date || "",
@@ -329,34 +333,47 @@ const GenerateReportForm = ({
     };
   }, [selectedFiles]);
 
-  // const handleFileDetailChange = (index, field, value) => {
-  //   setFileDetails((prev) => {
-  //     const updated = prev.map((detail, i) => {
-  //       if (i === index) {
-  //         const updatedDetail = { ...detail, [field]: value };
-  //         console.log(`Updated ${field} for file ${index}:`, {
-  //           previous: detail[field],
-  //           new: value,
-  //           fullDetail: updatedDetail,
-  //         });
-  //         return updatedDetail;
-  //       }
-  //       return detail;
-  //     });
+  const isPdfPath = (p) =>
+    typeof p === "string" && p.toLowerCase().endsWith(".pdf");
 
-  //     console.log("Updated fileDetails:", updated);
-  //     return updated;
-  //   });
-  // };
-  const handlePreviewFile = (previewUrl, fileType) => {
-    if (fileType.includes("application/pdf")) {
-      window.open(previewUrl, "_blank");
-    } else {
+  const handlePreviewFile = async (previewUrlOrPath, fileType) => {
+    try {
+      // If it's a blob URL (e.g., from <input type="file">), open in a tab
+      const isBlobUrl =
+        typeof previewUrlOrPath === "string" &&
+        previewUrlOrPath.startsWith("blob:");
+
+      // Prefer robust PDF check: file extension OR mime
+      const isPdf =
+        isBlobUrl ||
+        isPdfPath(previewUrlOrPath) ||
+        (typeof fileType === "string" && fileType.includes("application/pdf"));
+
+      if (!isPdf) {
+        toast({
+          title: "Alert",
+          description: "File not supported for preview",
+          variant: "destructive",
+          duration: 3000,
+        });
+        return;
+      }
+
+      if (isBlobUrl) {
+        // Old flow (HTML input) still works
+        window.open(previewUrlOrPath, "_blank", "noopener,noreferrer");
+        return;
+      }
+
+      // New flow (paths from showOpenDialog): ask main to open with default viewer
+      await window.electron.previewFile(previewUrlOrPath);
+    } catch (err) {
+      console.error("Preview failed:", err);
       toast({
-        title: "Alert",
-        description: "File not supported for preview",
+        title: "Preview failed",
+        description: err?.message || "Could not open file",
         variant: "destructive",
-        duration: 3000,
+        duration: 4000,
       });
     }
   };
@@ -577,7 +594,6 @@ const GenerateReportForm = ({
   const handleDragOver = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDragging(true);
   };
 
   const handleDrop = (e) => {
@@ -586,54 +602,36 @@ const GenerateReportForm = ({
     setIsDragging(false);
 
     const files = Array.from(e.dataTransfer.files);
-    setSelectedFiles((prevFiles) => [...prevFiles, ...files]);
+    handleFileChange(files);
   };
 
-  const handleFileChange = (e) => {
-    console.log("Inside handleFileChange..");
-    console.log({ e: e.target });
-    if (e.target.files) {
-      const newFiles = Array.from(e.target.files);
+  const handleFileChange = (files) => {
+    const newFiles = files.map((file) => {
+      if (typeof file === "string") {
+        const blob = new Blob([null], { type: "application/pdf" });
+        const newFile = new File([blob], file.split("\\").pop(), {
+          type: "application/pdf",
+        });
+        newFile.path = file;
+        return newFile;
+      }
+      return file;
+    });
 
-      // Combine new files with existing files
-      const combinedFiles = [...selectedFiles, ...newFiles];
+    const combinedFiles = [...selectedFiles, ...newFiles];
 
-      console.log({ newFiles, combinedFiles });
+    const uniqueFiles = combinedFiles.filter(
+      (file, index, self) =>
+        index === self.findIndex((f) => f.path === file.path)
+    );
 
-      // Remove duplicates based on file name and size
-      const uniqueFiles = combinedFiles.filter(
-        (file, index, self) =>
-          index ===
-          self.findIndex((f) => f.name === file.name && f.size === file.size)
-      );
+    setSelectedFiles(uniqueFiles);
+  };
 
-      console.log({ uniqueFiles });
-
-      setSelectedFiles(uniqueFiles);
-
-      // Create file details for all files
-      const newFileDetails = uniqueFiles.map((file, index) => {
-        // Check if this file already has details from previous selection
-        const existingDetailIndex = selectedFiles.findIndex(
-          (existingFile) =>
-            existingFile.name === file.name && existingFile.size === file.size
-        );
-
-        const existingDetail =
-          existingDetailIndex !== -1 ? fileDetails[existingDetailIndex] : {};
-
-        return {
-          file,
-          previewUrl: URL.createObjectURL(file),
-          password: existingDetail.password || "",
-          start_date: existingDetail.start_date || "",
-          end_date: existingDetail.end_date || "",
-          bankName: existingDetail.bankName || "",
-        };
-      });
-
-      setFileDetails(newFileDetails);
-      e.target.value = "";
+  const openFileDialog = async () => {
+    const filePaths = await window.electron.openFileDialog();
+    if (filePaths && filePaths.length > 0) {
+      handleFileChange(filePaths);
     }
   };
 
@@ -753,23 +751,20 @@ const GenerateReportForm = ({
                   value={currentCaseName || caseName}
                   onChange={(e) => setCaseName(e.target.value)}
                   disabled={currentCaseName != null}
-                  className={`w-1/3 px-3 py-2 text-sm text-gray-500 dark:text-gray-400 focus:outline-none ${currentCaseName == null
+                  className={`w-1/3 px-3 py-2 text-sm text-gray-500 dark:text-gray-400 focus:outline-none ${ currentCaseName == null
                       ? "focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-500"
                       : "cursor-not-allowed"
-                    } transition-all border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm`}
+                  } transition-all border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm`}
                 />
               </div>
 
               <div
-                className={`relative ${isDragging ? "ring-2 ring-[#3498db] dark:ring-blue-500" : ""
-                  }`}
-                onDragEnter={handleDragEnter}
-                onDragLeave={handleDragLeave}
+                className={`relative ${ isDragging ? "ring-2 ring-[#3498db] dark:ring-blue-500" : ""}`}
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
               >
                 <div
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={openFileDialog}
                   className="flex cursor-pointer flex-col items-center justify-center p-5 border-2 border-dashed border-gray-200 dark:border-white rounded-lg hover:border-gray-300 dark:hover:border-gray-500 transition-all bg-gray-50 dark:bg-black"
                 >
                   <div className="flex flex-col items-center justify-center w-full">
@@ -781,6 +776,7 @@ const GenerateReportForm = ({
                             className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 p-4 space-y-4"
                             onClick={(e) => e.stopPropagation()}
                           >
+                            {console.log({ detail })}
                             <div className="flex items-center justify-between">
                               <div className="flex items-center space-x-3">
                                 <FileText className="w-5 h-5 text-[#3498db] dark:text-blue-500" />
@@ -788,9 +784,9 @@ const GenerateReportForm = ({
                                   <p className="text-sm text-gray-600 dark:text-gray-300">
                                     {detail.file.name}
                                   </p>
-                                  <p className="text-xs text-gray-400 dark:text-gray-500">
+                                  {/* <p className="text-xs text-gray-400 dark:text-gray-500">
                                     {formatFileSize(detail.file.size)}
-                                  </p>
+                                  </p> */}
                                 </div>
                               </div>
 
@@ -799,7 +795,7 @@ const GenerateReportForm = ({
                                   type="button"
                                   onClick={() =>
                                     handlePreviewFile(
-                                      detail.previewUrl,
+                                      detail.file.path,
                                       detail.file.type
                                     )
                                   }
@@ -837,8 +833,7 @@ const GenerateReportForm = ({
                                   onOpenChange={() => setBankSearchTerm("")}
                                 >
                                   <SelectTrigger className="w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-500 transition-all">
-                                    <SelectValue placeholder="Select Bank Name" />
-                                    <SelectValue>
+                                    <SelectValue placeholder="Select Bank Name">
                                       {detail.bankName || "Select a bank"}
                                     </SelectValue>
                                   </SelectTrigger>
@@ -1010,7 +1005,7 @@ const GenerateReportForm = ({
                     variant="outline"
                     onClick={(e) => {
                       e.stopPropagation();
-                      fileInputRef.current?.click();
+                      openFileDialog();
                     }}
                     className="mt-4 px-6 py-2.5 text-sm font-medium"
                   >
@@ -1018,18 +1013,13 @@ const GenerateReportForm = ({
                       ? "Add More Files"
                       : "Browse Files"}
                   </Button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    onChange={handleFileChange}
-                    className="hidden"
-                    multiple
-                    accept=".pdf,.xls,.xlsx"
-                  />
                 </div>
 
                 {isDragging && (
-                  <div className="absolute inset-0 bg-[#3498db]/10 dark:bg-blue-500/10 rounded-lg pointer-events-none" />
+                  <div
+                    className="absolute inset-0 bg-[#3498db]/10 dark:bg-blue-500/10 rounded-lg pointer-events-none"
+                    style={{ pointerEvents: "none" }}
+                  />
                 )}
               </div>
             </div>

@@ -7,6 +7,7 @@ const { eod } = require("../db/schema/EodSchema");
 const { summary } = require("../db/schema/Summary");
 const { eq, gt, and, inArray, or, asc } = require("drizzle-orm"); // Add this import
 const axios = require("axios");
+const getBaseUrl = require("../getBaseUrl");
 
 const formatDate = (dateString) => {
   const date = new Date(dateString); // Parse the date string
@@ -103,8 +104,11 @@ function registerIndividualDashboardIpc() {
 
         log.info({ exampleTransaction: allTransactions[8] });
         log.info({ exampleupdatedTransactions: updatedTransactions[8] });
+
+        const baseUrl = getBaseUrl();
+        const apiUrlIndividualSummary = `${baseUrl}/individual-summary/`;
         const response = await axios.post(
-          "http://localhost:7500/individual-summary/",
+          apiUrlIndividualSummary,
           {
             transactions_data: updatedTransactions,
           },

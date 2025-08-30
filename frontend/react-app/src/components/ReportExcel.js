@@ -43,9 +43,9 @@ function mapDataForExcelGenerator(accountsData, summaryObject, individualId) {
 
       // Add all month data and "Total" column
       Object.keys(item).forEach((key) => {
-      if (/^[A-Za-z]{3}-\d{4}$/.test(key) || key === "Total") {
-        newItem[key] = item[key];
-      }
+        if (/^[A-Za-z]{3}-\d{4}$/.test(key) || key === "Total") {
+          newItem[key] = item[key];
+        }
       });
 
       return newItem;
@@ -249,36 +249,63 @@ const generateFinancialReport = async (
       await window.electron.getOpportunityToEarnForExcel(caseid);
     const EodData = await window.electron.getEodBalance(caseid);
     const formattedEodData = EodformatData(EodData[0].data);
-    const transactionsData = await window.electron.getTransactions(caseid);
+    const transactionsData = await window.electron.getTransactions(
+      caseid,
+      individualId
+    );
     const investmentData = await window.electron.getTransactionsByInvestment(
-      caseid
+      caseid,
+      individualId
     );
     const creditorsData = await window.electron.getTransactionsByCreditor(
-      caseid
+      caseid,
+      individualId
     );
-    const debtorsData = await window.electron.getTransactionsByDebtor(caseid);
-    const upiCrData = await window.electron.getTransactionsByUpiCr(caseid);
-    const upiDrData = await window.electron.getTransactionsByUpiDr(caseid);
+    const debtorsData = await window.electron.getTransactionsByDebtor(
+      caseid,
+      individualId
+    );
+    const upiCrData = await window.electron.getTransactionsByUpiCr(
+      caseid,
+      individualId
+    );
+    const upiDrData = await window.electron.getTransactionsByUpiDr(
+      caseid,
+      individualId
+    );
     const cashWithdrawalData =
-      await window.electron.getTransactionsByCashWithdrawal(caseid);
+      await window.electron.getTransactionsByCashWithdrawal(
+        caseid,
+        individualId
+      );
     const cashDepositData = await window.electron.getTransactionsByCashDeposit(
-      caseid
+      caseid,
+      individualId
     );
-    const ProbableEmiData = await window.electron.getTransactionsByEmi(caseid);
+    const ProbableEmiData = await window.electron.getTransactionsByEmi(
+      caseid,
+      individualId
+    );
     const reversalData = await window.electron.getTransactionsByReversal(
-      caseid
+      caseid,
+      individualId
     );
 
     const suspensecredit =
-      await window.electron.getTransactionsBySuspenseCredit(caseid);
+      await window.electron.getTransactionsBySuspenseCredit(
+        caseid,
+        individualId
+      );
     const transformCreditData = processSuspenseData(suspensecredit);
 
     const suspensedebit = await window.electron.getTransactionsBySuspenseDebit(
-      caseid
+      caseid,
+      individualId
     );
     const transformDebitData = processSuspenseData(suspensedebit);
     const redemptionData = await window.electron.getTransactionsByRedemption(
-      caseid
+      caseid,
+      individualId
     );
     const voucherTransaction = await window.electron.getTransactions(caseid);
     const formatVoucherData = formatVoucherTransaction(voucherTransaction);
@@ -287,7 +314,9 @@ const generateFinancialReport = async (
     addSummarySheet(workbook, mappedData);
     if (!summaryOnly) {
       addOpportunityToEarnSheet(workbook, opportunityToEarnData.data);
-      addEodSheet(workbook, formattedEodData);
+      if (!individualId) {
+        addEodSheet(workbook, formattedEodData);
+      }
       addTransactionsSheet(workbook, transactionsData);
       addInvestmentSheet(workbook, investmentData);
       addCreditorsSheet(workbook, creditorsData);
@@ -345,9 +374,9 @@ const addSummarySheet = (workbook, data) => {
     return;
   }
 
-  // Dynamically get all months from the data
+  // Dynamically get all months from the data, excluding "Total"
   const months = Object.keys(summaryObject.particulars[0] || {}).filter(
-    (key) => key !== "Particulars"
+    (key) => key !== "Particulars" && key !== "Total"
   );
   console.log("months", months);
 
@@ -355,7 +384,7 @@ const addSummarySheet = (workbook, data) => {
   worksheet.columns = [
     { width: 30 }, // "Particulars"
     ...months.map(() => ({ width: 12 })), // Dynamic months
-    // { width: 12 }, // "Total"
+    { width: 12 }, // "Total"
   ];
 
   // Set row heights
@@ -410,7 +439,7 @@ const addSummarySheet = (workbook, data) => {
     const subHeaderRow = worksheet.getRow(row);
 
     // Apply header style to all cells
-    for (let i = 1; i <= months.length + 1; i++) {
+    for (let i = 1; i <= months.length + 2; i++) {
       const cell = subHeaderRow.getCell(i);
       cell.fill = headerStyle.fill;
       cell.font = headerStyle.font;
@@ -426,7 +455,7 @@ const addSummarySheet = (workbook, data) => {
     });
 
     // Add "Total" header
-    // subHeaderRow.getCell(months.length + 2).value = "Total";
+    subHeaderRow.getCell(months.length + 2).value = "Total";
 
     // Add data rows
     data.forEach((item, index) => {
@@ -436,7 +465,7 @@ const addSummarySheet = (workbook, data) => {
 
       // Apply alternating row color
       if (index % 2 === 0) {
-        for (let i = 1; i <= months.length + 1; i++) {
+        for (let i = 1; i <= months.length + 2; i++) {
           dataRow.getCell(i).fill = alternatingRowStyle.fill;
         }
       }
@@ -450,13 +479,12 @@ const addSummarySheet = (workbook, data) => {
         cell.alignment = { horizontal: "right" };
       });
 
-      // Calculate total dynamically
+      // Calculate and set the total value directly
       const totalCell = dataRow.getCell(months.length + 2);
-      totalCell.value = {
-        formula: `SUM(B${row}:${String.fromCharCode(
-          65 + months.length
-        )}${row})`,
-      };
+      const rowTotal = months.reduce((sum, month) => {
+        return sum + parseFloat(item[month] || 0);
+      }, 0);
+      totalCell.value = rowTotal;
       totalCell.numFmt = "0.00";
       totalCell.alignment = { horizontal: "right" };
     });
