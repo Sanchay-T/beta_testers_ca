@@ -2806,10 +2806,10 @@ app.whenReady().then(async () => {
     }
     
   } catch (error) {
-    log.error("💥 Compatibility check crashed - proceeding with startup anyway", {
-      error: error.message,
-      stack: error.stack,
-    });
+    log.error("💥 Compatibility check crashed - proceeding with startup anyway");
+    log.error("💥 Error message:", error.message);
+    log.error("💥 Error stack:", error.stack);
+    console.error("💥 DETAILED COMPATIBILITY ERROR:", error);
     
     // Don't block startup if compatibility checker itself fails
     // This ensures we don't break existing functionality

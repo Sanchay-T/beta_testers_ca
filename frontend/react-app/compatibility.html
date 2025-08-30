@@ -159,6 +159,10 @@
     </div>
 
     <script>
+      // 🎯 SINGLE SOURCE OF TRUTH FOR MODE DETECTION
+      // This variable is set once and used by BOTH UI and EMAIL systems
+      window.GLOBAL_DETECTED_MODE = 'SCAN'; // Default, will be updated by mode detection
+      
       // Bridge for Electron IPC
       const { ipcRenderer } = require("electron");
 
@@ -1356,7 +1360,7 @@
             determinedMode.style.color = modeColors[appMode.determined] || 'var(--cypheridge-blue)';
           }
 
-          // Update configuration mode display in results summary
+          // 🎯 SINGLE SOURCE: Update configuration mode display using global variable
           const configurationMode = document.getElementById('configuration-mode');
           if (configurationMode) {
             const modeLabels = {
@@ -1365,8 +1369,8 @@
               'HYBRID': 'HYBRID Mode',
               'ERROR': 'Fallback Mode'
             };
-            configurationMode.textContent = modeLabels[appMode.determined] || 'Standard Mode';
-            configurationMode.style.color = modeColors[appMode.determined] || '#64748b';
+            configurationMode.textContent = modeLabels[window.GLOBAL_DETECTED_MODE] || 'Standard Mode';
+            configurationMode.style.color = modeColors[window.GLOBAL_DETECTED_MODE] || '#64748b';
           }
 
           // Update launch button text with mode
@@ -1638,6 +1642,10 @@
           // Use the correct property name from AppModeManager
           const actualMode = result.determinedMode;
           console.log('🧪 [STEP 6] Extracted actual mode:', actualMode);
+          
+          // 🎯 SINGLE SOURCE: Set global variable for both UI and EMAIL to use
+          window.GLOBAL_DETECTED_MODE = actualMode;
+          console.log('🎯 GLOBAL_DETECTED_MODE set to:', window.GLOBAL_DETECTED_MODE);
 
           const modeColor = actualMode === 'SCAN' ? '#22c55e' : 
                           actualMode === 'UNSCAN' ? '#f59e0b' : 

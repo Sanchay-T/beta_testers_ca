@@ -31,7 +31,7 @@ class SystemCompatibilityChecker {
     this.userDecision = null;
     
     // 📧 EMAIL PERSISTENCE: Initialize store and load previously captured email
-    this.initializeStore();
+    // Note: initializeStore is async and will be called in runFullCheck()
     this.results = {
       startTime: Date.now(),
       canProceed: false,
@@ -48,6 +48,9 @@ class SystemCompatibilityChecker {
   async runFullCheck() {
     this.logger.info('SESSION_START', 'Starting comprehensive compatibility check');
     log.info("🔍 [COMPAT] Starting comprehensive compatibility check...");
+
+    // 📧 EMAIL PERSISTENCE: Initialize store first (async operation)
+    await this.initializeStore();
 
     // Start enhanced report collection
     this.enhancedReportCollector.startCompatibilityCheck();
@@ -1990,11 +1993,24 @@ class SystemCompatibilityChecker {
    */
   async getModeDetectionResult() {
     console.log('📧 🔍 === GETTING MODE DETECTION RESULT ===');
-    console.log('📧 🔍 this.enhancedReportCollector available:', !!this.enhancedReportCollector);
-    console.log('📧 🔍 this.appModeManager available:', !!this.appModeManager);
     
     try {
-      // First try to get from enhanced report collector (most reliable)
+      // 🎯 SINGLE SOURCE: Use global variable from compatibility window
+      if (this.window && !this.window.isDestroyed()) {
+        const globalMode = await this.window.webContents.executeJavaScript('window.GLOBAL_DETECTED_MODE');
+        if (globalMode) {
+          console.log('📧 ✅ Using GLOBAL_DETECTED_MODE:', globalMode);
+          return {
+            determinedMode: globalMode,
+            confidence: 'high',
+            userMessage: `${globalMode} mode detected from compatibility check`,
+            canProceed: true,
+            source: 'global_variable'
+          };
+        }
+      }
+      
+      // Fallback: First try to get from enhanced report collector (most reliable)
       const enhancedReport = this.enhancedReportCollector.getReport();
       console.log('📧 🔍 Enhanced report available:', !!enhancedReport);
       

@@ -179,7 +179,7 @@
     "python-shell": "^5.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "resend": "^6.0.1",
+    "resend": "^6.0.2",
     "sudo-prompt": "^9.2.1",
     "systeminformation": "^5.25.11",
     "tailwind-merge": "^2.6.0",
