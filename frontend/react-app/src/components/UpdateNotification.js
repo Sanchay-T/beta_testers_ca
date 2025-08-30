@@ -4,13 +4,52 @@ import { toast } from "../hooks/use-toast";
 const UpdateNotification = () => {
   const [updateStatus, setUpdateStatus] = useState("idle");
   const [progress, setProgress] = useState(0);
-  const { updates } = window.electron;
+  const [systemRequirementsInfo, setSystemRequirementsInfo] = useState(null);
+  const { updates, system } = window.electron;
 
   useEffect(() => {
     // Set up update event listeners with detailed logging
     updates.onUpdateStatus((status, info) => {
       // console.log('Update status:', status, info);
       setUpdateStatus(status);
+      
+      // Handle system requirements failure
+      if (status === "system-requirements-failed") {
+        setSystemRequirementsInfo(info);
+        toast({
+          title: "Update Paused",
+          description: (
+            <div className="space-y-2">
+              <p className="text-sm text-amber-800">
+                Update has been paused due to system requirements.
+              </p>
+              <p className="text-xs text-gray-600">
+                Your system has less than 8GB RAM which may affect app performance during updates.
+              </p>
+              <div className="mt-2 p-2 bg-amber-50 rounded text-xs text-amber-700">
+                <strong>Detected:</strong> {info?.requirements?.memoryGB}GB RAM<br/>
+                <strong>Recommended:</strong> 8GB RAM minimum
+              </div>
+            </div>
+          ),
+          variant: "default",
+          duration: 0, // Keep until dismissed
+          action: (
+            <div className="flex flex-col gap-1">
+              <button
+                onClick={() => {
+                  window.electron.shell.openExternal("https://support.microsoft.com/en-us/windows/view-your-system-info-a965a8f2-0773-1d65-472a-1e747c9ebe00");
+                }}
+                className="px-3 py-1 text-xs bg-blue-600 text-white hover:bg-blue-700 rounded-md"
+              >
+                Check System
+              </button>
+            </div>
+          ),
+        });
+        return;
+      }
+      
       if (status === "available") {
         toast({
           title: "Update Available",
@@ -77,6 +116,11 @@ const UpdateNotification = () => {
 
   if (updateStatus === "idle" || updateStatus === "checking") {
     return null;
+  }
+
+  // System requirements failed - only show toast, no persistent UI
+  if (updateStatus === "system-requirements-failed" && systemRequirementsInfo) {
+    return null; // Toast notification is handled in the event listener above
   }
 
   if (updateStatus === "downloading") {

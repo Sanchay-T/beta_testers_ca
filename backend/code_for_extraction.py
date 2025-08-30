@@ -255,79 +255,121 @@ def flatten_pdf_rotation(input_pdf_path, output_pdf_path):
 
     return output_pdf_path
 
-def unlock_and_add_margins_to_pdf(pdf_path, pdf_password, timestamp, CA_ID):
-    margin = 0.3
+
+def unlock_and_add_margins_to_pdf(
+    pdf_path: str,
+    pdf_password: str | None,
+    timestamp: str,
+    CA_ID: str,
+    margin_in: float = 0.3,          # inches added to LEFT & RIGHT
+    line_width_pt: float = 1,      # thickness of top rule (points)
+    line_color_rgb: tuple = (0, 0, 0)  # black (0–1 floats for PyMuPDF)
+) -> str:
+    """
+    Returns the path of the modified PDF.
+
+    Raises
+    ------
+    ValueError
+        If the password is incorrect, the PDF is image-only,
+        or any other processing error occurs.
+    """
+
     os.makedirs(TEMP_SAVED_PDF_DIR, exist_ok=True)
 
     try:
-        # Open the PDF using fitz (PyMuPDF)
+        # ----------------------------------------------------------
+        # 1.  Open the document
+        # ----------------------------------------------------------
         pdf_document = fitz.open(pdf_path)
 
-        # If the PDF is encrypted, try to unlock it
+        # ----------------------------------------------------------
+        # 2.  Unlock if required
+        # ----------------------------------------------------------
         if pdf_document.is_encrypted:
-            if not pdf_document.authenticate(pdf_password):
+            if not pdf_document.authenticate(pdf_password or ""):
                 raise ValueError("Incorrect password. Unable to unlock the PDF.")
 
-        # FIRST CHECK: Check if the PDF is image-only
-        first_page = pdf_document[0]
-        text = first_page.get_text("text").strip()
-        if not text or text == "CamScanner":
-            raise ValueError("The PDF is of image-only (non-text) format. Please upload a text PDF.")
+        # ----------------------------------------------------------
+        # 3.  Reject image-only PDFs (simple first-page heuristic)
+        # ----------------------------------------------------------
+        # FIRST CHECK: Check if the first 5 pages are image-only
+        image_only_pages = 0
+        for i in range(min(5, len(pdf_document))):
+            page = pdf_document[i]
+            text = page.get_text("text").strip()
+            if not text or text in ["CamScanner", "DocScanner"]:
+                image_only_pages += 1
 
-        # Define the output path for the unlocked PDF
-        unlocked_pdf_filename = f"{timestamp}-{CA_ID}_{uuid.uuid4().hex}.pdf"
-        unlocked_pdf_path = os.path.join(TEMP_SAVED_PDF_DIR, unlocked_pdf_filename)
+        if image_only_pages == min(5, len(pdf_document)):
+            raise ValueError("The PDF appears to be image-only / Scanned")
 
-        # MARGIN CODE STARTS NOW: Convert margin from inches to points (1 inch = 72 points)
-        margin_pts = margin * 72
 
-        # Process the first page for trimming if needed
-        cropped_doc = load_new_first_page_function(pdf_document)
-
+        # ----------------------------------------------------------
+        # 4.  Replace / crop first page if your workflow needs it
+        #      (keep your own helper implementation)
+        # ----------------------------------------------------------
+        cropped_doc = load_new_first_page_function(pdf_document)  # <- your function
         if cropped_doc:
-            # Create a new document combining the cropped first page and the remaining pages
             combined_doc = fitz.open()
-            combined_doc.insert_pdf(cropped_doc)
-            combined_doc.insert_pdf(pdf_document, from_page=1)
+            combined_doc.insert_pdf(cropped_doc)                  # new first page(s)
+            combined_doc.insert_pdf(pdf_document, from_page=1)    # remaining pages
+            tmp_path = "combined_temp.pdf"
+            combined_doc.save(tmp_path)
+            pdf_document.close()
+            pdf_document = fitz.open(tmp_path)
 
-            # Save the combined document back to the original reference
-            combined_path = "combined_temp.pdf"
-            combined_doc.save(combined_path)
-            pdf_document = fitz.open(combined_path)
+        # ----------------------------------------------------------
+        # 5.  Pre-compute conversion: inches → points
+        # ----------------------------------------------------------
+        margin_pts = margin_in * 72
 
-        # Iterate through each page, applying the margin adjustment
-        for page_num in range(len(pdf_document)):
-            page = pdf_document.load_page(page_num)
-            rect = page.rect  # Get the original page size
+        # ----------------------------------------------------------
+        # 6.  Process every page
+        # ----------------------------------------------------------
+        for pg in range(len(pdf_document)):
+            page = pdf_document.load_page(pg)
+            rect = page.rect
 
-            # Expand the page size by adding margin around all sides
+            # 6-a. widen page (left & right)
             new_rect = fitz.Rect(
-                rect.x0 - margin_pts,  # Left
-                rect.y0,  # Top (unchanged for now)
-                rect.x1 + margin_pts,  # Right
-                rect.y1  # Bottom (unchanged for now)
+                rect.x0 - margin_pts,   # new left edge
+                rect.y0,                # top unchanged
+                rect.x1 + margin_pts,   # new right edge
+                rect.y1                 # bottom unchanged
             )
-
-            # Set the new page size (media box) to the expanded dimensions
             page.set_mediabox(new_rect)
 
-        # Save the modified PDF (unlocked and with margins)
-        pdf_document.save(unlocked_pdf_path)
-        pdf_document.close()
+            # 6-b. draw a thin black rule *exactly* on the top edge
+            #      (no offset)
+            y_top = new_rect.y0
+            page.draw_line(
+                p1=(new_rect.x0, y_top),
+                p2=(new_rect.x1, y_top),
+                color=line_color_rgb,
+                width=line_width_pt,
+            )
 
-        return unlocked_pdf_path
+        # ----------------------------------------------------------
+        # 7.  Save result
+        # ----------------------------------------------------------
+        out_name = f"{timestamp}-{CA_ID}_{uuid.uuid4().hex}.pdf"
+        out_path = os.path.join(TEMP_SAVED_PDF_DIR, out_name)
+        pdf_document.save(out_path)
 
-    except Exception as e:
-        raise ValueError(f"Error: {e}")
+        return out_path
+
+    except Exception as exc:
+        raise ValueError(f"Error while processing PDF: {exc}") from exc
 
     finally:
-        # Ensure all temporary documents are closed and cleaned up
-        if 'cropped_doc' in locals() and cropped_doc is not None:
-            cropped_doc.close()
-        if 'combined_doc' in locals() and combined_doc is not None:
-            combined_doc.close()
+        # Close / tidy all temp docs & files
+        locals().get("pdf_document", None) and pdf_document.close()
+        locals().get("cropped_doc", None) and cropped_doc.close()
+        locals().get("combined_doc", None) and combined_doc.close()
         if os.path.exists("combined_temp.pdf"):
             os.remove("combined_temp.pdf")
+
 
 def get_table_column_coordinates(pdf_path):
     page_num = 0
@@ -428,9 +470,16 @@ def get_table_column_coordinates_by_text(pdf_path):
 
 ##____________AFTER EXTRACTION (cleaning)_________________
 def parse_date(date_string):
+    date_string = date_string.strip()
     formats_to_try = [
         "%d/%m /%Y",
+        "%d/%m/ %Y",
         "%d-%m-%Y",
+        "%d-%m- %Y",
+        "%d-%m -%Y",
+        "%d/%b/%Y",
+        "%d/%b/ %Y",
+        "%d/%b /%Y",
         "%d %b %Y",
         "%Y-%m-%d",
         # "%y-%m-%d",
@@ -465,6 +514,7 @@ def parse_date(date_string):
         "%d-%b- %Y %H:%M:%S",
         "%d/%b/%Y %H:%M:%S",
         "%y-%m-%d %H:%M:%S",
+        "%d/%m/%Y %H:%M",
         "%y-%m-%d",
     ]
 
@@ -588,9 +638,16 @@ def check_date(df):
 def cleaning(new_df):
 
     def try_parsing_date(text):
+        text = str(text).strip()
         formats_to_try = [
             "%d/%m /%Y",
+            "%d/%m/ %Y",
             "%d-%m-%Y",
+            "%d-%m- %Y",
+            "%d-%m -%Y",
+            "%d/%b/%Y",
+            "%d/%b/ %Y",
+            "%d/%b /%Y",
             "%d %b %Y",
             "%Y-%m-%d",
             # "%y-%m-%d",
@@ -625,6 +682,7 @@ def cleaning(new_df):
             "%d-%b- %Y %H:%M:%S",
             "%d/%b/%Y %H:%M:%S",
             "%y-%m-%d %H:%M:%S",
+            "%d/%m/%Y %H:%M",
             "%y-%m-%d",
         ]
 
@@ -1217,7 +1275,7 @@ def validate_bank_statement_returns_error_message(df, tolerance=2, raise_error=T
                              f"for Description '{description}'; "
                              f"Expected balance {true_expected_balance}, "
                              f"Actual balance {actual_balance}. "
-                             f"Difference: {difference}")
+                             f"Difference: {difference:.2f}")
                 error_message = error_msg
                 # raise Exception(error_msg)
 
@@ -1595,16 +1653,29 @@ def run_test_output_on_whole_pdf(list_a, pdf_in_saved_pdf, bank_name, timestamp,
         return df, explicit_lines
 
 
-def is_pdf_encoded(pdf_path):
+def is_pdf_encoded(pdf_path,password=""):
     try:
+        print(f"Checking if PDF is encoded: {pdf_path}")
         reader = PdfReader(pdf_path)
+
+        # Attempt decryption if the file is encrypted
+        if reader.is_encrypted:
+            print("PDF is encrypted. Attempting to decrypt...")
+            try:
+                # Try decrypting with empty password first (common case)
+                result = reader.decrypt(password)
+                if result == 0:
+                    return "PDF is encrypted and cannot be read without a password."
+                else:
+                    print("PDF decrypted successfully.")
+            except Exception as e:
+                return f"PDF decryption failed: {str(e)}"
+
         total_pages = len(reader.pages)
-        
+        print(f"Number of pages in PDF: {total_pages} for path: {pdf_path}")
+
         # Choose pages 0 to 3 if total_pages > 4, else all available pages
-        if total_pages > 4:
-            page_indices = [0, 1, 2, 3]
-        else:
-            page_indices = list(range(total_pages))
+        page_indices = [0, 1, 2, 3] if total_pages > 4 else list(range(total_pages))
 
         readable_count = 0
 
@@ -1622,8 +1693,7 @@ def is_pdf_encoded(pdf_path):
             return "PDF appears encoded or obfuscated."
 
     except Exception as e:
-        return f"An unexpected error occurred: {e}"
-
+        return f"Encoding Result: An unexpected error occurred: {str(e)}"
 
 # Main function to run test cases with optimizations
 def extract_with_test_cases(bank_name, pdf_path, pdf_password, CA_ID):

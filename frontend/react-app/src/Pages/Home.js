@@ -7,6 +7,7 @@ import {
   IndianRupee,
   ReceiptText,
   Grid2X2,
+  Video,
 } from "lucide-react";
 import ReportGenerator from "../components/MainDashboardComponents/GenerateReport";
 import { cn } from "../lib/utils";
@@ -17,17 +18,15 @@ import MainDashboard from "../components/MainDashboardComponents/MainDashboard";
 import Eligibility from "../components/MainDashboardComponents/Eligibility";
 import Billing from "../components/MainDashboardComponents/Billing";
 import Analytics from "../components/MainDashboardComponents/Analytics";
-import ExcelViewer from "../components/ImportTally/TallyPrime";
 import ExcelERP from "../components/ImportTally/TallyERP";
 import { BreadcrumbDynamic } from "../components/BreadCrumb";
 import { useBreadcrumb } from "../contexts/BreadcrumbContext";
 import { useParams } from "react-router-dom";
-import PdfColumnMarker from "../components/MainDashboardComponents/PdfMarker";
 import TallyPrimeDirect from "../components/ImportTally/TallyDirectImport";
 import TallyPrime from "../components/ImportTally/TallyPrime";
 import { useReportContext } from "../contexts/ReportContext";
 import { useAuth } from "../contexts/AuthContext";
-import TimerDisplay from "../components/TimerDisplay";
+import VideoLibrary from "../components/MainDashboardComponents/VideoLibrary";
 
 const Dashboard = () => {
   const { breadcrumbs, setMainDashboard } = useBreadcrumb();
@@ -58,6 +57,11 @@ const Dashboard = () => {
       url: "#",
       icon: Grid2X2,
     },
+    //  {
+    //   title: "Billing",
+    //   url: "#",
+    //   icon: Grid2X2,
+    // },
     // {
     //   title: "Import to Tally",
     //   url: "#",
@@ -85,6 +89,11 @@ const Dashboard = () => {
       title: user.role === "MSME" ? "Loan Eligibility" : "Opportunity to Earn",
       url: "#",
       icon: IndianRupee,
+    },
+    {
+      title: "Video Library",
+      url: "#",
+      icon: Video,
     },
 
     // {
@@ -162,6 +171,7 @@ const Dashboard = () => {
                 <TallyPrimeDirect source="manual" />
               )}
               {activeTab === "TallyERP Vouchers" && <ExcelERP />}
+              {activeTab === "Video Library" && <VideoLibrary />}
             </main>
           </div>
         </ScrollArea>

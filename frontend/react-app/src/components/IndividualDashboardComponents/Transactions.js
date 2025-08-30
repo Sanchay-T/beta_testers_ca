@@ -172,6 +172,7 @@ const Transactions = () => {
             setSelectedColumns={setSelectedMonths}
           />
 
+
           {selectedMonths.length === 0 ? (
             <div className="text-center text-gray-600 dark:text-gray-400 my-6">
               Select months to view data
@@ -242,6 +243,7 @@ const Transactions = () => {
                 caseId={parseInt(caseId)}
                 refreshFunction={fetchTransactions}
                 source="transactions"
+                videoId="transactions"
               />
             </>
           )}

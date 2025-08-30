@@ -20,26 +20,47 @@ class GatewayServerService {
   }
 
   async initialize() {
+    const startTime = Date.now();
+    const debugLog = (phase, status, data = {}) => {
+      const elapsed = Date.now() - startTime;
+      log.info(`[GATEWAY DEBUG] ${phase} - ${status} | Elapsed: ${elapsed}ms |`, data);
+    };
+
+    debugLog("INIT", "START", { 
+      platform: process.platform,
+      executableDir: this.gatewayExecutableDir,
+      serviceName: this.serviceName 
+    });
     log.info("🚀 GATEWAY INITIALIZATION STARTING...");
 
     try {
       // Step 1: Check if gateway is already responding
+      debugLog("HEALTH_CHECK", "ATTEMPTING");
       log.info("📡 Checking if gateway is already responding on port 7890...");
       const isResponding = await this.checkGatewayHealth();
+      debugLog("HEALTH_CHECK", isResponding ? "SUCCESS" : "FAILED", { isResponding });
+      
       if (isResponding) {
+        debugLog("INIT", "COMPLETE", { method: "already_running", totalTime: Date.now() - startTime });
         log.info("✅ Gateway already running and responding - initialization complete");
         return true;
       }
 
       // Step 2: Try Windows Service approach first
+      debugLog("SERVICE_APPROACH", "ATTEMPTING");
       log.info("🔧 Attempting Windows Service approach...");
       const serviceSuccess = await this.tryServiceApproach();
+      debugLog("SERVICE_APPROACH", serviceSuccess ? "SUCCESS" : "FAILED", { serviceSuccess });
 
       if (serviceSuccess) {
-        // Wait for service to actually respond (increased timeout for PostgreSQL)
+        // Wait for service to actually respond
+        debugLog("SERVICE_WAIT", "STARTING", { timeout: 15000 });
         log.info("⏳ Waiting for service to respond on port 7890...");
-        const serviceReady = await this.waitForGatewayReady(60000);
+        const serviceReady = await this.waitForGatewayReady(15000);
+        debugLog("SERVICE_WAIT", serviceReady ? "SUCCESS" : "TIMEOUT", { serviceReady });
+        
         if (serviceReady) {
+          debugLog("INIT", "COMPLETE", { method: "windows_service", totalTime: Date.now() - startTime });
           log.info("✅ Windows Service started successfully and responding");
           return true;
         } else {
@@ -48,10 +69,13 @@ class GatewayServerService {
       }
 
       // Step 3: Fallback - run as regular process
+      debugLog("PROCESS_FALLBACK", "ATTEMPTING");
       log.info("🔄 Windows Service failed - attempting process fallback...");
       const processSuccess = await this.runAsProcess();
+      debugLog("PROCESS_FALLBACK", processSuccess ? "SUCCESS" : "FAILED", { processSuccess });
 
       if (processSuccess) {
+        debugLog("INIT", "COMPLETE", { method: "process", totalTime: Date.now() - startTime });
         log.info("✅ Gateway started as process and responding");
         return true;
       }
@@ -69,29 +93,55 @@ class GatewayServerService {
       throw new Error("All gateway startup methods failed");
 
     } catch (error) {
+      debugLog("INIT", "ERROR", { 
+        error: error.message, 
+        stack: error.stack,
+        totalTime: Date.now() - startTime 
+      });
       log.error("❌ GATEWAY INITIALIZATION FAILED:", error.message);
       throw error;
     }
   }
 
   async tryServiceApproach() {
+    const startTime = Date.now();
+    const debugLog = (action, status, data = {}) => {
+      const elapsed = Date.now() - startTime;
+      log.info(`[SERVICE DEBUG] ${action} - ${status} | Elapsed: ${elapsed}ms |`, data);
+    };
+
+    debugLog("tryServiceApproach", "START");
+    
     try {
+      debugLog("checkServiceExists", "CALLING");
       const exists = await this.checkServiceExists();
+      debugLog("checkServiceExists", "RESULT", { exists });
 
       if (!exists) {
+        debugLog("createAndStartService", "CALLING");
         log.info("📦 Service doesn't exist - creating...");
-        return await this.createAndStartService();
+        const createResult = await this.createAndStartService();
+        debugLog("createAndStartService", createResult ? "SUCCESS" : "FAILED", { createResult });
+        return createResult;
       } else {
+        debugLog("isServiceRunning", "CALLING");
         const isRunning = await this.isServiceRunning();
+        debugLog("isServiceRunning", "RESULT", { isRunning });
+        
         if (!isRunning) {
+          debugLog("startServiceWithRetry", "CALLING");
           log.info("🔄 Service exists but not running - starting...");
-          return await this.startServiceWithRetry();
+          const startResult = await this.startServiceWithRetry();
+          debugLog("startServiceWithRetry", startResult ? "SUCCESS" : "FAILED", { startResult });
+          return startResult;
         } else {
+          debugLog("tryServiceApproach", "COMPLETE", { reason: "already_running" });
           log.info("✅ Service already running");
           return true;
         }
       }
     } catch (error) {
+      debugLog("tryServiceApproach", "ERROR", { error: error.message, stack: error.stack });
       log.error("❌ Service approach failed:", error.message);
       return false;
     }
@@ -224,14 +274,20 @@ class GatewayServerService {
   }
 
   async checkGatewayHealth() {
+    const startTime = Date.now();
     try {
+      log.info(`[HEALTH DEBUG] Checking gateway health at http://localhost:7890/api/health`);
       const axios = require('axios');
       const response = await axios.get('http://localhost:7890/api/health', {
         timeout: 3000,
         headers: { 'User-Agent': 'Cyphersol-HealthCheck' }
       });
+      const elapsed = Date.now() - startTime;
+      log.info(`[HEALTH DEBUG] Health check SUCCESS in ${elapsed}ms | Status: ${response.status}`);
       return response.status === 200;
     } catch (error) {
+      const elapsed = Date.now() - startTime;
+      log.info(`[HEALTH DEBUG] Health check FAILED in ${elapsed}ms | Error: ${error.code || error.message}`);
       return false;
     }
   }
@@ -304,9 +360,16 @@ class GatewayServerService {
   createAndStartService() {
     return new Promise((resolve) => {
       const createCmd = `sc create ${this.serviceName} binPath= "${this.gatewayServerExecutablePath}" start= auto`;
+      
+      log.info(`[SERVICE CREATE DEBUG] Executing: ${createCmd}`);
+      const cmdStartTime = Date.now();
 
       exec(createCmd, async (error, stdout, stderr) => {
+        const cmdElapsed = Date.now() - cmdStartTime;
+        log.info(`[SERVICE CREATE DEBUG] Command completed in ${cmdElapsed}ms`);
+        
         if (error || stderr) {
+          log.error(`[SERVICE CREATE DEBUG] FAILED | error: ${error?.code} | stderr: ${stderr}`);
           log.error("❌ Failed to create service.");
           if (error) this.logErrorDetails(error);
           if (stderr) log.error("STDERR:", stderr);
@@ -314,6 +377,7 @@ class GatewayServerService {
           return;
         }
 
+        log.info(`[SERVICE CREATE DEBUG] SUCCESS | stdout: ${stdout}`);
         log.info("✅ Service created. Starting service...");
         const startSuccess = await this.startServiceWithRetry();
         resolve(startSuccess);
@@ -323,8 +387,16 @@ class GatewayServerService {
 
   startService() {
     return new Promise((resolve) => {
-      exec(`sc start ${this.serviceName}`, (err, stdout, stderr) => {
+      const startCmd = `sc start ${this.serviceName}`;
+      log.info(`[SERVICE START DEBUG] Executing: ${startCmd}`);
+      const cmdStartTime = Date.now();
+      
+      exec(startCmd, (err, stdout, stderr) => {
+        const cmdElapsed = Date.now() - cmdStartTime;
+        log.info(`[SERVICE START DEBUG] Command completed in ${cmdElapsed}ms`);
+        
         if (err) {
+          log.info(`[SERVICE START DEBUG] Error code: ${err.code} | Message: ${err.message}`);
           // Handle error 1053 specifically - service might still be starting
           if (err.code === 1053) {
             log.warn("⚠️ Service returned 1053 (timeout) - service may still be starting");
@@ -335,9 +407,11 @@ class GatewayServerService {
             resolve(false);
           }
         } else if (stderr) {
+          log.info(`[SERVICE START DEBUG] STDERR: ${stderr}`);
           log.error("❌ Service start stderr:", stderr);
           resolve(false);
         } else {
+          log.info(`[SERVICE START DEBUG] SUCCESS | stdout: ${stdout}`);
           log.info("✅ Service start command completed successfully");
           resolve(true);
         }

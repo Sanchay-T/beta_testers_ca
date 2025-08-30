@@ -14,6 +14,7 @@ import { PrivateRoute } from "./components/PrivateRoute";
 import Login from "./components/Authentication/Login";
 import ForgotPassword from "./components/Authentication/ForgotPassword";
 import UpdateNotification from "./components/UpdateNotification";
+import SystemRequirementsNotification from "./components/SystemRequirementsNotification";
 import { useLoading } from "./contexts/LoadingContext";
 import { useToast } from "./hooks/use-toast";
 import { Toaster } from "./components/ui/toaster";
@@ -55,7 +56,8 @@ function App() {
   return (
     <ThemeProvider defaultTheme="light" storageKey="app-theme">
       {showIntro && <ElectronIntro onComplete={() => setShowIntro(false)} />}
-      {/* <UpdateNotification /> */}
+      <UpdateNotification />
+      <SystemRequirementsNotification />
       <SidebarProvider>
         <HashRouter>
           <BreadcrumbProvider>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+  import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import {
   Select,
@@ -145,7 +145,9 @@ const TallyDirectImport = ({ defaultVoucher, source, setActiveTab }) => {
   // New helper function to fetch and process transactions data
   async function fetchAllTransactions() {
     try {
-      const data = await window.electron.getTallyTransactions(caseId,individualId);
+      console.log("Auyaz",{caseId, individualId});  
+      let tempIndividualId = individualId!=="combined" ? individualId : null;
+      const data = await window.electron.getTallyTransactions(caseId,tempIndividualId);
       console.log("fetched data", data);
       // const sortedData = data.sort((a, b) => a.imported - b.imported);
       // const storedReasons = JSON.parse(

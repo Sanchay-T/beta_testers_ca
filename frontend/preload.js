@@ -5,6 +5,9 @@ const log = require("electron-log");
 // Expose a secure API for opening files to the renderer process
 contextBridge.exposeInMainWorld("electron", {
   openFile: (filePath) => ipcRenderer.invoke("open-file", filePath),
+  openFileDialog: () => ipcRenderer.invoke("open-file-dialog"),
+  previewFile: (filePath) => ipcRenderer.invoke("preview-file", filePath),
+  getFileContent: (filePath) => ipcRenderer.invoke("get-file-content", filePath),
   fetchPdfContent: (filePath, caseName) =>
     ipcRenderer.invoke("fetch-pdf-content", filePath, caseName),
 
@@ -105,7 +108,7 @@ contextBridge.exposeInMainWorld("electron", {
   cleanupTempFiles: () => ipcRenderer.invoke("cleanup-temp-files"),
 
   checkStatementLimit: () => ipcRenderer.invoke("check-statement-limit"),
-  generateReportIpc: (result, reportName, source) =>
+  generateReportIpc: (result, reportName,source) =>
     ipcRenderer.invoke("generate-report", result, reportName, source),
 
   getOpportunityToEarn: () => ipcRenderer.invoke("getOpportunityToEarn"),
@@ -253,6 +256,18 @@ contextBridge.exposeInMainWorld("electron", {
       ipcRenderer.removeAllListeners("update-progress");
       ipcRenderer.removeAllListeners("update-downloaded");
       ipcRenderer.removeAllListeners("update-error");
+      ipcRenderer.removeAllListeners("system-requirements-check");
+    },
+  },
+
+  // System requirements related methods
+  system: {
+    getSystemRequirements: () => ipcRenderer.invoke("get-system-requirements"),
+    onSystemRequirementsCheck: (callback) =>
+      ipcRenderer.on("system-requirements-check", (_, requirements) => callback(requirements)),
+    overrideSystemRequirements: () => ipcRenderer.invoke("override-system-requirements"),
+    removeSystemRequirementsListeners: () => {
+      ipcRenderer.removeAllListeners("system-requirements-check");
     },
   },
 

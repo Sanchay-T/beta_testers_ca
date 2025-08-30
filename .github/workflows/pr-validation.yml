@@ -1,7 +1,7 @@
 name: PR Validation
 on:
   pull_request:
-    branches: [dev]
+    branches: [uat]
     types: [opened, synchronize, reopened]
 
 env:
@@ -153,5 +153,5 @@ jobs:
           Write-Host "✅ Electron configuration validated" -ForegroundColor Green
           Write-Host "✅ Critical files verified" -ForegroundColor Green
           Write-Host "" 
-          Write-Host "🚀 Ready for review and merge to dev!" -ForegroundColor Cyan
+          Write-Host "🚀 Ready for review and merge to uat!" -ForegroundColor Cyan
         shell: pwsh

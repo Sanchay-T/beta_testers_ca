@@ -1,0 +1,3086 @@
+diff --git a/frontend/main.js b/frontend/main.js
+index 78d169a4..8bbfef27 100644
+--- a/frontend/main.js
++++ b/frontend/main.js
+@@ -27,6 +27,7 @@ const { registerTallyIpc } = require("./ipc/tallyHandlers.js");
+ const { registerVoucherIpc } = require("./ipc/VoucherHandlers.js");
+ const { registerExcelDownloadHandlers } = require("./ipc/excelDownloadHandler");
+ const { registerAppLevelIPCHandlers } = require("./ipc/appLevelIPC");
++const DatabaseMigration = require("./utils/databaseMigration");
+ // Moved database require to after AppConfig initialization
+ const { spawn, execFile, exec, execSync } = require("child_process");
+ const log = require("electron-log");
+@@ -103,22 +104,22 @@ log.transports.console.level = "debug"; // Set the log level
+ log.transports.file.level = "info"; // Only log info level and above in the log file
+ 
+ // Set up detailed logging for updates
+-log.transports.file.fileName = 'cyphersol.log';
+-log.info('===========================================');
++log.transports.file.fileName = "cyphersol.log";
++log.info("===========================================");
+ log.info(`Application starting - Version ${app.getVersion()}`);
+ log.info(`User data directory: ${userDataDir}`);
+ log.info(`Platform: ${process.platform}`);
+ log.info(`Arch: ${process.arch}`);
+ log.info(`Node version: ${process.versions.node}`);
+ log.info(`Electron version: ${process.versions.electron}`);
+-log.info('===========================================');
++log.info("===========================================");
+ 
+ // Configure autoUpdater logging
+ autoUpdater.logger = log;
+ autoUpdater.logger.transports.file.level = "info";
+ 
+ // Configure autoUpdater for seamless background updates
+-autoUpdater.autoDownload = true;  // Enable automatic background downloads
++autoUpdater.autoDownload = true; // Enable automatic background downloads
+ autoUpdater.disableWebInstaller = true;
+ autoUpdater.allowPrerelease = false;
+ 
+@@ -151,6 +152,7 @@ if (global.AppConfig.isDev) {
+ // Removed redundant settings - configured above
+ 
+ // Configure autoUpdater for GitHub repository
++// BETA TESTING: Using beta-testers repo for testing migration changes
+ autoUpdater.setFeedURL({
+   provider: "github",
+   owner: "Shama-Cyphersol",
+@@ -170,32 +172,49 @@ let lastCheckedVersion = null;
+ 
+ // Auto-update event handlers with detailed logging
+ autoUpdater.on("checking-for-update", () => {
+-  performanceTracker.start('update-check');
+-  
+-  logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Update check initiated');
+-  logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Checking GitHub repository for new releases');
+-  
++  performanceTracker.start("update-check");
++
++  logWithTimestamp("info", UPDATE_LOG_PREFIX, "Update check initiated");
++  logWithTimestamp(
++    "info",
++    UPDATE_LOG_PREFIX,
++    "Checking GitHub repository for new releases"
++  );
++
+   const updateCheckData = {
+     currentVersion: app.getVersion(),
+     checkTime: new Date().toISOString(),
+     platform: process.platform,
+     feedUrl: autoUpdater.getFeedURL(),
+-    autoDownloadEnabled: autoUpdater.autoDownload
++    autoDownloadEnabled: autoUpdater.autoDownload,
+   };
+-  
+-  logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Update check configuration', updateCheckData);
+-  
++
++  logWithTimestamp(
++    "info",
++    UPDATE_LOG_PREFIX,
++    "Update check configuration",
++    updateCheckData
++  );
++
+   win?.webContents.send("update-status", "checking");
+ });
+ 
+ autoUpdater.on("update-available", (info) => {
+-  performanceTracker.end('update-check');
+-  performanceTracker.start('update-download-process');
+-  
++  performanceTracker.end("update-check");
++  performanceTracker.start("update-download-process");
++
+   // Skip if we've already notified about this version
+   if (lastCheckedVersion === info.version) {
+-    logWithTimestamp('warn', UPDATE_LOG_PREFIX, `Skipping duplicate update notification for version: ${info.version}`);
+-    logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Update process terminated - duplicate version detected');
++    logWithTimestamp(
++      "warn",
++      UPDATE_LOG_PREFIX,
++      `Skipping duplicate update notification for version: ${info.version}`
++    );
++    logWithTimestamp(
++      "info",
++      UPDATE_LOG_PREFIX,
++      "Update process terminated - duplicate version detected"
++    );
+     return;
+   }
+ 
+@@ -203,95 +222,158 @@ autoUpdater.on("update-available", (info) => {
+     currentVersion: app.getVersion(),
+     newVersion: info.version,
+     releaseDate: info.releaseDate,
+-    releaseNotes: info.releaseNotes ? info.releaseNotes.substring(0, 200) + '...' : 'No release notes',
+-    downloadUrl: info.files?.[0]?.url || 'URL not available',
+-    fileSize: info.files?.[0]?.size || 'Size unknown',
++    releaseNotes: info.releaseNotes
++      ? info.releaseNotes.substring(0, 200) + "..."
++      : "No release notes",
++    downloadUrl: info.files?.[0]?.url || "URL not available",
++    fileSize: info.files?.[0]?.size || "Size unknown",
+     detectionTime: new Date().toISOString(),
+-    isAutoDownloadEnabled: autoUpdater.autoDownload
++    isAutoDownloadEnabled: autoUpdater.autoDownload,
+   };
+ 
+-  logWithTimestamp('info', UPDATE_LOG_PREFIX, '🎉 UPDATE AVAILABLE DETECTED!', updateAvailableData);
+-  logWithTimestamp('info', UPDATE_LOG_PREFIX, `Version upgrade path: ${app.getVersion()} → ${info.version}`);
+-  
++  logWithTimestamp(
++    "info",
++    UPDATE_LOG_PREFIX,
++    "🎉 UPDATE AVAILABLE DETECTED!",
++    updateAvailableData
++  );
++  logWithTimestamp(
++    "info",
++    UPDATE_LOG_PREFIX,
++    `Version upgrade path: ${app.getVersion()} → ${info.version}`
++  );
++
+   lastCheckedVersion = info.version;
+ 
+   // Log seamless download strategy
+-  logWithTimestamp('info', UPDATE_LOG_PREFIX, '🚀 SEAMLESS UPDATE STRATEGY ACTIVATED');
+-  logWithTimestamp('info', UPDATE_LOG_PREFIX, 'No user prompts - initiating silent background download');
+-  
++  logWithTimestamp(
++    "info",
++    UPDATE_LOG_PREFIX,
++    "🚀 SEAMLESS UPDATE STRATEGY ACTIVATED"
++  );
++  logWithTimestamp(
++    "info",
++    UPDATE_LOG_PREFIX,
++    "No user prompts - initiating silent background download"
++  );
++
+   // Send notification to frontend about background download starting
+   const frontendNotification = {
+-    status: "downloading-background", 
++    status: "downloading-background",
+     version: info.version,
+     message: "Update downloading in background...",
+-    timestamp: new Date().toISOString()
++    timestamp: new Date().toISOString(),
+   };
+-  
+-  logWithTimestamp('info', USER_LOG_PREFIX, 'Frontend notification sent', frontendNotification);
++
++  logWithTimestamp(
++    "info",
++    USER_LOG_PREFIX,
++    "Frontend notification sent",
++    frontendNotification
++  );
+   win?.webContents.send("update-status", frontendNotification);
+-  
++
+   // Create database backup silently in background
+-  performanceTracker.start('database-backup');
+-  
++  performanceTracker.start("database-backup");
++
+   try {
+-        const dbPath = path.join(userDataDir, "database.sqlite");
+-        const backupDir = path.join(userDataDir, "backups");
+-    
+-    logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Starting pre-update database backup');
+-        
+-        if (!fs.existsSync(backupDir)) {
+-          fs.mkdirSync(backupDir, { recursive: true });
+-      logWithTimestamp('info', UPDATE_LOG_PREFIX, `Created backup directory: ${backupDir}`);
+-        }
+-        
+-        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+-        const backupPath = path.join(backupDir, `db-backup-${timestamp}.sqlite`);
+-        
+-        if (fs.existsSync(dbPath)) {
++    const dbPath = path.join(userDataDir, "db.sqlite3");
++    const backupDir = path.join(userDataDir, "backups");
++
++    logWithTimestamp(
++      "info",
++      UPDATE_LOG_PREFIX,
++      "Starting pre-update database backup"
++    );
++
++    if (!fs.existsSync(backupDir)) {
++      fs.mkdirSync(backupDir, { recursive: true });
++      logWithTimestamp(
++        "info",
++        UPDATE_LOG_PREFIX,
++        `Created backup directory: ${backupDir}`
++      );
++    }
++
++    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
++    const backupPath = path.join(backupDir, `db-backup-${timestamp}.sqlite`);
++
++    if (fs.existsSync(dbPath)) {
+       const dbStats = fs.statSync(dbPath);
+-          fs.copyFileSync(dbPath, backupPath);
+-      
++      fs.copyFileSync(dbPath, backupPath);
++
+       const backupData = {
+         sourcePath: dbPath,
+         backupPath: backupPath,
+         dbSize: dbStats.size,
+         backupTime: timestamp,
+-        success: true
++        success: true,
+       };
+-      
+-      performanceTracker.end('database-backup');
+-      logWithTimestamp('info', SUCCESS_LOG_PREFIX, 'Database backup completed successfully', backupData);
++
++      performanceTracker.end("database-backup");
++      logWithTimestamp(
++        "info",
++        SUCCESS_LOG_PREFIX,
++        "Database backup completed successfully",
++        backupData
++      );
+     } else {
+-      logWithTimestamp('warn', UPDATE_LOG_PREFIX, 'Database file not found - skipping backup');
++      logWithTimestamp(
++        "warn",
++        UPDATE_LOG_PREFIX,
++        "Database file not found - skipping backup"
++      );
+     }
+   } catch (error) {
+-    performanceTracker.end('database-backup');
++    performanceTracker.end("database-backup");
+     const backupError = {
+       error: error.message,
+       stack: error.stack,
+-      timestamp: new Date().toISOString()
++      timestamp: new Date().toISOString(),
+     };
+-    logWithTimestamp('error', ERROR_LOG_PREFIX, 'Database backup failed - continuing update', backupError);
++    logWithTimestamp(
++      "error",
++      ERROR_LOG_PREFIX,
++      "Database backup failed - continuing update",
++      backupError
++    );
+   }
+-  
+-  logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Automatic download will commence (autoDownload=true)');
+-  logWithTimestamp('info', UPDATE_LOG_PREFIX, 'No manual download trigger required');
++
++  logWithTimestamp(
++    "info",
++    UPDATE_LOG_PREFIX,
++    "Automatic download will commence (autoDownload=true)"
++  );
++  logWithTimestamp(
++    "info",
++    UPDATE_LOG_PREFIX,
++    "No manual download trigger required"
++  );
+ });
+ 
+ autoUpdater.on("update-not-available", (info) => {
+-  performanceTracker.end('update-check');
+-  
++  performanceTracker.end("update-check");
++
+   const noUpdateData = {
+     currentVersion: app.getVersion(),
+-    latestVersion: info?.version || 'Unknown',
++    latestVersion: info?.version || "Unknown",
+     checkTime: new Date().toISOString(),
+     platform: process.platform,
+-    isUpToDate: true
++    isUpToDate: true,
+   };
+-  
+-  logWithTimestamp('info', UPDATE_LOG_PREFIX, 'No updates available - application is up to date', noUpdateData);
+-  logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Update check completed successfully');
+-  
++
++  logWithTimestamp(
++    "info",
++    UPDATE_LOG_PREFIX,
++    "No updates available - application is up to date",
++    noUpdateData
++  );
++  logWithTimestamp(
++    "info",
++    UPDATE_LOG_PREFIX,
++    "Update check completed successfully"
++  );
++
+   win?.webContents.send("update-status", "not-available");
+ });
+ 
+@@ -302,42 +384,65 @@ autoUpdater.on("download-progress", (progress) => {
+     transferred: progress.transferred,
+     total: progress.total,
+     speed: progress.bytesPerSecond || 0,
+-    timeRemaining: progress.total && progress.bytesPerSecond ? 
+-      Math.round((progress.total - progress.transferred) / progress.bytesPerSecond) : 'Unknown',
+-    timestamp: new Date().toISOString()
++    timeRemaining:
++      progress.total && progress.bytesPerSecond
++        ? Math.round(
++            (progress.total - progress.transferred) / progress.bytesPerSecond
++          )
++        : "Unknown",
++    timestamp: new Date().toISOString(),
+   };
+-  
++
+   // Log every 10% to avoid spam but provide detailed progress tracking
+-  if (Math.floor(progress.percent) % 10 === 0 && Math.floor(progress.percent) !== Math.floor(progress.percent - 1)) {
+-    logWithTimestamp('info', UPDATE_LOG_PREFIX, `📥 Download Progress: ${Math.round(progress.percent)}%`, downloadData);
+-    
++  if (
++    Math.floor(progress.percent) % 10 === 0 &&
++    Math.floor(progress.percent) !== Math.floor(progress.percent - 1)
++  ) {
++    logWithTimestamp(
++      "info",
++      UPDATE_LOG_PREFIX,
++      `📥 Download Progress: ${Math.round(progress.percent)}%`,
++      downloadData
++    );
++
+     // Calculate and log download speed
+-    const speedMBps = progress.bytesPerSecond ? (progress.bytesPerSecond / 1024 / 1024).toFixed(2) : 'Unknown';
+-    logWithTimestamp('info', PERFORMANCE_LOG_PREFIX, `Download speed: ${speedMBps} MB/s`);
++    const speedMBps = progress.bytesPerSecond
++      ? (progress.bytesPerSecond / 1024 / 1024).toFixed(2)
++      : "Unknown";
++    logWithTimestamp(
++      "info",
++      PERFORMANCE_LOG_PREFIX,
++      `Download speed: ${speedMBps} MB/s`
++    );
+   }
+-  
++
+   // Send detailed progress to frontend for optional subtle indicator
+   const frontendProgress = {
+     percent: progress.percent,
+     transferred: progress.transferred,
+     total: progress.total,
+     speed: progress.bytesPerSecond,
+-    timestamp: new Date().toISOString()
++    timestamp: new Date().toISOString(),
+   };
+-  
++
+   win?.webContents.send("update-download-progress", frontendProgress);
+-  
++
+   // Very subtle progress in taskbar (user barely notices)
+-  win?.setProgressBar(progress.percent / 100, { mode: 'normal' });
+-  
++  win?.setProgressBar(progress.percent / 100, { mode: "normal" });
++
+   // Log completion
+   if (progress.percent >= 100) {
+-    performanceTracker.end('update-download-process');
+-    logWithTimestamp('info', SUCCESS_LOG_PREFIX, 'Update download completed successfully!', {
+-      totalSize: progress.total,
+-      finalPercent: progress.percent,
+-      completionTime: new Date().toISOString()
+-    });
++    performanceTracker.end("update-download-process");
++    logWithTimestamp(
++      "info",
++      SUCCESS_LOG_PREFIX,
++      "Update download completed successfully!",
++      {
++        totalSize: progress.total,
++        finalPercent: progress.percent,
++        completionTime: new Date().toISOString(),
++      }
++    );
+   }
+ });
+ 
+@@ -346,266 +451,446 @@ let isUpdating = false;
+ 
+ // Cleanup function to ensure all processes are stopped before update
+ async function cleanupForUpdate() {
+-  performanceTracker.start('cleanup-process');
+-  
+-  logWithTimestamp('info', UPDATE_LOG_PREFIX, '🧹 ADMIN-LEVEL CLEANUP SEQUENCE INITIATED');
+-  logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Using administrator privileges for clean process termination');
+-  
++  performanceTracker.start("cleanup-process");
++
++  logWithTimestamp(
++    "info",
++    UPDATE_LOG_PREFIX,
++    "🧹 ADMIN-LEVEL CLEANUP SEQUENCE INITIATED"
++  );
++  logWithTimestamp(
++    "info",
++    UPDATE_LOG_PREFIX,
++    "Using administrator privileges for clean process termination"
++  );
++
+   const cleanupSteps = [];
+-  
++
+   try {
+     // 1. Stop the Gateway Windows Service with admin privileges
+-    if (process.platform === 'win32') {
+-      performanceTracker.start('gateway-service-stop');
+-      logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Step 1/6: Stopping Gateway Windows Service (Admin Mode)');
+-      
++    if (process.platform === "win32") {
++      performanceTracker.start("gateway-service-stop");
++      logWithTimestamp(
++        "info",
++        UPDATE_LOG_PREFIX,
++        "Step 1/6: Stopping Gateway Windows Service (Admin Mode)"
++      );
++
+       try {
+-        execSync('sc stop LicensingServer', { timeout: 5000 });
+-        logWithTimestamp('info', SUCCESS_LOG_PREFIX, 'Gateway service stopped successfully with admin privileges');
+-        cleanupSteps.push({ step: 'Gateway Service Stop', status: 'SUCCESS', timing: performanceTracker.end('gateway-service-stop') });
++        execSync("sc stop LicensingServer", { timeout: 5000 });
++        logWithTimestamp(
++          "info",
++          SUCCESS_LOG_PREFIX,
++          "Gateway service stopped successfully with admin privileges"
++        );
++        cleanupSteps.push({
++          step: "Gateway Service Stop",
++          status: "SUCCESS",
++          timing: performanceTracker.end("gateway-service-stop"),
++        });
+       } catch (e) {
+-        performanceTracker.end('gateway-service-stop');
+-        logWithTimestamp('warn', UPDATE_LOG_PREFIX, 'Gateway service already stopped or not running');
+-        cleanupSteps.push({ step: 'Gateway Service Stop', status: 'ALREADY_STOPPED' });
++        performanceTracker.end("gateway-service-stop");
++        logWithTimestamp(
++          "warn",
++          UPDATE_LOG_PREFIX,
++          "Gateway service already stopped or not running"
++        );
++        cleanupSteps.push({
++          step: "Gateway Service Stop",
++          status: "ALREADY_STOPPED",
++        });
+       }
+-      
++
+       // Short wait for service to stop
+-      await new Promise(resolve => setTimeout(resolve, 2000));
++      await new Promise((resolve) => setTimeout(resolve, 2000));
+     }
+-    
++
+     // 2. Close database connections
+-    performanceTracker.start('database-cleanup');
+-    logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Step 2/6: Closing database connections');
+-    
++    performanceTracker.start("database-cleanup");
++    logWithTimestamp(
++      "info",
++      UPDATE_LOG_PREFIX,
++      "Step 2/6: Closing database connections"
++    );
++
+     try {
+       const dbManager = databaseManager.getInstance();
+       if (dbManager && dbManager.getDatabase()) {
+         const db = dbManager.getDatabase();
+         if (db && db.close) {
+           db.close();
+-          logWithTimestamp('info', SUCCESS_LOG_PREFIX, 'Database connection closed successfully');
++          logWithTimestamp(
++            "info",
++            SUCCESS_LOG_PREFIX,
++            "Database connection closed successfully"
++          );
+         }
+       }
+-      cleanupSteps.push({ step: 'Database Cleanup', status: 'SUCCESS', timing: performanceTracker.end('database-cleanup') });
++      cleanupSteps.push({
++        step: "Database Cleanup",
++        status: "SUCCESS",
++        timing: performanceTracker.end("database-cleanup"),
++      });
+     } catch (e) {
+-      performanceTracker.end('database-cleanup');
+-      cleanupSteps.push({ step: 'Database Cleanup', status: 'ERROR', error: e.message });
++      performanceTracker.end("database-cleanup");
++      cleanupSteps.push({
++        step: "Database Cleanup",
++        status: "ERROR",
++        error: e.message,
++      });
+     }
+-    
++
+     // 3. Terminate Python backend with admin privileges
+-    performanceTracker.start('python-process-cleanup');
+-    logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Step 3/6: Terminating Python backend (Admin Mode)');
+-    
++    performanceTracker.start("python-process-cleanup");
++    logWithTimestamp(
++      "info",
++      UPDATE_LOG_PREFIX,
++      "Step 3/6: Terminating Python backend (Admin Mode)"
++    );
++
+     if (pythonProcess && !pythonProcess.killed) {
+-      pythonProcess.kill('SIGTERM');
+-      await new Promise(resolve => setTimeout(resolve, 1000));
+-      
++      pythonProcess.kill("SIGTERM");
++      await new Promise((resolve) => setTimeout(resolve, 1000));
++
+       if (!pythonProcess.killed) {
+-        pythonProcess.kill('SIGKILL');
++        pythonProcess.kill("SIGKILL");
+       }
+-      }
+-      
++    }
++
+     // Force kill any remaining Python processes with admin privileges
+-      if (process.platform === 'win32') {
+-        try {
+-          execSync('taskkill /F /IM main.exe', { timeout: 3000 });
+-        logWithTimestamp('info', SUCCESS_LOG_PREFIX, 'Python processes terminated with admin privileges');
+-        } catch (e) {
++    if (process.platform === "win32") {
++      try {
++        execSync("taskkill /F /IM main.exe", { timeout: 3000 });
++        logWithTimestamp(
++          "info",
++          SUCCESS_LOG_PREFIX,
++          "Python processes terminated with admin privileges"
++        );
++      } catch (e) {
+         // Process might not exist - not an error
+       }
+     }
+-    
+-    cleanupSteps.push({ step: 'Python Process Cleanup', status: 'SUCCESS', timing: performanceTracker.end('python-process-cleanup') });
+-    
++
++    cleanupSteps.push({
++      step: "Python Process Cleanup",
++      status: "SUCCESS",
++      timing: performanceTracker.end("python-process-cleanup"),
++    });
++
+     // 4. Terminate Gateway executable with admin privileges
+-    performanceTracker.start('gateway-exe-cleanup');
+-    logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Step 4/6: Terminating Gateway executable (Admin Mode)');
+-    
+-    if (process.platform === 'win32') {
++    performanceTracker.start("gateway-exe-cleanup");
++    logWithTimestamp(
++      "info",
++      UPDATE_LOG_PREFIX,
++      "Step 4/6: Terminating Gateway executable (Admin Mode)"
++    );
++
++    if (process.platform === "win32") {
+       try {
+-        execSync('taskkill /F /IM gatewayService.exe', { timeout: 3000 });
+-        logWithTimestamp('info', SUCCESS_LOG_PREFIX, 'Gateway executable terminated with admin privileges');
+-        cleanupSteps.push({ step: 'Gateway Executable Cleanup', status: 'SUCCESS', timing: performanceTracker.end('gateway-exe-cleanup') });
++        execSync("taskkill /F /IM gatewayService.exe", { timeout: 3000 });
++        logWithTimestamp(
++          "info",
++          SUCCESS_LOG_PREFIX,
++          "Gateway executable terminated with admin privileges"
++        );
++        cleanupSteps.push({
++          step: "Gateway Executable Cleanup",
++          status: "SUCCESS",
++          timing: performanceTracker.end("gateway-exe-cleanup"),
++        });
+       } catch (e) {
+-        performanceTracker.end('gateway-exe-cleanup');
+-        logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Gateway executable already terminated');
+-        cleanupSteps.push({ step: 'Gateway Executable Cleanup', status: 'ALREADY_TERMINATED' });
++        performanceTracker.end("gateway-exe-cleanup");
++        logWithTimestamp(
++          "info",
++          UPDATE_LOG_PREFIX,
++          "Gateway executable already terminated"
++        );
++        cleanupSteps.push({
++          step: "Gateway Executable Cleanup",
++          status: "ALREADY_TERMINATED",
++        });
+       }
+     }
+-    
++
+     // 5. Close main application windows (preserve installation window)
+-    performanceTracker.start('window-cleanup');
+-    logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Step 5/6: Closing application windows');
+-    
++    performanceTracker.start("window-cleanup");
++    logWithTimestamp(
++      "info",
++      UPDATE_LOG_PREFIX,
++      "Step 5/6: Closing application windows"
++    );
++
+     const openWindows = BrowserWindow.getAllWindows();
+     let windowsClosedCount = 0;
+     let installationWindowsFound = 0;
+-    
++
+     openWindows.forEach((win, index) => {
+       if (!win.isDestroyed()) {
+         const isInstallationWindow = win.isInstallationWindow === true;
+-        
++
+         if (isInstallationWindow) {
+           installationWindowsFound++;
+-          logWithTimestamp('info', UPDATE_LOG_PREFIX, `Preserving installation window ${index + 1}`);
++          logWithTimestamp(
++            "info",
++            UPDATE_LOG_PREFIX,
++            `Preserving installation window ${index + 1}`
++          );
+         } else {
+-        win.removeAllListeners('close');
++          win.removeAllListeners("close");
+           win.close();
+           windowsClosedCount++;
+         }
+       }
+     });
+-    
+-    logWithTimestamp('info', SUCCESS_LOG_PREFIX, `Closed ${windowsClosedCount} windows, preserved ${installationWindowsFound} installation windows`);
+-    cleanupSteps.push({ 
+-      step: 'Window Cleanup', 
+-      status: 'SUCCESS', 
++
++    logWithTimestamp(
++      "info",
++      SUCCESS_LOG_PREFIX,
++      `Closed ${windowsClosedCount} windows, preserved ${installationWindowsFound} installation windows`
++    );
++    cleanupSteps.push({
++      step: "Window Cleanup",
++      status: "SUCCESS",
+       windowsClosed: windowsClosedCount,
+       installationWindowsPreserved: installationWindowsFound,
+-      timing: performanceTracker.end('window-cleanup')
++      timing: performanceTracker.end("window-cleanup"),
+     });
+-    
++
+     // 6. Final settlement wait
+-    performanceTracker.start('final-wait');
+-    logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Step 6/6: Final process settlement (3 seconds)');
+-    logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Admin privileges ensure clean termination - minimal wait required');
+-    
+-    await new Promise(resolve => setTimeout(resolve, 3000));
+-    
+-    cleanupSteps.push({ step: 'Final Settlement Wait', status: 'COMPLETED', timing: performanceTracker.end('final-wait') });
+-    
+-    const totalCleanupTime = performanceTracker.end('cleanup-process');
+-    
++    performanceTracker.start("final-wait");
++    logWithTimestamp(
++      "info",
++      UPDATE_LOG_PREFIX,
++      "Step 6/6: Final process settlement (3 seconds)"
++    );
++    logWithTimestamp(
++      "info",
++      UPDATE_LOG_PREFIX,
++      "Admin privileges ensure clean termination - minimal wait required"
++    );
++
++    await new Promise((resolve) => setTimeout(resolve, 3000));
++
++    cleanupSteps.push({
++      step: "Final Settlement Wait",
++      status: "COMPLETED",
++      timing: performanceTracker.end("final-wait"),
++    });
++
++    const totalCleanupTime = performanceTracker.end("cleanup-process");
++
+     // Admin-level cleanup summary
+     const cleanupSummary = {
+       totalSteps: cleanupSteps.length,
+-      successfulSteps: cleanupSteps.filter(s => s.status === 'SUCCESS').length,
++      successfulSteps: cleanupSteps.filter((s) => s.status === "SUCCESS")
++        .length,
+       adminPrivileges: true,
+       totalCleanupTime: totalCleanupTime,
+       completionTime: new Date().toISOString(),
+-      stepDetails: cleanupSteps
++      stepDetails: cleanupSteps,
+     };
+-    
+-    logWithTimestamp('info', SUCCESS_LOG_PREFIX, '🧹 ADMIN-LEVEL CLEANUP COMPLETED SUCCESSFULLY!', cleanupSummary);
+-    logWithTimestamp('info', UPDATE_LOG_PREFIX, 'All processes terminated cleanly with administrator privileges');
+-    logWithTimestamp('info', UPDATE_LOG_PREFIX, 'System ready for seamless update installation');
+-    
++
++    logWithTimestamp(
++      "info",
++      SUCCESS_LOG_PREFIX,
++      "🧹 ADMIN-LEVEL CLEANUP COMPLETED SUCCESSFULLY!",
++      cleanupSummary
++    );
++    logWithTimestamp(
++      "info",
++      UPDATE_LOG_PREFIX,
++      "All processes terminated cleanly with administrator privileges"
++    );
++    logWithTimestamp(
++      "info",
++      UPDATE_LOG_PREFIX,
++      "System ready for seamless update installation"
++    );
+   } catch (error) {
+-    performanceTracker.end('cleanup-process');
+-    
++    performanceTracker.end("cleanup-process");
++
+     const criticalError = {
+       error: error.message,
+       stack: error.stack,
+       timestamp: new Date().toISOString(),
+-      adminPrivileges: true
++      adminPrivileges: true,
+     };
+-    
+-    logWithTimestamp('error', ERROR_LOG_PREFIX, '💥 CRITICAL ERROR IN ADMIN-LEVEL CLEANUP', criticalError);
+-    logWithTimestamp('warn', UPDATE_LOG_PREFIX, 'Continuing with update installation despite cleanup errors');
++
++    logWithTimestamp(
++      "error",
++      ERROR_LOG_PREFIX,
++      "💥 CRITICAL ERROR IN ADMIN-LEVEL CLEANUP",
++      criticalError
++    );
++    logWithTimestamp(
++      "warn",
++      UPDATE_LOG_PREFIX,
++      "Continuing with update installation despite cleanup errors"
++    );
+   }
+ }
+ 
+ autoUpdater.on("update-downloaded", (info) => {
+-  performanceTracker.start('user-interaction-flow');
+-  
++  performanceTracker.start("user-interaction-flow");
++
+   const downloadCompletedData = {
+     newVersion: info.version,
+     currentVersion: app.getVersion(),
+     downloadedAt: new Date().toISOString(),
+-    fileSize: info.files?.[0]?.size || 'Unknown',
+-    releaseNotes: info.releaseNotes ? info.releaseNotes.substring(0, 100) + '...' : 'No release notes',
+-    platform: process.platform
++    fileSize: info.files?.[0]?.size || "Unknown",
++    releaseNotes: info.releaseNotes
++      ? info.releaseNotes.substring(0, 100) + "..."
++      : "No release notes",
++    platform: process.platform,
+   };
+-  
+-  logWithTimestamp('info', SUCCESS_LOG_PREFIX, '🎉 UPDATE DOWNLOAD COMPLETED SUCCESSFULLY!', downloadCompletedData);
+-  logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Clearing taskbar progress indicator');
+-  
++
++  logWithTimestamp(
++    "info",
++    SUCCESS_LOG_PREFIX,
++    "🎉 UPDATE DOWNLOAD COMPLETED SUCCESSFULLY!",
++    downloadCompletedData
++  );
++  logWithTimestamp(
++    "info",
++    UPDATE_LOG_PREFIX,
++    "Clearing taskbar progress indicator"
++  );
++
+   win?.setProgressBar(-1); // Clear taskbar progress
+-  
++
+   // Log the seamless strategy transition
+-  logWithTimestamp('info', UPDATE_LOG_PREFIX, '🎯 TRANSITIONING TO USER INTERACTION PHASE');
+-  logWithTimestamp('info', UPDATE_LOG_PREFIX, 'This is the ONLY user interaction in the seamless update process');
+-  
++  logWithTimestamp(
++    "info",
++    UPDATE_LOG_PREFIX,
++    "🎯 TRANSITIONING TO USER INTERACTION PHASE"
++  );
++  logWithTimestamp(
++    "info",
++    UPDATE_LOG_PREFIX,
++    "This is the ONLY user interaction in the seamless update process"
++  );
++
+   // Send notification to frontend first (for any UI updates)
+   const frontendUpdateStatus = {
+-    status: "ready-to-install", 
++    status: "ready-to-install",
+     version: info.version,
+     message: "Update ready to install",
+-    timestamp: new Date().toISOString()
++    timestamp: new Date().toISOString(),
+   };
+-  
+-  logWithTimestamp('info', USER_LOG_PREFIX, 'Sending ready-to-install status to frontend', frontendUpdateStatus);
++
++  logWithTimestamp(
++    "info",
++    USER_LOG_PREFIX,
++    "Sending ready-to-install status to frontend",
++    frontendUpdateStatus
++  );
+   win?.webContents.send("update-status", frontendUpdateStatus);
+-  
++
+   // Show user-friendly notification AFTER download is complete
+   const dialogOptions = {
+-      type: "info",
++    type: "info",
+     title: "Update Ready to Install",
+     message: `🎉 New version ${info.version} has been downloaded!`,
+-    detail: "The update is ready to install. Would you like to restart and apply it now, or install it later?",
++    detail:
++      "The update is ready to install. Would you like to restart and apply it now, or install it later?",
+     buttons: ["Install Now", "Install Later"],
+-      defaultId: 0,
+-      cancelId: 1,
++    defaultId: 0,
++    cancelId: 1,
+   };
+-  
+-  logWithTimestamp('info', USER_LOG_PREFIX, 'Displaying update installation dialog to user', {
+-    dialogTitle: dialogOptions.title,
+-    dialogMessage: dialogOptions.message,
+-    buttonOptions: dialogOptions.buttons,
+-    displayTime: new Date().toISOString()
+-  });
+-  
++
++  logWithTimestamp(
++    "info",
++    USER_LOG_PREFIX,
++    "Displaying update installation dialog to user",
++    {
++      dialogTitle: dialogOptions.title,
++      dialogMessage: dialogOptions.message,
++      buttonOptions: dialogOptions.buttons,
++      displayTime: new Date().toISOString(),
++    }
++  );
++
+   dialog
+     .showMessageBox(dialogOptions)
+     .then(async (response) => {
+-      performanceTracker.end('user-interaction-flow');
+-      
+-      const userChoice = response.response === 0 ? 'Install Now' : 'Install Later';
+-      
+-      logWithTimestamp('info', USER_LOG_PREFIX, `User decision recorded: ${userChoice}`, {
+-        buttonIndex: response.response,
+-        responseTime: new Date().toISOString(),
+-        userChoice: userChoice
+-      });
+-      
+-      if (response.response === 0) {  // User clicked "Install Now"
+-        performanceTracker.start('installation-process');
+-        
+-        logWithTimestamp('info', UPDATE_LOG_PREFIX, '🚀 IMMEDIATE INSTALLATION REQUESTED BY USER');
+-        
++      performanceTracker.end("user-interaction-flow");
++
++      const userChoice =
++        response.response === 0 ? "Install Now" : "Install Later";
++
++      logWithTimestamp(
++        "info",
++        USER_LOG_PREFIX,
++        `User decision recorded: ${userChoice}`,
++        {
++          buttonIndex: response.response,
++          responseTime: new Date().toISOString(),
++          userChoice: userChoice,
++        }
++      );
++
++      if (response.response === 0) {
++        // User clicked "Install Now"
++        performanceTracker.start("installation-process");
++
++        logWithTimestamp(
++          "info",
++          UPDATE_LOG_PREFIX,
++          "🚀 IMMEDIATE INSTALLATION REQUESTED BY USER"
++        );
++
+         // Set updating flag to skip confirmation dialogs FIRST
+         isUpdating = true;
+         sessionManager.logoutUser();
+-        
+-        logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Update flag set - skipping close confirmations');
+-        logWithTimestamp('info', UPDATE_LOG_PREFIX, 'User session logged out for clean installation');
+-        
++
++        logWithTimestamp(
++          "info",
++          UPDATE_LOG_PREFIX,
++          "Update flag set - skipping close confirmations"
++        );
++        logWithTimestamp(
++          "info",
++          UPDATE_LOG_PREFIX,
++          "User session logged out for clean installation"
++        );
++
+         // Create success flag for next startup
+-        const updateFlagPath = path.join(app.getPath("userData"), "update-success.txt");
++        const updateFlagPath = path.join(
++          app.getPath("userData"),
++          "update-success.txt"
++        );
+         fs.writeFileSync(updateFlagPath, info.version);
+-        logWithTimestamp('info', UPDATE_LOG_PREFIX, `Success flag created: ${updateFlagPath}`);
+-        
++        logWithTimestamp(
++          "info",
++          UPDATE_LOG_PREFIX,
++          `Success flag created: ${updateFlagPath}`
++        );
++
+         // Show minimal installation progress BEFORE cleanup
+-        logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Creating installation progress window');
+-        
++        logWithTimestamp(
++          "info",
++          UPDATE_LOG_PREFIX,
++          "Creating installation progress window"
++        );
++
+         const installingWindow = new BrowserWindow({
+           width: 350,
+           height: 100,
+-        frame: false,
+-        resizable: false,
+-        center: true,
+-        alwaysOnTop: true,
+-        show: false,
+-        webPreferences: {
+-          nodeIntegration: true,
+-          contextIsolation: false
+-        }
+-      });
+-        
++          frame: false,
++          resizable: false,
++          center: true,
++          alwaysOnTop: true,
++          show: false,
++          webPreferences: {
++            nodeIntegration: true,
++            contextIsolation: false,
++          },
++        });
++
+         // Mark this as an installation window for cleanup exclusion
+         installingWindow.isInstallationWindow = true;
+-      
+-      const installHtml = `
++
++        const installHtml = `
+         <html>
+           <head>
+             <meta charset="UTF-8">
+@@ -642,157 +927,223 @@ autoUpdater.on("update-downloaded", (info) => {
+           </body>
+         </html>
+       `;
+-      
+-      installingWindow.loadURL("data:text/html;charset=utf-8," + encodeURIComponent(installHtml));
+-      
+-      installingWindow.once('ready-to-show', () => {
+-        installingWindow.show();
+-          logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Installation progress window displayed to user');
++
++        installingWindow.loadURL(
++          "data:text/html;charset=utf-8," + encodeURIComponent(installHtml)
++        );
++
++        installingWindow.once("ready-to-show", () => {
++          installingWindow.show();
++          logWithTimestamp(
++            "info",
++            UPDATE_LOG_PREFIX,
++            "Installation progress window displayed to user"
++          );
+         });
+-        
++
+         // Run cleanup AFTER showing installation window
+-        logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Starting pre-installation cleanup sequence');
++        logWithTimestamp(
++          "info",
++          UPDATE_LOG_PREFIX,
++          "Starting pre-installation cleanup sequence"
++        );
+         await cleanupForUpdate();
+-        
++
+         // Install update
+-      setTimeout(() => {
+-        try {
+-            logWithTimestamp('info', UPDATE_LOG_PREFIX, '🚀 INITIATING QUIT AND INSTALL SEQUENCE');
+-            logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Application will restart with new version');
+-            
+-            performanceTracker.end('installation-process');
++        setTimeout(() => {
++          try {
++            logWithTimestamp(
++              "info",
++              UPDATE_LOG_PREFIX,
++              "🚀 INITIATING QUIT AND INSTALL SEQUENCE"
++            );
++            logWithTimestamp(
++              "info",
++              UPDATE_LOG_PREFIX,
++              "Application will restart with new version"
++            );
++
++            performanceTracker.end("installation-process");
+             autoUpdater.autoInstallOnAppQuit = false;
+             autoUpdater.quitAndInstall(true, true);
+-        } catch (err) {
+-            performanceTracker.end('installation-process');
++          } catch (err) {
++            performanceTracker.end("installation-process");
+             const installError = {
+               error: err.message,
+               stack: err.stack,
+-              timestamp: new Date().toISOString()
++              timestamp: new Date().toISOString(),
+             };
+-            logWithTimestamp('error', ERROR_LOG_PREFIX, 'Critical error during installation', installError);
+-          app.quit();
+-        }
++            logWithTimestamp(
++              "error",
++              ERROR_LOG_PREFIX,
++              "Critical error during installation",
++              installError
++            );
++            app.quit();
++          }
+         }, 1000);
+-        
+       } else {
+         // User clicked "Install Later"
+-        logWithTimestamp('info', USER_LOG_PREFIX, '📅 DEFERRED INSTALLATION SELECTED BY USER');
+-        logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Update will be applied on next application restart');
+-        logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Update file cached and ready for installation');
++        logWithTimestamp(
++          "info",
++          USER_LOG_PREFIX,
++          "📅 DEFERRED INSTALLATION SELECTED BY USER"
++        );
++        logWithTimestamp(
++          "info",
++          UPDATE_LOG_PREFIX,
++          "Update will be applied on next application restart"
++        );
++        logWithTimestamp(
++          "info",
++          UPDATE_LOG_PREFIX,
++          "Update file cached and ready for installation"
++        );
+       }
+     })
+     .catch((dialogError) => {
+-      performanceTracker.end('user-interaction-flow');
++      performanceTracker.end("user-interaction-flow");
+       const dialogErrorData = {
+         error: dialogError.message,
+         stack: dialogError.stack,
+-        timestamp: new Date().toISOString()
++        timestamp: new Date().toISOString(),
+       };
+-      logWithTimestamp('error', ERROR_LOG_PREFIX, 'Error displaying installation dialog', dialogErrorData);
++      logWithTimestamp(
++        "error",
++        ERROR_LOG_PREFIX,
++        "Error displaying installation dialog",
++        dialogErrorData
++      );
+     });
+ });
+ 
+ autoUpdater.on("error", (err) => {
+   // Stop any running performance timers
+-  if (performanceTracker.timers.has('update-check')) performanceTracker.end('update-check');
+-  if (performanceTracker.timers.has('update-download-process')) performanceTracker.end('update-download-process');
+-  if (performanceTracker.timers.has('installation-process')) performanceTracker.end('installation-process');
+-  
++  if (performanceTracker.timers.has("update-check"))
++    performanceTracker.end("update-check");
++  if (performanceTracker.timers.has("update-download-process"))
++    performanceTracker.end("update-download-process");
++  if (performanceTracker.timers.has("installation-process"))
++    performanceTracker.end("installation-process");
++
+   const errorData = {
+     errorMessage: err.message,
+-    errorCode: err.code || 'Unknown',
+-    stack: err.stack || 'No stack trace available',
++    errorCode: err.code || "Unknown",
++    stack: err.stack || "No stack trace available",
+     platform: process.platform,
+     appVersion: app.getVersion(),
+     timestamp: new Date().toISOString(),
+     updateUrl: autoUpdater.getFeedURL(),
+-    autoDownloadEnabled: autoUpdater.autoDownload
++    autoDownloadEnabled: autoUpdater.autoDownload,
+   };
+-  
+-  logWithTimestamp('error', ERROR_LOG_PREFIX, '💥 AUTO-UPDATER ERROR OCCURRED', errorData);
+-  
++
++  logWithTimestamp(
++    "error",
++    ERROR_LOG_PREFIX,
++    "💥 AUTO-UPDATER ERROR OCCURRED",
++    errorData
++  );
++
+   // Categorize error types for better analysis
+-  let errorCategory = 'UNKNOWN';
+-  if (err.message.includes('No published releases')) {
+-    errorCategory = 'NO_RELEASES_AVAILABLE';
+-  } else if (err.message.includes('net::')) {
+-    errorCategory = 'NETWORK_ERROR';
+-  } else if (err.message.includes('ENOENT')) {
+-    errorCategory = 'FILE_NOT_FOUND';
+-  } else if (err.message.includes('Permission denied')) {
+-    errorCategory = 'PERMISSION_ERROR';
+-  } else if (err.message.includes('timeout')) {
+-    errorCategory = 'TIMEOUT_ERROR';
++  let errorCategory = "UNKNOWN";
++  if (err.message.includes("No published releases")) {
++    errorCategory = "NO_RELEASES_AVAILABLE";
++  } else if (err.message.includes("net::")) {
++    errorCategory = "NETWORK_ERROR";
++  } else if (err.message.includes("ENOENT")) {
++    errorCategory = "FILE_NOT_FOUND";
++  } else if (err.message.includes("Permission denied")) {
++    errorCategory = "PERMISSION_ERROR";
++  } else if (err.message.includes("timeout")) {
++    errorCategory = "TIMEOUT_ERROR";
+   }
+-  
+-  logWithTimestamp('error', ERROR_LOG_PREFIX, `Error category identified: ${errorCategory}`);
+-  
++
++  logWithTimestamp(
++    "error",
++    ERROR_LOG_PREFIX,
++    `Error category identified: ${errorCategory}`
++  );
++
+   win?.webContents.send("update-error", err.message);
+   win?.setProgressBar(-1); // Clear any progress indication
+-  
++
+   // Show error to user only if it's a critical error (not just "no releases")
+   if (!err.message.includes("No published releases")) {
+     const errorDialogData = {
+       errorCategory: errorCategory,
+       shownToUser: true,
+-      userNotificationTime: new Date().toISOString()
++      userNotificationTime: new Date().toISOString(),
+     };
+-    
+-    logWithTimestamp('error', USER_LOG_PREFIX, 'Displaying error dialog to user', errorDialogData);
+-    
+-  dialog.showMessageBox({
+-    type: "error",
+-    title: "Update Error",
+-    message: "There was a problem updating the application.",
+-    detail: "You can try again later or contact support if the problem persists.",
+-    buttons: ["OK"]
+-  });
++
++    logWithTimestamp(
++      "error",
++      USER_LOG_PREFIX,
++      "Displaying error dialog to user",
++      errorDialogData
++    );
++
++    dialog.showMessageBox({
++      type: "error",
++      title: "Update Error",
++      message: "There was a problem updating the application.",
++      detail:
++        "You can try again later or contact support if the problem persists.",
++      buttons: ["OK"],
++    });
+   } else {
+-    logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Non-critical error - no user notification shown');
++    logWithTimestamp(
++      "info",
++      UPDATE_LOG_PREFIX,
++      "Non-critical error - no user notification shown"
++    );
+   }
+-  
++
+   // Log recovery suggestions for backend team
+   const recoverySuggestions = {
+     errorCategory: errorCategory,
+     suggestions: getRecoverySuggestions(errorCategory),
+-    timestamp: new Date().toISOString()
++    timestamp: new Date().toISOString(),
+   };
+-  
+-  logWithTimestamp('info', UPDATE_LOG_PREFIX, 'Recovery suggestions for backend team', recoverySuggestions);
++
++  logWithTimestamp(
++    "info",
++    UPDATE_LOG_PREFIX,
++    "Recovery suggestions for backend team",
++    recoverySuggestions
++  );
+ });
+ 
+ // Helper function for recovery suggestions
+ function getRecoverySuggestions(errorCategory) {
+   const suggestions = {
+-    'NO_RELEASES_AVAILABLE': [
+-      'Verify GitHub repository has published releases',
+-      'Check release visibility settings',
+-      'Ensure GH_TOKEN has correct permissions'
++    NO_RELEASES_AVAILABLE: [
++      "Verify GitHub repository has published releases",
++      "Check release visibility settings",
++      "Ensure GH_TOKEN has correct permissions",
++    ],
++    NETWORK_ERROR: [
++      "Check internet connectivity",
++      "Verify firewall settings",
++      "Test GitHub API accessibility",
+     ],
+-    'NETWORK_ERROR': [
+-      'Check internet connectivity',
+-      'Verify firewall settings',
+-      'Test GitHub API accessibility'
++    PERMISSION_ERROR: [
++      "Check file system permissions",
++      "Verify user has write access to update directory",
++      "Consider running with elevated permissions",
+     ],
+-    'PERMISSION_ERROR': [
+-      'Check file system permissions',
+-      'Verify user has write access to update directory',
+-      'Consider running with elevated permissions'
++    TIMEOUT_ERROR: [
++      "Increase timeout settings",
++      "Check network stability",
++      "Retry during off-peak hours",
+     ],
+-    'TIMEOUT_ERROR': [
+-      'Increase timeout settings',
+-      'Check network stability',
+-      'Retry during off-peak hours'
++    UNKNOWN: [
++      "Review full error logs",
++      "Check system resources",
++      "Verify update configuration",
+     ],
+-    'UNKNOWN': [
+-      'Review full error logs',
+-      'Check system resources',
+-      'Verify update configuration'
+-    ]
+   };
+-  
+-  return suggestions[errorCategory] || suggestions['UNKNOWN'];
++
++  return suggestions[errorCategory] || suggestions["UNKNOWN"];
+ }
+ 
+ let win = null;
+@@ -852,7 +1203,8 @@ function getProductionExecutablePath() {
+   return executablePath;
+ }
+ 
+-async function startPythonExecutable() {  return new Promise((resolve, reject) => {
++async function startPythonExecutable() {
++  return new Promise((resolve, reject) => {
+     let command, args;
+     let options = {
+       detached: false,
+@@ -1077,7 +1429,9 @@ async function createWindow() {
+     },
+     icon: path.join(__dirname, "assets", "cyphersol-icon.png"),
+     autoHideMenuBar: true,
+-    title: global.AppConfig.isDev ? `CypherSol Dev v${app.getVersion()}` : `CypherSol v${app.getVersion()}`,
++    title: global.AppConfig.isDev
++      ? `CypherEdge Dev v${app.getVersion()}`
++      : `CypherEdge v${app.getVersion()}`,
+   });
+   if (global.AppConfig.isDev) {
+     win.loadURL("http://localhost:3000");
+@@ -1224,7 +1578,7 @@ async function createWindow() {
+     log.info("Update download requested");
+     try {
+       // Backup database before update
+-      const dbPath = path.join(userDataDir, "database.sqlite");
++      const dbPath = path.join(userDataDir, "db.sqlite3");
+       const backupDir = path.join(userDataDir, "backups");
+ 
+       log.info("Creating backup directory:", backupDir);
+@@ -1324,15 +1678,171 @@ const GATEWAY_EXECUTABLE_DIR = isPackaged
+ 
+ console.log("GATEWAY EXECUTABLE DIR:", GATEWAY_EXECUTABLE_DIR);
+ 
+-app.setName("CypherSol Dev");
++app.setName("CypherEdge Dev");
++
++// Add this function before app.whenReady()
++async function performUserDataMigration() {
++  const migrationStartTime = Date.now();
++
++  try {
++    log.info("🚀 [USER-DATA-MIGRATION] === STARTING MIGRATION PROCESS ===");
++    log.info("[USER-DATA-MIGRATION] SYSTEM CONTEXT", {
++      appVersion: app.getVersion(),
++      appName: app.getName(),
++      platform: process.platform,
++      arch: process.arch,
++      isPackaged: app.isPackaged,
++      userDataDir: app.getPath("userData"),
++      tempDir: app.getPath("temp"),
++      processId: process.pid,
++      startTime: new Date().toISOString(),
++    });
++
++    const migration = new DatabaseMigration();
++
++    // Get initial status
++    const initialStatus = migration.getMigrationStatus();
++    log.info("[USER-DATA-MIGRATION] INITIAL STATUS", initialStatus);
++
++    // Perform migration
++    log.info("[USER-DATA-MIGRATION] CALLING MIGRATION FUNCTION");
++    const result = await migration.performMigration();
++
++    const migrationEndTime = Date.now();
++    const totalDuration = migrationEndTime - migrationStartTime;
++
++    // Log results based on outcome
++    if (result.alreadyCompleted) {
++      log.info("✅ [USER-DATA-MIGRATION] ALREADY COMPLETED", {
++        totalDurationMs: totalDuration,
++      });
++    } else if (result.freshInstall) {
++      log.info("ℹ️ [USER-DATA-MIGRATION] FRESH INSTALLATION DETECTED", {
++        totalDurationMs: totalDuration,
++      });
++    } else if (result.success) {
++      log.info("🎉 [USER-DATA-MIGRATION] MIGRATION SUCCESSFUL!", {
++        oldApp: result.oldAppName,
++        totalItems: result.totalItems,
++        successfulMigrations: result.successfulMigrations,
++        failedMigrations: result.failedMigrations,
++        preservedOriginal: result.preservedOriginal,
++        migrationDurationMs: result.migrationDurationMs,
++        totalProcessDurationMs: totalDuration,
++      });
++
++      // Log detailed success information
++      if (result.successfulMigrations > 0) {
++        const migratedFiles = result.migratedItems
++          .filter((item) => item.migrationSuccess)
++          .map((item) => ({
++            name: item.fileName,
++            type: item.type,
++            description: item.description || "No description",
++            size: item.size || "Unknown",
++            durationMs: item.migrationDurationMs || "Unknown",
++          }));
++
++        log.info("📋 [USER-DATA-MIGRATION] SUCCESSFULLY MIGRATED ITEMS", {
++          count: migratedFiles.length,
++          items: migratedFiles,
++          note: "Original files preserved in old app directory",
++        });
++      }
++
++      // Log any failures for debugging
++      if (result.failedMigrations > 0) {
++        const failedFiles = result.migratedItems
++          .filter((item) => !item.migrationSuccess)
++          .map((item) => ({
++            name: item.fileName,
++            type: item.type,
++            description: item.description || "No description",
++          }));
++
++        log.warn("⚠️ [USER-DATA-MIGRATION] FAILED MIGRATIONS", {
++          count: failedFiles.length,
++          items: failedFiles,
++        });
++      }
++    } else {
++      log.error("❌ [USER-DATA-MIGRATION] MIGRATION FAILED", {
++        totalItems: result.totalItems || "Unknown",
++        successful: result.successfulMigrations || 0,
++        failed: result.failedMigrations || "Unknown",
++        error: result.error || "Unknown error",
++        totalDurationMs: totalDuration,
++      });
++    }
++
++    // Get final status for comparison
++    const finalStatus = migration.getMigrationStatus();
++    log.info("[USER-DATA-MIGRATION] FINAL STATUS", finalStatus);
++
++    log.info("🏁 [USER-DATA-MIGRATION] === MIGRATION PROCESS COMPLETED ===", {
++      totalDurationMs: totalDuration,
++      totalDurationSeconds: (totalDuration / 1000).toFixed(2),
++    });
++
++    return result;
++  } catch (error) {
++    const migrationEndTime = Date.now();
++    const totalDuration = migrationEndTime - migrationStartTime;
++
++    log.error("💥 [USER-DATA-MIGRATION] CRITICAL MIGRATION ERROR", {
++      error: error.message,
++      stack: error.stack,
++      totalDurationMs: totalDuration,
++      timestamp: new Date().toISOString(),
++    });
++
++    // Try to log to a backup location
++    try {
++      const errorLogPath = path.join(
++        app.getPath("temp"),
++        "cyphersol-migration-error.log"
++      );
++      const errorInfo = {
++        timestamp: new Date().toISOString(),
++        error: error.message,
++        stack: error.stack,
++        appVersion: app.getVersion(),
++        platform: process.platform,
++      };
++      fs.writeFileSync(errorLogPath, JSON.stringify(errorInfo, null, 2));
++      log.info("[USER-DATA-MIGRATION] Error details saved to:", errorLogPath);
++    } catch (backupError) {
++      log.error(
++        "[USER-DATA-MIGRATION] Failed to save error backup:",
++        backupError
++      );
++    }
++
++    return { success: false, error: error.message, criticalError: true };
++  }
++}
+ 
+ app.whenReady().then(async () => {
+-  log.info("App is ready", userDataDir);
++  log.info("🚀 APP READY - STARTING INITIALIZATION SEQUENCE", {
++    userDataDir: userDataDir,
++    appVersion: app.getVersion(),
++    timestamp: new Date().toISOString(),
++  });
+ 
+   createSplashWindow();
+ 
+   try {
+-    // 🗄️ Initialize Database FIRST (Core Requirement)
++    // 🔄 MIGRATE USER DATA FROM OLD APP (Critical first step)
++    log.info("📋 INITIALIZATION STEP 1: USER DATA MIGRATION");
++    const migrationResult = await performUserDataMigration();
++
++    if (migrationResult.criticalError) {
++      log.error("💥 CRITICAL MIGRATION ERROR - CONTINUING WITH CAUTION");
++      // Continue with app initialization even if migration fails
++    }
++
++    // 🗄️ Initialize Database AFTER migration (so it uses the migrated data)
++    log.info("📋 INITIALIZATION STEP 2: DATABASE INITIALIZATION");
+     try {
+       const dbManager = databaseManager.getInstance();
+       await dbManager.initialize(userDataDir);
+@@ -1343,32 +1853,38 @@ app.whenReady().then(async () => {
+     }
+ 
+     // 🏁 Check Update Success/Failure Flags
+-    const updateFlagPath = path.join(app.getPath("userData"), "update-success.txt");
++    const updateFlagPath = path.join(
++      app.getPath("userData"),
++      "update-success.txt"
++    );
+     if (fs.existsSync(updateFlagPath)) {
+       try {
+-        const version = fs.readFileSync(updateFlagPath, 'utf8');
++        const version = fs.readFileSync(updateFlagPath, "utf8");
+         fs.unlinkSync(updateFlagPath); // Remove the flag file
+-        
++
+         // Show success message after app fully loads
+         setTimeout(() => {
+           dialog.showMessageBox({
+             type: "info",
+             title: "Update Successful",
+             message: `Successfully updated to version ${app.getVersion()}`,
+-            buttons: ["OK"]
++            buttons: ["OK"],
+           });
+         }, 2000);
+       } catch (err) {
+         log.error("Error reading update flag:", err);
+       }
+     }
+-    
++
+     // Check for update failure flag
+-    const updateFailurePath = path.join(app.getPath("userData"), "update-failure.txt");
++    const updateFailurePath = path.join(
++      app.getPath("userData"),
++      "update-failure.txt"
++    );
+     if (fs.existsSync(updateFailurePath)) {
+       try {
+         fs.unlinkSync(updateFailurePath); // Remove the flag file
+-        
++
+         // Show failure recovery message
+         setTimeout(() => {
+           dialog.showMessageBox({
+@@ -1376,7 +1892,7 @@ app.whenReady().then(async () => {
+             title: "Update Recovery",
+             message: "The application recovered from a failed update attempt.",
+             detail: "You can try updating again later.",
+-            buttons: ["OK"]
++            buttons: ["OK"],
+           });
+         }, 2000);
+       } catch (err) {
+@@ -1386,17 +1902,18 @@ app.whenReady().then(async () => {
+ 
+     // ✅ FIXED: Correct initialization order to prevent license validation race condition
+     // 🚨 CRITICAL: Gateway server MUST start BEFORE license validation
+-    
++
+     // 1. Start Gateway Server FIRST (needed for license validation)
+     try {
+-      log.info("🚀 PHASE 1: Initializing Gateway Server (Required for License Validation)");
++      log.info(
++        "🚀 PHASE 1: Initializing Gateway Server (Required for License Validation)"
++      );
+       gatewayServer.init(GATEWAY_EXECUTABLE_DIR);
+       log.info("✅ Gateway server path configured");
+-      
++
+       // 🔧 ROBUST GATEWAY INITIALIZATION with health checks and fallback
+       await gatewayServer.initialize();
+       log.info("✅ Gateway server initialized and responding on port 7890");
+-      
+     } catch (error) {
+       log.error("❌ GatewayServer initialization failed:", error);
+       throw error;
+@@ -1404,7 +1921,9 @@ app.whenReady().then(async () => {
+ 
+     // 2. Initialize License Manager AFTER Gateway Server is ready
+     try {
+-      log.info("🚀 PHASE 2: Initializing License Manager (Gateway Server Available)");
++      log.info(
++        "🚀 PHASE 2: Initializing License Manager (Gateway Server Available)"
++      );
+       const isLicenseValid = await licenseManager.init(app.getPath("userData"));
+       log.info("✅ License status:", isLicenseValid);
+       log.info("✅ License Info Data:", licenseManager.licenseData);
+@@ -1526,61 +2045,69 @@ function checkForUpdates() {
+ }
+ 
+ // Set up detailed logging for updates
+-log.transports.file.fileName = 'cyphersol.log';
++log.transports.file.fileName = "cyphersol.log";
+ 
+ // ═══════════════════════════════════════════════════════════════════════════════════════
+-// 🚀 COMPREHENSIVE AUTO-UPDATE LOGGING SYSTEM v1.0.14
++// 🚀 COMPREHENSIVE AUTO-UPDATE LOGGING SYSTEM v2.0.0
+ // ═══════════════════════════════════════════════════════════════════════════════════════
+ // Created for: Backend Team Analysis & Software Improvement
+ // Purpose: Detailed tracking of update process, user behavior, and system performance
+ // ═══════════════════════════════════════════════════════════════════════════════════════
+ 
+-const UPDATE_LOG_PREFIX = '🔄 [AUTO-UPDATE]';
+-const PERFORMANCE_LOG_PREFIX = '⚡ [PERFORMANCE]';
+-const USER_LOG_PREFIX = '👤 [USER-INTERACTION]';
+-const SYSTEM_LOG_PREFIX = '🖥️ [SYSTEM]';
+-const ERROR_LOG_PREFIX = '❌ [ERROR]';
+-const SUCCESS_LOG_PREFIX = '✅ [SUCCESS]';
++const UPDATE_LOG_PREFIX = "🔄 [AUTO-UPDATE]";
++const PERFORMANCE_LOG_PREFIX = "⚡ [PERFORMANCE]";
++const USER_LOG_PREFIX = "👤 [USER-INTERACTION]";
++const SYSTEM_LOG_PREFIX = "🖥️ [SYSTEM]";
++const ERROR_LOG_PREFIX = "❌ [ERROR]";
++const SUCCESS_LOG_PREFIX = "✅ [SUCCESS]";
+ 
+ // Enhanced logging utility functions
+ const logWithTimestamp = (level, prefix, message, data = null) => {
+   const timestamp = new Date().toISOString();
+   const logMessage = `${prefix} [${timestamp}] ${message}`;
+-  
++
+   if (data) {
+     log[level](`${logMessage}`, JSON.stringify(data, null, 2));
+   } else {
+     log[level](logMessage);
+   }
+-  
++
+   // Also log to console in development for immediate feedback
+   if (global.AppConfig.isDev) {
+-    console.log(`${prefix} ${message}`, data || '');
++    console.log(`${prefix} ${message}`, data || "");
+   }
+ };
+ 
+ // Performance tracking utilities
+ const performanceTracker = {
+   timers: new Map(),
+-  
++
+   start(operationName) {
+     const startTime = Date.now();
+     this.timers.set(operationName, startTime);
+-    logWithTimestamp('info', PERFORMANCE_LOG_PREFIX, `Started: ${operationName}`);
++    logWithTimestamp(
++      "info",
++      PERFORMANCE_LOG_PREFIX,
++      `Started: ${operationName}`
++    );
+     return startTime;
+   },
+-  
++
+   end(operationName) {
+     const endTime = Date.now();
+     const startTime = this.timers.get(operationName);
+     if (startTime) {
+       const duration = endTime - startTime;
+       this.timers.delete(operationName);
+-      logWithTimestamp('info', PERFORMANCE_LOG_PREFIX, `Completed: ${operationName} | Duration: ${duration}ms`);
++      logWithTimestamp(
++        "info",
++        PERFORMANCE_LOG_PREFIX,
++        `Completed: ${operationName} | Duration: ${duration}ms`
++      );
+       return duration;
+     }
+     return null;
+-  }
++  },
+ };
+ 
+ // System information logger
+@@ -1594,26 +2121,43 @@ const logSystemInfo = () => {
+     userDataDir: userDataDir,
+     isPackaged: app.isPackaged,
+     isDevelopment: global.AppConfig.isDev,
+-    totalMemory: process.getSystemMemoryInfo ? process.getSystemMemoryInfo().total : 'N/A',
+-    availableMemory: process.getSystemMemoryInfo ? process.getSystemMemoryInfo().free : 'N/A'
++    totalMemory: process.getSystemMemoryInfo
++      ? process.getSystemMemoryInfo().total
++      : "N/A",
++    availableMemory: process.getSystemMemoryInfo
++      ? process.getSystemMemoryInfo().free
++      : "N/A",
+   };
+-  
+-  logWithTimestamp('info', SYSTEM_LOG_PREFIX, 'System Information Collected', systemInfo);
++
++  logWithTimestamp(
++    "info",
++    SYSTEM_LOG_PREFIX,
++    "System Information Collected",
++    systemInfo
++  );
+   return systemInfo;
+ };
+ 
+ // Initialize comprehensive logging
+-log.info('═══════════════════════════════════════════════════════════════════════════════════════');
+-log.info('🚀 CYPHERSOL AUTO-UPDATE LOGGING SYSTEM v1.0.14 INITIALIZED');
+-log.info('═══════════════════════════════════════════════════════════════════════════════════════');
++log.info(
++  "═══════════════════════════════════════════════════════════════════════════════════════"
++);
++log.info("🚀 CYPHERSOL AUTO-UPDATE LOGGING SYSTEM v2.0.0 INITIALIZED");
++log.info(
++  "═══════════════════════════════════════════════════════════════════════════════════════"
++);
+ log.info(`📅 Session Start Time: ${new Date().toISOString()}`);
+ log.info(`🏷️ Application Version: ${app.getVersion()}`);
+ log.info(`📁 User Data Directory: ${userDataDir}`);
+ log.info(`🖥️ Platform: ${process.platform} (${process.arch})`);
+ log.info(`⚡ Node Version: ${process.versions.node}`);
+ log.info(`🔋 Electron Version: ${process.versions.electron}`);
+-log.info(`🔧 Development Mode: ${global.AppConfig.isDev ? 'ENABLED' : 'DISABLED'}`);
+-log.info('═══════════════════════════════════════════════════════════════════════════════════════');
++log.info(
++  `🔧 Development Mode: ${global.AppConfig.isDev ? "ENABLED" : "DISABLED"}`
++);
++log.info(
++  "═══════════════════════════════════════════════════════════════════════════════════════"
++);
+ 
+ // Log detailed system information
+ logSystemInfo();
+diff --git a/frontend/package.json b/frontend/package.json
+index ba4c2b35..621d7fde 100644
+--- a/frontend/package.json
++++ b/frontend/package.json
+@@ -1,8 +1,11 @@
+-{  "name": "cyphersol-electron-app",  "version": "1.0.14",  "description": "CA OFFLINE APP",
++{
++  "name": "CypherEdge",
++  "version": "2.0.0",
++  "description": "CA OFFLINE APP",
+   "main": "main.js",
+   "icon": "./assets/cyphersol-icon.png",
+   "scripts": {
+-    "start": "powershell -Command \"Start-Process cmd -ArgumentList '/k cd /d \\\"D:\\CA\\ca-offline-suite\\frontend\\\" && npm run electron' -Verb runAs\"",
++    "start": "powershell -Command \"Start-Process cmd -ArgumentList '/k cd /d \\\"D:\\CA\\beta_testers_ca\\frontend\\\" && npm run electron' -Verb runAs\"",
+     "start_": "npm run electron",
+     "electron": "electron main.js",
+     "start:fastapi": "cd ../ && uvicorn backend.main:app --reload --port 7500",
+@@ -36,7 +39,7 @@
+   },
+   "build": {
+     "appId": "com.electron.electronapp",
+-    "productName": "Cyphersol",
++    "productName": "CypherEdge",
+     "icon": "assets/cyphersol-icon.ico",
+     "asarUnpack": [
+       "**/*.node"
+@@ -61,7 +64,20 @@
+       "!backend/__pycache__",
+       "!env/bin/python3",
+       "package.json",
+-              "media/**/*"      ],    "extraResources": [      {        "from": "../dist/main",        "to": "backend/main"      },      {        "from": "media",        "to": "media",        "filter": [          "**/*"        ]      },
++      "media/**/*"
++    ],
++    "extraResources": [
++      {
++        "from": "../dist/main",
++        "to": "backend/main"
++      },
++      {
++        "from": "media",
++        "to": "media",
++        "filter": [
++          "**/*"
++        ]
++      },
+       {
+         "from": "drizzle.config.js",
+         "to": "drizzle.config.js"
+@@ -105,7 +121,7 @@
+       ],
+       "artifactName": "${productName}-Setup-${version}.${ext}",
+       "verifyUpdateCodeSignature": false,
+-      "publisherName": "Cyphersol",
++      "publisherName": "CypherEdge",
+       "requestedExecutionLevel": "requireAdministrator"
+     },
+     "nsis": {
+@@ -113,7 +129,7 @@
+       "allowToChangeInstallationDirectory": false,
+       "createDesktopShortcut": true,
+       "createStartMenuShortcut": true,
+-      "shortcutName": "Cyphersol",
++      "shortcutName": "CypherEdge",
+       "deleteAppDataOnUninstall": false,
+       "artifactName": "${productName}-Setup-${version}.${ext}",
+       "uninstallDisplayName": "${productName}",
+@@ -169,4 +185,4 @@
+     "uuid": "^11.0.5",
+     "xmldom": "^0.6.0"
+   }
+-}
++}
+\ No newline at end of file
+diff --git a/frontend/react-app/src/components/MainDashboardComponents/MainDashboard.js b/frontend/react-app/src/components/MainDashboardComponents/MainDashboard.js
+index b4d2f413..d63b6f88 100644
+--- a/frontend/react-app/src/components/MainDashboardComponents/MainDashboard.js
++++ b/frontend/react-app/src/components/MainDashboardComponents/MainDashboard.js
+@@ -769,7 +769,7 @@ const MainDashboard = ({ handleTabChange }) => {
+     <ScrollArea className="h-full">
+       {/* scroll to top */}
+ 
+-              <div className="p-8 pt-0 space-y-8">          <div className="flex justify-between items-center">            <div>              <div className="flex items-center gap-3">                <h2 className="text-3xl font-bold tracking-tight dark:text-slate-300">                  CypherSOL                </h2>                <span className="bg-gradient-to-r from-blue-500 to-cyan-400 text-white text-xs px-2 py-1 rounded-full font-semibold animate-pulse">                  v1.0.14           </span>              </div>              <p className="text-muted-foreground">                Analytics Dashboard - Chartered Accountants and Tax Professionals              </p>            </div>            <div className="flex items-center space-x-4">
++              <div className="p-8 pt-0 space-y-8">          <div className="flex justify-between items-center">            <div>              <div className="flex items-center gap-3">                <h2 className="text-3xl font-bold tracking-tight dark:text-slate-300">                  CypherSOL                </h2>                <span className="bg-gradient-to-r from-blue-500 to-cyan-400 text-white text-xs px-2 py-1 rounded-full font-semibold animate-pulse">                  v2.0.0           </span>              </div>              <p className="text-muted-foreground">                Analytics Dashboard - Chartered Accountants and Tax Professionals              </p>            </div>            <div className="flex items-center space-x-4">
+             {/* <DropdownMenu>
+               <DropdownMenuTrigger asChild>
+                 <Button variant="outline" size="icon" className="relative">
+diff --git a/frontend/react-app/src/components/activate-license.jsx b/frontend/react-app/src/components/activate-license.jsx
+index 08bd1032..711eb5e9 100644
+--- a/frontend/react-app/src/components/activate-license.jsx
++++ b/frontend/react-app/src/components/activate-license.jsx
+@@ -811,11 +811,11 @@ export function LicenseActivationForm({ className, ...props }) {
+               >
+                 <div className="flex flex-col gap-4">
+                   <motion.div className="grid gap-2" custom={0} variants={itemVariants}>
+-                    <Label htmlFor="email">Email</Label>
++                    <Label htmlFor="email">Username / Email</Label>
+                     <Input
+                       id="email"
+-                      type="email"
+-                      placeholder="johndoe@example.com"
++                      type="text"
++                      placeholder="Enter your username or email"
+                       required
+                       value={credentials.email}
+                       onChange={handleInputChange}
+@@ -885,11 +885,11 @@ export function LicenseActivationForm({ className, ...props }) {
+               >
+                 <div className="flex flex-col gap-4">
+                   <motion.div className="grid gap-2" custom={0} variants={itemVariants}>
+-                    <Label htmlFor="email">Email</Label>
++                    <Label htmlFor="email">Username / Email</Label>
+                     <Input
+                       id="email"
+-                      type="email"
+-                      placeholder="johndoe@example.com"
++                      type="text"
++                      placeholder="Enter your username or email"
+                       required
+                       value={credentials.email}
+                       onChange={handleInputChange}
+@@ -976,4 +976,4 @@ export function LicenseActivationForm({ className, ...props }) {
+       </motion.div>
+     </>
+   );
+-}
+\ No newline at end of file
++}
+diff --git a/frontend/utils/databaseMigration.js b/frontend/utils/databaseMigration.js
+new file mode 100644
+index 00000000..a0176dd2
+--- /dev/null
++++ b/frontend/utils/databaseMigration.js
+@@ -0,0 +1,732 @@
++const fs = require("fs");
++const path = require("path");
++const { app } = require("electron");
++const log = require("electron-log");
++
++class DatabaseMigration {
++  constructor() {
++    this.currentUserDataDir = app.getPath("userData");
++    this.migrationLogFile = path.join(
++      this.currentUserDataDir,
++      "migration-detailed.log"
++    );
++
++    // Possible old app names (we'll detect which one exists dynamically)
++    this.possibleOldAppNames = [
++      "cyphersol-electron-app",
++      "cyphersol-ats-electron-app",
++      "cyphersol-ats",
++    ];
++
++    // Will be set dynamically when we find which old app exists
++    this.oldAppName = null;
++    this.oldAppDirectory = null;
++
++    // Initialize detailed logging
++    this.initializeDetailedLogging();
++  }
++
++  /**
++   * Initialize comprehensive logging system
++   */
++  initializeDetailedLogging() {
++    const systemInfo = {
++      timestamp: new Date().toISOString(),
++      platform: process.platform,
++      arch: process.arch,
++      nodeVersion: process.versions.node,
++      electronVersion: process.versions.electron,
++      appVersion: app.getVersion(),
++      appName: app.getName(),
++      isPackaged: app.isPackaged,
++      currentUserDataDir: this.currentUserDataDir,
++      possibleOldAppNames: this.possibleOldAppNames,
++      oldAppName: this.oldAppName || "Will be discovered dynamically",
++      processId: process.pid,
++      workingDirectory: process.cwd(),
++      migrationStrategy:
++        "Dynamic old app discovery + simplified file migration",
++    };
++
++    this.logMigration("🚀 SIMPLIFIED MIGRATION SYSTEM INITIALIZED", systemInfo);
++    this.logMigration("=".repeat(80));
++  }
++
++  /**
++   * Dynamically discover which old app directory exists and return it
++   */
++  getOldAppDataDirectory() {
++    // If already discovered, return cached result
++    if (this.oldAppDirectory && this.oldAppName) {
++      this.logMigration("📁 USING CACHED OLD APP DIRECTORY", {
++        oldAppName: this.oldAppName,
++        oldAppDirectory: this.oldAppDirectory,
++      });
++      return this.oldAppDirectory;
++    }
++
++    const appDataRoot = path.dirname(this.currentUserDataDir);
++
++    this.logMigration("🔍 STARTING DYNAMIC OLD APP DIRECTORY DISCOVERY", {
++      appDataRoot: appDataRoot,
++      possibleOldAppNames: this.possibleOldAppNames,
++      searchStrategy: "Find first existing directory with critical files",
++    });
++
++    // Check each possible old app name to see which one exists
++    for (const possibleName of this.possibleOldAppNames) {
++      const possibleDir = path.join(appDataRoot, possibleName);
++
++      this.logMigration(`🔍 CHECKING POSSIBLE OLD APP: ${possibleName}`, {
++        path: possibleDir,
++        exists: fs.existsSync(possibleDir),
++      });
++
++      if (fs.existsSync(possibleDir)) {
++        // Check if this directory has critical files (database or license)
++        const dbPath = path.join(possibleDir, "db.sqlite3");
++        const licensePath = path.join(possibleDir, "clientLicense.enc");
++
++        const hasDb = fs.existsSync(dbPath);
++        const hasLicense = fs.existsSync(licensePath);
++
++        this.logMigration(`📊 DIRECTORY CONTENT ANALYSIS: ${possibleName}`, {
++          path: possibleDir,
++          hasDatabase: hasDb,
++          hasLicense: hasLicense,
++          dbPath: dbPath,
++          licensePath: licensePath,
++        });
++
++        // If it has at least one critical file, use this directory
++        if (hasDb || hasLicense) {
++          this.oldAppName = possibleName;
++          this.oldAppDirectory = possibleDir;
++
++          this.logMigration("✅ OLD APP DIRECTORY DISCOVERED!", {
++            detectedOldAppName: this.oldAppName,
++            detectedOldAppDirectory: this.oldAppDirectory,
++            hasDatabase: hasDb,
++            hasLicense: hasLicense,
++            priorityReason: hasDb ? "Contains database" : "Contains license",
++          });
++
++          return this.oldAppDirectory;
++        } else {
++          this.logMigration(
++            `⚠️ DIRECTORY EXISTS BUT NO CRITICAL FILES: ${possibleName}`,
++            {
++              path: possibleDir,
++              note: "Skipping - no db.sqlite3 or clientLicense.enc found",
++            }
++          );
++        }
++      }
++    }
++
++    // No old app directory found
++    this.logMigration("🆕 NO OLD APP DIRECTORY FOUND", {
++      checkedDirectories: this.possibleOldAppNames.map((name) => ({
++        name: name,
++        path: path.join(appDataRoot, name),
++        exists: fs.existsSync(path.join(appDataRoot, name)),
++      })),
++      conclusion: "Fresh installation - no previous app data to migrate",
++    });
++
++    return null;
++  }
++
++  /**
++   * Check if migration has already been performed for this installation
++   */
++  isMigrationCompleted() {
++    const migrationFlagFile = path.join(
++      this.currentUserDataDir,
++      ".migration-completed"
++    );
++    const exists = fs.existsSync(migrationFlagFile);
++
++    this.logMigration("🔍 CHECKING MIGRATION STATUS", {
++      flagFile: migrationFlagFile,
++      exists: exists,
++      currentUserDataDirExists: fs.existsSync(this.currentUserDataDir),
++    });
++
++    if (exists) {
++      try {
++        const content = fs.readFileSync(migrationFlagFile, "utf8");
++        const migrationInfo = JSON.parse(content);
++        this.logMigration("📄 EXISTING MIGRATION INFO FOUND", migrationInfo);
++      } catch (error) {
++        this.logMigration("❌ ERROR READING MIGRATION FLAG", {
++          error: error.message,
++        });
++      }
++    }
++
++    return exists;
++  }
++
++  /**
++   * Mark migration as completed with detailed information
++   */
++  markMigrationCompleted(migrationResults = []) {
++    const migrationFlagFile = path.join(
++      this.currentUserDataDir,
++      ".migration-completed"
++    );
++    const migrationInfo = {
++      completedAt: new Date().toISOString(),
++      appVersion: app.getVersion(),
++      platform: process.platform,
++      oldAppName: this.oldAppName,
++      oldDirectory: this.oldAppDirectory || this.getOldAppDataDirectory(),
++      currentDirectory: this.currentUserDataDir,
++      migratedFiles: migrationResults,
++      possibleOldAppNames: this.possibleOldAppNames,
++      migrationStrategy: "Dynamic discovery",
++      note: this.oldAppName
++        ? "Original files preserved in old location"
++        : "Fresh installation - no old files to preserve",
++      migrationLogFile: this.migrationLogFile,
++      processId: process.pid,
++      migrationVersion: "dynamic-v1.0",
++    };
++
++    try {
++      fs.writeFileSync(
++        migrationFlagFile,
++        JSON.stringify(migrationInfo, null, 2)
++      );
++      this.logMigration("✅ MIGRATION COMPLETION FLAG CREATED", {
++        flagFile: migrationFlagFile,
++        migrationInfo: migrationInfo,
++      });
++    } catch (error) {
++      this.logMigration("❌ FAILED TO CREATE MIGRATION FLAG", {
++        error: error.message,
++        flagFile: migrationFlagFile,
++      });
++    }
++  }
++
++  /**
++   * Enhanced logging with multiple outputs and detailed context
++   */
++  logMigration(message, data = null) {
++    const timestamp = new Date().toISOString();
++    const formattedEntry = `[${timestamp}] [PID:${process.pid}] ${message}${
++      data ? "\n" + JSON.stringify(data, null, 2) : ""
++    }\n`;
++
++    // 1. Log to electron-log (appears in main app logs)
++    if (data) {
++      log.info(`[SIMPLE-MIGRATION] ${message}`, data);
++    } else {
++      log.info(`[SIMPLE-MIGRATION] ${message}`);
++    }
++
++    // 2. Log to console for immediate visibility during development
++    console.log(`[SIMPLE-MIGRATION] ${message}`, data || "");
++
++    // 3. Log to dedicated migration file for detailed audit trail
++    try {
++      // Ensure current userData directory exists
++      if (!fs.existsSync(this.currentUserDataDir)) {
++        fs.mkdirSync(this.currentUserDataDir, { recursive: true });
++        console.log(
++          `[SIMPLE-MIGRATION] Created userData directory: ${this.currentUserDataDir}`
++        );
++      }
++
++      fs.appendFileSync(this.migrationLogFile, formattedEntry);
++    } catch (error) {
++      console.error(
++        "[SIMPLE-MIGRATION] CRITICAL: Failed to write to migration log file:",
++        error
++      );
++      log.error(
++        "[SIMPLE-MIGRATION] CRITICAL: Failed to write to migration log file:",
++        error
++      );
++    }
++
++    // 4. Also write to a backup log in temp directory as failsafe
++    try {
++      const tempLogFile = path.join(
++        app.getPath("temp"),
++        "cyphersol-migration-backup.log"
++      );
++      fs.appendFileSync(tempLogFile, formattedEntry);
++    } catch (error) {
++      console.error("[SIMPLE-MIGRATION] Failed to write backup log:", error);
++    }
++  }
++
++  /**
++   * Find critical user data files (simplified to only essential files)
++   */
++  findOldUserDataFiles() {
++    const oldDir = this.getOldAppDataDirectory();
++    const foundFiles = [];
++
++    this.logMigration("🔍 === STARTING SIMPLIFIED USER DATA SEARCH ===");
++    this.logMigration("SEARCH PARAMETERS", {
++      oldAppDirectory: oldDir,
++      newAppDirectory: this.currentUserDataDir,
++      oldAppName: this.oldAppName,
++      possibleOldAppNames: this.possibleOldAppNames,
++      strategy: "DYNAMIC DISCOVERY + SIMPLIFIED - Only Critical Files",
++    });
++
++    if (!oldDir || !fs.existsSync(oldDir)) {
++      this.logMigration(
++        "🆕 NO OLD APP DATA FOUND - FRESH INSTALLATION DETECTED",
++        {
++          checkedPossibleNames: this.possibleOldAppNames,
++          discoveredOldAppName: this.oldAppName,
++          discoveredOldDirectory: oldDir,
++        }
++      );
++      return foundFiles;
++    }
++
++    // SIMPLIFIED FILES LIST - Only the absolutely critical files
++    const criticalFiles = [
++      {
++        name: "db.sqlite3",
++        description: "Main application database",
++        priority: "CRITICAL",
++      },
++      {
++        name: "clientLicense.enc",
++        description: "Encrypted license file",
++        priority: "CRITICAL",
++      },
++    ];
++
++    this.logMigration("📋 SEARCHING FOR CRITICAL FILES ONLY", {
++      totalFiles: criticalFiles.length,
++      files: criticalFiles.map((f) => f.name),
++    });
++
++    // Check for critical files
++    for (const fileInfo of criticalFiles) {
++      const filePath = path.join(oldDir, fileInfo.name);
++
++      this.logMigration(
++        `🔍 Checking ${fileInfo.priority} file: ${fileInfo.name}`,
++        {
++          path: filePath,
++          description: fileInfo.description,
++          priority: fileInfo.priority,
++        }
++      );
++
++      if (fs.existsSync(filePath)) {
++        try {
++          const stats = fs.statSync(filePath);
++
++          this.logMigration(`📄 CRITICAL FILE FOUND: ${fileInfo.name}`, {
++            path: filePath,
++            size: stats.size,
++            sizeKB: (stats.size / 1024).toFixed(2),
++            created: stats.birthtime,
++            modified: stats.mtime,
++            description: fileInfo.description,
++            priority: fileInfo.priority,
++          });
++
++          // Only migrate files that have content
++          if (stats.size > 0) {
++            foundFiles.push({
++              type: "file",
++              oldPath: filePath,
++              fileName: fileInfo.name,
++              description: fileInfo.description,
++              priority: fileInfo.priority,
++              size: stats.size,
++              lastModified: stats.mtime,
++              sourceDirectory: oldDir,
++            });
++
++            this.logMigration(
++              `✅ ADDED TO MIGRATION LIST: ${fileInfo.name} (${fileInfo.priority})`
++            );
++          } else {
++            this.logMigration(`⚠️ SKIPPING EMPTY FILE: ${fileInfo.name}`, {
++              path: filePath,
++            });
++          }
++        } catch (error) {
++          this.logMigration(`❌ ERROR ANALYZING FILE: ${fileInfo.name}`, {
++            path: filePath,
++            error: error.message,
++          });
++        }
++      } else {
++        this.logMigration(`❌ CRITICAL FILE NOT FOUND: ${fileInfo.name}`, {
++          path: filePath,
++        });
++      }
++    }
++
++    this.logMigration("📊 === SIMPLIFIED SEARCH SUMMARY ===", {
++      totalItemsFound: foundFiles.length,
++      criticalItemsFound: foundFiles.length,
++      foundItems: foundFiles.map((f) => ({
++        name: f.fileName,
++        type: f.type,
++        priority: f.priority,
++        description: f.description,
++      })),
++    });
++
++    return foundFiles;
++  }
++
++  /**
++   * Copy a single file with extensive verification and logging
++   */
++  copyFile(sourceInfo) {
++    const { oldPath, fileName, description, priority } = sourceInfo;
++    const newPath = path.join(this.currentUserDataDir, fileName);
++
++    this.logMigration(
++      `📄 === STARTING FILE COPY: ${fileName} (${priority}) ===`,
++      {
++        description: description,
++        priority: priority,
++        source: oldPath,
++        destination: newPath,
++      }
++    );
++
++    try {
++      // Pre-copy analysis
++      const sourceStats = fs.statSync(oldPath);
++      this.logMigration(`📊 SOURCE FILE ANALYSIS: ${fileName}`, {
++        path: oldPath,
++        size: sourceStats.size,
++        sizeKB: (sourceStats.size / 1024).toFixed(2),
++        created: sourceStats.birthtime,
++        modified: sourceStats.mtime,
++        priority: priority,
++      });
++
++      // Check if destination already exists
++      if (fs.existsSync(newPath)) {
++        const existingStats = fs.statSync(newPath);
++        this.logMigration(`⚠️ DESTINATION FILE EXISTS: ${fileName}`, {
++          path: newPath,
++          existingSize: existingStats.size,
++          existingSizeKB: (existingStats.size / 1024).toFixed(2),
++          existingModified: existingStats.mtime,
++        });
++
++        if (existingStats.size > 0) {
++          // Create backup
++          const backupDir = path.join(
++            this.currentUserDataDir,
++            "pre-migration-backups"
++          );
++          const timestamp = Date.now();
++          const backupPath = path.join(
++            backupDir,
++            `${fileName}.backup.${timestamp}`
++          );
++
++          this.logMigration(
++            `💾 CREATING BACKUP OF EXISTING FILE: ${fileName}`,
++            {
++              backupPath: backupPath,
++            }
++          );
++
++          if (!fs.existsSync(backupDir)) {
++            fs.mkdirSync(backupDir, { recursive: true });
++            this.logMigration(`📁 CREATED BACKUP DIRECTORY: ${backupDir}`);
++          }
++
++          fs.copyFileSync(newPath, backupPath);
++          const backupStats = fs.statSync(backupPath);
++
++          this.logMigration(`✅ BACKUP CREATED SUCCESSFULLY: ${fileName}`, {
++            backupPath: backupPath,
++            backupSize: backupStats.size,
++            verified: backupStats.size === existingStats.size,
++          });
++        }
++      }
++
++      // Perform the actual copy
++      this.logMigration(`🔄 COPYING ${priority} FILE: ${fileName}`);
++      const copyStartTime = Date.now();
++
++      fs.copyFileSync(oldPath, newPath);
++
++      const copyEndTime = Date.now();
++      const copyDuration = copyEndTime - copyStartTime;
++
++      // Verify the copy
++      const newStats = fs.statSync(newPath);
++      const verificationResult = {
++        originalSize: sourceStats.size,
++        copiedSize: newStats.size,
++        sizesMatch: sourceStats.size === newStats.size,
++        copyDurationMs: copyDuration,
++        copySpeedKBps:
++          sourceStats.size > 0
++            ? (sourceStats.size / 1024 / (copyDuration / 1000)).toFixed(2)
++            : 0,
++        priority: priority,
++      };
++
++      if (verificationResult.sizesMatch) {
++        this.logMigration(
++          `✅ FILE COPY SUCCESSFUL: ${fileName} (${priority})`,
++          {
++            source: oldPath,
++            destination: newPath,
++            verification: verificationResult,
++          }
++        );
++        return true;
++      } else {
++        throw new Error(
++          `File size mismatch after copy. Original: ${sourceStats.size}, Copy: ${newStats.size}`
++        );
++      }
++    } catch (error) {
++      this.logMigration(`❌ FILE COPY FAILED: ${fileName} (${priority})`, {
++        error: error.message,
++        stack: error.stack,
++        source: oldPath,
++        destination: newPath,
++        priority: priority,
++      });
++      return false;
++    }
++  }
++
++  /**
++   * Perform the simplified migration process
++   */
++  async performMigration() {
++    const migrationStartTime = Date.now();
++
++    this.logMigration("🚀 === STARTING DYNAMIC MIGRATION PROCESS ===");
++    this.logMigration("MIGRATION STRATEGY", {
++      approach: "DYNAMIC DISCOVERY + SIMPLIFIED",
++      possibleOldApps: this.possibleOldAppNames,
++      targetFiles: ["db.sqlite3", "clientLicense.enc"],
++      preserveOriginal: true,
++      oneTimeOnly: true,
++      discoveryStrategy:
++        "Auto-detect which old app directory exists with critical files",
++    });
++
++    try {
++      // Step 1: Check if migration already completed
++      this.logMigration("📋 STEP 1: CHECKING MIGRATION STATUS");
++      if (this.isMigrationCompleted()) {
++        const result = {
++          alreadyCompleted: true,
++          success: true,
++          message: "Migration already completed previously",
++        };
++        this.logMigration("✅ MIGRATION ALREADY COMPLETED - SKIPPING", result);
++        return result;
++      }
++
++      // Step 2: Ensure current directory exists
++      this.logMigration("📋 STEP 2: ENSURING CURRENT USER DATA DIRECTORY");
++      if (!fs.existsSync(this.currentUserDataDir)) {
++        fs.mkdirSync(this.currentUserDataDir, { recursive: true });
++        this.logMigration("📁 CREATED CURRENT USER DATA DIRECTORY", {
++          path: this.currentUserDataDir,
++        });
++      }
++
++      // Step 3: Find old user data
++      this.logMigration("📋 STEP 3: SEARCHING FOR OLD USER DATA");
++      const oldUserData = this.findOldUserDataFiles();
++
++      if (oldUserData.length === 0) {
++        const result = {
++          freshInstall: true,
++          success: true,
++          message: "No old user data found - fresh installation",
++        };
++        this.logMigration("🆕 FRESH INSTALLATION DETECTED", result);
++        this.markMigrationCompleted([]);
++        return result;
++      }
++
++      // Step 4: Perform migration
++      this.logMigration("📋 STEP 4: PERFORMING SIMPLIFIED DATA MIGRATION", {
++        itemsToMigrate: oldUserData.length,
++        items: oldUserData.map((item) => ({
++          name: item.fileName,
++          type: item.type,
++          priority: item.priority,
++          description: item.description,
++        })),
++      });
++
++      const migrationResults = [];
++      let successCount = 0;
++      let failureCount = 0;
++
++      for (let i = 0; i < oldUserData.length; i++) {
++        const item = oldUserData[i];
++        const itemStartTime = Date.now();
++
++        this.logMigration(
++          `🔄 MIGRATING ITEM ${i + 1}/${oldUserData.length}: ${
++            item.fileName
++          } (${item.priority})`,
++          {
++            type: item.type,
++            description: item.description,
++            priority: item.priority,
++          }
++        );
++
++        let success = false;
++
++        try {
++          success = this.copyFile(item);
++        } catch (error) {
++          this.logMigration(`❌ MIGRATION ERROR FOR ITEM: ${item.fileName}`, {
++            error: error.message,
++            stack: error.stack,
++            priority: item.priority,
++          });
++          success = false;
++        }
++
++        const itemEndTime = Date.now();
++        const itemDuration = itemEndTime - itemStartTime;
++
++        const result = {
++          ...item,
++          migrationSuccess: success,
++          newPath: path.join(this.currentUserDataDir, item.fileName),
++          migrationDurationMs: itemDuration,
++        };
++
++        migrationResults.push(result);
++
++        if (success) {
++          successCount++;
++          this.logMigration(
++            `✅ ITEM MIGRATION SUCCESS: ${item.fileName} (${item.priority})`,
++            {
++              durationMs: itemDuration,
++            }
++          );
++        } else {
++          failureCount++;
++          this.logMigration(
++            `❌ ITEM MIGRATION FAILED: ${item.fileName} (${item.priority})`,
++            {
++              durationMs: itemDuration,
++            }
++          );
++        }
++      }
++
++      // Step 5: Complete migration
++      this.logMigration("📋 STEP 5: COMPLETING MIGRATION PROCESS");
++      this.markMigrationCompleted(migrationResults);
++
++      const migrationEndTime = Date.now();
++      const totalMigrationTime = migrationEndTime - migrationStartTime;
++
++      const finalResult = {
++        success: successCount > 0,
++        totalItems: oldUserData.length,
++        successfulMigrations: successCount,
++        failedMigrations: failureCount,
++        migratedItems: migrationResults,
++        discoveryStrategy: "Dynamic old app detection",
++        possibleOldAppNames: this.possibleOldAppNames,
++        discoveredOldAppName: this.oldAppName,
++        oldDirectory: this.oldAppDirectory,
++        preservedOriginal: true,
++        migrationDurationMs: totalMigrationTime,
++        migrationDurationSeconds: (totalMigrationTime / 1000).toFixed(2),
++        migrationVersion: "dynamic-v1.0",
++      };
++
++      if (finalResult.success) {
++        this.logMigration(
++          "🎉 === DYNAMIC MIGRATION COMPLETED SUCCESSFULLY ===",
++          {
++            summary: `${successCount}/${oldUserData.length} critical files migrated successfully`,
++            discoveredOldApp: this.oldAppName,
++            fromDirectory: this.oldAppDirectory,
++            toDirectory: this.currentUserDataDir,
++            totalDuration: `${finalResult.migrationDurationSeconds} seconds`,
++            note: "Original files preserved in old app directory",
++          }
++        );
++      } else {
++        this.logMigration(
++          "⚠️ === DYNAMIC MIGRATION COMPLETED WITH FAILURES ===",
++          finalResult
++        );
++      }
++
++      this.logMigration("=".repeat(80));
++
++      return finalResult;
++    } catch (error) {
++      const migrationEndTime = Date.now();
++      const totalMigrationTime = migrationEndTime - migrationStartTime;
++
++      this.logMigration("💥 === CRITICAL MIGRATION ERROR ===", {
++        error: error.message,
++        stack: error.stack,
++        totalDurationMs: totalMigrationTime,
++        timestamp: new Date().toISOString(),
++      });
++
++      return {
++        success: false,
++        error: error.message,
++        criticalError: true,
++        migrationDurationMs: totalMigrationTime,
++      };
++    }
++  }
++
++  /**
++   * Get current migration status for debugging
++   */
++  getMigrationStatus() {
++    const oldDir = this.getOldAppDataDirectory();
++    const migrationFlag = path.join(
++      this.currentUserDataDir,
++      ".migration-completed"
++    );
++
++    return {
++      migrationStrategy: "Dynamic old app discovery",
++      possibleOldAppNames: this.possibleOldAppNames,
++      discoveredOldAppName: this.oldAppName,
++      oldAppDirectory: oldDir,
++      oldAppDirectoryExists: oldDir ? fs.existsSync(oldDir) : false,
++      currentUserDataDir: this.currentUserDataDir,
++      currentUserDataDirExists: fs.existsSync(this.currentUserDataDir),
++      migrationCompleted: fs.existsSync(migrationFlag),
++      migrationFlagPath: migrationFlag,
++      migrationLogPath: this.migrationLogFile,
++      migrationVersion: "dynamic-v1.0",
++    };
++  }
++}
++
++module.exports = DatabaseMigration;
+diff --git a/frontend/utils/logger.js b/frontend/utils/logger.js
+new file mode 100644
+index 00000000..be79a1c1
+--- /dev/null
++++ b/frontend/utils/logger.js
+@@ -0,0 +1,449 @@
++const log = require('electron-log');
++const path = require('path');
++const fs = require('fs');
++const { app } = require('electron');
++
++class CyphersolLogger {
++  constructor() {
++    this.sessionId = this.generateSessionId();
++    this.buildId = this.getBuildId();
++    this.systemInfo = null;
++    this.setupLoggers();
++    this.initializeSystemInfo();
++  }
++
++  generateSessionId() {
++    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
++  }
++
++  getBuildId() {
++    try {
++      const packagePath = path.join(__dirname, '../package.json');
++      const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
++      return `${packageJson.version}-${Date.now()}`;
++    } catch (error) {
++      return `unknown-${Date.now()}`;
++    }
++  }
++
++  setupLoggers() {
++    try {
++      const userDataDir = app ? app.getPath('userData') : './logs';
++      const logsDir = path.join(userDataDir, 'logs');
++      
++      // Ensure logs directory exists
++      if (!fs.existsSync(logsDir)) {
++        fs.mkdirSync(logsDir, { recursive: true });
++      }
++
++      // Configure main logger
++      log.transports.file.level = 'debug';
++      log.transports.console.level = 'debug';
++      log.transports.file.maxSize = 10 * 1024 * 1024; // 10MB
++      log.transports.file.archiveLog = true;
++      log.transports.file.fileName = 'cyphersol-main.log';
++      log.transports.file.resolvePathFn = () => path.join(logsDir, 'cyphersol-main.log');
++
++      // Create specialized loggers
++      this.createSpecializedLoggers(logsDir);
++      
++      // Setup log rotation
++      this.setupLogRotation(logsDir);
++    } catch (error) {
++      // Fallback to console logging if file logging fails
++      console.error('Failed to setup file logging:', error);
++      log.transports.file.level = false;
++      log.transports.console.level = 'debug';
++    }
++  }
++
++  createSpecializedLoggers(logsDir) {
++    try {
++      // Build Process Logger
++      this.buildLogger = log.create('build');
++      this.buildLogger.transports.file.fileName = 'build.log';
++      this.buildLogger.transports.file.resolvePathFn = () => path.join(logsDir, 'build.log');
++      this.buildLogger.transports.console.level = 'info';
++
++      // Update Process Logger
++      this.updateLogger = log.create('update');
++      this.updateLogger.transports.file.fileName = 'update.log';
++      this.updateLogger.transports.file.resolvePathFn = () => path.join(logsDir, 'update.log');
++      this.updateLogger.transports.console.level = 'info';
++
++      // Database Logger
++      this.dbLogger = log.create('database');
++      this.dbLogger.transports.file.fileName = 'database.log';
++      this.dbLogger.transports.file.resolvePathFn = () => path.join(logsDir, 'database.log');
++      this.dbLogger.transports.console.level = 'warn';
++
++      // Network Logger
++      this.networkLogger = log.create('network');
++      this.networkLogger.transports.file.fileName = 'network.log';
++      this.networkLogger.transports.file.resolvePathFn = () => path.join(logsDir, 'network.log');
++      this.networkLogger.transports.console.level = 'warn';
++
++      // Performance Logger
++      this.perfLogger = log.create('performance');
++      this.perfLogger.transports.file.fileName = 'performance.log';
++      this.perfLogger.transports.file.resolvePathFn = () => path.join(logsDir, 'performance.log');
++      this.perfLogger.transports.console.level = 'info';
++
++      // Error Logger (Critical issues only)
++      this.errorLogger = log.create('error');
++      this.errorLogger.transports.file.fileName = 'errors.log';
++      this.errorLogger.transports.file.resolvePathFn = () => path.join(logsDir, 'errors.log');
++      this.errorLogger.transports.console.level = 'error';
++
++      // User Actions Logger
++      this.userLogger = log.create('user');
++      this.userLogger.transports.file.fileName = 'user-actions.log';
++      this.userLogger.transports.file.resolvePathFn = () => path.join(logsDir, 'user-actions.log');
++      this.userLogger.transports.console.level = false; // Don't spam console with user actions
++    } catch (error) {
++      console.error('Failed to create specialized loggers:', error);
++      // Create fallback loggers that just use the main logger
++      this.buildLogger = log;
++      this.updateLogger = log;
++      this.dbLogger = log;
++      this.networkLogger = log;
++      this.perfLogger = log;
++      this.errorLogger = log;
++      this.userLogger = log;
++    }
++  }
++
++  setupLogRotation(logsDir) {
++    // Clean up old logs (keep last 30 days)
++    const maxAge = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
++    
++    try {
++      const files = fs.readdirSync(logsDir);
++      const now = Date.now();
++      
++      files.forEach(file => {
++        const filePath = path.join(logsDir, file);
++        const stats = fs.statSync(filePath);
++        
++        if (now - stats.mtime.getTime() > maxAge) {
++          fs.unlinkSync(filePath);
++          this.info('SYSTEM', 'Cleaned up old log file', { file });
++        }
++      });
++    } catch (error) {
++      this.error('SYSTEM', 'Failed to clean up old logs', { error: error.message });
++    }
++  }
++
++  async initializeSystemInfo() {
++    try {
++      const si = require('systeminformation');
++      this.systemInfo = {
++        os: await si.osInfo(),
++        cpu: await si.cpu(),
++        mem: await si.mem(),
++        disk: await si.diskLayout(),
++        network: await si.networkInterfaces(),
++        timestamp: new Date().toISOString()
++      };
++    } catch (error) {
++      this.systemInfo = {
++        error: 'Failed to gather system info',
++        timestamp: new Date().toISOString()
++      };
++    }
++  }
++
++  // Enhanced logging methods with context
++  formatMessage(component, message, context = {}) {
++    const timestamp = new Date().toISOString();
++    const baseContext = {
++      sessionId: this.sessionId,
++      buildId: this.buildId,
++      component,
++      timestamp,
++      pid: process.pid,
++      platform: process.platform,
++      version: app ? app.getVersion() : 'unknown'
++    };
++
++    return {
++      message,
++      context: { ...baseContext, ...context }
++    };
++  }
++
++  // Main logging methods
++  trace(component, message, context = {}) {
++    const formatted = this.formatMessage(component, message, context);
++    log.silly(`[${component}] ${message}`, formatted.context);
++  }
++
++  debug(component, message, context = {}) {
++    const formatted = this.formatMessage(component, message, context);
++    log.debug(`[${component}] ${message}`, formatted.context);
++  }
++
++  info(component, message, context = {}) {
++    const formatted = this.formatMessage(component, message, context);
++    log.info(`[${component}] ${message}`, formatted.context);
++  }
++
++  warn(component, message, context = {}) {
++    const formatted = this.formatMessage(component, message, context);
++    log.warn(`[${component}] ⚠️  ${message}`, formatted.context);
++  }
++
++  error(component, message, context = {}) {
++    const formatted = this.formatMessage(component, message, context);
++    log.error(`[${component}] ❌ ${message}`, formatted.context);
++    
++    // Also log to error logger
++    this.errorLogger.error(`[${component}] ${message}`, formatted.context);
++  }
++
++  fatal(component, message, context = {}) {
++    const formatted = this.formatMessage(component, message, context);
++    log.error(`[${component}] 💀 FATAL: ${message}`, formatted.context);
++    
++    // Log to error logger with FATAL prefix
++    this.errorLogger.error(`FATAL [${component}] ${message}`, formatted.context);
++  }
++
++  // Specialized logging methods
++  
++  // Build Process Logging
++  buildStart(version, platform) {
++    const context = { version, platform, stage: 'start' };
++    this.buildLogger.info('🏗️  BUILD STARTED', context);
++    this.info('BUILD', 'Build process initiated', context);
++  }
++
++  buildStep(step, details = {}) {
++    const context = { step, stage: 'progress', ...details };
++    this.buildLogger.info(`📦 ${step}`, context);
++    this.info('BUILD', step, context);
++  }
++
++  buildError(step, error, details = {}) {
++    const context = { step, error: error.message, stack: error.stack, stage: 'error', ...details };
++    this.buildLogger.error(`❌ BUILD FAILED: ${step}`, context);
++    this.error('BUILD', `Build failed at ${step}`, context);
++  }
++
++  buildSuccess(outputPath, size, duration) {
++    const context = { outputPath, size, duration, stage: 'complete' };
++    this.buildLogger.info('✅ BUILD COMPLETED', context);
++    this.info('BUILD', 'Build completed successfully', context);
++  }
++
++  // Update Process Logging
++  updateStart(currentVersion, targetVersion) {
++    const context = { currentVersion, targetVersion, stage: 'start' };
++    this.updateLogger.info('🔄 UPDATE STARTED', context);
++    this.info('UPDATE', 'Update process initiated', context);
++  }
++
++  updateProgress(stage, progress, details = {}) {
++    const context = { stage, progress, ...details };
++    this.updateLogger.info(`📥 ${stage}: ${progress}%`, context);
++    this.debug('UPDATE', `${stage} progress: ${progress}%`, context);
++  }
++
++  updateCleanup(action, success, details = {}) {
++    const context = { action, success, stage: 'cleanup', ...details };
++    const status = success ? '✅' : '❌';
++    this.updateLogger.info(`${status} CLEANUP: ${action}`, context);
++    this.info('UPDATE', `Cleanup ${action}: ${success ? 'success' : 'failed'}`, context);
++  }
++
++  updateError(stage, error, details = {}) {
++    const context = { stage, error: error.message, stack: error.stack, ...details };
++    this.updateLogger.error(`❌ UPDATE FAILED: ${stage}`, context);
++    this.error('UPDATE', `Update failed at ${stage}`, context);
++  }
++
++  updateSuccess(newVersion, duration) {
++    const context = { newVersion, duration, stage: 'complete' };
++    this.updateLogger.info('✅ UPDATE COMPLETED', context);
++    this.info('UPDATE', 'Update completed successfully', context);
++  }
++
++  // Database Logging
++  dbQuery(query, duration, rowCount, params = {}) {
++    const context = { query, duration, rowCount, params };
++    this.dbLogger.debug('🗄️  DB QUERY', context);
++    
++    if (duration > 1000) { // Log slow queries
++      this.warn('DATABASE', 'Slow query detected', context);
++    }
++  }
++
++  dbError(operation, error, query = null) {
++    const context = { operation, error: error.message, query, stack: error.stack };
++    this.dbLogger.error('❌ DB ERROR', context);
++    this.error('DATABASE', `Database error in ${operation}`, context);
++  }
++
++  dbConnection(action, success, details = {}) {
++    const context = { action, success, ...details };
++    const status = success ? '✅' : '❌';
++    this.dbLogger.info(`${status} DB ${action.toUpperCase()}`, context);
++    this.info('DATABASE', `Database ${action}: ${success ? 'success' : 'failed'}`, context);
++  }
++
++  // Network Logging
++  networkRequest(method, url, duration, status, size = null) {
++    const context = { method, url, duration, status, size };
++    this.networkLogger.debug(`🌐 ${method} ${url}`, context);
++    
++    if (status >= 400) {
++      this.warn('NETWORK', `HTTP ${status} error`, context);
++    }
++    
++    if (duration > 5000) { // Log slow requests
++      this.warn('NETWORK', 'Slow network request', context);
++    }
++  }
++
++  networkError(operation, error, url = null) {
++    const context = { operation, error: error.message, url, stack: error.stack };
++    this.networkLogger.error('❌ NETWORK ERROR', context);
++    this.error('NETWORK', `Network error in ${operation}`, context);
++  }
++
++  // Performance Logging
++  perfStart(operation) {
++    const startTime = Date.now();
++    return {
++      operation,
++      startTime,
++      end: (details = {}) => {
++        const duration = Date.now() - startTime;
++        const context = { operation, duration, ...details };
++        this.perfLogger.info(`⏱️  ${operation}: ${duration}ms`, context);
++        
++        if (duration > 10000) { // Log operations taking more than 10 seconds
++          this.warn('PERFORMANCE', 'Slow operation detected', context);
++        }
++        
++        return duration;
++      }
++    };
++  }
++
++  perfMemory(operation, details = {}) {
++    const memUsage = process.memoryUsage();
++    const context = { 
++      operation, 
++      memory: {
++        rss: Math.round(memUsage.rss / 1024 / 1024) + 'MB',
++        heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024) + 'MB',
++        heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024) + 'MB',
++        external: Math.round(memUsage.external / 1024 / 1024) + 'MB'
++      },
++      ...details 
++    };
++    this.perfLogger.info(`💾 MEMORY: ${operation}`, context);
++  }
++
++  // User Action Logging
++  userAction(action, details = {}) {
++    const context = { action, ...details };
++    this.userLogger.info(`👤 ${action}`, context);
++  }
++
++  userError(action, error, details = {}) {
++    const context = { action, error: error.message, ...details };
++    this.userLogger.error(`👤 ERROR: ${action}`, context);
++    this.error('USER', `User action failed: ${action}`, context);
++  }
++
++  // System State Logging
++  systemState(component, state, details = {}) {
++    const context = { 
++      component, 
++      state, 
++      systemInfo: this.systemInfo,
++      ...details 
++    };
++    this.info('SYSTEM', `${component} state: ${state}`, context);
++  }
++
++  // Process Logging
++  processStart(processName, command, args = []) {
++    const context = { processName, command, args };
++    this.info('PROCESS', `Starting ${processName}`, context);
++  }
++
++  processExit(processName, exitCode, signal = null) {
++    const context = { processName, exitCode, signal };
++    if (exitCode === 0) {
++      this.info('PROCESS', `${processName} exited normally`, context);
++    } else {
++      this.error('PROCESS', `${processName} exited with error`, context);
++    }
++  }
++
++  processOutput(processName, output, isError = false) {
++    const context = { processName, output };
++    if (isError) {
++      this.warn('PROCESS', `${processName} stderr`, context);
++    } else {
++      this.debug('PROCESS', `${processName} stdout`, context);
++    }
++  }
++
++  // File Operation Logging
++  fileOperation(operation, filePath, success, details = {}) {
++    const context = { operation, filePath, success, ...details };
++    const status = success ? '✅' : '❌';
++    this.debug('FILE', `${status} ${operation}: ${filePath}`, context);
++    
++    if (!success) {
++      this.warn('FILE', `File operation failed: ${operation}`, context);
++    }
++  }
++
++  // Startup Logging
++  startupPhase(phase, duration = null, details = {}) {
++    const context = { phase, duration, ...details };
++    this.info('STARTUP', `Phase: ${phase}${duration ? ` (${duration}ms)` : ''}`, context);
++  }
++
++  // Session Logging
++  sessionEvent(event, userId = null, details = {}) {
++    const context = { event, userId, ...details };
++    this.userAction(`SESSION_${event.toUpperCase()}`, context);
++  }
++
++  // License Logging
++  licenseEvent(event, details = {}) {
++    const context = { event, ...details };
++    this.info('LICENSE', event, context);
++  }
++
++  // Generate diagnostic report
++  generateDiagnosticReport() {
++    const report = {
++      sessionId: this.sessionId,
++      buildId: this.buildId,
++      timestamp: new Date().toISOString(),
++      systemInfo: this.systemInfo,
++      appVersion: app ? app.getVersion() : 'unknown',
++      platform: process.platform,
++      nodeVersion: process.version,
++      electronVersion: process.versions.electron,
++      memoryUsage: process.memoryUsage(),
++      uptime: process.uptime()
++    };
++
++    this.info('DIAGNOSTIC', 'Generated diagnostic report', report);
++    return report;
++  }
++}
++
++// Create singleton instance
++const logger = new CyphersolLogger();
++
++module.exports = logger; 
+\ No newline at end of file
