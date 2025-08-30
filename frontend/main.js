@@ -2082,7 +2082,6 @@ console.log("GATEWAY EXECUTABLE DIR:", GATEWAY_EXECUTABLE_DIR);
 app.setName("CypherSol Dev");
 
 app.whenReady().then(async () => {
-  sessionManager = require("./SessionManager");
   log.info("🚀 APP READY - STARTING INITIALIZATION SEQUENCE", {
     userDataDir: userDataDir,
     appVersion: app.getVersion(),
