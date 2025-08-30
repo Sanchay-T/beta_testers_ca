@@ -6,6 +6,7 @@ const {
   shell,
   dialog,
 } = require("electron");
+const { EventEmitter } = require("events");
 const fs = require("fs");
 
 const { registerOpenFileIpc } = require("./ipc/fileHandler.js");
@@ -2082,6 +2083,9 @@ console.log("GATEWAY EXECUTABLE DIR:", GATEWAY_EXECUTABLE_DIR);
 app.setName("CypherSol Dev");
 
 app.whenReady().then(async () => {
+  // Track total startup time
+  const appStartTime = Date.now();
+  
   log.info("🚀 APP READY - STARTING INITIALIZATION SEQUENCE", {
     userDataDir: userDataDir,
     appVersion: app.getVersion(),
