@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { app } = require('electron');
+const pathResolver = require('./utils/PathResolver');
 
 class CompatibilityLogger {
   constructor(options = {}) {
@@ -44,10 +45,10 @@ class CompatibilityLogger {
       const userDataPath = app.getPath('userData');
       
       if (isDev) {
-        // Development paths
-        this.logDir = path.join(__dirname, 'log');  // Project directory
+        // Development paths - use PathResolver for dynamic paths
+        this.logDir = pathResolver.getLogDir();
         this.userLogDir = path.join(userDataPath, 'logs', 'compatibility');
-        this.reportsDir = path.join(__dirname, 'log', 'reports');
+        this.reportsDir = pathResolver.getReportsDir();
         this.sessionsDir = path.join(userDataPath, 'sessions');
       } else {
         // Production paths - all under CypherEdge directory
@@ -142,7 +143,7 @@ class CompatibilityLogger {
 
   getCypherEdgeVersion() {
     try {
-      const packagePath = path.join(__dirname, '..', 'package.json');
+      const packagePath = pathResolver.resolveProject('package.json');
       if (fs.existsSync(packagePath)) {
         const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
         return packageData.version || 'unknown';

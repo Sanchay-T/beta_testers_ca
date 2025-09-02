@@ -4,6 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const pathResolver = require('./utils/PathResolver');
 
 class CompatibilityCache {
   constructor(logger = null) {
@@ -20,11 +21,9 @@ class CompatibilityCache {
     const isDevelopment = process.env.NODE_ENV !== 'production';
     
     if (isDevelopment) {
-      // Development: Store in project directory
-      const devPath = path.join(__dirname, 'cache');
-      if (!fs.existsSync(devPath)) {
-        fs.mkdirSync(devPath, { recursive: true });
-      }
+      // Development: Store in project cache directory
+      const devPath = pathResolver.getCacheDir();
+      pathResolver.ensureDir(devPath);
       return path.join(devPath, this.cacheFileName);
     } else {
       // Production: Store in user data directory

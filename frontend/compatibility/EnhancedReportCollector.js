@@ -5,6 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const pathResolver = require('./utils/PathResolver');
 const { app } = require('electron');
 
 class EnhancedReportCollector {
@@ -73,12 +74,12 @@ class EnhancedReportCollector {
     const userDataDir = app.getPath('userData');
     
     if (this.isDev) {
-      // Development paths
+      // Development paths - use PathResolver for dynamic paths
       return {
-        compatibilityLogs: path.join(__dirname, 'log'),
+        compatibilityLogs: pathResolver.getLogDir(),
         userLogs: path.join(userDataDir, 'logs', 'compatibility'),
         modeDecision: path.join(userDataDir, 'appMode'),
-        reports: path.join(__dirname, 'log', 'reports'),
+        reports: pathResolver.getReportsDir(),
         sessions: path.join(userDataDir, 'sessions')
       };
     } else {

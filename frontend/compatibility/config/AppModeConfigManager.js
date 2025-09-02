@@ -1,58 +1,49 @@
 // AppModeConfigManager.js
 const fs = require('fs');
 const path = require('path');
+const pathResolver = require('../utils/PathResolver');
 
 class AppModeConfigManager {
   constructor() {
-    // Use a more robust path resolution that works across different environments
-    const configDir = this.getConfigDirectory();
+    // Use the centralized path resolver for robust path resolution
+    const configDir = pathResolver.getConfigDir();
     const tempConfigPath = path.join(configDir, 'temp_appModeConfig.json');
     const mainConfigPath = path.join(configDir, 'appModeConfig.json');
+    
+    // Ensure config directory exists
+    pathResolver.ensureDir(configDir);
+    
+    // Check if config file exists, create if needed
+    if (!fs.existsSync(mainConfigPath) && !fs.existsSync(tempConfigPath)) {
+      console.log(`⚠️ [CONFIG] Config file not found, creating default at: ${configDir}`);
+      this.createDefaultConfigFile(configDir);
+    }
     
     this.configPath = fs.existsSync(tempConfigPath) ? tempConfigPath : mainConfigPath;
     this.config = null;
     this.isLoaded = false;
+    
+    console.log(`🧪 [CONFIG] Using config file: ${this.configPath}`);
   }
 
   /**
-   * Get the configuration directory using multiple fallback methods
-   * @returns {string} Path to config directory
+   * Create default config file if it doesn't exist
+   * @param {string} configDir - Directory to create config in
    */
-  getConfigDirectory() {
-    // Method 1: Use __dirname (works in development)
-    let configDir = __dirname;
-    
-    // Method 2: If that doesn't work, try relative to the current working directory
-    if (!fs.existsSync(path.join(configDir, 'appModeConfig.json'))) {
-      const cwdPath = path.join(process.cwd(), 'frontend', 'compatibility', 'config');
-      if (fs.existsSync(path.join(cwdPath, 'appModeConfig.json'))) {
-        configDir = cwdPath;
-      }
+  createDefaultConfigFile(configDir) {
+    try {
+      const configPath = path.join(configDir, 'appModeConfig.json');
+      const defaultConfig = this.getDefaultConfig();
+      
+      // Ensure directory exists
+      pathResolver.ensureDir(configDir);
+      
+      // Write default config
+      fs.writeFileSync(configPath, JSON.stringify(defaultConfig, null, 2), 'utf8');
+      console.log(`✅ [CONFIG] Created default config file at: ${configPath}`);
+    } catch (error) {
+      console.error(`❌ [CONFIG] Failed to create default config file:`, error.message);
     }
-    
-    // Method 3: Try relative to the main.js location (for packaged apps)
-    if (!fs.existsSync(path.join(configDir, 'appModeConfig.json'))) {
-      const mainPath = path.join(path.dirname(process.argv[0]), 'frontend', 'compatibility', 'config');
-      if (fs.existsSync(path.join(mainPath, 'appModeConfig.json'))) {
-        configDir = mainPath;
-      }
-    }
-    
-    // Method 4: Search upwards from current directory
-    if (!fs.existsSync(path.join(configDir, 'appModeConfig.json'))) {
-      let searchDir = process.cwd();
-      for (let i = 0; i < 5; i++) { // Search up to 5 levels
-        const testPath = path.join(searchDir, 'frontend', 'compatibility', 'config');
-        if (fs.existsSync(path.join(testPath, 'appModeConfig.json'))) {
-          configDir = testPath;
-          break;
-        }
-        searchDir = path.dirname(searchDir);
-      }
-    }
-    
-    console.log(`🧪 [CONFIG] Using config directory: ${configDir}`);
-    return configDir;
   }
 
   /**
@@ -117,7 +108,7 @@ class AppModeConfigManager {
    */
   getConfig() {
     // Always check for temp config in case it was created after instantiation
-    const configDir = this.getConfigDirectory();
+    const configDir = pathResolver.getConfigDir();
     const tempConfigPath = path.join(configDir, 'temp_appModeConfig.json');
     const mainConfigPath = path.join(configDir, 'appModeConfig.json');
     const currentBestPath = fs.existsSync(tempConfigPath) ? tempConfigPath : mainConfigPath;
@@ -275,21 +266,99 @@ class AppModeConfigManager {
     console.log('⚠️ Using default configuration');
     return {
       version: "1.0.0",
-      developmentMode: { enabled: true, showTestingPanel: true },
+      lastUpdated: new Date().toISOString().split('T')[0],
+      environment: "development",
+      description: "Auto-generated default configuration for app mode detection and classification",
+      developmentMode: {
+        enabled: false,
+        showTestingPanel: false,
+        autoLaunch: true,
+        allowOverrides: false,
+        verboseLogging: false,
+        debugInfo: false
+      },
       hardwareThresholds: {
-        fullMode: { minRAM: 8, minProcessor: "i5", scanTestTimeout: 30000 },
-        hybridMode: { maxRAM: 8, maxProcessor: "i5" }
+        fullMode: {
+          minRAM: 8,
+          minRAMUnit: "GB",
+          minProcessor: "i5",
+          processorTypes: ["i5", "i7", "i9", "ryzen5", "ryzen7", "ryzen9"],
+          scanTestTimeout: 30000,
+          scanTestTimeoutUnit: "ms",
+          description: "Requirements for full offline mode with ML scanning"
+        },
+        hybridMode: {
+          maxRAM: 8,
+          maxRAMUnit: "GB",
+          maxProcessor: "i5",
+          lowEndProcessors: ["i3", "celeron", "pentium", "atom", "ryzen3"],
+          description: "Low-end hardware requiring cloud-assisted processing"
+        }
+      },
+      testingOverrides: {
+        forceRAM: null,
+        forceCPU: null,
+        forceScanResult: null,
+        forceMode: null,
+        simulateSlowScan: false
       },
       userExperience: {
         hybridModeFlow: {
+          timeouts: {
+            alternativePCPrompt: 15000,
+            paymentScreen: 0
+          },
           messages: {
-            lowSpecWarning: "This PC requires hybrid mode",
-            alternativePCQuestion: "Do you have another PC?",
-            paymentRequired: "Hybrid mode requires subscription"
+            lowSpecWarning: "This PC requires hybrid mode upgrade for optimal CypherEdge performance",
+            alternativePCQuestion: "Do you have another PC or system available?",
+            alternativePCAdvice: "Please try running CypherEdge on your other system for better performance",
+            paymentRequired: "Hybrid mode requires a subscription. Scan the QR code to connect with our support team.",
+            paymentInstructions: "After payment, contact support to enable hybrid mode for this system."
+          },
+          qrCode: {
+            paymentUrl: "upi://pay?pa=support@cyphersol.co.in&pn=CypherEdge%20Support&am=2499&cu=INR",
+            supportContact: "support@cyphersol.co.in",
+            supportPhone: "+91-XXXX-XXXX-XX"
           }
+        },
+        notifications: {
+          scanModeEnabled: "✅ SCAN MODE: Full offline processing with ML scanning enabled",
+          unscanModeEnabled: "⚡ UNSCAN MODE: Lightweight offline processing (ML scanning disabled)",
+          hybridModeRequired: "🔄 HYBRID MODE: Cloud-assisted processing required for this hardware"
         }
       },
-      storage: { decisionFile: "appModeDecision.json" }
+      logging: {
+        captureSystemSpecs: true,
+        captureTestResults: true,
+        captureTimings: true,
+        captureUserChoices: true,
+        emailReporting: false,
+        detailedDebugLogs: true
+      },
+      storage: {
+        decisionFile: "appModeDecision.json",
+        logFile: "appModeDetection.log",
+        backupCount: 10
+      },
+      testing: {
+        scenarios: {
+          lowEnd: {
+            name: "Low-End PC (HYBRID Mode)",
+            hardwareProfile: { ram: 4, processor: "i3" },
+            expectedMode: "HYBRID"
+          },
+          midRange: {
+            name: "Mid-Range PC (UNSCAN Mode)",
+            hardwareProfile: { ram: 8, processor: "i5" },
+            expectedMode: "UNSCAN"
+          },
+          highEnd: {
+            name: "High-End PC (SCAN Mode)",
+            hardwareProfile: { ram: 16, processor: "i7" },
+            expectedMode: "SCAN"
+          }
+        }
+      }
     };
   }
 
@@ -303,5 +372,22 @@ class AppModeConfigManager {
   }
 }
 
-// Export singleton instance
-module.exports = { AppModeConfigManager: new AppModeConfigManager() };
+// Create and export singleton instance with static-like access
+const configManagerInstance = new AppModeConfigManager();
+
+// Export both the class and instance with static-like methods
+module.exports = {
+  AppModeConfigManager: {
+    // Static-like methods that delegate to the singleton instance
+    getConfig: () => configManagerInstance.getConfig(),
+    saveConfig: (config) => configManagerInstance.saveConfig(config),
+    getHardwareThresholds: (mode) => configManagerInstance.getHardwareThresholds(mode),
+    isDevelopmentMode: () => configManagerInstance.isDevelopmentMode(),
+    setTestingOverride: (key, value) => configManagerInstance.setTestingOverride(key, value),
+    resetTestingOverrides: () => configManagerInstance.resetTestingOverrides(),
+    exportConfig: () => configManagerInstance.exportConfig(),
+    
+    // For debugging/testing - access to instance
+    getInstance: () => configManagerInstance
+  }
+};
