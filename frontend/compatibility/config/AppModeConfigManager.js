@@ -4,13 +4,55 @@ const path = require('path');
 
 class AppModeConfigManager {
   constructor() {
-    // Check if temp config exists (for testing scenarios), otherwise use main config
-    const tempConfigPath = path.join(__dirname, 'temp_appModeConfig.json');
-    const mainConfigPath = path.join(__dirname, 'appModeConfig.json');
+    // Use a more robust path resolution that works across different environments
+    const configDir = this.getConfigDirectory();
+    const tempConfigPath = path.join(configDir, 'temp_appModeConfig.json');
+    const mainConfigPath = path.join(configDir, 'appModeConfig.json');
     
     this.configPath = fs.existsSync(tempConfigPath) ? tempConfigPath : mainConfigPath;
     this.config = null;
     this.isLoaded = false;
+  }
+
+  /**
+   * Get the configuration directory using multiple fallback methods
+   * @returns {string} Path to config directory
+   */
+  getConfigDirectory() {
+    // Method 1: Use __dirname (works in development)
+    let configDir = __dirname;
+    
+    // Method 2: If that doesn't work, try relative to the current working directory
+    if (!fs.existsSync(path.join(configDir, 'appModeConfig.json'))) {
+      const cwdPath = path.join(process.cwd(), 'frontend', 'compatibility', 'config');
+      if (fs.existsSync(path.join(cwdPath, 'appModeConfig.json'))) {
+        configDir = cwdPath;
+      }
+    }
+    
+    // Method 3: Try relative to the main.js location (for packaged apps)
+    if (!fs.existsSync(path.join(configDir, 'appModeConfig.json'))) {
+      const mainPath = path.join(path.dirname(process.argv[0]), 'frontend', 'compatibility', 'config');
+      if (fs.existsSync(path.join(mainPath, 'appModeConfig.json'))) {
+        configDir = mainPath;
+      }
+    }
+    
+    // Method 4: Search upwards from current directory
+    if (!fs.existsSync(path.join(configDir, 'appModeConfig.json'))) {
+      let searchDir = process.cwd();
+      for (let i = 0; i < 5; i++) { // Search up to 5 levels
+        const testPath = path.join(searchDir, 'frontend', 'compatibility', 'config');
+        if (fs.existsSync(path.join(testPath, 'appModeConfig.json'))) {
+          configDir = testPath;
+          break;
+        }
+        searchDir = path.dirname(searchDir);
+      }
+    }
+    
+    console.log(`🧪 [CONFIG] Using config directory: ${configDir}`);
+    return configDir;
   }
 
   /**
@@ -75,8 +117,9 @@ class AppModeConfigManager {
    */
   getConfig() {
     // Always check for temp config in case it was created after instantiation
-    const tempConfigPath = path.join(__dirname, 'temp_appModeConfig.json');
-    const mainConfigPath = path.join(__dirname, 'appModeConfig.json');
+    const configDir = this.getConfigDirectory();
+    const tempConfigPath = path.join(configDir, 'temp_appModeConfig.json');
+    const mainConfigPath = path.join(configDir, 'appModeConfig.json');
     const currentBestPath = fs.existsSync(tempConfigPath) ? tempConfigPath : mainConfigPath;
     
     // Reload if path changed or not loaded yet
