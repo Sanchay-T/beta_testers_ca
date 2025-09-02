@@ -5,7 +5,7 @@
   "main": "main.js",
   "icon": "./assets/cyphersol-icon.png",
   "scripts": {
-    "start": "powershell -Command \"Start-Process cmd -ArgumentList '/k cd /d \\\"D:\\CA\\beta_testers_ca\\frontend\\\" && npm run electron' -Verb runAs\"",
+    "start": "powershell -Command \"Start-Process cmd -ArgumentList '/k cd /d \\\"%cd%\\\" && npm run electron' -Verb runAs\"",
     "start_": "npm run electron",
     "electron": "electron main.js",
     "start:fastapi": "cd ../ && uvicorn backend.main:app --reload --port 7500",
@@ -184,6 +184,7 @@
     "python-shell": "^5.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "resend": "^6.0.2",
     "sudo-prompt": "^9.2.1",
     "systeminformation": "^5.25.11",
     "tailwind-merge": "^2.6.0",

@@ -1,0 +1,2889 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>CypherEdge Compatibility Check</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        border: none;
+        outline: none;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+          "Oxygen", "Ubuntu", "Cantarell", sans-serif;
+        background: white;
+        overflow: hidden;
+        height: 100vh;
+        width: 100vw;
+        box-sizing: border-box;
+      }
+      
+      html {
+        margin: 0;
+        padding: 0;
+        border: none;
+        outline: none;
+        box-sizing: border-box;
+      }
+      
+      * {
+        box-sizing: border-box;
+      }
+      #compatibility-root {
+        width: 100vw;
+        height: 100vh;
+      }
+      .loading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        font-size: 18px;
+        color: #64748b;
+        flex-direction: column;
+      }
+      .loading-spinner {
+        width: 32px;
+        height: 32px;
+        border: 3px solid #e2e8f0;
+        border-top: 3px solid #0056b3;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 16px;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      /* Professional Modal Animations */
+      @keyframes overlayFadeIn {
+        0% { 
+          opacity: 0; 
+          backdrop-filter: blur(0px); 
+        }
+        100% { 
+          opacity: 1; 
+          backdrop-filter: blur(12px); 
+        }
+      }
+
+      /* Responsive Design for Professional Modals */
+      @media (max-width: 768px) {
+        .hybrid-modal-content {
+          margin: 10px !important;
+          padding: 24px !important;
+          max-width: calc(100vw - 20px) !important;
+          width: calc(100vw - 20px) !important;
+        }
+        
+        .hybrid-choice-grid {
+          grid-template-columns: 1fr !important;
+          gap: 12px !important;
+        }
+        
+        .hybrid-modal-buttons {
+          flex-direction: column !important;
+          gap: 12px !important;
+        }
+        
+        .hybrid-modal-buttons button {
+          width: 100% !important;
+        }
+      }
+
+      @media (max-height: 700px) {
+        .hybrid-modal-overlay {
+          align-items: flex-start !important;
+          padding-top: 20px !important;
+        }
+      }
+
+      @keyframes modalSlideIn {
+        0% { 
+          opacity: 0; 
+          transform: translateY(20px) scale(0.95); 
+          filter: blur(1px);
+        }
+        100% { 
+          opacity: 1; 
+          transform: translateY(0) scale(1); 
+          filter: blur(0px);
+        }
+      }
+
+      @keyframes fadeOut {
+        0% { 
+          opacity: 1; 
+          transform: scale(1); 
+        }
+        100% { 
+          opacity: 0; 
+          transform: scale(0.95); 
+        }
+      }
+
+      @keyframes fadeIn {
+        0% { 
+          opacity: 0; 
+        }
+        100% { 
+          opacity: 1; 
+        }
+      }
+      
+      /* Tailwind-like utility classes for compatibility */
+      .min-h-screen { min-height: 100vh; }
+      .bg-gradient-to-br { background-image: linear-gradient(to bottom right, var(--tw-gradient-stops)); }
+      .from-gray-50 { --tw-gradient-from: #f9fafb; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgb(249 250 251 / 0)); }
+      .to-gray-100 { --tw-gradient-to: #f3f4f6; }
+      
+      /* CypherEdge brand colors */
+      :root {
+        --cypheridge-blue: #0056b3;
+        --cypheridge-blue-light: #3b82f6;
+        --cypheridge-gray: #64748b;
+        --cypheridge-success: #22c55e;
+        --cypheridge-warning: #f59e0b;
+        --cypheridge-error: #ef4444;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="compatibility-root">
+      <div class="loading">
+        <div class="loading-spinner"></div>
+        <div>Loading compatibility checker...</div>
+      </div>
+    </div>
+
+    <script>
+      // 🎯 SINGLE SOURCE OF TRUTH FOR MODE DETECTION
+      // This variable is set once and used by BOTH UI and EMAIL systems
+      window.GLOBAL_DETECTED_MODE = 'SCAN'; // Default, will be updated by mode detection
+      
+      // Bridge for Electron IPC
+      const { ipcRenderer } = require("electron");
+
+      // UI Flow Logger for Compatibility Page
+      window.CypherEdgeLogger = {
+        logPageEvent: function(eventType, data) {
+          console.log('🔍 [COMPATIBILITY_UI]', eventType, data);
+          
+          // Send to main process for centralized logging
+          if (ipcRenderer) {
+            ipcRenderer.invoke('ui-logger:log-event', {
+              page: 'compatibility.html',
+              eventType: eventType,
+              data: data,
+              timestamp: new Date().toISOString(),
+              url: window.location.href
+            });
+          }
+        },
+        
+        logButtonClick: function(buttonId, buttonText, action, context) {
+          this.logPageEvent('BUTTON_CLICK', {
+            buttonId: buttonId,
+            buttonText: buttonText,
+            action: action,
+            context: context || {}
+          });
+        },
+        
+        logFlowStep: function(step, mode, data) {
+          this.logPageEvent('FLOW_STEP', {
+            step: step,
+            mode: mode,
+            data: data || {}
+          });
+        },
+        
+        logModalAction: function(modalName, action, data) {
+          this.logPageEvent('MODAL_ACTION', {
+            modalName: modalName,
+            action: action,
+            data: data || {}
+          });
+        },
+
+        logPageNavigation: function(page, trigger) {
+          this.logPageEvent('PAGE_NAVIGATION', {
+            page: page,
+            trigger: trigger || 'unknown'
+          });
+        }
+      };
+
+      // Global API for React components to communicate with main process
+      window.electronAPI = {
+        onTestProgress: (callback) => ipcRenderer.on("test-progress", callback),
+        onCompatibilityComplete: (callback) =>
+          ipcRenderer.on("compatibility-complete", callback),
+        sendUserDecision: (decision) =>
+          ipcRenderer.invoke("compatibility:user-decision", decision),
+        submitEmail: (data) => ipcRenderer.invoke("email:submit", data),
+        startTests: () => ipcRenderer.invoke("compatibility:start-tests"),
+        invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
+        onModeNotification: (callback) => {
+          ipcRenderer.on("mode-notification:show-unscan", callback);
+          ipcRenderer.on("hybrid-flow:show-screen", callback);
+        },
+        removeAllListeners: () => {
+          ipcRenderer.removeAllListeners("test-progress");
+          ipcRenderer.removeAllListeners("compatibility-complete");
+          ipcRenderer.removeAllListeners("mode-notification:show-unscan");
+          ipcRenderer.removeAllListeners("hybrid-flow:show-screen");
+        },
+      };
+
+      // Simple React-like component system for Phase 1
+      // This will be replaced with proper React build in later phases
+      class CompatibilityApp {
+        constructor() {
+          this.currentStep = 0;
+          this.userEmail = null;
+          this.testResults = null;
+          this.testProgress = {};
+          this.isTestingComplete = false;
+          this.modeNotificationActive = false;
+          this.setupEventListeners();
+          this.setupAutoButtonLogging();
+        }
+
+        // Auto-logging setup for all button clicks
+        setupAutoButtonLogging() {
+          // Log page load
+          window.CypherEdgeLogger.logPageNavigation('CompatibilityChecker', 'page-load');
+          
+          // Auto-log all button clicks throughout the page
+          document.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON' || e.target.type === 'button' || e.target.onclick) {
+              const buttonId = e.target.id || 'unnamed-button';
+              const buttonText = e.target.textContent || e.target.value || 'No Text';
+              const buttonAction = e.target.onclick ? e.target.onclick.name : 'click';
+              
+              window.CypherEdgeLogger.logButtonClick(buttonId, buttonText, buttonAction, {
+                className: e.target.className,
+                currentStep: this.currentStep,
+                modeNotificationActive: this.modeNotificationActive,
+                isTestingComplete: this.isTestingComplete,
+                tagName: e.target.tagName,
+                type: e.target.type
+              });
+            }
+          });
+
+          // Auto-log form submissions
+          document.addEventListener('submit', (e) => {
+            window.CypherEdgeLogger.logPageEvent('FORM_SUBMIT', {
+              formId: e.target.id || 'unnamed-form',
+              action: e.target.action,
+              method: e.target.method,
+              currentStep: this.currentStep
+            });
+          });
+
+          // Auto-log input focus events for form fields
+          document.addEventListener('focus', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+              window.CypherEdgeLogger.logPageEvent('INPUT_FOCUS', {
+                inputId: e.target.id || 'unnamed-input',
+                inputType: e.target.type || 'text',
+                inputName: e.target.name || 'unnamed',
+                currentStep: this.currentStep
+              });
+            }
+          }, true);
+        }
+
+        setupEventListeners() {
+          // Listen for test progress updates from main process
+          window.electronAPI.onTestProgress((event, progress) => {
+            console.log("Test progress received:", progress);
+            this.testProgress[`${progress.suiteName}-${progress.testName}`] = progress;
+            if (this.currentStep === 2) {
+              this.updateTestingUI(progress);
+            }
+          });
+
+          // Listen for compatibility check completion
+          window.electronAPI.onCompatibilityComplete((event, results) => {
+            console.log("Compatibility check completed:", results);
+            this.testResults = results;
+            this.isTestingComplete = true;
+            this.showStep3();
+          });
+
+          // Listen for mode notifications
+          window.electronAPI.onModeNotification((event, notificationData) => {
+            console.log("Mode notification received:", notificationData);
+            this.showModeNotification(notificationData);
+          });
+        }
+
+        init() {
+          this.render();
+        }
+
+        render() {
+          const root = document.getElementById("compatibility-root");
+          root.innerHTML = this.getCurrentStepHTML();
+          this.attachEventListeners();
+        }
+
+        getCurrentStepHTML() {
+          switch (this.currentStep) {
+            case 0:
+              return this.getStep0HTML();
+            case 1:
+              return this.getStep1HTML();
+            case 2:
+              return this.getStep2HTML();
+            case 3:
+              return this.getStep3HTML();
+            default:
+              return this.getStep0HTML();
+          }
+        }
+
+        getStep0HTML() {
+          return `
+            <div style="background: white; height: 100vh; width: 100vw; position: relative; overflow-y: auto;">
+              <div style="padding: 60px 40px 40px 40px; max-width: 500px; margin: 0 auto; display: flex; justify-content: center; align-items: center; min-height: 100vh;">
+                <div style="width: 100%; text-align: center;">
+                  
+                  <!-- CypherEdge Logo -->
+                  <div style="margin-bottom: 40px;">
+                    <div style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--cypheridge-blue) 0%, var(--cypheridge-blue-light) 100%); border-radius: 16px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; color: white; font-size: 36px; font-weight: bold;">C</div>
+                    <h1 style="font-size: 28px; font-weight: 700; color: #1f2937; margin: 0 0 8px 0;">Welcome to CypherEdge</h1>
+                    <p style="color: var(--cypheridge-gray); font-size: 16px; margin: 0;">Please enter your email address to begin</p>
+                  </div>
+
+                  <!-- Email Form -->
+                  <form id="emailForm" style="margin-bottom: 30px;">
+                    <div style="text-align: left; margin-bottom: 20px;">
+                      <label for="emailInput" style="display: block; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px;">Email Address</label>
+                      <input 
+                        type="email" 
+                        id="emailInput" 
+                        name="email" 
+                        style="width: 100%; padding: 12px 16px; border: 2px solid #e1e5e9; border-radius: 8px; font-size: 16px; transition: border-color 0.2s, box-shadow 0.2s; background: #ffffff;"
+                        placeholder="Enter your email address"
+                        required
+                      />
+                    </div>
+
+                    <button 
+                      type="submit" 
+                      id="continueBtn"
+                      style="width: 100%; background: linear-gradient(135deg, var(--cypheridge-blue) 0%, var(--cypheridge-blue-light) 100%); color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 16px; font-weight: 500; cursor: pointer; transition: all 0.2s;"
+                    >
+                      Continue to Compatibility Check
+                    </button>
+                  </form>
+
+                  <!-- Status Message -->
+                  <div id="emailStatus" style="margin-top: 15px; padding: 10px 12px; border-radius: 6px; font-size: 14px; display: none;"></div>
+
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        getStep1HTML() {
+          return `
+            <div style="background: white; height: 100vh; width: 100vw; position: relative; overflow-y: auto;">
+              
+              <!-- Native window controls will be handled by the OS frame -->
+              
+              <div style="padding: 60px 40px 40px 40px; max-width: 700px; margin: 0 auto; display: flex; justify-content: center; align-items: center; min-height: 100vh;">
+                <div style="width: 100%;">
+                  
+                  <!-- Progress Header -->
+                  <div style="text-align: center; margin-bottom: 40px;">
+                    <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 20px;">
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--cypheridge-success); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">✓</div>
+                        <div style="width: 40px; height: 2px; background: var(--cypheridge-success);"></div>
+                        <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--cypheridge-blue); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">1</div>
+                        <div style="width: 40px; height: 2px; background: #e2e8f0;"></div>
+                        <div style="width: 32px; height: 32px; border-radius: 50%; background: #e2e8f0; color: #94a3b8; display: flex; align-items: center; justify-content: center; font-weight: 600;">2</div>
+                        <div style="width: 40px; height: 2px; background: #e2e8f0;"></div>
+                        <div style="width: 32px; height: 32px; border-radius: 50%; background: #e2e8f0; color: #94a3b8; display: flex; align-items: center; justify-content: center; font-weight: 600;">3</div>
+                      </div>
+                    </div>
+                    <div style="color: #64748b; font-size: 14px;">System Check</div>
+                  </div>
+
+                  <!-- Main Content -->
+                  <div style="text-align: center;">
+                    <div style="font-size: 48px; margin-bottom: 20px;">🔍</div>
+                    <h1 style="font-size: 28px; font-weight: 700; color: #1e293b; margin-bottom: 12px;">System Compatibility Check</h1>
+                    <p style="color: #64748b; font-size: 16px; line-height: 1.6; margin-bottom: 32px;">
+                      We'll quickly verify your system compatibility to ensure CypherEdge runs smoothly.
+                    </p>
+
+                    <!-- Checklist -->
+                    <div style="text-align: left; background: #f8fafc; border-radius: 8px; padding: 24px; margin-bottom: 32px;">
+                      <div style="font-weight: 600; color: #374151; margin-bottom: 16px;">This process will check:</div>
+                      <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                          <span style="color: var(--cypheridge-success);">✓</span>
+                          <span style="color: #4b5563;">Port availability (7500, 7890)</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                          <span style="color: var(--cypheridge-success);">✓</span>
+                          <span style="color: #4b5563;">System requirements (RAM, disk, Windows)</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                          <span style="color: var(--cypheridge-success);">✓</span>
+                          <span style="color: #4b5563;">Service permissions</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                          <span style="color: var(--cypheridge-success);">✓</span>
+                          <span style="color: #4b5563;">Component accessibility</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                          <span style="color: var(--cypheridge-success);">✓</span>
+                          <span style="color: #4b5563;">PDF processing capabilities</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Time estimate -->
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 24px; color: #64748b; font-size: 14px;">
+                      <span>⏱️</span>
+                      <span>This typically takes 10-30 seconds</span>
+                    </div>
+
+                    <!-- Continue Button - Made more prominent -->
+                    <button id="continue-btn" style="
+                      background: var(--cypheridge-blue);
+                      color: white;
+                      border: none;
+                      padding: 14px 40px;
+                      border-radius: 8px;
+                      font-size: 18px;
+                      font-weight: 600;
+                      cursor: pointer;
+                      transition: all 0.2s;
+                      box-shadow: 0 4px 6px rgba(0, 86, 179, 0.2);
+                      transform: translateY(0);
+                    " onmouseover="this.style.background='#004494'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0, 86, 179, 0.3)'" onmouseout="this.style.background='var(--cypheridge-blue)'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0, 86, 179, 0.2)'">
+                      Continue →
+                    </button>
+                    
+                    <!-- Auto-start countdown -->
+                    <div id="auto-start-countdown" style="margin-top: 16px; font-size: 12px; color: #94a3b8; text-align: center;">
+                      Auto-starting in <span id="countdown">2</span> seconds...
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        getStep2HTML() {
+          return `
+            <div style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); height: 100vh; width: 100vw; position: relative; overflow-y: auto;">
+              
+              <!-- Native window controls will be handled by the OS frame -->
+              
+              <div style="padding: 60px 40px 40px 40px; max-width: 900px; margin: 0 auto;">
+                  
+                  <!-- Progress Header -->
+                  <div style="text-align: center; margin-bottom: 40px;">
+                    <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 20px;">
+                      <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--cypheridge-success); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);">✓</div>
+                        <div style="width: 50px; height: 3px; background: var(--cypheridge-success); border-radius: 2px;"></div>
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--cypheridge-success); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);">✓</div>
+                        <div style="width: 50px; height: 3px; background: linear-gradient(90deg, var(--cypheridge-success), var(--cypheridge-blue)); border-radius: 2px;"></div>
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--cypheridge-blue); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(0, 86, 179, 0.3); animation: pulse 2s infinite;">
+                          <div style="position: absolute; width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--cypheridge-blue); animation: ripple 2s infinite;"></div>
+                          2
+                        </div>
+                        <div style="width: 50px; height: 3px; background: #e2e8f0; border-radius: 2px;"></div>
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background: #e2e8f0; color: #94a3b8; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 16px;">3</div>
+                      </div>
+                    </div>
+                    <div style="color: #64748b; font-size: 14px; font-weight: 500;">Preparing Application</div>
+                  </div>
+
+                  <!-- Main Status Card -->
+                  <div style="background: white; border-radius: 16px; padding: 32px; margin-bottom: 32px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);">
+                    <div style="text-align: center; margin-bottom: 24px;">
+                      <div style="font-size: 54px; margin-bottom: 16px; animation: rotate 2s linear infinite;">🔍</div>
+                      <h1 style="font-size: 32px; font-weight: 700; color: #1e293b; margin-bottom: 8px;">Running Compatibility Tests</h1>
+                      <div id="progress-counter" style="color: #64748b; font-size: 18px; font-weight: 500;">Initializing... (0/15)</div>
+                      
+                      <!-- Progress Bar -->
+                      <div style="width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; margin: 20px 0; overflow: hidden;">
+                        <div id="progress-bar" style="height: 100%; background: linear-gradient(90deg, var(--cypheridge-blue), var(--cypheridge-blue-light)); border-radius: 3px; width: 0%; transition: width 0.5s ease; box-shadow: 0 0 10px rgba(0, 86, 179, 0.3);"></div>
+                      </div>
+                      
+                      <!-- Current Test Status -->
+                      <div id="current-test-status" style="font-size: 14px; color: #475569; font-weight: 500; min-height: 20px; margin-bottom: 8px;">Preparing system validation...</div>
+                      <div id="current-test-details" style="font-size: 12px; color: #64748b; min-height: 16px; font-style: italic;"></div>
+                    </div>
+                  </div>
+
+                  <!-- Test Suites -->
+                  <div id="test-suites" style="display: flex; flex-direction: column; gap: 20px;">
+                    ${this.getEnhancedTestSuitesHTML()}
+                  </div>
+                  
+                  <!-- Performance Info -->
+                  <div style="margin-top: 24px; text-align: center;">
+                    <div style="background: rgba(255, 255, 255, 0.7); border-radius: 12px; padding: 16px; backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3);">
+                      <div style="display: flex; justify-content: center; gap: 32px; font-size: 13px;">
+                        <div style="display: flex; align-items: center; gap: 6px; color: #64748b;">
+                          <span>⏱️</span>
+                          <span id="elapsed-time">0s elapsed</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px; color: #64748b;">
+                          <span>🔧</span>
+                          <span>Real system validation</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px; color: #64748b;">
+                          <span>🚀</span>
+                          <span id="estimated-remaining">~30s remaining</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <style>
+              @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.7; }
+              }
+              
+              @keyframes ripple {
+                0% {
+                  transform: scale(1);
+                  opacity: 0.6;
+                }
+                100% {
+                  transform: scale(1.4);
+                  opacity: 0;
+                }
+              }
+              
+              @keyframes rotate {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+              }
+              
+              @keyframes slideIn {
+                from {
+                  opacity: 0;
+                  transform: translateY(20px);
+                }
+                to {
+                  opacity: 1;
+                  transform: translateY(0);
+                }
+              }
+              
+              .test-suite-card {
+                animation: slideIn 0.5s ease-out forwards;
+              }
+            </style>
+          `;
+        }
+
+        getTestSuitesHTML() {
+          const suites = [
+            {
+              name: "System Requirements",
+              tests: ["Available RAM", "ML Models Memory", "Disk Space", "Windows Version", "Admin Privileges"]
+            },
+            {
+              name: "Component Auto-Startup & Verification",
+              tests: ["CypherEdge Component Flow Test"]
+            },
+            {
+              name: "Basic Port Availability",
+              tests: ["Application Services", "Security Services", "Service Health Check"]
+            },
+            {
+              name: "File System Tests", 
+              tests: ["Python Executable", "Gateway Service", "Database Access", "File Permissions"]
+            },
+            {
+              name: "API Dependencies",
+              tests: ["Application Dependencies", "Document Processing Capability"]
+            }
+          ];
+
+          return suites.map(suite => `
+            <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; background: white;">
+              <div style="font-weight: 600; color: #374151; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                <span id="suite-status-${suite.name.replace(/\\s+/g, '-')}" style="font-size: 16px;">⏳</span>
+                ${suite.name}
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 8px; margin-left: 24px;">
+                ${suite.tests.map(test => `
+                  <div id="test-${suite.name.replace(/\\s+/g, '-')}-${test.replace(/[^a-zA-Z0-9]/g, '-')}" style="padding: 8px 0;">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="test-status" style="font-size: 14px;">⏳</span>
+                        <span style="color: #4b5563; font-size: 14px;">${test}</span>
+                      </div>
+                      <span class="test-result" style="font-size: 12px; color: #64748b;"></span>
+                    </div>
+                    <div class="test-details" style="font-size: 11px; color: #6b7280; margin-top: 4px; margin-left: 22px; display: none; font-style: italic;"></div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `).join('');
+        }
+
+        getStep3HTML() {
+          const results = this.testResults;
+          const totalTests = results.successes.length + results.warnings.length + results.issues.length;
+          const isCompatible = results.canProceed !== false;
+          const statusText = results.canProceed === true ? "COMPATIBLE" : results.canProceed === false ? "INCOMPATIBLE" : "COMPATIBLE WITH WARNINGS";
+          const statusColor = results.canProceed === true ? "var(--cypheridge-success)" : results.canProceed === false ? "var(--cypheridge-error)" : "var(--cypheridge-warning)";
+
+          return `
+            <div style="background: white; height: 100vh; width: 100vw; position: relative; overflow-y: auto;">
+              
+              <!-- Native window controls will be handled by the OS frame -->
+              
+              <div style="padding: 60px 40px 40px 40px; max-width: 800px; margin: 0 auto;">
+                  
+                  <!-- Progress Header -->
+                  <div style="text-align: center; margin-bottom: 40px;">
+                    <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 20px;">
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--cypheridge-success); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">✓</div>
+                        <div style="width: 40px; height: 2px; background: var(--cypheridge-success);"></div>
+                        <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--cypheridge-success); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">✓</div>
+                        <div style="width: 40px; height: 2px; background: var(--cypheridge-success);"></div>
+                        <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--cypheridge-success); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">✓</div>
+                        <div style="width: 40px; height: 2px; background: var(--cypheridge-success);"></div>
+                        <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--cypheridge-success); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">3</div>
+                      </div>
+                    </div>
+                    <div style="color: #64748b; font-size: 14px;">Ready to Launch</div>
+                  </div>
+
+                  <!-- Main Content -->
+                  <div style="text-align: center;">
+                    <div style="font-size: 48px; margin-bottom: 20px;">${isCompatible ? '✅' : '❌'}</div>
+                    <h1 style="font-size: 28px; font-weight: 700; color: #1e293b; margin-bottom: 32px;">System Compatibility Check Complete</h1>
+
+                    <!-- Status Card -->
+                    <div style="background: ${results.canProceed === true ? '#f0fdf4' : results.canProceed === false ? '#fef2f2' : '#fffbeb'}; border: 1px solid ${results.canProceed === true ? '#bbf7d0' : results.canProceed === false ? '#fecaca' : '#fed7aa'}; border-radius: 8px; padding: 24px; margin-bottom: 32px;">
+                      <div style="font-size: 18px; font-weight: 700; color: ${statusColor}; margin-bottom: 16px;">
+                        SYSTEM STATUS: ${statusText}
+                      </div>
+                      <div style="display: flex; justify-content: space-around; text-align: center;">
+                        <div>
+                          <div style="font-size: 24px; font-weight: 700; color: var(--cypheridge-success);">${results.successes.length}</div>
+                          <div style="font-size: 12px; color: #64748b;">Tests Passed</div>
+                        </div>
+                        <div>
+                          <div style="font-size: 24px; font-weight: 700; color: var(--cypheridge-warning);">${results.warnings.length}</div>
+                          <div style="font-size: 12px; color: #64748b;">Warnings</div>
+                        </div>
+                        <div>
+                          <div style="font-size: 24px; font-weight: 700; color: var(--cypheridge-error);">${results.issues.length}</div>
+                          <div style="font-size: 12px; color: #64748b;">Critical Issues</div>
+                        </div>
+                      </div>
+                      <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+                        <div style="font-size: 14px; color: #64748b;">
+                          Estimated Startup Time: ${Math.round(results.duration / 1000) + 8} seconds
+                        </div>
+                        <div style="font-size: 14px; color: #64748b;">
+                          Configuration: <span id="configuration-mode">Standard Mode</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- App Mode Detection Result -->
+                    <div id="app-mode-result" style="display: none; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 24px; text-align: left;">
+                      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                        <span id="mode-icon" style="font-size: 24px;">🎯</span>
+                        <div>
+                          <h3 style="margin: 0; color: #1e293b; font-size: 18px; font-weight: 600;">
+                            System Mode: <span id="determined-mode" style="color: var(--cypheridge-blue);">SCAN</span>
+                          </h3>
+                          <p id="mode-confidence" style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">
+                            Confidence: High
+                          </p>
+                        </div>
+                      </div>
+                      <div id="mode-description" style="color: #475569; font-size: 14px; line-height: 1.5; margin-bottom: 12px;">
+                        Full offline processing with ML scanning enabled
+                      </div>
+                      <div id="mode-features" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        <!-- Mode-specific features will be added here dynamically -->
+                      </div>
+                    </div>
+
+                    <!-- Warnings (if any) -->
+                    ${results.warnings.length > 0 ? `
+                      <div style="background: #fffbeb; border: 1px solid #fed7aa; border-radius: 8px; padding: 16px; margin-bottom: 24px; text-align: left;">
+                        ${results.warnings.map(warning => `
+                          <div style="display: flex; align-items: start; gap: 8px; margin-bottom: 8px;">
+                            <span style="color: var(--cypheridge-warning); margin-top: 2px;">⚠️</span>
+                            <div>
+                              <div style="font-weight: 600; color: #92400e; font-size: 14px;">${warning.test}</div>
+                              <div style="color: #a16207; font-size: 13px;">${warning.message}</div>
+                            </div>
+                          </div>
+                        `).join('')}
+                      </div>
+                    ` : ''}
+
+                    <!-- Report Info -->
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 32px; color: #64748b; font-size: 14px;">
+                      <span>📊</span>
+                      <span>Detailed report will be saved to compatibility-reports</span>
+                    </div>
+
+                    <!-- App Mode Testing Section (Development Only) -->
+                    <div id="app-mode-testing-section" style="display: none; background: #f0f9ff; border: 2px dashed #0ea5e9; border-radius: 12px; padding: 24px; margin-bottom: 32px; text-align: left;">
+                      <div style="text-align: center; margin-bottom: 20px;">
+                        <h3 style="margin: 0; color: #0c4a6e; font-size: 18px; font-weight: 600;">🧪 App Mode Testing Panel</h3>
+                        <p style="margin: 5px 0 0 0; color: #075985; font-size: 14px;">Development Mode - Test app mode detection</p>
+                      </div>
+                      
+                      <!-- Test Scenarios -->
+                      <div style="margin-bottom: 20px;">
+                        <h4 style="margin: 0 0 10px 0; font-size: 14px; font-weight: 600; color: #0c4a6e;">Test Scenarios</h4>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+                          <button class="scenario-btn" data-scenario="current" style="
+                            background: #3b82f6; color: white; border: none; padding: 8px 12px; border-radius: 6px; 
+                            font-size: 12px; cursor: pointer; text-align: left; transition: background 0.2s;
+                          " onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
+                            <div style="font-weight: 600;">Current System</div>
+                            <div style="opacity: 0.8; font-size: 11px;">With overrides</div>
+                          </button>
+                          <button class="scenario-btn" data-scenario="highEnd" style="
+                            background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 8px 12px; border-radius: 6px; 
+                            font-size: 12px; cursor: pointer; text-align: left; transition: all 0.2s;
+                          " onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
+                            <div style="font-weight: 600;">High-End PC</div>
+                            <div style="opacity: 0.8; font-size: 11px;">16GB RAM, i7 CPU</div>
+                          </button>
+                          <button class="scenario-btn" data-scenario="midRange" style="
+                            background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 8px 12px; border-radius: 6px; 
+                            font-size: 12px; cursor: pointer; text-align: left; transition: all 0.2s;
+                          " onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
+                            <div style="font-weight: 600;">Mid-Range PC</div>
+                            <div style="opacity: 0.8; font-size: 11px;">8GB RAM, i5 CPU</div>
+                          </button>
+                          <button class="scenario-btn" data-scenario="lowEnd" style="
+                            background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; padding: 8px 12px; border-radius: 6px; 
+                            font-size: 12px; cursor: pointer; text-align: left; transition: all 0.2s;
+                          " onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
+                            <div style="font-weight: 600;">Low-End PC</div>
+                            <div style="opacity: 0.8; font-size: 11px;">4GB RAM, i3 CPU</div>
+                          </button>
+                        </div>
+                      </div>
+
+                      <!-- Override Controls (only visible for current scenario) -->
+                      <div id="override-controls" style="margin-bottom: 20px;">
+                        <h4 style="margin: 0 0 10px 0; font-size: 14px; font-weight: 600; color: #0c4a6e;">System Overrides</h4>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                          <div>
+                            <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #0c4a6e;">Force RAM (GB)</label>
+                            <select id="force-ram" style="width: 100%; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px;">
+                              <option value="">Auto-detect</option>
+                              <option value="4">4 GB</option>
+                              <option value="8">8 GB</option>
+                              <option value="16" selected>16 GB</option>
+                              <option value="32">32 GB</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #0c4a6e;">Force CPU</label>
+                            <select id="force-cpu" style="width: 100%; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px;">
+                              <option value="">Auto-detect</option>
+                              <option value="i3">Intel i3</option>
+                              <option value="i5">Intel i5</option>
+                              <option value="i7" selected>Intel i7</option>
+                              <option value="i9">Intel i9</option>
+                              <option value="ryzen5">AMD Ryzen 5</option>
+                              <option value="ryzen7">AMD Ryzen 7</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #0c4a6e;">Force Scan Result</label>
+                            <select id="force-scan-result" style="width: 100%; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px;">
+                              <option value="">Run actual test</option>
+                              <option value="pass" selected>Force Pass</option>
+                              <option value="fail">Force Fail</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #0c4a6e;">Simulate Slow Scan</label>
+                            <input type="checkbox" id="slow-scan" style="margin-left: 4px;">
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Test Button and Results -->
+                      <div style="text-align: center;">
+                        <button id="run-app-mode-test" style="
+                          background: #059669; color: white; border: none; padding: 10px 20px; border-radius: 6px; 
+                          font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s; margin-bottom: 16px;
+                        " onmouseover="this.style.background='#047857'" onmouseout="this.style.background='#059669'">
+                          🚀 Run Mode Detection Test
+                        </button>
+                        
+                        <div id="app-mode-test-result" style="display: none; background: white; border: 1px solid #cbd5e1; border-radius: 8px; padding: 16px; text-align: left;">
+                          <!-- Test results will be displayed here -->
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div style="display: flex; gap: 12px; justify-content: center;">
+                      <button id="view-report-btn" style="
+                        background: #f8fafc;
+                        color: #475569;
+                        border: 1px solid #e2e8f0;
+                        padding: 12px 24px;
+                        border-radius: 8px;
+                        font-size: 14px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                      " onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
+                        View Report
+                      </button>
+                      <button id="launch-btn" style="
+                        background: var(--cypheridge-blue);
+                        color: white;
+                        border: none;
+                        padding: 12px 24px;
+                        border-radius: 8px;
+                        font-size: 14px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: background 0.2s;
+                      " onmouseover="this.style.background='#004494'" onmouseout="this.style.background='var(--cypheridge-blue)'">
+                        <span id="launch-btn-text">${results.canProceed === false ? 'Exit Application' : 'Launch CypherEdge'}</span> →
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        attachEventListeners() {
+          // Step 0: Email form handling
+          const emailForm = document.getElementById("emailForm");
+          if (emailForm) {
+            emailForm.addEventListener("submit", async (e) => {
+              e.preventDefault();
+              await this.handleEmailSubmission();
+            });
+          }
+
+          // Email input focus styling
+          const emailInput = document.getElementById("emailInput");
+          if (emailInput) {
+            emailInput.addEventListener("focus", () => {
+              emailInput.style.borderColor = "var(--cypheridge-blue)";
+              emailInput.style.boxShadow = "0 0 0 3px rgba(0, 86, 179, 0.1)";
+            });
+            emailInput.addEventListener("blur", () => {
+              emailInput.style.borderColor = "#e1e5e9";
+              emailInput.style.boxShadow = "none";
+            });
+          }
+
+          const continueBtn = document.getElementById("continue-btn");
+          if (continueBtn) {
+            continueBtn.addEventListener("click", () => {
+              this.startTests();
+            });
+          }
+
+          const launchBtn = document.getElementById("launch-btn");
+          if (launchBtn) {
+            launchBtn.addEventListener("click", () => {
+              this.handleUserDecision("proceed");
+            });
+          }
+
+          const viewReportBtn = document.getElementById("view-report-btn");
+          if (viewReportBtn) {
+            viewReportBtn.addEventListener("click", () => {
+              this.handleUserDecision("view-report");
+            });
+          }
+        }
+
+        async handleEmailSubmission() {
+          const emailInput = document.getElementById("emailInput");
+          const continueBtn = document.getElementById("continueBtn");
+          const statusDiv = document.getElementById("emailStatus");
+          
+          const email = emailInput.value.trim();
+          
+          if (!email) {
+            this.showEmailStatus("Please enter an email address", "error");
+            return;
+          }
+
+          // Basic email validation
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(email)) {
+            this.showEmailStatus("Please enter a valid email address", "error");
+            return;
+          }
+
+          // Show loading state
+          continueBtn.disabled = true;
+          continueBtn.style.opacity = "0.7";
+          continueBtn.innerHTML = "Processing...";
+
+          try {
+            console.log("📧 Submitting email:", email);
+            
+            // Submit email via IPC
+            const result = await window.electronAPI.submitEmail({ email });
+            
+            if (result.success) {
+              this.userEmail = email;
+              this.showEmailStatus("Email received successfully!", "success");
+              
+              // Proceed to Step 1 after short delay
+              setTimeout(() => {
+                this.currentStep = 1;
+                this.render();
+                
+                // Start auto-countdown for Step 1 (only after email is submitted)
+                this.startAutoCountdown();
+              }, 800);
+            } else {
+              this.showEmailStatus("Failed to process email. Please try again.", "error");
+            }
+          } catch (error) {
+            console.error("Email submission error:", error);
+            this.showEmailStatus("An error occurred. Please try again.", "error");
+          } finally {
+            // Reset button state
+            continueBtn.disabled = false;
+            continueBtn.style.opacity = "1";
+            continueBtn.innerHTML = "Continue to Compatibility Check";
+          }
+        }
+
+        showEmailStatus(message, type) {
+          const statusDiv = document.getElementById("emailStatus");
+          if (statusDiv) {
+            statusDiv.textContent = message;
+            statusDiv.style.display = "block";
+            
+            if (type === "success") {
+              statusDiv.style.background = "#d4edda";
+              statusDiv.style.color = "#155724";
+              statusDiv.style.border = "1px solid #c3e6cb";
+            } else if (type === "error") {
+              statusDiv.style.background = "#f8d7da";
+              statusDiv.style.color = "#721c24";
+              statusDiv.style.border = "1px solid #f5c6cb";
+            }
+          }
+        }
+
+        startAutoCountdown() {
+          // Only start countdown if we're on Step 1 and countdown element exists
+          setTimeout(() => {
+            const countdownElement = document.getElementById('countdown');
+            if (!countdownElement || this.currentStep !== 1) return;
+            
+            let countdown = 5; // 5 second auto-start for Step 1
+            const countdownInterval = setInterval(() => {
+              countdown--;
+              const countdownElement = document.getElementById('countdown');
+              if (countdownElement) {
+                countdownElement.textContent = countdown;
+              }
+              
+              if (countdown <= 0) {
+                clearInterval(countdownInterval);
+                const countdownContainer = document.getElementById('auto-start-countdown');
+                if (countdownContainer) {
+                  countdownContainer.textContent = 'Auto-starting now...';
+                }
+                // Auto-start the tests
+                this.startTests();
+              }
+            }, 1000);
+            
+            // Clear countdown if user clicks Continue manually
+            const continueBtn = document.getElementById('continue-btn');
+            if (continueBtn) {
+              continueBtn.addEventListener('click', () => {
+                clearInterval(countdownInterval);
+              });
+            }
+          }, 100); // Small delay to ensure DOM is rendered
+        }
+
+        async startTests() {
+          console.log("Starting compatibility tests...");
+          this.currentStep = 2;
+          this.testProgress = {};
+          this.isTestingComplete = false;
+          this.render();
+
+          try {
+            await window.electronAPI.startTests();
+          } catch (error) {
+            console.error("Failed to start compatibility tests:", error);
+          }
+        }
+
+        updateTestingUI(progress) {
+          console.log('🔄 updateTestingUI called with:', progress); // Debug logging
+          
+          const testId = `test-${progress.suiteName.replace(/\\s+/g, '-')}-${progress.testName.replace(/[^a-zA-Z0-9]/g, '-')}`;
+          const testElement = document.getElementById(testId);
+          
+          // Update overall progress
+          this.updateOverallProgress(progress);
+          
+          if (testElement) {
+            const statusElement = testElement.querySelector('.test-status');
+            const resultElement = testElement.querySelector('.test-result');
+            const detailsElement = testElement.querySelector('.test-details');
+            
+            switch (progress.status) {
+              case 'testing':
+                statusElement.textContent = '🔄';
+                resultElement.textContent = 'TESTING';
+                resultElement.style.color = '#64748b';
+                
+                // Enhanced live update display with priority handling
+                if (detailsElement) {
+                  let detailMessage = '';
+                  
+                  // Priority 1: Show componentAction from IsolatedCompatibilityBubble
+                  if (progress.details?.componentAction) {
+                    detailMessage = progress.details.componentAction;
+                    console.log('📱 Showing componentAction:', detailMessage);
+                  }
+                  // Priority 2: Show enhanced description for current test
+                  else if (progress.details?.description) {
+                    detailMessage = progress.details.description;
+                    console.log('📱 Showing description:', detailMessage);
+                  }
+                  // Priority 3: Show general message
+                  else if (progress.message) {
+                    detailMessage = progress.message;
+                    console.log('📱 Showing message:', detailMessage);
+                  }
+                  
+                  if (detailMessage) {
+                    detailsElement.textContent = detailMessage;
+                    detailsElement.style.display = 'block';
+                    detailsElement.style.color = '#64748b';
+                    detailsElement.style.fontSize = '11px';
+                    detailsElement.style.marginTop = '4px';
+                    detailsElement.style.marginLeft = '22px';
+                    detailsElement.style.fontStyle = 'italic';
+                  }
+                }
+                break;
+              case 'success':
+                statusElement.textContent = '✅';
+                resultElement.textContent = 'PASSED';
+                resultElement.style.color = 'var(--cypheridge-success)';
+                
+                // Hide details when test completes successfully
+                if (detailsElement) {
+                  detailsElement.style.display = 'none';
+                }
+                break;
+              case 'warning':
+                statusElement.textContent = '⚠️';
+                resultElement.textContent = 'WARNING';
+                resultElement.style.color = 'var(--cypheridge-warning)';
+                
+                // Show warning details
+                if (detailsElement && progress.message) {
+                  detailsElement.textContent = progress.message;
+                  detailsElement.style.display = 'block';
+                  detailsElement.style.color = 'var(--cypheridge-warning)';
+                }
+                break;
+              case 'error':
+                statusElement.textContent = '❌';
+                resultElement.textContent = 'FAILED';
+                resultElement.style.color = 'var(--cypheridge-error)';
+                
+                // Show error details
+                if (detailsElement && progress.message) {
+                  detailsElement.textContent = progress.message;
+                  detailsElement.style.display = 'block';
+                  detailsElement.style.color = 'var(--cypheridge-error)';
+                }
+                break;
+            }
+          } else {
+            console.warn('⚠️ Test element not found:', testId);
+          }
+
+          // Update progress counter
+          const completed = Object.keys(this.testProgress).length;
+          const progressCounter = document.getElementById('progress-counter');
+          if (progressCounter) {
+            progressCounter.textContent = `(${completed}/16)`;
+          }
+        }
+
+        showStep3() {
+          this.currentStep = 3;
+          this.render();
+          
+          // 📧 TRIGGER EMAIL AUDIT REPORT - Final report page is now displayed
+          console.log('📧 🎯 === FINAL REPORT PAGE DISPLAYED - TRIGGERING EMAIL AUDIT ===');
+          console.log('📧 🎯 Current step:', this.currentStep);
+          console.log('📧 🎯 Test results available:', !!this.testResults);
+          console.log('📧 🎯 Timestamp:', new Date().toISOString());
+          
+          // 📧 TRIGGER EMAIL AUDIT VIA ELECTRON API (IMMEDIATE - BEFORE AUTO-LAUNCH)
+          console.log('📧 🎯 === CALLING EMAIL AUDIT VIA ELECTRON API ===');
+          if (window.electronAPI && window.electronAPI.compatibilityCheck) {
+            window.electronAPI.compatibilityCheck.sendEmailAudit()
+              .then(result => {
+                console.log('📧 ✅ Email audit completed:', result);
+              })
+              .catch(error => {
+                console.error('📧 ❌ Email audit failed:', error);
+              });
+          } else {
+            console.error('📧 ❌ EmailAudit API not available');
+          }
+          
+          // Display app mode detection results
+          this.displayAppModeResult();
+          
+          // Show app mode testing section in development mode
+          if (process.env.NODE_ENV === 'development') {
+            const testingSection = document.getElementById('app-mode-testing-section');
+            if (testingSection) {
+              testingSection.style.display = 'block';
+            }
+            
+            // Set up app mode testing functionality
+            this.setupAppModeTesting();
+          }
+        }
+
+        async handleUserDecision(decision) {
+          console.log('🔚 [USER DECISION] ============== FINAL USER DECISION ==============');
+          console.log('🔚 [USER DECISION] Decision type:', decision);
+          console.log('🔚 [USER DECISION] Timestamp:', new Date().toISOString());
+          console.log('🔚 [USER DECISION] Sending to main process via IPC...');
+          
+          try {
+            const { ipcRenderer } = require('electron');
+            await ipcRenderer.invoke('compatibility:user-decision', decision);
+            console.log('🔚 [USER DECISION] Successfully sent to main process');
+            
+            if (decision === 'proceed') {
+              console.log('🔚 [USER DECISION] PROCEEDING TO LAUNCH CYPHEREDGE');
+            } else if (decision === 'cancel') {
+              console.log('🔚 [USER DECISION] CANCELLING - APPLICATION WILL EXIT');
+            } else {
+              console.log('🔚 [USER DECISION] OTHER DECISION:', decision);
+            }
+          } catch (error) {
+            console.error('🔚 [USER DECISION ERROR] Failed to send decision:', error);
+            // Show immediate feedback even if IPC fails
+            if (decision === 'proceed') {
+              console.log('🔚 [USER DECISION] PROCEEDING TO LAUNCH CYPHEREDGE (FALLBACK)');
+            }
+          }
+          
+          // Immediate UI feedback - hide compatibility window to prevent glitch
+          if (decision === 'proceed') {
+            console.log('🔚 [USER DECISION] Hiding compatibility window immediately...');
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.2s ease-out';
+          }
+        }
+
+        updateOverallProgress(progress) {
+          // Update progress counter
+          const completed = Object.keys(this.testProgress).length;
+          const progressCounter = document.getElementById('progress-counter');
+          if (progressCounter) {
+            progressCounter.textContent = `Testing in progress... (${completed}/15)`;
+          }
+          
+          // Update progress bar if we have percentage info
+          if (progress.progress?.percentage !== undefined) {
+            const progressBar = document.getElementById('progress-bar');
+            if (progressBar) {
+              progressBar.style.width = `${progress.progress.percentage}%`;
+            }
+          }
+          
+          // Update current test status
+          const currentTestStatus = document.getElementById('current-test-status');
+          if (currentTestStatus) {
+            currentTestStatus.textContent = `Testing ${progress.testName}...`;
+          }
+          
+          const currentTestDetails = document.getElementById('current-test-details');
+          if (currentTestDetails && progress.details?.description) {
+            currentTestDetails.textContent = progress.details.description;
+          }
+        }
+
+        getEnhancedTestSuitesHTML() {
+          // Enhanced version with better styling
+          const suites = [
+            {
+              name: "System Requirements",
+              icon: "🖥️",
+              tests: ["Available RAM", "ML Models Memory", "Disk Space", "Windows Version", "Admin Privileges"]
+            },
+            {
+              name: "Component Auto-Startup & Verification",
+              icon: "🚀", 
+              tests: ["CypherEdge Component Flow Test"]
+            },
+            {
+              name: "Basic Port Availability",
+              icon: "🌐",
+              tests: ["Application Services", "Security Services", "Service Health Check"]
+            },
+            {
+              name: "File System Tests",
+              icon: "📁", 
+              tests: ["Python Executable", "Gateway Service", "Database Access", "File Permissions"]
+            },
+            {
+              name: "API Dependencies",
+              icon: "🔧",
+              tests: ["Application Dependencies", "Document Processing Capability"]
+            }
+          ];
+
+          return suites.map((suite, index) => `
+            <div class="test-suite-card" style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.05); animation-delay: ${index * 0.1}s;">
+              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                <span style="font-size: 20px;">${suite.icon}</span>
+                <div style="flex: 1;">
+                  <div style="font-weight: 600; color: #1e293b; font-size: 16px;">${suite.name}</div>
+                  <div style="font-size: 12px; color: #64748b; margin-top: 2px;">${suite.tests.length} tests</div>
+                </div>
+                <span id="suite-status-${suite.name.replace(/\\s+/g, '-')}" style="font-size: 18px;">⏳</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                ${suite.tests.map(test => `
+                  <div id="test-${suite.name.replace(/\\s+/g, '-')}-${test.replace(/[^a-zA-Z0-9]/g, '-')}" style="border-radius: 8px; padding: 12px; background: #f8fafc; border: 1px solid #e2e8f0;">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                      <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="test-status" style="font-size: 16px;">⏳</span>
+                        <div>
+                          <div style="color: #374151; font-size: 14px; font-weight: 500;">${test}</div>
+                        </div>
+                      </div>
+                      <span class="test-result" style="font-size: 12px; color: #64748b; font-weight: 600;"></span>
+                    </div>
+                    <div class="test-details" style="font-size: 11px; color: #6b7280; margin-top: 8px; margin-left: 26px; display: none; font-style: italic; line-height: 1.4;"></div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `).join('');
+        }
+
+        // Display app mode detection results
+        displayAppModeResult() {
+          if (!this.testResults || !this.testResults.appMode) {
+            console.log('No app mode results to display');
+            return;
+          }
+
+          const appMode = this.testResults.appMode;
+          const appModeResult = document.getElementById('app-mode-result');
+          
+          if (!appModeResult) {
+            console.warn('App mode result element not found');
+            return;
+          }
+
+          // Show the app mode result section
+          appModeResult.style.display = 'block';
+
+          // Update mode icon based on determined mode
+          const modeIcon = document.getElementById('mode-icon');
+          const modeIcons = {
+            'SCAN': '✅',
+            'UNSCAN': '⚡', 
+            'HYBRID': '🔄',
+            'ERROR': '❌'
+          };
+          if (modeIcon) {
+            modeIcon.textContent = modeIcons[appMode.determined] || '🎯';
+          }
+
+          // Update determined mode display
+          const determinedMode = document.getElementById('determined-mode');
+          if (determinedMode) {
+            determinedMode.textContent = appMode.determined || 'UNKNOWN';
+            
+            // Apply mode-specific colors
+            const modeColors = {
+              'SCAN': 'var(--cypheridge-success)',
+              'UNSCAN': 'var(--cypheridge-warning)',
+              'HYBRID': 'var(--cypheridge-blue)',
+              'ERROR': 'var(--cypheridge-error)'
+            };
+            determinedMode.style.color = modeColors[appMode.determined] || 'var(--cypheridge-blue)';
+          }
+
+          // 🎯 SINGLE SOURCE: Update configuration mode display using global variable
+          const configurationMode = document.getElementById('configuration-mode');
+          if (configurationMode) {
+            const modeLabels = {
+              'SCAN': 'Standard Mode',
+              'UNSCAN': 'UNSCAN Mode', 
+              'HYBRID': 'HYBRID Mode',
+              'ERROR': 'Fallback Mode'
+            };
+            configurationMode.textContent = modeLabels[window.GLOBAL_DETECTED_MODE] || 'Standard Mode';
+            configurationMode.style.color = modeColors[window.GLOBAL_DETECTED_MODE] || '#64748b';
+          }
+
+          // Update launch button text with mode
+          const launchBtnText = document.getElementById('launch-btn-text');
+          if (launchBtnText && appMode.canProceed) {
+            const modeButtons = {
+              'SCAN': 'Launch CypherEdge (Standard Mode)',
+              'UNSCAN': 'Launch CypherEdge (UNSCAN Mode)',
+              'HYBRID': 'Launch CypherEdge (HYBRID Mode)',
+              'ERROR': 'Launch CypherEdge (Fallback Mode)'
+            };
+            launchBtnText.textContent = modeButtons[appMode.determined] || 'Launch CypherEdge';
+          }
+
+          // Update confidence display
+          const modeConfidence = document.getElementById('mode-confidence');
+          if (modeConfidence) {
+            const confidence = appMode.confidence || 'unknown';
+            modeConfidence.textContent = `Confidence: ${confidence.charAt(0).toUpperCase() + confidence.slice(1)}`;
+          }
+
+          // Update mode description
+          const modeDescription = document.getElementById('mode-description');
+          if (modeDescription) {
+            modeDescription.textContent = appMode.userMessage || this.getDefaultModeDescription(appMode.determined);
+          }
+
+          // Update mode features
+          this.displayModeFeatures(appMode.determined);
+
+          console.log('App mode results displayed:', appMode);
+        }
+
+        // Get default mode description if userMessage not available
+        getDefaultModeDescription(mode) {
+          const descriptions = {
+            'SCAN': 'Full offline processing with ML scanning enabled',
+            'UNSCAN': 'Lightweight offline processing (ML scanning disabled)',
+            'HYBRID': 'Cloud-assisted processing required for this hardware',
+            'ERROR': 'Unable to determine optimal mode for your system'
+          };
+          return descriptions[mode] || 'Mode-specific information not available';
+        }
+
+        // Display mode-specific features
+        displayModeFeatures(mode) {
+          const modeFeatures = document.getElementById('mode-features');
+          if (!modeFeatures) return;
+
+          const features = {
+            'SCAN': [
+              { text: 'Full ML Scanning', color: 'var(--cypheridge-success)' },
+              { text: 'Advanced Analytics', color: 'var(--cypheridge-success)' },
+              { text: 'Offline Processing', color: 'var(--cypheridge-success)' }
+            ],
+            'UNSCAN': [
+              { text: 'Basic Processing', color: 'var(--cypheridge-warning)' },
+              { text: 'Manual Categorization', color: 'var(--cypheridge-warning)' },
+              { text: 'Offline Operation', color: 'var(--cypheridge-success)' }
+            ],
+            'HYBRID': [
+              { text: 'Cloud Processing', color: 'var(--cypheridge-blue)' },
+              { text: 'Internet Required', color: 'var(--cypheridge-warning)' },
+              { text: 'Subscription Needed', color: 'var(--cypheridge-warning)' }
+            ],
+            'ERROR': [
+              { text: 'Mode Detection Failed', color: 'var(--cypheridge-error)' }
+            ]
+          };
+
+          const modeFeaturesList = features[mode] || [];
+          modeFeatures.innerHTML = modeFeaturesList.map(feature => `
+            <span style="
+              background: rgba(0, 0, 0, 0.05); 
+              color: ${feature.color}; 
+              padding: 4px 8px; 
+              border-radius: 4px; 
+              font-size: 12px; 
+              font-weight: 500;
+            ">${feature.text}</span>
+          `).join('');
+        }
+
+        // Show mode notification overlay
+        showModeNotification(notificationData) {
+          console.log('Displaying mode notification:', notificationData);
+          this.modeNotificationActive = true;
+          
+          // Create overlay container if it doesn't exist
+          let overlay = document.getElementById('mode-notification-overlay');
+          if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'mode-notification-overlay';
+            overlay.style.cssText = `
+              position: fixed;
+              top: 0;
+              left: 0;
+              width: 100vw;
+              height: 100vh;
+              z-index: 20000;
+              pointer-events: auto;
+            `;
+            document.body.appendChild(overlay);
+          }
+          
+          // Display the notification HTML
+          overlay.innerHTML = notificationData.html;
+          overlay.style.display = 'flex';
+          
+          // Log notification display
+          console.log(`Mode notification displayed: ${notificationData.type}`);
+        }
+
+        // Hide mode notification overlay
+        hideModeNotification() {
+          const overlay = document.getElementById('mode-notification-overlay');
+          if (overlay) {
+            overlay.style.display = 'none';
+            overlay.innerHTML = '';
+          }
+          this.modeNotificationActive = false;
+          console.log('Mode notification hidden');
+        }
+
+        // Window controls are now handled by native OS frame
+
+        // App Mode Testing Setup
+        setupAppModeTesting() {
+          this.selectedScenario = 'current';
+          this.appModeOverrides = {
+            forceRAM: 16,
+            forceCPU: 'i7',
+            forceScanResult: 'pass',
+            simulateSlowScan: false
+          };
+
+          // Set up scenario buttons
+          const scenarioBtns = document.querySelectorAll('.scenario-btn');
+          scenarioBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              this.selectScenario(e.currentTarget.dataset.scenario);
+            });
+          });
+
+          // Set up override controls
+          document.getElementById('force-ram').addEventListener('change', (e) => {
+            this.appModeOverrides.forceRAM = e.target.value ? parseInt(e.target.value) : null;
+          });
+
+          document.getElementById('force-cpu').addEventListener('change', (e) => {
+            this.appModeOverrides.forceCPU = e.target.value || null;
+          });
+
+          document.getElementById('force-scan-result').addEventListener('change', (e) => {
+            this.appModeOverrides.forceScanResult = e.target.value || null;
+          });
+
+          document.getElementById('slow-scan').addEventListener('change', (e) => {
+            this.appModeOverrides.simulateSlowScan = e.target.checked;
+          });
+
+          // Set up test button
+          document.getElementById('run-app-mode-test').addEventListener('click', () => {
+            this.runAppModeTest();
+          });
+
+          // Show/hide override controls based on scenario
+          this.updateOverrideVisibility();
+        }
+
+        selectScenario(scenario) {
+          console.log('🎛️ [SCENARIO] ============== SCENARIO SELECTION ==============');
+          console.log('🎛️ [SCENARIO] Previous scenario:', this.selectedScenario);
+          console.log('🎛️ [SCENARIO] New scenario selected:', scenario);
+          
+          this.selectedScenario = scenario;
+          
+          // Update button states
+          const scenarioButtons = document.querySelectorAll('.scenario-btn');
+          console.log('🎛️ [SCENARIO] Found', scenarioButtons.length, 'scenario buttons');
+          
+          scenarioButtons.forEach(btn => {
+            if (btn.dataset.scenario === scenario) {
+              console.log('🎛️ [SCENARIO] Activating button for:', scenario);
+              btn.style.background = '#3b82f6';
+              btn.style.color = 'white';
+              btn.style.border = 'none';
+            } else {
+              btn.style.background = '#f8fafc';
+              btn.style.color = '#475569';
+              btn.style.border = '1px solid #e2e8f0';
+            }
+          });
+
+          this.updateOverrideVisibility();
+          console.log('🎛️ [SCENARIO] Scenario selection complete');
+        }
+
+        updateOverrideVisibility() {
+          const overrideControls = document.getElementById('override-controls');
+          if (overrideControls) {
+            overrideControls.style.display = this.selectedScenario === 'current' ? 'block' : 'none';
+          }
+        }
+
+        async runAppModeTest() {
+          console.log('🧪 Mode Detection Test Started - Scenario:', this.selectedScenario);
+          
+          const testBtn = document.getElementById('run-app-mode-test');
+          const resultDiv = document.getElementById('app-mode-test-result');
+          
+          testBtn.textContent = '🔄 Running Test...';
+          testBtn.disabled = true;
+          resultDiv.style.display = 'none';
+          
+          try {
+            const testOptions = {
+              scenario: this.selectedScenario,
+              overrides: this.selectedScenario === 'current' ? this.appModeOverrides : null
+            };
+            
+            const result = await window.electronAPI.invoke('app-mode:run-detection', testOptions);
+            console.log('🧪 Detection Result:', result.determinedMode || result.mode);
+            
+            this.displayAppModeTestResult(result);
+          } catch (error) {
+            console.error('🧪 [ERROR] App mode test failed:', error);
+            console.error('🧪 [ERROR] Error details:', {
+              message: error.message,
+              stack: error.stack
+            });
+            this.displayAppModeTestResult({
+              error: true,
+              message: error.message || 'Test failed'
+            });
+          } finally {
+            testBtn.textContent = '🚀 Run Mode Detection Test';
+            testBtn.disabled = false;
+          }
+        }
+
+        displayAppModeTestResult(result) {
+          console.log('🧪 Displaying Test Result:', result.determinedMode || result.mode || 'Unknown');
+          
+          const resultDiv = document.getElementById('app-mode-test-result');
+          
+          if (result.error) {
+            console.log('🧪 [ERROR] Test result contains error:', result.message);
+            resultDiv.innerHTML = `
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <span style="color: #ef4444; font-size: 16px;">❌</span>
+                <strong style="color: #ef4444;">Test Failed</strong>
+              </div>
+              <div style="color: #6b7280; font-size: 14px;">${result.message}</div>
+            `;
+            resultDiv.style.display = 'block';
+            console.log('🧪 [ERROR] Error result displayed, stopping flow');
+            return;
+          }
+
+          // DEBUG: Let's see what properties the backend is actually sending
+          console.log('🧪 [STEP 6] All result properties:', Object.keys(result));
+          console.log('🧪 [STEP 6] result.mode:', result.mode);
+          console.log('🧪 [STEP 6] result.determined:', result.determined);
+          console.log('🧪 [STEP 6] result.determinedMode:', result.determinedMode);
+          console.log('🧪 [STEP 6] User Message:', result.userMessage);
+          console.log('🧪 [STEP 6] Confidence:', result.confidence);
+          
+          // Use the correct property name from AppModeManager
+          const actualMode = result.determinedMode;
+          console.log('🧪 [STEP 6] Extracted actual mode:', actualMode);
+          
+          // 🎯 SINGLE SOURCE: Set global variable for both UI and EMAIL to use
+          window.GLOBAL_DETECTED_MODE = actualMode;
+          console.log('🎯 GLOBAL_DETECTED_MODE set to:', window.GLOBAL_DETECTED_MODE);
+
+          const modeColor = actualMode === 'SCAN' ? '#22c55e' : 
+                          actualMode === 'UNSCAN' ? '#f59e0b' : 
+                          actualMode === 'HYBRID' ? '#3b82f6' : '#6b7280';
+
+          // 1. IMMEDIATELY UPDATE CONFIGURATION DISPLAY
+          console.log('🧪 [STEP 7] ============== UPDATING UI ELEMENTS ==============');
+          const configurationMode = document.getElementById('configuration-mode');
+          if (configurationMode) {
+            const modeLabels = {
+              'SCAN': 'Standard Mode',
+              'UNSCAN': 'UNSCAN Mode', 
+              'HYBRID': 'HYBRID Mode',
+              'ERROR': 'Fallback Mode'
+            };
+            const oldText = configurationMode.textContent;
+            const newText = modeLabels[actualMode] || 'Standard Mode';
+            
+            console.log('🧪 [STEP 7] Configuration display UPDATE:');
+            console.log('🧪 [STEP 7]   - Old text:', oldText);
+            console.log('🧪 [STEP 7]   - New text:', newText);
+            console.log('🧪 [STEP 7]   - Color:', modeColor);
+            
+            configurationMode.textContent = newText;
+            configurationMode.style.color = modeColor;
+            configurationMode.style.fontWeight = '600'; // Make it bold to highlight the change
+          } else {
+            console.log('🧪 [WARNING] Configuration mode element not found!');
+          }
+
+          // 2. UPDATE LAUNCH BUTTON TEXT
+          const launchBtnText = document.getElementById('launch-btn-text');
+          if (launchBtnText) {
+            const modeButtons = {
+              'SCAN': 'Launch CypherEdge (Standard Mode)',
+              'UNSCAN': 'Launch CypherEdge (UNSCAN Mode)',
+              'HYBRID': 'Launch CypherEdge (HYBRID Mode)',
+              'ERROR': 'Launch CypherEdge (Fallback Mode)'
+            };
+            const oldBtnText = launchBtnText.textContent;
+            const newBtnText = modeButtons[actualMode] || 'Launch CypherEdge';
+            
+            console.log('🧪 [STEP 7] Launch button text UPDATE:');
+            console.log('🧪 [STEP 7]   - Old text:', oldBtnText);
+            console.log('🧪 [STEP 7]   - New text:', newBtnText);
+            
+            launchBtnText.textContent = newBtnText;
+          } else {
+            console.log('🧪 [WARNING] Launch button text element not found!');
+          }
+
+          // 3. DISPLAY TEST RESULT
+          console.log('🧪 [STEP 8] ============== DISPLAYING RESULT BOX ==============');
+          resultDiv.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+              <span style="background: ${modeColor}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">
+                ${actualMode || 'UNKNOWN'} MODE DETECTED
+              </span>
+            </div>
+            <div style="font-size: 14px; margin-bottom: 8px;">
+              <strong>Result:</strong> ${result.userMessage || 'Mode detection completed'}
+            </div>
+            ${result.confidence ? `
+              <div style="font-size: 13px; color: #6b7280; margin-bottom: 4px;">
+                <strong>Confidence:</strong> ${result.confidence}
+              </div>
+            ` : ''}
+            ${result.reasoning ? `
+              <div style="font-size: 13px; color: #6b7280;">
+                <strong>Reasoning:</strong> ${result.reasoning}
+              </div>
+            ` : ''}
+          `;
+          resultDiv.style.display = 'block';
+          console.log('🧪 [STEP 8] Test result box displayed with mode:', actualMode);
+
+          // 4. TRIGGER MODE-SPECIFIC FLOWS
+          console.log('🧪 [STEP 9] ============== TRIGGERING FLOW IN 1.5s ==============');
+          console.log('🧪 [STEP 9] Will trigger flow for mode:', actualMode);
+          console.log('🧪 [STEP 9] Setting timeout for triggerModeSpecificFlow...');
+          
+          setTimeout(() => {
+            this.triggerModeSpecificFlow(actualMode, result);
+          }, 1500); // Give user 1.5s to see the mode detection result
+        }
+
+        // NEW: Trigger appropriate flow based on detected mode
+        triggerModeSpecificFlow(mode, result) {
+          console.log('🎯 ==================== MODE FLOW TRIGGERED ====================');
+          console.log('🎯 [STEP 10] triggerModeSpecificFlow called with:', {
+            mode: mode,
+            result: result,
+            timestamp: new Date().toISOString()
+          });
+
+          // Log the mode-specific flow trigger
+          window.CypherEdgeLogger.logFlowStep('triggerModeSpecificFlow', mode, {
+            mode: mode,
+            result: result,
+            step: 'MODE_FLOW_START'
+          });
+          
+          switch(mode) {
+            case 'SCAN':
+              console.log('🎯 [SCAN FLOW] High-End PC detected - Auto launch flow');
+              console.log('🎯 [SCAN FLOW] Step 1: Showing success message');
+              
+              // Log SCAN mode flow
+              window.CypherEdgeLogger.logFlowStep('SCAN_MODE', 'HIGH_END', {
+                step: 'SHOWING_SUCCESS_MESSAGE',
+                autoLaunch: true,
+                hardware: result.hardware
+              });
+              
+              this.showModeMessage('🚀 Excellent system detected! Auto-launching in Standard Mode...', '#22c55e');
+              
+              console.log('🎯 [SCAN FLOW] Step 2: Setting 2s timeout for auto-launch');
+              setTimeout(() => {
+                console.log('🎯 [SCAN FLOW] Step 3: Executing auto-launch (handleUserDecision proceed)');
+                this.handleUserDecision('proceed');
+              }, 2000);
+              break;
+              
+            case 'UNSCAN':
+              console.log('🎯 [UNSCAN FLOW] Mid-Range PC detected - Notification then auto launch');
+              console.log('🎯 [UNSCAN FLOW] Step 1: Showing optimization message');
+              
+              // Log UNSCAN mode flow
+              window.CypherEdgeLogger.logFlowStep('UNSCAN_MODE', 'MID_RANGE', {
+                step: 'SHOWING_OPTIMIZATION_MESSAGE',
+                optimizedMode: true,
+                hardware: result.hardware
+              });
+              
+              this.showModeMessage('⚡ Good system detected! Switching to optimized UNSCAN Mode...', '#f59e0b');
+              
+              console.log('🎯 [UNSCAN FLOW] Step 2: Setting 2s timeout for notification');
+              setTimeout(() => {
+                console.log('🎯 [UNSCAN FLOW] Step 3: Showing UNSCAN mode notification');
+                this.showUnscanModeNotification(result);
+              }, 2000);
+              break;
+              
+            case 'HYBRID':
+              console.log('🎯 [HYBRID FLOW] Low-End PC detected - Payment flow, NO auto launch');
+              console.log('🎯 [HYBRID FLOW] Step 1: Showing hybrid setup message');
+              
+              // Log HYBRID mode flow
+              window.CypherEdgeLogger.logFlowStep('HYBRID_MODE', 'LOW_END', {
+                step: 'SHOWING_HYBRID_SETUP',
+                paymentRequired: true,
+                cloudProcessing: true,
+                hardware: result.hardware
+              });
+              
+              this.showModeMessage('⚠️ System requires HYBRID Mode. Initiating setup process...', '#3b82f6');
+              
+              console.log('🎯 [HYBRID FLOW] Step 2: Setting 2s timeout for payment flow');
+              setTimeout(() => {
+                console.log('🎯 [HYBRID FLOW] Step 3: Showing hybrid mode payment flow');
+                this.showHybridModeFlow(result);
+              }, 2000);
+              break;
+              
+            default:
+              console.warn('🎯 [WARNING] Unknown mode detected:', mode);
+              console.warn('🎯 [WARNING] Available modes: SCAN, UNSCAN, HYBRID');
+              console.warn('🎯 [WARNING] No flow will be triggered');
+              break;
+          }
+        }
+
+        // NEW: Show temporary mode message
+        showModeMessage(message, color) {
+          console.log('💬 [MESSAGE] ============== SHOWING MODE MESSAGE ==============');
+          console.log('💬 [MESSAGE] Text:', message);
+          console.log('💬 [MESSAGE] Color:', color);
+          
+          const messageDiv = document.createElement('div');
+          messageDiv.style.cssText = `
+            position: fixed; top: 20px; right: 20px; z-index: 10000;
+            background: ${color}; color: white; padding: 12px 20px;
+            border-radius: 8px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease-out;
+          `;
+          messageDiv.textContent = message;
+          document.body.appendChild(messageDiv);
+          
+          console.log('💬 [MESSAGE] Mode message displayed, will auto-remove in 3s');
+          
+          setTimeout(() => {
+            if (messageDiv.parentNode) {
+              messageDiv.remove();
+              console.log('💬 [MESSAGE] Mode message removed after 3s');
+            }
+          }, 3000);
+        }
+
+        // ENHANCED: Show beautiful UNSCAN mode modal with auto-launch
+        showUnscanModeNotification(result) {
+          console.log('📢 [UNSCAN MODAL] ============== CREATING CENTERED UNSCAN MODAL ==============');
+          
+          // Log UNSCAN modal action
+          window.CypherEdgeLogger.logModalAction('UnscanModeNotification', 'open', {
+            mode: 'UNSCAN',
+            hardware: result.hardware,
+            autoLaunch: true
+          });
+          
+          // Create modal overlay
+          const modalOverlay = document.createElement('div');
+          modalOverlay.style.cssText = `
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 20000;
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
+            display: flex; justify-content: center; align-items: center; padding: 20px;
+            animation: fadeIn 0.3s ease-out;
+          `;
+          
+          // Create modal content
+          const modalContent = document.createElement('div');
+          modalContent.style.cssText = `
+            background: white; border-radius: 16px; padding: 40px 32px; text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 123, 255, 0.15), 0 0 0 1px rgba(0, 123, 255, 0.1);
+            max-width: 480px; width: 100%; position: relative;
+            animation: modalSlideIn 0.4s ease-out; color: #2c3e50;
+          `;
+          
+          modalContent.innerHTML = `
+            <div style="
+              width: 80px; height: 80px; background: linear-gradient(45deg, #007bff, #28a745);
+              border-radius: 50%; display: flex; align-items: center; justify-content: center;
+              margin: 0 auto 24px; font-size: 36px;
+            ">⚡</div>
+            <h2 style="margin: 0 0 16px 0; font-size: 24px; font-weight: 600; color: #2c3e50;">
+              Optimized Mode Ready
+            </h2>
+            <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6; color: #6c757d;">
+              Your system is configured for <strong style="color: #007bff;">UNSCAN Mode</strong> - 
+              an optimized experience designed for enhanced performance and efficiency.
+            </p>
+            <div style="
+              background: #f8f9fa; border-radius: 12px; border: 1px solid #e9ecef;
+              padding: 20px; margin: 20px 0;
+            ">
+              <p style="margin: 0 0 12px 0; font-size: 15px; color: #495057; font-weight: 500;">
+                🚀 <strong>Auto-launching in <span id="unscan-countdown">5</span> seconds</strong>
+              </p>
+              <div style="
+                width: 100%; height: 6px; background: #e9ecef;
+                border-radius: 3px; overflow: hidden;
+              ">
+                <div id="unscan-progress" style="
+                  width: 0%; height: 100%; background: linear-gradient(45deg, #007bff, #28a745);
+                  border-radius: 3px; transition: width 0.1s ease;
+                "></div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+              <button id="unscan-launch-now" style="
+                background: #007bff; color: white; border: none; padding: 12px 28px;
+                border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;
+                transition: all 0.2s ease; min-width: 140px;
+                box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
+              " onmouseover="this.style.background='#0056b3'; this.style.transform='translateY(-1px)'" 
+                 onmouseout="this.style.background='#007bff'; this.style.transform='translateY(0)'">
+                Launch Now 🚀
+              </button>
+            </div>
+          `;
+          
+          modalOverlay.appendChild(modalContent);
+          document.body.appendChild(modalOverlay);
+          
+          console.log('📢 [UNSCAN MODAL] Modal displayed - starting 5s countdown');
+          
+          // Countdown and progress animation
+          let countdown = 5;
+          const countdownEl = document.getElementById('unscan-countdown');
+          const progressEl = document.getElementById('unscan-progress');
+          const launchBtn = document.getElementById('unscan-launch-now');
+          
+          const countdownInterval = setInterval(() => {
+            countdown--;
+            if (countdownEl) countdownEl.textContent = countdown;
+            if (progressEl) progressEl.style.width = `${((5 - countdown) / 5) * 100}%`;
+            
+            if (countdown <= 0) {
+              clearInterval(countdownInterval);
+              this.launchFromUnscanModal(modalOverlay);
+            }
+          }, 1000);
+          
+          // Launch now button
+          launchBtn.addEventListener('click', () => {
+            console.log('📢 [UNSCAN MODAL] User clicked Launch Now button');
+            clearInterval(countdownInterval);
+            this.launchFromUnscanModal(modalOverlay);
+          });
+          
+          // Add CSS animations
+          this.addModalAnimations();
+        }
+        
+        launchFromUnscanModal(modalOverlay) {
+          console.log('📢 [UNSCAN MODAL] Launching CypherEdge...');
+          
+          // Fade out modal
+          modalOverlay.style.animation = 'fadeOut 0.3s ease-out forwards';
+          
+          setTimeout(() => {
+            if (modalOverlay.parentNode) {
+              modalOverlay.remove();
+            }
+            console.log('📢 [UNSCAN MODAL] Modal removed, executing auto-launch');
+            this.handleUserDecision('proceed');
+          }, 300);
+        }
+
+        // PROFESSIONAL: Show HYBRID mode decision flow with modern design
+        showHybridModeFlow(result) {
+          console.log('🤔 [HYBRID DECISION] ============== SHOWING HYBRID DECISION MODAL ==============');
+          
+          // Log HYBRID decision modal action
+          window.CypherEdgeLogger.logModalAction('HybridModeDecision', 'open', {
+            mode: 'HYBRID',
+            hardware: result.hardware,
+            step: 'SINGLE_OPTION_MODAL'
+          });
+          
+          // Create modal overlay with professional backdrop
+          const modalOverlay = document.createElement('div');
+          modalOverlay.className = 'hybrid-modal-overlay';
+          modalOverlay.style.cssText = `
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 20000;
+            background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px);
+            display: flex; align-items: center; justify-content: center; padding: 20px;
+            animation: overlayFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto; overflow-x: hidden;
+          `;
+          
+          // Create modal content container with perfect centering (narrower for single option)
+          const modalContainer = document.createElement('div');
+          modalContainer.style.cssText = `
+            width: 100%; max-width: 480px; margin: auto;
+            position: relative; min-height: 0;
+          `;
+          
+          // Create modal content with premium design
+          const modalContent = document.createElement('div');
+          modalContent.className = 'hybrid-modal-content';
+          modalContent.style.cssText = `
+            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            border-radius: 16px; padding: 32px; text-align: center;
+            box-shadow: 
+              0 32px 64px rgba(15, 23, 42, 0.15),
+              0 16px 32px rgba(15, 23, 42, 0.1),
+              0 0 0 1px rgba(15, 23, 42, 0.05),
+              inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative; color: #0f172a;
+            animation: modalSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+          `;
+          
+          modalContent.innerHTML = `
+            <!-- Professional Header -->
+            <div style="
+              display: flex; align-items: center; justify-content: center; margin-bottom: 24px;
+            ">
+              <div style="
+                width: 56px; height: 56px; background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+                border-radius: 12px; display: flex; align-items: center; justify-content: center;
+                margin-right: 16px; box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+              ">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: white;">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+              </div>
+              <div style="text-align: left;">
+                <h2 style="margin: 0; font-size: 24px; font-weight: 700; color: #1a202c; line-height: 1.2;">
+                  System Requirements
+                </h2>
+                <p style="margin: 4px 0 0 0; font-size: 15px; color: #718096;">
+                  Insufficient resources detected
+                </p>
+              </div>
+            </div>
+
+            <!-- System Status Card -->
+            <div style="
+              background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+              border: 1px solid #fecaca; border-radius: 12px; padding: 20px; margin-bottom: 24px;
+              text-align: left;
+            ">
+              <h3 style="margin: 0 0 12px 0; font-size: 16px; color: #991b1b; font-weight: 600;">
+                System Assessment Results
+              </h3>
+              <div style="display: grid; gap: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #fecaca;">
+                  <span style="font-size: 14px; color: #7f1d1d;">RAM Available</span>
+                  <span style="background: #dc2626; color: white; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600;">
+                    Less than 4GB
+                  </span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
+                  <span style="font-size: 14px; color: #7f1d1d;">Minimum Required</span>
+                  <span style="background: #059669; color: white; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600;">
+                    4GB or Higher
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Info Message -->
+            <div style="
+              background: #f8fafc; border-left: 4px solid #007bff; border-radius: 8px; 
+              padding: 16px; margin-bottom: 24px; text-align: left;
+            ">
+              <p style="margin: 0; font-size: 14px; color: #475569; line-height: 1.6;">
+                CypherEdge requires a minimum of 4GB RAM for optimal performance. 
+                Your current system has less than 4GB RAM available, which may cause 
+                performance issues and instability.
+              </p>
+            </div>
+
+            <!-- Single Option Button -->
+            <div style="margin-bottom: 16px;">
+              <button id="hybrid-try-another-pc" style="
+                width: 100%; padding: 16px 24px; border: none; border-radius: 12px;
+                background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+                color: white; font-size: 16px; font-weight: 600; cursor: pointer;
+                transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+                display: flex; align-items: center; justify-content: center; gap: 12px;
+              " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(0,123,255,0.3)'" 
+                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,123,255,0.2)'">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: white;">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                  <line x1="8" y1="21" x2="16" y2="21"/>
+                  <line x1="12" y1="17" x2="12" y2="21"/>
+                </svg>
+                Try on Another PC
+              </button>
+            </div>
+
+            <!-- Footer -->
+            <div style="
+              text-align: center; padding-top: 16px; border-top: 1px solid #e2e8f0;
+            ">
+              <p style="margin: 0; font-size: 13px; color: #718096; line-height: 1.4;">
+                Please use a computer with 4GB RAM or higher for the best CypherEdge experience
+              </p>
+            </div>
+          `;
+          
+          modalContainer.appendChild(modalContent);
+          modalOverlay.appendChild(modalContainer);
+          document.body.appendChild(modalOverlay);
+          
+          // Prevent body scroll when modal is open
+          document.body.style.overflow = 'hidden';
+          
+          console.log('🤔 [HYBRID DECISION] Professional decision modal displayed');
+          
+          // Handle button click - only one button now
+          document.getElementById('hybrid-try-another-pc').addEventListener('click', () => {
+            console.log('🤔 [HYBRID DECISION] User chose: Try Another PC - closing application');
+            this.handleHybridDecision('try_another_pc', modalOverlay);
+          });
+          
+          // Add CSS animations
+          this.addModalAnimations();
+        }
+        
+        handleHybridDecision(choice, modalOverlay, result = null) {
+          // Only one choice now - try another PC
+          if (choice === 'try_another_pc') {
+            // User wants to try on another PC - close the application
+            console.log('🚪 [HYBRID EXIT] Showing exit message and closing app');
+            document.body.style.overflow = ''; // Restore body scroll
+            
+            // Update modal content with exit message
+            const modalContent = modalOverlay.querySelector('.hybrid-modal-content');
+            modalContent.innerHTML = `
+              <div style="
+                width: 80px; height: 80px; background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+                border-radius: 50%; display: flex; align-items: center; justify-content: center;
+                margin: 0 auto 24px; box-shadow: 0 8px 25px rgba(0, 123, 255, 0.2);
+              ">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
+              </div>
+              <h2 style="margin: 0 0 16px 0; font-size: 24px; font-weight: 700; color: #1a202c;">
+                Thank You for Understanding
+              </h2>
+              <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6; color: #475569;">
+                We recommend trying CypherEdge on a computer with at least 4GB RAM for the best experience. 
+                The application will now close.
+              </p>
+              <div style="
+                background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+                border-radius: 12px; border: 1px solid #e2e8f0;
+                padding: 20px; margin: 20px 0;
+              ">
+                <p style="margin: 0; font-size: 15px; color: #475569; font-weight: 500;">
+                  Closing in <span id="exit-countdown" style="color: #007bff; font-weight: 700;">3</span> seconds...
+                </p>
+              </div>
+            `;
+            
+            let countdown = 3;
+            const countdownEl = document.getElementById('exit-countdown');
+            const exitInterval = setInterval(() => {
+              countdown--;
+              if (countdownEl) countdownEl.textContent = countdown;
+              
+              if (countdown <= 0) {
+                clearInterval(exitInterval);
+                modalOverlay.style.animation = 'fadeOut 0.3s ease-out forwards';
+                setTimeout(() => {
+                  if (modalOverlay.parentNode) modalOverlay.remove();
+                  this.handleUserDecision('cancel'); // This will close the app
+                }, 300);
+              }
+            }, 1000);
+          }
+        }
+        
+        showHybridPaymentFlow(modalOverlay, result) {
+          console.log('💳 [HYBRID PAYMENT] ============== SHOWING PAYMENT FLOW ==============');
+          
+          // Smooth transition - fade out current content
+          const currentContent = modalOverlay.querySelector('div');
+          currentContent.style.animation = 'fadeOut 0.3s ease-out forwards';
+          
+          setTimeout(() => {
+            // Update modal content for payment flow
+            currentContent.style.cssText = `
+              background: white; border-radius: 12px; padding: 24px; text-align: center;
+              box-shadow: 0 20px 40px rgba(0, 123, 255, 0.15), 0 0 0 1px rgba(0, 123, 255, 0.1);
+              max-width: 480px; width: 100%; position: relative; color: #1a202c;
+              animation: modalSlideIn 0.4s ease-out; max-height: none;
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            `;
+            
+            currentContent.innerHTML = `
+              <div style="
+                width: 80px; height: 80px; background: linear-gradient(45deg, #007bff, #28a745);
+                border-radius: 50%; display: flex; align-items: center; justify-content: center;
+                margin: 0 auto 24px; font-size: 36px;
+              ">💳</div>
+              <h2 style="margin: 0 0 16px 0; font-size: 24px; font-weight: 600; color: #2c3e50;">
+                HYBRID Mode Access
+              </h2>
+              <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.6; color: #6c757d;">
+                Unlock cloud-enhanced performance, priority processing, and advanced features 
+                for your device with HYBRID Mode.
+              </p>
+              
+              <div style="
+                background: #f8f9fa; border-radius: 12px; border: 1px solid #e9ecef;
+                padding: 24px; margin: 24px 0; text-align: left;
+              ">
+                <h3 style="margin: 0 0 16px 0; font-size: 18px; text-align: center; color: #495057; font-weight: 600;">
+                  Features Included
+                </h3>
+                <div style="display: grid; gap: 8px;">
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="color: #007bff;">⚡</span>
+                    <span style="font-size: 14px; color: #495057;">Cloud processing acceleration</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="color: #28a745;">🎯</span>
+                    <span style="font-size: 14px; color: #495057;">Priority support & faster processing</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="color: #6f42c1;">🔄</span>
+                    <span style="font-size: 14px; color: #495057;">Automatic performance optimization</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="color: #fd7e14;">📞</span>
+                    <span style="font-size: 14px; color: #495057;">Direct team support access</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div style="
+                background: linear-gradient(45deg, #007bff, #28a745); 
+                border-radius: 12px; padding: 20px; margin: 20px 0; color: white;
+              ">
+                <h3 style="margin: 0 0 8px 0; font-size: 28px; font-weight: 700;">₹2,499</h3>
+                <p style="margin: 0; font-size: 14px; opacity: 0.9;">One-time payment for HYBRID Mode access</p>
+              </div>
+              
+              <div style="display: grid; grid-template-columns: auto 1fr; gap: 12px; margin-top: 24px;">
+                <button id="payment-back" style="
+                  background: #6c757d; color: white; border: none; padding: 12px 20px;
+                  border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+                  transition: all 0.2s ease; min-height: 44px;
+                " onmouseover="this.style.background='#5a6268'; this.style.transform='translateY(-1px)'" 
+                   onmouseout="this.style.background='#6c757d'; this.style.transform='translateY(0)'">
+                  ← Back
+                </button>
+                <button id="proceed-payment" style="
+                  background: #007bff; color: white; border: none; padding: 12px 24px;
+                  border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;
+                  transition: all 0.2s ease; min-height: 44px; box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
+                " onmouseover="this.style.background='#0056b3'; this.style.transform='translateY(-1px)'" 
+                   onmouseout="this.style.background='#007bff'; this.style.transform='translateY(0)'">
+                  Proceed to Payment →
+                </button>
+              </div>
+            `;
+            
+            // Handle payment flow buttons
+            document.getElementById('payment-back').addEventListener('click', () => {
+              console.log('💳 [HYBRID PAYMENT] User clicked Back - returning to decision');
+              document.body.style.overflow = ''; // Restore body scroll
+              modalOverlay.remove(); // Remove current modal
+              this.showHybridModeFlow(result); // Re-show decision modal
+            });
+            
+            document.getElementById('proceed-payment').addEventListener('click', () => {
+              console.log('💳 [HYBRID PAYMENT] User clicked Proceed - showing QR payment');
+              this.showHybridQRPayment(modalOverlay);
+            });
+            
+          }, 300);
+        }
+        
+        showHybridQRPayment(modalOverlay) {
+          console.log('📱 [QR PAYMENT] ============== SHOWING QR PAYMENT SCREEN ==============');
+          
+          // Smooth transition - fade out current content
+          const currentContent = modalOverlay.querySelector('div div');
+          currentContent.style.animation = 'fadeOut 0.3s ease-out forwards';
+          
+          setTimeout(() => {
+            // Update modal content for QR payment with premium design
+            currentContent.style.cssText = `
+              background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+              border-radius: 16px; padding: 32px; text-align: center;
+              box-shadow: 
+                0 32px 64px rgba(15, 23, 42, 0.15),
+                0 16px 32px rgba(15, 23, 42, 0.1),
+                0 0 0 1px rgba(15, 23, 42, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+              position: relative; color: #0f172a;
+              animation: modalSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+              border: 1px solid rgba(148, 163, 184, 0.1);
+            `;
+            
+            // Generate system ID for payment
+            const systemId = 'CYP-' + Date.now().toString().slice(-8);
+            
+            currentContent.innerHTML = `
+              <!-- Professional Header -->
+              <div style="
+                display: flex; align-items: center; justify-content: center; margin-bottom: 24px;
+              ">
+                <div style="
+                  width: 48px; height: 48px; background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+                  border-radius: 12px; display: flex; align-items: center; justify-content: center;
+                  margin-right: 12px; box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+                ">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: white;">
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                    <line x1="1" y1="10" x2="23" y2="10"/>
+                  </svg>
+                </div>
+                <div style="text-align: left;">
+                  <h2 style="margin: 0; font-size: 22px; font-weight: 700; color: #1a202c; line-height: 1.2;">
+                    Payment Process
+                  </h2>
+                  <p style="margin: 4px 0 0 0; font-size: 14px; color: #718096;">
+                    Secure HYBRID Mode activation
+                  </p>
+                </div>
+              </div>
+
+              <!-- Payment Steps Progress -->
+              <div style="
+                background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 12px; 
+                padding: 20px; margin-bottom: 24px;
+              ">
+                <div style="display: grid; grid-template-columns: auto 1fr auto 1fr auto; gap: 12px; align-items: center;">
+                  <div style="
+                    width: 32px; height: 32px; background: #007bff; color: white; border-radius: 50%;
+                    display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600;
+                  ">1</div>
+                  <div style="height: 2px; background: #007bff; border-radius: 1px;"></div>
+                  <div style="
+                    width: 32px; height: 32px; background: #007bff; color: white; border-radius: 50%;
+                    display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600;
+                  ">2</div>
+                  <div style="height: 2px; background: #e2e8f0; border-radius: 1px;"></div>
+                  <div style="
+                    width: 32px; height: 32px; background: #e2e8f0; color: #a0aec0; border-radius: 50%;
+                    display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600;
+                  ">3</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 8px; text-align: center;">
+                  <span style="font-size: 12px; color: #4a5568; font-weight: 600;">Scan & Pay</span>
+                  <span style="font-size: 12px; color: #4a5568; font-weight: 600;">Mark Complete</span>
+                  <span style="font-size: 12px; color: #a0aec0;">Team Verification</span>
+                </div>
+              </div>
+              
+              <!-- QR Code Section with actual image -->
+              <div style="
+                background: white; border: 2px solid #e2e8f0; border-radius: 16px; 
+                padding: 24px; margin-bottom: 24px; text-align: center;
+              ">
+                <div style="margin-bottom: 12px;">
+                  <h3 style="
+                    margin: 0 0 8px 0; font-size: 16px; font-weight: 700; color: #1a202c;
+                  ">Scan QR Code to Pay</h3>
+                  <p style="
+                    margin: 0 0 16px 0; font-size: 13px; color: #718096;
+                  ">VPA: cyphersolfint@kbl</p>
+                </div>
+                
+                <!-- Actual QR Code Image -->
+                <div style="
+                  display: inline-block; padding: 16px; background: white;
+                  border: 2px solid #007bff; border-radius: 12px;
+                  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.1);
+                ">
+                  <img src="../assets/CypherSOL_Karnataka_Scanner.jpg" 
+                       alt="CypherSol Payment QR Code" 
+                       style="
+                         width: 280px; height: 280px;
+                         object-fit: contain; display: block;
+                       "
+                       onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'width: 280px; height: 280px; display: flex; align-items: center; justify-content: center; background: #f7fafc; color: #718096;\\'><div style=\\'text-align: center;\\'><svg width=\\'48\\' height=\\'48\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' style=\\'color: #cbd5e0; margin: 0 auto 8px;\\'><rect x=\\'3\\' y=\\'3\\' width=\\'5\\' height=\\'5\\'/><rect x=\\'3\\' y=\\'16\\' width=\\'5\\' height=\\'5\\'/><rect x=\\'16\\' y=\\'3\\' width=\\'5\\' height=\\'5\\'/></svg><p style=\\'margin: 0; font-size: 14px; font-weight: 600;\\'>QR Code Loading...</p></div></div>';">
+                </div>
+                
+                <div style="
+                  background: #edf2f7; border: 1px solid #e2e8f0; border-radius: 8px;
+                  padding: 12px; display: inline-block; margin-top: 16px;
+                ">
+                  <span style="font-size: 13px; color: #4a5568; font-weight: 600;">
+                    Reference ID: ${systemId}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Payment Instructions -->
+              <div style="
+                background: #fffbeb; border: 1px solid #f59e0b; border-radius: 12px; 
+                padding: 16px; margin-bottom: 24px; text-align: left;
+              ">
+                <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: #f59e0b; margin-right: 8px;">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="m9 12 2 2 4-4"/>
+                  </svg>
+                  <span style="font-size: 15px; color: #92400e; font-weight: 600;">Payment Instructions</span>
+                </div>
+                <ol style="margin: 0; padding-left: 20px; color: #92400e; font-size: 14px; line-height: 1.5;">
+                  <li style="margin-bottom: 4px;">Open any UPI app (PhonePe, GPay, Paytm)</li>
+                  <li style="margin-bottom: 4px;">Scan the QR code above</li>
+                  <li style="margin-bottom: 4px;">Enter amount: <strong>₹2,499</strong></li>
+                  <li style="margin-bottom: 4px;">Add reference ID: <strong>${systemId}</strong></li>
+                  <li>Complete payment and click "Mark as Completed" below</li>
+                </ol>
+              </div>
+
+              <!-- Action Buttons -->
+              <div style="display: grid; grid-template-columns: auto auto 1fr; gap: 12px;">
+                <button id="qr-back" style="
+                  background: #718096; color: white; border: none; padding: 12px 16px;
+                  border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+                  transition: all 0.2s ease; display: flex; align-items: center; gap: 6px;
+                " onmouseover="this.style.background='#4a5568'; this.style.transform='translateY(-1px)'" 
+                   onmouseout="this.style.background='#718096'; this.style.transform='translateY(0)'">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="m15 18-6-6 6-6"/>
+                  </svg>
+                  Back
+                </button>
+                <button id="payment-help" style="
+                  background: #f59e0b; color: white; border: none; padding: 12px 16px;
+                  border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+                  transition: all 0.2s ease; display: flex; align-items: center; gap: 6px;
+                " onmouseover="this.style.background='#d97706'; this.style.transform='translateY(-1px)'" 
+                   onmouseout="this.style.background='#f59e0b'; this.style.transform='translateY(0)'">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                    <path d="M12 17h.01"/>
+                  </svg>
+                  Help
+                </button>
+                <button id="payment-completed" style="
+                  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: white; border: none;
+                  padding: 14px 20px; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;
+                  transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px;
+                  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+                " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 8px 20px rgba(34, 197, 94, 0.3)'" 
+                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(34, 197, 94, 0.2)'">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M9 12l2 2 4-4"/>
+                    <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3"/>
+                    <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3"/>
+                  </svg>
+                  Mark Payment as Completed
+                </button>
+              </div>
+            `;
+            
+            // Handle payment screen buttons
+            document.getElementById('qr-back').addEventListener('click', () => {
+              console.log('📱 [QR PAYMENT] User clicked Back - returning to payment flow');
+              this.showHybridPaymentFlow(modalOverlay, {});
+            });
+            
+            document.getElementById('payment-help').addEventListener('click', () => {
+              console.log('📱 [QR PAYMENT] User clicked Need Help - showing support options');
+              this.showPaymentSupport(modalOverlay, systemId);
+            });
+            
+            document.getElementById('payment-completed').addEventListener('click', () => {
+              console.log('📱 [QR PAYMENT] User clicked I\'ve Paid - verifying payment');
+              this.handlePaymentComplete(modalOverlay, systemId);
+            });
+            
+          }, 300);
+        }
+        
+        showPaymentSupport(modalOverlay, systemId) {
+          console.log('🤝 [PAYMENT SUPPORT] ============== SHOWING SUPPORT OPTIONS ==============');
+          
+          const currentContent = modalOverlay.querySelector('div');
+          currentContent.style.animation = 'fadeOut 0.2s ease-out forwards';
+          
+          setTimeout(() => {
+            currentContent.style.cssText = `
+              background: white; border-radius: 12px; padding: 24px; text-align: center;
+              box-shadow: 0 20px 40px rgba(0, 123, 255, 0.15), 0 0 0 1px rgba(0, 123, 255, 0.1);
+              max-width: 460px; width: 100%; position: relative; color: #1a202c;
+              animation: modalSlideIn 0.3s ease-out; max-height: none;
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            `;
+            
+            currentContent.innerHTML = `
+              <div style="
+                width: 80px; height: 80px; background: linear-gradient(45deg, #28a745, #20c997);
+                border-radius: 50%; display: flex; align-items: center; justify-content: center;
+                margin: 0 auto 20px; font-size: 36px;
+              ">🤝</div>
+              <h2 style="margin: 0 0 12px 0; font-size: 24px; font-weight: 600; color: #2c3e50;">
+                Need Payment Help?
+              </h2>
+              <p style="margin: 0 0 20px 0; font-size: 16px; color: #6c757d;">
+                Our support team is here to assist you with HYBRID Mode setup
+              </p>
+              
+              <div style="
+                background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 12px; 
+                padding: 20px; margin: 20px 0; text-align: left;
+              ">
+                <p style="margin: 0 0 8px 0; font-size: 15px; color: #495057; font-weight: 600;">
+                  <strong>Your System ID:</strong> ${systemId}
+                </p>
+                <p style="margin: 0; font-size: 13px; color: #6c757d;">
+                  Please mention this ID when contacting support
+                </p>
+              </div>
+              
+              <div style="display: grid; gap: 10px; margin: 20px 0;">
+                <button onclick="window.open('mailto:support@cypheredge.com?subject=HYBRID Payment Help - ${systemId}', '_blank')" style="
+                  background: #007bff; color: white; border: none; padding: 14px 18px;
+                  border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+                  transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px;
+                " onmouseover="this.style.background='#0056b3'; this.style.transform='translateY(-1px)'" 
+                   onmouseout="this.style.background='#007bff'; this.style.transform='translateY(0)'">
+                  <span>📧</span> Email Support Team
+                </button>
+                <button onclick="window.open('https://wa.me/911234567890?text=Hi, I need help with HYBRID Mode payment. System ID: ${systemId}', '_blank')" style="
+                  background: #25d366; color: white; border: none; padding: 14px 18px;
+                  border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+                  transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px;
+                " onmouseover="this.style.background='#128c7e'; this.style.transform='translateY(-1px)'" 
+                   onmouseout="this.style.background='#25d366'; this.style.transform='translateY(0)'">
+                  <span>💬</span> WhatsApp Support
+                </button>
+                <button onclick="window.open('tel:+911234567890', '_blank')" style="
+                  background: #fd7e14; color: white; border: none; padding: 14px 18px;
+                  border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+                  transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px;
+                " onmouseover="this.style.background='#e8590c'; this.style.transform='translateY(-1px)'" 
+                   onmouseout="this.style.background='#fd7e14'; this.style.transform='translateY(0)'">
+                  <span>📞</span> Call Support: +91-12345-67890
+                </button>
+              </div>
+              
+              <button id="support-back" style="
+                background: #6c757d; color: white; border: none;
+                padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+                transition: all 0.2s ease; margin-top: 16px;
+              " onmouseover="this.style.background='#5a6268'; this.style.transform='translateY(-1px)'" 
+                 onmouseout="this.style.background='#6c757d'; this.style.transform='translateY(0)'">
+                ← Back to Payment
+              </button>
+              
+              <p style="margin-top: 16px; font-size: 13px; color: #6c757d;">
+                Support available 24/7 for HYBRID Mode assistance
+              </p>
+            `;
+            
+            document.getElementById('support-back').addEventListener('click', () => {
+              this.showHybridQRPayment(modalOverlay);
+            });
+            
+          }, 200);
+        }
+        
+        handlePaymentComplete(modalOverlay, systemId) {
+          console.log('✅ [PAYMENT COMPLETE] ============== HANDLING PAYMENT COMPLETION ==============');
+          
+          const currentContent = modalOverlay.querySelector('div div');
+          currentContent.style.animation = 'fadeOut 0.3s ease-out forwards';
+          
+          setTimeout(() => {
+            currentContent.style.cssText = `
+              background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+              border-radius: 16px; padding: 40px 32px; text-align: center;
+              box-shadow: 
+                0 32px 64px rgba(15, 23, 42, 0.15),
+                0 16px 32px rgba(15, 23, 42, 0.1),
+                0 0 0 1px rgba(15, 23, 42, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+              position: relative; color: #0f172a;
+              animation: modalSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+              border: 1px solid rgba(148, 163, 184, 0.1);
+            `;
+            
+            currentContent.innerHTML = `
+              <!-- Success Header -->
+              <div style="
+                display: flex; align-items: center; justify-content: center; margin-bottom: 32px;
+              ">
+                <div style="
+                  width: 64px; height: 64px; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+                  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+                  margin-right: 16px; box-shadow: 0 8px 24px rgba(34, 197, 94, 0.3);
+                ">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: white;">
+                    <path d="M9 12l2 2 4-4"/>
+                    <path d="m9 12 2 2 4-4"/>
+                  </svg>
+                </div>
+                <div style="text-align: left;">
+                  <h2 style="margin: 0; font-size: 26px; font-weight: 700; color: #1a202c; line-height: 1.2;">
+                    Payment Submitted
+                  </h2>
+                  <p style="margin: 4px 0 0 0; font-size: 16px; color: #22c55e; font-weight: 600;">
+                    Verification in progress
+                  </p>
+                </div>
+              </div>
+
+              <!-- Status Timeline -->
+              <div style="
+                background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 16px; 
+                padding: 24px; margin-bottom: 24px;
+              ">
+                <h3 style="margin: 0 0 20px 0; font-size: 18px; color: #2d3748; font-weight: 600; text-align: center;">
+                  What happens next?
+                </h3>
+                
+                <div style="position: relative;">
+                  <!-- Timeline Line -->
+                  <div style="
+                    position: absolute; left: 16px; top: 20px; bottom: 20px; width: 2px; 
+                    background: linear-gradient(to bottom, #22c55e 0%, #22c55e 33%, #e2e8f0 33%, #e2e8f0 100%);
+                  "></div>
+                  
+                  <!-- Timeline Items -->
+                  <div style="display: grid; gap: 24px;">
+                    <!-- Step 1: Completed -->
+                    <div style="display: flex; align-items: flex-start; gap: 16px; position: relative;">
+                      <div style="
+                        width: 32px; height: 32px; background: #22c55e; border-radius: 50%;
+                        display: flex; align-items: center; justify-content: center; z-index: 1;
+                      ">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: white;">
+                          <path d="M9 12l2 2 4-4"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 style="margin: 0 0 4px 0; font-size: 15px; color: #2d3748; font-weight: 600;">
+                          Payment Information Received
+                        </h4>
+                        <p style="margin: 0; font-size: 13px; color: #22c55e; font-weight: 600;">Completed now</p>
+                      </div>
+                    </div>
+
+                    <!-- Step 2: In Progress -->
+                    <div style="display: flex; align-items: flex-start; gap: 16px; position: relative;">
+                      <div style="
+                        width: 32px; height: 32px; background: #f59e0b; border-radius: 50%;
+                        display: flex; align-items: center; justify-content: center; z-index: 1;
+                        animation: pulse 2s infinite;
+                      ">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: white;">
+                          <circle cx="12" cy="12" r="10"/>
+                          <path d="M12 6v6l4 2"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 style="margin: 0 0 4px 0; font-size: 15px; color: #2d3748; font-weight: 600;">
+                          Team Verification & Processing
+                        </h4>
+                        <p style="margin: 0; font-size: 13px; color: #f59e0b; font-weight: 600;">Within 2-4 hours</p>
+                      </div>
+                    </div>
+
+                    <!-- Step 3: Pending -->
+                    <div style="display: flex; align-items: flex-start; gap: 16px; position: relative;">
+                      <div style="
+                        width: 32px; height: 32px; background: #e2e8f0; border-radius: 50%;
+                        display: flex; align-items: center; justify-content: center; z-index: 1;
+                      ">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: #a0aec0;">
+                          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 style="margin: 0 0 4px 0; font-size: 15px; color: #a0aec0; font-weight: 600;">
+                          Contact & HYBRID Mode Activation
+                        </h4>
+                        <p style="margin: 0; font-size: 13px; color: #a0aec0;">After verification</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Reference Information -->
+              <div style="
+                background: white; border: 2px solid #e2e8f0; border-radius: 12px; 
+                padding: 20px; margin-bottom: 24px; text-align: left;
+              ">
+                <h4 style="margin: 0 0 16px 0; font-size: 16px; color: #2d3748; font-weight: 600;">
+                  Reference Information
+                </h4>
+                <div style="display: grid; gap: 12px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f7fafc; border-radius: 6px;">
+                    <span style="font-size: 14px; color: #4a5568;">Payment Reference</span>
+                    <span style="font-size: 14px; color: #2d3748; font-weight: 600; font-family: monospace;">${systemId}</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f7fafc; border-radius: 6px;">
+                    <span style="font-size: 14px; color: #4a5568;">Amount</span>
+                    <span style="font-size: 14px; color: #2d3748; font-weight: 600;">₹2,499</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f7fafc; border-radius: 6px;">
+                    <span style="font-size: 14px; color: #4a5568;">Expected Contact</span>
+                    <span style="font-size: 14px; color: #2d3748; font-weight: 600;">2-4 hours</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Support Contact -->
+              <div style="
+                background: #fffbeb; border: 1px solid #f59e0b; border-radius: 12px; 
+                padding: 16px; margin-bottom: 24px; text-align: center;
+              ">
+                <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: #f59e0b; margin-right: 8px;">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                  </svg>
+                  <span style="font-size: 15px; color: #92400e; font-weight: 600;">Need immediate assistance?</span>
+                </div>
+                <p style="margin: 0 0 8px 0; font-size: 13px; color: #92400e;">
+                  Our team will contact you shortly. For urgent queries, reach us at:
+                </p>
+                <p style="margin: 0; font-size: 14px; color: #92400e; font-weight: 600;">
+                  support@cypheredge.com | +91-12345-67890
+                </p>
+              </div>
+
+              <!-- Important Notice -->
+              <div style="
+                background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; 
+                padding: 20px; margin-bottom: 24px; text-align: center;
+              ">
+                <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: #d97706; margin-right: 8px;">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 8v4"/>
+                    <path d="M12 16h.01"/>
+                  </svg>
+                  <span style="font-size: 18px; color: #92400e; font-weight: 700;">Important Notice</span>
+                </div>
+                <p style="margin: 0; font-size: 15px; color: #92400e; line-height: 1.5; font-weight: 600;">
+                  Your system requires HYBRID Mode for optimal performance. CypherEdge cannot run in Standard Mode on this device. 
+                  Please wait for our team to activate HYBRID Mode or try using a higher-specification computer.
+                </p>
+              </div>
+
+              <!-- Action Buttons -->
+              <div style="text-align: center;">
+                <button id="close-application" style="
+                  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white; border: none; 
+                  padding: 16px 32px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer;
+                  transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 8px;
+                  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+                " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(220, 38, 38, 0.3)'" 
+                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(220, 38, 38, 0.2)'">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M18 6L6 18"/>
+                    <path d="M6 6l12 12"/>
+                  </svg>
+                  Close Application
+                </button>
+                <p style="margin: 16px 0 0 0; font-size: 13px; color: #6b7280;">
+                  Our team will contact you within 2-4 hours to activate HYBRID Mode
+                </p>
+              </div>
+
+              <!-- CSS Animations -->
+              <style>
+                @keyframes pulse {
+                  0%, 100% { opacity: 1; }
+                  50% { opacity: 0.5; }
+                }
+              </style>
+            `;
+            
+            // Handle close application button (only option for HYBRID users)
+            document.getElementById('close-application').addEventListener('click', () => {
+              console.log('✅ [PAYMENT COMPLETE] HYBRID user must close - Standard Mode not available');
+              document.body.style.overflow = ''; // Restore body scroll
+              modalOverlay.style.animation = 'fadeOut 0.3s ease-out forwards';
+              setTimeout(() => {
+                if (modalOverlay.parentNode) modalOverlay.remove();
+                this.handleUserDecision('cancel'); // Close the app - HYBRID users cannot use Standard Mode
+              }, 300);
+            });
+            
+          }, 300);
+        }
+        
+        launchHybridMode(modalOverlay) {
+          console.log('🚀 [HYBRID LAUNCH] Launching CypherEdge in HYBRID Mode...');
+          
+          modalOverlay.style.animation = 'fadeOut 0.4s ease-out forwards';
+          
+          setTimeout(() => {
+            if (modalOverlay.parentNode) {
+              modalOverlay.remove();
+            }
+            console.log('🚀 [HYBRID LAUNCH] Modal removed, executing HYBRID launch');
+            this.handleUserDecision('proceed'); // Launch the app
+          }, 400);
+        }
+        
+        addModalAnimations() {
+          // Add CSS animations if not already present
+          if (!document.getElementById('modal-animations')) {
+            const style = document.createElement('style');
+            style.id = 'modal-animations';
+            style.textContent = `
+              @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+              }
+              @keyframes fadeOut {
+                from { opacity: 1; }
+                to { opacity: 0; }
+              }
+              @keyframes modalSlideIn {
+                from { 
+                  opacity: 0; 
+                  transform: scale(0.8) translateY(-20px); 
+                }
+                to { 
+                  opacity: 1; 
+                  transform: scale(1) translateY(0); 
+                }
+              }
+              @keyframes slideIn {
+                from { 
+                  opacity: 0; 
+                  transform: translateX(20px); 
+                }
+                to { 
+                  opacity: 1; 
+                  transform: translateX(0); 
+                }
+              }
+            `;
+            document.head.appendChild(style);
+          }
+        }
+        
+        // Send email audit report when final results page is displayed
+        async sendEmailAuditReport() {
+          console.log('📧 🎯 === SENDING EMAIL AUDIT REPORT ===');
+          
+          try {
+            // Use IPC to trigger email audit in the backend SystemCompatibilityChecker
+            console.log('📧 🎯 Calling compatibility:send-email-audit via IPC...');
+            
+            const result = await window.electronAPI.compatibilityCheck.sendEmailAudit({
+              testResults: this.testResults,
+              currentStep: this.currentStep,
+              timestamp: new Date().toISOString()
+            });
+            
+            if (result.success) {
+              console.log('📧 ✅ Email audit sent successfully!');
+              console.log('📧 ✅ Email ID:', result.emailId);
+              console.log('📧 ✅ Recipients:', result.recipients);
+            } else {
+              console.log('📧 ❌ Email audit failed:', result.error);
+            }
+            
+          } catch (error) {
+            console.error('📧 💥 Email audit exception:', error);
+          }
+          
+          console.log('📧 🎯 === EMAIL AUDIT REPORT COMPLETED ===');
+        }
+      }
+
+      // Initialize the app when DOM is ready
+      document.addEventListener("DOMContentLoaded", () => {
+        const app = new CompatibilityApp();
+        window.compatApp = app; // Make app globally accessible for window controls
+        app.init();
+        
+        // Only start countdown if we're on Step 1 (not Step 0 email input)
+        // This will be started manually when user reaches Step 1
+      });
+    </script>
+  </body>
+</html>
