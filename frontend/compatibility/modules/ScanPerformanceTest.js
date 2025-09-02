@@ -3,6 +3,7 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 const { AppModeConfigManager } = require('../config/AppModeConfigManager');
+const pathResolver = require('../utils/PathResolver');
 
 class ScanPerformanceTest {
   constructor(logger = null, progressCallback = null) {
@@ -138,12 +139,11 @@ class ScanPerformanceTest {
    */
   async getTestPDF() {
     try {
-      // First, try to find an existing test PDF
+      // First, try to find an existing test PDF using PathResolver
+      const testSamplesDir = pathResolver.getTestSamplesDir();
       const possiblePaths = [
-        path.join(__dirname, '../../test-samples/scan-test.pdf'),
-        path.join(__dirname, '../../test-samples/test.pdf'),
-        path.join(__dirname, '../../../test-samples/scan-test.pdf'),
-        path.join(__dirname, '../../../test-samples/test.pdf')
+        path.join(testSamplesDir, 'scan-test.pdf'),
+        path.join(testSamplesDir, 'test.pdf')
       ];
 
       for (const testPath of possiblePaths) {
