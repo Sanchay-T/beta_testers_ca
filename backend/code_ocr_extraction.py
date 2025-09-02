@@ -35,7 +35,11 @@ import uuid
 import logging
 from .utils import get_base_dir
 
-from paddleocr import PaddleOCR, TextDetection, TextRecognition
+try:
+    from paddleocr import PaddleOCR, TextDetection, TextRecognition
+    PADDLEOCR_AVAILABLE = True
+except ImportError:
+    PADDLEOCR_AVAILABLE = False
 
 
 logger = logging.getLogger(__name__)
@@ -48,15 +52,19 @@ TEMP_SAVED_PDF_DIR = get_saved_pdf_dir()
 # # 1. Paths to Your Model Folders and Sample Image
 # # ─────────────────────────────────────────────────────────────────────────────\
 
-# DETDIR_server = os.path.join(BASE_DIR,"models", "PP-OCRv5_server_det_infer")
-DETDIR_mobile = os.path.join(BASE_DIR,"models", "PP-OCRv5_mobile_det_infer")
-# RECDIR_server = os.path.join(BASE_DIR,"models", "PP-OCRv5_server_rec_infer")
-RECDIR_mobile = os.path.join(BASE_DIR,"models", "PP-OCRv5_mobile_rec_infer")
+if PADDLEOCR_AVAILABLE:
+    # DETDIR_server = os.path.join(BASE_DIR,"models", "PP-OCRv5_server_det_infer")
+    DETDIR_mobile = os.path.join(BASE_DIR,"models", "PP-OCRv5_mobile_det_infer")
+    # RECDIR_server = os.path.join(BASE_DIR,"models", "PP-OCRv5_server_rec_infer")
+    RECDIR_mobile = os.path.join(BASE_DIR,"models", "PP-OCRv5_mobile_rec_infer")
 
-# det_model = TextDetection(model_name="PP-OCRv5_server_det", model_dir= DETDIR_server)
-det_model_mobile = TextDetection(model_name="PP-OCRv5_mobile_det", model_dir=DETDIR_mobile)
-# rec_model = TextRecognition(model_name="PP-OCRv5_server_rec", model_dir=RECDIR_server)
-rec_model_mobile = TextRecognition(model_name="PP-OCRv5_mobile_rec", model_dir=RECDIR_mobile)
+    # det_model = TextDetection(model_name="PP-OCRv5_server_det", model_dir= DETDIR_server)
+    det_model_mobile = TextDetection(model_name="PP-OCRv5_mobile_det", model_dir=DETDIR_mobile)
+    # rec_model = TextRecognition(model_name="PP-OCRv5_server_rec", model_dir=RECDIR_server)
+    rec_model_mobile = TextRecognition(model_name="PP-OCRv5_mobile_rec", model_dir=RECDIR_mobile)
+else:
+    det_model_mobile = None
+    rec_model_mobile = None
 # # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -2735,17 +2743,8 @@ def extract_textboxes(pdf_path: str | Path,
 import time
 # Main function to run test cases with optimizations
 def extract_with_test_cases_ocr(bank_name, pdf_path, pdf_password, CA_ID, encoded_pdf=False):
-   ##################################################################################################################
-
-#    df , name_num, error = extract_with_test_cases(bank_name, pdf_path, pdf_password, [], [], encoded_pdf)
-
-#    print("---------------------------------Initial extraction process completed--------------------------------------------")
-
-#    df.to_excel("rectify_output.xlsx")
-
-#    print(xx)
-
-   ###################################################################################################################
+   if not PADDLEOCR_AVAILABLE:
+       raise ImportError("PaddleOCR is not installed. Please install it to use the OCR functionality.")
    timestamp = "1234_temp"
    pdf_in_saved_pdf = unlock_and_add_margins_to_pdf(pdf_path, pdf_password, timestamp, CA_ID)
    pdf_to_images = pdf_to_numpy_arrays(pdf_in_saved_pdf) #list of high quality images of pdf page
@@ -2780,7 +2779,8 @@ def extract_with_test_cases_ocr(bank_name, pdf_path, pdf_password, CA_ID, encode
 
 def extraction_process_only_rectify(bank, pdf_path, pdf_password, start_date, end_date, only_lines, labels, encoded_pdf=False):
     
-    # only_lines = [360.12442452566955, 466.55299595424094, 277.2672816685267, 85.83871023995533, 567.2672816685266, 24.410138811383923]
+    if not PADDLEOCR_AVAILABLE:
+        raise ImportError("PaddleOCR is not installed. Please install it to use the OCR functionality.")
     
     CA_ID = "1234_temp"
     empty_idf = pd.DataFrame()
