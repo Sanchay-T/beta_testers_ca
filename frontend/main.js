@@ -8,7 +8,6 @@ const {
 } = require("electron");
 const { EventEmitter } = require("events");
 const fs = require("fs");
-
 const { registerOpenFileIpc } = require("./ipc/fileHandler.js");
 require("dotenv").config();
 const path = require("path");
@@ -71,6 +70,7 @@ global.AppConfig = {
   // or inside the packaged application.
   // Use app.isPackaged as primary check, fallback to NODE_ENV
   isDev: isDevelopment,
+  isCapable: process.env.IS_CAPABLE.toLowerCase() === "true" ? true : false,
 
   // Resolve the base directory based on the environment.
   get baseDir() {
@@ -233,7 +233,7 @@ autoUpdater.on("update-available", (info) => {
   const systemRequirementsCheck = systemInfo.getSystemRequirementsCheck();
   if (systemRequirementsCheck && systemRequirementsCheck.shouldBlockUpdates) {
     performanceTracker.end("update-download-process");
-    
+
     logWithTimestamp(
       "warn",
       UPDATE_LOG_PREFIX,
@@ -250,7 +250,7 @@ autoUpdater.on("update-available", (info) => {
     // Only show notification to user once per session to avoid annoyance
     if (!systemRequirementsNotificationShown) {
       systemRequirementsNotificationShown = true;
-      
+
       // Send system requirements notification to frontend
       const systemRequirementsNotification = {
         status: "system-requirements-failed",
@@ -272,7 +272,7 @@ autoUpdater.on("update-available", (info) => {
           blockingUpdates: systemRequirementsCheck.shouldBlockUpdates
         }
       );
-      
+
       logWithTimestamp(
         "info",
         USER_LOG_PREFIX,
@@ -2047,6 +2047,10 @@ async function createWindow() {
       log.error("Error reading file:", error);
       throw error;
     }
+  });
+
+  ipcMain.handle("is-capable", () => {
+    return global.AppConfig.isCapable;
   });
 
   ipcMain.handle("preview-file", async (_event, filePath) => {
