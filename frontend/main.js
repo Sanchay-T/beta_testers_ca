@@ -1440,6 +1440,8 @@ async function startPythonExecutable() {
 
 // ---- Add these helpers near your other constants ----
 const crypto = require("crypto");
+const { getSystemUUID } = require("./utils/getSystemUUID.js");
+const { default: axios } = require("axios");
 
 const isDev = global.AppConfig?.isDev ?? !app.isPackaged;
 
@@ -2115,7 +2117,7 @@ async function initializeDatabase() {
       const worksheet = workbook.getWorksheet(1);
       const headerRow = worksheet.getRow(1).values;
       const columnMapping = {
-        keywords: headerRow.indexOf("Description"),
+        description: headerRow.indexOf("Description"),
         debit_credit: headerRow.indexOf("Debit / Credit"),
         category: headerRow.indexOf("Category"),
         particulars: headerRow.indexOf("Particulars"),
@@ -2126,11 +2128,13 @@ async function initializeDatabase() {
         if (rowNumber > 1) {
           // Skip header row
           const rowData = row.values;
+
           await db.insert(Category_Master).values({
-            category: rowData[columnMapping.category],
-            sub_category: rowData[columnMapping.sub_category],
-            keywords: rowData[columnMapping.keywords],
+            description: rowData[columnMapping.description],
             debit_credit: rowData[columnMapping.debit_credit],
+            category: rowData[columnMapping.category],
+            particulars: rowData[columnMapping.particulars],
+            preferences: rowData[columnMapping.preferences],
             is_editable: true, // Assuming custom categories are always editable
           });
         }
@@ -2144,6 +2148,34 @@ async function initializeDatabase() {
     }
   } catch (error) {
     log.error("Error initializing Category_Master:", error);
+  }
+}
+
+async function getDeviceInfoFromServer() {
+  // const deviceInfo = {
+  //   uuid: systemInfo.getUUID(),
+  //   macAddress: systemInfo.getMACAddress(),
+  //   hostname: systemInfo.getHostname(),
+  //   windowsUserSID: systemInfo.getWindowsUserSID(),
+  //   username: systemInfo.getUsername(),
+  // };
+  const uuid = await getSystemUUID();
+
+  log.info("Device uuid:", uuid);
+
+
+  try {
+  const response = await axios.post(
+      process.env.BASE_API_URL + "/api/devices/search/",
+      {
+        email:"qureshi.aiyaz17@gmail.com",
+        uuid: uuid,
+      }
+    );
+
+    console.log("Response from server:", response.data);
+  } catch (error) {
+    log.error("Error sending device info to server:", error);
   }
 }
 app.whenReady().then(async () => {
@@ -2165,6 +2197,7 @@ app.whenReady().then(async () => {
       const dbManager = databaseManager.getInstance();
       await dbManager.initialize(userDataDir);
       await initializeDatabase();
+      await getDeviceInfoFromServer();
       log.info("✅ Database initialized successfully");
     } catch (error) {
       log.error("❌ Database initialization failed:", error);
