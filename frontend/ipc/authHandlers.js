@@ -1,4 +1,5 @@
-const { ipcMain } = require("electron");
+const { ipcMain, dialog, app } = require("electron");
+const AppConfig = require("../config");
 const sessionManager = require("../SessionManager");
 const log = require("electron-log");
 const licenseManager = require("../LicenseManager");
@@ -17,6 +18,7 @@ const gatewayServer = require("../InitiateGatewayServer");
 const dgram = require("dgram");
 const os = require("os");
 const ip = require("ip"); // You need to install this via: npm install ip
+const { getSystemUUID } = require("../utils/getSystemUUID.js");
 // const { gateway } = require('default-gateway');
 
 log.info("License manager process.env.NODE_ENV", process.env.NODE_ENV);
@@ -219,6 +221,46 @@ function discoverMdnsServices(serviceType = "", timeout = 5000) {
   });
 }
 
+async function getDeviceInfoFromServer(email, event) {
+  const uuid = await getSystemUUID();
+
+  log.info("Device uuid:", uuid);
+
+  try {
+    const response = await axios.post(
+      process.env.BASE_API_URL + "/api/devices/search/",
+      {
+        email: email,
+        uuid: uuid,
+      }
+    );
+
+    console.log("Response from server:", response.data);
+
+    if (response.data && response.data[0].detected_mode) {
+      const detectedMode = response.data[0].detected_mode.toLowerCase();
+
+      let isCapable = false;
+      if (detectedMode === "scan" || detectedMode === "unscan") {
+        isCapable = true;
+      }
+
+      AppConfig.setIsCapable(isCapable);
+
+      // Notify renderer process
+      if (event && event.sender) {
+        event.sender.send("isCapable-changed", { isCapable, detectedMode });
+        log.info(`Sent isCapable-changed event to renderer with mode: ${detectedMode}`);
+      }
+      return detectedMode;
+    }
+    return null;
+  } catch (error) {
+    log.error("Error sending device info to server:", error);
+    return null;
+  }
+}
+
 function registerAuthHandlers(userDataPath) {
   const db = databaseManager.getInstance().getDatabase();
 
@@ -281,6 +323,10 @@ function registerAuthHandlers(userDataPath) {
       // ✅ Start countdown based on license validity
       if (data.remainingSeconds && data.remainingSeconds > 0) {
         sessionManager.startLicenseCountdown(data.remainingSeconds);
+      }
+
+      if (!AppConfig.mode_detected_last_checked_at) {
+        await getDeviceInfoFromServer(credentials.email, event);
       }
 
       return { success: true, user: credentials };
@@ -876,6 +922,15 @@ function registerAuthHandlers(userDataPath) {
       }
     }
   );
+
+  ipcMain.handle("auth:refresh-mode-detected", async (event) => {
+    const user = sessionManager.getUser();
+    if (user && user.email) {
+      const detectedMode = await getDeviceInfoFromServer(user.email, event);
+      return { success: true, detectedMode };
+    }
+    return { success: false, error: "User not logged in." };
+  });
 
   ipcMain.handle("license:revoke-session", async (event, licenseData) => {
     log.info("Revoking license session:", licenseData);

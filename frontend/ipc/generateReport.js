@@ -971,8 +971,8 @@ function generateReportIpc(tmpdir_path) {
         log.info("Sending API request with payload:", payload);
 
         let response = null;
-        const IS_CAPABLE =
-          process.env.IS_CAPABLE.toLowerCase() === "true" ? true : false;
+        const AppConfig = require("../config.js");
+        const IS_CAPABLE = AppConfig.isCapable;
         // const IS_CAPABLE = false;
 
         if (!IS_CAPABLE) {

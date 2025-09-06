@@ -1,0 +1,1952 @@
+2025-09-06 09:56:00.008 +05:30 [INF] Discovered network interface: Wi-Fi ({F38FAAF6-F03C-4158-AE20-91E4C88D5AC7})
+2025-09-06 09:56:00.015 +05:30 [INF] Discovered network interface: Wi-Fi-WFP Native MAC Layer LightWeight Filter-0000 ({1A3C96A6-83CF-11F0-AA8F-4C1D961F5A5D})
+2025-09-06 09:56:00.019 +05:30 [INF] Discovered network interface: Wi-Fi-Virtual WiFi Filter Driver-0000 ({9CF8392E-2F68-11F0-AA75-90812FFB745E})
+2025-09-06 09:56:00.019 +05:30 [INF] Discovered network interface: Wi-Fi-Native WiFi Filter Driver-0000 ({9CF8392F-2F68-11F0-AA75-90812FFB745E})
+2025-09-06 09:56:00.019 +05:30 [INF] Discovered network interface: Wi-Fi-QoS Packet Scheduler-0000 ({1A3C96A7-83CF-11F0-AA8F-4C1D961F5A5D})
+2025-09-06 09:56:00.019 +05:30 [INF] Discovered network interface: Wi-Fi-WFP 802.3 MAC Layer LightWeight Filter-0000 ({1A3C96A8-83CF-11F0-AA8F-4C1D961F5A5D})
+2025-09-06 09:56:01.834 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 09:56:26.834 +05:30 [INF] License is present: true
+2025-09-06 09:56:26.834 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 09:56:27.217 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 09:56:27.217 +05:30 [INF] License is present: true
+2025-09-06 09:56:27.217 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 09:56:27.217 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757086907.078981 to 1757132787.657255
+2025-09-06 09:56:27.217 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 728306203 to 774187546
+2025-09-06 09:56:27.217 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 09:56:27.217 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757132787.657255,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":774187546}
+2025-09-06 09:56:27.217 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 09:56:27.322 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 09:56:27.322 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 09:56:27.322 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 09:56:27.324 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 09:56:27 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757132787.657255,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 774187546
+}
+2025-09-06 09:56:27.324 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 09:57:01.840 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 09:58:01.849 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 09:58:27.328 +05:30 [INF] License is present: true
+2025-09-06 09:58:27.328 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 09:58:27.662 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 09:58:27.662 +05:30 [INF] License is present: true
+2025-09-06 09:58:27.662 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 09:58:27.662 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757132787.657255 to 1757132908.102053
+2025-09-06 09:58:27.662 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 774187546 to 774308000
+2025-09-06 09:58:27.662 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 09:58:27.662 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757132908.102053,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":774308000}
+2025-09-06 09:58:27.662 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 09:58:27.764 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 09:58:27.764 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 09:58:27.764 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 09:58:27.764 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 09:58:28 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757132908.102053,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 774308000
+}
+2025-09-06 09:58:27.764 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 09:59:01.855 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:00:01.859 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:00:27.768 +05:30 [INF] License is present: true
+2025-09-06 10:00:27.769 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 10:00:28.016 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 10:00:28.016 +05:30 [INF] License is present: true
+2025-09-06 10:00:28.016 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 10:00:28.016 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757132908.102053 to 1757133028.458612
+2025-09-06 10:00:28.016 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 774308000 to 774428343
+2025-09-06 10:00:28.017 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 10:00:28.017 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757133028.458612,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":774428343}
+2025-09-06 10:00:28.017 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 10:00:28.118 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:00:28.119 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:00:28.119 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:00:28.119 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:00:28 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757133028.458612,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 774428343
+}
+2025-09-06 10:00:28.119 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 10:01:01.864 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:02:01.878 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:02:28.119 +05:30 [INF] License is present: true
+2025-09-06 10:02:28.119 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 10:02:28.266 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 10:02:28.266 +05:30 [INF] License is present: true
+2025-09-06 10:02:28.266 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 10:02:28.266 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757133028.458612 to 1757133148.697645
+2025-09-06 10:02:28.266 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 774428343 to 774548593
+2025-09-06 10:02:28.266 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 10:02:28.266 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757133148.697645,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":774548593}
+2025-09-06 10:02:28.266 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 10:02:28.391 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:02:28.391 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:02:28.391 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:02:28.393 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:02:28 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757133148.697645,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 774548593
+}
+2025-09-06 10:02:28.393 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 10:03:01.879 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:04:01.880 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:04:28.394 +05:30 [INF] License is present: true
+2025-09-06 10:04:28.394 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 10:04:28.528 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 10:04:28.528 +05:30 [INF] License is present: true
+2025-09-06 10:04:28.528 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 10:04:28.528 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757133148.697645 to 1757133268.972014
+2025-09-06 10:04:28.528 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 774548593 to 774668859
+2025-09-06 10:04:28.528 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 10:04:28.528 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757133268.972014,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":774668859}
+2025-09-06 10:04:28.528 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 10:04:28.632 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:04:28.633 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:04:28.633 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:04:28.633 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:04:28 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757133268.972014,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 774668859
+}
+2025-09-06 10:04:28.633 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 10:05:01.881 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:06:01.881 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:06:28.635 +05:30 [INF] License is present: true
+2025-09-06 10:06:28.636 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 10:06:28.767 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 10:06:28.767 +05:30 [INF] License is present: true
+2025-09-06 10:06:28.767 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 10:06:28.767 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757133268.972014 to 1757133389.212055
+2025-09-06 10:06:28.767 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 774668859 to 774789109
+2025-09-06 10:06:28.767 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 10:06:28.767 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757133389.212055,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":774789109}
+2025-09-06 10:06:28.767 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 10:06:28.862 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:06:28.863 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:06:28.863 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:06:28.863 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:06:29 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757133389.212055,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 774789109
+}
+2025-09-06 10:06:28.863 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 10:07:01.886 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:08:01.891 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:08:28.875 +05:30 [INF] License is present: true
+2025-09-06 10:08:28.876 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 10:08:29.002 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 10:08:29.002 +05:30 [INF] License is present: true
+2025-09-06 10:08:29.002 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 10:08:29.002 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757133389.212055 to 1757133509.442311
+2025-09-06 10:08:29.002 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 774789109 to 774909343
+2025-09-06 10:08:29.002 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 10:08:29.002 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757133509.442311,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":774909343}
+2025-09-06 10:08:29.003 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 10:08:29.099 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:08:29.099 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:08:29.099 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:08:29.099 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:08:29 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757133509.442311,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 774909343
+}
+2025-09-06 10:08:29.100 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 10:09:01.898 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:10:01.904 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:10:29.111 +05:30 [INF] License is present: true
+2025-09-06 10:10:29.111 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 10:10:29.513 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 10:10:29.513 +05:30 [INF] License is present: true
+2025-09-06 10:10:29.513 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 10:10:29.513 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757133509.442311 to 1757133629.936201
+2025-09-06 10:10:29.513 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 774909343 to 775029843
+2025-09-06 10:10:29.513 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 10:10:29.513 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757133629.936201,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":775029843}
+2025-09-06 10:10:29.513 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 10:10:29.611 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:10:29.612 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:10:29.612 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:10:29.612 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:10:29 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757133629.936201,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 775029843
+}
+2025-09-06 10:10:29.612 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 10:11:01.912 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:12:01.919 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:12:29.614 +05:30 [INF] License is present: true
+2025-09-06 10:12:29.614 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 10:12:29.782 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 10:12:29.782 +05:30 [INF] License is present: true
+2025-09-06 10:12:29.782 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 10:12:29.782 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757133629.936201 to 1757133750.229948
+2025-09-06 10:12:29.782 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 775029843 to 775150109
+2025-09-06 10:12:29.782 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 10:12:29.782 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757133750.229948,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":775150109}
+2025-09-06 10:12:29.782 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 10:12:29.895 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:12:29.896 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:12:29.896 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:12:29.898 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:12:30 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757133750.229948,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 775150109
+}
+2025-09-06 10:12:29.898 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 10:13:01.933 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:14:01.939 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:14:29.899 +05:30 [INF] License is present: true
+2025-09-06 10:14:29.899 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 10:14:30.048 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 10:14:30.048 +05:30 [INF] License is present: true
+2025-09-06 10:14:30.048 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 10:14:30.048 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757133750.229948 to 1757133870.49214
+2025-09-06 10:14:30.048 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 775150109 to 775270375
+2025-09-06 10:14:30.048 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 10:14:30.048 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757133870.49214,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":775270375}
+2025-09-06 10:14:30.048 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 10:14:30.157 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:14:30.158 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:14:30.158 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:14:30.158 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:14:30 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757133870.49214,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 775270375
+}
+2025-09-06 10:14:30.158 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 10:15:01.941 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:16:01.957 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:16:30.162 +05:30 [INF] License is present: true
+2025-09-06 10:16:30.162 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 10:17:01.971 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:17:07.138 +05:30 [ERR] The SSL connection could not be established, see inner exception.
+2025-09-06 10:17:07.138 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-09-06 10:18:01.984 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:19:02.004 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:19:07.139 +05:30 [INF] License is present: true
+2025-09-06 10:19:07.139 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 10:20:02.006 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:20:08.341 +05:30 [ERR] The SSL connection could not be established, see inner exception.
+2025-09-06 10:20:08.341 +05:30 [WRN] [License Polling] Failed to resync license.
+2025-09-06 10:21:02.035 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:22:02.037 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:22:08.350 +05:30 [INF] License is present: true
+2025-09-06 10:22:08.350 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 10:22:08.562 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 10:22:08.562 +05:30 [INF] License is present: true
+2025-09-06 10:22:08.562 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 10:22:08.562 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757133870.49214 to 1757134328.979538
+2025-09-06 10:22:08.562 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 775270375 to 775728890
+2025-09-06 10:22:08.562 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 10:22:08.562 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757134328.979538,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":775728890}
+2025-09-06 10:22:08.570 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 10:22:08.750 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:22:08.750 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:22:08.750 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:22:08.752 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:22:08 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757134328.979538,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 775728890
+}
+2025-09-06 10:22:08.752 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 10:23:02.060 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:24:02.074 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:24:08.766 +05:30 [INF] License is present: true
+2025-09-06 10:24:08.766 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 10:24:09.508 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 10:24:09.508 +05:30 [INF] License is present: true
+2025-09-06 10:24:09.508 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 10:24:09.508 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757134328.979538 to 1757134449.96086
+2025-09-06 10:24:09.508 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 775728890 to 775849843
+2025-09-06 10:24:09.508 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 10:24:09.508 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757134449.96086,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":775849843}
+2025-09-06 10:24:09.509 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 10:24:09.640 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:24:09.640 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:24:09.640 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:24:09.640 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:24:09 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757134449.96086,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 775849843
+}
+2025-09-06 10:24:09.640 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 10:25:02.077 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:26:02.080 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:26:09.648 +05:30 [INF] License is present: true
+2025-09-06 10:26:09.648 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 10:26:09.800 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 10:26:09.800 +05:30 [INF] License is present: true
+2025-09-06 10:26:09.800 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 10:26:09.800 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757134449.96086 to 1757134570.248207
+2025-09-06 10:26:09.800 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 775849843 to 775970140
+2025-09-06 10:26:09.800 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 10:26:09.800 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757134570.248207,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":775970140}
+2025-09-06 10:26:09.800 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 10:26:09.918 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:26:09.919 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:26:09.919 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:26:09.921 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:26:10 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757134570.248207,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 775970140
+}
+2025-09-06 10:26:09.922 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 10:27:02.095 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:28:02.102 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:28:09.926 +05:30 [INF] License is present: true
+2025-09-06 10:28:09.927 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 10:28:10.090 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 10:28:10.090 +05:30 [INF] License is present: true
+2025-09-06 10:28:10.090 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 10:28:10.090 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757134570.248207 to 1757134690.537415
+2025-09-06 10:28:10.090 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 775970140 to 776090421
+2025-09-06 10:28:10.090 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 10:28:10.091 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757134690.537415,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":776090421}
+2025-09-06 10:28:10.091 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 10:28:10.202 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:28:10.202 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:28:10.202 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:28:10.202 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:28:10 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757134690.537415,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 776090421
+}
+2025-09-06 10:28:10.202 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 10:29:02.113 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:30:02.120 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:30:10.201 +05:30 [INF] License is present: true
+2025-09-06 10:30:10.201 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 10:30:10.343 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 10:30:10.344 +05:30 [INF] License is present: true
+2025-09-06 10:30:10.344 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 10:30:10.344 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757134690.537415 to 1757134810.79679
+2025-09-06 10:30:10.344 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 776090421 to 776210671
+2025-09-06 10:30:10.344 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 10:30:10.344 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757134810.79679,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":776210671}
+2025-09-06 10:30:10.344 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 10:30:10.440 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:30:10.440 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:30:10.440 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:30:10.440 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:30:10 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757134810.79679,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 776210671
+}
+2025-09-06 10:30:10.440 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 10:31:02.122 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:32:02.125 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:32:10.444 +05:30 [INF] License is present: true
+2025-09-06 10:32:10.444 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 10:32:10.580 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 10:32:10.580 +05:30 [INF] License is present: true
+2025-09-06 10:32:10.580 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 10:32:10.580 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757134810.79679 to 1757134931.036431
+2025-09-06 10:32:10.580 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 776210671 to 776330921
+2025-09-06 10:32:10.581 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 10:32:10.581 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757134931.036431,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":776330921}
+2025-09-06 10:32:10.581 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 10:32:10.678 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:32:10.679 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:32:10.679 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:32:10.680 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:32:11 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757134931.036431,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 776330921
+}
+2025-09-06 10:32:10.680 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 10:33:02.134 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:34:02.136 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:34:10.686 +05:30 [INF] License is present: true
+2025-09-06 10:34:10.686 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 10:34:10.837 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 10:34:10.837 +05:30 [INF] License is present: true
+2025-09-06 10:34:10.837 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 10:34:10.837 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757134931.036431 to 1757135051.292812
+2025-09-06 10:34:10.837 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 776330921 to 776451171
+2025-09-06 10:34:10.837 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 10:34:10.837 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757135051.292812,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":776451171}
+2025-09-06 10:34:10.838 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 10:34:10.942 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:34:10.943 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:34:10.943 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:34:10.943 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:34:11 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757135051.292812,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 776451171
+}
+2025-09-06 10:34:10.943 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 10:35:02.152 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:36:02.159 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:36:10.444 +05:30 [INF] Received mDNS answer for service: _license-server._tcp.local of type "PTR"
+2025-09-06 10:36:10.446 +05:30 [INF] Responded to license server UDP discovery request from 172.20.10.3:61071 with: {"name":"LicenseServer","host":"AQ","ip":"0.0.0.0","port":7890,"type":"license-server"}
+2025-09-06 10:36:10.448 +05:30 [INF] Received mDNS query for service: _license-server._tcp.local of type "PTR"
+2025-09-06 10:36:10.950 +05:30 [INF] License is present: true
+2025-09-06 10:36:10.950 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 10:36:11.096 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 10:36:11.096 +05:30 [INF] License is present: true
+2025-09-06 10:36:11.096 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 10:36:11.096 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757135051.292812 to 1757135171.540922
+2025-09-06 10:36:11.096 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 776451171 to 776571437
+2025-09-06 10:36:11.096 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 10:36:11.096 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757135171.540922,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":776571437}
+2025-09-06 10:36:11.097 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 10:36:11.223 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:36:11.224 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:36:11.224 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:36:11.224 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:36:11 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757135171.540922,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 776571437
+}
+2025-09-06 10:36:11.224 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 10:36:15.458 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:36:11 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757135171.540922,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 776571437
+}
+2025-09-06 10:36:15.458 +05:30 [INF] License validation request received
+2025-09-06 10:36:15.458 +05:30 [INF] License validation successful: Key=32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, Users=1, Statements=500, ExpiresIn=31284565.349483013 seconds
+2025-09-06 10:36:18.915 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:36:11 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757135171.540922,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 776571437
+}
+2025-09-06 10:36:18.915 +05:30 [INF] License assign request: {"clientId":"S-1-5-21-3078838854-999866614-3559894054-1001","uuid":"94aa02bf-4ed8-0264-169a-a28a3f0f806c","hostname":"AQ","username":"aiyaz","macAddress":"4c:1d:96:1f:5a:59"}
+2025-09-06 10:36:18.915 +05:30 [INF] License assign request: S-1-5-21-3078838854-999866614-3559894054-1001, 94aa02bf-4ed8-0264-169a-a28a3f0f806c, 4c:1d:96:1f:5a:59, AQ, aiyaz
+2025-09-06 10:36:18.915 +05:30 [INF] License info: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:36:11 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757135171.540922,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 776571437
+}
+2025-09-06 10:36:18.915 +05:30 [INF] License manager active count: 1 / 1
+2025-09-06 10:36:20.274 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:36:11 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757135171.540922,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 776571437
+}
+2025-09-06 10:36:20.394 +05:30 [INF] Session activation logged to Django.
+2025-09-06 10:37:02.174 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:37:43.633 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:36:11 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757135171.540922,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 776571437
+}
+2025-09-06 10:37:48.634 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:36:11 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757135171.540922,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 776571437
+}
+2025-09-06 10:37:48.902 +05:30 [INF] Session activation logged to Django.
+2025-09-06 10:38:02.189 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:38:11.226 +05:30 [INF] License is present: true
+2025-09-06 10:38:11.226 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 10:38:11.286 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 10:38:11.286 +05:30 [INF] License is present: true
+2025-09-06 10:38:11.286 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 10:38:11.286 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757135171.540922 to 1757135291.741632
+2025-09-06 10:38:11.286 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 776571437 to 776691625
+2025-09-06 10:38:11.286 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 10:38:11.286 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757135291.741632,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":776691625}
+2025-09-06 10:38:11.286 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 10:38:11.429 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:38:11.430 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:38:11.430 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:38:11.433 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:38:11 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757135291.741632,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 776691625
+}
+2025-09-06 10:38:11.433 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 10:39:02.199 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:39:53.040 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:38:11 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757135291.741632,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 776691625
+}
+2025-09-06 10:40:02.207 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:40:11.441 +05:30 [INF] License is present: true
+2025-09-06 10:40:11.441 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 10:40:11.671 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 10:40:11.671 +05:30 [INF] License is present: true
+2025-09-06 10:40:11.671 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 10:40:11.671 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757135291.741632 to 1757135412.127783
+2025-09-06 10:40:11.672 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 776691625 to 776812000
+2025-09-06 10:40:11.672 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 10:40:11.672 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757135412.127783,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":776812000}
+2025-09-06 10:40:11.672 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 10:40:11.772 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:40:11.773 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:40:11.773 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:40:11.773 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:40:12 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757135412.127783,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 776812000
+}
+2025-09-06 10:40:11.773 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 10:40:35.998 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:40:12 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757135412.127783,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 776812000
+}
+2025-09-06 10:40:36.106 +05:30 [INF] Session activation logged to Django.
+2025-09-06 10:41:02.207 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:42:00.645 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:40:12 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757135412.127783,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 776812000
+}
+2025-09-06 10:42:02.221 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:42:11.773 +05:30 [INF] License is present: true
+2025-09-06 10:42:11.773 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 10:42:11.937 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 10:42:11.937 +05:30 [INF] License is present: true
+2025-09-06 10:42:11.937 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 10:42:11.937 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757135412.127783 to 1757135532.396762
+2025-09-06 10:42:11.937 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 776812000 to 776932265
+2025-09-06 10:42:11.937 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 10:42:11.937 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757135532.396762,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":776932265}
+2025-09-06 10:42:11.937 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 10:42:12.084 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:42:12.085 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:42:12.085 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:42:12.085 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:42:12 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757135532.396762,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 776932265
+}
+2025-09-06 10:42:12.085 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 10:42:46.962 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:42:12 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757135532.396762,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 776932265
+}
+2025-09-06 10:42:47.059 +05:30 [INF] Session activation logged to Django.
+2025-09-06 10:43:02.232 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:43:39.925 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:42:12 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757135532.396762,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 776932265
+}
+2025-09-06 10:43:55.318 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:42:12 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757135532.396762,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 776932265
+}
+2025-09-06 10:43:55.391 +05:30 [INF] Session activation logged to Django.
+2025-09-06 10:44:02.233 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:44:12.087 +05:30 [INF] License is present: true
+2025-09-06 10:44:12.088 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 10:44:12.161 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 10:44:12.161 +05:30 [INF] License is present: true
+2025-09-06 10:44:12.161 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 10:44:12.161 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757135532.396762 to 1757135652.621287
+2025-09-06 10:44:12.161 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 776932265 to 777052500
+2025-09-06 10:44:12.161 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 10:44:12.161 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757135652.621287,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":777052500}
+2025-09-06 10:44:12.162 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 10:44:12.284 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:44:12.284 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:44:12.284 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:44:12.284 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:44:12 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757135652.621287,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 777052500
+}
+2025-09-06 10:44:12.284 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 10:45:02.246 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:46:02.257 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:46:12.295 +05:30 [INF] License is present: true
+2025-09-06 10:46:12.295 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 10:46:12.454 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 10:46:12.454 +05:30 [INF] License is present: true
+2025-09-06 10:46:12.454 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 10:46:12.454 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757135652.621287 to 1757135772.901067
+2025-09-06 10:46:12.454 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 777052500 to 777172781
+2025-09-06 10:46:12.454 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 10:46:12.455 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757135772.901067,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":777172781}
+2025-09-06 10:46:12.455 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 10:46:12.588 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:46:12.589 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:46:12.589 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:46:12.590 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:46:12 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757135772.901067,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 777172781
+}
+2025-09-06 10:46:12.590 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 10:46:54.763 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:46:12 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757135772.901067,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 777172781
+}
+2025-09-06 10:47:02.261 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:47:03.020 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:46:12 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757135772.901067,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 777172781
+}
+2025-09-06 10:47:03.095 +05:30 [INF] Session activation logged to Django.
+2025-09-06 10:47:36.109 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:46:12 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757135772.901067,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 777172781
+}
+2025-09-06 10:47:39.656 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:46:12 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757135772.901067,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 777172781
+}
+2025-09-06 10:47:39.714 +05:30 [INF] Session activation logged to Django.
+2025-09-06 10:47:44.414 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:46:12 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757135772.901067,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 777172781
+}
+2025-09-06 10:47:51.191 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:46:12 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757135772.901067,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 777172781
+}
+2025-09-06 10:47:51.281 +05:30 [INF] Session activation logged to Django.
+2025-09-06 10:48:02.273 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:48:12.600 +05:30 [INF] License is present: true
+2025-09-06 10:48:12.600 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 10:48:12.680 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 10:48:12.680 +05:30 [INF] License is present: true
+2025-09-06 10:48:12.680 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 10:48:12.680 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757135772.901067 to 1757135893.131773
+2025-09-06 10:48:12.680 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 777172781 to 777293015
+2025-09-06 10:48:12.680 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 10:48:12.680 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757135893.131773,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":777293015}
+2025-09-06 10:48:12.681 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 10:48:12.831 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:48:12.831 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:48:12.831 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:48:12.831 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:48:13 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757135893.131773,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 777293015
+}
+2025-09-06 10:48:12.831 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 10:49:02.274 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:50:02.279 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:50:12.846 +05:30 [INF] License is present: true
+2025-09-06 10:50:12.846 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 10:50:13.026 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 10:50:13.026 +05:30 [INF] License is present: true
+2025-09-06 10:50:13.026 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 10:50:13.026 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757135893.131773 to 1757136013.466789
+2025-09-06 10:50:13.026 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 777293015 to 777413359
+2025-09-06 10:50:13.026 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 10:50:13.026 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757136013.466789,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":777413359}
+2025-09-06 10:50:13.026 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 10:50:13.169 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:50:13.169 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:50:13.169 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:50:13.169 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:50:13 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757136013.466789,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 777413359
+}
+2025-09-06 10:50:13.169 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 10:50:28.741 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:50:13 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757136013.466789,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 777413359
+}
+2025-09-06 10:50:44.799 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:50:13 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757136013.466789,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 777413359
+}
+2025-09-06 10:50:44.903 +05:30 [INF] Session activation logged to Django.
+2025-09-06 10:51:02.293 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:52:02.296 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:52:13.170 +05:30 [INF] License is present: true
+2025-09-06 10:52:13.170 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 10:52:13.345 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 10:52:13.345 +05:30 [INF] License is present: true
+2025-09-06 10:52:13.345 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 10:52:13.345 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757136013.466789 to 1757136133.791445
+2025-09-06 10:52:13.345 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 777413359 to 777533687
+2025-09-06 10:52:13.345 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 10:52:13.345 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757136133.791445,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":777533687}
+2025-09-06 10:52:13.345 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 10:52:13.541 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:52:13.542 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:52:13.542 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:52:13.546 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:52:13 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757136133.791445,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 777533687
+}
+2025-09-06 10:52:13.546 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 10:52:24.859 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:52:13 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757136133.791445,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 777533687
+}
+2025-09-06 10:52:33.637 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:52:13 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757136133.791445,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 777533687
+}
+2025-09-06 10:52:33.739 +05:30 [INF] Session activation logged to Django.
+2025-09-06 10:53:02.299 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:53:06.826 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:52:13 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757136133.791445,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 777533687
+}
+2025-09-06 10:54:02.311 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:54:13.561 +05:30 [INF] License is present: true
+2025-09-06 10:54:13.561 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 10:54:13.701 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 10:54:13.701 +05:30 [INF] License is present: true
+2025-09-06 10:54:13.701 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 10:54:13.701 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757136133.791445 to 1757136254.162288
+2025-09-06 10:54:13.701 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 777533687 to 777654031
+2025-09-06 10:54:13.701 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 10:54:13.701 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757136254.162288,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":777654031}
+2025-09-06 10:54:13.702 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 10:54:13.801 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:54:13.802 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:54:13.802 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:54:13.802 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:54:14 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757136254.162288,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 777654031
+}
+2025-09-06 10:54:13.802 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 10:55:02.312 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:56:02.321 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:56:13.806 +05:30 [INF] License is present: true
+2025-09-06 10:56:13.806 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 10:56:13.898 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 10:56:13.898 +05:30 [INF] License is present: true
+2025-09-06 10:56:13.898 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 10:56:13.898 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757136254.162288 to 1757136374.360167
+2025-09-06 10:56:13.898 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 777654031 to 777774234
+2025-09-06 10:56:13.898 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 10:56:13.898 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757136374.360167,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":777774234}
+2025-09-06 10:56:13.899 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 10:56:14.001 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:56:14.001 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:56:14.001 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:56:14.001 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:56:14 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757136374.360167,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 777774234
+}
+2025-09-06 10:56:14.001 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 10:57:02.330 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:58:02.334 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 10:58:14.004 +05:30 [INF] License is present: true
+2025-09-06 10:58:14.004 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 10:58:14.142 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 10:58:14.142 +05:30 [INF] License is present: true
+2025-09-06 10:58:14.142 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 10:58:14.142 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757136374.360167 to 1757136494.602267
+2025-09-06 10:58:14.142 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 777774234 to 777894484
+2025-09-06 10:58:14.142 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 10:58:14.142 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757136494.602267,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":777894484}
+2025-09-06 10:58:14.142 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 10:58:14.239 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:58:14.239 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:58:14.239 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 10:58:14.240 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 10:58:14 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757136494.602267,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 777894484
+}
+2025-09-06 10:58:14.240 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 10:59:02.341 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:00:02.356 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:00:14.246 +05:30 [INF] License is present: true
+2025-09-06 11:00:14.246 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 11:00:14.376 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 11:00:14.376 +05:30 [INF] License is present: true
+2025-09-06 11:00:14.376 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 11:00:14.376 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757136494.602267 to 1757136614.840427
+2025-09-06 11:00:14.376 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 777894484 to 778014718
+2025-09-06 11:00:14.376 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 11:00:14.376 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757136614.840427,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":778014718}
+2025-09-06 11:00:14.377 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 11:00:14.474 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:00:14.475 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:00:14.475 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:00:14.476 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:00:14 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757136614.840427,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 778014718
+}
+2025-09-06 11:00:14.476 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 11:01:02.358 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:02:02.359 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:02:14.490 +05:30 [INF] License is present: true
+2025-09-06 11:02:14.490 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 11:02:18.110 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 11:02:18.110 +05:30 [INF] License is present: true
+2025-09-06 11:02:18.110 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 11:02:18.110 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757136614.840427 to 1757136738.556833
+2025-09-06 11:02:18.110 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 778014718 to 778138453
+2025-09-06 11:02:18.110 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 11:02:18.111 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757136738.556833,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":778138453}
+2025-09-06 11:02:18.111 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 11:02:18.208 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:02:18.208 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:02:18.208 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:02:18.209 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:02:18 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757136738.556833,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 778138453
+}
+2025-09-06 11:02:18.209 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 11:03:02.364 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:04:02.375 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:04:18.224 +05:30 [INF] License is present: true
+2025-09-06 11:04:18.224 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 11:04:18.436 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 11:04:18.436 +05:30 [INF] License is present: true
+2025-09-06 11:04:18.436 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 11:04:18.436 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757136738.556833 to 1757136858.881496
+2025-09-06 11:04:18.436 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 778138453 to 778258765
+2025-09-06 11:04:18.436 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 11:04:18.436 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757136858.881496,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":778258765}
+2025-09-06 11:04:18.436 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 11:04:18.532 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:04:18.532 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:04:18.532 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:04:18.532 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:04:18 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757136858.881496,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 778258765
+}
+2025-09-06 11:04:18.532 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 11:05:02.386 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:06:02.392 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:06:18.536 +05:30 [INF] License is present: true
+2025-09-06 11:06:18.537 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 11:06:18.827 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 11:06:18.827 +05:30 [INF] License is present: true
+2025-09-06 11:06:18.827 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 11:06:18.827 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757136858.881496 to 1757136979.272133
+2025-09-06 11:06:18.827 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 778258765 to 778379156
+2025-09-06 11:06:18.827 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 11:06:18.827 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757136979.272133,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":778379156}
+2025-09-06 11:06:18.827 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 11:06:18.925 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:06:18.926 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:06:18.926 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:06:18.928 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:06:19 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757136979.272133,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 778379156
+}
+2025-09-06 11:06:18.928 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 11:07:02.410 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:07:57.477 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:06:19 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757136979.272133,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 778379156
+}
+2025-09-06 11:08:01.269 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:06:19 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757136979.272133,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 778379156
+}
+2025-09-06 11:08:01.463 +05:30 [INF] Session activation logged to Django.
+2025-09-06 11:08:02.410 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:08:18.939 +05:30 [INF] License is present: true
+2025-09-06 11:08:18.939 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 11:08:19.037 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 11:08:19.037 +05:30 [INF] License is present: true
+2025-09-06 11:08:19.037 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 11:08:19.037 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757136979.272133 to 1757137099.501135
+2025-09-06 11:08:19.037 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 778379156 to 778499375
+2025-09-06 11:08:19.037 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 11:08:19.038 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757137099.501135,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":778499375}
+2025-09-06 11:08:19.038 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 11:08:19.167 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:08:19.167 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:08:19.167 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:08:19.168 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:08:19 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757137099.501135,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 778499375
+}
+2025-09-06 11:08:19.168 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 11:09:02.422 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:10:02.432 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:10:19.167 +05:30 [INF] License is present: true
+2025-09-06 11:10:19.167 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 11:10:19.459 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 11:10:19.459 +05:30 [INF] License is present: true
+2025-09-06 11:10:19.459 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 11:10:19.459 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757137099.501135 to 1757137219.921748
+2025-09-06 11:10:19.459 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 778499375 to 778619796
+2025-09-06 11:10:19.459 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 11:10:19.459 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757137219.921748,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":778619796}
+2025-09-06 11:10:19.460 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 11:10:19.615 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:10:19.616 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:10:19.616 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:10:19.616 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:10:19 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757137219.921748,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 778619796
+}
+2025-09-06 11:10:19.616 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 11:11:02.445 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:12:02.451 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:12:19.625 +05:30 [INF] License is present: true
+2025-09-06 11:12:19.625 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 11:12:20.091 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 11:12:20.091 +05:30 [INF] License is present: true
+2025-09-06 11:12:20.091 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 11:12:20.091 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757137219.921748 to 1757137340.555223
+2025-09-06 11:12:20.091 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 778619796 to 778740421
+2025-09-06 11:12:20.091 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 11:12:20.091 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757137340.555223,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":778740421}
+2025-09-06 11:12:20.092 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 11:12:20.188 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:12:20.189 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:12:20.189 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:12:20.189 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:12:20 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757137340.555223,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 778740421
+}
+2025-09-06 11:12:20.189 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 11:13:02.454 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:14:02.455 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:14:20.189 +05:30 [INF] License is present: true
+2025-09-06 11:14:20.189 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 11:14:20.408 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 11:14:20.409 +05:30 [INF] License is present: true
+2025-09-06 11:14:20.409 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 11:14:20.409 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757137340.555223 to 1757137460.876942
+2025-09-06 11:14:20.409 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 778740421 to 778860750
+2025-09-06 11:14:20.409 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 11:14:20.409 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757137460.876942,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":778860750}
+2025-09-06 11:14:20.409 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 11:14:20.502 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:14:20.503 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:14:20.503 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:14:20.504 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:14:20 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757137460.876942,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 778860750
+}
+2025-09-06 11:14:20.504 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 11:15:02.466 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:15:03.173 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:14:20 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757137460.876942,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 778860750
+}
+2025-09-06 11:15:09.078 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:14:20 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757137460.876942,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 778860750
+}
+2025-09-06 11:15:09.222 +05:30 [INF] Session activation logged to Django.
+2025-09-06 11:16:02.468 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:16:20.513 +05:30 [INF] License is present: true
+2025-09-06 11:16:20.513 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 11:16:20.827 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 11:16:20.827 +05:30 [INF] License is present: true
+2025-09-06 11:16:20.827 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 11:16:20.827 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757137460.876942 to 1757137581.288372
+2025-09-06 11:16:20.827 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 778860750 to 778981156
+2025-09-06 11:16:20.827 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 11:16:20.827 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757137581.288372,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":778981156}
+2025-09-06 11:16:20.828 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 11:16:20.968 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:16:20.969 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:16:20.969 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:16:20.969 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:16:21 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757137581.288372,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 778981156
+}
+2025-09-06 11:16:20.969 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 11:16:49.355 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:16:21 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757137581.288372,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 778981156
+}
+2025-09-06 11:16:53.133 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:16:21 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757137581.288372,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 778981156
+}
+2025-09-06 11:16:53.215 +05:30 [INF] Session activation logged to Django.
+2025-09-06 11:17:02.479 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:18:02.490 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:18:10.607 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:16:21 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757137581.288372,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 778981156
+}
+2025-09-06 11:18:20.974 +05:30 [INF] License is present: true
+2025-09-06 11:18:20.974 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 11:18:21.209 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 11:18:21.209 +05:30 [INF] License is present: true
+2025-09-06 11:18:21.209 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 11:18:21.210 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757137581.288372 to 1757137701.681455
+2025-09-06 11:18:21.210 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 778981156 to 779101546
+2025-09-06 11:18:21.210 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 11:18:21.210 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757137701.681455,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":779101546}
+2025-09-06 11:18:21.210 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 11:18:21.322 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:18:21.322 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:18:21.322 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:18:21.322 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:18:21 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757137701.681455,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 779101546
+}
+2025-09-06 11:18:21.322 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 11:18:33.861 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:18:21 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757137701.681455,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 779101546
+}
+2025-09-06 11:18:33.915 +05:30 [INF] Session activation logged to Django.
+2025-09-06 11:19:02.496 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:20:02.496 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:20:21.330 +05:30 [INF] License is present: true
+2025-09-06 11:20:21.330 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 11:20:21.615 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 11:20:21.615 +05:30 [INF] License is present: true
+2025-09-06 11:20:21.615 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 11:20:21.615 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757137701.681455 to 1757137822.081437
+2025-09-06 11:20:21.615 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 779101546 to 779221953
+2025-09-06 11:20:21.615 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 11:20:21.615 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757137822.081437,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":779221953}
+2025-09-06 11:20:21.615 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 11:20:21.798 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:20:21.799 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:20:21.799 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:20:21.802 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:20:22 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757137822.081437,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 779221953
+}
+2025-09-06 11:20:21.803 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 11:21:02.503 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:22:02.517 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:22:21.810 +05:30 [INF] License is present: true
+2025-09-06 11:22:21.810 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 11:22:22.077 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 11:22:22.077 +05:30 [INF] License is present: true
+2025-09-06 11:22:22.077 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 11:22:22.077 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757137822.081437 to 1757137942.542374
+2025-09-06 11:22:22.077 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 779221953 to 779342406
+2025-09-06 11:22:22.077 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 11:22:22.077 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757137942.542374,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":779342406}
+2025-09-06 11:22:22.077 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 11:22:22.240 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:22:22.240 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:22:22.240 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:22:22.241 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:22:22 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757137942.542374,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 779342406
+}
+2025-09-06 11:22:22.241 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 11:23:02.523 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:24:02.534 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:24:22.249 +05:30 [INF] License is present: true
+2025-09-06 11:24:22.249 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 11:24:22.588 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 11:24:22.588 +05:30 [INF] License is present: true
+2025-09-06 11:24:22.588 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 11:24:22.588 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757137942.542374 to 1757138063.061855
+2025-09-06 11:24:22.588 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 779342406 to 779462921
+2025-09-06 11:24:22.588 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 11:24:22.588 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757138063.061855,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":779462921}
+2025-09-06 11:24:22.589 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 11:24:22.760 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:24:22.761 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:24:22.761 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:24:22.761 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:24:23 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757138063.061855,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 779462921
+}
+2025-09-06 11:24:22.761 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 11:25:02.550 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:26:02.557 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:26:22.774 +05:30 [INF] License is present: true
+2025-09-06 11:26:22.774 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 11:26:23.316 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 11:26:23.316 +05:30 [INF] License is present: true
+2025-09-06 11:26:23.316 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 11:26:23.316 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757138063.061855 to 1757138183.756305
+2025-09-06 11:26:23.316 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 779462921 to 779583640
+2025-09-06 11:26:23.316 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 11:26:23.316 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757138183.756305,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":779583640}
+2025-09-06 11:26:23.317 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 11:26:23.454 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:26:23.455 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:26:23.455 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:26:23.457 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:26:23 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757138183.756305,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 779583640
+}
+2025-09-06 11:26:23.457 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 11:26:56.404 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:26:23 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757138183.756305,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 779583640
+}
+2025-09-06 11:27:02.562 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:27:36.949 +05:30 [INF] Middleware LicenseInfo: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:26:23 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757138183.756305,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 779583640
+}
+2025-09-06 11:27:37.062 +05:30 [INF] Session activation logged to Django.
+2025-09-06 11:28:02.567 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:28:23.472 +05:30 [INF] License is present: true
+2025-09-06 11:28:23.472 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 11:28:23.618 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 11:28:23.618 +05:30 [INF] License is present: true
+2025-09-06 11:28:23.618 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 11:28:23.618 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757138183.756305 to 1757138304.076291
+2025-09-06 11:28:23.619 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 779583640 to 779703953
+2025-09-06 11:28:23.619 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 11:28:23.619 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757138304.076291,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":779703953}
+2025-09-06 11:28:23.620 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 11:28:23.729 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:28:23.729 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:28:23.729 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:28:23.730 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:28:24 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757138304.076291,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 779703953
+}
+2025-09-06 11:28:23.730 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 11:29:02.570 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:30:02.576 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:30:23.733 +05:30 [INF] License is present: true
+2025-09-06 11:30:23.733 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 11:30:23.933 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 11:30:23.933 +05:30 [INF] License is present: true
+2025-09-06 11:30:23.933 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 11:30:23.933 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757138304.076291 to 1757138424.407534
+2025-09-06 11:30:23.933 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 779703953 to 779824265
+2025-09-06 11:30:23.933 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 11:30:23.934 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757138424.407534,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":779824265}
+2025-09-06 11:30:23.934 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 11:30:24.029 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:30:24.030 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:30:24.030 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:30:24.030 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:30:24 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757138424.407534,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 779824265
+}
+2025-09-06 11:30:24.030 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 11:31:02.585 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:32:02.589 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:32:24.043 +05:30 [INF] License is present: true
+2025-09-06 11:32:24.043 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 11:32:24.189 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 11:32:24.189 +05:30 [INF] License is present: true
+2025-09-06 11:32:24.189 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 11:32:24.189 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757138424.407534 to 1757138544.660977
+2025-09-06 11:32:24.189 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 779824265 to 779944531
+2025-09-06 11:32:24.189 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 11:32:24.189 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757138544.660977,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":779944531}
+2025-09-06 11:32:24.190 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 11:32:24.318 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:32:24.318 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:32:24.318 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:32:24.320 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:32:24 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757138544.660977,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 779944531
+}
+2025-09-06 11:32:24.320 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 11:33:02.600 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:34:02.602 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:34:24.327 +05:30 [INF] License is present: true
+2025-09-06 11:34:24.328 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 11:34:24.512 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 11:34:24.512 +05:30 [INF] License is present: true
+2025-09-06 11:34:24.512 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 11:34:24.512 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757138544.660977 to 1757138664.983167
+2025-09-06 11:34:24.512 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 779944531 to 780064843
+2025-09-06 11:34:24.512 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 11:34:24.512 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757138664.983167,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":780064843}
+2025-09-06 11:34:24.512 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 11:34:24.635 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:34:24.635 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:34:24.636 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:34:24.636 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:34:24 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757138664.983167,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 780064843
+}
+2025-09-06 11:34:24.636 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 11:35:02.609 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:36:02.617 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:36:24.649 +05:30 [INF] License is present: true
+2025-09-06 11:36:24.649 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 11:36:24.857 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 11:36:24.857 +05:30 [INF] License is present: true
+2025-09-06 11:36:24.857 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 11:36:24.857 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757138664.983167 to 1757138785.332503
+2025-09-06 11:36:24.857 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 780064843 to 780185187
+2025-09-06 11:36:24.857 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 11:36:24.857 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757138785.332503,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":780185187}
+2025-09-06 11:36:24.857 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 11:36:24.982 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:36:24.983 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:36:24.983 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:36:24.983 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:36:25 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757138785.332503,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 780185187
+}
+2025-09-06 11:36:24.983 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 11:37:02.624 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:38:02.627 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:38:24.986 +05:30 [INF] License is present: true
+2025-09-06 11:38:24.986 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 11:38:25.259 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 11:38:25.259 +05:30 [INF] License is present: true
+2025-09-06 11:38:25.259 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 11:38:25.259 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757138785.332503 to 1757138905.732758
+2025-09-06 11:38:25.259 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 780185187 to 780305593
+2025-09-06 11:38:25.259 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 11:38:25.259 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757138905.732758,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":780305593}
+2025-09-06 11:38:25.259 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 11:38:25.383 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:38:25.384 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:38:25.384 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:38:25.386 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:38:25 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757138905.732758,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 780305593
+}
+2025-09-06 11:38:25.386 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 11:39:02.638 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:40:02.639 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:40:25.387 +05:30 [INF] License is present: true
+2025-09-06 11:40:25.387 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 11:40:25.690 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 11:40:25.690 +05:30 [INF] License is present: true
+2025-09-06 11:40:25.690 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 11:40:25.691 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757138905.732758 to 1757139026.167122
+2025-09-06 11:40:25.691 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 780305593 to 780426031
+2025-09-06 11:40:25.691 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 11:40:25.691 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757139026.167122,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":780426031}
+2025-09-06 11:40:25.691 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 11:40:25.864 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:40:25.865 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:40:25.865 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:40:25.865 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:40:26 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757139026.167122,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 780426031
+}
+2025-09-06 11:40:25.865 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 11:41:02.638 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:42:02.649 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:42:25.865 +05:30 [INF] License is present: true
+2025-09-06 11:42:25.865 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 11:42:26.041 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 11:42:26.041 +05:30 [INF] License is present: true
+2025-09-06 11:42:26.041 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 11:42:26.041 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757139026.167122 to 1757139146.514995
+2025-09-06 11:42:26.041 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 780426031 to 780546375
+2025-09-06 11:42:26.041 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 11:42:26.041 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757139146.514995,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":780546375}
+2025-09-06 11:42:26.041 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 11:42:26.211 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:42:26.211 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:42:26.211 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:42:26.212 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:42:26 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757139146.514995,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 780546375
+}
+2025-09-06 11:42:26.212 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 11:43:02.650 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:44:02.656 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:44:26.213 +05:30 [INF] License is present: true
+2025-09-06 11:44:26.213 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 11:44:26.427 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 11:44:26.427 +05:30 [INF] License is present: true
+2025-09-06 11:44:26.427 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 11:44:26.427 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757139146.514995 to 1757139266.901301
+2025-09-06 11:44:26.427 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 780546375 to 780666750
+2025-09-06 11:44:26.427 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 11:44:26.427 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757139266.901301,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":780666750}
+2025-09-06 11:44:26.428 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 11:44:26.562 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:44:26.562 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:44:26.562 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:44:26.562 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:44:26 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757139266.901301,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 780666750
+}
+2025-09-06 11:44:26.562 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 11:45:02.659 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:46:02.673 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:46:26.563 +05:30 [INF] License is present: true
+2025-09-06 11:46:26.564 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 11:46:26.744 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 11:46:26.744 +05:30 [INF] License is present: true
+2025-09-06 11:46:26.744 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 11:46:26.744 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757139266.901301 to 1757139387.223325
+2025-09-06 11:46:26.744 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 780666750 to 780787078
+2025-09-06 11:46:26.744 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 11:46:26.744 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757139387.223325,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":780787078}
+2025-09-06 11:46:26.744 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 11:46:26.884 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:46:26.885 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:46:26.885 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:46:26.888 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:46:27 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757139387.223325,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 780787078
+}
+2025-09-06 11:46:26.888 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 11:47:02.687 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:48:02.696 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:48:26.895 +05:30 [INF] License is present: true
+2025-09-06 11:48:26.895 +05:30 [INF] [License Polling] Enriched JSON: { license_key = 32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10, used_statements = 4 }
+2025-09-06 11:48:27.083 +05:30 [INF] [License Polling] Expiry: 1788419740.349483
+2025-09-06 11:48:27.083 +05:30 [INF] License is present: true
+2025-09-06 11:48:27.083 +05:30 [INF] [SetServerExpiryTime] Updating license expiry time from 1788419740.349483 to 1788419740.349483
+2025-09-06 11:48:27.083 +05:30 [INF] [SetServerCurrentTime] Updating license current time from 1757139387.223325 to 1757139507.563442
+2025-09-06 11:48:27.083 +05:30 [INF] [SetSystemUpTime] Updating system up-time from 780787078 to 780907421
+2025-09-06 11:48:27.083 +05:30 [INF] [License Polling] Saving updated license info to disk.
+2025-09-06 11:48:27.083 +05:30 [INF] [License Polling] Enriched JSON: {"license_key":"32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10","current_timestamp":1757139507.563442,"expiry_timestamp":1788419740.349483,"number_of_users":1,"number_of_statements":500,"role":"CA","UsedStatements":4,"system_up_time":780907421}
+2025-09-06 11:48:27.084 +05:30 [INF] Fingerprint: AQAQ$S-1-5-184C4C4544-0051-4A10-804B-B8C04F595932
+2025-09-06 11:48:27.216 +05:30 [INF] Writing license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:48:27.216 +05:30 [INF] Wrote license file to C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:48:27.216 +05:30 [INF] [License Polling] License information securely saved at C:\ProgramData\Cyphersol\license.enc
+2025-09-06 11:48:27.216 +05:30 [INF] [License Polling] LicenseInfo updated and saved successfully: {
+  "LicenseKey": "32f31e741da82e0b0b61eeca9e9a942d1ce4b5dab2ab7cdbf27d7d8dce102e10",
+  "CurrentTimestampIST": "06-Sep-2025 11:48:27 AM IST",
+  "ExpiryTimestampIST": "03-Sep-2026 12:45:40 PM IST",
+  "CurrentTimestamp": 1757139507.563442,
+  "ExpiryTimestamp": 1788419740.349483,
+  "NumberOfUsers": 1,
+  "NumberOfStatements": 500,
+  "Role": "CA",
+  "UsedStatements": 4,
+  "SystemUpTime": 780907421
+}
+2025-09-06 11:48:27.216 +05:30 [INF] [License Polling] License resynced successfully.
+2025-09-06 11:49:02.702 +05:30 [INF] Re-advertising 1 mDNS services...
+2025-09-06 11:50:02.706 +05:30 [INF] Re-advertising 1 mDNS services...

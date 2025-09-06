@@ -36,6 +36,20 @@ export default function GenerateReport({ activeTab }) {
   const [dateRangeWarning, setDateRangeWarning] = useState(null);
   const [isCapable, setIsCapable] = useState(true);
 
+  useEffect(() => {
+    const handleIsCapableChanged = (newIsCapableValue) => {
+      console.log('isCapable-changed event received', newIsCapableValue);
+      setIsCapable(newIsCapableValue);
+    };
+
+    window.electron.onIsCapableChanged(handleIsCapableChanged);
+
+    // Cleanup the listener when the component unmounts
+    return () => {
+      window.electron.removeIsCapableChangedListener();
+    };
+  }, []);
+
   const hasScannedOrEncodedWarning = useMemo(() => {
     if (!Array.isArray(warning)) return false;
 

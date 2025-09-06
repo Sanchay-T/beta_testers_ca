@@ -168,6 +168,7 @@ contextBridge.exposeInMainWorld("electron", {
     resetPassword: (data) => ipcRenderer.invoke("auth:reset-password", data),
     getUser: () => ipcRenderer.invoke("auth:getUser"),
     checkAccountStatus: () => ipcRenderer.invoke("auth:check-account-status"),
+    refreshModeDetected: () => ipcRenderer.invoke("auth:refresh-mode-detected"),
     // updateUser: (userData) => ipcRenderer.invoke('auth:updateUser', userData)
     checkLicense: () => ipcRenderer.invoke("license:check"),
     searchNetworkLicenses: (networkLicense) => ipcRenderer.invoke("license:search-network-licenses", networkLicense),
@@ -215,6 +216,13 @@ contextBridge.exposeInMainWorld("electron", {
   getTallyTransactions: (caseId,individualId) =>
     ipcRenderer.invoke("get-tally-transactions", caseId,individualId),
   getTallyVouchers: () => ipcRenderer.invoke("get-tally-vouchers"),
+  onIsCapableChanged: (callback) => 
+    ipcRenderer.on('isCapable-changed', (_event, isCapable) => 
+      callback(isCapable)
+    ),
+  removeIsCapableChangedListener: () => {
+    ipcRenderer.removeAllListeners('isCapable-changed');
+  },
   getProgressed: () => ipcRenderer.invoke("get-user-progress"),
 
   // Add auto-update related methods

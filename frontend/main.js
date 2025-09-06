@@ -40,45 +40,7 @@ const gatewayServer = require("./InitiateGatewayServer.js");
 const systemInfo = require("./SystemInformation");
 const userDataDir = app.getPath("userData");
 const { Category_Master } = require("./db/schema/Category_Master.js");
-
-// -------------------------------------------------------------
-// Initialise global configuration EARLY so all subsequently
-// required local modules can rely on it without throwing
-// ReferenceError (e.g. "isDev is not defined").
-// -------------------------------------------------------------
-
-// Determine if we're in development mode
-const appIsPackaged = app.isPackaged;
-const nodeEnv = process.env.NODE_ENV;
-const isDevelopment = !appIsPackaged || nodeEnv === "development";
-
-log.info("=== AppConfig Initialization ===");
-log.info("app.isPackaged:", appIsPackaged);
-log.info("process.env.NODE_ENV:", nodeEnv);
-log.info("Determined isDev:", isDevelopment);
-
-global.AppConfig = {
-  // Flag that indicates whether we are running in development
-  // or inside the packaged application.
-  // Use app.isPackaged as primary check, fallback to NODE_ENV
-  isDev: isDevelopment,
-  isCapable: process.env.IS_CAPABLE.toLowerCase() === "true" ? true : false,
-
-  // Resolve the base directory based on the environment.
-  get baseDir() {
-    return this.isDev ? __dirname : process.resourcesPath;
-  },
-
-  // Expose Electron's user-data directory for convenient reuse.
-  userDataDir,
-};
-
-// Log the final configuration
-log.info("=== Final AppConfig ===");
-log.info("isDev:", global.AppConfig.isDev);
-log.info("baseDir:", global.AppConfig.baseDir);
-log.info("userDataDir:", global.AppConfig.userDataDir);
-log.info("========================");
+const AppConfig = require("./config.js");
 
 // NOW it's safe to require database after AppConfig is set
 const databaseManager = require("./db/db");
@@ -148,7 +110,7 @@ log.info("Update Configuration:", {
 log.info("process.env.NODE_ENV", process.env.NODE_ENV);
 
 // Allow updates without code signing in development
-if (global.AppConfig.isDev) {
+if (AppConfig.isDev) {
   autoUpdater.forceDevUpdateConfig = true;
 }
 
@@ -1295,7 +1257,7 @@ async function startPythonExecutable() {
       stdio: "pipe",
     };
 
-    if (global.AppConfig.isDev) {
+    if (AppConfig.isDev) {
       // Development mode code remains the same
       const venvPythonPath =
         process.platform === "win32"
@@ -1443,7 +1405,7 @@ const crypto = require("crypto");
 const { getSystemUUID } = require("./utils/getSystemUUID.js");
 const { default: axios } = require("axios");
 
-const isDev = global.AppConfig?.isDev ?? !app.isPackaged;
+const isDev = AppConfig.isDev;
 
 const DEV_MEDIA_DIR = path.join(__dirname, "media", "vouchers", "tallyprime");
 const PROD_MEDIA_DIRS = [
@@ -1719,11 +1681,11 @@ async function createWindow() {
     },
     icon: path.join(__dirname, "assets", "cyphersol-icon.png"),
     autoHideMenuBar: true,
-    title: global.AppConfig.isDev
+    title: AppConfig.isDev
       ? `CypherSol Dev v${app.getVersion()}`
       : `CypherSol v${app.getVersion()}`,
   });
-  if (global.AppConfig.isDev) {
+  if (AppConfig.isDev) {
     win.loadURL("http://localhost:3000");
   } else {
     const prodPath = path.resolve(
@@ -1780,7 +1742,7 @@ async function createWindow() {
 
   const createTempDirectory = () => {
     let tempDir = "";
-    if (global.AppConfig.isDev) {
+    if (AppConfig.isDev) {
       tempDir = path.join(__dirname, "tmp");
     } else {
       tempDir = path.join(app.getPath("temp"), "statements");
@@ -1837,19 +1799,19 @@ async function createWindow() {
   generateReportIpc(TMP_DIR);
   registerOpenFileIpc(app.getPath("userData"));
   registerReportHandlers(TMP_DIR);
-  registerAuthHandlers(app.getPath("userData"));
+  registerAuthHandlers(app.getPath("userData"), app);
   registerOpportunityToEarnIpc();
   registerTallyIpc();
   registerVoucherIpc();
   getdata();
   registerEditReportHandlers();
   registerExcelDownloadHandlers(app.getPath("downloads"));
-  registerAppLevelIPCHandlers(app, win, global.AppConfig.baseDir);
+  registerAppLevelIPCHandlers(app, win, AppConfig.baseDir);
 
   // Auto-update IPC handlers with detailed logging
   ipcMain.handle("check-for-updates", async () => {
     log.info("Manual update check requested");
-    if (global.AppConfig.isDev) {
+    if (AppConfig.isDev) {
       const msg = "Skip update check in dev mode";
       log.info(msg);
       return msg;
@@ -2010,7 +1972,7 @@ async function createWindow() {
   });
 
   ipcMain.handle("is-capable", () => {
-    return global.AppConfig.isCapable;
+    return AppConfig.isCapable;
   });
 
   ipcMain.handle("preview-file", async (_event, filePath) => {
@@ -2025,7 +1987,7 @@ async function createWindow() {
 
   // Check for updates after window is ready
   win.webContents.on("did-finish-load", () => {
-    if (!global.AppConfig.isDev) {
+    if (!AppConfig.isDev) {
       // Initial check after 3 seconds
       setTimeout(checkForUpdates, 3000);
 
@@ -2063,7 +2025,7 @@ async function initializeDatabase() {
 
   // Read master data file
   const masterDataPath = path.join(
-    isDev ? __dirname : process.resourcesPath,
+    AppConfig.isDev ? __dirname : process.resourcesPath,
     "Master_data.json"
   );
   log.info("Master data path:", process.resourcesPath);
@@ -2151,33 +2113,6 @@ async function initializeDatabase() {
   }
 }
 
-async function getDeviceInfoFromServer() {
-  // const deviceInfo = {
-  //   uuid: systemInfo.getUUID(),
-  //   macAddress: systemInfo.getMACAddress(),
-  //   hostname: systemInfo.getHostname(),
-  //   windowsUserSID: systemInfo.getWindowsUserSID(),
-  //   username: systemInfo.getUsername(),
-  // };
-  const uuid = await getSystemUUID();
-
-  log.info("Device uuid:", uuid);
-
-
-  try {
-  const response = await axios.post(
-      process.env.BASE_API_URL + "/api/devices/search/",
-      {
-        email:"qureshi.aiyaz17@gmail.com",
-        uuid: uuid,
-      }
-    );
-
-    console.log("Response from server:", response.data);
-  } catch (error) {
-    log.error("Error sending device info to server:", error);
-  }
-}
 app.whenReady().then(async () => {
   log.info("🚀 APP READY - STARTING INITIALIZATION SEQUENCE", {
     userDataDir: userDataDir,
@@ -2197,7 +2132,6 @@ app.whenReady().then(async () => {
       const dbManager = databaseManager.getInstance();
       await dbManager.initialize(userDataDir);
       await initializeDatabase();
-      await getDeviceInfoFromServer();
       log.info("✅ Database initialized successfully");
     } catch (error) {
       log.error("❌ Database initialization failed:", error);

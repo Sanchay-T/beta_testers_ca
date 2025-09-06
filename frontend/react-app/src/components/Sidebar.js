@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { BadgeCheck, Bell, CreditCard, LogOut, Sparkles } from "lucide-react";
+import { BadgeCheck, Bell, CreditCard, LogOut, Sparkles, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -130,6 +130,20 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
     }
   };
 
+  const handleRefreshMode = async () => {
+    try {
+      const result = await window.electron.auth.refreshModeDetected();
+      if (result.success) {
+        alert(`Server detected mode: ${result.detectedMode}. This is now your new mode.`);
+      } else {
+        alert(`Failed to refresh mode: ${result.error}`);
+      }
+    } catch (error) {
+      console.error("Failed to refresh mode:", error);
+      alert("An error occurred while refreshing the mode.");
+    }
+  };
+
   const MenuItem = ({ item, level = 0 }) => {
     const hasSubmenu = item.items?.length > 0;
     const { open: isOpen } = useSidebar();
@@ -251,8 +265,8 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
               </AvatarFallback>
             </Avatar>
             {!isCollapsed && (
-              <div className="ml-3 flex-1 text-left">
-                <p className="text-sm font-medium hover:text-black">
+              <div className="ml-3 flex-1 text-left min-w-0">
+                <p className="text-sm font-medium hover:text-black truncate">
                   {user?.email || "User"}
                 </p>
               </div>
@@ -263,11 +277,11 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
           <DropdownMenuLabel>
             <div className="flex items-center gap-2">
               <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src={user?.avatar} alt={user?.name || "User"} />
-                <AvatarFallback>{getInitials(user?.name)}</AvatarFallback>
+                <AvatarImage src={user?.avatar} alt={user?.email || "User"} />
+                <AvatarFallback>{getInitials(user?.email)}</AvatarFallback>
               </Avatar>
               <div>
-                <p className="text-sm font-medium">{user?.name || "User"}</p>
+                <p className="text-sm font-medium">{user?.email|| "User"}</p>
               </div>
             </div>
           </DropdownMenuLabel>
@@ -291,6 +305,10 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
             </DropdownMenuItem> */}
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleRefreshMode}>
+            <RefreshCw className="mr-2 h-4 w-4" />
+            <span>Refresh Mode</span>
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={handleLogout}>
             <LogOut className="mr-2 h-4 w-4" />
             <span>Log out</span>
