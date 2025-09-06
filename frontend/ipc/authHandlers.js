@@ -240,17 +240,16 @@ async function getDeviceInfoFromServer(email, event) {
     if (response.data && response.data[0].detected_mode) {
       const detectedMode = response.data[0].detected_mode.toLowerCase();
 
-      let isCapable = false;
-      if (detectedMode === "scan" || detectedMode === "unscan") {
-        isCapable = true;
-      }
-
-      AppConfig.setIsCapable(isCapable);
+      AppConfig.setMode(detectedMode);
 
       // Notify renderer process
       if (event && event.sender) {
-        event.sender.send("isCapable-changed", { isCapable, detectedMode });
-        log.info(`Sent isCapable-changed event to renderer with mode: ${detectedMode}`);
+        event.sender.send("mode-updated", { 
+          useLocalServer: AppConfig.useLocalServer,
+          isOcrEnabled: AppConfig.isOcrEnabled,
+          detectedMode: AppConfig.detected_mode,
+        });
+        log.info(`Sent mode-updated event to renderer with mode: ${detectedMode}`);
       }
       return detectedMode;
     }

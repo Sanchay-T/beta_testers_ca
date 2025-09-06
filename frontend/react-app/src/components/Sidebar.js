@@ -26,6 +26,15 @@ import { useReportContext } from "../contexts/ReportContext";
 import { useParams } from "react-router-dom";
 import { ScrollArea } from "../components/ui/scroll-area";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "./ui/alert-dialog";
 
 const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
   const { logout, setError, user } = useAuth();
@@ -37,6 +46,8 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
     Other: false, // "Other" remains expanded by default if desired
     Tally: true, // Tally is open by default
   });
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogContent, setDialogContent] = useState({ title: "", message: "" });
 
   // Get initials for avatar fallback
   const getInitials = (name) => {
@@ -134,14 +145,24 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
     try {
       const result = await window.electron.auth.refreshModeDetected();
       if (result.success) {
-        alert(`Server detected mode: ${result.detectedMode}. This is now your new mode.`);
+        setDialogContent({
+          title: "Mode Refresh Successful",
+          message: `Server detected mode: ${result.detectedMode}.`, 
+        });
       } else {
-        alert(`Failed to refresh mode: ${result.error}`);
+        setDialogContent({
+          title: "Mode Refresh Failed",
+          message: `Failed to refresh mode: ${result.error}`,
+        });
       }
     } catch (error) {
       console.error("Failed to refresh mode:", error);
-      alert("An error occurred while refreshing the mode.");
+      setDialogContent({
+        title: "Error",
+        message: "An error occurred while refreshing the mode.",
+      });
     }
+    setDialogOpen(true);
   };
 
   const MenuItem = ({ item, level = 0 }) => {
@@ -167,9 +188,9 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
       <div className="w-full">
         <button
           title={isCollapsed ? item.title : undefined}
-          className={`w-full flex items-center justify-start p-2 rounded-md transition-all duration-200 ease-in-out ${
-            level > 0 ? "ml-4" : ""
-          } ${
+          className={`w-full flex items-center justify-start p-2 rounded-md transition-all duration-200 ease-in-out ${ 
+            level > 0 ? "ml-4" : "" 
+          } ${ 
             activeTab === item.title && !hasSubmenu
               ? "bg-gray-300 text-black font-semibold dark:bg-slate-300"
               : "text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white"
@@ -254,7 +275,7 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
-            className={`flex items-center w-full ${
+            className={`flex items-center w-full ${ 
               open ? "p-2" : "p-1"
             } hover:bg-gray-100 rounded-md transition-all duration-200`}
           >
@@ -343,7 +364,7 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
           <img
             src={logo}
             alt="Logo"
-            className={`h-12 cursor-pointer transition-all duration-300 ${
+            className={`h-12 cursor-pointer transition-all duration-300 ${ 
               !open ? "w-8" : "w-auto"
             }`}
             onClick={() => navigate("/")}
@@ -362,6 +383,19 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
       </SidebarFooter>
       {/* We're still including SidebarRail but will disable its functionality */}
       <SidebarRail className="pointer-events-none" />
+      <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{dialogContent.title}</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogDescription>
+            {dialogContent.message}
+          </AlertDialogDescription>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setDialogOpen(false)}>OK</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Sidebar>
   );
 };

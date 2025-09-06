@@ -972,8 +972,7 @@ function generateReportIpc(tmpdir_path) {
 
         let response = null;
         const AppConfig = require("../config.js");
-        const IS_CAPABLE = AppConfig.isCapable;
-        // const IS_CAPABLE = false;
+        const IS_CAPABLE = AppConfig.useLocalServer;
 
         if (!IS_CAPABLE) {
           response = await axios.post(generateReportEndpointServer, form, {

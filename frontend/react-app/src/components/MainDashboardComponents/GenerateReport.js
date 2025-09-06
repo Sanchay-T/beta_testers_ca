@@ -34,19 +34,19 @@ export default function GenerateReport({ activeTab }) {
   const [warning, setWarning] = useState([]);
   const [warningExpanded, setWarningExpanded] = useState(false);
   const [dateRangeWarning, setDateRangeWarning] = useState(null);
-  const [isCapable, setIsCapable] = useState(true);
+  const [isOcrEnabled, setIsOcrEnabled] = useState(true);
 
   useEffect(() => {
-    const handleIsCapableChanged = (newIsCapableValue) => {
-      console.log('isCapable-changed event received', newIsCapableValue);
-      setIsCapable(newIsCapableValue);
+    const handleModeUpdated = (data) => {
+      console.log('mode-updated event received', data);
+      setIsOcrEnabled(data.isOcrEnabled);
     };
 
-    window.electron.onIsCapableChanged(handleIsCapableChanged);
+    window.electron.onModeUpdated(handleModeUpdated);
 
     // Cleanup the listener when the component unmounts
     return () => {
-      window.electron.removeIsCapableChangedListener();
+      window.electron.removeModeUpdatedListener();
     };
   }, []);
 
@@ -77,8 +77,8 @@ export default function GenerateReport({ activeTab }) {
     const base = warning.filter((msg) => !msg.startsWith("Balance mismatch"));
     // when OCR is allowed -> hide scanned warnings (old behavior)
     // when OCR is NOT allowed -> show scanned warnings (what you want now)
-    return isCapable ? base.filter((msg) => !OCR_REASON_RE.test(msg)) : base;
-  }, [warning, isCapable]);
+    return isOcrEnabled ? base.filter((msg) => !OCR_REASON_RE.test(msg)) : base;
+  }, [warning, isOcrEnabled]);
 
   const onlyOcrableFailures = (reasons = []) =>
     reasons.length > 0 && reasons.every((r) => OCR_REASON_RE.test(r));
@@ -275,7 +275,7 @@ export default function GenerateReport({ activeTab }) {
           if (activeTab !== "Generate Report")
             toast({
               title: "Failed",
-              description: `${caseName} report had some issues!`,
+              description: `${caseName} report had some issues!`, 
               variant: "destructive",
             });
         } else {
@@ -314,7 +314,7 @@ export default function GenerateReport({ activeTab }) {
         if (result.data.totalTransactions && activeTab !== "Generate Report") {
           toast({
             title: "Success",
-            description: `${caseName} report generated successfully!`,
+            description: `${caseName} report generated successfully!`, 
             duration: Infinity,
             variant: "success",
           });
@@ -372,10 +372,10 @@ export default function GenerateReport({ activeTab }) {
         console.log({ scannedOCRFiles });
         // If any OCR-worthy files found
         if (eligibleIndexes.length > 0) {
-          const tempIsCapable = await window.electron.isCapable();
-          setIsCapable(tempIsCapable);
-          console.log({ tempIsCapable });
-          if (tempIsCapable === false) {
+          const tempIsOcrEnabled = await window.electron.isOcrEnabled();
+          setIsOcrEnabled(tempIsOcrEnabled);
+          console.log({ tempIsOcrEnabled });
+          if (tempIsOcrEnabled === false) {
             // toast({
             //   title: "Error",
             //   description:
@@ -424,7 +424,7 @@ export default function GenerateReport({ activeTab }) {
           });
           // toast({
           //   title: "OCR Triggered",
-          //   description: `Detected scanned or encoded PDFs.`,
+          //   description: `Detected scanned or encoded PDFs.`, 
           //   variant: "default",
           //   duration: 5000,
           // });
@@ -540,7 +540,7 @@ export default function GenerateReport({ activeTab }) {
                 if (activeTab !== "Generate Report")
                   toast({
                     title: "Failed",
-                    description: `${caseName} report had some issues!`,
+                    description: `${caseName} report had some issues!`, 
                     variant: "destructive",
                   });
               } else {
@@ -582,7 +582,7 @@ export default function GenerateReport({ activeTab }) {
               ) {
                 toast({
                   title: "Success",
-                  description: `${caseName} report generated successfully!`,
+                  description: `${caseName} report generated successfully!`, 
                   duration: Infinity,
                   variant: "success",
                 });
@@ -878,7 +878,7 @@ export default function GenerateReport({ activeTab }) {
               </ul>
             </div>
           )}
-          {hasScannedOrEncodedWarning && isCapable && (
+          {hasScannedOrEncodedWarning && isOcrEnabled && (
             <div className="mb-4 mt-2">
               {/* <h3 className="text-md font-semibold flex items-center gap-x-2 mb-2">
                 <AlertCircle className="text-blue-500 w-5 h-5" />

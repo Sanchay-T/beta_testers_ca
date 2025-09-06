@@ -1971,8 +1971,8 @@ async function createWindow() {
     }
   });
 
-  ipcMain.handle("is-capable", () => {
-    return AppConfig.isCapable;
+  ipcMain.handle("is-ocr-enabled", () => {
+    return AppConfig.isOcrEnabled;
   });
 
   ipcMain.handle("preview-file", async (_event, filePath) => {

@@ -8,7 +8,7 @@ contextBridge.exposeInMainWorld("electron", {
   openFileDialog: () => ipcRenderer.invoke("open-file-dialog"),
   previewFile: (filePath) => ipcRenderer.invoke("preview-file", filePath),
   getFileContent: (filePath) => ipcRenderer.invoke("get-file-content", filePath),
-  isCapable: () => ipcRenderer.invoke("is-capable"),
+  isOcrEnabled: () => ipcRenderer.invoke("is-ocr-enabled"),
   fetchPdfContent: (filePath, caseName) =>
     ipcRenderer.invoke("fetch-pdf-content", filePath, caseName),
 
@@ -195,6 +195,13 @@ contextBridge.exposeInMainWorld("electron", {
   onLicenseExpired: (callback) => ipcRenderer.on("navigateToLogin", callback),
   removeLicenseExpiredListener: () =>
     ipcRenderer.removeAllListeners("navigateToLogin"),
+  onModeUpdated: (callback) => 
+    ipcRenderer.on('mode-updated', (_event, data) => 
+      callback(data)
+    ),
+  removeModeUpdatedListener: () => {
+    ipcRenderer.removeAllListeners('mode-updated');
+  },
   editCategory: (data, caseId) =>
     ipcRenderer.invoke("edit-category", data, caseId),
   excelFileDownload: (caseId) =>
@@ -216,13 +223,6 @@ contextBridge.exposeInMainWorld("electron", {
   getTallyTransactions: (caseId,individualId) =>
     ipcRenderer.invoke("get-tally-transactions", caseId,individualId),
   getTallyVouchers: () => ipcRenderer.invoke("get-tally-vouchers"),
-  onIsCapableChanged: (callback) => 
-    ipcRenderer.on('isCapable-changed', (_event, isCapable) => 
-      callback(isCapable)
-    ),
-  removeIsCapableChangedListener: () => {
-    ipcRenderer.removeAllListeners('isCapable-changed');
-  },
   getProgressed: () => ipcRenderer.invoke("get-user-progress"),
 
   // Add auto-update related methods
