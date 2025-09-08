@@ -955,32 +955,64 @@
           // Show loading state
           continueBtn.disabled = true;
           continueBtn.style.opacity = "0.7";
-          continueBtn.innerHTML = "Processing...";
+          continueBtn.innerHTML = "Validating...";
 
           try {
-            console.log("📧 Submitting email:", email);
+            console.log("📧 Validating email with Cyphersol API:", email);
             
-            // Submit email via IPC
-            const result = await window.electronAPI.submitEmail({ email });
+            // Call Cyphersol check-user API
+            const response = await fetch(`https://cyphersol.co.in/api/check-user/?email=${encodeURIComponent(email)}`);
             
-            if (result.success) {
+            if (!response.ok) {
+              throw new Error(`API request failed with status: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            console.log("📧 Cyphersol API response:", result);
+            
+            if (result.status === "success" && result.user_exists === true) {
+              // User exists in Cyphersol system - proceed with compatibility check
               this.userEmail = email;
-              this.showEmailStatus("Email received successfully!", "success");
+              this.showEmailStatus("Email validated successfully! Starting compatibility check...", "success");
+              
+              // Submit email via IPC for local processing
+              try {
+                await window.electronAPI.submitEmail({ email });
+              } catch (ipcError) {
+                console.warn("IPC email submission failed:", ipcError);
+                // Continue anyway since Cyphersol validation passed
+              }
               
               // Proceed to Step 1 after short delay
               setTimeout(() => {
                 this.currentStep = 1;
                 this.render();
                 
-                // Start auto-countdown for Step 1 (only after email is submitted)
+                // Start auto-countdown for Step 1 (only after email is validated)
                 this.startAutoCountdown();
-              }, 800);
+              }, 1000);
+              
+            } else if (result.status === "success" && result.user_exists === false) {
+              // User does not exist in Cyphersol system - deny access
+              this.showEmailStatus("Email not found in Cyphersol system. Please contact support or register first.", "error");
+              console.log("🚫 Access denied: User does not exist in Cyphersol system");
+              
             } else {
-              this.showEmailStatus("Failed to process email. Please try again.", "error");
+              // Unexpected response format
+              throw new Error("Unexpected API response format");
             }
+            
           } catch (error) {
-            console.error("Email submission error:", error);
-            this.showEmailStatus("An error occurred. Please try again.", "error");
+            console.error("Email validation error:", error);
+            
+            // Provide specific error messages based on error type
+            if (error.message.includes("fetch")) {
+              this.showEmailStatus("Network error. Please check your internet connection and try again.", "error");
+            } else if (error.message.includes("API request failed")) {
+              this.showEmailStatus("Validation service temporarily unavailable. Please try again later.", "error");
+            } else {
+              this.showEmailStatus("Email validation failed. Please try again or contact support.", "error");
+            }
           } finally {
             // Reset button state
             continueBtn.disabled = false;
