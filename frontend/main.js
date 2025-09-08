@@ -2129,6 +2129,7 @@ app.whenReady().then(async () => {
       // Start the compatibility checker
       const { SystemCompatibilityChecker } = require("./SystemCompatibilityChecker");
       globalCompatChecker = new SystemCompatibilityChecker();
+      global.globalCompatChecker = globalCompatChecker; // Make globally accessible
       
       // Run compatibility check (this will create its own window)
       const compatResult = await globalCompatChecker.runFullCheck();
@@ -2513,6 +2514,7 @@ app.whenReady().then(async () => {
       // Still create global compatibility checker for email audit functionality
       console.log("📧 🎯 === CREATING GLOBAL COMPATIBILITY CHECKER (CACHED MODE) ===");
       globalCompatChecker = new SystemCompatibilityChecker();
+      global.globalCompatChecker = globalCompatChecker; // Make globally accessible
       console.log("📧 🎯 globalCompatChecker created:", !!globalCompatChecker);
       console.log("📧 🎯 setUserEmail method available:", !!(globalCompatChecker && typeof globalCompatChecker.setUserEmail === 'function'));
       
@@ -2521,6 +2523,7 @@ app.whenReady().then(async () => {
       log.info("🔍 No valid cache found, running full system compatibility check...");
       console.log("📧 🎯 === CREATING GLOBAL COMPATIBILITY CHECKER ===");
       globalCompatChecker = new SystemCompatibilityChecker();
+      global.globalCompatChecker = globalCompatChecker; // Make globally accessible
       console.log("📧 🎯 globalCompatChecker created:", !!globalCompatChecker);
       console.log("📧 🎯 setUserEmail method available:", !!(globalCompatChecker && typeof globalCompatChecker.setUserEmail === 'function'));
       
