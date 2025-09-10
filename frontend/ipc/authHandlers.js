@@ -245,12 +245,14 @@ async function getDeviceInfoFromServer(email, event) {
 
       // Notify renderer process
       if (event && event.sender) {
-        event.sender.send("mode-updated", { 
+        event.sender.send("mode-updated", {
           useLocalServer: AppConfig.useLocalServer,
           isOcrEnabled: AppConfig.isOcrEnabled,
           detectedMode: AppConfig.detected_mode,
         });
-        log.info(`Sent mode-updated event to renderer with mode: ${detectedMode}`);
+        log.info(
+          `Sent mode-updated event to renderer with mode: ${detectedMode}`
+        );
       }
       return detectedMode;
     }
@@ -325,25 +327,29 @@ function registerAuthHandlers(userDataPath) {
         sessionManager.startLicenseCountdown(data.remainingSeconds);
       }
 
-      if (!AppConfig.mode_detected_last_checked_at) {
-        await getDeviceInfoFromServer(credentials.email, event);
-      }
-
       // 🔌 DEVICE REGISTRATION: Register device with Cyphersol API after successful login
       try {
-        log.info("🔌 Starting device registration with Cyphersol API (login flow)...");
-        
+        log.info(
+          "🔌 Starting device registration with Cyphersol API (login flow)..."
+        );
+
         // Get validated email from user credentials
         const userEmail = credentials.email;
-        
+
         if (userEmail) {
           // Check if device is already registered to avoid duplicates
           const deviceUuid = systemInformation.getUUID();
           if (deviceRegistration.isDeviceRegistered(deviceUuid)) {
-            log.info("🔌 Device already registered, skipping registration (login flow)", {
-              uuid: deviceUuid?.substring(0, 8) + "...",
-              email: userEmail.substring(0, 3) + "***" + userEmail.substring(userEmail.indexOf('@'))
-            });
+            log.info(
+              "🔌 Device already registered, skipping registration (login flow)",
+              {
+                uuid: deviceUuid?.substring(0, 8) + "...",
+                email:
+                  userEmail.substring(0, 3) +
+                  "***" +
+                  userEmail.substring(userEmail.indexOf("@")),
+              }
+            );
           } else {
             // Gather device data for registration
             const deviceData = {
@@ -351,39 +357,57 @@ function registerAuthHandlers(userDataPath) {
               hostname: systemInformation.getHostname(),
               username: systemInformation.getUsername(),
               macAddress: systemInformation.getMACAddress(),
-              windowsUserSID: systemInformation.getWindowsUserSID()
+              windowsUserSID: systemInformation.getWindowsUserSID(),
             };
-            
+
             // Get detected mode from compatibility results if available
             const detectedMode = await resolveDetectedCompatibilityMode();
-            
+
             // Register device with Cyphersol API
             const registrationResult = await deviceRegistration.registerDevice(
-              userEmail, 
-              deviceData, 
+              userEmail,
+              deviceData,
               detectedMode
             );
-            
+
             // Store registration status
-            deviceRegistration.storeRegistrationStatus(deviceUuid, registrationResult);
-            
+            deviceRegistration.storeRegistrationStatus(
+              deviceUuid,
+              registrationResult
+            );
+
             if (registrationResult.success) {
-              log.info("🔌 Device registration completed successfully (login flow)", {
-                uuid: deviceUuid?.substring(0, 8) + "...",
-                duration: registrationResult.duration
-              });
+              log.info(
+                "🔌 Device registration completed successfully (login flow)",
+                {
+                  uuid: deviceUuid?.substring(0, 8) + "...",
+                  duration: registrationResult.duration,
+                }
+              );
+              if (!AppConfig.mode_detected_last_checked_at) {
+                await getDeviceInfoFromServer(credentials.email, event);
+              }
+              
             } else {
-              log.warn("🔌 Device registration failed, but continuing with login (login flow)", {
-                error: registrationResult.error,
-                uuid: deviceUuid?.substring(0, 8) + "..."
-              });
+              log.warn(
+                "🔌 Device registration failed, but continuing with login (login flow)",
+                {
+                  error: registrationResult.error,
+                  uuid: deviceUuid?.substring(0, 8) + "...",
+                }
+              );
             }
           }
         } else {
-          log.warn("🔌 No user email found, skipping device registration (login flow).");
+          log.warn(
+            "🔌 No user email found, skipping device registration (login flow)."
+          );
         }
       } catch (deviceRegError) {
-        log.error("🔌 Device registration error (non-blocking, login flow):", deviceRegError.message);
+        log.error(
+          "🔌 Device registration error (non-blocking, login flow):",
+          deviceRegError.message
+        );
         // Continue with login even if device registration fails
       }
 
@@ -707,21 +731,24 @@ function registerAuthHandlers(userDataPath) {
 
       if (response.status === 200) {
         log.info("License activated successfully:", response.data);
-        
+
         // 🔌 DEVICE REGISTRATION: Register device with Cyphersol API after successful license activation
         try {
           log.info("🔌 Starting device registration with Cyphersol API...");
-          
+
           // Get validated email from global compatibility checker
           const userEmail = await getStoredUserEmail();
-          
+
           if (userEmail) {
             // Check if device is already registered to avoid duplicates
             const deviceUuid = systemInformation.getUUID();
             if (deviceRegistration.isDeviceRegistered(deviceUuid)) {
               log.info("🔌 Device already registered, skipping registration", {
                 uuid: deviceUuid?.substring(0, 8) + "...",
-                email: userEmail.substring(0, 3) + "***" + userEmail.substring(userEmail.indexOf('@'))
+                email:
+                  userEmail.substring(0, 3) +
+                  "***" +
+                  userEmail.substring(userEmail.indexOf("@")),
               });
             } else {
               // Gather device data for registration
@@ -730,42 +757,54 @@ function registerAuthHandlers(userDataPath) {
                 hostname: systemInformation.getHostname(),
                 username: systemInformation.getUsername(),
                 macAddress: systemInformation.getMACAddress(),
-                windowsUserSID: systemInformation.getWindowsUserSID()
+                windowsUserSID: systemInformation.getWindowsUserSID(),
               };
-              
+
               // Get detected mode from compatibility results if available
               const detectedMode = await resolveDetectedCompatibilityMode();
-              
+
               // Register device with Cyphersol API
-              const registrationResult = await deviceRegistration.registerDevice(
-                userEmail, 
-                deviceData, 
-                detectedMode
-              );
-              
+              const registrationResult =
+                await deviceRegistration.registerDevice(
+                  userEmail,
+                  deviceData,
+                  detectedMode
+                );
+
               // Store registration status
-              deviceRegistration.storeRegistrationStatus(deviceUuid, registrationResult);
-              
+              deviceRegistration.storeRegistrationStatus(
+                deviceUuid,
+                registrationResult
+              );
+
               if (registrationResult.success) {
                 log.info("🔌 Device registration completed successfully", {
                   uuid: deviceUuid?.substring(0, 8) + "...",
-                  duration: registrationResult.duration
+                  duration: registrationResult.duration,
                 });
               } else {
-                log.warn("🔌 Device registration failed, but continuing with license activation", {
-                  error: registrationResult.error,
-                  uuid: deviceUuid?.substring(0, 8) + "..."
-                });
+                log.warn(
+                  "🔌 Device registration failed, but continuing with license activation",
+                  {
+                    error: registrationResult.error,
+                    uuid: deviceUuid?.substring(0, 8) + "...",
+                  }
+                );
               }
             }
           } else {
-            log.warn("🔌 No user email found, skipping device registration. Email should have been validated during compatibility check.");
+            log.warn(
+              "🔌 No user email found, skipping device registration. Email should have been validated during compatibility check."
+            );
           }
         } catch (deviceRegError) {
-          log.error("🔌 Device registration error (non-blocking):", deviceRegError.message);
+          log.error(
+            "🔌 Device registration error (non-blocking):",
+            deviceRegError.message
+          );
           // Continue with license activation even if device registration fails
         }
-        
+
         return { success: true, data: response.data };
       } else {
         log.error("License activation failed:", response.data);
@@ -1088,39 +1127,50 @@ async function getStoredUserEmail() {
   try {
     // Access globalCompatChecker from global if available (it's defined globally in main.js)
     const globalCompatChecker = global.globalCompatChecker;
-    
+
     if (globalCompatChecker && globalCompatChecker.userEmail) {
       log.info("🔌 Retrieved user email from compatibility checker", {
-        email: globalCompatChecker.userEmail.substring(0, 3) + "***" + globalCompatChecker.userEmail.substring(globalCompatChecker.userEmail.indexOf('@'))
+        email:
+          globalCompatChecker.userEmail.substring(0, 3) +
+          "***" +
+          globalCompatChecker.userEmail.substring(
+            globalCompatChecker.userEmail.indexOf("@")
+          ),
       });
       return globalCompatChecker.userEmail;
     }
-    
+
     // Fallback: try to get from localStorage-style persistence
-    const fs = require('fs');
-    const path = require('path');
-    const { app } = require('electron');
-    
+    const fs = require("fs");
+    const path = require("path");
+    const { app } = require("electron");
+
     try {
-      const userDataPath = app.getPath('userData');
-      const emailStorePath = path.join(userDataPath, 'user_email.json');
-      
+      const userDataPath = app.getPath("userData");
+      const emailStorePath = path.join(userDataPath, "user_email.json");
+
       if (fs.existsSync(emailStorePath)) {
-        const emailData = JSON.parse(fs.readFileSync(emailStorePath, 'utf8'));
+        const emailData = JSON.parse(fs.readFileSync(emailStorePath, "utf8"));
         const ageHours = (Date.now() - emailData.timestamp) / (1000 * 60 * 60);
-        
+
         if (ageHours < 24 && emailData.email) {
           log.info("🔌 Retrieved user email from persistent storage", {
-            email: emailData.email.substring(0, 3) + "***" + emailData.email.substring(emailData.email.indexOf('@')),
-            ageHours: ageHours.toFixed(1)
+            email:
+              emailData.email.substring(0, 3) +
+              "***" +
+              emailData.email.substring(emailData.email.indexOf("@")),
+            ageHours: ageHours.toFixed(1),
           });
           return emailData.email;
         }
       }
     } catch (fsError) {
-      log.warn("🔌 Failed to read email from persistent storage:", fsError.message);
+      log.warn(
+        "🔌 Failed to read email from persistent storage:",
+        fsError.message
+      );
     }
-    
+
     log.warn("🔌 No stored user email found");
     return null;
   } catch (error) {
@@ -1137,53 +1187,67 @@ async function resolveDetectedCompatibilityMode() {
   try {
     // Try to get from global compatibility checker results
     const globalCompatChecker = global.globalCompatChecker;
-    
-    if (globalCompatChecker && globalCompatChecker.results && globalCompatChecker.results.finalDecision) {
+
+    if (
+      globalCompatChecker &&
+      globalCompatChecker.results &&
+      globalCompatChecker.results.finalDecision
+    ) {
       const mode = globalCompatChecker.results.finalDecision.mode;
       if (mode) {
-        log.info("🔌 Retrieved compatibility mode from checker results", { mode });
+        log.info("🔌 Retrieved compatibility mode from checker results", {
+          mode,
+        });
         return mode;
       }
     }
-    
+
     // Fallback: try to get from stored compatibility results
-    const fs = require('fs');
-    const path = require('path');
-    const { app } = require('electron');
-    
+    const fs = require("fs");
+    const path = require("path");
+    const { app } = require("electron");
+
     try {
-      const userDataPath = app.getPath('userData');
-      const compatResultsPath = path.join(userDataPath, 'compatibility_results.json');
-      
+      const userDataPath = app.getPath("userData");
+      const compatResultsPath = path.join(
+        userDataPath,
+        "compatibility_results.json"
+      );
+
       if (fs.existsSync(compatResultsPath)) {
-        const compatData = JSON.parse(fs.readFileSync(compatResultsPath, 'utf8'));
+        const compatData = JSON.parse(
+          fs.readFileSync(compatResultsPath, "utf8")
+        );
         const ageHours = (Date.now() - compatData.timestamp) / (1000 * 60 * 60);
-        
-        if (ageHours < 24 && compatData.finalDecision && compatData.finalDecision.mode) {
+
+        if (
+          ageHours < 24 &&
+          compatData.finalDecision &&
+          compatData.finalDecision.mode
+        ) {
           const mode = compatData.finalDecision.mode;
           log.info("🔌 Retrieved compatibility mode from persistent storage", {
             mode,
-            ageHours: ageHours.toFixed(1)
+            ageHours: ageHours.toFixed(1),
           });
           return mode;
         }
       }
     } catch (fsError) {
-      log.warn("🔌 Failed to read compatibility mode from persistent storage:", fsError.message);
+      log.warn(
+        "🔌 Failed to read compatibility mode from persistent storage:",
+        fsError.message
+      );
     }
-    
+
     // Default fallback
     log.info("🔌 No stored compatibility mode found, using default 'hybrid'");
-    return 'hybrid';
+    return "hybrid";
   } catch (error) {
     log.error("🔌 Error retrieving compatibility mode:", error.message);
-    return 'hybrid'; // Safe fallback
+    return "hybrid"; // Safe fallback
   }
 }
-
-
-
-
 
 /**
  * Resolve detected compatibility mode using single-source persistence first.
@@ -1196,19 +1260,21 @@ async function resolveDetectedCompatibilityMode() {
  */
 async function resolveDetectedCompatibilityMode() {
   try {
-    const fs = require('fs');
-    const path = require('path');
-    const { app } = require('electron');
+    const fs = require("fs");
+    const path = require("path");
+    const { app } = require("electron");
 
     // 1) renderer-persisted global mode
     try {
-      const userDataPath = app.getPath('userData');
-      const modeDir = path.join(userDataPath, 'appMode');
-      const globalModePath = path.join(modeDir, 'globalMode.json');
+      const userDataPath = app.getPath("userData");
+      const modeDir = path.join(userDataPath, "appMode");
+      const globalModePath = path.join(modeDir, "globalMode.json");
       if (fs.existsSync(globalModePath)) {
-        const data = JSON.parse(fs.readFileSync(globalModePath, 'utf8'));
+        const data = JSON.parse(fs.readFileSync(globalModePath, "utf8"));
         if (data && data.determinedMode) {
-          log.info('dY"O Retrieved compatibility mode from globalMode.json', { mode: data.determinedMode });
+          log.info('dY"O Retrieved compatibility mode from globalMode.json', {
+            mode: data.determinedMode,
+          });
           return data.determinedMode;
         }
       }
@@ -1218,50 +1284,80 @@ async function resolveDetectedCompatibilityMode() {
 
     // 2) canonical decision
     try {
-      const userDataPath = app.getPath('userData');
-      const decisionDir = path.join(userDataPath, 'appMode');
-      const decisionPath = path.join(decisionDir, 'appModeDecision.json');
+      const userDataPath = app.getPath("userData");
+      const decisionDir = path.join(userDataPath, "appMode");
+      const decisionPath = path.join(decisionDir, "appModeDecision.json");
       if (fs.existsSync(decisionPath)) {
-        const decision = JSON.parse(fs.readFileSync(decisionPath, 'utf8'));
+        const decision = JSON.parse(fs.readFileSync(decisionPath, "utf8"));
         if (decision && (decision.determinedMode || decision.mode)) {
           const mode = decision.determinedMode || decision.mode;
-          log.info('dY"O Retrieved compatibility mode from appModeDecision.json', { mode });
+          log.info(
+            'dY"O Retrieved compatibility mode from appModeDecision.json',
+            { mode }
+          );
           return mode;
         }
       }
     } catch (e) {
-      log.warn('dY"O Failed reading appModeDecision.json', { error: e.message });
+      log.warn('dY"O Failed reading appModeDecision.json', {
+        error: e.message,
+      });
     }
 
     // 3) in-memory checker (correct path)
     const globalCompatChecker = global.globalCompatChecker;
-    if (globalCompatChecker && globalCompatChecker.results && globalCompatChecker.results.appMode && globalCompatChecker.results.appMode.determined) {
+    if (
+      globalCompatChecker &&
+      globalCompatChecker.results &&
+      globalCompatChecker.results.appMode &&
+      globalCompatChecker.results.appMode.determined
+    ) {
       const mode = globalCompatChecker.results.appMode.determined;
-      log.info('dY"O Retrieved compatibility mode from checker results (appMode.determined)', { mode });
+      log.info(
+        'dY"O Retrieved compatibility mode from checker results (appMode.determined)',
+        { mode }
+      );
       return mode;
     }
 
     // 4) legacy file
     try {
-      const userDataPath = app.getPath('userData');
-      const compatResultsPath = path.join(userDataPath, 'compatibility_results.json');
+      const userDataPath = app.getPath("userData");
+      const compatResultsPath = path.join(
+        userDataPath,
+        "compatibility_results.json"
+      );
       if (fs.existsSync(compatResultsPath)) {
-        const compatData = JSON.parse(fs.readFileSync(compatResultsPath, 'utf8'));
+        const compatData = JSON.parse(
+          fs.readFileSync(compatResultsPath, "utf8")
+        );
         const ageHours = (Date.now() - compatData.timestamp) / (1000 * 60 * 60);
-        if (ageHours < 24 && compatData.finalDecision && compatData.finalDecision.mode) {
+        if (
+          ageHours < 24 &&
+          compatData.finalDecision &&
+          compatData.finalDecision.mode
+        ) {
           const mode = compatData.finalDecision.mode;
-          log.info('dY"O Retrieved compatibility mode from persistent storage', { mode, ageHours: ageHours.toFixed(1) });
+          log.info(
+            'dY"O Retrieved compatibility mode from persistent storage',
+            { mode, ageHours: ageHours.toFixed(1) }
+          );
           return mode;
         }
       }
     } catch (fsError) {
-      log.warn('dY"O Failed to read compatibility mode from persistent storage', { error: fsError.message });
+      log.warn(
+        'dY"O Failed to read compatibility mode from persistent storage',
+        { error: fsError.message }
+      );
     }
 
     log.warn('dY"O No compatibility mode available from any source');
     return null;
   } catch (error) {
-    log.error('dY"O Error resolving compatibility mode', { error: error.message });
+    log.error('dY"O Error resolving compatibility mode', {
+      error: error.message,
+    });
     return null;
   }
 }
