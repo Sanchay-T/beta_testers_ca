@@ -1,6 +1,43 @@
 // utils/deviceRegistration.js
 const log = require("electron-log");
 const crypto = require("crypto");
+const { app } = require('electron');
+const path = require('path');
+const fs = require('fs');
+
+// Minimal file-backed localStorage shim for main process
+// Scope-limited to this module so existing code paths continue to work
+const _storeDir = (() => {
+  try {
+    const dir = path.join(app.getPath('userData'), 'appMode');
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    return dir;
+  } catch (e) {
+    return process.cwd();
+  }
+})();
+const _storeFile = path.join(_storeDir, 'device_registration_store.json');
+function _readKV() {
+  try {
+    if (!fs.existsSync(_storeFile)) return {};
+    const raw = fs.readFileSync(_storeFile, 'utf8');
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+function _writeKV(obj) {
+  fs.writeFileSync(_storeFile, JSON.stringify(obj, null, 2), 'utf8');
+}
+const localStorage = {
+  getItem: (key) => {
+    const kv = _readKV();
+    return Object.prototype.hasOwnProperty.call(kv, key) ? kv[key] : null;
+  },
+  setItem: (key, value) => {
+    const kv = _readKV();
+    kv[key] = value;
+    _writeKV(kv);
+  }
+};
 
 /**
  * Device Registration Utility for Cyphersol API Integration

@@ -310,7 +310,7 @@ function registerAuthHandlers(userDataPath) {
             };
             
             // Get detected mode from compatibility results if available
-            const detectedMode = await getDetectedCompatibilityMode();
+            const detectedMode = await resolveDetectedCompatibilityMode();
             
             // Register device with Cyphersol API
             const registrationResult = await deviceRegistration.registerDevice(
@@ -689,7 +689,7 @@ function registerAuthHandlers(userDataPath) {
               };
               
               // Get detected mode from compatibility results if available
-              const detectedMode = await getDetectedCompatibilityMode();
+              const detectedMode = await resolveDetectedCompatibilityMode();
               
               // Register device with Cyphersol API
               const registrationResult = await deviceRegistration.registerDevice(
@@ -1075,7 +1075,7 @@ async function getStoredUserEmail() {
  * Helper function to get detected compatibility mode
  * @returns {Promise<string|null>} Detected mode (scan/unscan/hybrid) or null
  */
-async function getDetectedCompatibilityMode() {
+async function resolveDetectedCompatibilityMode() {
   try {
     // Try to get from global compatibility checker results
     const globalCompatChecker = global.globalCompatChecker;
@@ -1123,4 +1123,88 @@ async function getDetectedCompatibilityMode() {
   }
 }
 
+
+
+
+
+/**
+ * Resolve detected compatibility mode using single-source persistence first.
+ * Read order:
+ *  1) userData/appMode/globalMode.json (renderer-persisted GLOBAL_DETECTED_MODE)
+ *  2) userData/appMode/appModeDecision.json (pipeline output)
+ *  3) global.globalCompatChecker.results.appMode.determined (in-memory)
+ *  4) userData/compatibility_results.json (legacy)
+ * Returns uppercase mode or null if unavailable.
+ */
+async function resolveDetectedCompatibilityMode() {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const { app } = require('electron');
+
+    // 1) renderer-persisted global mode
+    try {
+      const userDataPath = app.getPath('userData');
+      const modeDir = path.join(userDataPath, 'appMode');
+      const globalModePath = path.join(modeDir, 'globalMode.json');
+      if (fs.existsSync(globalModePath)) {
+        const data = JSON.parse(fs.readFileSync(globalModePath, 'utf8'));
+        if (data && data.determinedMode) {
+          log.info('dY"O Retrieved compatibility mode from globalMode.json', { mode: data.determinedMode });
+          return data.determinedMode;
+        }
+      }
+    } catch (e) {
+      log.warn('dY"O Failed reading globalMode.json', { error: e.message });
+    }
+
+    // 2) canonical decision
+    try {
+      const userDataPath = app.getPath('userData');
+      const decisionDir = path.join(userDataPath, 'appMode');
+      const decisionPath = path.join(decisionDir, 'appModeDecision.json');
+      if (fs.existsSync(decisionPath)) {
+        const decision = JSON.parse(fs.readFileSync(decisionPath, 'utf8'));
+        if (decision && (decision.determinedMode || decision.mode)) {
+          const mode = decision.determinedMode || decision.mode;
+          log.info('dY"O Retrieved compatibility mode from appModeDecision.json', { mode });
+          return mode;
+        }
+      }
+    } catch (e) {
+      log.warn('dY"O Failed reading appModeDecision.json', { error: e.message });
+    }
+
+    // 3) in-memory checker (correct path)
+    const globalCompatChecker = global.globalCompatChecker;
+    if (globalCompatChecker && globalCompatChecker.results && globalCompatChecker.results.appMode && globalCompatChecker.results.appMode.determined) {
+      const mode = globalCompatChecker.results.appMode.determined;
+      log.info('dY"O Retrieved compatibility mode from checker results (appMode.determined)', { mode });
+      return mode;
+    }
+
+    // 4) legacy file
+    try {
+      const userDataPath = app.getPath('userData');
+      const compatResultsPath = path.join(userDataPath, 'compatibility_results.json');
+      if (fs.existsSync(compatResultsPath)) {
+        const compatData = JSON.parse(fs.readFileSync(compatResultsPath, 'utf8'));
+        const ageHours = (Date.now() - compatData.timestamp) / (1000 * 60 * 60);
+        if (ageHours < 24 && compatData.finalDecision && compatData.finalDecision.mode) {
+          const mode = compatData.finalDecision.mode;
+          log.info('dY"O Retrieved compatibility mode from persistent storage', { mode, ageHours: ageHours.toFixed(1) });
+          return mode;
+        }
+      }
+    } catch (fsError) {
+      log.warn('dY"O Failed to read compatibility mode from persistent storage', { error: fsError.message });
+    }
+
+    log.warn('dY"O No compatibility mode available from any source');
+    return null;
+  } catch (error) {
+    log.error('dY"O Error resolving compatibility mode', { error: error.message });
+    return null;
+  }
+}
 module.exports = { registerAuthHandlers };

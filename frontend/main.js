@@ -2439,6 +2439,31 @@ app.whenReady().then(async () => {
     }
   });
 
+  // Persist GLOBAL_DETECTED_MODE sent from renderer to a file so other
+  // subsystems (e.g., login/device registration) can read a single truth.
+  ipcMain.handle('app-mode:store-global-mode', async (event, mode) => {
+    try {
+      const userDataPath = app.getPath('userData');
+      const modeDir = path.join(userDataPath, 'appMode');
+      if (!fs.existsSync(modeDir)) {
+        fs.mkdirSync(modeDir, { recursive: true });
+      }
+
+      const filePath = path.join(modeDir, 'globalMode.json');
+      const payload = {
+        determinedMode: (mode || '').toUpperCase(),
+        timestamp: new Date().toISOString(),
+        source: 'window.GLOBAL_DETECTED_MODE'
+      };
+      fs.writeFileSync(filePath, JSON.stringify(payload, null, 2), 'utf8');
+      log.info('APP_MODE', 'Stored global mode to file', { filePath, determinedMode: payload.determinedMode });
+      return { success: true, path: filePath };
+    } catch (error) {
+      log.error('APP_MODE', 'Failed to store global mode', { error: error.message });
+      return { success: false, error: error.message };
+    }
+  });
+
   // Global compatibility checker instance for email capture
   let globalCompatChecker = null;
 
