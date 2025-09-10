@@ -90,7 +90,7 @@ class BankStatementRequest(BaseModel):
     whole_transaction_sheet: Optional[List[dict]] = None
     aiyazs_array_of_array: Optional[List[List[ColumnData]]]=None
     is_ocr: List[bool]
-    categoryMasterData: List[dict]
+    categoryMasterData: Optional[List[dict]] = None
 
     
 class EditCategoryRequest(BaseModel):
@@ -137,7 +137,8 @@ async def analyze_bank_statements_pdf(
     is_ocr: Annotated[List[str], Form()] = [],
     files: List[UploadFile] = File(...),
     whole_transaction_sheet: Annotated[Optional[str], Form()] = None,
-    aiyazs_array_of_array: Annotated[Optional[str], Form()] = None
+    aiyazs_array_of_array: Annotated[Optional[str], Form()] = None,
+    categoryMasterData: Annotated[Optional[str], Form()] = None
 ):
     
     pdf_paths = []
@@ -159,6 +160,10 @@ async def analyze_bank_statements_pdf(
         if aiyazs_array_of_array:
             aiyazs_array_of_array_data = json.loads(aiyazs_array_of_array)
 
+        categoryMasterData_data = None
+        if categoryMasterData:
+            categoryMasterData_data = json.loads(categoryMasterData)
+
         request_data = {
             "bank_names": bank_names,
             "pdf_paths": pdf_paths,
@@ -168,7 +173,8 @@ async def analyze_bank_statements_pdf(
             "ca_id": ca_id,
             "is_ocr": is_ocr_bool,
             "whole_transaction_sheet": whole_transaction_sheet_data,
-            "aiyazs_array_of_array": aiyazs_array_of_array_data
+            "aiyazs_array_of_array": aiyazs_array_of_array_data,
+            "categoryMasterData": categoryMasterData_data
         }
         
         request = BankStatementRequest(**request_data)
