@@ -1250,10 +1250,6 @@ function generateReportIpc(tmpdir_path) {
           successfulFiles: Array.from(successfulFiles || []),
           nerResults: {},
           missingMonthsList: [],
-          warning:
-            response.data?.["pdf_paths_not_extracted"]?.[
-              "respective_reasons_for_error"
-            ] || null,
         };
       }
     }

@@ -6,6 +6,7 @@ import { CircularProgress } from "../ui/circularprogress";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogDescription,
@@ -35,11 +36,16 @@ export default function GenerateReport({ activeTab }) {
   const [warningExpanded, setWarningExpanded] = useState(false);
   const [dateRangeWarning, setDateRangeWarning] = useState(null);
   const [isOcrEnabled, setIsOcrEnabled] = useState(true);
-  const [failureReasons, setFailureReasons] = useState([]);
+  const [detectedMode, setDetectedMode] = useState(null);
 
   useEffect(() => {
+    // Fetch initial OCR status
+    window.electron.isOcrEnabled().then((status) => {
+      setIsOcrEnabled(status);
+    });
+
     const handleModeUpdated = (data) => {
-      console.log('mode-updated event received', data);
+      console.log("mode-updated event received", data);
       setIsOcrEnabled(data.isOcrEnabled);
     };
 
@@ -49,6 +55,23 @@ export default function GenerateReport({ activeTab }) {
     return () => {
       window.electron.removeModeUpdatedListener();
     };
+  }, []);
+
+  useEffect(() => {
+    const fetchDetectedMode = async () => {
+      try {
+        const result = await window.electron.auth.getModeDetected();
+        if (result.success) {
+          setDetectedMode(result.detectedMode);
+        } else {
+          console.error("Failed to fetch mode:", result.error);
+        }
+      } catch (error) {
+        console.error("Failed to fetch mode:", error);
+      }
+    };
+
+    fetchDetectedMode();
   }, []);
 
   const hasScannedOrEncodedWarning = useMemo(() => {
@@ -232,16 +255,13 @@ export default function GenerateReport({ activeTab }) {
           const mustRectify = !onlyOcrableFailures(reasons);
           setShowRectifyButton(mustRectify); // ✅ true only when some non-OCR error exists
 
-          const failedFiles = result.data.failedStatements?.failedFiles.map((file_path, index) => {
+          const failedFiles = result.data.failedFiles.map((file_path) => {
             // Get the filename from the path and remove the timestamp
             const filename = file_path.split("\\").pop(); // Get filename from path
             const filenameWithoutTimestamp = filename.substring(
               filename.indexOf("-") + 1
             ); // Remove everything before first hyphen
-            return {
-              name: filenameWithoutTimestamp,
-              reason: reasons[index] || "Unknown error",
-            };
+            return filenameWithoutTimestamp;
           });
           setFailedStatements(failedFiles || []); // Store failed
 
@@ -279,7 +299,7 @@ export default function GenerateReport({ activeTab }) {
           if (activeTab !== "Generate Report")
             toast({
               title: "Failed",
-              description: `${caseName} report had some issues!`, 
+              description: `${caseName} report had some issues!`,
               variant: "destructive",
             });
         } else {
@@ -318,7 +338,7 @@ export default function GenerateReport({ activeTab }) {
         if (result.data.totalTransactions && activeTab !== "Generate Report") {
           toast({
             title: "Success",
-            description: `${caseName} report generated successfully!`, 
+            description: `${caseName} report generated successfully!`,
             duration: Infinity,
             variant: "success",
           });
@@ -428,7 +448,7 @@ export default function GenerateReport({ activeTab }) {
           });
           // toast({
           //   title: "OCR Triggered",
-          //   description: `Detected scanned or encoded PDFs.`, 
+          //   description: `Detected scanned or encoded PDFs.`,
           //   variant: "default",
           //   duration: 5000,
           // });
@@ -498,18 +518,14 @@ export default function GenerateReport({ activeTab }) {
               console.log("ocrResult generated successfully:", ocrResult.data);
               if (ocrResult.data.failedFiles.length > 0) {
                 setShowRectifyButton(true);
-                const reasons = ocrResult.data.failedStatements?.respective_reasons_for_error || [];
                 const failedFiles = ocrResult.data.failedFiles.map(
-                  (file_path, index) => {
+                  (file_path) => {
                     // Get the filename from the path and remove the timestamp
                     const filename = file_path.split("\\").pop(); // Get filename from path
                     const filenameWithoutTimestamp = filename.substring(
                       filename.indexOf("-") + 1
                     ); // Remove everything before first hyphen
-                    return {
-                      name: filenameWithoutTimestamp,
-                      reason: reasons[index] || "Unknown error",
-                    };
+                    return filenameWithoutTimestamp;
                   }
                 );
                 setFailedStatements(failedFiles || []); // Store failed
@@ -548,7 +564,7 @@ export default function GenerateReport({ activeTab }) {
                 if (activeTab !== "Generate Report")
                   toast({
                     title: "Failed",
-                    description: `${caseName} report had some issues!`, 
+                    description: `${caseName} report had some issues!`,
                     variant: "destructive",
                   });
               } else {
@@ -590,7 +606,7 @@ export default function GenerateReport({ activeTab }) {
               ) {
                 toast({
                   title: "Success",
-                  description: `${caseName} report generated successfully!`, 
+                  description: `${caseName} report generated successfully!`,
                   duration: Infinity,
                   variant: "success",
                 });
@@ -848,7 +864,7 @@ export default function GenerateReport({ activeTab }) {
 
       {/* Dialog for successful report generation */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen} className="">
-        <DialogContent className="max-h-[90vh] overflow-y-auto pb-0 border-none shadow-none">
+        <DialogContent className="max-h-[90vh] min-w-[40%] overflow-y-auto pb-0 border-none shadow-none">
           <DialogHeader>
             {successfulStatements.length > 0 ? (
               <DialogTitle>
@@ -875,7 +891,7 @@ export default function GenerateReport({ activeTab }) {
               <ul className="list-disc pl-5">
                 {failedStatements.map((statement, index) => (
                   <li key={index} className="text-red-400">
-                    {statement.name} - {statement.reason}
+                    {statement}
                   </li>
                 ))}
                 {successfulStatements.map((statement, index) => (
@@ -998,19 +1014,35 @@ export default function GenerateReport({ activeTab }) {
             </div>
           )}
 
-          <div className="flex gap-4 sticky w-full p-4  bottom-0 bg-white ">
-            {showAnalsisButton && (
-              <Button onClick={() => viewAnalysis()} className="flex-1">
-                View Analysis
-              </Button>
+          <DialogFooter className="flex items-center justify-between sticky w-full p-4 bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+            {/* Left section: Detected mode */}
+            {detectedMode && (
+              <div className="flex-1 items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                <span className="font-semibold">Detected Mode:</span>
+                <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-md">
+                  {detectedMode}
+                </span>
+              </div>
             )}
 
-            {showRectifyButton && (
-              <Button onClick={handleRectify} className="flex-1">
-                Rectify Now
-              </Button>
-            )}
-          </div>
+            {/* Right section: Buttons */}
+            <div className="flex flex-end items-center gap-3">
+              {showAnalsisButton && (
+                <Button onClick={() => viewAnalysis()} className="px-4">
+                  View Analysis
+                </Button>
+              )}
+              {showRectifyButton && (
+                <Button
+                  onClick={handleRectify}
+                  variant="outline"
+                  className="px-4"
+                >
+                  Rectify Now
+                </Button>
+              )}
+            </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
