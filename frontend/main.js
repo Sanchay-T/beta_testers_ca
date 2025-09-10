@@ -1977,10 +1977,12 @@ async function createWindow() {
     const result = await dialog.showOpenDialog(win, {
       properties: [
         "openFile",
+         "openDirectory", 
         "multiSelections",
         "showHiddenFiles",
         "treatPackageAsDirectory",
         "dontAddToRecent",
+        "createDirectory", 
       ],
       filters: [
         { name: "Documents", extensions: ["pdf", "xlsx", "csv"] },

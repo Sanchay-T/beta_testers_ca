@@ -1742,6 +1742,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                                     Done
                                                   </Button>
                                                 ) : (
+                                                  (statement.pdfName.toLowerCase().endsWith(".pdf")||statement.pdfName.toLowerCase().endsWith(".PDF")) && (
                                                   <Button
                                                     variant="secondary"
                                                     size="sm"
@@ -1757,6 +1758,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                                   >
                                                     Rectify
                                                   </Button>
+                                                  )
                                                 )}
                                               </div>
                                             }
