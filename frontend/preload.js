@@ -169,6 +169,7 @@ contextBridge.exposeInMainWorld("electron", {
     getUser: () => ipcRenderer.invoke("auth:getUser"),
     checkAccountStatus: () => ipcRenderer.invoke("auth:check-account-status"),
     refreshModeDetected: () => ipcRenderer.invoke("auth:refresh-mode-detected"),
+    getModeDetected: () => ipcRenderer.invoke("auth:get-mode-detected"),
     // updateUser: (userData) => ipcRenderer.invoke('auth:updateUser', userData)
     checkLicense: async () => {
       try {

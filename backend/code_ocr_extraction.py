@@ -52,15 +52,20 @@ TEMP_SAVED_PDF_DIR = get_saved_pdf_dir()
 # # ─────────────────────────────────────────────────────────────────────────────\
 
 if PADDLEOCR_AVAILABLE:
-    # DETDIR_server = os.path.join(BASE_DIR,"models", "PP-OCRv5_server_det_infer")
-    DETDIR_mobile = os.path.join(BASE_DIR,"models", "PP-OCRv5_mobile_det_infer")
-    # RECDIR_server = os.path.join(BASE_DIR,"models", "PP-OCRv5_server_rec_infer")
-    RECDIR_mobile = os.path.join(BASE_DIR,"models", "PP-OCRv5_mobile_rec_infer")
+    try:
+        # DETDIR_server = os.path.join(BASE_DIR,"models", "PP-OCRv5_server_det_infer")
+        DETDIR_mobile = os.path.join(BASE_DIR,"models", "PP-OCRv5_mobile_det_infer")
+        # RECDIR_server = os.path.join(BASE_DIR,"models", "PP-OCRv5_server_rec_infer")
+        RECDIR_mobile = os.path.join(BASE_DIR,"models", "PP-OCRv5_mobile_rec_infer")
 
-    # det_model = TextDetection(model_name="PP-OCRv5_server_det", model_dir= DETDIR_server)
-    det_model_mobile = TextDetection(model_name="PP-OCRv5_mobile_det", model_dir=DETDIR_mobile)
-    # rec_model = TextRecognition(model_name="PP-OCRv5_server_rec", model_dir=RECDIR_server)
-    rec_model_mobile = TextRecognition(model_name="PP-OCRv5_mobile_rec", model_dir=RECDIR_mobile)
+        # det_model = TextDetection(model_name="PP-OCRv5_server_det", model_dir= DETDIR_server)
+        det_model_mobile = TextDetection(model_name="PP-OCRv5_mobile_det", model_dir=DETDIR_mobile)
+        # rec_model = TextRecognition(model_name="PP-OCRv5_server_rec", model_dir=RECDIR_server)
+        rec_model_mobile = TextRecognition(model_name="PP-OCRv5_mobile_rec", model_dir=RECDIR_mobile)
+    except Exception as e:
+        det_model_mobile = None
+        rec_model_mobile = None
+        logger.warning(f"Could not load OCR models: {e}")
 else:
     det_model_mobile = None
     rec_model_mobile = None
@@ -1191,30 +1196,34 @@ def outputs_to_objects(outputs, img_size, id2label):
     return objects
 
 def detect_table_columns(image):
-    structure_model = TableTransformerForObjectDetection.from_pretrained(os.path.join(BASE_DIR,"models", "local_model"))
-    # structure_model = TableTransformerForObjectDetection.from_pretrained("./local_model")
+    try:
+        structure_model = TableTransformerForObjectDetection.from_pretrained(os.path.join(BASE_DIR,"models", "local_model"))
+        # structure_model = TableTransformerForObjectDetection.from_pretrained("./local_model")
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    structure_model.to(device)
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        structure_model.to(device)
 
-    structure_transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ])
+        structure_transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ])
 
-    img_size = image.size
-    pixel_values = structure_transform(image).unsqueeze(0).to(device)
+        img_size = image.size
+        pixel_values = structure_transform(image).unsqueeze(0).to(device)
 
-    with torch.no_grad():
-        outputs = structure_model(pixel_values)
+        with torch.no_grad():
+            outputs = structure_model(pixel_values)
 
-    structure_id2label = structure_model.config.id2label
-    structure_id2label[len(structure_id2label)] = "no object"
+        structure_id2label = structure_model.config.id2label
+        structure_id2label[len(structure_id2label)] = "no object"
 
-    objects = outputs_to_objects(outputs, img_size, structure_id2label)
-    columns = [obj for obj in objects if obj['label'] == "table column"]
+        objects = outputs_to_objects(outputs, img_size, structure_id2label)
+        columns = [obj for obj in objects if obj['label'] == "table column"]
 
-    return columns
+        return columns
+    except Exception as e:
+        logger.warning(f"Could not load table detection model: {e}")
+        return []
 
 def annotate_pdf(pdf_document, columns):
     rightmost_column = None

@@ -35,6 +35,7 @@ export default function GenerateReport({ activeTab }) {
   const [warningExpanded, setWarningExpanded] = useState(false);
   const [dateRangeWarning, setDateRangeWarning] = useState(null);
   const [isOcrEnabled, setIsOcrEnabled] = useState(true);
+  const [failureReasons, setFailureReasons] = useState([]);
 
   useEffect(() => {
     const handleModeUpdated = (data) => {
@@ -231,13 +232,16 @@ export default function GenerateReport({ activeTab }) {
           const mustRectify = !onlyOcrableFailures(reasons);
           setShowRectifyButton(mustRectify); // ✅ true only when some non-OCR error exists
 
-          const failedFiles = result.data.failedFiles.map((file_path) => {
+          const failedFiles = result.data.failedStatements?.failedFiles.map((file_path, index) => {
             // Get the filename from the path and remove the timestamp
             const filename = file_path.split("\\").pop(); // Get filename from path
             const filenameWithoutTimestamp = filename.substring(
               filename.indexOf("-") + 1
             ); // Remove everything before first hyphen
-            return filenameWithoutTimestamp;
+            return {
+              name: filenameWithoutTimestamp,
+              reason: reasons[index] || "Unknown error",
+            };
           });
           setFailedStatements(failedFiles || []); // Store failed
 
@@ -494,14 +498,18 @@ export default function GenerateReport({ activeTab }) {
               console.log("ocrResult generated successfully:", ocrResult.data);
               if (ocrResult.data.failedFiles.length > 0) {
                 setShowRectifyButton(true);
+                const reasons = ocrResult.data.failedStatements?.respective_reasons_for_error || [];
                 const failedFiles = ocrResult.data.failedFiles.map(
-                  (file_path) => {
+                  (file_path, index) => {
                     // Get the filename from the path and remove the timestamp
                     const filename = file_path.split("\\").pop(); // Get filename from path
                     const filenameWithoutTimestamp = filename.substring(
                       filename.indexOf("-") + 1
                     ); // Remove everything before first hyphen
-                    return filenameWithoutTimestamp;
+                    return {
+                      name: filenameWithoutTimestamp,
+                      reason: reasons[index] || "Unknown error",
+                    };
                   }
                 );
                 setFailedStatements(failedFiles || []); // Store failed
@@ -867,7 +875,7 @@ export default function GenerateReport({ activeTab }) {
               <ul className="list-disc pl-5">
                 {failedStatements.map((statement, index) => (
                   <li key={index} className="text-red-400">
-                    {statement}
+                    {statement.name} - {statement.reason}
                   </li>
                 ))}
                 {successfulStatements.map((statement, index) => (

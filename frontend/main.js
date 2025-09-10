@@ -2893,7 +2893,7 @@ app.whenReady().then(async () => {
     });
 
     // Initial update check after 1 minute
-    if (!global.AppConfig.isDev) {
+    if (!AppConfig.isDev) {
       setTimeout(() => {
         log.info("🔄 Starting automatic update check");
         checkForUpdates();

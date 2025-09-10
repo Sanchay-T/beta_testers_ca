@@ -48,6 +48,7 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
   });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogContent, setDialogContent] = useState({ title: "", message: "" });
+  const [detectedMode, setDetectedMode] = useState(null);
 
   // Get initials for avatar fallback
   const getInitials = (name) => {
@@ -72,6 +73,7 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
       reportData.individualId === "combined");
 
   useEffect(() => {
+    fetchDetectedMode();
     let fetchedCustomerName = reportData.customerName;
     let fetchedReportName = reportData.reportName;
 
@@ -127,6 +129,19 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
     }
   }, [caseId, individualId]);
 
+  const fetchDetectedMode = async () => {
+    try {
+      const result = await window.electron.auth.getModeDetected();
+      if (result.success) {
+        setDetectedMode(result.detectedMode);
+      } else {
+        console.error("Failed to fetch mode:", result.error);
+      }
+    } catch (error) {
+      console.error("Failed to fetch mode:", error);
+    }
+  };
+
   const handleLogout = async () => {
     try {
       const loggedOut = await logout();
@@ -147,8 +162,9 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
       if (result.success) {
         setDialogContent({
           title: "Mode Refresh Successful",
-          message: `Server detected mode: ${result.detectedMode}.`, 
+          message: `Server detected mode: ${result.detectedMode}.`,
         });
+        setDetectedMode(result.detectedMode);
       } else {
         setDialogContent({
           title: "Mode Refresh Failed",
@@ -329,6 +345,7 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
           <DropdownMenuItem onClick={handleRefreshMode}>
             <RefreshCw className="mr-2 h-4 w-4" />
             <span>Refresh Mode</span>
+            {detectedMode && <span className="ml-2 text-xs text-gray-500">({detectedMode})</span>}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handleLogout}>
             <LogOut className="mr-2 h-4 w-4" />

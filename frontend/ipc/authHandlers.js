@@ -1049,6 +1049,10 @@ function registerAuthHandlers(userDataPath) {
     return { success: false, error: "User not logged in." };
   });
 
+  ipcMain.handle("auth:get-mode-detected", async (event) => {
+    return { success: true, detectedMode: AppConfig.detected_mode };
+  });
+
   ipcMain.handle("license:revoke-session", async (event, licenseData) => {
     log.info("Revoking license session:", licenseData);
 

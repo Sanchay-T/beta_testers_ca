@@ -997,9 +997,12 @@ function generateReportIpc(tmpdir_path) {
               caseId: caseId,
               processed: null,
               warning:
-                [response.data.message] || [response?.message] ||
+                [response.data.message] ||
+                [response?.message] ||
                 "Unknown error",
               processing_times: response.data?.processing_times || [],
+              failedFiles: Array.from(failedFiles || []),
+              successfulFiles: Array.from(successfulFiles || []),
             },
           };
         }
@@ -1247,6 +1250,10 @@ function generateReportIpc(tmpdir_path) {
           successfulFiles: Array.from(successfulFiles || []),
           nerResults: {},
           missingMonthsList: [],
+          warning:
+            response.data?.["pdf_paths_not_extracted"]?.[
+              "respective_reasons_for_error"
+            ] || null,
         };
       }
     }
