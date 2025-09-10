@@ -163,6 +163,37 @@
       // This variable is set once and used by BOTH UI and EMAIL systems
       window.GLOBAL_DETECTED_MODE = 'SCAN'; // Default, will be updated by mode detection
       
+      // 🧪 MANUAL VALIDATION FUNCTION - Force HYBRID mode for testing
+      window.FORCE_VALIDATION_MODE = function(testMode = 'HYBRID') {
+        console.log('🧪 ======================== MANUAL VALIDATION MODE ========================');
+        console.log('🧪 FORCING MODE DETECTION TO:', testMode);
+        console.log('🧪 This will override ALL systems to test data consistency');
+        console.log('🧪 ======================================================================');
+        
+        // Override the global source of truth
+        window.GLOBAL_DETECTED_MODE = testMode;
+        console.log('🧪 [STEP 1] GLOBAL_DETECTED_MODE set to:', window.GLOBAL_DETECTED_MODE);
+        
+        // Force update UI immediately if elements exist
+        const configMode = document.getElementById('configuration-mode');
+        if (configMode) {
+          const modeLabels = {
+            'SCAN': 'Standard Mode',
+            'UNSCAN': 'UNSCAN Mode', 
+            'HYBRID': 'HYBRID Mode',
+            'ERROR': 'Fallback Mode'
+          };
+          configMode.textContent = modeLabels[testMode] || 'Unknown Mode';
+          console.log('🧪 [STEP 2] UI configuration-mode updated to:', configMode.textContent);
+        }
+        
+        return {
+          forcedMode: testMode,
+          globalVariable: window.GLOBAL_DETECTED_MODE,
+          timestamp: new Date().toISOString()
+        };
+      };
+      
       // Bridge for Electron IPC
       const { ipcRenderer } = require("electron");
 
@@ -707,7 +738,7 @@
                           Estimated Startup Time: ${Math.round(results.duration / 1000) + 8} seconds
                         </div>
                         <div style="font-size: 14px; color: #64748b;">
-                          Configuration: <span id="configuration-mode">Standard Mode</span>
+                          Configuration: <span id="configuration-mode">Loading...</span>
                         </div>
                       </div>
                     </div>
@@ -1082,6 +1113,7 @@
           this.render();
 
           try {
+            // Only run compatibility tests - mode detection will run in showStep3()
             await window.electronAPI.startTests();
           } catch (error) {
             console.error("Failed to start compatibility tests:", error);
@@ -1186,9 +1218,85 @@
           }
         }
 
-        showStep3() {
+        async showStep3() {
+          // 🎯 COMPREHENSIVE MODE DETECTION USING FULL DECISION ENGINE
+          console.log('🎯 =============== RUNNING COMPREHENSIVE MODE DETECTION ===============');
+          console.log('🎯 Calling full ModeDecisionEngine for detailed analysis...');
+          
+          try {
+            // Call the actual mode detection system with comprehensive logging
+            const modeDetectionOptions = {
+              scenario: 'current', // Use current system hardware
+              source: 'compatibility_check_step3'
+            };
+            
+            console.log('🎯 Invoking app-mode:run-detection with options:', modeDetectionOptions);
+            const result = await window.electronAPI.invoke('app-mode:run-detection', modeDetectionOptions);
+            
+            console.log('🎯 =============== MODE DETECTION RESULT RECEIVED ===============');
+            console.log('🎯 Full result object:', result);
+            console.log('🎯 Determined Mode:', result.determinedMode || result.mode);
+            console.log('🎯 Confidence:', result.confidence);
+            console.log('🎯 Reason:', result.reason);
+            console.log('🎯 Can Proceed:', result.canProceed);
+            console.log('🎯 Duration:', result.duration);
+            
+            // Extract the determined mode from the comprehensive result
+            const detectedMode = result.determinedMode || result.mode || 'SCAN';
+            
+            // Update global variable with the comprehensive result
+            window.GLOBAL_DETECTED_MODE = detectedMode;
+            console.log('🎯 GLOBAL_DETECTED_MODE updated to:', window.GLOBAL_DETECTED_MODE);
+            
+            // Store the full result for other systems
+            this.comprehensiveModeResult = result;
+            
+            console.log('🎯 =============== MODE DETECTION COMPLETE ===============');
+            
+          } catch (error) {
+            console.error('🎯 [ERROR] Comprehensive mode detection failed:', error);
+            console.log('🎯 [FALLBACK] Using simple RAM-based detection...');
+            
+            // Fallback to simple RAM-based classification
+            const os = require('os');
+            const actualRAM = Math.round(os.totalmem() / (1024 * 1024 * 1024) * 100) / 100;
+            
+            console.log('🎯 System RAM detected:', actualRAM, 'GB');
+            
+            let detectedMode;
+            if (actualRAM >= 16) {
+              detectedMode = 'SCAN';
+              console.log('🎯 Fallback Logic: 16GB+ RAM → SCAN Mode (Standard Mode)');
+            } else if (actualRAM >= 8) {
+              detectedMode = 'UNSCAN';
+              console.log('🎯 Fallback Logic: 8-15GB RAM → UNSCAN Mode');
+            } else {
+              detectedMode = 'HYBRID';
+              console.log('🎯 Fallback Logic: <8GB RAM → HYBRID Mode');
+            }
+            
+            window.GLOBAL_DETECTED_MODE = detectedMode;
+            console.log('🎯 GLOBAL_DETECTED_MODE set to (fallback):', window.GLOBAL_DETECTED_MODE);
+          }
+
           this.currentStep = 3;
           this.render();
+          
+          // Update UI after rendering
+          setTimeout(() => {
+            const configMode = document.getElementById('configuration-mode');
+            if (configMode) {
+              const modeLabels = {
+                'SCAN': 'Standard Mode',
+                'UNSCAN': 'UNSCAN Mode', 
+                'HYBRID': 'HYBRID Mode'
+              };
+              configMode.textContent = modeLabels[window.GLOBAL_DETECTED_MODE] || 'Loading...';
+              configMode.style.color = window.GLOBAL_DETECTED_MODE === 'SCAN' ? '#22c55e' : 
+                                     window.GLOBAL_DETECTED_MODE === 'UNSCAN' ? '#f59e0b' : '#3b82f6';
+              console.log('🎯 UI updated to show:', configMode.textContent, 'for mode:', window.GLOBAL_DETECTED_MODE);
+            }
+          }, 100);
           
           // 📧 TRIGGER EMAIL AUDIT REPORT - Final report page is now displayed
           console.log('📧 🎯 === FINAL REPORT PAGE DISPLAYED - TRIGGERING EMAIL AUDIT ===');
@@ -1533,9 +1641,9 @@
         setupAppModeTesting() {
           this.selectedScenario = 'current';
           this.appModeOverrides = {
-            forceRAM: 16,
-            forceCPU: 'i7',
-            forceScanResult: 'pass',
+            forceRAM: 3,
+            forceCPU: 'i3',
+            forceScanResult: 'fail',
             simulateSlowScan: false
           };
 

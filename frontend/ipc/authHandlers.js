@@ -1084,7 +1084,7 @@ async function getDetectedCompatibilityMode() {
       const mode = globalCompatChecker.results.finalDecision.mode;
       if (mode) {
         log.info("🔌 Retrieved compatibility mode from checker results", { mode });
-        return mode.toLowerCase();
+        return mode;
       }
     }
     
@@ -1102,7 +1102,7 @@ async function getDetectedCompatibilityMode() {
         const ageHours = (Date.now() - compatData.timestamp) / (1000 * 60 * 60);
         
         if (ageHours < 24 && compatData.finalDecision && compatData.finalDecision.mode) {
-          const mode = compatData.finalDecision.mode.toLowerCase();
+          const mode = compatData.finalDecision.mode;
           log.info("🔌 Retrieved compatibility mode from persistent storage", {
             mode,
             ageHours: ageHours.toFixed(1)

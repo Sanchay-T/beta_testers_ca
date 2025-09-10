@@ -60,7 +60,7 @@ class AppModeManager {
       this.currentPhase = 'configuration';
       const config = AppModeConfigManager.getConfig();
       const isDevelopmentMode = config.developmentMode?.enabled;
-      const hasTestScenario = options.scenario && ['lowEnd', 'midRange', 'highEnd'].includes(options.scenario);
+      const hasTestScenario = options.scenario && ['lowEnd', 'midRange', 'highEnd', 'current'].includes(options.scenario);
 
       this.logger?.info('APP_MODE_MANAGER', 'Configuration check:', {
         isDevelopmentMode,

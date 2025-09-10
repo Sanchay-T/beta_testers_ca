@@ -2529,14 +2529,29 @@ app.whenReady().then(async () => {
       
       compatResult = await globalCompatChecker.runFullCheck();
       
+      // 🔍 DEBUG: Log the exact compatResult structure for cache debugging
+      log.info("🔍 [CACHE_DEBUG] Compatibility result structure:", {
+        canProceed: compatResult.canProceed,
+        hasModeDetection: !!compatResult.modeDetection,
+        modeDetectionKeys: compatResult.modeDetection ? Object.keys(compatResult.modeDetection) : null,
+        determinedMode: compatResult.modeDetection?.determinedMode,
+        modeCanProceed: compatResult.modeDetection?.canProceed
+      });
+      
       // 💾 Cache the result if successful
       if (compatResult.canProceed && compatResult.modeDetection) {
+        log.info("🔍 [CACHE_DEBUG] Cache conditions met, attempting to save cache...");
         const cacheSuccess = compatCache.saveCachedResult(compatResult.modeDetection);
         if (cacheSuccess) {
           log.info("💾 Compatibility result cached for future startups");
         } else {
           log.warn("⚠️ Failed to cache compatibility result");
         }
+      } else {
+        log.warn("🔍 [CACHE_DEBUG] Cache conditions NOT met:", {
+          canProceed: compatResult.canProceed,
+          hasModeDetection: !!compatResult.modeDetection
+        });
       }
     }
     

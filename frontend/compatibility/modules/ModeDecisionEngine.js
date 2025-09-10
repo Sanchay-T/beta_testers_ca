@@ -97,19 +97,42 @@ class ModeDecisionEngine {
 
       // Step 5: Finalize result
       this.logger?.info('MODE_DECISION', '[FINALIZE] Creating final result...');
+      this.logger?.info('MODE_DECISION', '[FINALIZE] Input decision to finalizer:', {
+        decisionMode: decision.mode,
+        decisionConfidence: decision.confidence,
+        decisionReason: decision.reason,
+        hardwareCheck: decision.hardware?.meetsFullModeRequirements,
+        scanTestResults: decision.scanTest
+      });
+      
       const finalResult = this.finalizeDecision(decision, startTime);
 
+      // 🎯 CRITICAL: Store the result as the definitive source of truth
       this.decisionResult = finalResult;
+      this.logger?.info('MODE_DECISION', '🎯 [CRITICAL] FINAL RESULT STORED IN decisionResult property');
+      
       this.logger?.info('MODE_DECISION', '=== MODE DETERMINATION COMPLETED ===');
-      this.logger?.info('MODE_DECISION', 'Summary:', {
-        determinedMode: finalResult.mode,
-        confidence: finalResult.confidence,
-        duration: `${finalResult.duration}ms`,
-        hardwareMeetsRequirements: finalResult.analysis.hardware.meetsFullModeRequirements,
-        scanTestPassed: finalResult.analysis.scanTest?.passed,
-        decisionPath: finalResult.analysis.decisionPath
+      this.logger?.info('MODE_DECISION', '🎯 [FINAL_SUMMARY] Complete mode determination result:', {
+        FINAL_DETERMINED_MODE: finalResult.mode,
+        FINAL_CONFIDENCE: finalResult.confidence,
+        FINAL_DURATION: `${finalResult.duration}ms`,
+        FINAL_USER_MESSAGE: finalResult.userMessage,
+        FINAL_RECOMMENDED_ACTION: finalResult.recommendedAction,
+        FINAL_HARDWARE_ADEQUATE: finalResult.analysis.hardware.meetsFullModeRequirements,
+        FINAL_SCAN_TEST_PASSED: finalResult.analysis.scanTest?.passed,
+        FINAL_DECISION_PATH: finalResult.analysis.decisionPath?.join(' → '),
+        FINAL_TIMESTAMP: finalResult.timestamp,
+        FINAL_NEXT_STEPS: finalResult.nextSteps,
+        FINAL_TECHNICAL_INFO: {
+          configVersion: finalResult.technical.configVersion,
+          testMode: finalResult.technical.testMode,
+          overridesApplied: finalResult.technical.overridesApplied
+        }
       });
 
+      this.logger?.info('MODE_DECISION', '🎯 === RETURNING FINAL RESULT TO CALLER ===');
+      this.logger?.info('MODE_DECISION', `🎯 [RETURN] MODE: ${finalResult.mode} | CONFIDENCE: ${finalResult.confidence} | CAN_PROCEED: true`);
+      
       return finalResult;
 
     } catch (error) {
@@ -182,50 +205,120 @@ class ModeDecisionEngine {
       cpu: `${hardwareCheck.cpu.actual} (needs ${hardwareCheck.cpu.required}+)`
     });
 
-    // Core Logic: IF (RAM >= 4GB AND CPU >= i5) → Test Scan → SCAN/UNSCAN ELSE → HYBRID
-    if (hardwareCheck.meetsFullModeRequirements) {
-      this.updateProgress('Hardware meets requirements, testing scan performance...', 40);
-      this.logger?.info('MODE_DECISION', '[LOGIC] Hardware sufficient - running scan test...');
+    // 🎯 UNIVERSAL RAM-FIRST DECISION LOGIC:
+    // RAM < 4GB    → HYBRID (not compatible with offline processing)
+    // 4GB ≤ RAM ≤ 8GB → UNSCAN (offline but no scanning)  
+    // RAM > 8GB    → SCAN (full offline with scanning)
+    this.logger?.info('MODE_DECISION', '🎯 [DECISION_POINT] Starting UNIVERSAL RAM-FIRST mode determination logic...');
+    
+    const actualRAM = hardwareCheck.ram.actual;
+    const actualCPU = hardwareCheck.cpu.actual;
+    
+    this.logger?.info('MODE_DECISION', '[UNIVERSAL_LOGIC] System specs:', {
+      RAM: `${actualRAM}GB`,
+      CPU: actualCPU,
+      decisionStrategy: 'RAM_FIRST_PRIORITY'
+    });
+    
+    // DECISION RULE 1: RAM < 4GB → HYBRID MODE
+    if (actualRAM < 4) {
+      this.updateProgress('RAM below 4GB - HYBRID mode required...', 70);
+      this.logger?.info('MODE_DECISION', '🎯 [DECISION] ❌ RAM < 4GB -> DETERMINING HYBRID MODE');
+      this.logger?.info('MODE_DECISION', '[UNIVERSAL_LOGIC] HYBRID decision rationale:', {
+        ramCheck: `${actualRAM}GB < 4GB = INSUFFICIENT_FOR_OFFLINE`,
+        cpuRelevance: 'CPU irrelevant - RAM is limiting factor',
+        finalDecision: 'HYBRID'
+      });
       
-      // Hardware is good enough, now test scan performance
-      const scanTestResult = await this.runScanPerformanceTest();
-      
-      if (scanTestResult.passed) {
-        // Scan test passed -> SCAN MODE
-        this.logger?.info('MODE_DECISION', '[LOGIC] Scan test PASSED -> SCAN MODE');
-        return {
-          mode: 'SCAN',
-          reason: 'Hardware meets requirements and scan test passed',
-          confidence: 'high',
-          hardware: hardwareCheck,
-          scanTest: scanTestResult,
-          recommendedAction: 'proceed'
-        };
-      } else {
-        // Scan test failed -> UNSCAN MODE
-        this.logger?.info('MODE_DECISION', '[LOGIC] Scan test FAILED -> UNSCAN MODE');
-        return {
-          mode: 'UNSCAN', 
-          reason: 'Hardware meets requirements but scan test failed/slow',
-          confidence: 'medium',
-          hardware: hardwareCheck,
-          scanTest: scanTestResult,
-          recommendedAction: 'proceed_limited'
-        };
-      }
-    } else {
-      // Hardware doesn't meet requirements -> HYBRID MODE
-      this.updateProgress('Hardware below requirements, hybrid mode required...', 70);
-      this.logger?.info('MODE_DECISION', '[LOGIC] Hardware insufficient -> HYBRID MODE');
-      
-      return {
+      const hybridDecision = {
         mode: 'HYBRID',
-        reason: 'Hardware below minimum requirements for offline processing',
+        reason: `Insufficient RAM (${actualRAM}GB < 4GB required for offline processing)`,
         confidence: 'high',
         hardware: hardwareCheck,
-        scanTest: null, // No scan test needed
+        scanTest: null, // No scan test needed - RAM insufficient
         recommendedAction: 'upgrade_or_cloud'
       };
+      
+      this.logger?.info('MODE_DECISION', '🎯 [DECISION_MADE] HYBRID MODE decision created:', {
+        finalMode: hybridDecision.mode,
+        finalConfidence: hybridDecision.confidence,
+        finalReason: hybridDecision.reason,
+        ramLimiting: `${actualRAM}GB < 4GB`,
+        scanTestSkipped: 'RAM insufficient, scan test not applicable'
+      });
+      return hybridDecision;
+    }
+    
+    // DECISION RULE 2: 4GB ≤ RAM ≤ 8GB → UNSCAN MODE  
+    else if (actualRAM >= 4 && actualRAM <= 8) {
+      this.updateProgress('RAM 4-8GB range - UNSCAN mode (lightweight processing)...', 70);
+      this.logger?.info('MODE_DECISION', '🎯 [DECISION] ⚡ 4GB ≤ RAM ≤ 8GB -> DETERMINING UNSCAN MODE');
+      this.logger?.info('MODE_DECISION', '[UNIVERSAL_LOGIC] UNSCAN decision rationale:', {
+        ramCheck: `4GB ≤ ${actualRAM}GB ≤ 8GB = SUITABLE_FOR_LIGHTWEIGHT_OFFLINE`,
+        cpuNote: `CPU: ${actualCPU} (secondary consideration)`,
+        finalDecision: 'UNSCAN'
+      });
+      
+      const unscanDecision = {
+        mode: 'UNSCAN',
+        reason: `Moderate RAM (${actualRAM}GB) suitable for lightweight offline processing without scanning`,
+        confidence: 'high',
+        hardware: hardwareCheck,
+        scanTest: { passed: false, reason: 'Skipped - UNSCAN mode determined by RAM range', duration: 0 },
+        recommendedAction: 'proceed_limited'
+      };
+      
+      this.logger?.info('MODE_DECISION', '🎯 [DECISION_MADE] UNSCAN MODE decision created:', {
+        finalMode: unscanDecision.mode,
+        finalConfidence: unscanDecision.confidence,
+        finalReason: unscanDecision.reason,
+        ramInRange: `${actualRAM}GB in 4-8GB range`,
+        scanTestSkipped: 'UNSCAN mode determined by RAM - scan test unnecessary'
+      });
+      return unscanDecision;
+    }
+    
+    // DECISION RULE 3: RAM > 8GB → SCAN MODE
+    else if (actualRAM > 8) {
+      this.updateProgress('RAM > 8GB - SCAN mode (full processing with scanning)...', 70);
+      this.logger?.info('MODE_DECISION', '🎯 [DECISION] ✅ RAM > 8GB -> DETERMINING SCAN MODE');
+      this.logger?.info('MODE_DECISION', '[UNIVERSAL_LOGIC] SCAN decision rationale:', {
+        ramCheck: `${actualRAM}GB > 8GB = EXCELLENT_FOR_FULL_OFFLINE`,
+        cpuNote: `CPU: ${actualCPU} (secondary consideration)`,
+        finalDecision: 'SCAN'
+      });
+      
+      const scanDecision = {
+        mode: 'SCAN',
+        reason: `Excellent RAM (${actualRAM}GB) perfect for full offline processing with scanning`,
+        confidence: 'high',
+        hardware: hardwareCheck,
+        scanTest: { passed: true, reason: 'Assumed passed - RAM sufficient for all operations', duration: 0 },
+        recommendedAction: 'proceed'
+      };
+      
+      this.logger?.info('MODE_DECISION', '🎯 [DECISION_MADE] SCAN MODE decision created:', {
+        finalMode: scanDecision.mode,
+        finalConfidence: scanDecision.confidence,
+        finalReason: scanDecision.reason,
+        ramExcellent: `${actualRAM}GB > 8GB`,
+        scanTestSkipped: 'SCAN mode determined by RAM - scan test unnecessary'
+      });
+      return scanDecision;
+    }
+    
+    // FALLBACK (should never reach here with proper RAM detection)
+    else {
+      this.logger?.error('MODE_DECISION', '❌ [FALLBACK] Unexpected RAM value - defaulting to HYBRID');
+      const fallbackDecision = {
+        mode: 'HYBRID',
+        reason: `Unexpected RAM detection (${actualRAM}GB) - defaulting to safe HYBRID mode`,
+        confidence: 'low',
+        hardware: hardwareCheck,
+        scanTest: null,
+        recommendedAction: 'upgrade_or_cloud'
+      };
+      return fallbackDecision;
     }
   }
 
@@ -272,13 +365,34 @@ class ModeDecisionEngine {
    * @returns {Object} Final decision result
    */
   finalizeDecision(decision, startTime) {
+    this.logger?.info('MODE_DECISION', '🎯 === STARTING FINAL DECISION CREATION ===');
+    
     const endTime = Date.now();
     const duration = endTime - startTime;
+
+    // Log input decision details
+    this.logger?.info('MODE_DECISION', '[FINALIZE] Input decision analysis:', {
+      inputMode: decision.mode,
+      inputConfidence: decision.confidence,
+      inputReason: decision.reason,
+      inputRecommendedAction: decision.recommendedAction,
+      hardwareMeetsRequirements: decision.hardware?.meetsFullModeRequirements,
+      scanTestResult: decision.scanTest?.passed,
+      processingDuration: `${duration}ms`
+    });
 
     this.updateProgress(`Mode determined: ${decision.mode}`, 95);
 
     const config = AppModeConfigManager.getConfig();
     const notifications = config.userExperience?.notifications || {};
+
+    // Log configuration details
+    this.logger?.info('MODE_DECISION', '[FINALIZE] Configuration context:', {
+      configVersion: config.version,
+      developmentModeEnabled: config.developmentMode?.enabled || false,
+      testingOverridesActive: this.hasOverridesApplied(config),
+      notificationsAvailable: Object.keys(notifications).length
+    });
 
     const result = {
       mode: decision.mode,
@@ -313,7 +427,65 @@ class ModeDecisionEngine {
       }
     };
 
+    // 🎯 COMPREHENSIVE FINAL RESULT LOGGING
+    this.logger?.info('MODE_DECISION', '🎯 === FINAL DECISION RESULT CREATED ===');
+    this.logger?.info('MODE_DECISION', '[FINAL_RESULT] Core decision:', {
+      FINAL_MODE: result.mode,
+      FINAL_CONFIDENCE: result.confidence,
+      FINAL_REASON: result.reason,
+      FINAL_RECOMMENDED_ACTION: result.recommendedAction,
+      FINAL_DURATION: `${result.duration}ms`,
+      FINAL_TIMESTAMP: result.timestamp
+    });
+
+    this.logger?.info('MODE_DECISION', '[FINAL_RESULT] Hardware analysis:', {
+      RAM_ACTUAL: result.analysis.hardware.ram?.actual,
+      RAM_REQUIRED: result.analysis.hardware.ram?.required,
+      RAM_MEETS_REQ: result.analysis.hardware.ram?.meets,
+      CPU_ACTUAL: result.analysis.hardware.cpu?.actual,
+      CPU_REQUIRED: result.analysis.hardware.cpu?.required,
+      CPU_MEETS_REQ: result.analysis.hardware.cpu?.meets,
+      HARDWARE_SUFFICIENT: result.analysis.hardware.meetsFullModeRequirements
+    });
+
+    this.logger?.info('MODE_DECISION', '[FINAL_RESULT] Scan test results:', {
+      SCAN_TEST_EXECUTED: !!result.analysis.scanTest,
+      SCAN_TEST_PASSED: result.analysis.scanTest?.passed,
+      SCAN_TEST_DURATION: result.analysis.scanTest?.duration,
+      SCAN_TEST_PERFORMANCE: result.analysis.scanTest?.performance,
+      SCAN_TEST_REASON: result.analysis.scanTest?.reason
+    });
+
+    this.logger?.info('MODE_DECISION', '[FINAL_RESULT] Decision path:', {
+      DECISION_PATH: result.analysis.decisionPath,
+      PATH_LENGTH: result.analysis.decisionPath?.length,
+      PATH_SUMMARY: result.analysis.decisionPath?.join(' → ')
+    });
+
+    this.logger?.info('MODE_DECISION', '[FINAL_RESULT] User experience:', {
+      USER_MESSAGE: result.userMessage,
+      NEXT_STEPS_COUNT: result.nextSteps?.length,
+      NEXT_STEPS: result.nextSteps
+    });
+
+    this.logger?.info('MODE_DECISION', '[FINAL_RESULT] Technical metadata:', {
+      CONFIG_VERSION: result.technical.configVersion,
+      TEST_MODE_ACTIVE: result.technical.testMode,
+      OVERRIDES_APPLIED: result.technical.overridesApplied,
+      DECISION_ENGINE_VERSION: result.technical.decisionEngine
+    });
+
     this.updateProgress('Decision analysis complete!', 100);
+
+    // Final summary log
+    this.logger?.info('MODE_DECISION', '🎯 === FINAL RESULT SUMMARY ===');
+    this.logger?.info('MODE_DECISION', `✅ DETERMINED MODE: ${result.mode}`);
+    this.logger?.info('MODE_DECISION', `✅ CONFIDENCE LEVEL: ${result.confidence}`);
+    this.logger?.info('MODE_DECISION', `✅ PROCESSING TIME: ${result.duration}ms`);
+    this.logger?.info('MODE_DECISION', `✅ HARDWARE ADEQUATE: ${result.analysis.hardware.meetsFullModeRequirements}`);
+    this.logger?.info('MODE_DECISION', `✅ SCAN TEST STATUS: ${result.analysis.scanTest?.passed ? 'PASSED' : 'FAILED/SKIPPED'}`);
+    this.logger?.info('MODE_DECISION', `✅ USER MESSAGE: ${result.userMessage}`);
+    this.logger?.info('MODE_DECISION', '🎯 === FINAL DECISION COMPLETE - RETURNING RESULT ===');
 
     return result;
   }
@@ -485,7 +657,23 @@ class ModeDecisionEngine {
    * @returns {Object|null} Last decision result
    */
   getLastDecision() {
-    return this.decisionResult;
+    this.logger?.info('MODE_DECISION', '🎯 [ACCESS] getLastDecision() called');
+    
+    if (this.decisionResult) {
+      this.logger?.info('MODE_DECISION', '🎯 [ACCESS] Returning stored decision result:', {
+        storedMode: this.decisionResult.mode,
+        storedConfidence: this.decisionResult.confidence,
+        storedTimestamp: this.decisionResult.timestamp,
+        storedDuration: this.decisionResult.duration,
+        hasAnalysis: !!this.decisionResult.analysis,
+        hasUserMessage: !!this.decisionResult.userMessage,
+        hasNextSteps: !!this.decisionResult.nextSteps
+      });
+      return this.decisionResult;
+    } else {
+      this.logger?.warn('MODE_DECISION', '🎯 [ACCESS] No decision result stored - returning null');
+      return null;
+    }
   }
 
   /**

@@ -345,25 +345,29 @@ class SystemCompatibilityChecker {
         autoLaunchExpected: result.modeDetection?.determinedMode === 'SCAN' || result.modeDetection?.determinedMode === 'UNSCAN'
       });
 
-      // ✅ CRITICAL FIX: Close window AFTER returning result to avoid app.quit() race condition
-      // Delay window closure to ensure main.js receives the result first
-      setTimeout(() => {
-        // Cleanup app mode manager
-        if (this.appModeManager) {
-          this.appModeManager.cleanup();
-        }
+      // ✅ CRITICAL FIX: Return result FIRST, then close window to avoid race condition
+      // Store cleanup function to run after returning result
+      const cleanup = () => {
+        setTimeout(() => {
+          // Cleanup app mode manager
+          if (this.appModeManager) {
+            this.appModeManager.cleanup();
+          }
 
-        // Cleanup mode notification UI  
-        if (this.modeNotificationUI) {
-          this.modeNotificationUI.cleanup();
-        }
+          // Cleanup mode notification UI  
+          if (this.modeNotificationUI) {
+            this.modeNotificationUI.cleanup();
+          }
 
-        // Close window last
-        if (this.window && !this.window.isDestroyed()) {
-          this.window.close();
-        }
-      }, 100); // 100ms delay to let main.js process the result
+          // Close window last
+          if (this.window && !this.window.isDestroyed()) {
+            this.window.close();
+          }
+        }, 100); // 100ms delay to let main.js process the result
+      };
 
+      // Schedule cleanup but return result immediately
+      cleanup();
       return result;
     } catch (error) {
       this.logger.critical('SESSION_ERROR', 'Compatibility check failed', { error: error.message, stack: error.stack });
