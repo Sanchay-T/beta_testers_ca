@@ -172,6 +172,10 @@
         
         // Override the global source of truth
         window.GLOBAL_DETECTED_MODE = testMode;
+        try {
+          // Persist immediately so backend/APIs can read the same value
+          ipcRenderer?.invoke('app-mode:store-global-mode', window.GLOBAL_DETECTED_MODE);
+        } catch (e) { /* no-op */ }
         console.log('🧪 [STEP 1] GLOBAL_DETECTED_MODE set to:', window.GLOBAL_DETECTED_MODE);
         
         // Force update UI immediately if elements exist
@@ -1246,6 +1250,9 @@
             
             // Update global variable with the comprehensive result
             window.GLOBAL_DETECTED_MODE = detectedMode;
+            try {
+              ipcRenderer?.invoke('app-mode:store-global-mode', window.GLOBAL_DETECTED_MODE);
+            } catch (e) { /* no-op */ }
             console.log('🎯 GLOBAL_DETECTED_MODE updated to:', window.GLOBAL_DETECTED_MODE);
             
             // Store the full result for other systems
@@ -1276,6 +1283,9 @@
             }
             
             window.GLOBAL_DETECTED_MODE = detectedMode;
+            try {
+              ipcRenderer?.invoke('app-mode:store-global-mode', window.GLOBAL_DETECTED_MODE);
+            } catch (e) { /* no-op */ }
             console.log('🎯 GLOBAL_DETECTED_MODE set to (fallback):', window.GLOBAL_DETECTED_MODE);
           }
 
@@ -1785,6 +1795,9 @@
           
           // 🎯 SINGLE SOURCE: Set global variable for both UI and EMAIL to use
           window.GLOBAL_DETECTED_MODE = actualMode;
+          try {
+            ipcRenderer?.invoke('app-mode:store-global-mode', window.GLOBAL_DETECTED_MODE);
+          } catch (e) { /* no-op */ }
           console.log('🎯 GLOBAL_DETECTED_MODE set to:', window.GLOBAL_DETECTED_MODE);
 
           const modeColor = actualMode === 'SCAN' ? '#22c55e' : 
