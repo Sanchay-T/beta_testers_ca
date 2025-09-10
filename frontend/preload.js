@@ -170,7 +170,17 @@ contextBridge.exposeInMainWorld("electron", {
     checkAccountStatus: () => ipcRenderer.invoke("auth:check-account-status"),
     refreshModeDetected: () => ipcRenderer.invoke("auth:refresh-mode-detected"),
     // updateUser: (userData) => ipcRenderer.invoke('auth:updateUser', userData)
-    checkLicense: () => ipcRenderer.invoke("license:check"),
+    checkLicense: async () => {
+      try {
+        return await ipcRenderer.invoke("license:check");
+      } catch (error) {
+        if (error.message.includes("No handler registered")) {
+          // Return safe default when handler isn't ready
+          return { success: false, message: "License check pending - handlers not ready" };
+        }
+        throw error;
+      }
+    },
     searchNetworkLicenses: (networkLicense) => ipcRenderer.invoke("license:search-network-licenses", networkLicense),
     activateLicense: (credentials) =>
       ipcRenderer.invoke("license:activate", credentials),
@@ -291,4 +301,35 @@ contextBridge.exposeInMainWorld("electron", {
     advertiseMdns: (data) => ipcRenderer.invoke("db:advertiseMdns", data),
     validateConnection: (data) => ipcRenderer.invoke("db:validateConnection", data),
   },
+  
+  // App mode testing (development mode)
+  appMode: {
+    loadConfig: () => ipcRenderer.invoke("app-mode:load-config"),
+    runDetection: (options) => ipcRenderer.invoke("app-mode:run-detection", options),
+  },
+
+  // Email verification
+  emailVerification: {
+    submitEmail: (data) => ipcRenderer.invoke("email:submit", data),
+  },
+
+  // Window controls
+  window: {
+    minimize: () => ipcRenderer.send("window:minimize"),
+    close: () => ipcRenderer.send("window:close"),
+  },
+});
+
+// Expose compatibility-specific API for compatibility.html
+contextBridge.exposeInMainWorld("electronAPI", {
+  // Compatibility check functions
+  compatibilityCheck: {
+    startTests: () => ipcRenderer.invoke("compatibility:start-tests"),
+    sendEmailAudit: (data) => ipcRenderer.invoke("compatibility:send-email-audit", data),
+  },
+  
+  // Event listeners for compatibility updates
+  onCompatibilityComplete: (callback) => ipcRenderer.on("compatibility-complete", callback),
+  onTestProgress: (callback) => ipcRenderer.on("test-progress", callback),
+  onModeNotification: (callback) => ipcRenderer.on("mode-notification", callback),
 });

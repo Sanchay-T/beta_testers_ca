@@ -33,6 +33,8 @@ from fastapi.responses import JSONResponse
 # from backend.account_number_ifsc_extraction import extract_accno_ifsc
 # from backend.pdf_to_name import extract_entities
 import time
+import platform
+import psutil
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -559,6 +561,475 @@ async def individual_summary_api(request: InvididualSummaryRequest):
         raise HTTPException(
             status_code=500, detail=f"Error processing bank statements: {str(e)}"
         )
+
+
+# ===== SYSTEM COMPATIBILITY CHECKER ENDPOINTS =====
+
+class CompatibilityCheckRequest(BaseModel):
+    pdf_paths: List[str] = Field(default=[], description="List of PDF paths to test (optional)")
+    passwords: Optional[List[str]] = Field(default=[], description="List of passwords for PDFs (optional)")
+    quick_check: bool = Field(default=True, description="Perform quick compatibility check without processing files")
+
+
+@app.post("/compatibility-check/")
+async def check_system_compatibility(request: CompatibilityCheckRequest):
+    """
+    Comprehensive system compatibility check for CypherEdge backend.
+    Tests all critical dependencies, ML models, and processing capabilities.
+    """
+    try:
+        logger.info("Starting comprehensive system compatibility check")
+        
+        # Initialize compatibility results
+        compatibility_results = {
+            "status": "compatible",
+            "timestamp": time.time(),
+            "checks": {
+                "dependencies": {"status": "unknown", "details": {}},
+                "ml_models": {"status": "unknown", "details": {}},
+                "temp_directories": {"status": "unknown", "details": {}},
+                "pdf_processing": {"status": "unknown", "details": {}}
+            },
+            "warnings": [],
+            "errors": [],
+            "system_info": {}
+        }
+        
+        # 1. Check Python dependencies
+        dependency_result = await check_python_dependencies()
+        compatibility_results["checks"]["dependencies"] = dependency_result
+        if dependency_result["status"] == "error":
+            compatibility_results["errors"].extend(dependency_result.get("errors", []))
+        elif dependency_result["status"] == "warning":
+            compatibility_results["warnings"].extend(dependency_result.get("warnings", []))
+        
+        # 2. Check ML models availability
+        ml_result = await check_ml_models()
+        compatibility_results["checks"]["ml_models"] = ml_result
+        if ml_result["status"] == "error":
+            compatibility_results["errors"].extend(ml_result.get("errors", []))
+        elif ml_result["status"] == "warning":
+            compatibility_results["warnings"].extend(ml_result.get("warnings", []))
+        
+        # 3. Check temp directories and file access
+        temp_result = await check_temp_directories()
+        compatibility_results["checks"]["temp_directories"] = temp_result
+        if temp_result["status"] == "error":
+            compatibility_results["errors"].extend(temp_result.get("errors", []))
+        elif temp_result["status"] == "warning":
+            compatibility_results["warnings"].extend(temp_result.get("warnings", []))
+        
+        # 4. Test PDF processing capabilities (if requested and PDFs provided)
+        if not request.quick_check and request.pdf_paths:
+            pdf_result = await check_pdf_processing(request.pdf_paths, request.passwords)
+            compatibility_results["checks"]["pdf_processing"] = pdf_result
+            if pdf_result["status"] == "error":
+                compatibility_results["errors"].extend(pdf_result.get("errors", []))
+            elif pdf_result["status"] == "warning":
+                compatibility_results["warnings"].extend(pdf_result.get("warnings", []))
+        else:
+            compatibility_results["checks"]["pdf_processing"] = {
+                "status": "skipped",
+                "details": {"reason": "Quick check mode or no PDFs provided"}
+            }
+        
+        # 5. Collect system information
+        compatibility_results["system_info"] = get_system_info()
+        
+        # Determine overall compatibility status
+        if compatibility_results["errors"]:
+            compatibility_results["status"] = "incompatible"
+        elif compatibility_results["warnings"]:
+            compatibility_results["status"] = "compatible_with_warnings"
+        else:
+            compatibility_results["status"] = "compatible"
+        
+        logger.info(f"Compatibility check completed with status: {compatibility_results['status']}")
+        return compatibility_results
+        
+    except Exception as e:
+        logger.error(f"Compatibility check failed: {str(e)}")
+        return {
+            "status": "error",
+            "timestamp": time.time(),
+            "error": str(e),
+            "checks": {},
+            "system_info": {}
+        }
+
+
+async def check_python_dependencies():
+    """Check if all required Python dependencies are available"""
+    try:
+        missing_deps = []
+        available_deps = []
+        
+        # Critical dependencies for CypherEdge
+        critical_deps = [
+            ("pandas", "Data processing"),
+            ("fastapi", "Web API framework"),
+            ("uvicorn", "ASGI server"),
+            ("pydantic", "Data validation")
+        ]
+        
+        # ML and PDF dependencies
+        ml_deps = [
+            ("torch", "PyTorch ML framework"),
+            ("transformers", "Hugging Face transformers"),
+            ("spacy", "NLP library"),
+            ("fitz", "PyMuPDF for PDF processing"),
+            ("pdfplumber", "PDF text extraction")
+        ]
+        
+        all_deps = critical_deps + ml_deps
+        
+        for dep_name, description in all_deps:
+            try:
+                __import__(dep_name)
+                available_deps.append({"name": dep_name, "description": description, "status": "available"})
+            except ImportError:
+                missing_deps.append({"name": dep_name, "description": description, "status": "missing"})
+        
+        if missing_deps:
+            return {
+                "status": "error" if any(dep["name"] in [d[0] for d in critical_deps] for dep in missing_deps) else "warning",
+                "details": {
+                    "available": available_deps,
+                    "missing": missing_deps,
+                    "total_checked": len(all_deps)
+                },
+                "errors": [f"Missing critical dependency: {dep['name']}" for dep in missing_deps if dep["name"] in [d[0] for d in critical_deps]],
+                "warnings": [f"Missing optional dependency: {dep['name']}" for dep in missing_deps if dep["name"] not in [d[0] for d in critical_deps]]
+            }
+        
+        return {
+            "status": "success",
+            "details": {
+                "available": available_deps,
+                "missing": [],
+                "total_checked": len(all_deps)
+            }
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "details": {"error": str(e)},
+            "errors": [f"Dependency check failed: {str(e)}"]
+        }
+
+
+async def check_ml_models():
+    """Check if ML models can be loaded"""
+    try:
+        model_results = []
+        
+        # Test spaCy model loading
+        try:
+            import spacy
+            # Try to load the English model that CypherEdge uses
+            nlp = spacy.load("en_core_web_sm")
+            model_results.append({
+                "name": "spaCy en_core_web_sm",
+                "status": "loaded",
+                "size": "small",
+                "capabilities": ["tokenization", "NER", "POS tagging"]
+            })
+        except Exception as spacy_error:
+            model_results.append({
+                "name": "spaCy en_core_web_sm",
+                "status": "error",
+                "error": str(spacy_error)
+            })
+        
+        # Test basic PyTorch availability
+        try:
+            import torch
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            model_results.append({
+                "name": "PyTorch",
+                "status": "available",
+                "device": device,
+                "version": torch.__version__
+            })
+        except Exception as torch_error:
+            model_results.append({
+                "name": "PyTorch",
+                "status": "error",
+                "error": str(torch_error)
+            })
+        
+        # Check for errors
+        errors = [result for result in model_results if result["status"] == "error"]
+        
+        if errors:
+            return {
+                "status": "error" if len(errors) == len(model_results) else "warning",
+                "details": {
+                    "models": model_results,
+                    "loaded_count": len([r for r in model_results if r["status"] in ["loaded", "available"]]),
+                    "error_count": len(errors)
+                },
+                "errors": [f"ML model error: {error['name']} - {error['error']}" for error in errors]
+            }
+        
+        return {
+            "status": "success",
+            "details": {
+                "models": model_results,
+                "loaded_count": len(model_results),
+                "error_count": 0
+            }
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "details": {"error": str(e)},
+            "errors": [f"ML model check failed: {str(e)}"]
+        }
+
+
+async def check_temp_directories():
+    """Check temporary directory access and permissions"""
+    try:
+        import tempfile
+        
+        temp_results = []
+        
+        # Test system temp directory
+        try:
+            with tempfile.NamedTemporaryFile(mode='w', delete=True, suffix='.cypher_test') as temp_file:
+                temp_file.write("CypherEdge compatibility test")
+                temp_file.flush()
+                
+                # Test read access
+                temp_file.seek(0)
+                
+            temp_results.append({
+                "location": tempfile.gettempdir(),
+                "type": "system_temp",
+                "status": "accessible",
+                "permissions": "read_write"
+            })
+        except Exception as temp_error:
+            temp_results.append({
+                "location": tempfile.gettempdir(),
+                "type": "system_temp", 
+                "status": "error",
+                "error": str(temp_error)
+            })
+        
+        # Test CypherEdge temp directory
+        try:
+            cypher_temp = TEMP_SAVED_PDF_DIR
+            if not os.path.exists(cypher_temp):
+                os.makedirs(cypher_temp, exist_ok=True)
+            
+            test_file = os.path.join(cypher_temp, "cypher_compatibility_test.tmp")
+            with open(test_file, 'w') as f:
+                f.write("test")
+            
+            # Clean up
+            os.remove(test_file)
+            
+            temp_results.append({
+                "location": cypher_temp,
+                "type": "cypher_temp",
+                "status": "accessible",
+                "permissions": "read_write"
+            })
+        except Exception as cypher_error:
+            temp_results.append({
+                "location": cypher_temp if 'cypher_temp' in locals() else "unknown",
+                "type": "cypher_temp",
+                "status": "error", 
+                "error": str(cypher_error)
+            })
+        
+        # Check for errors
+        errors = [result for result in temp_results if result["status"] == "error"]
+        
+        if errors:
+            return {
+                "status": "error",
+                "details": {
+                    "directories": temp_results,
+                    "accessible_count": len([r for r in temp_results if r["status"] == "accessible"]),
+                    "error_count": len(errors)
+                },
+                "errors": [f"Temp directory error: {error['location']} - {error['error']}" for error in errors]
+            }
+        
+        return {
+            "status": "success",
+            "details": {
+                "directories": temp_results,
+                "accessible_count": len(temp_results),
+                "error_count": 0
+            }
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "details": {"error": str(e)},
+            "errors": [f"Temp directory check failed: {str(e)}"]
+        }
+
+
+async def check_pdf_processing(pdf_paths: List[str], passwords: Optional[List[str]] = None):
+    """Test PDF processing capabilities with provided files"""
+    try:
+        if not pdf_paths:
+            return {
+                "status": "skipped",
+                "details": {"reason": "No PDF paths provided"}
+            }
+        
+        processing_results = []
+        passwords = passwords or []
+        
+        for i, pdf_path in enumerate(pdf_paths[:3]):  # Limit to 3 PDFs for performance
+            try:
+                if not os.path.exists(pdf_path):
+                    processing_results.append({
+                        "pdf_path": pdf_path,
+                        "status": "error",
+                        "error": "File not found"
+                    })
+                    continue
+                
+                password = passwords[i] if i < len(passwords) else ""
+                
+                # Test basic PDF reading with PyMuPDF
+                import fitz
+                doc = fitz.open(pdf_path)
+                
+                if doc.needs_pass and not password:
+                    processing_results.append({
+                        "pdf_path": pdf_path,
+                        "status": "warning",
+                        "warning": "PDF requires password but none provided"
+                    })
+                    doc.close()
+                    continue
+                
+                if password and doc.needs_pass:
+                    doc.authenticate(password)
+                
+                # Test basic text extraction
+                text_sample = ""
+                if doc.page_count > 0:
+                    page = doc[0]
+                    text_sample = page.get_text()[:200]  # First 200 characters
+                
+                doc.close()
+                
+                processing_results.append({
+                    "pdf_path": pdf_path,
+                    "status": "success",
+                    "pages": doc.page_count,
+                    "text_sample_length": len(text_sample),
+                    "has_text": len(text_sample.strip()) > 0
+                })
+                
+            except Exception as pdf_error:
+                processing_results.append({
+                    "pdf_path": pdf_path,
+                    "status": "error",
+                    "error": str(pdf_error)
+                })
+        
+        # Check results
+        errors = [r for r in processing_results if r["status"] == "error"]
+        warnings = [r for r in processing_results if r["status"] == "warning"]
+        
+        if errors:
+            return {
+                "status": "error" if len(errors) == len(processing_results) else "warning",
+                "details": {
+                    "results": processing_results,
+                    "processed_count": len([r for r in processing_results if r["status"] == "success"]),
+                    "error_count": len(errors),
+                    "warning_count": len(warnings)
+                },
+                "errors": [f"PDF processing error: {error['pdf_path']} - {error['error']}" for error in errors],
+                "warnings": [f"PDF processing warning: {warning['pdf_path']} - {warning['warning']}" for warning in warnings]
+            }
+        elif warnings:
+            return {
+                "status": "warning",
+                "details": {
+                    "results": processing_results,
+                    "processed_count": len([r for r in processing_results if r["status"] == "success"]),
+                    "error_count": 0,
+                    "warning_count": len(warnings)
+                },
+                "warnings": [f"PDF processing warning: {warning['pdf_path']} - {warning['warning']}" for warning in warnings]
+            }
+        
+        return {
+            "status": "success",
+            "details": {
+                "results": processing_results,
+                "processed_count": len(processing_results),
+                "error_count": 0,
+                "warning_count": 0
+            }
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "details": {"error": str(e)},
+            "errors": [f"PDF processing check failed: {str(e)}"]
+        }
+
+
+def get_system_info():
+    """Collect system information for compatibility reporting"""
+    try:
+        return {
+            "platform": {
+                "system": platform.system(),
+                "release": platform.release(),
+                "version": platform.version(),
+                "machine": platform.machine(),
+                "processor": platform.processor()
+            },
+            "python": {
+                "version": platform.python_version(),
+                "implementation": platform.python_implementation()
+            },
+            "memory": {
+                "total": psutil.virtual_memory().total,
+                "available": psutil.virtual_memory().available,
+                "percent": psutil.virtual_memory().percent
+            },
+            "disk": {
+                "total": psutil.disk_usage('/').total if os.name != 'nt' else psutil.disk_usage('C:\\').total,
+                "free": psutil.disk_usage('/').free if os.name != 'nt' else psutil.disk_usage('C:\\').free
+            },
+            "temp_directory": TEMP_SAVED_PDF_DIR,
+            "backend_version": "2.0.1"  # Update this to match your version
+        }
+    except Exception as e:
+        return {
+            "error": f"Could not collect system info: {str(e)}",
+            "temp_directory": TEMP_SAVED_PDF_DIR,
+            "backend_version": "2.0.1"
+        }
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    print("Validation Error:", exc.errors())
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors()},
+    )
+
 
 if __name__ == "__main__":
     # Optionally use environment variables for host/port. Falls back to "127.0.0.1" and 7500 if none provided.

@@ -9,6 +9,7 @@ const bcrypt = require("bcrypt");
 const databaseManager = require("../db/db");
 const { eq, exists, sql } = require("drizzle-orm");
 const systemInformation = require("../SystemInformation");
+const { deviceRegistration } = require("../utils/deviceRegistration");
 const bonjour = require("bonjour")();
 const axios = require("axios");
 const path = require("path");
@@ -326,6 +327,64 @@ function registerAuthHandlers(userDataPath) {
 
       if (!AppConfig.mode_detected_last_checked_at) {
         await getDeviceInfoFromServer(credentials.email, event);
+      }
+
+      // 🔌 DEVICE REGISTRATION: Register device with Cyphersol API after successful login
+      try {
+        log.info("🔌 Starting device registration with Cyphersol API (login flow)...");
+        
+        // Get validated email from user credentials
+        const userEmail = credentials.email;
+        
+        if (userEmail) {
+          // Check if device is already registered to avoid duplicates
+          const deviceUuid = systemInformation.getUUID();
+          if (deviceRegistration.isDeviceRegistered(deviceUuid)) {
+            log.info("🔌 Device already registered, skipping registration (login flow)", {
+              uuid: deviceUuid?.substring(0, 8) + "...",
+              email: userEmail.substring(0, 3) + "***" + userEmail.substring(userEmail.indexOf('@'))
+            });
+          } else {
+            // Gather device data for registration
+            const deviceData = {
+              uuid: systemInformation.getUUID(),
+              hostname: systemInformation.getHostname(),
+              username: systemInformation.getUsername(),
+              macAddress: systemInformation.getMACAddress(),
+              windowsUserSID: systemInformation.getWindowsUserSID()
+            };
+            
+            // Get detected mode from compatibility results if available
+            const detectedMode = await getDetectedCompatibilityMode();
+            
+            // Register device with Cyphersol API
+            const registrationResult = await deviceRegistration.registerDevice(
+              userEmail, 
+              deviceData, 
+              detectedMode
+            );
+            
+            // Store registration status
+            deviceRegistration.storeRegistrationStatus(deviceUuid, registrationResult);
+            
+            if (registrationResult.success) {
+              log.info("🔌 Device registration completed successfully (login flow)", {
+                uuid: deviceUuid?.substring(0, 8) + "...",
+                duration: registrationResult.duration
+              });
+            } else {
+              log.warn("🔌 Device registration failed, but continuing with login (login flow)", {
+                error: registrationResult.error,
+                uuid: deviceUuid?.substring(0, 8) + "..."
+              });
+            }
+          }
+        } else {
+          log.warn("🔌 No user email found, skipping device registration (login flow).");
+        }
+      } catch (deviceRegError) {
+        log.error("🔌 Device registration error (non-blocking, login flow):", deviceRegError.message);
+        // Continue with login even if device registration fails
       }
 
       return { success: true, user: credentials };
@@ -648,6 +707,65 @@ function registerAuthHandlers(userDataPath) {
 
       if (response.status === 200) {
         log.info("License activated successfully:", response.data);
+        
+        // 🔌 DEVICE REGISTRATION: Register device with Cyphersol API after successful license activation
+        try {
+          log.info("🔌 Starting device registration with Cyphersol API...");
+          
+          // Get validated email from global compatibility checker
+          const userEmail = await getStoredUserEmail();
+          
+          if (userEmail) {
+            // Check if device is already registered to avoid duplicates
+            const deviceUuid = systemInformation.getUUID();
+            if (deviceRegistration.isDeviceRegistered(deviceUuid)) {
+              log.info("🔌 Device already registered, skipping registration", {
+                uuid: deviceUuid?.substring(0, 8) + "...",
+                email: userEmail.substring(0, 3) + "***" + userEmail.substring(userEmail.indexOf('@'))
+              });
+            } else {
+              // Gather device data for registration
+              const deviceData = {
+                uuid: systemInformation.getUUID(),
+                hostname: systemInformation.getHostname(),
+                username: systemInformation.getUsername(),
+                macAddress: systemInformation.getMACAddress(),
+                windowsUserSID: systemInformation.getWindowsUserSID()
+              };
+              
+              // Get detected mode from compatibility results if available
+              const detectedMode = await getDetectedCompatibilityMode();
+              
+              // Register device with Cyphersol API
+              const registrationResult = await deviceRegistration.registerDevice(
+                userEmail, 
+                deviceData, 
+                detectedMode
+              );
+              
+              // Store registration status
+              deviceRegistration.storeRegistrationStatus(deviceUuid, registrationResult);
+              
+              if (registrationResult.success) {
+                log.info("🔌 Device registration completed successfully", {
+                  uuid: deviceUuid?.substring(0, 8) + "...",
+                  duration: registrationResult.duration
+                });
+              } else {
+                log.warn("🔌 Device registration failed, but continuing with license activation", {
+                  error: registrationResult.error,
+                  uuid: deviceUuid?.substring(0, 8) + "..."
+                });
+              }
+            }
+          } else {
+            log.warn("🔌 No user email found, skipping device registration. Email should have been validated during compatibility check.");
+          }
+        } catch (deviceRegError) {
+          log.error("🔌 Device registration error (non-blocking):", deviceRegError.message);
+          // Continue with license activation even if device registration fails
+        }
+        
         return { success: true, data: response.data };
       } else {
         log.error("License activation failed:", response.data);
@@ -956,6 +1074,208 @@ function registerAuthHandlers(userDataPath) {
       return { success: false, error: error.message };
     }
   });
+}
+
+/**
+ * Helper function to get stored user email from global compatibility checker
+ * @returns {Promise<string|null>} User email or null if not found
+ */
+async function getStoredUserEmail() {
+  try {
+    // Access globalCompatChecker from global if available (it's defined globally in main.js)
+    const globalCompatChecker = global.globalCompatChecker;
+    
+    if (globalCompatChecker && globalCompatChecker.userEmail) {
+      log.info("🔌 Retrieved user email from compatibility checker", {
+        email: globalCompatChecker.userEmail.substring(0, 3) + "***" + globalCompatChecker.userEmail.substring(globalCompatChecker.userEmail.indexOf('@'))
+      });
+      return globalCompatChecker.userEmail;
+    }
+    
+    // Fallback: try to get from localStorage-style persistence
+    const fs = require('fs');
+    const path = require('path');
+    const { app } = require('electron');
+    
+    try {
+      const userDataPath = app.getPath('userData');
+      const emailStorePath = path.join(userDataPath, 'user_email.json');
+      
+      if (fs.existsSync(emailStorePath)) {
+        const emailData = JSON.parse(fs.readFileSync(emailStorePath, 'utf8'));
+        const ageHours = (Date.now() - emailData.timestamp) / (1000 * 60 * 60);
+        
+        if (ageHours < 24 && emailData.email) {
+          log.info("🔌 Retrieved user email from persistent storage", {
+            email: emailData.email.substring(0, 3) + "***" + emailData.email.substring(emailData.email.indexOf('@')),
+            ageHours: ageHours.toFixed(1)
+          });
+          return emailData.email;
+        }
+      }
+    } catch (fsError) {
+      log.warn("🔌 Failed to read email from persistent storage:", fsError.message);
+    }
+    
+    log.warn("🔌 No stored user email found");
+    return null;
+  } catch (error) {
+    log.error("🔌 Error retrieving stored user email:", error.message);
+    return null;
+  }
+}
+
+/**
+ * Helper function to get detected compatibility mode
+ * @returns {Promise<string|null>} Detected mode (scan/unscan/hybrid) or null
+ */
+async function getDetectedCompatibilityMode() {
+  try {
+    // Try to get from global compatibility checker results
+    const globalCompatChecker = global.globalCompatChecker;
+    
+    if (globalCompatChecker && globalCompatChecker.results && globalCompatChecker.results.finalDecision) {
+      const mode = globalCompatChecker.results.finalDecision.mode;
+      if (mode) {
+        log.info("🔌 Retrieved compatibility mode from checker results", { mode });
+        return mode;
+      }
+    }
+    
+    // Fallback: try to get from stored compatibility results
+    const fs = require('fs');
+    const path = require('path');
+    const { app } = require('electron');
+    
+    try {
+      const userDataPath = app.getPath('userData');
+      const compatResultsPath = path.join(userDataPath, 'compatibility_results.json');
+      
+      if (fs.existsSync(compatResultsPath)) {
+        const compatData = JSON.parse(fs.readFileSync(compatResultsPath, 'utf8'));
+        const ageHours = (Date.now() - compatData.timestamp) / (1000 * 60 * 60);
+        
+        if (ageHours < 24 && compatData.finalDecision && compatData.finalDecision.mode) {
+          const mode = compatData.finalDecision.mode;
+          log.info("🔌 Retrieved compatibility mode from persistent storage", {
+            mode,
+            ageHours: ageHours.toFixed(1)
+          });
+          return mode;
+        }
+      }
+    } catch (fsError) {
+      log.warn("🔌 Failed to read compatibility mode from persistent storage:", fsError.message);
+    }
+    
+    // Default fallback
+    log.info("🔌 No stored compatibility mode found, using default 'hybrid'");
+    return 'hybrid';
+  } catch (error) {
+    log.error("🔌 Error retrieving compatibility mode:", error.message);
+    return 'hybrid'; // Safe fallback
+  }
+}
+
+/**
+ * Helper function to get stored user email from global compatibility checker
+ * @returns {Promise<string|null>} User email or null if not found
+ */
+async function getStoredUserEmail() {
+  try {
+    // Access globalCompatChecker from global if available (it's defined globally in main.js)
+    const globalCompatChecker = global.globalCompatChecker;
+    
+    if (globalCompatChecker && globalCompatChecker.userEmail) {
+      log.info("🔌 Retrieved user email from compatibility checker", {
+        email: globalCompatChecker.userEmail.substring(0, 3) + "***" + globalCompatChecker.userEmail.substring(globalCompatChecker.userEmail.indexOf('@'))
+      });
+      return globalCompatChecker.userEmail;
+    }
+    
+    // Fallback: try to get from localStorage-style persistence
+    const fs = require('fs');
+    const path = require('path');
+    const { app } = require('electron');
+    
+    try {
+      const userDataPath = app.getPath('userData');
+      const emailStorePath = path.join(userDataPath, 'user_email.json');
+      
+      if (fs.existsSync(emailStorePath)) {
+        const emailData = JSON.parse(fs.readFileSync(emailStorePath, 'utf8'));
+        const ageHours = (Date.now() - emailData.timestamp) / (1000 * 60 * 60);
+        
+        if (ageHours < 24 && emailData.email) {
+          log.info("🔌 Retrieved user email from persistent storage", {
+            email: emailData.email.substring(0, 3) + "***" + emailData.email.substring(emailData.email.indexOf('@')),
+            ageHours: ageHours.toFixed(1)
+          });
+          return emailData.email;
+        }
+      }
+    } catch (fsError) {
+      log.warn("🔌 Failed to read email from persistent storage:", fsError.message);
+    }
+    
+    log.warn("🔌 No stored user email found");
+    return null;
+  } catch (error) {
+    log.error("🔌 Error retrieving stored user email:", error.message);
+    return null;
+  }
+}
+
+/**
+ * Helper function to get detected compatibility mode
+ * @returns {Promise<string|null>} Detected mode (scan/unscan/hybrid) or null
+ */
+async function getDetectedCompatibilityMode() {
+  try {
+    // Try to get from global compatibility checker results
+    const globalCompatChecker = global.globalCompatChecker;
+    
+    if (globalCompatChecker && globalCompatChecker.results && globalCompatChecker.results.finalDecision) {
+      const mode = globalCompatChecker.results.finalDecision.mode;
+      if (mode) {
+        log.info("🔌 Retrieved compatibility mode from checker results", { mode });
+        return mode;
+      }
+    }
+    
+    // Fallback: try to get from stored compatibility results
+    const fs = require('fs');
+    const path = require('path');
+    const { app } = require('electron');
+    
+    try {
+      const userDataPath = app.getPath('userData');
+      const compatResultsPath = path.join(userDataPath, 'compatibility_results.json');
+      
+      if (fs.existsSync(compatResultsPath)) {
+        const compatData = JSON.parse(fs.readFileSync(compatResultsPath, 'utf8'));
+        const ageHours = (Date.now() - compatData.timestamp) / (1000 * 60 * 60);
+        
+        if (ageHours < 24 && compatData.finalDecision && compatData.finalDecision.mode) {
+          const mode = compatData.finalDecision.mode;
+          log.info("🔌 Retrieved compatibility mode from persistent storage", {
+            mode,
+            ageHours: ageHours.toFixed(1)
+          });
+          return mode;
+        }
+      }
+    } catch (fsError) {
+      log.warn("🔌 Failed to read compatibility mode from persistent storage:", fsError.message);
+    }
+    
+    // Default fallback
+    log.info("🔌 No stored compatibility mode found, using default 'hybrid'");
+    return 'hybrid';
+  } catch (error) {
+    log.error("🔌 Error retrieving compatibility mode:", error.message);
+    return 'hybrid'; // Safe fallback
+  }
 }
 
 module.exports = { registerAuthHandlers };

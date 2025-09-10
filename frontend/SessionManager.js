@@ -1,7 +1,9 @@
 const { EventEmitter } = require('events');
 const log = require('electron-log');
-const licenseManager = require('./LicenseManager');
-const axios = require('axios');
+
+// Delay loading these to avoid circular dependency issues
+let licenseManager;
+let axios;
 
 class SessionManager extends EventEmitter {
     constructor() {
@@ -15,58 +17,44 @@ class SessionManager extends EventEmitter {
         this.remainingSeconds = 0;
         this.interval = null;
 
-        // this.init();
         SessionManager.instance = this;
     }
 
     async init() {
-        // const { default: Store } = await import('electron-store');
-        // this.store = new Store({
-        //     encryptionKey: process.env.NODE_ENV === 'production' ? 'your-encryption-key' : undefined,
-        //     name: 'session'
-        // });
-
-        // this._user = this.store.get('user') || null;
+        // For future implementation
     }
 
     static getInstance() {
         if (!SessionManager.instance) {
-            new SessionManager();  // Create the instance if it doesn't exist
+            new SessionManager();
         }
         return SessionManager.instance;
     }
 
     startLicenseCountdown(remainingSeconds) {
-
         if (remainingSeconds <= 0) {
             this.emit('licenseExpired');
             return;
         }
 
-        // Set the initial remaining seconds
         this.setRemainingSeconds(remainingSeconds);
 
-        // Start the countdown
         this.interval = setInterval(() => {
             remainingSeconds -= 1;
 
             if (remainingSeconds <= 0) {
                 clearInterval(this.interval);
                 this.remainingSeconds = 0;
-                // this.stopLicenseCountdown();           // clears + nulls interval
                 this.emit('licenseExpired');
             } else {
                 this.setRemainingSeconds(remainingSeconds);
             }
         }, 1000);
-
-        // console.log(`License countdown started: ${remainingSeconds} seconds remaining`);
     }
 
     setRemainingSeconds(seconds) {
         this.remainingSeconds = seconds;
         this.emit('remainingSecondsUpdated', seconds);
-        // log.info(`License countdown: ${seconds} seconds remaining`);
     }
 
     stopLicenseCountdown() {
@@ -97,11 +85,12 @@ class SessionManager extends EventEmitter {
         return this._user !== null;
     }
 
-
     clearUser() {
         this._user = null;
         try {
-            this.store.delete('user');
+            if (this.store) {
+                this.store.delete('user');
+            }
             return { success: true };
         }
         catch (err) {
@@ -117,10 +106,16 @@ class SessionManager extends EventEmitter {
         if (!user) return { success: true, message: "No active user." };
 
         try {
-            // ✅ Get system info from your license manager
-            const { clientId, uuid, macAddress, hostname, username, ip, port } = licenseManager.getLicenseInfo(); // Ensure this function returns what you need
+            // Load dependencies only when needed to avoid circular dependency
+            if (!licenseManager) {
+                licenseManager = require('./LicenseManager');
+            }
+            if (!axios) {
+                axios = require('axios');
+            }
 
-            // ✅ Call the .NET licensing server API to activate session
+            const { clientId, uuid, macAddress, hostname, username, ip, port } = licenseManager.getLicenseInfo();
+
             const response = await axios.post(`http://${ip}:${port}/api/license/deactivate-session`, {
                 clientId,
                 uuid,
@@ -152,5 +147,5 @@ class SessionManager extends EventEmitter {
 }
 
 // Create and export singleton instance
-// const sessionManager = new SessionManager();
-module.exports = SessionManager.getInstance();  
+const sessionManagerInstance = new SessionManager();
+module.exports = sessionManagerInstance;

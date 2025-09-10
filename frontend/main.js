@@ -6,6 +6,7 @@ const {
   shell,
   dialog,
 } = require("electron");
+const { EventEmitter } = require("events");
 const fs = require("fs");
 const { registerOpenFileIpc } = require("./ipc/fileHandler.js");
 require("dotenv").config();
@@ -19,6 +20,7 @@ const { registerCaseDashboardIpc } = require("./ipc/caseDashboard.js");
 const { registerReportHandlers } = require("./ipc/reportHandlers.js");
 const { registerAuthHandlers } = require("./ipc/authHandlers.js");
 const { registerEditReportHandlers } = require("./ipc/editReportHandlers.js");
+// Import SessionManager singleton instance
 const sessionManager = require("./SessionManager");
 const licenseManager = require("./LicenseManager");
 const { generateReportIpc } = require("./ipc/generateReport");
@@ -1195,6 +1197,8 @@ function getRecoverySuggestions(errorCategory) {
 let win = null;
 let splashWindow = null;
 let pythonProcess = null;
+let isPerformingCleanup = false; // Add this flag
+let isStartingUp = true; // Prevent window-all-closed during startup sequence
 
 const BACKEND_PORT = 5000; // Replace with the port your backend is listening to
 
@@ -1670,6 +1674,9 @@ function setupEventListeners(win) {
 }
 
 async function createWindow() {
+  log.info("🔍 [CREATEWINDOW_DEBUG] createWindow() function called");
+  log.info("🔍 [CREATEWINDOW_DEBUG] Creating new BrowserWindow with dimensions 1800x1000");
+  
   win = new BrowserWindow({
     width: 1800,
     height: 1000,
@@ -1700,6 +1707,8 @@ async function createWindow() {
   }
 
   setupEventListeners(win);
+  log.info("🔍 [CREATEWINDOW_DEBUG] Event listeners setup completed");
+  log.info("🔍 [CREATEWINDOW_DEBUG] About to set up window.on('close') handler");
 
   win.on("close", (event) => {
     log.info("Close event triggered");
@@ -1735,6 +1744,30 @@ async function createWindow() {
   // }, 5000)
 
   win.on("closed", () => {
+    console.log('🔍 [WINDOW_CLOSE] Window closed event triggered');
+    console.log('🔍 [WINDOW_CLOSE] sessionManager defined:', !!sessionManager);
+    console.log('🔍 [WINDOW_CLOSE] sessionManager type:', typeof sessionManager);
+    console.log('🔍 [WINDOW_CLOSE] sessionManager stopLicenseCountdown:', typeof sessionManager?.stopLicenseCountdown);
+    console.log('🔍 [WINDOW_CLOSE] sessionManager removeAllListeners:', typeof sessionManager?.removeAllListeners);
+    
+    try {
+      sessionManager.stopLicenseCountdown();
+      console.log('🔍 [WINDOW_CLOSE] stopLicenseCountdown called successfully');
+    } catch (error) {
+      console.error('🔍 [WINDOW_CLOSE] ERROR calling stopLicenseCountdown:', error);
+    }
+    
+    try {
+      if (typeof sessionManager.removeAllListeners === 'function') {
+        sessionManager.removeAllListeners();
+        console.log('🔍 [WINDOW_CLOSE] removeAllListeners called successfully');
+      } else {
+        console.error('🔍 [WINDOW_CLOSE] removeAllListeners is not a function:', typeof sessionManager.removeAllListeners);
+      }
+    } catch (error) {
+      console.error('🔍 [WINDOW_CLOSE] ERROR calling removeAllListeners:', error);
+    }
+    
     win = null;
     log.info("Window closed");
     app.quit();
@@ -2114,13 +2147,548 @@ async function initializeDatabase() {
 }
 
 app.whenReady().then(async () => {
+  // Track total startup time
+  const appStartTime = Date.now();
+  
   log.info("🚀 APP READY - STARTING INITIALIZATION SEQUENCE", {
     userDataDir: userDataDir,
     appVersion: app.getVersion(),
     timestamp: new Date().toISOString(),
   });
 
-  createSplashWindow();
+  log.info("🔍 [CREATEWINDOW_DEBUG] Main window setup nearly complete - about to register IPC handlers");
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // 🔐 EMAIL VERIFICATION & AUTO-REPORTING IPC HANDLERS
+  // ═══════════════════════════════════════════════════════════════════════════════
+  
+  let verifiedEmail = null;
+  
+  // Store verified email for compatibility reporting
+  ipcMain.handle("email-verification:store", async (event, email) => {
+    try {
+      verifiedEmail = email;
+      log.info("🔐 Email stored for compatibility reporting:", email);
+      return { success: true };
+    } catch (error) {
+      log.error("❌ Failed to store verified email:", error);
+      return { success: false, error: error.message };
+    }
+  });
+  
+  // Start compatibility check after email verification
+  ipcMain.handle("email-verification:start-compatibility", async () => {
+    try {
+      log.info("🔐 Starting compatibility check after email verification");
+      
+      // Close email verification window and start compatibility check
+      if (win && !win.isDestroyed()) {
+        win.close();
+      }
+      
+      // Start the compatibility checker
+      const { SystemCompatibilityChecker } = require("./SystemCompatibilityChecker");
+      globalCompatChecker = new SystemCompatibilityChecker();
+      global.globalCompatChecker = globalCompatChecker; // Make globally accessible
+      
+      // Run compatibility check (this will create its own window)
+      const compatResult = await globalCompatChecker.runFullCheck();
+      
+      return { success: true, result: compatResult };
+    } catch (error) {
+      log.error("❌ Failed to start compatibility check:", error);
+      return { success: false, error: error.message };
+    }
+  });
+  
+  // Auto-report compatibility results to server
+  ipcMain.handle("compatibility:auto-report", async (event, compatibilityResult) => {
+    try {
+      log.info("📊 Auto-reporting compatibility results to server");
+      
+      const reportData = {
+        timestamp: new Date().toISOString(),
+        userEmail: verifiedEmail,
+        systemInfo: {
+          hostname: require('os').hostname(),
+          platform: process.platform,
+          arch: process.arch,
+          nodeVersion: process.version,
+          electronVersion: process.versions.electron,
+          appVersion: app.getVersion()
+        },
+        compatibilityResult: compatibilityResult,
+        modeDetection: compatibilityResult.modeDetection || null
+      };
+      
+      // 🔧 DEMO - Replace with real API endpoint
+      console.log("📊 [AUTO_REPORT] Report data prepared:", reportData);
+      
+      /* 
+      // 🚀 PRODUCTION - Replace with real server call:
+      const response = await fetch('https://api.cyphersol.co.in/compatibility-report', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(reportData)
+      });
+      
+      if (response.ok) {
+        log.info("✅ Compatibility report sent to server successfully");
+      } else {
+        throw new Error(`Server responded with status: ${response.status}`);
+      }
+      */
+      
+      // Simulate successful report
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      log.info("✅ Compatibility report sent to server successfully (demo)");
+      
+      return { success: true, reportData };
+    } catch (error) {
+      log.error("❌ Failed to send compatibility report:", error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // 💾 COMPATIBILITY CACHE MANAGEMENT IPC HANDLERS
+  // ═══════════════════════════════════════════════════════════════════════════════
+  
+  // Get cache status
+  ipcMain.handle("compatibility-cache:get-status", async () => {
+    try {
+      const { CompatibilityCache } = require("./compatibility/CompatibilityCache");
+      const compatCache = new CompatibilityCache(log);
+      return { success: true, status: compatCache.getCacheStatus() };
+    } catch (error) {
+      log.error("❌ Failed to get cache status:", error);
+      return { success: false, error: error.message };
+    }
+  });
+  
+  // Clear compatibility cache (force re-run on next startup)
+  ipcMain.handle("compatibility-cache:clear", async () => {
+    try {
+      const { CompatibilityCache } = require("./compatibility/CompatibilityCache");
+      const compatCache = new CompatibilityCache(log);
+      const cleared = compatCache.clearCache();
+      
+      if (cleared) {
+        log.info("🗑️ Compatibility cache cleared - next startup will run full check");
+        return { success: true, message: "Cache cleared successfully" };
+      } else {
+        return { success: false, error: "Failed to clear cache" };
+      }
+    } catch (error) {
+      log.error("❌ Failed to clear cache:", error);
+      return { success: false, error: error.message };
+    }
+  });
+  
+  // Check if cache exists and is valid
+  ipcMain.handle("compatibility-cache:is-valid", async () => {
+    try {
+      const { CompatibilityCache } = require("./compatibility/CompatibilityCache");
+      const compatCache = new CompatibilityCache(log);
+      const cachedResult = compatCache.getCachedResult();
+      
+      return { 
+        success: true, 
+        isValid: cachedResult !== null,
+        result: cachedResult ? {
+          mode: cachedResult.compatibilityResult.determinedMode,
+          age: compatCache.getCacheAge(cachedResult.timestamp),
+          confidence: cachedResult.compatibilityResult.confidence
+        } : null
+      };
+    } catch (error) {
+      log.error("❌ Failed to check cache validity:", error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // 🧪 REGISTER APP MODE TESTING IPC HANDLERS (Before System Compatibility Check)
+  // ═══════════════════════════════════════════════════════════════════════════════
+  
+  log.info("🔍 [CREATEWINDOW_DEBUG] Registering app-mode IPC handlers");
+  ipcMain.handle("app-mode:load-config", async () => {
+    try {
+      const configPath = path.join(__dirname, "compatibility", "config", "appModeConfig.json");
+      const configData = fs.readFileSync(configPath, 'utf8');
+      return JSON.parse(configData);
+    } catch (error) {
+      log.error("Failed to load app mode config:", error);
+      throw new Error(`Failed to load configuration: ${error.message}`);
+    }
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // MODE NOTIFICATION IPC HANDLERS
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  ipcMain.handle("mode-notification:unscan-acknowledged", async (event) => {
+    try {
+      log.info("📢 [MODE] UNSCAN mode notification acknowledged by user");
+      return { success: true };
+    } catch (error) {
+      log.error("❌ [MODE] Error handling UNSCAN acknowledgment:", error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle("hybrid-flow:alternative-choice", async (event, hasAlternative) => {
+    try {
+      log.info("📢 [MODE] HYBRID flow alternative PC choice:", hasAlternative);
+      return { success: true, choice: hasAlternative };
+    } catch (error) {
+      log.error("❌ [MODE] Error handling alternative choice:", error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle("hybrid-flow:close-app", async (event) => {
+    try {
+      log.info("📢 [MODE] HYBRID flow requested app close - user chose to try another PC");
+      app.quit();
+      return { success: true };
+    } catch (error) {
+      log.error("❌ [MODE] Error handling app close:", error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle("app-mode:run-detection", async (event, options = {}) => {
+    try {
+      log.info("=== APP MODE DETECTION IPC HANDLER ===");
+      log.info("🧪 Detection request received:", {
+        scenario: options.scenario,
+        hasOverrides: !!options.overrides,
+        timestamp: new Date().toISOString()
+      });
+      
+      const { getSharedAppModeManager } = require("./compatibility/SharedAppModeManager");
+      const manager = getSharedAppModeManager(log, null);
+      
+      if (options.scenario && options.scenario !== 'current') {
+        log.info("[IPC] Processing test scenario:", options.scenario);
+        
+        // Load test scenario with proper mapping
+        const configPath = path.join(__dirname, "compatibility", "config", "appModeConfig.json");
+        const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        
+        log.info("[IPC] Loaded config:", {
+          developmentMode: config.developmentMode?.enabled,
+          hasTestScenarios: !!config.testing?.scenarios,
+          availableScenarios: Object.keys(config.testing?.scenarios || {})
+        });
+        
+        // Map UI scenario names to config scenario names
+        const scenarioMapping = {
+          'highEnd': 'highEnd',
+          'midRange': 'midRange', 
+          'lowEnd': 'lowEnd'
+        };
+        
+        const mappedScenario = scenarioMapping[options.scenario] || options.scenario;
+        const scenario = config.testing.scenarios[mappedScenario];
+        
+        log.info("[IPC] Scenario mapping:", {
+          original: options.scenario,
+          mapped: mappedScenario,
+          found: !!scenario
+        });
+        
+        if (scenario) {
+          log.info("[IPC] Scenario found in config:", {
+            name: scenario.name,
+            expectedMode: scenario.expectedMode,
+            hardwareProfile: scenario.hardwareProfile
+          });
+          
+          // Override test scenario in config
+          const originalOverrides = config.testingOverrides;
+          config.testingOverrides = {
+            ...originalOverrides,
+            forceRAM: scenario.hardwareProfile?.ram,
+            forceCPU: scenario.hardwareProfile?.processor,
+            forceScanResult: 'pass',  // Always pass scan for test scenarios
+            forceMode: scenario.expectedMode
+          };
+          
+          log.info("[IPC] Creating testing overrides:", {
+            forceRAM: config.testingOverrides.forceRAM,
+            forceCPU: config.testingOverrides.forceCPU,
+            forceScanResult: config.testingOverrides.forceScanResult,
+            forceMode: config.testingOverrides.forceMode
+          });
+          
+          // Temporarily save scenario config
+          const tempConfigPath = path.join(__dirname, "compatibility", "config", "temp_appModeConfig.json");
+          fs.writeFileSync(tempConfigPath, JSON.stringify(config, null, 2));
+          log.info("[IPC] Temp config created at:", tempConfigPath);
+          
+          // Debug logging to verify scenario override
+          log.info("🧪 [IPC] Final scenario configuration:", {
+            scenario: options.scenario,
+            mappedScenario: mappedScenario,
+            expectedMode: scenario.expectedMode,
+            forceMode: config.testingOverrides.forceMode,
+            forceRAM: config.testingOverrides.forceRAM,
+            forceCPU: config.testingOverrides.forceCPU,
+            developmentMode: config.developmentMode?.enabled
+          });
+          
+          // Run detection with scenario
+          log.info("[IPC] Starting mode detection with mapped scenario:", mappedScenario);
+          const result = await manager.runModeDetection({ scenario: mappedScenario });
+          
+          log.info("[IPC] Detection completed:", {
+            success: result.success,
+            determinedMode: result.determinedMode,
+            canProceed: result.canProceed,
+            forced: result.modeDecision?.forced
+          });
+          
+          // Clean up temp config
+          if (fs.existsSync(tempConfigPath)) {
+            fs.unlinkSync(tempConfigPath);
+            log.info("[IPC] Temp config cleaned up");
+          }
+          
+          log.info("=== APP MODE DETECTION IPC COMPLETE ===");
+          return result;
+        } else {
+          log.warn("[IPC] Scenario not found in config:", mappedScenario);
+        }
+      }
+      
+      // Run with current system/overrides
+      if (options.overrides) {
+        log.info("[IPC] Applying manual overrides:", options.overrides);
+        
+        // Update config with overrides
+        const configPath = path.join(__dirname, "compatibility", "config", "appModeConfig.json");
+        const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        config.testingOverrides = { ...config.testingOverrides, ...options.overrides };
+        fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+        
+        log.info("[IPC] Config updated with overrides");
+      }
+      
+      log.info("[IPC] Running standard detection with scenario:", options.scenario || 'current');
+      const result = await manager.runModeDetection({ scenario: options.scenario || 'current' });
+      
+      log.info("[IPC] Standard detection completed:", {
+        success: result.success,
+        determinedMode: result.determinedMode,
+        canProceed: result.canProceed
+      });
+      
+      log.info("=== APP MODE DETECTION IPC COMPLETE ===");
+      return result;
+      
+    } catch (error) {
+      log.error("[IPC ERROR] App mode detection failed:", {
+        message: error.message,
+        stack: error.stack
+      });
+      throw new Error(`Detection failed: ${error.message}`);
+    }
+  });
+
+  // Global compatibility checker instance for email capture
+  let globalCompatChecker = null;
+
+  // Register email verification IPC handler BEFORE compatibility check
+  ipcMain.handle("email:submit", async (event, data) => {
+    const { email } = data;
+    console.log("📧 🎯 === EMAIL SUBMIT IPC HANDLER TRIGGERED ===");
+    console.log("📧 🎯 Received email:", email);
+    console.log("📧 🎯 globalCompatChecker exists:", !!globalCompatChecker);
+    console.log("📧 🎯 setUserEmail method exists:", !!(globalCompatChecker && typeof globalCompatChecker.setUserEmail === 'function'));
+    
+    log.info("📧 [EMAIL] User submitted email:", email);
+    
+    // Store email in global compatibility checker if available
+    if (globalCompatChecker && typeof globalCompatChecker.setUserEmail === 'function') {
+      console.log("📧 🎯 Calling setUserEmail on compatibility checker...");
+      globalCompatChecker.setUserEmail(email);
+      console.log("📧 🎯 Email stored successfully in compatibility checker");
+      log.info("📧 [EMAIL] Email stored in compatibility checker for audit");
+    } else {
+      console.log("📧 ⚠️ globalCompatChecker or setUserEmail method not available");
+      console.log("📧 ⚠️ globalCompatChecker:", globalCompatChecker);
+      console.log("📧 ⚠️ setUserEmail type:", globalCompatChecker ? typeof globalCompatChecker.setUserEmail : 'N/A');
+    }
+    
+    return {
+      success: true,
+      email: email,
+      message: "Email received successfully"
+    };
+  });
+  log.info("📧 Email verification IPC handler registered");
+
+  // 🔍 STEP -1: SYSTEM COMPATIBILITY CHECK (CRITICAL FIRST STEP)
+  log.info("📋 INITIALIZATION STEP -1: SYSTEM COMPATIBILITY CHECK");
+  
+  // Run system compatibility check for both dev and production
+  try {
+    // 🚀 ENHANCED: Check cache first to skip if already completed
+    const { CompatibilityCache } = require("./compatibility/CompatibilityCache");
+    const { SystemCompatibilityChecker } = require("./SystemCompatibilityChecker");
+    
+    const compatCache = new CompatibilityCache(log);
+    const compatStartTime = Date.now();
+    
+    // Step 1: Check for valid cached result
+    log.info("📂 Checking compatibility cache...");
+    const cachedResult = compatCache.getCachedResult();
+    
+    let compatResult;
+    
+    if (cachedResult) {
+      // ✅ Use cached result - skip full compatibility check
+      log.info("⚡ Using cached compatibility result", {
+        mode: cachedResult.compatibilityResult.determinedMode,
+        age: compatCache.getCacheAge(cachedResult.timestamp),
+        confidence: cachedResult.compatibilityResult.confidence
+      });
+      
+      // Create compatibility result format expected by rest of startup
+      compatResult = {
+        canProceed: cachedResult.compatibilityResult.canProceed,
+        modeDetection: cachedResult.compatibilityResult,
+        results: {
+          successes: [], // Cached results don't have detailed test info
+          warnings: [],
+          issues: []
+        },
+        fromCache: true,
+        cacheAge: compatCache.getCacheAge(cachedResult.timestamp)
+      };
+      
+      // Still create global compatibility checker for email audit functionality
+      console.log("📧 🎯 === CREATING GLOBAL COMPATIBILITY CHECKER (CACHED MODE) ===");
+      globalCompatChecker = new SystemCompatibilityChecker();
+      global.globalCompatChecker = globalCompatChecker; // Make globally accessible
+      console.log("📧 🎯 globalCompatChecker created:", !!globalCompatChecker);
+      console.log("📧 🎯 setUserEmail method available:", !!(globalCompatChecker && typeof globalCompatChecker.setUserEmail === 'function'));
+      
+    } else {
+      // ❌ No valid cache - run full compatibility check
+      log.info("🔍 No valid cache found, running full system compatibility check...");
+      console.log("📧 🎯 === CREATING GLOBAL COMPATIBILITY CHECKER ===");
+      globalCompatChecker = new SystemCompatibilityChecker();
+      global.globalCompatChecker = globalCompatChecker; // Make globally accessible
+      console.log("📧 🎯 globalCompatChecker created:", !!globalCompatChecker);
+      console.log("📧 🎯 setUserEmail method available:", !!(globalCompatChecker && typeof globalCompatChecker.setUserEmail === 'function'));
+      
+      compatResult = await globalCompatChecker.runFullCheck();
+      
+      // 🔍 DEBUG: Log the exact compatResult structure for cache debugging
+      log.info("🔍 [CACHE_DEBUG] Compatibility result structure:", {
+        canProceed: compatResult.canProceed,
+        hasModeDetection: !!compatResult.modeDetection,
+        modeDetectionKeys: compatResult.modeDetection ? Object.keys(compatResult.modeDetection) : null,
+        determinedMode: compatResult.modeDetection?.determinedMode,
+        modeCanProceed: compatResult.modeDetection?.canProceed
+      });
+      
+      // 💾 Cache the result if successful
+      if (compatResult.canProceed && compatResult.modeDetection) {
+        log.info("🔍 [CACHE_DEBUG] Cache conditions met, attempting to save cache...");
+        const cacheSuccess = compatCache.saveCachedResult(compatResult.modeDetection);
+        if (cacheSuccess) {
+          log.info("💾 Compatibility result cached for future startups");
+        } else {
+          log.warn("⚠️ Failed to cache compatibility result");
+        }
+      } else {
+        log.warn("🔍 [CACHE_DEBUG] Cache conditions NOT met:", {
+          canProceed: compatResult.canProceed,
+          hasModeDetection: !!compatResult.modeDetection
+        });
+      }
+    }
+    
+    const compatEndTime = Date.now();
+    const compatDuration = compatEndTime - compatStartTime;
+    
+    if (!compatResult.canProceed) {
+      log.error("❌ CRITICAL: System compatibility check failed", {
+        duration: compatDuration,
+        issues: compatResult.results.issues.length,
+        warnings: compatResult.results.warnings.length,
+        canProceed: compatResult.canProceed,
+      });
+      
+      // Show final message and exit gracefully
+      log.info("🛑 Application startup terminated due to compatibility issues");
+      app.quit();
+      return;
+    }
+    
+    log.info("✅ System compatibility check passed", {
+      duration: compatDuration,
+      successes: compatResult.results.successes.length,
+      warnings: compatResult.results.warnings.length,
+      issues: compatResult.results.issues.length,
+      canProceed: compatResult.canProceed,
+      fromCache: compatResult.fromCache || false,
+      cacheAge: compatResult.cacheAge || null
+    });
+    
+    // 🔍 DEBUG: Log mode detection result from compatibility check
+    if (compatResult.modeDetection) {
+      log.info("🎯 [MODE_DEBUG] Mode detection result from compatibility:", {
+        determinedMode: compatResult.modeDetection.determinedMode,
+        canProceed: compatResult.modeDetection.canProceed,
+        confidence: compatResult.modeDetection.confidence,
+        userMessage: compatResult.modeDetection.userMessage,
+        nextSteps: compatResult.modeDetection.nextSteps
+      });
+    } else {
+      log.warn("⚠️ [MODE_DEBUG] No mode detection result from compatibility check");
+    }
+    
+    if (compatResult.results.warnings.length > 0) {
+      log.warn("⚠️ Compatibility warnings detected - proceeding with fallback configuration", {
+        warnings: compatResult.results.warnings.map(w => w.test),
+      });
+    }
+    
+  } catch (error) {
+    log.error("💥 Compatibility check crashed - proceeding with startup anyway");
+    log.error("💥 Error message:", error.message);
+    log.error("💥 Error stack:", error.stack);
+    console.error("💥 DETAILED COMPATIBILITY ERROR:", error);
+    
+    // Don't block startup if compatibility checker itself fails
+    // This ensures we don't break existing functionality
+  }
+
+  // 🎯 STEP 0: CREATE SPLASH SCREEN FIRST
+  log.info("📋 INITIALIZATION STEP 0: SPLASH SCREEN CREATION");
+  log.info("🔍 [STARTUP_DEBUG] About to create splash screen - checking mode detection status");
+  
+  try {
+    const splashStartTime = Date.now();
+    createSplashWindow();
+    const splashEndTime = Date.now();
+    log.info("✅ Splash screen created successfully", {
+      duration: splashEndTime - splashStartTime,
+      splashPath: path.join(__dirname, "/react-app/splash.html"),
+    });
+    log.info("🔍 [STARTUP_DEBUG] Splash screen creation completed - continuing with startup");
+  } catch (error) {
+    log.error("❌ Splash screen creation failed:", error);
+    log.error("🔍 [STARTUP_DEBUG] Splash screen failed, but continuing anyway");
+    // Continue anyway - splash is not critical
+  }
 
   try {
     // 🔄 MIGRATE USER DATA FROM OLD APP (Critical first step)
@@ -2221,8 +2789,24 @@ app.whenReady().then(async () => {
     // 3. Initialize Session Manager
     try {
       log.info("🚀 PHASE 3: Initializing Session Manager");
-      await sessionManager.init();
-      log.info("✅ SessionManager initialized successfully");
+      
+      // Verify SessionManager instance and methods
+      if (!sessionManager) {
+        throw new Error("SessionManager instance not found");
+      }
+      
+      if (typeof sessionManager.init !== 'function') {
+        log.warn("⚠️ SessionManager.init method not found, skipping initialization");
+        log.info("✅ SessionManager loaded without init (singleton pattern)");
+      } else {
+        await sessionManager.init();
+        log.info("✅ SessionManager initialized successfully");
+      }
+      
+      // const sessionEndTime = Date.now();
+      // log.info("✅ SessionManager phase completed", {
+      //   duration: sessionEndTime - sessionStartTime,
+      // });
     } catch (error) {
       log.error("❌ SessionManager initialization failed:", error);
       throw error;
@@ -2243,8 +2827,20 @@ app.whenReady().then(async () => {
 
     // 5. Create main window
     log.info("📋 INITIALIZATION STEP 3: CREATING MAIN WINDOW");
-    await createWindow();
-    log.info("✅ Main window created successfully");
+    try {
+      const windowStartTime = Date.now();
+      log.info("🔍 [STARTUP_DEBUG] Calling createWindow() function...");
+      await createWindow();
+      const windowEndTime = Date.now();
+      log.info("✅ Main window created successfully", {
+        duration: windowEndTime - windowStartTime,
+      });
+      log.info("🔍 [STARTUP_DEBUG] Main window creation completed - should show window soon");
+    } catch (error) {
+      log.error("❌ Main window creation failed:", error);
+      log.error("🔍 [STARTUP_DEBUG] CRITICAL: Main window creation failed - this is likely why no auto-launch");
+      throw error;
+    }
 
     // 6. Start Python backend
     log.info("📋 INITIALIZATION STEP 4: STARTING PYTHON BACKEND");
@@ -2255,6 +2851,8 @@ app.whenReady().then(async () => {
       log.error("❌ Python backend failed to start:", error);
       // Handle backend start failure
     }
+    
+    log.info("🔍 [STARTUP_DEBUG] ✅ ENTIRE STARTUP SEQUENCE COMPLETED SUCCESSFULLY");
 
     // 7. Sync TallyPrime files
     log.info("📋 INITIALIZATION STEP 5: SYNCING TALLYPRIME FILES");
@@ -2275,7 +2873,32 @@ app.whenReady().then(async () => {
       log.info("✅ Splash screen closed");
     }
 
-    log.info("🎉 APP INITIALIZATION COMPLETED SUCCESSFULLY");
+    // Calculate total startup time
+    const totalStartupTime = Date.now() - appStartTime;
+    // Mark startup as complete - allow window-all-closed to quit the app normally
+    isStartingUp = false;
+    
+    log.info(
+      "════════════════════════════════════════════════════════════════"
+    );
+    log.info("🎉 APPLICATION STARTUP COMPLETED SUCCESSFULLY");
+    log.info(
+      "════════════════════════════════════════════════════════════════"
+    );
+    log.info("📊 STARTUP SUMMARY", {
+      totalStartupTime: totalStartupTime,
+      totalStartupSeconds: (totalStartupTime / 1000).toFixed(2),
+      allServicesRunning: true,
+      timestamp: new Date().toISOString(),
+    });
+
+    // Initial update check after 1 minute
+    if (!global.AppConfig.isDev) {
+      setTimeout(() => {
+        log.info("🔄 Starting automatic update check");
+        checkForUpdates();
+      }, 60 * 1000);
+    }
   } catch (error) {
     log.error("💥 APP INITIALIZATION FAILED", {
       error: error.message,
@@ -2293,20 +2916,377 @@ app.whenReady().then(async () => {
 });
 
 app.on("window-all-closed", () => {
+  log.info("[DEBUG] window-all-closed event fired");
+  log.info("[DEBUG] isUpdating value:", isUpdating);
+  log.info("[DEBUG] isPerformingCleanup value:", isPerformingCleanup);
+  log.info("[DEBUG] isStartingUp value:", isStartingUp);
+  log.info("[DEBUG] platform:", process.platform);
+
   if (process.platform !== "darwin") {
-    app.quit();
+    // Don't quit if we're in the middle of an update, cleanup, or startup
+    if (!isUpdating && !isPerformingCleanup && !isStartingUp) {
+      log.info("[DEBUG] Neither updating, cleaning up, nor starting up, calling app.quit()");
+      app.quit();
+    } else {
+      log.info(
+        "Skipping quit during update/cleanup/startup process - will continue with initialization"
+      );
+    }
   }
 });
 
-app.on("activate", () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
-});
+// Compact cleanup function for update process
+const stopEverythingNeatly = async () => {
+  try {
+    logWithTimestamp(
+      "info",
+      UPDATE_LOG_PREFIX,
+      "[CLEANUP] Starting aggressive gateway termination..."
+    );
 
-// Graceful shutdown
-app.on("before-quit", (event) => {
-  log.info("Application is about to quit");
+    // 1. Stop Gateway Windows Service (try both possible service names)
+    if (process.platform === "win32") {
+      // Try stopping both services
+      const serviceNames = ["LicensingServer"];
+      for (const serviceName of serviceNames) {
+        // Create a retry function for stopping services
+        const stopServiceWithRetry = (
+          serviceName,
+          maxRetries = 10,
+          timeoutMs = 30000
+        ) => {
+          const startTime = Date.now();
+          let attempts = 0;
+
+          while (attempts < maxRetries && Date.now() - startTime < timeoutMs) {
+            try {
+              attempts++;
+              logWithTimestamp(
+                "info",
+                UPDATE_LOG_PREFIX,
+                `[CLEANUP] Attempt ${attempts}/${maxRetries}: Stopping service ${serviceName}`
+              );
+
+              // First, try to stop the service
+              try {
+                execSync(`sc stop "${serviceName}"`, { timeout: 5000 });
+                logWithTimestamp(
+                  "info",
+                  UPDATE_LOG_PREFIX,
+                  `[CLEANUP] Stop command sent for ${serviceName}`
+                );
+              } catch (stopError) {
+                // Check if service is already stopped or doesn't exist
+                if (
+                  stopError.message.includes("1062") ||
+                  stopError.message.includes("not started") ||
+                  stopError.message.includes("1052") ||
+                  stopError.message.includes("1060")
+                ) {
+                  logWithTimestamp(
+                    "info",
+                    UPDATE_LOG_PREFIX,
+                    `[CLEANUP] Service ${serviceName} was already stopped or doesn't exist`
+                  );
+                  return true;
+                }
+                // If it's a different error, we'll still try to verify status below
+                logWithTimestamp(
+                  "warn",
+                  UPDATE_LOG_PREFIX,
+                  `[CLEANUP] Stop command error for ${serviceName}: ${stopError.message}`
+                );
+              }
+
+              // Now verify the service has actually stopped using sc query
+              let verificationAttempts = 0;
+              const maxVerificationAttempts = 5;
+
+              while (verificationAttempts < maxVerificationAttempts) {
+                try {
+                  verificationAttempts++;
+                  const queryResult = execSync(`sc query "${serviceName}"`, {
+                    timeout: 3000,
+                    encoding: "utf8",
+                  });
+
+                  logWithTimestamp(
+                    "info",
+                    UPDATE_LOG_PREFIX,
+                    `[CLEANUP] Verification attempt ${verificationAttempts}: Checking ${serviceName} status`
+                  );
+
+                  // Check if service is stopped
+                  if (
+                    queryResult.includes("STATE") &&
+                    (queryResult.includes("STOPPED") ||
+                      queryResult.includes("1  STOPPED"))
+                  ) {
+                    logWithTimestamp(
+                      "info",
+                      UPDATE_LOG_PREFIX,
+                      `[CLEANUP] ✅ Service ${serviceName} confirmed STOPPED on attempt ${attempts}`
+                    );
+                    return true;
+                  } else if (
+                    queryResult.includes("STOP_PENDING") ||
+                    queryResult.includes("3  STOP_PENDING")
+                  ) {
+                    logWithTimestamp(
+                      "info",
+                      UPDATE_LOG_PREFIX,
+                      `[CLEANUP] Service ${serviceName} is stopping... waiting`
+                    );
+                    // Wait a bit for the service to finish stopping
+                    try {
+                      execSync(`timeout /t 2 /nobreak > nul 2>&1`, {
+                        stdio: "ignore",
+                      });
+                    } catch (_) {
+                      const start = Date.now();
+                      while (Date.now() - start < 2000) {
+                        // Busy wait 2 seconds
+                      }
+                    }
+                  } else {
+                    logWithTimestamp(
+                      "warn",
+                      UPDATE_LOG_PREFIX,
+                      `[CLEANUP] Service ${serviceName} still running, will retry stop command`
+                    );
+                    break; // Exit verification loop to retry stop command
+                  }
+                } catch (queryError) {
+                  // Service doesn't exist or query failed
+                  if (
+                    queryError.message.includes("1060") ||
+                    queryError.message.includes("does not exist")
+                  ) {
+                    logWithTimestamp(
+                      "info",
+                      UPDATE_LOG_PREFIX,
+                      `[CLEANUP] ✅ Service ${serviceName} doesn't exist (already removed)`
+                    );
+                    return true;
+                  }
+                  logWithTimestamp(
+                    "warn",
+                    UPDATE_LOG_PREFIX,
+                    `[CLEANUP] Query error for ${serviceName}: ${queryError.message}`
+                  );
+                  break; // Exit verification loop to retry
+                }
+              }
+
+              // If we get here, either verification failed or service is still running
+              logWithTimestamp(
+                "warn",
+                UPDATE_LOG_PREFIX,
+                `[CLEANUP] Service ${serviceName} not confirmed stopped, will retry`
+              );
+
+              // Wait before retry (exponential backoff, max 5 seconds)
+              const waitTime = Math.min(1000 * Math.pow(2, attempts - 1), 5000);
+              try {
+                execSync(
+                  `timeout /t ${Math.ceil(
+                    waitTime / 1000
+                  )} /nobreak > nul 2>&1`,
+                  { stdio: "ignore" }
+                );
+              } catch (_) {
+                // Fallback to setTimeout if timeout command fails
+                const start = Date.now();
+                while (Date.now() - start < waitTime) {
+                  // Busy wait
+                }
+              }
+            } catch (error) {
+              logWithTimestamp(
+                "error",
+                UPDATE_LOG_PREFIX,
+                `[CLEANUP] Unexpected error on attempt ${attempts} for ${serviceName}: ${error.message}`
+              );
+
+              // Wait before retry
+              const waitTime = Math.min(1000 * Math.pow(2, attempts - 1), 5000);
+              try {
+                execSync(
+                  `timeout /t ${Math.ceil(
+                    waitTime / 1000
+                  )} /nobreak > nul 2>&1`,
+                  { stdio: "ignore" }
+                );
+              } catch (_) {
+                const start = Date.now();
+                while (Date.now() - start < waitTime) {
+                  // Busy wait
+                }
+              }
+            }
+          }
+
+          logWithTimestamp(
+            "error",
+            UPDATE_LOG_PREFIX,
+            `[CLEANUP] ❌ Failed to stop and verify service ${serviceName} after ${attempts} attempts and ${Date.now() - startTime}ms`
+          );
+          return false;
+        };
+
+        try {
+          stopServiceWithRetry(serviceName);
+        } catch (_) {
+          logWithTimestamp(
+            "info",
+            UPDATE_LOG_PREFIX,
+            `[CLEANUP] Service ${serviceName} retry function completed`
+          );
+        }
+      }
+
+      // Wait for services to fully stop
+      logWithTimestamp(
+        "info",
+        UPDATE_LOG_PREFIX,
+        "[CLEANUP] Waiting for services to stop..."
+      );
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+
+      // Kill gateway processes aggressively
+      logWithTimestamp(
+        "info",
+        UPDATE_LOG_PREFIX,
+        "[CLEANUP] Force terminating gateway processes..."
+      );
+
+      // Try multiple kill methods
+      const killMethods = [
+        // Method 1: Kill by exact name
+        'taskkill /IM "gatewayService.exe" /F',
+        // Method 2: Kill with tree
+        'taskkill /IM "gatewayService.exe" /F /T',
+        // Method 3: Kill any gateway pattern
+        "wmic process where \"name like '%gateway%'\" delete",
+        // Method 4: PowerShell force kill
+        "powershell -Command \"Get-Process | Where-Object {$_.ProcessName -like '*gateway*'} | Stop-Process -Force\"",
+      ];
+
+      for (let i = 0; i < killMethods.length; i++) {
+        try {
+          logWithTimestamp(
+            "info",
+            UPDATE_LOG_PREFIX,
+            `[CLEANUP] Kill method ${i + 1}: ${killMethods[i].substring(
+              0,
+              30
+            )}...`
+          );
+          execSync(killMethods[i], { shell: true, windowsHide: true });
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        } catch (e) {
+          // Continue with next method
+        }
+      }
+
+      // Final verification
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      try {
+        execSync('tasklist | find /I "gatewayService.exe"', { shell: true });
+        logWithTimestamp(
+          "warn",
+          UPDATE_LOG_PREFIX,
+          "[CLEANUP] Gateway process might still be running"
+        );
+      } catch (e) {
+        logWithTimestamp(
+          "info",
+          UPDATE_LOG_PREFIX,
+          "[CLEANUP] Gateway process successfully terminated"
+        );
+      }
+    }
+
+    // 2. Close SQLite
+    try {
+      const db = databaseManager.getInstance()?.getDatabase();
+      if (db) {
+        db.close();
+        logWithTimestamp(
+          "info",
+          UPDATE_LOG_PREFIX,
+          "[CLEANUP] Closed database connection"
+        );
+      }
+    } catch (_) {}
+
+    // 3. Kill Python backend
+    if (pythonProcess) {
+      pythonProcess.kill("SIGTERM");
+      logWithTimestamp(
+        "info",
+        UPDATE_LOG_PREFIX,
+        "[CLEANUP] Terminated Python backend"
+      );
+    }
+
+    logWithTimestamp(
+      "info",
+      UPDATE_LOG_PREFIX,
+      "[CLEANUP] Gateway termination complete"
+    );
+  } catch (e) {
+    logWithTimestamp(
+      "error",
+      UPDATE_LOG_PREFIX,
+      `[CLEANUP] stopEverythingNeatly error: ${e.message}`
+    );
+
+  }
+}
+
+app.on("will-quit", async (event) => {
+  log.info("App is quitting");
+  log.info("isUpdating flag:", isUpdating);
+
+  await stopEverythingNeatly();
+  
+  // Clean up shared AppModeManager instance
+  try {
+    const { resetSharedAppModeManager } = require("./compatibility/SharedAppModeManager");
+    resetSharedAppModeManager();
+    log.info("Shared AppModeManager instance cleaned up");
+  } catch (error) {
+    log.warn("Error cleaning up shared AppModeManager:", error.message);
+  }
+
+  // Clean up SessionManager listeners before quit
+  try {
+    if (sessionManager && typeof sessionManager.removeAllListeners === 'function') {
+      sessionManager.removeAllListeners("remainingSecondsUpdated");
+      sessionManager.removeAllListeners("licenseExpired");
+      log.info("SessionManager listeners cleaned up on quit");
+    }
+  } catch (err) {
+    log.error("Error cleaning up SessionManager listeners on quit:", err);
+  }
+
+  if (isUpdating) {
+    log.info("Auto install update on quit");
+  }
+
+  // Clean logout on quit
+  try {
+    if (sessionManager && typeof sessionManager.logoutUser === 'function') {
+      sessionManager.logoutUser();
+    }
+  } catch (error) {
+    log.error("Error calling sessionManager.logoutUser():", error);
+  }
+  if (pythonProcess) {
+    log.info("Stopping Python process...");
+    pythonProcess.kill("SIGTERM");
+  }
 
   // Skip confirmation if updating
   if (isUpdating) {
@@ -2327,6 +3307,15 @@ app.on("before-quit", (event) => {
     log.info("Database connection closed");
   }
 });
+
+
+app.on("activate", () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
+  }
+});
+
+
 
 // Performance tracking utility
 const performanceTracker = {
