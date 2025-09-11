@@ -629,45 +629,9 @@ const GenerateReportForm = ({
   };
 
   const openFileDialog = async () => {
-    try {
-      const filePaths = await window.electron.openFileDialog();
-      if (filePaths && filePaths.length > 0) {
-        handleFileChange(filePaths);
-      }
-    } catch (error) {
-      console.error("Error opening file dialog:", error);
-      toast({
-        title: "File Dialog Error",
-        description: "Could not open file dialog. Try the network access option.",
-        variant: "destructive",
-        duration: 3000,
-      });
-    }
-  };
-
-  const openNetworkPathDialog = async () => {
-    try {
-      const result = await window.electron.openNetworkPathDialog();
-      if (result && result.filePaths && result.filePaths.length > 0) {
-        handleFileChange(result.filePaths);
-        
-        if (result.source === "network") {
-          toast({
-            title: "Network Files Selected",
-            description: `Selected ${result.filePaths.length} file(s) from network location.`,
-            variant: "default",
-            duration: 3000,
-          });
-        }
-      }
-    } catch (error) {
-      console.error("Error accessing network path:", error);
-      toast({
-        title: "Network Access Error",
-        description: "Could not access network location. Please check your network connection and permissions.",
-        variant: "destructive",
-        duration: 4000,
-      });
+    const filePaths = await window.electron.openFileDialog();
+    if (filePaths && filePaths.length > 0) {
+      handleFileChange(filePaths);
     }
   };
 
@@ -1036,34 +1000,19 @@ const GenerateReportForm = ({
                     )}
                   </div>
 
-                  <div className="mt-4 flex gap-3 flex-wrap">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openFileDialog();
-                      }}
-                      className="px-6 py-2.5 text-sm font-medium"
-                    >
-                      {selectedFiles.length > 0
-                        ? "Add More Files"
-                        : "Browse Files"}
-                    </Button>
-                    
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openNetworkPathDialog();
-                      }}
-                      className="px-6 py-2.5 text-sm font-medium bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
-                      title="Access files from network drives or central servers"
-                    >
-                      Network Access
-                    </Button>
-                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openFileDialog();
+                    }}
+                    className="mt-4 px-6 py-2.5 text-sm font-medium"
+                  >
+                    {selectedFiles.length > 0
+                      ? "Add More Files"
+                      : "Browse Files"}
+                  </Button>
                 </div>
 
                 {isDragging && (

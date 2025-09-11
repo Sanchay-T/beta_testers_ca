@@ -1981,98 +1981,17 @@ async function createWindow() {
         "showHiddenFiles",
         "treatPackageAsDirectory",
         "dontAddToRecent",
-        "noResolveAliases", // Better handling of network shortcuts
       ],
       filters: [
         { name: "Documents", extensions: ["pdf", "xlsx", "csv"] },
         { name: "All Files", extensions: ["*"] },
       ],
-      // Start from user's home directory which may show network drives better
-      defaultPath: require('os').homedir(),
     });
 
     if (!result.canceled) {
       return result.filePaths;
     }
     return [];
-  });
-
-  // Add alternative network path input dialog
-  ipcMain.handle("open-network-path-dialog", async () => {
-    try {
-      const result = await dialog.showMessageBox(win, {
-        type: "info",
-        title: "Network Drive Access",
-        message: "Enter Network Path",
-        detail: "If you can't see network drives in the file dialog, you can enter the network path directly:\n\nExample formats:\n• \\\\server\\share\\folder\n• Z:\\folder (mapped drive)\n• //server/share/folder",
-        buttons: ["Browse Manually", "Enter Network Path", "Cancel"],
-        defaultId: 0,
-        cancelId: 2,
-      });
-
-      if (result.response === 1) {
-        // Show input dialog for network path
-        const pathResult = await dialog.showSaveDialog(win, {
-          title: "Enter Network Path (use the location bar)",
-          defaultPath: "\\\\", // Start with UNC path prefix
-          properties: ["showOverwriteConfirmation"],
-        });
-        
-        if (!pathResult.canceled && pathResult.filePath) {
-          // Extract directory path and open file dialog there
-          const networkDir = require('path').dirname(pathResult.filePath);
-          const fileResult = await dialog.showOpenDialog(win, {
-            defaultPath: networkDir,
-            properties: [
-              "openFile",
-              "multiSelections",
-              "showHiddenFiles",
-            ],
-            filters: [
-              { name: "Documents", extensions: ["pdf", "xlsx", "csv"] },
-              { name: "All Files", extensions: ["*"] },
-            ],
-          });
-          
-          if (!fileResult.canceled) {
-            return { filePaths: fileResult.filePaths, source: "network" };
-          }
-        }
-      } else if (result.response === 0) {
-        // Regular browse - try with different starting points
-        const tryPaths = [
-          "C:\\", // Local drives
-          require('os').homedir(), // User home
-          "", // Default (let Windows decide)
-        ];
-        
-        for (const tryPath of tryPaths) {
-          const fileResult = await dialog.showOpenDialog(win, {
-            defaultPath: tryPath,
-            title: "Select Files - Try browsing to 'This PC' or 'Network' in the sidebar",
-            properties: [
-              "openFile",
-              "multiSelections",
-              "showHiddenFiles",
-              "treatPackageAsDirectory",
-            ],
-            filters: [
-              { name: "Documents", extensions: ["pdf", "xlsx", "csv"] },
-              { name: "All Files", extensions: ["*"] },
-            ],
-          });
-          
-          if (!fileResult.canceled && fileResult.filePaths.length > 0) {
-            return { filePaths: fileResult.filePaths, source: "browse" };
-          }
-        }
-      }
-      
-      return { filePaths: [], source: "canceled" };
-    } catch (error) {
-      log.error("Error in network path dialog:", error);
-      throw error;
-    }
   });
 
   ipcMain.handle("get-file-content", async (event, filePath) => {
