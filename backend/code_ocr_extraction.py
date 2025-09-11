@@ -4,10 +4,7 @@ import io
 from PyPDF2 import PdfReader, PdfWriter
 from PyPDF2 import PdfReader, PdfWriter, Transformation
 from PyPDF2.generic import NameObject, NumberObject, RectangleObject
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.colors import black
-from datetime import datetime, timedelta
+from datetime import datetime
 import torch
 from PIL import Image
 import fitz  # PyMuPDF
@@ -19,7 +16,6 @@ import cv2
 # import matplotlib
 # matplotlib.use("Agg")
 # from matplotlib.patches import Patch
-from PIL import ImageDraw
 from PIL import Image
 from transformers import TableTransformerForObjectDetection
 # from tqdm.auto import tqdm

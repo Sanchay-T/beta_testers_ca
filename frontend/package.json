@@ -1,6 +1,6 @@
 {
   "name": "CypherEdge",
-  "version": "2.2.400",
+  "version": "2.3.100",
   "description": "CA OFFLINE APP",
   "main": "main.js",
   "icon": "./assets/cyphersol-icon.png",
@@ -83,6 +83,10 @@
       {
         "from": "drizzle.config.js",
         "to": "drizzle.config.js"
+      },
+      {
+        "from": "Master_data.json",
+        "to": "Master_data.json"
       },
       {
         "from": "gatewayServer/appsettings.json",
