@@ -6,7 +6,6 @@ const log = require("electron-log");
 contextBridge.exposeInMainWorld("electron", {
   openFile: (filePath) => ipcRenderer.invoke("open-file", filePath),
   openFileDialog: () => ipcRenderer.invoke("open-file-dialog"),
-  openNetworkPathDialog: () => ipcRenderer.invoke("open-network-path-dialog"),
   previewFile: (filePath) => ipcRenderer.invoke("preview-file", filePath),
   getFileContent: (filePath) => ipcRenderer.invoke("get-file-content", filePath),
   isOcrEnabled: () => ipcRenderer.invoke("is-ocr-enabled"),
