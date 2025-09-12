@@ -1019,7 +1019,7 @@ export default function GenerateReport({ activeTab }) {
             {detectedMode && (
               <div className="flex-1 items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                 <span className="font-semibold">Detected Mode:</span>
-                <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-md">
+                <span className="px-2 py-1 ml-2 bg-gray-100 dark:bg-gray-700 rounded-md">
                   {detectedMode}
                 </span>
               </div>

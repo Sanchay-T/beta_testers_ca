@@ -1326,18 +1326,18 @@ async function startPythonExecutable() {
           "Customer_category.xlsx"
         );
 
-        if (!fs.existsSync(userSheet)) {
-          if (fs.existsSync(defaultSheet)) {
-            // Make sure the folder exists
-            fs.mkdirSync(path.dirname(userSheet), { recursive: true });
+        // if (!fs.existsSync(userSheet)) {
+        //   if (fs.existsSync(defaultSheet)) {
+        //     // Make sure the folder exists
+        //     fs.mkdirSync(path.dirname(userSheet), { recursive: true });
 
-            // Copy the default into userData
-            fs.copyFileSync(defaultSheet, userSheet);
-            log.info("Copied default user sheet to userData:", userSheet);
-          } else {
-            log.error("Bundled sheet not found at:", defaultSheet);
-          }
-        }
+        //     // Copy the default into userData
+        //     fs.copyFileSync(defaultSheet, userSheet);
+        //     log.info("Copied default user sheet to userData:", userSheet);
+        //   } else {
+        //     log.error("Bundled sheet not found at:", defaultSheet);
+        //   }
+        // }
       }
 
       options.env = {
