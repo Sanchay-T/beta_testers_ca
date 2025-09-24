@@ -2,7 +2,7 @@ import sys
 import io
 import os
 import logging
-import uuid
+import random
 
 logger = logging.getLogger(__name__)
 
@@ -145,8 +145,8 @@ async def analyze_bank_statements_pdf(
     pdf_paths = []
     try:
         for pdf_file in files:
-            unique_id = uuid.uuid4().hex
-            unique_filename = f"{ca_id}_{unique_id}_{pdf_file.filename}"
+            random_num = random.randint(100000, 999999)
+            unique_filename = f"{ca_id}_{random_num}_{pdf_file.filename}"
             file_path = os.path.join(TEMP_SAVED_PDF_DIR, unique_filename)
             logger.info(f"file_path: {file_path}")
             with open(file_path, "wb") as buffer:
