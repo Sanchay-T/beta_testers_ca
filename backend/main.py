@@ -190,9 +190,6 @@ async def analyze_bank_statements_pdf(
                 logger.info(f"Successfully deleted temporary file: {path}")
             except OSError as e:
                 logger.error(f"Error deleting file {path}: {e.strerror}")
-        
-        # Clean up all temporary files for this ca_id
-        cleanup_temp_files(ca_id)
 
 @app.post("/analyze-statements/")
 async def analyze_bank_statements(request: BankStatementRequest):
