@@ -9,7 +9,7 @@ const bcrypt = require("bcrypt");
 const databaseManager = require("../db/db");
 const { eq, exists, sql } = require("drizzle-orm");
 const systemInformation = require("../SystemInformation");
-const { deviceRegistration } = require("../utils/deviceRegistration");
+const { deviceRegistration, UserNotFoundError } = require("../utils/deviceRegistration");
 const bonjour = require("bonjour")();
 const axios = require("axios");
 const path = require("path");
@@ -290,28 +290,6 @@ function registerAuthHandlers(userDataPath) {
         throw new AuthError("Password is incorrect.");
       }
 
-      // ✅ Get system info from your license manager
-      const { clientId, uuid, macAddress, hostname, username, ip, port } =
-        licenseManager.getLicenseInfo(); // Ensure this function returns what you need
-
-      // ✅ Call the .NET licensing server API to activate session
-      const response = await axios.post(
-        `http://${ip}:${port}/api/license/activate-session`,
-        {
-          clientId,
-          uuid,
-          macAddress,
-          hostname,
-          username,
-        }
-      );
-
-      const { data } = response;
-
-      if (!data.success) {
-        throw new Error("Session activation failed");
-      }
-
       sessionManager.setUser({
         userId: user.id,
         email: user.email,
@@ -319,97 +297,6 @@ function registerAuthHandlers(userDataPath) {
         name: user.name,
       });
       log.info("Login User session activated:", sessionManager.getUser());
-
-      log.info("Login License session activated:", data);
-
-      // ✅ Start countdown based on license validity
-      if (data.remainingSeconds && data.remainingSeconds > 0) {
-        sessionManager.startLicenseCountdown(data.remainingSeconds);
-      }
-
-      // 🔌 DEVICE REGISTRATION: Register device with Cyphersol API after successful login
-      try {
-        log.info(
-          "🔌 Starting device registration with Cyphersol API (login flow)..."
-        );
-
-        // Get validated email from user credentials
-        const userEmail = credentials.email;
-
-        if (userEmail) {
-          // Check if device is already registered to avoid duplicates
-          const deviceUuid = systemInformation.getUUID();
-          if (deviceRegistration.isDeviceRegistered(deviceUuid)) {
-            log.info(
-              "🔌 Device already registered, skipping registration (login flow)",
-              {
-                uuid: deviceUuid?.substring(0, 8) + "...",
-                email:
-                  userEmail.substring(0, 3) +
-                  "***" +
-                  userEmail.substring(userEmail.indexOf("@")),
-              }
-            );
-          } else {
-            // Gather device data for registration
-            const deviceData = {
-              uuid: systemInformation.getUUID(),
-              hostname: systemInformation.getHostname(),
-              username: systemInformation.getUsername(),
-              macAddress: systemInformation.getMACAddress(),
-              windowsUserSID: systemInformation.getWindowsUserSID(),
-            };
-
-            // Get detected mode from compatibility results if available
-            const detectedMode = await resolveDetectedCompatibilityMode();
-
-            // Register device with Cyphersol API
-            const registrationResult = await deviceRegistration.registerDevice(
-              userEmail,
-              deviceData,
-              detectedMode
-            );
-
-            // Store registration status
-            deviceRegistration.storeRegistrationStatus(
-              deviceUuid,
-              registrationResult
-            );
-
-            if (registrationResult.success) {
-              log.info(
-                "🔌 Device registration completed successfully (login flow)",
-                {
-                  uuid: deviceUuid?.substring(0, 8) + "...",
-                  duration: registrationResult.duration,
-                }
-              );
-              if (!AppConfig.mode_detected_last_checked_at) {
-                await getDeviceInfoFromServer(credentials.email, event);
-              }
-              
-            } else {
-              log.warn(
-                "🔌 Device registration failed, but continuing with login (login flow)",
-                {
-                  error: registrationResult.error,
-                  uuid: deviceUuid?.substring(0, 8) + "...",
-                }
-              );
-            }
-          }
-        } else {
-          log.warn(
-            "🔌 No user email found, skipping device registration (login flow)."
-          );
-        }
-      } catch (deviceRegError) {
-        log.error(
-          "🔌 Device registration error (non-blocking, login flow):",
-          deviceRegError.message
-        );
-        // Continue with login even if device registration fails
-      }
 
       return { success: true, user: credentials };
     } catch (error) {
@@ -507,23 +394,121 @@ function registerAuthHandlers(userDataPath) {
           return { success: false, error: "Failed to register user." };
         }
 
-        // const remainingSeconds = licenseManager.calculateRemainingSeconds(
-        //   result.data.expiry_timestamp
-        // );
-        // const storeResult = await licenseManager.storeLicense({
-        //   licenseKey: credentials.licenseKey,
-        //   email: credentials.email,
-        // });
+        // 🔌 DEVICE REGISTRATION: Register device with Cyphersol API after successful login
+        try {
+          log.info(
+            "🔌 Starting device registration with Cyphersol API (login flow)..."
+          );
 
-        // if (storeResult.success) {
-        //   sessionManager.startLicenseCountdown(remainingSeconds);
-        // }
+          // Get validated email from user credentials
+          const userEmail = credentials.email;
 
-        return {
-          success: true,
-          message: "User created successfully.",
-          user: user[0],
-        };
+          if (userEmail) {
+            // Gather device data for registration
+            const deviceData = {
+              uuid: systemInformation.getUUID(),
+              hostname: systemInformation.getHostname(),
+              username: systemInformation.getUsername(),
+              macAddress: systemInformation.getMACAddress(),
+              windowsUserSID: systemInformation.getWindowsUserSID(),
+            };
+
+            // Get detected mode from compatibility results if available
+            const detectedMode = await resolveDetectedCompatibilityMode();
+
+            // Register device with Cyphersol API
+            const registrationResult = await deviceRegistration.registerDevice(
+              userEmail,
+              deviceData,
+              detectedMode
+            );
+
+            // Store registration status
+            deviceRegistration.storeRegistrationStatus(
+              systemInformation.getUUID(),
+              registrationResult
+            );
+
+            if (registrationResult.success) {
+              log.info(
+                "🔌 Device registration completed successfully (login flow)",
+                {
+                  uuid: deviceUuid?.substring(0, 8) + "...",
+                  duration: registrationResult.duration,
+                }
+              );
+              if (!AppConfig.mode_detected_last_checked_at) {
+                await getDeviceInfoFromServer(credentials.email, event);
+              }
+            } else {
+              log.warn(
+                "🔌 Device registration failed, but continuing with login (login flow)",
+                {
+                  error: registrationResult.error,
+                  uuid: deviceUuid?.substring(0, 8) + "...",
+                }
+              );
+            }
+          } else {
+            log.warn(
+              "🔌 No user email found, skipping device registration (login flow)."
+            );
+          }
+        } catch (deviceRegError) {
+          if (deviceRegError instanceof UserNotFoundError) {
+          log.warn(
+            "🔌 Device registration failed: User not found. Halting signup.",
+            { error: deviceRegError.message }
+          );
+          return {
+            success: false,
+            error: "Registration failed: The provided email was not found. Please use a valid email.",
+          };
+        }
+
+
+          log.error(
+            "🔌 Device registration error (non-blocking, login flow):",
+            deviceRegError.message
+          );
+          // Continue with login even if device registration fails
+        }
+
+        // ✅ Get system info from your license manager
+        const { clientId, uuid, macAddress, hostname, username, ip, port } =
+          licenseManager.getLicenseInfo(); // Ensure this function returns what you need
+
+        // ✅ Call the .NET licensing server API to activate session
+        const response = await axios.post(
+          `http://${ip}:${port}/api/license/activate-session`,
+          {
+            clientId,
+            uuid,
+            macAddress,
+            hostname,
+            username,
+          }
+        );
+
+        const { data } = response;
+
+        if (!data.success) {
+          throw new Error("Session activation failed");
+        }
+
+        // ✅ Start countdown based on license validity
+        if (data.remainingSeconds && data.remainingSeconds > 0) {
+          sessionManager.startLicenseCountdown(data.remainingSeconds);
+        }
+
+        sessionManager.setUser({
+          userId: user.id,
+          email: user.email,
+          role: user.role,
+          name: user.name,
+        });
+
+        return { success: true, user: user[0] };
       }
     } catch (err) {
       log.info("Error in creating new user : ", err);
@@ -1183,71 +1168,7 @@ async function getStoredUserEmail() {
  * Helper function to get detected compatibility mode
  * @returns {Promise<string|null>} Detected mode (scan/unscan/hybrid) or null
  */
-async function resolveDetectedCompatibilityMode() {
-  try {
-    // Try to get from global compatibility checker results
-    const globalCompatChecker = global.globalCompatChecker;
 
-    if (
-      globalCompatChecker &&
-      globalCompatChecker.results &&
-      globalCompatChecker.results.finalDecision
-    ) {
-      const mode = globalCompatChecker.results.finalDecision.mode;
-      if (mode) {
-        log.info("🔌 Retrieved compatibility mode from checker results", {
-          mode,
-        });
-        return mode;
-      }
-    }
-
-    // Fallback: try to get from stored compatibility results
-    const fs = require("fs");
-    const path = require("path");
-    const { app } = require("electron");
-
-    try {
-      const userDataPath = app.getPath("userData");
-      const compatResultsPath = path.join(
-        userDataPath,
-        "compatibility_results.json"
-      );
-
-      if (fs.existsSync(compatResultsPath)) {
-        const compatData = JSON.parse(
-          fs.readFileSync(compatResultsPath, "utf8")
-        );
-        const ageHours = (Date.now() - compatData.timestamp) / (1000 * 60 * 60);
-
-        if (
-          ageHours < 24 &&
-          compatData.finalDecision &&
-          compatData.finalDecision.mode
-        ) {
-          const mode = compatData.finalDecision.mode;
-          log.info("🔌 Retrieved compatibility mode from persistent storage", {
-            mode,
-            ageHours: ageHours.toFixed(1),
-          });
-          return mode;
-        }
-      }
-    } catch (fsError) {
-      log.warn(
-        "🔌 Failed to read compatibility mode from persistent storage:",
-        fsError.message
-      );
-    }
-
-    // Default fallback
-    log.info("🔌 No stored compatibility mode found, using default 'hybrid'");
-    return "hybrid";
-  } catch (error) {
-    log.error("🔌 Error retrieving compatibility mode:", error.message);
-    return "hybrid"; // Safe fallback
-  }
-}
 
 /**
  * Resolve detected compatibility mode using single-source persistence first.
@@ -1352,13 +1273,13 @@ async function resolveDetectedCompatibilityMode() {
       );
     }
 
-    log.warn('dY"O No compatibility mode available from any source');
-    return null;
+    log.warn('dY"O No compatibility mode available from any source, defaulting to scan');
+    return 'scan';
   } catch (error) {
     log.error('dY"O Error resolving compatibility mode', {
       error: error.message,
     });
-    return null;
+    return 'scan';
   }
 }
 module.exports = { registerAuthHandlers };

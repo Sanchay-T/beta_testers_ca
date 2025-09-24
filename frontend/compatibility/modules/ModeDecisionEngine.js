@@ -250,40 +250,11 @@ class ModeDecisionEngine {
     }
     
     // DECISION RULE 2: 4GB ≤ RAM ≤ 8GB → UNSCAN MODE  
-    else if (actualRAM >= 4 && actualRAM <= 8) {
-      this.updateProgress('RAM 4-8GB range - UNSCAN mode (lightweight processing)...', 70);
-      this.logger?.info('MODE_DECISION', '🎯 [DECISION] ⚡ 4GB ≤ RAM ≤ 8GB -> DETERMINING UNSCAN MODE');
-      this.logger?.info('MODE_DECISION', '[UNIVERSAL_LOGIC] UNSCAN decision rationale:', {
-        ramCheck: `4GB ≤ ${actualRAM}GB ≤ 8GB = SUITABLE_FOR_LIGHTWEIGHT_OFFLINE`,
-        cpuNote: `CPU: ${actualCPU} (secondary consideration)`,
-        finalDecision: 'UNSCAN'
-      });
-      
-      const unscanDecision = {
-        mode: 'UNSCAN',
-        reason: `Moderate RAM (${actualRAM}GB) suitable for lightweight offline processing without scanning`,
-        confidence: 'high',
-        hardware: hardwareCheck,
-        scanTest: { passed: false, reason: 'Skipped - UNSCAN mode determined by RAM range', duration: 0 },
-        recommendedAction: 'proceed_limited'
-      };
-      
-      this.logger?.info('MODE_DECISION', '🎯 [DECISION_MADE] UNSCAN MODE decision created:', {
-        finalMode: unscanDecision.mode,
-        finalConfidence: unscanDecision.confidence,
-        finalReason: unscanDecision.reason,
-        ramInRange: `${actualRAM}GB in 4-8GB range`,
-        scanTestSkipped: 'UNSCAN mode determined by RAM - scan test unnecessary'
-      });
-      return unscanDecision;
-    }
-    
-    // DECISION RULE 3: RAM > 8GB → SCAN MODE
-    else if (actualRAM > 8) {
-      this.updateProgress('RAM > 8GB - SCAN mode (full processing with scanning)...', 70);
-      this.logger?.info('MODE_DECISION', '🎯 [DECISION] ✅ RAM > 8GB -> DETERMINING SCAN MODE');
+    else if (actualRAM >= 4) {
+      this.updateProgress('RAM > 4GB - SCAN mode (full processing with scanning)...', 70);
+      this.logger?.info('MODE_DECISION', '🎯 [DECISION] ✅ RAM > 4GB -> DETERMINING SCAN MODE');
       this.logger?.info('MODE_DECISION', '[UNIVERSAL_LOGIC] SCAN decision rationale:', {
-        ramCheck: `${actualRAM}GB > 8GB = EXCELLENT_FOR_FULL_OFFLINE`,
+        ramCheck: `${actualRAM}GB > 4GB = EXCELLENT_FOR_FULL_OFFLINE`,
         cpuNote: `CPU: ${actualCPU} (secondary consideration)`,
         finalDecision: 'SCAN'
       });
@@ -301,7 +272,7 @@ class ModeDecisionEngine {
         finalMode: scanDecision.mode,
         finalConfidence: scanDecision.confidence,
         finalReason: scanDecision.reason,
-        ramExcellent: `${actualRAM}GB > 8GB`,
+        ramExcellent: `${actualRAM}GB > 4GB`,
         scanTestSkipped: 'SCAN mode determined by RAM - scan test unnecessary'
       });
       return scanDecision;
