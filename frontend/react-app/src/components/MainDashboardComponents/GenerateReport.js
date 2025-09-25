@@ -210,6 +210,27 @@ export default function GenerateReport({ activeTab }) {
       );
 
       console.log({ electronResponse: result });
+      // Early user-friendly handling: license limit reached or license check unavailable
+      if (
+        result &&
+        result.success === false &&
+        Array.isArray(result.data?.warning) &&
+        result.data.warning.length > 0
+      ) {
+        clearInterval(progressIntervalRef.current);
+        toast.dismiss(newToastId);
+        setProgress(0);
+        setLoading(false);
+        progressIntervalRef.current = null;
+        // Show the first warning message from backend
+        toast({
+          title: "No Statements Remaining",
+          description: result.data.warning[0],
+          variant: "destructive",
+          duration: 5000,
+        });
+        return;
+      }
       if (
         result.data.missingMonthsList &&
         result.data.missingMonthsList.length > 0
@@ -259,9 +280,7 @@ export default function GenerateReport({ activeTab }) {
             // Get the filename from the path and remove the timestamp
             const filename = file_path.split("\\").pop(); // Get filename from path
             // const filename = file_path.split(/[\\/]/).pop(); // Get filename from path
-            const filenameWithoutTimestamp = filename.substring(
-              filename.indexOf("-") + 1
-            ); // Remove everything before first hyphen
+            const filenameWithoutTimestamp = /^\d{10,}-/.test(filename) ? filename.replace(/^\d{10,}-/, '') : filename; // Remove everything before first hyphen
             return filenameWithoutTimestamp;
           });
           setFailedStatements(failedFiles || []); // Store failed
@@ -477,6 +496,27 @@ export default function GenerateReport({ activeTab }) {
             setWarningExpanded(false); // Reset warning expansion state
 
             console.log("OCR Result:", ocrResult);
+
+            // Early user-friendly handling for OCR retry as well
+            if (
+              ocrResult &&
+              ocrResult.success === false &&
+              Array.isArray(ocrResult.data?.warning) &&
+              ocrResult.data.warning.length > 0
+            ) {
+              clearInterval(progressIntervalRef.current);
+              toast.dismiss(newToastId);
+              setProgress(0);
+              setLoading(false);
+              progressIntervalRef.current = null;
+              toast({
+                title: "No Statements Remaining",
+                description: ocrResult.data.warning[0],
+                variant: "destructive",
+                duration: 5000,
+              });
+              return;
+            }
 
             if (
               ocrResult.data.missingMonthsList &&

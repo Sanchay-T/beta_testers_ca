@@ -252,9 +252,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
           const failedFiles = result?.data?.failedFiles?.map((file_path) => {
             // Get the filename from the path and remove the timestamp
             const filename = file_path.split(/[\\/]/).pop(); // Get filename from path
-            const filenameWithoutTimestamp = filename.substring(
-              filename.indexOf("-") + 1
-            ); // Remove everything before first hyphen
+            const filenameWithoutTimestamp = /^\d{10,}-/.test(filename) ? filename.replace(/^\d{10,}-/, '') : filename; // Remove everything before first hyphen
             return filenameWithoutTimestamp;
           });
           setFailedStatements(failedFiles || []); // Store failed
@@ -701,6 +699,26 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         "add-pdf"
       );
       console.log({ electronResponse: result });
+      // Early user-friendly handling: license limit reached or license check unavailable
+      if (
+        result &&
+        result.success === false &&
+        Array.isArray(result.data?.warning) &&
+        result.data.warning.length > 0
+      ) {
+        clearInterval(progressIntervalRef.current);
+        toast.dismiss(newToastId);
+        setProgress(0);
+        setLoading(false);
+        progressIntervalRef.current = null;
+        toast({
+          title: "No Statements Remaining",
+          description: result.data.warning[0],
+          variant: "destructive",
+          duration: 5000,
+        });
+        return;
+      }
 
       if (
         result.data.missingMonthsList &&
@@ -743,9 +761,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
           const failedFiles = result.data.failedFiles.map((file_path) => {
             // Get the filename from the path and remove the timestamp
             const filename = file_path.split("\\").pop(); // Get filename from path
-            const filenameWithoutTimestamp = filename.substring(
-              filename.indexOf("-") + 1
-            ); // Remove everything before first hyphen
+            const filenameWithoutTimestamp = /^\d{10,}-/.test(filename) ? filename.replace(/^\d{10,}-/, '') : filename; // Remove everything before first hyphen
             return filenameWithoutTimestamp;
           });
           setFailedStatements(failedFiles || []); // Store failed
@@ -1704,6 +1720,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                         : -1;
                                     })
                                     .map((statement, index) => {
+                                      console.log({aiyaz:statement})
                                       const isDone = statement.resolved;
                                       const hasError = Boolean(
                                         statement.respectiveReasonsForError
@@ -1722,11 +1739,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                             <p className="flex-[4.5]">
                                               <strong>File Name:</strong>{" "}
                                               {statement.pdfName
-                                                ? statement.pdfName.substring(
-                                                    statement.pdfName.indexOf(
-                                                      "-"
-                                                    ) + 1
-                                                  )
+                                                ? (() => { const n = statement.pdfName; return n.replace(/^\d{10,}-/, ""); })()
                                                 : ""}
                                             </p>
                                             {/* {!hasError && ( */}

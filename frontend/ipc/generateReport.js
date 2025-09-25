@@ -781,15 +781,39 @@ function generateReportIpc(tmpdir_path) {
       try {
         const { success, data } = await checkStatementLimit();
         if (!success) {
-          throw new Error("Failed to check statement limit.");
+          log.error("checkStatementLimit returned unsuccessful response");
+          return {
+            success: false,
+            data: {
+              caseId: null,
+              processed: null,
+              warning: ["Unable to verify license usage. Please try again."],
+            },
+          };
         }
         if (data.limitReached) {
-          throw new Error("Statement limit reached. Please contact support.");
+          log.warn("Statement limit reached. Remaining:", data.remaining);
+          return {
+            success: false,
+            data: {
+              caseId: null,
+              processed: null,
+              warning: ["No statements remaining on your license. Please contact support."],
+              remaining: data.remaining,
+            },
+          };
         }
         log.info("Remaining statements:", data.remaining);
       } catch (error) {
         log.error("Error checking statement limit:", error.message);
-        throw new Error("Something went wrong.");
+        return {
+          success: false,
+          data: {
+            caseId: null,
+            processed: null,
+            warning: ["Could not check license usage right now. Please try again."],
+          },
+        };
       }
 
       log.info("Received result:", receivedResult);
@@ -1017,13 +1041,53 @@ function generateReportIpc(tmpdir_path) {
 
         // Step 3: Handle failed extractions
         if (response.data?.["pdf_paths_not_extracted"]?.paths?.length > 0) {
-          const failedPdfPaths =
-            response.data["pdf_paths_not_extracted"].paths || [];
+          let failedObj = response.data["pdf_paths_not_extracted"];
+          let failedPdfPaths = failedObj.paths || [];
 
-          // Store failed statements in database
+          // In HYBRID (useLocalServer=false), backend returns only filenames.
+          // Map them to local full paths under <tmpdir_path>/failed_pdfs/<caseName>/
+          try {
+            const AppConfig = require("../config.js");
+            const IS_LOCAL = AppConfig.useLocalServer; // true = local; false = hosted/hybrid
+            if (!IS_LOCAL) {
+              const caseFolder = path.join(tmpdir_path, "failed_pdfs", caseName);
+              let filesInFolder = [];
+              try {
+                filesInFolder = fs.existsSync(caseFolder) ? fs.readdirSync(caseFolder) : [];
+              } catch (_) {
+                filesInFolder = [];
+              }
+
+              const mapToLocal = (backendPathOrName) => {
+                const base = path.basename(backendPathOrName);
+                // Try exact match first (timestamped names)
+                const match =
+                  filesInFolder.find((f) => f === base) ||
+                  // Then match by stripping timestamp prefix "<ts>-<base>"
+                  filesInFolder.find((f) => {
+                    const dashIdx = f.indexOf("-");
+                    const stripped = dashIdx !== -1 ? f.substring(dashIdx + 1) : f;
+                    return stripped === base;
+                  }) ||
+                  // Fallback: suffix match
+                  filesInFolder.find((f) => f.endsWith(base));
+
+                return match ? path.join(caseFolder, match) : path.join(caseFolder, base);
+              };
+
+              failedPdfPaths = failedPdfPaths.map(mapToLocal);
+              failedObj = { ...failedObj, paths: failedPdfPaths };
+              // Reflect mapping back to response for downstream usage
+              response.data["pdf_paths_not_extracted"] = failedObj;
+            }
+          } catch (e) {
+            log.warn("HYBRID failed path mapping skipped due to error", e);
+          }
+
+          // Store failed statements in database (mapped in HYBRID; unchanged in LOCAL)
           await db.insert(failedStatements).values({
             caseId: caseId,
-            data: JSON.stringify(response.data["pdf_paths_not_extracted"]),
+            data: JSON.stringify(failedObj),
           });
 
           for (const failedPath of failedPdfPaths) {
@@ -1364,11 +1428,91 @@ function generateReportIpc(tmpdir_path) {
       const finalPayload = preprocessPayload(payload);
 
       log.info("finalPayload: ", finalPayload);
-      const response = await axios.post(generateReportEndpoint, finalPayload, {
-        headers: { "Content-Type": "application/json" },
-        // timeout: 300000,
-        validateStatus: (status) => status === 200,
-      });
+      const AppConfigRectify = require("../config.js");
+      const IS_HYBRID = !AppConfigRectify.useLocalServer;
+
+      let response;
+      if (IS_HYBRID) {
+        // HYBRID: upload local files as multipart to hosted server
+        const FormData = require("form-data");
+        const hybridForm = new FormData();
+
+        (finalPayload.bank_names || []).forEach((bn) => hybridForm.append("bank_names", bn));
+        (finalPayload.passwords || []).forEach((pw) => hybridForm.append("passwords", pw || ""));
+        (finalPayload.start_date || finalPayload.start_dates || []).forEach((sd) => hybridForm.append("start_date", sd || ""));
+        (finalPayload.end_date || finalPayload.end_dates || []).forEach((ed) => hybridForm.append("end_date", ed || ""));
+        (finalPayload.is_ocr || []).forEach((flag) => hybridForm.append("is_ocr", String(!!flag)));
+
+        // Attach files from resolved pdf paths (map to failed_pdfs/<caseName> when needed)
+        (finalPayload.pdf_paths || []).forEach((p) => {
+          try {
+            const direct = path.isAbsolute(p) ? p : path.resolve(p);
+
+            let attachPath = direct;
+            if (!fs.existsSync(attachPath)) {
+              // Try to find it under the case's failed_pdfs folder using basename and timestamp-<basename> patterns
+              const caseFolder = path.join(tmpdir_path, "failed_pdfs", caseName);
+              let filesInFolder = [];
+              try {
+                filesInFolder = fs.existsSync(caseFolder) ? fs.readdirSync(caseFolder) : [];
+              } catch (_) {
+                filesInFolder = [];
+              }
+              const base = path.basename(p);
+              const match =
+                filesInFolder.find((f) => f === base) ||
+                filesInFolder.find((f) => {
+                  const dashIdx = f.indexOf("-");
+                  const stripped = dashIdx !== -1 ? f.substring(dashIdx + 1) : f;
+                  return stripped === base;
+                }) ||
+                filesInFolder.find((f) => f.endsWith(base));
+              attachPath = match ? path.join(caseFolder, match) : path.join(caseFolder, base);
+            }
+
+            if (fs.existsSync(attachPath)) {
+              hybridForm.append("files", fs.createReadStream(attachPath), {
+                filename: path.basename(attachPath),
+                contentType: "application/pdf",
+              });
+            } else {
+              log.warn("HYBRID rectify: file not found for upload:", attachPath);
+            }
+          } catch (e) {
+            log.warn("Skipping missing file during HYBRID rectify upload:", p, e?.message);
+          }
+        });
+
+        // Extra JSON blobs
+        if (finalPayload.categoryMasterData) {
+          hybridForm.append("categoryMasterData", JSON.stringify(finalPayload.categoryMasterData));
+        }
+        if (finalPayload.whole_transaction_sheet) {
+          hybridForm.append("whole_transaction_sheet", JSON.stringify(finalPayload.whole_transaction_sheet));
+        }
+        if (finalPayload.aiyazs_array_of_array) {
+          hybridForm.append("aiyazs_array_of_array", JSON.stringify(finalPayload.aiyazs_array_of_array));
+        }
+        if (finalPayload.ca_id) {
+          hybridForm.append("ca_id", finalPayload.ca_id);
+        }
+
+        log.info("[edit-pdf] HYBRID mode: posting multipart to /analyze-statements-pdf/");
+        response = await axios.post(generateReportEndpointServer, hybridForm, {
+          headers: hybridForm.getHeaders(),
+          maxBodyLength: Infinity,
+          maxContentLength: Infinity,
+          validateStatus: (s) => s === 200,
+        });
+      } else {
+        // LOCAL: keep JSON flow
+        log.info("[edit-pdf] LOCAL mode: posting JSON to /analyze-statements/");
+        response = await axios.post(generateReportEndpoint, finalPayload, {
+          headers: { "Content-Type": "application/json" },
+          // timeout: 300000,
+          validateStatus: (status) => status === 200,
+        });
+      }
 
       if (response.data.status == "failed") {
         log.info("API response failed:", response.data);
@@ -1391,19 +1535,57 @@ function generateReportIpc(tmpdir_path) {
       // Check if there are any PDF paths not extracted
       if (response.data?.["pdf_paths_not_extracted"]?.paths?.length > 0) {
         await updateCaseStatus(caseId, "Failed");
-        // Get the case ID
-        const validCaseId = await getOrCreateCase(caseName);
 
-        log.info({ validCaseId });
+        let failedObj = response.data["pdf_paths_not_extracted"];
+        failedPdfPaths = failedObj.paths || [];
 
-        // // Store failed statements in the database
-        // await db.insert(failedStatements).values({
-        //   caseId: validCaseId,
-        //   data: JSON.stringify(modifiedData),
-        // });
+        // In HYBRID (useLocalServer=false), backend returns only filenames for rectify results.
+        // Map them to local full paths under <tmpdir_path>/failed_pdfs/<caseName>/ and store.
+        try {
+          const AppConfig = require("../config.js");
+          const IS_LOCAL = AppConfig.useLocalServer; // true = local; false = hosted/hybrid
+          if (!IS_LOCAL) {
+            const caseFolder = path.join(tmpdir_path, "failed_pdfs", caseName);
+            let filesInFolder = [];
+            try {
+              filesInFolder = fs.existsSync(caseFolder) ? fs.readdirSync(caseFolder) : [];
+            } catch (_) {
+              filesInFolder = [];
+            }
 
-        // // Track failed PDF paths
-        // failedPdfPaths = modifiedData.paths || [];
+            const mapToLocal = (backendPathOrName) => {
+              const base = path.basename(backendPathOrName);
+              const match =
+                filesInFolder.find((f) => f === base) ||
+                filesInFolder.find((f) => {
+                  const dashIdx = f.indexOf("-");
+                  const stripped = dashIdx !== -1 ? f.substring(dashIdx + 1) : f;
+                  return stripped === base;
+                }) ||
+                filesInFolder.find((f) => f.endsWith(base));
+
+              return match ? path.join(caseFolder, match) : path.join(caseFolder, base);
+            };
+
+            failedPdfPaths = failedPdfPaths.map(mapToLocal);
+            failedObj = { ...failedObj, paths: failedPdfPaths };
+            response.data["pdf_paths_not_extracted"] = failedObj;
+          }
+        } catch (e) {
+          log.warn("HYBRID failed path mapping skipped in edit-pdf", e);
+        }
+
+        // Store failed statements in database (mapped in HYBRID; unchanged in LOCAL)
+        try {
+          const validCaseId = await getOrCreateCase(caseName);
+          await db.insert(failedStatements).values({
+            caseId: validCaseId,
+            data: JSON.stringify(failedObj),
+          });
+        } catch (dbError) {
+          log.error("Failed to store failed statements in edit-pdf:", dbError);
+        }
+
         log.warn("Some PDF paths were not extracted", failedPdfPaths);
       }
 
