@@ -214,6 +214,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
             (file_path) => {
               // Get the filename from the path and remove the timestamp
               const filename = file_path.split("\\").pop(); // Get filename from path
+              // const filename = file_path.split(/[\\/]/).pop(); // Get filename from path
               const filenameWithoutTimestamp = filename.substring(
                 filename.indexOf("-") + 1
               ); // Remove everything before first hyphen
@@ -250,7 +251,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         } else {
           const failedFiles = result?.data?.failedFiles?.map((file_path) => {
             // Get the filename from the path and remove the timestamp
-            const filename = file_path.split("\\").pop(); // Get filename from path
+            const filename = file_path.split(/[\\/]/).pop(); // Get filename from path
             const filenameWithoutTimestamp = filename.substring(
               filename.indexOf("-") + 1
             ); // Remove everything before first hyphen
@@ -948,7 +949,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
           path: pdfPath,
           password: firstFailedEntry.parsedContent.passwords[index] || "",
           resolved: false,
-          pdfName: pdfPath.split("\\").pop(),
+          pdfName: pdfPath.split(/[\\/]/).pop(),
           respectiveReasonsForError:
             firstFailedEntry.parsedContent.respectiveReasonsForError?.[index] ||
             "",

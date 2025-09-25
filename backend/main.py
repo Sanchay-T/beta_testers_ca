@@ -143,6 +143,7 @@ async def analyze_bank_statements_pdf(
 ):
     
     pdf_paths = []
+    path_mapping = {}
     try:
         for pdf_file in files:
             random_num = random.randint(100000, 999999)
@@ -152,6 +153,7 @@ async def analyze_bank_statements_pdf(
             with open(file_path, "wb") as buffer:
                 shutil.copyfileobj(pdf_file.file, buffer)
             pdf_paths.append(file_path)
+            path_mapping[file_path] = pdf_file.filename
 
         is_ocr_bool = [val.lower() == 'true' for val in is_ocr]
 
@@ -181,7 +183,15 @@ async def analyze_bank_statements_pdf(
         }
         
         request = BankStatementRequest(**request_data)
-        return await analyze_bank_statements(request)
+        response = await analyze_bank_statements(request)
+
+        if response and response.get("pdf_paths_not_extracted"):
+            original_paths = []
+            for path in response["pdf_paths_not_extracted"]["paths"]:
+                original_paths.append(path_mapping.get(path, path))
+            response["pdf_paths_not_extracted"]["paths"] = original_paths
+
+        return response
     finally:
         # Clean up the saved PDF files
         for path in pdf_paths:
