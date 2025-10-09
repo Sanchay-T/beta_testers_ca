@@ -214,6 +214,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
             (file_path) => {
               // Get the filename from the path and remove the timestamp
               const filename = file_path.split("\\").pop(); // Get filename from path
+              // const filename = file_path.split(/[\\/]/).pop(); // Get filename from path
               const filenameWithoutTimestamp = filename.substring(
                 filename.indexOf("-") + 1
               ); // Remove everything before first hyphen
@@ -250,10 +251,8 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         } else {
           const failedFiles = result?.data?.failedFiles?.map((file_path) => {
             // Get the filename from the path and remove the timestamp
-            const filename = file_path.split("\\").pop(); // Get filename from path
-            const filenameWithoutTimestamp = filename.substring(
-              filename.indexOf("-") + 1
-            ); // Remove everything before first hyphen
+            const filename = file_path.split(/[\\/]/).pop(); // Get filename from path
+            const filenameWithoutTimestamp = /^\d{10,}-/.test(filename) ? filename.replace(/^\d{10,}-/, '') : filename; // Remove everything before first hyphen
             return filenameWithoutTimestamp;
           });
           setFailedStatements(failedFiles || []); // Store failed
@@ -700,6 +699,26 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         "add-pdf"
       );
       console.log({ electronResponse: result });
+      // Early user-friendly handling: license limit reached or license check unavailable
+      if (
+        result &&
+        result.success === false &&
+        Array.isArray(result.data?.warning) &&
+        result.data.warning.length > 0
+      ) {
+        clearInterval(progressIntervalRef.current);
+        toast.dismiss(newToastId);
+        setProgress(0);
+        setLoading(false);
+        progressIntervalRef.current = null;
+        toast({
+          title: "No Statements Remaining",
+          description: result.data.warning[0],
+          variant: "destructive",
+          duration: 5000,
+        });
+        return;
+      }
 
       if (
         result.data.missingMonthsList &&
@@ -742,9 +761,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
           const failedFiles = result.data.failedFiles.map((file_path) => {
             // Get the filename from the path and remove the timestamp
             const filename = file_path.split("\\").pop(); // Get filename from path
-            const filenameWithoutTimestamp = filename.substring(
-              filename.indexOf("-") + 1
-            ); // Remove everything before first hyphen
+            const filenameWithoutTimestamp = /^\d{10,}-/.test(filename) ? filename.replace(/^\d{10,}-/, '') : filename; // Remove everything before first hyphen
             return filenameWithoutTimestamp;
           });
           setFailedStatements(failedFiles || []); // Store failed
@@ -799,280 +816,6 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
 
         setSelectedFiles([]);
         setFileDetails([]);
-
-        // Handle Scanned and encoded files
-        console.log({ aiyaz: result.data.failedStatements });
-        const failedStatementsFromBackend = result.data.failedStatements || [];
-        console.log({ tyope: typeof failedStatementsFromBackend });
-
-        const paths = failedStatementsFromBackend.paths || [];
-        const reasons =
-          failedStatementsFromBackend.respective_reasons_for_error || [];
-        const bankNames = failedStatementsFromBackend.bank_names || [];
-        const passwords = failedStatementsFromBackend.passwords || [];
-        const startDates = failedStatementsFromBackend.start_dates || [];
-        const endDates = failedStatementsFromBackend.end_dates || [];
-
-        // Helper: Match OCR-triggering reasons
-        const isOcrCandidate = (reason = "") => {
-          const r = reason.toLowerCase();
-          return (
-            r.includes("image-only") ||
-            r.includes("scanned") ||
-            r.includes("non-text") ||
-            r.includes("encoded")
-          );
-        };
-
-        // ✅ Filter out null or undefined pdfs and match OCR-triggering reasons
-        const eligibleIndexes = reasons
-          .map((reason, idx) =>
-            isOcrCandidate(reason) && paths[idx] ? idx : null
-          )
-          .filter((i) => i !== null);
-        console.log({ eligibleIndexes });
-        const scannedOCRFiles = eligibleIndexes.map((i) => ({
-          bankName: bankNames[i],
-          pdf_paths: paths[i],
-          passwords: passwords[i],
-          start_date: startDates[i],
-          end_date: endDates[i],
-          ca_id: result.data.caseId,
-          is_ocr: true,
-        }));
-
-        // If any OCR-worthy files found
-        if (eligibleIndexes.length > 0) {
-          const newData = {
-            id: result.data.caseId,
-            name: caseName,
-            userId: null,
-            status: "Processing",
-            pages: null,
-            createdAt: new Date().toLocaleDateString("en-GB", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-            }),
-            // statements: null,
-          };
-
-          updateReportData({
-            recentReportsData: [newData, ...reportData.recentReportsData],
-          });
-
-          toast({
-            id: newToastId,
-            title: "Running OCR",
-            description: (
-              <div className="mt-2 w-full flex items-center gap-2">
-                <div className="flex items-center gap-4">
-                  <CircularProgress className="w-full" />
-                </div>
-                <p className="text-sm text-gray-500">
-                  Processing scanned/encoded PDFs…
-                </p>
-              </div>
-            ),
-            variant: "default",
-            duration: Infinity,
-          });
-          // toast({
-          //   title: "OCR Triggered",
-          //   description: `Detected scanned or encoded PDFs.`,
-          //   variant: "default",
-          //   duration: 5000,
-          // });
-
-          console.log({
-            files: scannedOCRFiles,
-            caseName,
-            is_ocr: true,
-            soure: "add-pdf",
-          });
-          try {
-            const ocrResult = await window.electron.generateReportIpc(
-              { files: scannedOCRFiles },
-              caseName,
-              "add-pdf"
-            );
-
-            setFailedStatements([]);
-            setSuccessfulStatements([]);
-            setShowRectifyButton(false);
-            setShowAnalysisButton(false);
-            setMissingMonthsList([]);
-            setWarning([]);
-
-            console.log("OCR Result:", ocrResult);
-
-            if (
-              ocrResult.data.missingMonthsList &&
-              ocrResult.data.missingMonthsList.length > 0
-            ) {
-              setMissingMonthsList(ocrResult.data.missingMonthsList);
-            }
-
-            if (ocrResult.data.warning && ocrResult.data.warning.length > 0) {
-              const formattedWarnings = ocrResult.data.warning.filter(
-                (warn) => {
-                  return warn && warn.trim() !== ""; // Return true for non-empty warnings
-                }
-              );
-
-              const uniqueWarnings = Array.from(new Set(formattedWarnings)); // Remove duplicates
-              setWarning(uniqueWarnings);
-            }
-
-            // setCurrentCaseId(ocrResult.data.caseId); // Store caseId
-            console.log({ ocrResult });
-            if (ocrResult.success) {
-              setDialogOpen(true); // Open the Dialog
-              toast.dismiss(newToastId);
-
-              console.log("ocrResult generated successfully:", ocrResult.data);
-              if (ocrResult.data.failedFiles.length > 0) {
-                setShowRectifyButton(true);
-                const failedFiles = ocrResult.data.failedFiles.map(
-                  (file_path) => {
-                    // Get the filename from the path and remove the timestamp
-                    const filename = file_path.split("\\").pop(); // Get filename from path
-                    const filenameWithoutTimestamp = filename.substring(
-                      filename.indexOf("-") + 1
-                    ); // Remove everything before first hyphen
-                    return filenameWithoutTimestamp;
-                  }
-                );
-                setFailedStatements(failedFiles || []); // Store failed
-
-                const newData = {
-                  id: ocrResult.data.caseId,
-                  name: caseName,
-                  userId: null,
-                  status: "Failed",
-                  pages: null,
-                  createdAt: new Date().toLocaleDateString("en-GB", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                  }),
-                  statements: null,
-                };
-
-                // setShowRectifyButton(true);
-                const successfulFiles = ocrResult.data.successfulFiles.map(
-                  (file_path) => {
-                    // Get the filename from the path and remove the timestamp
-                    const filename = file_path.split("\\").pop(); // Get filename from path
-                    const filenameWithoutTimestamp = filename.substring(
-                      filename.indexOf("-") + 1
-                    ); // Remove everything before first hyphen
-                    return filenameWithoutTimestamp;
-                  }
-                );
-                setSuccessfulStatements(successfulFiles || []); // Store successful
-
-                updateReportData({
-                  recentReportsData: [newData, ...reportData.recentReportsData],
-                });
-              } else {
-                // setShowRectifyButton(true);
-                const successfulFiles = ocrResult.data.successfulFiles.map(
-                  (file_path) => {
-                    // Get the filename from the path and remove the timestamp
-                    const filename = file_path.split("\\").pop(); // Get filename from path
-                    const filenameWithoutTimestamp = filename.substring(
-                      filename.indexOf("-") + 1
-                    ); // Remove everything before first hyphen
-                    return filenameWithoutTimestamp;
-                  }
-                );
-                setSuccessfulStatements(successfulFiles || []); // Store successful
-
-                const newData = {
-                  id: ocrResult.data.caseId,
-                  name: caseName,
-                  userId: null,
-                  status: "Success",
-                  pages: null,
-                  createdAt: new Date().toLocaleDateString("en-GB", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                  }),
-                  // statements: null,
-                };
-
-                updateReportData({
-                  recentReportsData: [newData, ...reportData.recentReportsData],
-                });
-              }
-
-              if (ocrResult.data.totalTransactions) {
-                toast({
-                  title: "Success",
-                  description: `${caseName} report generated successfully!`,
-                  duration: Infinity,
-                  variant: "success",
-                });
-              }
-
-              if (ocrResult.data.totalTransactions > 0) {
-                setShowAnalysisButton(true);
-              }
-
-              // setFailedStatements(ocrResult.pdf_paths_not_extracted || []); // Store failed
-              setSelectedFiles([]);
-              setFileDetails([]);
-
-              clearInterval(progressIntervalRef.current);
-              setProgress(100);
-              toast.dismiss(newToastId);
-
-              // open dialog and everything
-
-              setLoading(false);
-              localStorage.removeItem("dashboardData");
-              // refreshPage();
-              progressIntervalRef.current = null;
-
-              // Trigger a page refresh
-              // refreshPage();
-            } else {
-              const errorMessage = result.error
-                ? typeof result.error === "object"
-                  ? JSON.stringify(result.error, null, 2)
-                  : result.error
-                : "Unknown error occurred";
-
-              throw new Error(errorMessage);
-            }
-
-            // toast({
-            //   title: "OCR Completed",
-            //   variant: "success",
-            // });
-          } catch (ocrErr) {
-            toast({
-              title: "OCR Failed",
-              description: "OCR retry failed for scanned/encoded PDFs.",
-              variant: "destructive",
-            });
-            console.error("OCR error:", ocrErr);
-          }
-        }
-        clearInterval(progressIntervalRef.current);
-        setProgress(100);
-        toast.dismiss(newToastId);
-
-        // open dialog and everything
-
-        setLoading(false);
-        localStorage.removeItem("dashboardData");
-        // refreshPage();
-        progressIntervalRef.current = null;
-
-        // Trigger a page refresh
       } else {
         const errorMessage = result.error
           ? typeof result.error === "object"
@@ -1222,7 +965,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
           path: pdfPath,
           password: firstFailedEntry.parsedContent.passwords[index] || "",
           resolved: false,
-          pdfName: pdfPath.split("\\").pop(),
+          pdfName: pdfPath.split(/[\\/]/).pop(),
           respectiveReasonsForError:
             firstFailedEntry.parsedContent.respectiveReasonsForError?.[index] ||
             "",
@@ -1977,6 +1720,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                         : -1;
                                     })
                                     .map((statement, index) => {
+                                      console.log({aiyaz:statement})
                                       const isDone = statement.resolved;
                                       const hasError = Boolean(
                                         statement.respectiveReasonsForError
@@ -1995,11 +1739,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                             <p className="flex-[4.5]">
                                               <strong>File Name:</strong>{" "}
                                               {statement.pdfName
-                                                ? statement.pdfName.substring(
-                                                    statement.pdfName.indexOf(
-                                                      "-"
-                                                    ) + 1
-                                                  )
+                                                ? (() => { const n = statement.pdfName; return n.replace(/^\d{10,}-/, ""); })()
                                                 : ""}
                                             </p>
                                             {/* {!hasError && ( */}
@@ -2016,6 +1756,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                                     Done
                                                   </Button>
                                                 ) : (
+                                                  (statement.pdfName.toLowerCase().endsWith(".pdf")||statement.pdfName.toLowerCase().endsWith(".PDF")) && (
                                                   <Button
                                                     variant="secondary"
                                                     size="sm"
@@ -2031,6 +1772,7 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
                                                   >
                                                     Rectify
                                                   </Button>
+                                                  )
                                                 )}
                                               </div>
                                             }

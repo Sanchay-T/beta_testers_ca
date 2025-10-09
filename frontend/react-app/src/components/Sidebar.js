@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { BadgeCheck, Bell, CreditCard, LogOut, Sparkles } from "lucide-react";
+import { BadgeCheck, Bell, CreditCard, LogOut, Sparkles, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -26,6 +26,15 @@ import { useReportContext } from "../contexts/ReportContext";
 import { useParams } from "react-router-dom";
 import { ScrollArea } from "../components/ui/scroll-area";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "./ui/alert-dialog";
 
 const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
   const { logout, setError, user } = useAuth();
@@ -37,6 +46,9 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
     Other: false, // "Other" remains expanded by default if desired
     Tally: true, // Tally is open by default
   });
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogContent, setDialogContent] = useState({ title: "", message: "" });
+  const [detectedMode, setDetectedMode] = useState(null);
 
   // Get initials for avatar fallback
   const getInitials = (name) => {
@@ -61,6 +73,7 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
       reportData.individualId === "combined");
 
   useEffect(() => {
+    fetchDetectedMode();
     let fetchedCustomerName = reportData.customerName;
     let fetchedReportName = reportData.reportName;
 
@@ -116,6 +129,19 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
     }
   }, [caseId, individualId]);
 
+  const fetchDetectedMode = async () => {
+    try {
+      const result = await window.electron.auth.getModeDetected();
+      if (result.success) {
+        setDetectedMode(result.detectedMode);
+      } else {
+        console.error("Failed to fetch mode:", result.error);
+      }
+    } catch (error) {
+      console.error("Failed to fetch mode:", error);
+    }
+  };
+
   const handleLogout = async () => {
     try {
       const loggedOut = await logout();
@@ -128,6 +154,31 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
       console.error("Logout error:", error);
       setError(error.message);
     }
+  };
+
+  const handleRefreshMode = async () => {
+    try {
+      const result = await window.electron.auth.refreshModeDetected();
+      if (result.success) {
+        setDialogContent({
+          title: "Mode Refresh Successful",
+          message: `Server detected mode: ${result.detectedMode}.`,
+        });
+        setDetectedMode(result.detectedMode);
+      } else {
+        setDialogContent({
+          title: "Mode Refresh Failed",
+          message: `Failed to refresh mode: ${result.error}`,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to refresh mode:", error);
+      setDialogContent({
+        title: "Error",
+        message: "An error occurred while refreshing the mode.",
+      });
+    }
+    setDialogOpen(true);
   };
 
   const MenuItem = ({ item, level = 0 }) => {
@@ -153,9 +204,9 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
       <div className="w-full">
         <button
           title={isCollapsed ? item.title : undefined}
-          className={`w-full flex items-center justify-start p-2 rounded-md transition-all duration-200 ease-in-out ${
-            level > 0 ? "ml-4" : ""
-          } ${
+          className={`w-full flex items-center justify-start p-2 rounded-md transition-all duration-200 ease-in-out ${ 
+            level > 0 ? "ml-4" : "" 
+          } ${ 
             activeTab === item.title && !hasSubmenu
               ? "bg-gray-300 text-black font-semibold dark:bg-slate-300"
               : "text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white"
@@ -240,7 +291,7 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
-            className={`flex items-center w-full ${
+            className={`flex items-center w-full ${ 
               open ? "p-2" : "p-1"
             } hover:bg-gray-100 rounded-md transition-all duration-200`}
           >
@@ -251,8 +302,8 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
               </AvatarFallback>
             </Avatar>
             {!isCollapsed && (
-              <div className="ml-3 flex-1 text-left">
-                <p className="text-sm font-medium hover:text-black">
+              <div className="ml-3 flex-1 text-left min-w-0">
+                <p className="text-sm font-medium hover:text-black truncate">
                   {user?.email || "User"}
                 </p>
               </div>
@@ -263,11 +314,11 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
           <DropdownMenuLabel>
             <div className="flex items-center gap-2">
               <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src={user?.avatar} alt={user?.name || "User"} />
-                <AvatarFallback>{getInitials(user?.name)}</AvatarFallback>
+                <AvatarImage src={user?.avatar} alt={user?.email || "User"} />
+                <AvatarFallback>{getInitials(user?.email)}</AvatarFallback>
               </Avatar>
               <div>
-                <p className="text-sm font-medium">{user?.name || "User"}</p>
+                <p className="text-sm font-medium">{user?.email|| "User"}</p>
               </div>
             </div>
           </DropdownMenuLabel>
@@ -291,6 +342,11 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
             </DropdownMenuItem> */}
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleRefreshMode}>
+            <RefreshCw className="mr-2 h-4 w-4" />
+            <span>Refresh Mode</span>
+            {detectedMode && <span className="ml-2 text-xs text-gray-500">({detectedMode})</span>}
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={handleLogout}>
             <LogOut className="mr-2 h-4 w-4" />
             <span>Log out</span>
@@ -325,7 +381,7 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
           <img
             src={logo}
             alt="Logo"
-            className={`h-12 cursor-pointer transition-all duration-300 ${
+            className={`h-12 cursor-pointer transition-all duration-300 ${ 
               !open ? "w-8" : "w-auto"
             }`}
             onClick={() => navigate("/")}
@@ -344,6 +400,19 @@ const SidebarDynamic = ({ navItems, activeTab, setActiveTab }) => {
       </SidebarFooter>
       {/* We're still including SidebarRail but will disable its functionality */}
       <SidebarRail className="pointer-events-none" />
+      <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{dialogContent.title}</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogDescription>
+            {dialogContent.message}
+          </AlertDialogDescription>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setDialogOpen(false)}>OK</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Sidebar>
   );
 };

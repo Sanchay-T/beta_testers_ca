@@ -29,3 +29,19 @@ def get_base_dir():
         return sys._MEIPASS
     else:
         return os.path.dirname(os.path.abspath(__file__))
+
+def cleanup_temp_files(ca_id: str):
+    """
+    Deletes all temporary files associated with a specific ca_id from the saved_pdf directory.
+    """
+    if not ca_id:
+        return
+
+    temp_dir = get_saved_pdf_dir()
+    for filename in os.listdir(temp_dir):
+        if filename.startswith(ca_id):
+            try:
+                os.remove(os.path.join(temp_dir, filename))
+                print(f"Successfully deleted temporary file: {filename}")
+            except OSError as e:
+                print(f"Error deleting file {filename}: {e.strerror}")

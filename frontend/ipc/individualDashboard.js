@@ -8,6 +8,7 @@ const { summary } = require("../db/schema/Summary");
 const { eq, gt, and, inArray, or, asc } = require("drizzle-orm"); // Add this import
 const axios = require("axios");
 const getBaseUrl = require("../getBaseUrl");
+const { Category_Master } = require("../db/schema/Category_Master");
 
 const formatDate = (dateString) => {
   const date = new Date(dateString); // Parse the date string
@@ -104,6 +105,18 @@ function registerIndividualDashboardIpc() {
 
         log.info({ exampleTransaction: allTransactions[8] });
         log.info({ exampleupdatedTransactions: updatedTransactions[8] });
+        const categoryMasterData = await db.select().from(Category_Master);
+        log.info("Category Master Data:", categoryMasterData);
+        const transformedCategoryMasterData = categoryMasterData.map(
+          (item) => ({
+            id: item.id,
+            Category: item.category,
+            Description: item.description,
+            Particulars: item.particulars,
+            Preferences: item.preferences,
+            debit_credit: item.debit_credit,
+          })
+        );
 
         const baseUrl = getBaseUrl();
         const apiUrlIndividualSummary = `${baseUrl}/individual-summary/`;
@@ -111,6 +124,7 @@ function registerIndividualDashboardIpc() {
           apiUrlIndividualSummary,
           {
             transactions_data: updatedTransactions,
+            categoryMasterData: transformedCategoryMasterData,
           },
           {
             headers: { "Content-Type": "application/json" },

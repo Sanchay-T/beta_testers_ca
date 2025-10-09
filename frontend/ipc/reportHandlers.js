@@ -305,7 +305,7 @@ function registerReportHandlers(tmpdir_path) {
         .from(failedStatements)
         .where(eq(failedStatements.caseId, referenceId));
 
-      //   log.info("Failed statements fetched successfully",result);
+        log.info("Failed statements fetched successfully",result);
       return result;
     } catch (error) {
       log.error("Error fetching failed statements:", error);
@@ -403,13 +403,49 @@ function registerReportHandlers(tmpdir_path) {
 
       // Handle failed extractions from API response
       if (response.data?.["pdf_paths_not_extracted"]) {
-        const failedPdfPaths =
-          response.data["pdf_paths_not_extracted"].paths || [];
+        let failedObj = response.data["pdf_paths_not_extracted"];
+        let failedPdfPaths = failedObj.paths || [];
 
-        // Store failed statements in database
+        // In HYBRID (useLocalServer=false), backend returns only filenames.
+        // Map them to local full paths under <tmpdir_path>/failed_pdfs/<caseName>/
+        try {
+          const AppConfig = require("../config.js");
+          const IS_LOCAL = AppConfig.useLocalServer; // true = local; false = hosted/hybrid
+          if (!IS_LOCAL) {
+            const caseFolder = path.join(tmpdir_path, "failed_pdfs", caseName);
+            let filesInFolder = [];
+            try {
+              filesInFolder = fs.existsSync(caseFolder) ? fs.readdirSync(caseFolder) : [];
+            } catch (_) {
+              filesInFolder = [];
+            }
+
+            const mapToLocal = (backendPathOrName) => {
+              const base = path.basename(backendPathOrName);
+              const match =
+                filesInFolder.find((f) => f === base) ||
+                filesInFolder.find((f) => {
+                  const dashIdx = f.indexOf("-");
+                  const stripped = dashIdx !== -1 ? f.substring(dashIdx + 1) : f;
+                  return stripped === base;
+                }) ||
+                filesInFolder.find((f) => f.endsWith(base));
+
+              return match ? path.join(caseFolder, match) : path.join(caseFolder, base);
+            };
+
+            failedPdfPaths = failedPdfPaths.map(mapToLocal);
+            failedObj = { ...failedObj, paths: failedPdfPaths };
+            response.data["pdf_paths_not_extracted"] = failedObj; // reflect mapping downstream
+          }
+        } catch (e) {
+          log.warn("HYBRID failed path mapping skipped in add-pdf", e);
+        }
+
+        // Store failed statements in database (mapped in HYBRID; unchanged in LOCAL)
         await db.insert(failedStatements).values({
           caseId: caseId,
-          data: JSON.stringify(response.data["pdf_paths_not_extracted"]),
+          data: JSON.stringify(failedObj),
         });
 
         // Mark files as failed based on API response

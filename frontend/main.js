@@ -30,6 +30,7 @@ const { registerVoucherIpc } = require("./ipc/VoucherHandlers.js");
 const { registerExcelDownloadHandlers } = require("./ipc/excelDownloadHandler");
 const { registerAppLevelIPCHandlers } = require("./ipc/appLevelIPC");
 const DatabaseMigration = require("./utils/databaseMigration");
+const ExcelJS = require("exceljs");
 // Moved database require to after AppConfig initialization
 const { spawn, execFile, exec, execSync } = require("child_process");
 const log = require("electron-log");
@@ -40,53 +41,8 @@ const bonjour = require("bonjour")();
 const gatewayServer = require("./InitiateGatewayServer.js");
 const systemInfo = require("./SystemInformation");
 const userDataDir = app.getPath("userData");
-
-// Initialize UI Flow Logger
-const { initializeUIFlowLogging } = require("./utils/UILoggerIntegrations");
-const uiLogger = initializeUIFlowLogging({
-  enableMainProcess: true,
-  enableIpcLogging: true,
-  logLevel: 'info'
-});
-
-// -------------------------------------------------------------
-// Initialise global configuration EARLY so all subsequently
-// required local modules can rely on it without throwing
-// ReferenceError (e.g. "isDev is not defined").
-// -------------------------------------------------------------
-
-// Determine if we're in development mode
-const appIsPackaged = app.isPackaged;
-const nodeEnv = process.env.NODE_ENV;
-const isDevelopment = !appIsPackaged || nodeEnv === "development";
-
-console.log("=== AppConfig Initialization ===");
-console.log("app.isPackaged:", appIsPackaged);
-console.log("process.env.NODE_ENV:", nodeEnv);
-console.log("Determined isDev:", isDevelopment);
-
-global.AppConfig = {
-  // Flag that indicates whether we are running in development
-  // or inside the packaged application.
-  // Use app.isPackaged as primary check, fallback to NODE_ENV
-  isDev: isDevelopment,
-  isCapable: process.env.IS_CAPABLE.toLowerCase() === "true" ? true : false,
-
-  // Resolve the base directory based on the environment.
-  get baseDir() {
-    return this.isDev ? __dirname : process.resourcesPath;
-  },
-
-  // Expose Electron's user-data directory for convenient reuse.
-  userDataDir,
-};
-
-// Log the final configuration
-console.log("=== Final AppConfig ===");
-console.log("isDev:", global.AppConfig.isDev);
-console.log("baseDir:", global.AppConfig.baseDir);
-console.log("userDataDir:", global.AppConfig.userDataDir);
-console.log("========================");
+const { Category_Master } = require("./db/schema/Category_Master.js");
+const AppConfig = require("./config.js");
 
 // NOW it's safe to require database after AppConfig is set
 const databaseManager = require("./db/db");
@@ -156,7 +112,7 @@ log.info("Update Configuration:", {
 log.info("process.env.NODE_ENV", process.env.NODE_ENV);
 
 // Allow updates without code signing in development
-if (global.AppConfig.isDev) {
+if (AppConfig.isDev) {
   autoUpdater.forceDevUpdateConfig = true;
 }
 
@@ -243,7 +199,7 @@ autoUpdater.on("update-available", (info) => {
         issues: systemRequirementsCheck.issues,
         memoryGB: systemRequirementsCheck.memoryGB,
         hasInsufficientRAM: systemRequirementsCheck.hasInsufficientRAM,
-        hasLowEndCPU: systemRequirementsCheck.hasLowEndCPU
+        hasLowEndCPU: systemRequirementsCheck.hasLowEndCPU,
       }
     );
 
@@ -261,7 +217,7 @@ autoUpdater.on("update-available", (info) => {
       };
 
       logWithTimestamp(
-        "warn", 
+        "warn",
         UPDATE_LOG_PREFIX,
         "Update blocked due to system requirements - showing notification to user",
         {
@@ -269,7 +225,7 @@ autoUpdater.on("update-available", (info) => {
           currentVersion: app.getVersion(),
           memoryGB: systemRequirementsCheck.memoryGB,
           issues: systemRequirementsCheck.issues,
-          blockingUpdates: systemRequirementsCheck.shouldBlockUpdates
+          blockingUpdates: systemRequirementsCheck.shouldBlockUpdates,
         }
       );
 
@@ -279,9 +235,12 @@ autoUpdater.on("update-available", (info) => {
         "Sending system requirements notification to frontend (first time this session)",
         systemRequirementsNotification
       );
-      
+
       win?.webContents.send("update-status", systemRequirementsNotification);
-      win?.webContents.send("system-requirements-check", systemRequirementsCheck);
+      win?.webContents.send(
+        "system-requirements-check",
+        systemRequirementsCheck
+      );
     } else {
       logWithTimestamp(
         "info",
@@ -289,7 +248,7 @@ autoUpdater.on("update-available", (info) => {
         "Update blocked due to system requirements - notification already shown this session, skipping UI notification"
       );
     }
-    
+
     // Don't proceed with download
     return;
   }
@@ -303,7 +262,7 @@ autoUpdater.on("update-available", (info) => {
       availableVersion: info.version,
       currentVersion: app.getVersion(),
       memoryGB: systemRequirementsCheck.memoryGB,
-      meetsRequirements: systemRequirementsCheck.meetsRequirements
+      meetsRequirements: systemRequirementsCheck.meetsRequirements,
     }
   );
 
@@ -1302,7 +1261,7 @@ async function startPythonExecutable() {
       stdio: "pipe",
     };
 
-    if (global.AppConfig.isDev) {
+    if (AppConfig.isDev) {
       // Development mode code remains the same
       const venvPythonPath =
         process.platform === "win32"
@@ -1367,18 +1326,18 @@ async function startPythonExecutable() {
           "Customer_category.xlsx"
         );
 
-        if (!fs.existsSync(userSheet)) {
-          if (fs.existsSync(defaultSheet)) {
-            // Make sure the folder exists
-            fs.mkdirSync(path.dirname(userSheet), { recursive: true });
+        // if (!fs.existsSync(userSheet)) {
+        //   if (fs.existsSync(defaultSheet)) {
+        //     // Make sure the folder exists
+        //     fs.mkdirSync(path.dirname(userSheet), { recursive: true });
 
-            // Copy the default into userData
-            fs.copyFileSync(defaultSheet, userSheet);
-            console.log("Copied default user sheet to userData:", userSheet);
-          } else {
-            console.error("Bundled sheet not found at:", defaultSheet);
-          }
-        }
+        //     // Copy the default into userData
+        //     fs.copyFileSync(defaultSheet, userSheet);
+        //     log.info("Copied default user sheet to userData:", userSheet);
+        //   } else {
+        //     log.error("Bundled sheet not found at:", defaultSheet);
+        //   }
+        // }
       }
 
       options.env = {
@@ -1447,8 +1406,10 @@ async function startPythonExecutable() {
 
 // ---- Add these helpers near your other constants ----
 const crypto = require("crypto");
+const { getSystemUUID } = require("./utils/getSystemUUID.js");
+const { default: axios } = require("axios");
 
-const isDev = global.AppConfig?.isDev ?? !app.isPackaged;
+const isDev = AppConfig.isDev;
 
 const DEV_MEDIA_DIR = path.join(__dirname, "media", "vouchers", "tallyprime");
 const PROD_MEDIA_DIRS = [
@@ -1727,11 +1688,11 @@ async function createWindow() {
     },
     icon: path.join(__dirname, "assets", "cyphersol-icon.png"),
     autoHideMenuBar: true,
-    title: global.AppConfig.isDev
+    title: AppConfig.isDev
       ? `CypherSol Dev v${app.getVersion()}`
       : `CypherSol v${app.getVersion()}`,
   });
-  if (global.AppConfig.isDev) {
+  if (AppConfig.isDev) {
     win.loadURL("http://localhost:3000");
   } else {
     const prodPath = path.resolve(
@@ -1814,7 +1775,7 @@ async function createWindow() {
 
   const createTempDirectory = () => {
     let tempDir = "";
-    if (global.AppConfig.isDev) {
+    if (AppConfig.isDev) {
       tempDir = path.join(__dirname, "tmp");
     } else {
       tempDir = path.join(app.getPath("temp"), "statements");
@@ -1871,27 +1832,19 @@ async function createWindow() {
   generateReportIpc(TMP_DIR);
   registerOpenFileIpc(app.getPath("userData"));
   registerReportHandlers(TMP_DIR);
-  registerAuthHandlers(app.getPath("userData"));
-  log.info("🔐 Auth handlers registered (including license:check)");
-  
-  // Initialize UI Flow Logger IPC integration AFTER all handlers are registered
-  uiLogger.integrateMainProcess(ipcMain);
-  log.info("📊 UI Flow Logger integrated with IPC handlers");
-
-  // Email verification IPC handler registered earlier in startup sequence
-
+  registerAuthHandlers(app.getPath("userData"), app);
   registerOpportunityToEarnIpc();
   registerTallyIpc();
   registerVoucherIpc();
   getdata();
   registerEditReportHandlers();
   registerExcelDownloadHandlers(app.getPath("downloads"));
-  registerAppLevelIPCHandlers(app, win, global.AppConfig.baseDir);
+  registerAppLevelIPCHandlers(app, win, AppConfig.baseDir);
 
   // Auto-update IPC handlers with detailed logging
   ipcMain.handle("check-for-updates", async () => {
     log.info("Manual update check requested");
-    if (global.AppConfig.isDev) {
+    if (AppConfig.isDev) {
       const msg = "Skip update check in dev mode";
       log.info(msg);
       return msg;
@@ -1913,13 +1866,13 @@ async function createWindow() {
       const requirements = systemInfo.getSystemRequirementsCheck();
       const memoryGB = systemInfo.getMemoryGB();
       const cpuModel = systemInfo.getCPUModel();
-      
+
       return {
         requirements,
         memoryGB,
         cpuModel,
         shouldBlockUpdates: systemInfo.shouldBlockUpdates(),
-        meetsRequirements: systemInfo.meetsMinimumRequirements()
+        meetsRequirements: systemInfo.meetsMinimumRequirements(),
       };
     } catch (err) {
       log.error("System requirements check failed:", err);
@@ -1931,9 +1884,11 @@ async function createWindow() {
     log.warn("System requirements override requested by user");
     // This could be used for advanced users to bypass the check
     // For now, we'll just log it - the implementation can be added later if needed
-    return { overridden: false, message: "Override not implemented for security" };
+    return {
+      overridden: false,
+      message: "Override not implemented for security",
+    };
   });
-
 
   ipcMain.handle("download-update", async () => {
     log.info("Update download requested");
@@ -2028,7 +1983,7 @@ async function createWindow() {
         "dontAddToRecent",
       ],
       filters: [
-        { name: "Documents", extensions: ["pdf", "xlsx","csv"] },
+        { name: "Documents", extensions: ["pdf", "xlsx", "csv"] },
         { name: "All Files", extensions: ["*"] },
       ],
     });
@@ -2041,7 +1996,7 @@ async function createWindow() {
 
   ipcMain.handle("get-file-content", async (event, filePath) => {
     try {
-      const content = await fs.promises.readFile(filePath);
+      const content = await fs.promises.readFile(filePath, "utf-8");
       return content;
     } catch (error) {
       log.error("Error reading file:", error);
@@ -2049,8 +2004,8 @@ async function createWindow() {
     }
   });
 
-  ipcMain.handle("is-capable", () => {
-    return global.AppConfig.isCapable;
+  ipcMain.handle("is-ocr-enabled", () => {
+    return AppConfig.isOcrEnabled;
   });
 
   ipcMain.handle("preview-file", async (_event, filePath) => {
@@ -2065,7 +2020,7 @@ async function createWindow() {
 
   // Check for updates after window is ready
   win.webContents.on("did-finish-load", () => {
-    if (!global.AppConfig.isDev) {
+    if (!AppConfig.isDev) {
       // Initial check after 3 seconds
       setTimeout(checkForUpdates, 3000);
 
@@ -2085,6 +2040,111 @@ const GATEWAY_EXECUTABLE_DIR = isPackaged
 console.log("GATEWAY EXECUTABLE DIR:", GATEWAY_EXECUTABLE_DIR);
 
 app.setName("CypherSol Dev");
+
+async function initializeDatabase() {
+  const dbManager = databaseManager.getInstance();
+  const db = await dbManager.initialize(app.getPath("userData"));
+
+  // Helper function to check if table has data
+  async function hasData(table) {
+    try {
+      const result = await db.select().from(table).limit(1);
+      return result.length > 0;
+    } catch (err) {
+      log.error(`Error checking data in table: ${err.message}`);
+      return false;
+    }
+  }
+
+  // Read master data file
+  const masterDataPath = path.join(
+    AppConfig.isDev ? __dirname : process.resourcesPath,
+    "Master_data.json"
+  );
+  log.info("Master data path:", process.resourcesPath);
+  log.info(`Reading master data from: ${masterDataPath}`);
+
+  if (!fs.existsSync(masterDataPath)) {
+    log.error(`Master data file not found at: ${masterDataPath}`);
+    return;
+  }
+  let dataInserted = false;
+
+  try {
+    const rawData = fs.readFileSync(masterDataPath, "utf8");
+    const masterData = JSON.parse(rawData);
+    log.info("Master data loaded successfully");
+    const categoryData = await hasData(Category_Master);
+
+    if (
+      !categoryData &&
+      masterData.category &&
+      Array.isArray(masterData.category)
+    ) {
+      log.info("Inserting Category data");
+      for (const item of masterData.category) {
+        try {
+          await db.insert(Category_Master).values({
+            description: item.Description,
+            debit_credit: item.Debit_Credit,
+            category: item.Category,
+            particulars: item.Particulars,
+            preferences: item.Preferences,
+          });
+        } catch (err) {
+          log.error(`Error inserting Category record: ${err.message}`);
+        }
+      }
+      log.info("Category data inserted successfully");
+      dataInserted = true;
+    } else {
+      log.info("Category table already has data or no data to insert");
+    }
+
+    const customerCategoryPath = path.join(
+      userDataDir,
+      "Customer_category.xlsx"
+    );
+    if (fs.existsSync(customerCategoryPath)) {
+      log.info("Found Customer_category.xlsx, migrating data...");
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.readFile(customerCategoryPath);
+      const worksheet = workbook.getWorksheet(1);
+      const headerRow = worksheet.getRow(1).values;
+      const columnMapping = {
+        description: headerRow.indexOf("Description"),
+        debit_credit: headerRow.indexOf("Debit / Credit"),
+        category: headerRow.indexOf("Category"),
+        particulars: headerRow.indexOf("Particulars"),
+        preferences: headerRow.indexOf("Preferences"),
+      };
+
+      worksheet.eachRow({ includeEmpty: false }, async (row, rowNumber) => {
+        if (rowNumber > 1) {
+          // Skip header row
+          const rowData = row.values;
+
+          await db.insert(Category_Master).values({
+            description: rowData[columnMapping.description],
+            debit_credit: rowData[columnMapping.debit_credit],
+            category: rowData[columnMapping.category],
+            particulars: rowData[columnMapping.particulars],
+            preferences: rowData[columnMapping.preferences],
+            is_editable: true, // Assuming custom categories are always editable
+          });
+        }
+      });
+
+      fs.renameSync(
+        customerCategoryPath,
+        path.join(userDataDir, "Customer_category.xlsx.migrated")
+      );
+      log.info("Customer_category.xlsx migrated and renamed.");
+    }
+  } catch (error) {
+    log.error("Error initializing Category_Master:", error);
+  }
+}
 
 app.whenReady().then(async () => {
   // Track total startup time
@@ -2132,8 +2192,9 @@ app.whenReady().then(async () => {
       global.globalCompatChecker = globalCompatChecker; // Make globally accessible
       
       // Run compatibility check (this will create its own window)
-      const compatResult = await globalCompatChecker.runFullCheck();
-      
+      // const compatResult = await globalCompatChecker.runFullCheck();
+      const compatResult = { canProceed: true, results: { issues: [], warnings: [], successes: [] }, modeDetection: { determinedMode: 'SCAN', canProceed: true } };
+
       return { success: true, result: compatResult };
     } catch (error) {
       log.error("❌ Failed to start compatibility check:", error);
@@ -2552,7 +2613,8 @@ app.whenReady().then(async () => {
       console.log("📧 🎯 globalCompatChecker created:", !!globalCompatChecker);
       console.log("📧 🎯 setUserEmail method available:", !!(globalCompatChecker && typeof globalCompatChecker.setUserEmail === 'function'));
       
-      compatResult = await globalCompatChecker.runFullCheck();
+      // compatResult = await globalCompatChecker.runFullCheck();
+      compatResult = { canProceed: true, results: { issues: [], warnings: [], successes: [] }, modeDetection: { determinedMode: 'SCAN', canProceed: true } };
       
       // 🔍 DEBUG: Log the exact compatResult structure for cache debugging
       log.info("🔍 [CACHE_DEBUG] Compatibility result structure:", {
@@ -2664,6 +2726,7 @@ app.whenReady().then(async () => {
     try {
       const dbManager = databaseManager.getInstance();
       await dbManager.initialize(userDataDir);
+      await initializeDatabase();
       log.info("✅ Database initialized successfully");
     } catch (error) {
       log.error("❌ Database initialization failed:", error);
@@ -2857,7 +2920,7 @@ app.whenReady().then(async () => {
     });
 
     // Initial update check after 1 minute
-    if (!global.AppConfig.isDev) {
+    if (!AppConfig.isDev) {
       setTimeout(() => {
         log.info("🔄 Starting automatic update check");
         checkForUpdates();

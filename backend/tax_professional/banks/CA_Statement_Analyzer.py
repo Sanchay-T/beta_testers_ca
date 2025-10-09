@@ -430,12 +430,12 @@ def save_to_excel(df, name_n_num_df, account_number):
     return filename
 
 
-def returns_json_output_of_all_sheets(df, name_n_num_df):
+def returns_json_output_of_all_sheets(df, name_n_num_df,category_master_data_df):
     # Generate all necessary DataFrames
     eod_sheet_df = eod(df)
     opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df,df)
 
-    summary_df_list, missing_months_list = summary_sheet(df, opening_bal, closing_bal, df)
+    summary_df_list, missing_months_list = summary_sheet(df, opening_bal, closing_bal, df,category_master_data_df)
 
     particulars_df = summary_df_list[0]
     income_receipts_df = summary_df_list[1]
@@ -495,6 +495,7 @@ def returns_json_output_of_all_sheets(df, name_n_num_df):
         "Payment Voucher": payment_df.to_dict(orient="records"),
         "Receipt Voucher": receipt_df.to_dict(orient="records"),
     }
+    print("donenenenenenenenen 2")
 
     # Convert the entire dictionary to JSON
     json_output = json.dumps(result_dict, indent=4)
@@ -503,14 +504,14 @@ def returns_json_output_of_all_sheets(df, name_n_num_df):
     return json_output, missing_months_list
 
 
-def refresh_category_all_sheets(df,eod_sheet_df, new_categories):
+def refresh_category_all_sheets(df,eod_sheet_df, new_categories,category_master_data_df):
     # eod_sheet_df = eod(df)
     opening_bal, closing_bal = opening_and_closing_bal(eod_sheet_df,df)
 
     if not new_categories:
-        summary_df_list, missing_months_list = summary_sheet(df, opening_bal, closing_bal, df)
+        summary_df_list, missing_months_list = summary_sheet(df, opening_bal, closing_bal, df,category_master_data_df)
     else:
-        summary_df_list, missing_months_list = summary_sheet(df, opening_bal, closing_bal, df, new_categories)
+        summary_df_list, missing_months_list = summary_sheet(df, opening_bal, closing_bal, df, category_master_data_df,new_categories)
 
     particulars_df = summary_df_list[0]
     income_receipts_df = summary_df_list[1]
@@ -575,7 +576,7 @@ def refresh_category_all_sheets(df,eod_sheet_df, new_categories):
     return json_output
 
 
-def individual_summary(transactions_df):
+def individual_summary(transactions_df,category_master_data_df):
     
     transactions_df.rename(columns={
         "description": "Description",
@@ -592,7 +593,7 @@ def individual_summary(transactions_df):
     print("closing_bal", closing_bal)
 
 
-    summary_df_list,mission_months = summary_sheet(transactions_df, opening_bal, closing_bal, transactions_df)
+    summary_df_list,mission_months = summary_sheet(transactions_df, opening_bal, closing_bal, transactions_df,category_master_data_df)
 
     # print("summary_df_list", len(summary_df_list))
     particulars_df = summary_df_list[0]
@@ -622,7 +623,7 @@ def individual_summary(transactions_df):
     return json_output
     
 
-def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_dates, CA_ID, progress_data,is_ocr,
+def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_dates, CA_ID, category_master_data_df,progress_data,is_ocr,
                              whole_transaction_sheet=None, aiyazs_array_of_array=None):
     account_number = ""
     dfs = {}
@@ -661,12 +662,12 @@ def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_
                                                                                         explicit_lines, labels, encoded_pdf=False)
             else:
                 dfs[bank], name_dfs[bank], errorz[bank] = extraction_process_explicit_lines(bank, pdf_path, pdf_password,
-                                                                                            start_date, end_date,
-                                                                                            explicit_lines, labels)
+                                                                                                start_date, end_date,
+                                                                                                explicit_lines, labels)
 
         else:
             dfs[bank], name_dfs[bank], errorz[bank] = extraction_process(bank, pdf_path, pdf_password, start_date,
-                                                                         end_date,isthis_ocr)
+                                                                         end_date,isthis_ocr,CA_ID)
             
         
         print("heyyyy",dfs)
@@ -755,14 +756,14 @@ def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_
         # arrange dfs
         initial_df = pd.concat(sort_dataframes_by_date(list_of_dataframes)).fillna("").reset_index(drop=True)
         initial_df = initial_df.drop_duplicates(keep="first")
-        df = category_add_ca(initial_df)
+        df = category_add_ca(initial_df,category_master_data_df)
         new_tran_df = another_method(df)
         new_tran_df = Upi(new_tran_df)
         # print("transaction")
         # print(new_tran_df)
         #############################------------------------#######################################
 
-        json_lists_of_df, missing_months_list = returns_json_output_of_all_sheets(new_tran_df, name_n_num_df)
+        json_lists_of_df, missing_months_list = returns_json_output_of_all_sheets(new_tran_df, name_n_num_df,category_master_data_df)
 
         # excel_file_path = save_to_excel(new_tran_df, name_n_num_df, account_number)
         # print(excel_file_path)

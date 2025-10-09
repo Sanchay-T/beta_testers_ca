@@ -920,7 +920,7 @@ export function LicenseActivationForm({ className, ...props }) {
               >
                 <div className="flex flex-col gap-4">
                   <motion.div className="grid gap-2" custom={0} variants={itemVariants}>
-                    <Label htmlFor="email">Username / Email</Label>
+                    <Label htmlFor="email">Email</Label>
                     <Input
                       id="email"
                       type="text"
@@ -994,7 +994,7 @@ export function LicenseActivationForm({ className, ...props }) {
               >
                 <div className="flex flex-col gap-4">
                   <motion.div className="grid gap-2" custom={0} variants={itemVariants}>
-                    <Label htmlFor="email">Username / Email</Label>
+                    <Label htmlFor="email">Email</Label>
                     <Input
                       id="email"
                       type="text"

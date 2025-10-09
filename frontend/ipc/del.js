@@ -1,306 +1,506 @@
-import React, { useEffect, useState } from "react";
-import { Card, CardContent } from "../ui/card";
-import { Progress } from "../ui/progress";
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
-import { TrendingUp, Clock, FileText, ClipboardList } from "lucide-react";
-import clsx from "clsx";
+const { ipcMain } = require("electron");
+const sessionManager = require("../SessionManager");
+const log = require("electron-log");
+const licenseManager = require("../LicenseManager");
+const databaseManager = require("../db/db");
+const { transactions } = require("../db/schema/Transactions");
+const { statements } = require("../db/schema/Statement");
+const { cases } = require("../db/schema/Cases");
+const { summary } = require("../db/schema/Summary");
+const { eod } = require("../db/schema/EodSchema");
+const { opportunityToEarn } = require("../db/schema/OpportunityToEarn");
+const { eq, and, SQL, sql, inArray } = require("drizzle-orm");
+const axios = require("axios");
+const { Category_Master } = require("../db/Master_Schema/Category_Master");
 
-const getCardStyles = (type) => {
-  switch (type) {
-    case "reports":
-      return {
-        background: `linear-gradient(135deg, #2D2665 0%, #4633B5 100%),
-                    radial-gradient(circle at top right, rgba(115, 103, 240, 0.3) 0%, transparent 70%),
-                    radial-gradient(circle at bottom left, rgba(50, 40, 120, 0.3) 0%, transparent 70%),
-                    radial-gradient(circle at center, rgba(115, 103, 240, 0.1) 0%, transparent 50%)`,
-        boxShadow: "0 8px 32px rgba(45, 38, 101, 0.25)",
-      };
-    case "statements":
-      return {
-        background: `linear-gradient(135deg, #003366 0%, #0056B3 100%),
-                    radial-gradient(circle at top right, rgba(0, 150, 255, 0.3) 0%, transparent 70%),
-                    radial-gradient(circle at bottom left, rgba(0, 80, 170, 0.3) 0%, transparent 70%),
-                    radial-gradient(circle at center, rgba(0, 150, 255, 0.1) 0%, transparent 50%)`,
-        boxShadow: "0 8px 32px rgba(0, 51, 102, 0.25)",
-      };
+function registerEditReportHandlers() {
+  const db = databaseManager.getInstance().getDatabase();
+  log.info("Database instance : ", db);
 
-    case "timeSaved":
-      return {
-        background: `linear-gradient(135deg, #003366 0%, #0056B3 100%),
-                      radial-gradient(circle at top right, rgba(0, 150, 255, 0.3) 0%, transparent 70%),
-                      radial-gradient(circle at bottom left, rgba(0, 80, 170, 0.3) 0%, transparent 70%),
-                      radial-gradient(circle at center, rgba(0, 150, 255, 0.1) 0%, transparent 50%)`,
-        boxShadow: "0 8px 32px rgba(0, 51, 102, 0.25)",
-      };
-    default:
-      return {};
-  }
-};
+  async function processOpportunityToEarnData(opportunityToEarnData, caseId) {
+    try {
+      // log.info(
+      //   "Full Opportunity to Earn Data:",
+      //   JSON.stringify(opportunityToEarnData)
+      // );
 
-const MetricIcon = ({ type }) => {
-  const iconProps = {
-    className:
-      "h-4 w-4 text-white transition-all duration-300 sm:h-5 sm:w-5 lg:h-6 lg:w-6",
-  };
-  switch (type) {
-    case "statements":
-      return <ClipboardList {...iconProps} />;
-    case "reports":
-      return <FileText {...iconProps} />;
-    case "timeSaved":
-      return <Clock {...iconProps} />;
-    default:
-      return null;
-  }
-};
+      // Check if the data is an array with at least one element
+      const opportunityToEarnArray = Array.isArray(opportunityToEarnData)
+        ? opportunityToEarnData
+        : opportunityToEarnData["Opportunity to Earn"];
 
-const AnimatedPieChart = ({ data }) => {
-  const COLORS = [
-    "rgba(255, 255, 255, 0.8)",
-    "rgba(255, 255, 255, 0.4)",
-    "rgba(255, 255, 255, 0.2)",
-  ];
+      if (!opportunityToEarnArray || opportunityToEarnArray.length === 0) {
+        log.warn("No Opportunity to Earn data found");
+        return false;
+      }
 
-  return (
-    <ResponsiveContainer width="100%" height="100%">
-      <PieChart>
-        <Pie
-          data={data}
-          cx="50%"
-          cy="50%"
-          innerRadius={60}
-          outerRadius={80}
-          paddingAngle={5}
-          dataKey="value"
-          animationBegin={0}
-          animationDuration={1500}
-        >
-          {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-          ))}
-        </Pie>
-        <Tooltip
-          contentStyle={{
-            backgroundColor: "rgba(255, 255, 255, 0.95)",
-            border: "none",
-            borderRadius: "8px",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-          }}
-          itemStyle={{ color: "#1E1B4B" }}
-        />
-      </PieChart>
-    </ResponsiveContainer>
-  );
-};
+      const opportunityToEarnValues = Array.isArray(opportunityToEarnArray)
+        ? opportunityToEarnArray[0]
+        : opportunityToEarnArray;
 
-const StatsMetricCard = ({
-  type,
-  title,
-  value1,
-  value2,
-  mainValue1,
-  mainValue2,
-  chartData,
-  chartType,
-  onDurationChange,
-  initialDuration = "1M",
-}) => {
-  const cardStyles = getCardStyles(type);
-  const [duration, setDuration] = useState(type === "statements" ? "1Y" : "1M");
-  const [userProgress, setUserProgress] = useState({
-    progress: 0,
-    remainingDays: 0,
-    dateJoined: null,
-    expiryDate: null,
-  });
-  const [localDuration, setLocalDuration] = useState(initialDuration);
+      const validCaseId = caseId;
 
-  useEffect(() => {
-    const fetchUserProgress = async () => {
-      if (type === "statements") {
-        try {
-          const progress = await window.electron.getProgressed();
-          if (!progress.error) {
-            setUserProgress(progress);
+      let homeLoanValue = 0;
+      let loanAgainstProperty = 0;
+      let businessLoan = 0;
+      let termPlan = 0;
+      let generalInsurance = 0;
+
+      for (const item of opportunityToEarnArray) {
+        const product = item["Product"];
+        const amount = parseFloat(item["Amount"]) || 0;
+
+        if (!isNaN(amount)) {
+          if (product.includes("Home Loan")) {
+            homeLoanValue += amount;
+          } else if (product.includes("Loan Against Property")) {
+            loanAgainstProperty += amount;
+          } else if (product.includes("Business Loan")) {
+            businessLoan += amount;
+          } else if (product.includes("Term Plan")) {
+            termPlan += amount;
+          } else if (product.includes("General Insurance")) {
+            generalInsurance += amount;
           }
-        } catch (error) {
-          console.error("Error fetching user progress:", error);
         }
       }
-    };
 
-    fetchUserProgress();
-  }, [type]);
-
-  // Change progress bar color dynamically
-  const progressColor = clsx(
-    "h-2 rounded-full transition-all",
-    userProgress.progress < 40
-      ? "bg-green-500"
-      : userProgress.progress < 70
-      ? "bg-yellow-500"
-      : "bg-red-500"
-  );
-
-  const handleDurationClick = (newDuration) => {
-    setLocalDuration(newDuration);
-    onDurationChange?.(newDuration);
-  };
-
-  const renderChart = () => {
-    if (type === "statements") {
-      return (
-        <Card className="bg-transparent text-white py-4 px-2 rounded-2xl shadow-lg">
-          <CardContent className="space-y-4">
-            <div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-semibold pb-3">
-                  Plan Validity
-                </span>
-                <span className="text-sm text-gray-300">
-                  {userProgress.progress}% Complete
-                </span>
-              </div>
-              <div className="relative w-full h-2 bg-gray-700 rounded-full overflow-hidden">
-                <div
-                  className={progressColor}
-                  style={{ width: `${userProgress.progress}%` }}
-                ></div>
-              </div>
-            </div>
-            <p className="text-sm text-gray-400">
-              Your <span className="text-white font-medium">Enterprise</span>{" "}
-              plan will expire in{" "}
-              <span className="text-white font-semibold">
-                {userProgress.remainingDays} days
-              </span>
-              .
-            </p>
-          </CardContent>
-        </Card>
+      log.info(
+        "Extracted opportunity to earn values:",
+        homeLoanValue,
+        loanAgainstProperty,
+        businessLoan,
+        termPlan,
+        generalInsurance
       );
-    }
 
-    if (type === "timeSaved") {
-      const pieChartData = [
-        { name: "Manual Processing", value: 40 },
-        { name: "Automation", value: 35 },
-        { name: "Optimization", value: 25 },
-      ];
-      return <AnimatedPieChart data={pieChartData} />;
-    }
+      const existingOpportunityToEarn = await db
+        .select()
+        .from(opportunityToEarn)
+        .where(eq(opportunityToEarn.caseId, validCaseId));
 
-    return (
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart
-          data={chartData}
-          margin={{ top: 5, right: 10, left: 0, bottom: 0 }}
-        >
-          <CartesianGrid
-            strokeDasharray="3 3"
-            stroke="rgba(255, 255, 255, 0.1)"
-          />
-          <XAxis
-            dataKey="month"
-            stroke="rgba(255, 255, 255, 0.3)"
-            tick={{ fill: "rgba(255, 255, 255, 0.8)", fontSize: "12px" }}
-          />
-          <YAxis
-            stroke="rgba(255, 255, 255, 0.3)"
-            tick={{ fill: "rgba(255, 255, 255, 0.8)", fontSize: "12px" }}
-            width={30}
-          />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "rgba(255, 255, 255, 0.95)",
-              border: "none",
-              borderRadius: "8px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-            }}
-          />
-          <Bar
-            dataKey="reports"
-            fill="#5A7DED"
-            radius={[4, 4, 0, 0]}
-            name="Reports"
-          />
-          <Bar
-            dataKey="statements"
-            fill="#FF6B81"
-            radius={[4, 4, 0, 0]}
-            name="Statements"
-          />
-        </BarChart>
-      </ResponsiveContainer>
-    );
+      if (existingOpportunityToEarn.length > 0) {
+        // Update the existing opportunity to earn record
+        await db
+          .update(opportunityToEarn)
+          .set({
+            homeLoanValue,
+            loanAgainstProperty,
+            businessLoan,
+            termPlan,
+            generalInsurance,
+          })
+          .where(eq(opportunityToEarn.caseId, validCaseId));
+      } else {
+        // Insert new opportunity to earn record
+        await db.insert(opportunityToEarn).values({
+          caseId: validCaseId,
+          homeLoanValue,
+          loanAgainstProperty,
+          businessLoan,
+          termPlan,
+          generalInsurance,
+          createdAt: new Date(),
+        });
+      }
+
+      log.info(`Opportunity to earn data processed for case ${validCaseId}`);
+      return true;
+    } catch (error) {
+      log.error("Error processing opportunity to earn data:", error);
+      throw error;
+    }
+  }
+
+  const processSummaryData = async (parsedData, caseId) => {
+    try {
+      const validCaseId = caseId;
+
+      log.info("Parsed Summary Data:", Object.keys(parsedData));
+
+      // Validate the summary data
+      if (
+        !parsedData ||
+        typeof parsedData !== "object" ||
+        !parsedData["Particulars"] ||
+        !parsedData["Income Receipts"] ||
+        !parsedData["Important Expenses"] ||
+        !parsedData["Other Expenses"] ||
+        !parsedData["Contra Debit"] ||
+        !parsedData["Contra Credit"]
+      ) {
+        throw new Error("Invalid summary data provided");
+      }
+
+      // Prepare summary data object
+      const summaryData = {
+        particulars: parsedData["Particulars"],
+        incomeReceipts: parsedData["Income Receipts"],
+        importantExpenses: parsedData["Important Expenses"],
+        otherExpenses: parsedData["Other Expenses"],
+        contraDebit: parsedData["Contra Debit"],
+        contraCredit: parsedData["Contra Credit"],
+      };
+
+      // Check if summary data already exists for this case
+      const existingSummary = await db
+        .select()
+        .from(summary)
+        .where(eq(summary.caseId, validCaseId))
+        .limit(1);
+
+      if (existingSummary.length > 0) {
+        // Update the existing summary record
+        await db
+          .update(summary)
+          .set({
+            data: JSON.stringify(summaryData),
+            updatedAt: new Date(),
+          })
+          .where(eq(summary.caseId, validCaseId));
+        // log.info(`Updated Data:`,summaryData);
+      } else {
+        // Insert new summary record
+        await db.insert(summary).values({
+          caseId: validCaseId,
+          data: JSON.stringify(summaryData),
+          createdAt: new Date(),
+        });
+      }
+
+      log.info(`Summary data processed for case ${validCaseId}`);
+      return true;
+    } catch (error) {
+      log.error("Error processing summary data:", error);
+      throw error;
+    }
   };
 
-  return (
-    <Card
-      className="w-full overflow-hidden transition-all duration-300 border-0 rounded-xl relative backdrop-blur-xl"
-      style={cardStyles}
-    >
-      <div className="absolute inset-0 opacity-50 mix-blend-overlay bg-[radial-gradient(circle_at_50%_-20%,rgba(255,255,255,0.15),rgba(255,255,255,0))]" />
-      <CardContent className="flex flex-col h-full p-6 gap-4 relative z-10">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-white/10 rounded-lg backdrop-blur-sm shadow-lg">
-              <MetricIcon type={type} />
-            </div>
-            <h2 className="text-lg font-semibold text-white tracking-wide">
-              {title}
-            </h2>
-          </div>
-        </div>
+  const formatDate = (dateString) => {
+    const date = new Date(dateString); // Parse the date string
+    const day = String(date.getDate()).padStart(2, "0"); // Get day and pad with zero
+    const month = String(date.getMonth() + 1).padStart(2, "0"); // Get month (0-based) and pad with zero
+    const year = date.getFullYear(); // Get full year
 
-        <div className="flex flex-row gap-2 items-center">
-          <div className="bg-white/10 p-2 rounded-lg backdrop-blur-sm shadow-lg flex flex-col items-center text-white w-full">
-            <div>{value1}</div>{" "}
-            <div className="text-3xl font-semibold">
-              {mainValue1.toLocaleString()}
-            </div>
-          </div>
-          <div className="bg-white/10 p-2 rounded-lg backdrop-blur-sm shadow-lg flex flex-col items-center text-white w-full">
-            <div>{value2}</div>{" "}
-            <div className="text-3xl font-semibold">
-              {mainValue2.toLocaleString()}
-            </div>
-          </div>
-        </div>
+    return `${day}-${month}-${year}`; // Format as dd-mm-yyyy
+  };
 
-        <div className="h-44 w-full">{renderChart()}</div>
+  const sanitizeJSONString = (jsonString) => {
+    return jsonString
+      .replace(/: *NaN/g, ": null")
+      .replace(/: *undefined/g, ": null")
+      .replace(/: *Infinity/g, ": null")
+      .replace(/: *-Infinity/g, ": null");
+  };
 
-        <div className="flex justify-center gap-3 mt-4">
-          {["today", "1M", "2M", "6M", "1Y"].map((option) => (
-            <button
-              key={option}
-              className={`px-3 py-1 rounded-lg font-medium text-sm transition-all duration-300 ${
-                localDuration === option
-                  ? "bg-emerald-500 text-white"
-                  : "bg-white/10 text-white/80 hover:bg-white/20"
-              }`}
-              onClick={() => handleDurationClick(option)}
-            >
-              {option === "today" ? "Today" : option}
-            </button>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
+  const bulkUpdateTransactions = async (finalSql, ids) => {
+    await db
+      .update(transactions)
+      .set({ category: finalSql })
+      .where(inArray(transactions.id, ids));
+  };
 
-export default StatsMetricCard;
+  // Prepare data for database insertion
+  const prepareTransactionsForDB = async (data) => {
+    console.log({ prepareTransactionsForDB: data });
+    if (!data || Object.keys(data).length === 0) {
+      return; // No data to process
+    }
+
+    // Prepare SQL chunks and IDs
+    const sqlChunks = [];
+    const ids = [];
+
+    // Start the SQL case statement
+    sqlChunks.push(sql`(case`);
+
+    // Iterate through key-value pairs of data
+    for (const [key, item] of Object.entries(data)) {
+      log.info("Item : ", key, item.category);
+      const id = key; // Use transactionId or fallback to key
+      const category = item.category || "Uncategorized"; // Default to "Uncategorized"
+
+      sqlChunks.push(sql`when ${transactions.id} = ${id} then ${category}`); // Create case condition
+      ids.push(id); // Collect the IDs for the WHERE clause
+    }
+
+    // End the SQL case statement
+    sqlChunks.push(sql`end)`);
+
+    // Join the SQL chunks
+    const finalSql = sql.join(sqlChunks, sql.raw(" "));
+    // log.info("Final SQL : ", finalSql, ids);
+
+    return { finalSql, ids };
+  };
+
+  const prepareEntityForDB = async (data) => {
+    if (!data || data.length === 0) {
+      return; // No data to process
+    }
+
+    // Prepare SQL chunks and IDs
+    const sqlChunks = [];
+    const ids = [];
+
+    // Start the SQL case statement
+    sqlChunks.push(sql`(case`);
+
+    // Iterate through key-value pairs of data
+    // Iterate through the list of objects
+    for (const item of data) {
+      const id = item.transactionId; // Use transactionId from the object
+      const entity = item.entity || null; // Default to "Uncategorized"
+
+      // Log each item for debugging
+      log.info("Item:", id, entity);
+
+      // Create case condition
+      if (entity) {
+        sqlChunks.push(sql`when ${transactions.id} = ${id} then ${entity}`);
+      }
+      ids.push(id); // Collect the IDs for the WHERE clause
+    }
+
+    // End the SQL case statement
+    sqlChunks.push(sql`else null end)`);
+
+    // Join the SQL chunks into a final SQL statement
+    const finalSql = sql.join(sqlChunks, sql.raw(" "));
+
+    // Log the final query
+    log.info("Final SQL:", finalSql.text, ids);
+
+    // Return the final SQL query and IDs
+    return { finalSql, ids };
+  };
+
+  const bulkUpdateEntity = async (finalSql, ids) => {
+    await db
+      .update(transactions)
+      .set({ entity: finalSql })
+      .where(inArray(transactions.id, ids));
+  };
+
+  ipcMain.handle("edit-category", async (event, data, caseId) => {
+    log.info("Edit Category : ", data, "Case ID : ", caseId);
+    // const caseId = 26;
+
+    let new_categories = [];
+    let transactionsForCase = null;
+    let eod_data = null;
+
+    try {
+      transactionsForCase = await db
+        .select({
+          id: transactions.id,
+          Date: transactions.date,
+          Description: transactions.description,
+          Type: transactions.type,
+          Amount: transactions.amount,
+          Balance: transactions.balance,
+          Category: transactions.category,
+        })
+        .from(transactions)
+        .innerJoin(statements, eq(transactions.statementId, statements.id))
+        .innerJoin(cases, eq(statements.caseId, cases.id))
+        .where(eq(cases.id, caseId));
+    } catch (err) {
+      log.error("Error fetching transactions for case:", err);
+    }
+
+    log.info("Count of transactions for case:", transactionsForCase.length);
+
+    const frontendData = data;
+    let aiyaz = 0;
+
+    const updatedTransactions = transactionsForCase.map(
+      (transaction, index) => {
+        const { id, Date, Amount, Type, ...requiredFields } = transaction;
+        const frontendEntry = frontendData[transaction.id.toString()]; // Check if the ID exists in frontend data
+
+        if (frontendEntry) {
+          log.info("Found frontend entry for ID:", frontendEntry, id);
+          const formattedDate = formatDate(Date);
+          // If present in frontend data, update the transaction
+          aiyaz = index;
+          return {
+            "Value Date": formattedDate,
+            ...requiredFields,
+            Category: frontendEntry.category || transaction.category,
+            Debit: Type === "debit" ? Amount : 0,
+            Credit: Type === "credit" ? Amount : 0,
+          };
+        }
+
+        return {
+          "Value Date": formatDate(Date),
+          ...requiredFields,
+          Debit: Type === "debit" ? Amount : 0,
+          Credit: Type === "credit" ? Amount : 0,
+        };
+      }
+    );
+
+    // log.info("Updated transactions:", updatedTransactions.slice(0, 5));
+    log.info("Example of Updated transaction:", updatedTransactions[aiyaz]);
+
+    try {
+      const { finalSql, ids } = await prepareTransactionsForDB(frontendData);
+
+      // Insert transactions
+      await bulkUpdateTransactions(finalSql, ids);
+
+      // db.run("SELECT * FROM transactions").then((result) => {
+      //     log.info("Transactions fetched successfully", result);
+      // });
+      log.info("Transactions updated successfully");
+    } catch (error) {
+      log.error("Error inserting transactions in batch:", error);
+      throw error;
+    }
+
+    log.info({ frontendData });
+    const newCategories = Object.values(frontendData).reduce((acc, item) => {
+      log.info({ item });
+      const accItem = {
+        Description: item.keyword || "Unknown",
+        "Debit / Credit": item.type == "debit" ? "Debit" : "Credit",
+        Category: item.category || "Uncategorized",
+        Particulars: item.classification || "Others",
+        Preferences: "default",
+      };
+
+      if (item.is_new) {
+        accItem["Preferences"] = "non_default";
+      }
+      acc.push(accItem);
+
+      return acc;
+    }, []);
+
+    for (const item of newCategories) {
+      if (
+        item.Description !== "Unknown" ||
+        item.Preferences === "non_default"
+      ) {
+        await db.insert(Category_Master).values({
+          description: item.Description,
+          debit_credit: item["Debit / Credit"],
+          category: item.Category,
+          particulars: item.Particulars,
+          preferences: item.Preferences,
+        });
+      }
+    }
+
+    console.log(
+      "New categories: ",
+      newCategories,
+      "NewCategoriesLength: ",
+      newCategories.length
+    );
+
+    try {
+      // get eod data
+      eod_data = await db.select().from(eod).where(eq(eod.caseId, caseId));
+      eod_data = JSON.parse(eod_data[0].data);
+      log.info("EOD data fetched successfully", typeof eod_data);
+    } catch (err) {
+      log.info("Failed to fetch eod data", err);
+    }
+
+    try {
+      const categoryMasterData = await db.select().from(Category_Master);
+      log.info("Category Master Data:", categoryMasterData);
+      const transformedCategoryMasterData = categoryMasterData.map((item) => ({
+        id: item.id,
+        Category: item.category,
+        Description: item.description,
+        Particulars: item.particulars,
+        Preferences: item.preferences,
+        debit_credit: item.debit_credit,
+      }));
+
+      log.info(
+        "Transformed Category Master Data:",
+        transformedCategoryMasterData
+      );
+
+      // make api call
+      const serverEndpoint = "http://localhost:7500/edit-category/";
+
+      const payload = {
+        transaction_data: updatedTransactions,
+        new_categories: newCategories,
+        eod_data: eod_data,
+        categoryMasterData: transformedCategoryMasterData,
+      };
+
+      log.info({ serverEndpoint, payload });
+
+      // use axios
+      const response = await axios.post(serverEndpoint, payload, {
+        headers: { "Content-Type": "application/json" },
+        // timeout: 300000,
+        validateStatus: (status) => status === 200,
+      });
+
+      log.info("API response:", response);
+
+      // log.info("API response:", typeof response.data);
+
+      const sanitizedJsonString = sanitizeJSONString(response.data);
+      parsedData = JSON.parse(sanitizedJsonString);
+      // log.info("API response:", parsedData['Important Expenses']);
+
+      try {
+        await processSummaryData(
+          {
+            Particulars: parsedData["Particulars"] || [],
+            "Income Receipts": parsedData["Income Receipts"] || [],
+            "Important Expenses": parsedData["Important Expenses"] || [],
+            "Other Expenses": parsedData["Other Expenses"] || [],
+            "Contra Debit": parsedData["Contra Debit"] || [],
+            "Contra Credit": parsedData["Contra Credit"] || [],
+          },
+          caseId
+        );
+      } catch (error) {
+        log.error("Error processing summary data:", error);
+        throw error;
+      }
+
+      // Process Opportunity to Earn Data
+      try {
+        await processOpportunityToEarnData(
+          parsedData["Opportunity to Earn"] || [],
+          caseId
+        );
+      } catch (error) {
+        log.error("Error processing opportunity to earn data:", error);
+        throw error;
+      }
+
+      // log.info("API response:", parsedData);
+    } catch (error) {
+      log.error("API call failed:", error);
+    }
+  });
+
+  ipcMain.handle("edit-entity", async (event, payload) => {
+    try {
+      const { finalSql, ids } = await prepareEntityForDB(payload);
+      log.info({ finalSql, ids });
+      await bulkUpdateEntity(finalSql, ids);
+      log.info("Entity updated successfully");
+      return { success: true };
+    } catch (error) {
+      log.error("Error inserting entity in batch:", error);
+      throw error;
+      return { success: false };
+    }
+  });
+}
+
+module.exports = { registerEditReportHandlers };

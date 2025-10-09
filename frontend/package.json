@@ -1,11 +1,11 @@
 {
   "name": "CypherEdge",
-  "version": "2.2.400",
+  "version": "2.3.100",
   "description": "CA OFFLINE APP",
   "main": "main.js",
   "icon": "./assets/cyphersol-icon.png",
   "scripts": {
-    "start": "powershell -Command \"Start-Process cmd -ArgumentList '/k cd /d \\\"%cd%\\\" && npm run electron' -Verb runAs\"",
+    "start": "powershell -Command \"Start-Process cmd -ArgumentList '/k cd /d \\\"D:\\CA\\beta_testers_ca\\frontend\\\" && npm run electron' -Verb runAs\"",
     "start_": "npm run electron",
     "electron": "electron main.js",
     "start:fastapi": "cd ../ && uvicorn backend.main:app --reload --port 7500",
@@ -83,6 +83,10 @@
       {
         "from": "drizzle.config.js",
         "to": "drizzle.config.js"
+      },
+      {
+        "from": "Master_data.json",
+        "to": "Master_data.json"
       },
       {
         "from": "gatewayServer/appsettings.json",
@@ -173,6 +177,7 @@
     "electron-log": "^5.2.4",
     "electron-store": "^10.0.0",
     "electron-updater": "^6.3.9",
+    "exceljs": "^4.3.0",
     "fast-xml-parser": "^4.5.1",
     "fs": "^0.0.1-security",
     "ip": "^2.0.1",

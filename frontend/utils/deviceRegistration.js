@@ -1,6 +1,14 @@
 // utils/deviceRegistration.js
 const log = require("electron-log");
 const crypto = require("crypto");
+
+class UserNotFoundError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'UserNotFoundError';
+  }
+}
+
 const { app } = require('electron');
 const path = require('path');
 const fs = require('fs');
@@ -57,7 +65,7 @@ class DeviceRegistration {
    * @param {string} detectedMode - Detected mode (scan/unscan/hybrid)
    * @returns {Promise<Object>} Registration result
    */
-  async registerDevice(email, deviceData, detectedMode = null) {
+  async registerDevice(email, deviceData, detectedMode = 'scan') {
     const startTime = Date.now();
     
     try {
@@ -111,12 +119,10 @@ class DeviceRegistration {
       };
 
     } catch (error) {
+if (error instanceof UserNotFoundError) {
+        throw error; // Re-throw to be caught by the caller
+      }
       const duration = Date.now() - startTime;
-      log.error("🔌 DEVICE_REGISTRATION: Registration failed", {
-        error: error.message,
-        duration,
-        email: email?.substring(0, 3) + "***" + email?.substring(email?.indexOf('@') || 0)
-      });
 
       return {
         success: false,
@@ -239,7 +245,7 @@ class DeviceRegistration {
         if (response.status === 400) {
           // Handle specific 400 errors
           if (Array.isArray(errorData) && errorData.includes("User with this email does not exist.")) {
-            throw new Error("User email not found in Cyphersol system. This should not happen after email validation.");
+            throw new UserNotFoundError("User email not found in Cyphersol system. This should not happen after email validation.");
           } else {
             throw new Error(`Device registration validation failed: ${JSON.stringify(errorData)}`);
           }
@@ -256,7 +262,7 @@ class DeviceRegistration {
         });
 
         // Don't retry for certain errors
-        if (error.message.includes("User email not found") || 
+        if (error instanceof UserNotFoundError || 
             error.message.includes("validation failed")) {
           throw error;
         }
@@ -336,4 +342,4 @@ class DeviceRegistration {
 
 // Export singleton instance
 const deviceRegistration = new DeviceRegistration();
-module.exports = { deviceRegistration };
+module.exports = { deviceRegistration, UserNotFoundError };

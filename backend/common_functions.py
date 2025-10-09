@@ -57,7 +57,7 @@ p.add_argument(
     "--customer-sheet-path",
     default=os.path.join(BASE_DIR, "Customer_category.xlsx"),
 )
-args = p.parse_args()
+args,_ = p.parse_known_args()
 
 # CUSTOMER_SHEET_PATH = os.environ.get(
 #     "CUSTOMER_SHEET_PATH",
@@ -347,8 +347,8 @@ def convert_csv_to_excel(csv_path, CA_ID):
     return excel_path
 
 
-def extraction_process(bank, pdf_path, pdf_password, start_date, end_date, isthis_ocr):
-    CA_ID = "1234_temp"
+def extraction_process(bank, pdf_path, pdf_password, start_date, end_date, isthis_ocr,CA_ID):
+    # CA_ID = "1234_temp"
     empty_idf = pd.DataFrame()
     default_name_n_num = ["_", "XXXXXXXXXX"]
     a = ""
@@ -429,13 +429,13 @@ def extraction_process(bank, pdf_path, pdf_password, start_date, end_date, isthi
             return idf, name_n_num, a
 
         except Exception as e:
-            return empty_idf, default_name_n_num, str(e)
+                return empty_idf, default_name_n_num, str(e)
 
 
 
 
 def extraction_process_explicit_lines(bank, pdf_path, pdf_password, start_date, end_date, explicit_lines, labels):
-    CA_ID = "1234_temp"
+    # CA_ID = "1234_temp"
     empty_idf = pd.DataFrame()
     default_name_n_num = ["_", "XXXXXXXXXX"]
     # bank = re.sub(r"\d+", "", bank)
@@ -1219,7 +1219,7 @@ def pmt_bl():
     return payment
 
 
-def category_add_ca(df):
+def category_add_ca(df,category_master_data_df):
     x = df["Balance"]
     df["Debit"] = pd.to_numeric(df["Debit"], errors="coerce")
     df["Credit"] = pd.to_numeric(df["Credit"], errors="coerce")
@@ -1227,14 +1227,17 @@ def category_add_ca(df):
         if df[col].dtype == "object":
             df[col] = df[col].str.lower()
     df["Description"] = df["Description"].str.replace(" ", "")
-    excel_file_path = os.path.join(BASE_DIR, "Final_Category.xlsx")
-    print("CUSTOMER_SHEET_PATH from common_function category_add_ca - ",CUSTOMER_SHEET_PATH)
-    excel2 = CUSTOMER_SHEET_PATH
+    # excel_file_path = os.path.join(BASE_DIR, "Final_Category.xlsx")
+    # print("CUSTOMER_SHEET_PATH from common_function category_add_ca - ",CUSTOMER_SHEET_PATH)
+    # excel2 = CUSTOMER_SHEET_PATH
     # excel2 = os.path.join(BASE_DIR, "Customer_category.xlsx")
-    df1 = pd.read_excel(excel_file_path)
-    df2_additional = pd.read_excel(excel2)
-    df2 = pd.concat([df1, df2_additional], ignore_index=True)
-    print("excel_file_path -",excel_file_path)
+    df1 = category_master_data_df
+
+    # df1 = pd.read_excel(excel_file_path)
+    # df2_additional = pd.read_excel(excel2)
+    # df2 = pd.concat([df1, df2_additional], ignore_index=True)
+    df2 = pd.concat([df1], ignore_index=True)
+    # print("excel_file_path -",excel_file_path)
     # df2 = pd.read_excel(excel_file_path)
 
     # Initialize the 'Category' column with "Suspense" for all rows
@@ -2621,33 +2624,36 @@ def make_summary_great_again(df1, opening_closing_balance, df2):
     return particulars_table, income_summary, important_summary, other_summary, contra_credit_summary, contra_debit_summary, missing_months_list
 
 
-def summary_sheet(idf, open_bal, close_bal, new_tran_df, new_categories = None):
+def summary_sheet(idf, open_bal, close_bal, new_tran_df,category_master_data_df, new_categories = None):
 
     opening_closing_balance = {month: [open_bal[month], close_bal[month]] for month in open_bal}
 
-    excel_file_path = os.path.join(BASE_DIR, "Final_Category.xlsx")
+    # excel_file_path = os.path.join(BASE_DIR, "Final_Category.xlsx")
 
-    logger.info("excel_file_path - ",excel_file_path)
-    print("CUSTOMER_SHEET_PATH from common_function summary_sheet - ",CUSTOMER_SHEET_PATH)
+    # logger.info("excel_file_path - ",excel_file_path)
+    # print("CUSTOMER_SHEET_PATH from common_function summary_sheet - ",CUSTOMER_SHEET_PATH)
     
     # user_created = os.path.join(BASE_DIR, "Customer_category.xlsx")
-    user_created = CUSTOMER_SHEET_PATH
-    logger.info("user_created_excel - ",user_created)
-    
+    # user_created = CUSTOMER_SHEET_PATH
+    # logger.info("user_created_excel - ",user_created)
+    df2 =category_master_data_df
+
     # print("excel_file_path_bruh -",excel_file_path)
         # excel_file_path+user_created
-    df2 = pd.read_excel(excel_file_path)
-    user_created_df = pd.read_excel(user_created)
+    # df2 = pd.read_excel(excel_file_path)
+    # user_created_df = pd.read_excel(user_created)
     
     df_new = pd.DataFrame()
-    
-    if new_categories:
-        print("new_categories -",new_categories)
-        df_new = pd.DataFrame(new_categories)
-        append_to_excel(user_created, new_categories)
+
+    # if new_categories:
+    #     print("new_categories -",new_categories)
+    #     df_new = pd.DataFrame(new_categories)
+    #     append_to_excel(user_created, new_categories)
 
     # Append new data
-    df2 = pd.concat([df2, df_new,user_created_df], ignore_index=True)
+    # df2 = pd.concat([df2, df_new,user_created_df], ignore_index=True)
+    df2 = pd.concat([df2, df_new], ignore_index=True)
+    print("Aiyaz Focus : ",df2.shape,df2.tail(50))
 
     sheet_1, sheet_2, sheet_3, sheet_4, sheet_5, sheet_6, missing_months_list = make_summary_great_again(new_tran_df, opening_closing_balance, df2)
     df_list = [sheet_1, sheet_2, sheet_3, sheet_4, sheet_5, sheet_6]

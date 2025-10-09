@@ -169,6 +169,13 @@
       "when": 1746599913067,
       "tag": "0023_lucky_lightspeed",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "6",
+      "when": 1756118218933,
+      "tag": "0024_polite_marvel_zombies",
+      "breakpoints": true
     }
   ]
 }

@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld("electron", {
   openFileDialog: () => ipcRenderer.invoke("open-file-dialog"),
   previewFile: (filePath) => ipcRenderer.invoke("preview-file", filePath),
   getFileContent: (filePath) => ipcRenderer.invoke("get-file-content", filePath),
+  isOcrEnabled: () => ipcRenderer.invoke("is-ocr-enabled"),
   fetchPdfContent: (filePath, caseName) =>
     ipcRenderer.invoke("fetch-pdf-content", filePath, caseName),
 
@@ -166,17 +167,9 @@ contextBridge.exposeInMainWorld("electron", {
     logout: () => ipcRenderer.invoke("auth:logout"),
     resetPassword: (data) => ipcRenderer.invoke("auth:reset-password", data),
     getUser: () => ipcRenderer.invoke("auth:getUser"),
-    checkAccountStatus: async () => {
-      try {
-        return await ipcRenderer.invoke("auth:check-account-status");
-      } catch (error) {
-        if (error.message.includes("No handler registered")) {
-          // Return safe default when handler isn't ready
-          return { success: false, message: "Account status check pending - handlers not ready" };
-        }
-        throw error;
-      }
-    },
+    checkAccountStatus: () => ipcRenderer.invoke("auth:check-account-status"),
+    refreshModeDetected: () => ipcRenderer.invoke("auth:refresh-mode-detected"),
+    getModeDetected: () => ipcRenderer.invoke("auth:get-mode-detected"),
     // updateUser: (userData) => ipcRenderer.invoke('auth:updateUser', userData)
     checkLicense: async () => {
       try {
@@ -213,6 +206,13 @@ contextBridge.exposeInMainWorld("electron", {
   onLicenseExpired: (callback) => ipcRenderer.on("navigateToLogin", callback),
   removeLicenseExpiredListener: () =>
     ipcRenderer.removeAllListeners("navigateToLogin"),
+  onModeUpdated: (callback) => 
+    ipcRenderer.on('mode-updated', (_event, data) => 
+      callback(data)
+    ),
+  removeModeUpdatedListener: () => {
+    ipcRenderer.removeAllListeners('mode-updated');
+  },
   editCategory: (data, caseId) =>
     ipcRenderer.invoke("edit-category", data, caseId),
   excelFileDownload: (caseId) =>

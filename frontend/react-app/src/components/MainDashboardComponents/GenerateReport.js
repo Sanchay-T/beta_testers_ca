@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { Bell, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
 import GenerateReportForm from "../Elements/ReportForm";
 import RecentReports from "./RecentReports";
@@ -6,6 +6,7 @@ import { CircularProgress } from "../ui/circularprogress";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogDescription,
@@ -34,6 +35,44 @@ export default function GenerateReport({ activeTab }) {
   const [warning, setWarning] = useState([]);
   const [warningExpanded, setWarningExpanded] = useState(false);
   const [dateRangeWarning, setDateRangeWarning] = useState(null);
+  const [isOcrEnabled, setIsOcrEnabled] = useState(true);
+  const [detectedMode, setDetectedMode] = useState(null);
+
+  useEffect(() => {
+    // Fetch initial OCR status
+    window.electron.isOcrEnabled().then((status) => {
+      setIsOcrEnabled(status);
+    });
+
+    const handleModeUpdated = (data) => {
+      console.log("mode-updated event received", data);
+      setIsOcrEnabled(data.isOcrEnabled);
+    };
+
+    window.electron.onModeUpdated(handleModeUpdated);
+
+    // Cleanup the listener when the component unmounts
+    return () => {
+      window.electron.removeModeUpdatedListener();
+    };
+  }, []);
+
+  useEffect(() => {
+    const fetchDetectedMode = async () => {
+      try {
+        const result = await window.electron.auth.getModeDetected();
+        if (result.success) {
+          setDetectedMode(result.detectedMode);
+        } else {
+          console.error("Failed to fetch mode:", result.error);
+        }
+      } catch (error) {
+        console.error("Failed to fetch mode:", error);
+      }
+    };
+
+    fetchDetectedMode();
+  }, []);
 
   const hasScannedOrEncodedWarning = useMemo(() => {
     if (!Array.isArray(warning)) return false;
@@ -49,14 +88,21 @@ export default function GenerateReport({ activeTab }) {
   );
 
   // everything else stays “red”
-  const otherErrors = warning.filter(
-    (msg) =>
-      !msg.startsWith("Balance mismatch") &&
-      !/image-only|scanned|non-text|encoded/i.test(msg)
-  );
-
-  // put next to your other helpers
+  // const otherErrors = warning.filter(
+  //   (msg) =>
+  //     !msg.startsWith("Balance mismatch") &&
+  //     !/image-only|scanned|non-text|encoded/i.test(msg)
+  // );
   const OCR_REASON_RE = /(image-only|scanned|non-text|encoded)/i;
+
+  const otherErrors = useMemo(() => {
+    if (!Array.isArray(warning)) return [];
+    // always hide “Balance mismatch” from this bucket
+    const base = warning.filter((msg) => !msg.startsWith("Balance mismatch"));
+    // when OCR is allowed -> hide scanned warnings (old behavior)
+    // when OCR is NOT allowed -> show scanned warnings (what you want now)
+    return isOcrEnabled ? base.filter((msg) => !OCR_REASON_RE.test(msg)) : base;
+  }, [warning, isOcrEnabled]);
 
   const onlyOcrableFailures = (reasons = []) =>
     reasons.length > 0 && reasons.every((r) => OCR_REASON_RE.test(r));
@@ -160,11 +206,31 @@ export default function GenerateReport({ activeTab }) {
           files: filesWithPaths,
         },
         caseName,
-        false,
         "generate-report"
       );
 
       console.log({ electronResponse: result });
+      // Early user-friendly handling: license limit reached or license check unavailable
+      if (
+        result &&
+        result.success === false &&
+        Array.isArray(result.data?.warning) &&
+        result.data.warning.length > 0
+      ) {
+        clearInterval(progressIntervalRef.current);
+        toast.dismiss(newToastId);
+        setProgress(0);
+        setLoading(false);
+        progressIntervalRef.current = null;
+        // Show the first warning message from backend
+        toast({
+          title: "No Statements Remaining",
+          description: result.data.warning[0],
+          variant: "destructive",
+          duration: 5000,
+        });
+        return;
+      }
       if (
         result.data.missingMonthsList &&
         result.data.missingMonthsList.length > 0
@@ -213,9 +279,8 @@ export default function GenerateReport({ activeTab }) {
           const failedFiles = result.data.failedFiles.map((file_path) => {
             // Get the filename from the path and remove the timestamp
             const filename = file_path.split("\\").pop(); // Get filename from path
-            const filenameWithoutTimestamp = filename.substring(
-              filename.indexOf("-") + 1
-            ); // Remove everything before first hyphen
+            // const filename = file_path.split(/[\\/]/).pop(); // Get filename from path
+            const filenameWithoutTimestamp = /^\d{10,}-/.test(filename) ? filename.replace(/^\d{10,}-/, '') : filename; // Remove everything before first hyphen
             return filenameWithoutTimestamp;
           });
           setFailedStatements(failedFiles || []); // Store failed
@@ -238,7 +303,7 @@ export default function GenerateReport({ activeTab }) {
           const successfulFiles = result.data.successfulFiles.map(
             (file_path) => {
               // Get the filename from the path and remove the timestamp
-              const filename = file_path.split("\\").pop(); // Get filename from path
+              const filename = file_path.split(/[\\/]/).pop(); // Get filename from path
               const filenameWithoutTimestamp = filename.substring(
                 filename.indexOf("-") + 1
               ); // Remove everything before first hyphen
@@ -351,6 +416,22 @@ export default function GenerateReport({ activeTab }) {
         console.log({ scannedOCRFiles });
         // If any OCR-worthy files found
         if (eligibleIndexes.length > 0) {
+          const tempIsOcrEnabled = await window.electron.isOcrEnabled();
+          setIsOcrEnabled(tempIsOcrEnabled);
+          console.log({ tempIsOcrEnabled });
+          if (tempIsOcrEnabled === false) {
+            // toast({
+            //   title: "Error",
+            //   description:
+            //     "This is a scanned PDF and cannot be processed by our servers. Please use the desktop app for scanned PDFs.",
+            //   variant: "destructive",
+            //   duration: 5000,
+            // });
+            // setLoading(false);
+            // clearInterval(progressIntervalRef.current);
+            // toast.dismiss(newToastId);
+            return;
+          }
           const newData = {
             id: result.data.caseId,
             name: caseName,
@@ -415,6 +496,27 @@ export default function GenerateReport({ activeTab }) {
             setWarningExpanded(false); // Reset warning expansion state
 
             console.log("OCR Result:", ocrResult);
+
+            // Early user-friendly handling for OCR retry as well
+            if (
+              ocrResult &&
+              ocrResult.success === false &&
+              Array.isArray(ocrResult.data?.warning) &&
+              ocrResult.data.warning.length > 0
+            ) {
+              clearInterval(progressIntervalRef.current);
+              toast.dismiss(newToastId);
+              setProgress(0);
+              setLoading(false);
+              progressIntervalRef.current = null;
+              toast({
+                title: "No Statements Remaining",
+                description: ocrResult.data.warning[0],
+                variant: "destructive",
+                duration: 5000,
+              });
+              return;
+            }
 
             if (
               ocrResult.data.missingMonthsList &&
@@ -648,6 +750,7 @@ export default function GenerateReport({ activeTab }) {
       const updatedRecentReportData = reportData.recentReportsData;
       updateReportData({ recentReportsData: updatedRecentReportData });
     } finally {
+      setLoading(false);
       return true;
     }
   };
@@ -802,7 +905,7 @@ export default function GenerateReport({ activeTab }) {
 
       {/* Dialog for successful report generation */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen} className="">
-        <DialogContent className="max-h-[90vh] overflow-y-auto pb-0 border-none shadow-none">
+        <DialogContent className="max-h-[90vh] min-w-[40%] overflow-y-auto pb-0 border-none shadow-none">
           <DialogHeader>
             {successfulStatements.length > 0 ? (
               <DialogTitle>
@@ -840,7 +943,7 @@ export default function GenerateReport({ activeTab }) {
               </ul>
             </div>
           )}
-          {hasScannedOrEncodedWarning && (
+          {hasScannedOrEncodedWarning && isOcrEnabled && (
             <div className="mb-4 mt-2">
               {/* <h3 className="text-md font-semibold flex items-center gap-x-2 mb-2">
                 <AlertCircle className="text-blue-500 w-5 h-5" />
@@ -952,19 +1055,35 @@ export default function GenerateReport({ activeTab }) {
             </div>
           )}
 
-          <div className="flex gap-4 sticky w-full p-4  bottom-0 bg-white ">
-            {showAnalsisButton && (
-              <Button onClick={() => viewAnalysis()} className="flex-1">
-                View Analysis
-              </Button>
+          <DialogFooter className="flex items-center justify-between sticky w-full p-4 bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+            {/* Left section: Detected mode */}
+            {detectedMode && (
+              <div className="flex-1 items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                <span className="font-semibold">Detected Mode:</span>
+                <span className="px-2 py-1 ml-2 bg-gray-100 dark:bg-gray-700 rounded-md">
+                  {detectedMode}
+                </span>
+              </div>
             )}
 
-            {showRectifyButton && (
-              <Button onClick={handleRectify} className="flex-1">
-                Rectify Now
-              </Button>
-            )}
-          </div>
+            {/* Right section: Buttons */}
+            <div className="flex flex-end items-center gap-3">
+              {showAnalsisButton && (
+                <Button onClick={() => viewAnalysis()} className="px-4">
+                  View Analysis
+                </Button>
+              )}
+              {showRectifyButton && (
+                <Button
+                  onClick={handleRectify}
+                  variant="outline"
+                  className="px-4"
+                >
+                  Rectify Now
+                </Button>
+              )}
+            </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
