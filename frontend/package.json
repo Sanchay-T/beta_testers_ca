@@ -1,5 +1,5 @@
 {
-  "name": "CypherEdge",
+  "name": "CypherEdge-UAT",
   "version": "2.3.100",
   "description": "CA OFFLINE APP",
   "main": "main.js",
@@ -40,8 +40,8 @@
     "wait-on": "^7.2.0"
   },
   "build": {
-    "appId": "com.electron.electronapp",
-    "productName": "CypherEdge",
+    "appId": "com.cyphersol.cypheredge.uat",
+    "productName": "CypherEdge UAT",
     "icon": "assets/cyphersol-icon.ico",
     "asarUnpack": [
       "**/*.node"
