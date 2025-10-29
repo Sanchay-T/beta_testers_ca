@@ -191,6 +191,10 @@ contextBridge.exposeInMainWorld("electron", {
       ipcRenderer.invoke("license:revoke-session", credentials),
   },
 
+  metrics: {
+    exportNow: () => ipcRenderer.invoke("metrics:export"),
+  },
+
   getRecentReports: () => ipcRenderer.invoke("get-recent-reports"),
   getFailedStatements: (referenceId) =>
     ipcRenderer.invoke("get-failed-statements", referenceId),

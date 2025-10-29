@@ -65,8 +65,14 @@ class SessionManager extends EventEmitter {
     }
 
     setUser(userData) {
+        const wasAuthenticated = this.isAuthenticated();
         this._user = userData;
         log.info("Setting user : ", this._user);
+        if (wasAuthenticated) {
+            this.emit('user-updated', this._user);
+        } else {
+            this.emit('login', this._user);
+        }
         return {
             success: true,
         };
@@ -91,6 +97,7 @@ class SessionManager extends EventEmitter {
             if (this.store) {
                 this.store.delete('user');
             }
+            this.emit('logout');
             return { success: true };
         }
         catch (err) {
@@ -126,6 +133,7 @@ class SessionManager extends EventEmitter {
 
             if (response.data?.success) {
                 this.stopLicenseCountdown();
+                this.emit('logout');
 
                 return {
                     success: true,

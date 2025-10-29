@@ -40,12 +40,22 @@ const { getdata } = require("./ipc/getData.js");
 const bonjour = require("bonjour")();
 const gatewayServer = require("./InitiateGatewayServer.js");
 const systemInfo = require("./SystemInformation");
+const { MetricsService } = require("./services/metrics");
 const userDataDir = app.getPath("userData");
 const { Category_Master } = require("./db/schema/Category_Master.js");
 const AppConfig = require("./config.js");
 
 // NOW it's safe to require database after AppConfig is set
 const databaseManager = require("./db/db");
+
+const metricsService = new MetricsService({ userDataPath: userDataDir });
+const metricsIntervalMinutes = Number(
+  process.env.METRICS_UPLOAD_INTERVAL_MINUTES || "1440"
+);
+if (!Number.isNaN(metricsIntervalMinutes) && metricsIntervalMinutes > 0) {
+  metricsService.setIntervalMs(metricsIntervalMinutes * 60 * 1000);
+}
+let shutdownInProgress = false;
 
 // Removed progressWindow - no longer needed for seamless updates
 
@@ -110,6 +120,43 @@ log.info("Update Configuration:", {
   tokenConfigured: !!process.env.GH_TOKEN,
 });
 log.info("process.env.NODE_ENV", process.env.NODE_ENV);
+
+sessionManager.on("login", () => {
+  metricsService
+    .exportAndUpload({ trigger: "login" })
+    .catch((error) =>
+      log.error("Metrics: login-triggered upload failed", error)
+    );
+});
+
+sessionManager.on("logout", () => {
+  metricsService
+    .exportAndUpload({ trigger: "logout" })
+    .catch((error) =>
+      log.error("Metrics: logout-triggered upload failed", error)
+    );
+});
+
+app.on("before-quit", (event) => {
+  if (shutdownInProgress) {
+    return;
+  }
+
+  event.preventDefault();
+  shutdownInProgress = true;
+
+  metricsService.stopSchedule();
+  metricsService
+    .exportAndUpload({ trigger: "shutdown" })
+    .catch((error) => {
+      log.error("Metrics: shutdown upload failed", error);
+    })
+    .finally(() => {
+      // Removing listeners prevents re-entry when we exit explicitly.
+      app.removeAllListeners("before-quit");
+      app.exit();
+    });
+});
 
 // Allow updates without code signing in development
 if (AppConfig.isDev) {
@@ -2149,6 +2196,21 @@ async function initializeDatabase() {
 app.whenReady().then(async () => {
   // Track total startup time
   const appStartTime = Date.now();
+
+  await metricsService.flushQueue();
+  metricsService.startSchedule();
+
+  ipcMain.handle("metrics:export", async () => {
+    try {
+      const result = await metricsService.exportAndUpload({
+        trigger: "manual",
+      });
+      return result;
+    } catch (error) {
+      log.error("Metrics: manual export failed", error);
+      return { success: false, error: error.message };
+    }
+  });
   
   log.info("🚀 APP READY - STARTING INITIALIZATION SEQUENCE", {
     userDataDir: userDataDir,
