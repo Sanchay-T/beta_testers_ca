@@ -7,11 +7,18 @@ const gzipAsync = promisify(zlib.gzip);
 const DEFAULT_TIMEOUT_MS = 10_000;
 
 class MetricsUploader {
-  constructor({ endpoint, token, logger = log, timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
+  constructor({
+    endpoint,
+    token,
+    testKey,
+    logger = log,
+    timeoutMs = DEFAULT_TIMEOUT_MS,
+  } = {}) {
     this.logger = logger;
     this.endpoint =
       endpoint || process.env.METRICS_ENDPOINT || "https://cyphersol.co.in/api/metrics/ingest/";
     this.token = token || process.env.METRICS_AUTH_TOKEN || null;
+    this.testKey = testKey || process.env.METRICS_TEST_KEY || null;
     this.timeoutMs = timeoutMs;
   }
 
@@ -23,6 +30,10 @@ class MetricsUploader {
 
   setToken(token) {
     this.token = token;
+  }
+
+  setTestKey(testKey) {
+    this.testKey = testKey;
   }
 
   async upload(payload) {
@@ -43,6 +54,9 @@ class MetricsUploader {
     };
     if (this.token) {
       headers.Authorization = `Bearer ${this.token}`;
+    }
+    if (this.testKey) {
+      headers["x-api-key"] = this.testKey;
     }
 
     try {

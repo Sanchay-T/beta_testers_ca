@@ -1,14 +1,17 @@
+// const { app } = require("electron");
 const log = require("electron-log");
 const path = require("path");
 const { exec } = require("child_process");
-
 require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
 
+// Use the global AppConfig object if available
 const getIsDev = () => {
+  // First, try to use global.AppConfig if it exists and is properly initialized
   if (global.AppConfig && typeof global.AppConfig.isDev === "boolean") {
     return global.AppConfig.isDev;
   }
 
+  // Fallback to checking if app is packaged (more reliable than NODE_ENV)
   try {
     const { app } = require("electron");
     if (app && typeof app.isPackaged === "boolean") {
@@ -18,6 +21,7 @@ const getIsDev = () => {
     console.warn("Could not access electron app:", err.message);
   }
 
+  // Final fallback to NODE_ENV
   return process.env.NODE_ENV === "development";
 };
 
@@ -28,9 +32,11 @@ const getBaseDir = () => {
   return getIsDev() ? __dirname : process.resourcesPath;
 };
 
+// Lazy initialization - don't determine these values at module load time
 let isDev = null;
 let BASE_DIR = null;
 
+// Initialize on first use
 const ensureInitialized = () => {
   if (isDev === null) {
     isDev = getIsDev();
@@ -39,13 +45,15 @@ const ensureInitialized = () => {
     log.info("process.env.NODE_ENV", process.env.NODE_ENV);
   }
 };
-
 const drizzleConfigPath = path.resolve(__dirname, "../drizzle.config.js");
 log.info("drizzleConfigPath", drizzleConfigPath);
 
 log.info("DB process.env.DB_FILE_NAME", process.env.DB_FILE_NAME);
 const { drizzle } = require("drizzle-orm/libsql");
 const { migrate } = require("drizzle-orm/libsql/migrator");
+
+// const { createClient } = require("@libsql/client");
+// const { schema } = require("./schema");
 
 class DatabaseManager {
   static instance = null;
@@ -56,6 +64,7 @@ class DatabaseManager {
     if (DatabaseManager.instance) {
       throw new Error("Use DatabaseManager.getInstance()");
     }
+    // Ensure configuration is initialized when DatabaseManager is created
     ensureInitialized();
     DatabaseManager.instance = this;
   }
@@ -100,7 +109,7 @@ class DatabaseManager {
       log.info("migrationsFolder : ", migrationsFolder);
 
       await migrate(this.#db, {
-        migrationsFolder,
+        migrationsFolder: migrationsFolder, // Ensure this path points to your migrations folder
       });
 
       this.#initialized = true;
@@ -113,8 +122,12 @@ class DatabaseManager {
   }
 
   getDatabase() {
+    // if (!this.#initialized) {
+    //   throw new Error("Database not initialized. Call initialize() first");
+    // }
     return this.#db;
   }
 }
 
+// Export the class instead of an instance
 module.exports = DatabaseManager;

@@ -59,6 +59,25 @@ This specification defines the JSON payload the Electron app sends to the Django
 | `total_transactions` | number | Count in `transactions`. |
 | `reports_generated` | number | Count in `summary`. |
 | `tally_exports` | number | Count in `tally_voucher`. |
+| `total_pages` | number | Sum of `cases.pages` where `deleted = 0`. |
+| `total_time_saved_minutes` | number | `total_pages * 10` minutes heuristic. |
+| `avg_time_saved_per_day_minutes` | number | Rounded average over active case count. |
+| `plan_validity` | object | See table below. |
+| `earning_opportunity` | object | See table below. |
+
+#### `usage.plan_validity`
+| Field | Type | Notes |
+|-------|------|-------|
+| `start_date` | string | ISO timestamp for license start. |
+| `expiry_date` | string | ISO timestamp for license expiry. |
+| `remaining_days` | number | Days remaining, never negative. |
+| `completion_percent` | number | Clamped 0-100. |
+
+#### `usage.earning_opportunity`
+| Field | Type | Notes |
+|-------|------|-------|
+| `total_eligibility` | number | Sum of loan/insurance opportunity columns. |
+| `total_commission` | number | Commission projection using current multipliers. |
 
 ### `failed_pdfs[]`
 | Field | Type | Notes |

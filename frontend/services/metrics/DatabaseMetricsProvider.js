@@ -8,6 +8,7 @@ const { failedStatements } = require("../../db/schema/FailedStatements");
 const { summary } = require("../../db/schema/Summary");
 const { transactions } = require("../../db/schema/Transactions");
 const { tallyVoucher } = require("../../db/schema/TallyVoucher");
+const { opportunityToEarn } = require("../../db/schema/OpportunityToEarn");
 
 class DatabaseMetricsProvider {
   constructor({ logger = log } = {}) {
@@ -33,9 +34,11 @@ class DatabaseMetricsProvider {
     const rows = await this.db
       .select({
         id: users.id,
+        name: users.name,
         email: users.email,
         role: users.role,
         dateJoined: users.dateJoined,
+        expiryDate: users.expiryDate,
         lastLogin: users.lastLogin,
       })
       .from(users)
@@ -85,6 +88,33 @@ class DatabaseMetricsProvider {
       .select({ count: sql`COUNT(*)`.as("count") })
       .from(tallyVoucher);
 
+    const [pagesSumRow] = await this.db
+      .select({
+        pages: sql`COALESCE(SUM(${cases.pages}), 0)`.as("pages"),
+      })
+      .from(cases)
+      .where(eq(cases.deleted, 0));
+
+    const [opportunityTotals] = await this.db
+      .select({
+        homeLoan: sql`COALESCE(SUM(${opportunityToEarn.homeLoanValue}), 0)`.as(
+          "homeLoan"
+        ),
+        loanAgainstProperty: sql`COALESCE(SUM(${opportunityToEarn.loanAgainstProperty}), 0)`.as(
+          "loanAgainstProperty"
+        ),
+        businessLoan: sql`COALESCE(SUM(${opportunityToEarn.businessLoan}), 0)`.as(
+          "businessLoan"
+        ),
+        termPlan: sql`COALESCE(SUM(${opportunityToEarn.termPlan}), 0)`.as(
+          "termPlan"
+        ),
+        generalInsurance: sql`COALESCE(SUM(${opportunityToEarn.generalInsurance}), 0)`.as(
+          "generalInsurance"
+        ),
+      })
+      .from(opportunityToEarn);
+
     const banks = await this.db
       .select({ bank: statements.bankName })
       .from(statements)
@@ -103,6 +133,30 @@ class DatabaseMetricsProvider {
     const successful = Math.max(totalStatements - totalFailed, 0);
     const successRate =
       totalStatements > 0 ? (successful / totalStatements) * 100 : 0;
+    const totalPages = Number(pagesSumRow?.pages || 0);
+    const totalTimeSaved = totalPages * 10;
+    const daysCount = Math.max(1, Number(caseCountRow?.count || 0));
+    const averageTimeSaved = Math.round(totalTimeSaved / daysCount);
+
+    const homeLoanTotal = Number(opportunityTotals?.homeLoan || 0);
+    const lapTotal = Number(opportunityTotals?.loanAgainstProperty || 0);
+    const businessLoanTotal = Number(opportunityTotals?.businessLoan || 0);
+    const termPlanTotal = Number(opportunityTotals?.termPlan || 0);
+    const generalInsuranceTotal = Number(
+      opportunityTotals?.generalInsurance || 0
+    );
+    const earningTotalEligibility =
+      homeLoanTotal +
+      lapTotal +
+      businessLoanTotal +
+      termPlanTotal +
+      generalInsuranceTotal;
+    const earningTotalCommission =
+      homeLoanTotal * 0.0045 +
+      lapTotal * 0.0065 +
+      businessLoanTotal * 0.01 +
+      termPlanTotal +
+      generalInsuranceTotal;
 
     return {
       totalCases: Number(caseCountRow?.count || 0),
@@ -118,6 +172,11 @@ class DatabaseMetricsProvider {
       totalCasesPending: statusCounts.pending || 0,
       totalCasesSucceeded: statusCounts.success || 0,
       caseActivity: caseActivity?.[0] || { first: null, last: null },
+      totalPages,
+      totalTimeSaved,
+      averageTimeSaved,
+      earningTotalEligibility,
+      earningTotalCommission,
     };
   }
 

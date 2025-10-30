@@ -76,6 +76,7 @@ POST /api/metrics/ingest/
 Headers:
   Content-Type: application/json
   Content-Encoding: gzip   # when compressed
+  x-api-key: <metrics test key>   # optional in prod, required for staging smoke tests
   Authorization: Bearer <token>
 
 Body: <payload from docs/METRICS_UPLOAD_SCHEMA.md>

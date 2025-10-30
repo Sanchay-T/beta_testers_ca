@@ -39,6 +39,7 @@ class MetricsPayloadBuilder {
     const userRecord = await this.dbProvider.getUserById(
       currentUser?.userId || 0
     );
+    const planValidity = this.computePlanValidity(userRecord);
 
     const licenseInfo =
       (typeof licenseManager.getLicenseInfo === "function"
@@ -52,7 +53,7 @@ class MetricsPayloadBuilder {
       device: this.buildDeviceSection(deviceSnapshot),
       license: this.buildLicenseSection(licenseInfo),
       user: this.buildUserSection(userRecord || currentUser),
-      usage: this.buildUsageSection(usage),
+      usage: this.buildUsageSection({ ...usage, planValidity }),
       failed_pdfs: this.buildFailedPdfsSection(failedStatements),
       activity_window: {
         first_activity: toISO(activityRange?.first),
@@ -157,6 +158,14 @@ class MetricsPayloadBuilder {
         first_case_created_at: toISO(usage.caseActivity?.first),
         last_case_created_at: toISO(usage.caseActivity?.last),
       },
+      total_pages: numberOrZero(usage.totalPages),
+      total_time_saved_minutes: numberOrZero(usage.totalTimeSaved),
+      avg_time_saved_per_day_minutes: numberOrZero(usage.averageTimeSaved),
+      plan_validity: this.buildPlanValiditySection(usage.planValidity),
+      earning_opportunity: this.buildEarningOpportunitySection({
+        totalEligibility: usage.earningTotalEligibility,
+        totalCommission: usage.earningTotalCommission,
+      }),
     };
   }
 
@@ -281,6 +290,87 @@ class MetricsPayloadBuilder {
     }
 
     return results;
+  }
+
+  computePlanValidity(userRecord) {
+    if (!userRecord || !userRecord.dateJoined || !userRecord.expiryDate) {
+      return null;
+    }
+    const joinedDate = new Date(userRecord.dateJoined);
+    const expiryDate = new Date(userRecord.expiryDate);
+
+    if (
+      Number.isNaN(joinedDate.getTime()) ||
+      Number.isNaN(expiryDate.getTime())
+    ) {
+      return null;
+    }
+
+    const joinedMs = joinedDate.getTime();
+    const expiryMs = expiryDate.getTime();
+
+    if (expiryMs <= joinedMs) {
+      return {
+        dateJoined: joinedDate,
+        expiryDate,
+        remainingDays: 0,
+        completionPercent: 100,
+      };
+    }
+
+    const nowMs = Date.now();
+    const totalDurationMs = expiryMs - joinedMs;
+    const elapsedMs = Math.min(
+      Math.max(nowMs - joinedMs, 0),
+      totalDurationMs
+    );
+    const remainingMs = Math.max(expiryMs - nowMs, 0);
+    const remainingDays = Math.ceil(
+      remainingMs / (1000 * 60 * 60 * 24)
+    );
+    const completionPercent = Math.min(
+      100,
+      Math.max(0, Math.round((elapsedMs / totalDurationMs) * 100))
+    );
+
+    return {
+      dateJoined: joinedDate,
+      expiryDate,
+      remainingDays,
+      completionPercent,
+    };
+  }
+
+  buildPlanValiditySection(planValidity) {
+    if (!planValidity) {
+      return {
+        start_date: null,
+        expiry_date: null,
+        remaining_days: null,
+        completion_percent: null,
+      };
+    }
+    return {
+      start_date: toISO(planValidity.dateJoined),
+      expiry_date: toISO(planValidity.expiryDate),
+      remaining_days: planValidity.remainingDays,
+      completion_percent: planValidity.completionPercent,
+    };
+  }
+
+  buildEarningOpportunitySection({
+    totalEligibility,
+    totalCommission,
+  } = {}) {
+    const safeNumber = (value) =>
+      typeof value === "number" && !Number.isNaN(value) ? value : 0;
+    const eligibility = roundTo(safeNumber(totalEligibility), 2);
+    const commission = roundTo(safeNumber(totalCommission), 2);
+
+    return {
+      total_eligibility: eligibility,
+      total_commission: commission,
+    };
   }
 }
 
