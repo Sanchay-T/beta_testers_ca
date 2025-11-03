@@ -193,6 +193,7 @@ contextBridge.exposeInMainWorld("electron", {
 
   metrics: {
     exportNow: () => ipcRenderer.invoke("metrics:export"),
+    pingActive: () => ipcRenderer.send("user-activity:ping"),
   },
 
   getRecentReports: () => ipcRenderer.invoke("get-recent-reports"),
@@ -323,6 +324,42 @@ contextBridge.exposeInMainWorld("electron", {
     minimize: () => ipcRenderer.send("window:minimize"),
     close: () => ipcRenderer.send("window:close"),
   },
+});
+
+const setupActivityListeners = () => {
+  const MIN_GAP_MS = 15000;
+  let lastPing = 0;
+
+  const ping = () => {
+    const now = Date.now();
+    if (now - lastPing < MIN_GAP_MS) {
+      return;
+    }
+    lastPing = now;
+    ipcRenderer.send("user-activity:ping");
+  };
+
+  ["mousemove", "mousedown", "keydown", "touchstart"].forEach((eventName) => {
+    window.addEventListener(eventName, ping, { passive: true });
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      ipcRenderer.send("user-activity:hidden");
+    } else {
+      ping();
+    }
+  });
+
+  window.addEventListener("focus", ping);
+};
+
+window.addEventListener("DOMContentLoaded", () => {
+  try {
+    setupActivityListeners();
+  } catch (error) {
+    log.error("Failed to initialize activity listeners", error);
+  }
 });
 
 // Expose compatibility-specific API for compatibility.html

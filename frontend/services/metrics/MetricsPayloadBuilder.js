@@ -4,6 +4,7 @@ const sessionManager = require("../../SessionManager");
 const licenseManager = require("../../LicenseManager");
 const SystemDataProvider = require("./SystemDataProvider");
 const DatabaseMetricsProvider = require("./DatabaseMetricsProvider");
+const ActiveTimeTracker = require("./ActiveTimeTracker");
 const {
   hashEmail,
   hashLicenseKey,
@@ -34,6 +35,8 @@ class MetricsPayloadBuilder {
     const usage = await this.dbProvider.getUsageStats();
     const activityRange = await this.dbProvider.getActivityWindow();
     const failedStatements = await this.dbProvider.getFailedStatements();
+    const activeMinutes = this.getActiveMinutes(userDataPath);
+    const appVersion = this.getAppVersion();
 
     const currentUser = sessionManager.getUser();
     const userRecord = await this.dbProvider.getUserById(
@@ -48,12 +51,16 @@ class MetricsPayloadBuilder {
 
     const payload = {
       metrics_version: "v1.0",
-      app_version: app.getVersion(),
+      app_version: appVersion,
       exported_at: new Date().toISOString(),
       device: this.buildDeviceSection(deviceSnapshot),
       license: this.buildLicenseSection(licenseInfo),
       user: this.buildUserSection(userRecord || currentUser),
-      usage: this.buildUsageSection({ ...usage, planValidity }),
+      usage: this.buildUsageSection({
+        ...usage,
+        planValidity,
+        activeMinutes,
+      }),
       failed_pdfs: this.buildFailedPdfsSection(failedStatements),
       activity_window: {
         first_activity: toISO(activityRange?.first),
@@ -63,8 +70,16 @@ class MetricsPayloadBuilder {
         export_trigger: trigger,
         queue_depth: queueDepth,
         upload_attempts: attempt,
+        app_version: appVersion,
       },
     };
+
+    this.logger.info("Metrics: payload summary", {
+      trigger,
+      active_minutes_total: payload.usage?.active_minutes_total ?? 0,
+      meta_app_version: payload.meta?.app_version,
+      queue_depth: queueDepth,
+    });
 
     return payload;
   }
@@ -166,7 +181,35 @@ class MetricsPayloadBuilder {
         totalEligibility: usage.earningTotalEligibility,
         totalCommission: usage.earningTotalCommission,
       }),
+      active_minutes_total: numberOrZero(usage.activeMinutes),
     };
+  }
+
+  getActiveMinutes(userDataPath) {
+    try {
+      const tracker = new ActiveTimeTracker({ userDataPath });
+      return tracker.getTotals().totalMinutes;
+    } catch (error) {
+      this.logger.warn("Metrics: failed to read active time tracker", {
+        message: error.message,
+      });
+      return 0;
+    }
+  }
+
+  getAppVersion() {
+    const envVersion = (process.env.APP_VERSION || "").trim();
+    if (envVersion) {
+      return envVersion;
+    }
+    try {
+      return app.getVersion();
+    } catch (error) {
+      this.logger.warn("Metrics: failed to read Electron app version", {
+        message: error.message,
+      });
+      return "unknown";
+    }
   }
 
   buildFailedPdfsSection(rows = []) {

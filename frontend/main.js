@@ -41,6 +41,7 @@ const bonjour = require("bonjour")();
 const gatewayServer = require("./InitiateGatewayServer.js");
 const systemInfo = require("./SystemInformation");
 const { MetricsService } = require("./services/metrics");
+const { ActivityMonitor } = require("./services/metrics/ActivityMonitor");
 const userDataDir = app.getPath("userData");
 const { Category_Master } = require("./db/schema/Category_Master.js");
 const AppConfig = require("./config.js");
@@ -49,6 +50,11 @@ const AppConfig = require("./config.js");
 const databaseManager = require("./db/db");
 
 const metricsService = new MetricsService({ userDataPath: userDataDir });
+const activityMonitor = new ActivityMonitor({
+  ipcMain,
+  userDataPath: userDataDir,
+  shouldTrack: () => sessionManager.isAuthenticated(),
+});
 const metricsIntervalMinutes = Number(
   process.env.METRICS_UPLOAD_INTERVAL_MINUTES || "1440"
 );
@@ -122,6 +128,7 @@ log.info("Update Configuration:", {
 log.info("process.env.NODE_ENV", process.env.NODE_ENV);
 
 sessionManager.on("login", () => {
+  activityMonitor.markActive();
   metricsService
     .exportAndUpload({ trigger: "login" })
     .catch((error) =>
@@ -130,6 +137,7 @@ sessionManager.on("login", () => {
 });
 
 sessionManager.on("logout", () => {
+  activityMonitor.finalizeSession({ force: true });
   metricsService
     .exportAndUpload({ trigger: "logout" })
     .catch((error) =>
@@ -145,6 +153,7 @@ app.on("before-quit", (event) => {
   event.preventDefault();
   shutdownInProgress = true;
 
+  activityMonitor.finalizeSession({ force: true });
   metricsService.stopSchedule();
   metricsService
     .exportAndUpload({ trigger: "shutdown" })
@@ -1754,6 +1763,7 @@ async function createWindow() {
   }
 
   setupEventListeners(win);
+  activityMonitor.attachToWindow(win);
   log.info("🔍 [CREATEWINDOW_DEBUG] Event listeners setup completed");
   log.info("🔍 [CREATEWINDOW_DEBUG] About to set up window.on('close') handler");
 
