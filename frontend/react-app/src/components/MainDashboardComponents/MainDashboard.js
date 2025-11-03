@@ -814,7 +814,7 @@ const MainDashboard = ({ handleTabChange }) => {
               </h2>{" "}
               <span className="bg-gradient-to-r from-blue-500 to-cyan-400 text-white text-xs px-2 py-1 rounded-full font-semibold animate-pulse">
                 {" "}
-                v2.3.100{" "}
+                v2.1.200{" "}
               </span>{" "}
             </div>{" "}
             <p className="text-muted-foreground">
@@ -823,38 +823,7 @@ const MainDashboard = ({ handleTabChange }) => {
             </p>{" "}
           </div>{" "}
           <div className="flex items-center space-x-4">
-            {" "}
-            {/* <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="relative">
-                  <Bell className="h-4 w-4" />
-                  <span className="absolute top-0 right-0 h-2 w-2 bg-red-600 rounded-full" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[380px]">
-                <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {notifications.map((notification) => (
-                  <DropdownMenuItem
-                    key={notification.id}
-                    className="flex flex-col items-start p-4"
-                  >
-                    <div className="flex justify-between w-full">
-                      <span className="font-medium">{notification.title}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {notification.time}
-                      </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {notification.message}
-                    </p>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu> */}
-            <InfoHoverVideo
-              videoId="demo"
-            />
+            <InfoHoverVideo videoId="demo" />
             <Button
               variant="ghost"
               size="icon"

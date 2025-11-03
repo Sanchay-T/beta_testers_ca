@@ -9,7 +9,7 @@ const LicenseManager = require('../LicenseManager'); // Adjust the path as neede
 // Parse command-line arguments for UUID and expected hash
 const args = minimist(process.argv.slice(2));
 const testUuid = args.uu || "723A2D01-54FF-11CB-B900-95BEA0D4A45F";
-const expectedHash = args.eh || "6a43470faead645d3c2389ccd69a7982722126036ae09efc3811baeb69580789";
+const expectedHash = args.eh || "92e984220520b519847acd0f344b0b513038447684af0dd3e9ac4ea7ab3edb89";
 
 let expect;
 

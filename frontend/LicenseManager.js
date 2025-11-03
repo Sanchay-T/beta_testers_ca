@@ -3,6 +3,7 @@ const fs = require("fs");
 const log = require("electron-log");
 const { decryptData } = require("./CryptoHandler"); // Adjust this path as needed
 const axios = require("axios");
+const crypto = require("crypto");
 
 class LicenseManager {
     static instance;
@@ -133,6 +134,17 @@ class LicenseManager {
 
     getLicenseInfo() {
         return this.licenseData; // <-- Accessor method if needed externally
+    }
+
+    getHashedUUIDTest(testUuid) {
+        if (!testUuid) {
+            return null;
+        }
+        const salt = process.env.UUID_SALT || "cyphersol";
+        return crypto
+            .createHash("sha256")
+            .update(`${String(testUuid).toLowerCase()}${salt}`, "utf8")
+            .digest("hex");
     }
 }
 
