@@ -174,20 +174,25 @@ if (AppConfig.isDev) {
 
 // Removed redundant settings - configured above
 
-// Configure autoUpdater for GitHub repository
+// Configure autoUpdater for DigitalOcean Spaces (S3-compatible CDN)
+const UPDATE_SERVER_URL = process.env.UPDATE_SERVER_URL ||
+  "https://cypheredge-exe-uat.blr1.cdn.digitaloceanspaces.com/releases/windows";
+
 autoUpdater.setFeedURL({
-  provider: "github",
-  owner: "Shama-Cyphersol",
-  repo: "ca-offline-suite",
-  token: process.env.GH_TOKEN,
+  provider: "generic",
+  url: UPDATE_SERVER_URL,
+  channel: process.env.UPDATE_CHANNEL || "latest"
 });
 
-// Log token status (without exposing the token)
-if (!process.env.GH_TOKEN) {
-  log.error("GH_TOKEN is not set! Updates will not work properly.");
-} else {
-  log.info("GH_TOKEN is configured properly for updates.");
-}
+// Log update server configuration
+log.info("✅ Update Configuration (DigitalOcean Spaces CDN):", {
+  provider: "generic (S3-compatible)",
+  updateUrl: UPDATE_SERVER_URL,
+  channel: process.env.UPDATE_CHANNEL || "latest",
+  platform: process.platform,
+  cdnEnabled: UPDATE_SERVER_URL.includes('.cdn.'),
+  currentVersion: app.getVersion()
+});
 
 // Add version tracking
 let lastCheckedVersion = null;
