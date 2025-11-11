@@ -636,6 +636,7 @@ def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_
         "passwords": [],
         "start_dates": [],
         "end_dates": [],
+        "error_codes": [],
         "respective_list_of_columns": [],
         "respective_reasons_for_error": []
     }
@@ -677,14 +678,14 @@ def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_
         print("errorz", errorz)
 
         print(f"Extracted {bank} bank statement successfully")
-      
-        pdf_paths_not_extracted["respective_reasons_for_error"].append(errorz[bank])
 
         print("one")
         # account_number += f"{name_dfs[bank][1][:4]}x{name_dfs[bank][1][-4:]}_"
         # Check if the extracted dataframe is empty
         if dfs[bank].empty:
-            pdf_paths_not_extracted["bank_names"].append(re.sub(r"\d+", "", bank))
+            # Sanitize bank name - never allow empty string
+            bank_name_sanitized = re.sub(r"\d+", "", bank) or "UNKNOWN"
+            pdf_paths_not_extracted["bank_names"].append(bank_name_sanitized)
 
             pdf_document = fitz.open(pdf_path)
             if pdf_document.is_encrypted:
@@ -705,8 +706,19 @@ def start_extraction_add_pdf(bank_names, pdf_paths, passwords, start_dates, end_
             pdf_paths_not_extracted["passwords"].append(pdf_password)
             pdf_paths_not_extracted["start_dates"].append(start_date)
             pdf_paths_not_extracted["end_dates"].append(end_date)
-            pdf_paths_not_extracted["respective_list_of_columns"].append(name_dfs[bank])
-            pdf_paths_not_extracted["respective_reasons_for_error"].append(errorz[bank])
+
+            # Handle error info - support both dict (new) and string (old) formats
+            error_info = errorz[bank]
+            if isinstance(error_info, dict):
+                pdf_paths_not_extracted["error_codes"].append(error_info.get("error_code", "UNKNOWN_ERROR"))
+                pdf_paths_not_extracted["respective_reasons_for_error"].append(error_info.get("message", ""))
+            else:
+                # Backward compatibility for old string format
+                pdf_paths_not_extracted["error_codes"].append("UNKNOWN_ERROR")
+                pdf_paths_not_extracted["respective_reasons_for_error"].append(str(error_info) if error_info else "")
+
+            # Sanitize columns - never allow null
+            pdf_paths_not_extracted["respective_list_of_columns"].append(name_dfs[bank] if name_dfs[bank] else [])
             del dfs[bank]
             del name_dfs[bank]
         print("two")

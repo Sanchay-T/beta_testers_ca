@@ -310,8 +310,8 @@ class MetricsPayloadBuilder {
         case_name: row.caseName || null,
         case_created_at: toISO(row.caseCreatedAt),
         file_name: sanitizeFileName(filePath),
-        bank_type: bankName,
-        error_code: parsed.errorCode || parsed.code || null,
+        bank_type: bankName || "UNKNOWN",
+        error_code: parsed.errorCode || parsed.code || "EXTRACTION_FAILED",
         error_message: truncateText(errorMessage),
         timestamp: toISO(timestamp),
         system_context: {
@@ -328,7 +328,7 @@ class MetricsPayloadBuilder {
           Array.isArray(parsed.respective_list_of_columns) &&
           parsed.respective_list_of_columns[idx]
             ? parsed.respective_list_of_columns[idx]
-            : null,
+            : [],
       });
     }
 

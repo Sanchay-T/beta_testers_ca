@@ -69,7 +69,29 @@ print("aiyaz CUSTOMER_SHEET_PATH from env = ",os.environ.get(
     "CUSTOMER_SHEET_PATH") )
 
 
-print("aiyaz CUSTOMER_SHEET_PATH from ARG = ",CUSTOMER_SHEET_PATH) 
+print("aiyaz CUSTOMER_SHEET_PATH from ARG = ",CUSTOMER_SHEET_PATH)
+
+# Error code mapping for failed PDF extraction
+ERROR_CODES = {
+    "encoded": "PDF_ENCODED",
+    "obfuscated": "PDF_OBFUSCATED",
+    "Rectify PDF": "TABLE_EXTRACTION_FAILED",
+    "Empty result": "OCR_FAILED",
+    "readable PDF": "PDF_ENCODED",
+}
+
+def get_error_code(error_message):
+    """Extract error code from error message"""
+    if not error_message:
+        return "UNKNOWN_ERROR"
+
+    error_str = str(error_message).lower()
+    for key, code in ERROR_CODES.items():
+        if key.lower() in error_str:
+            return code
+
+    return "EXTRACTION_FAILED"
+
 ##EXTRACTION PROCESS
 def extract_text_from_file(file_path):
 
@@ -370,10 +392,11 @@ def extraction_process(bank, pdf_path, pdf_password, start_date, end_date, isthi
                 a = validate_bank_statement_returns_error_message_ocr(idf)
                 idf = add_start_n_end_date_v2(idf, start_date, end_date, bank)
 
-            return idf, name_n_num, a
+            return idf, name_n_num, {"error_code": get_error_code(a) if a else None, "message": a}
 
         except Exception as e:
-            return empty_idf, default_name_n_num, str(e)
+            error_msg = str(e)
+            return empty_idf, default_name_n_num, {"error_code": get_error_code(error_msg), "message": error_msg}
     
     else:
         try:
@@ -426,10 +449,11 @@ def extraction_process(bank, pdf_path, pdf_password, start_date, end_date, isthi
                 a = validate_bank_statement_returns_error_message(idf)
                 idf = add_start_n_end_date_v2(idf, start_date, end_date, bank)
 
-            return idf, name_n_num, a
+            return idf, name_n_num, {"error_code": get_error_code(a) if a else None, "message": a}
 
         except Exception as e:
-                return empty_idf, default_name_n_num, str(e)
+                error_msg = str(e)
+                return empty_idf, default_name_n_num, {"error_code": get_error_code(error_msg), "message": error_msg}
 
 
 

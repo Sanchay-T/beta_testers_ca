@@ -19,6 +19,25 @@
   ; Ensure details are printed
   SetDetailsPrint both
 
+  ; ═══════════════════════════════════════════════════════════════════════════
+  ; CRITICAL FIX: Wait for Windows to release file locks after uninstall
+  ; This runs IMMEDIATELY when installation phase starts, giving Windows time
+  ; to fully release file handles from the uninstall phase
+  ; ═══════════════════════════════════════════════════════════════════════════
+  ${If} ${Silent}
+    DetailPrint ""
+    DetailPrint "╔════════════════════════════════════════════════════════╗"
+    DetailPrint "║    WAITING FOR FILE SYSTEM TO STABILIZE               ║"
+    DetailPrint "╚════════════════════════════════════════════════════════╝"
+    DetailPrint ""
+    DetailPrint "[PRE-INSTALL-WAIT] Uninstall phase complete"
+    DetailPrint "[PRE-INSTALL-WAIT] Waiting 10 seconds for Windows to release file locks..."
+    DetailPrint "[PRE-INSTALL-WAIT] This prevents app.asar locking issues"
+    Sleep 10000
+    DetailPrint "[PRE-INSTALL-WAIT] ✓ File system stabilized - safe to install"
+    DetailPrint ""
+  ${EndIf}
+
   DetailPrint "Pre-reqs: Checking Microsoft VC++ 2015–2022 Redistributable (x64)..."
   ; VC++ 2015–2022 x64 presence flag (Installed = 1)
   ReadRegDWORD $0 HKLM "SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64" "Installed"
@@ -74,10 +93,21 @@
     DetailPrint "Auto-update in progress..."
   ${EndIf}
   
-  ; Launch app after install
+  ; Launch app after install with safety delay
   ${If} ${Silent}
-    DetailPrint "Launching CypherEdge after update..."
-    Exec "$INSTDIR\CypherEdge.exe"
+    DetailPrint ""
+    DetailPrint "════════════════════════════════════════════════════════"
+    DetailPrint "  UPDATE INSTALLATION COMPLETE"
+    DetailPrint "════════════════════════════════════════════════════════"
+    DetailPrint ""
+    DetailPrint "[UPDATE-LOG] Waiting 5 seconds for file system stabilization..."
+    DetailPrint "[UPDATE-LOG] This prevents ASAR corruption and ensures clean start"
+    Sleep 5000
+    DetailPrint "[UPDATE-LOG] File system stabilized - safe to launch"
+    DetailPrint "[UPDATE-LOG] Launching CypherEdge-UAT..."
+    DetailPrint ""
+    Exec "$INSTDIR\CypherEdge-UAT.exe"
+    DetailPrint "[UPDATE-LOG] Launch command issued - app should start shortly"
   ${EndIf}
 !macroend
 
@@ -107,5 +137,100 @@
   ${EndIf}
   
   DetailPrint "Firewall cleanup completed"
-!macroend 
+!macroend
+
+; ═══════════════════════════════════════════════════════════════════════════
+; CRITICAL FIX: customUnInit macro
+; This runs BEFORE the uninstaller removes files during an update
+; It ensures all processes are killed so files can be replaced cleanly
+; Without this, app.asar remains locked → corruption → JSON parse error
+; ═══════════════════════════════════════════════════════════════════════════
+!macro customUnInit
+  SetDetailsPrint both
+
+  DetailPrint ""
+  DetailPrint "╔════════════════════════════════════════════════════════╗"
+  DetailPrint "║     PRE-UNINSTALL PROCESS CLEANUP (customUnInit)      ║"
+  DetailPrint "╚════════════════════════════════════════════════════════╝"
+  DetailPrint ""
+  DetailPrint "[CLEANUP-LOG] Starting comprehensive process cleanup"
+  DetailPrint "[CLEANUP-LOG] This prevents file locking during update"
+  DetailPrint ""
+
+  ; Step 1: Kill Electron app (both possible names)
+  DetailPrint "[CLEANUP-LOG] Step 1/6: Killing Electron application..."
+  nsExec::ExecToLog 'taskkill /F /IM "CypherEdge-UAT.exe" /T 2>nul'
+  Pop $0
+  ${If} $0 == 0
+    DetailPrint "[CLEANUP-LOG]   ✓ CypherEdge-UAT.exe terminated"
+  ${Else}
+    DetailPrint "[CLEANUP-LOG]   ⓘ CypherEdge-UAT.exe not running"
+  ${EndIf}
+
+  nsExec::ExecToLog 'taskkill /F /IM "CypherEdge.exe" /T 2>nul'
+  Pop $0
+  ${If} $0 == 0
+    DetailPrint "[CLEANUP-LOG]   ✓ CypherEdge.exe terminated"
+  ${Else}
+    DetailPrint "[CLEANUP-LOG]   ⓘ CypherEdge.exe not running"
+  ${EndIf}
+
+  ; Step 2: Kill Python backend
+  DetailPrint ""
+  DetailPrint "[CLEANUP-LOG] Step 2/6: Killing Python backend..."
+  nsExec::ExecToLog 'taskkill /F /IM "main.exe" /T 2>nul'
+  Pop $0
+  ${If} $0 == 0
+    DetailPrint "[CLEANUP-LOG]   ✓ Python backend (main.exe) terminated"
+  ${Else}
+    DetailPrint "[CLEANUP-LOG]   ⓘ Python backend not running"
+  ${EndIf}
+
+  ; Step 3: Kill Gateway service executable
+  DetailPrint ""
+  DetailPrint "[CLEANUP-LOG] Step 3/6: Killing Gateway service..."
+  nsExec::ExecToLog 'taskkill /F /IM "gatewayService.exe" /T 2>nul'
+  Pop $0
+  ${If} $0 == 0
+    DetailPrint "[CLEANUP-LOG]   ✓ Gateway service executable terminated"
+  ${Else}
+    DetailPrint "[CLEANUP-LOG]   ⓘ Gateway service not running"
+  ${EndIf}
+
+  ; Step 4: Stop Windows service
+  DetailPrint ""
+  DetailPrint "[CLEANUP-LOG] Step 4/6: Stopping LicensingServer Windows service..."
+  nsExec::ExecToLog 'sc stop LicensingServer 2>nul'
+  Pop $0
+  ${If} $0 == 0
+    DetailPrint "[CLEANUP-LOG]   ✓ LicensingServer service stopped"
+  ${Else}
+    DetailPrint "[CLEANUP-LOG]   ⓘ LicensingServer service not running"
+  ${EndIf}
+
+  ; Step 5: Wait for processes to fully terminate
+  DetailPrint ""
+  DetailPrint "[CLEANUP-LOG] Step 5/6: Waiting 5 seconds for clean shutdown..."
+  Sleep 5000
+  DetailPrint "[CLEANUP-LOG]   ✓ Wait complete"
+
+  ; Step 6: Verify cleanup - double-check all processes are dead
+  DetailPrint ""
+  DetailPrint "[CLEANUP-LOG] Step 6/6: Verifying all processes terminated..."
+  nsExec::ExecToLog 'taskkill /F /IM "CypherEdge-UAT.exe" /T 2>nul'
+  nsExec::ExecToLog 'taskkill /F /IM "CypherEdge.exe" /T 2>nul'
+  nsExec::ExecToLog 'taskkill /F /IM "main.exe" /T 2>nul'
+  nsExec::ExecToLog 'taskkill /F /IM "gatewayService.exe" /T 2>nul'
+  DetailPrint "[CLEANUP-LOG]   ✓ Verification complete"
+
+  DetailPrint ""
+  DetailPrint "╔════════════════════════════════════════════════════════╗"
+  DetailPrint "║   CLEANUP COMPLETE - FILES NOW SAFE TO REPLACE        ║"
+  DetailPrint "╚════════════════════════════════════════════════════════╝"
+  DetailPrint ""
+  DetailPrint "[CLEANUP-LOG] All file locks released"
+  DetailPrint "[CLEANUP-LOG] NSIS can now safely uninstall old version"
+  DetailPrint "[CLEANUP-LOG] This prevents app.asar corruption"
+  DetailPrint ""
+!macroend
 

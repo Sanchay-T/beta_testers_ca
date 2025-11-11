@@ -5,7 +5,21 @@ const UpdateNotification = () => {
   const [updateStatus, setUpdateStatus] = useState("idle");
   const [progress, setProgress] = useState(0);
   const [systemRequirementsInfo, setSystemRequirementsInfo] = useState(null);
+  const [isInstalling, setIsInstalling] = useState(false);
   const { updates, system } = window.electron;
+
+  // Handle install update with full-screen modal
+  const handleInstallUpdate = async () => {
+    console.log('[UPDATE-UI] User clicked "Restart Now"');
+    console.log('[UPDATE-UI] Showing full-screen installation modal');
+    setIsInstalling(true);
+
+    // Wait 3 seconds to show user the modal before quitting
+    setTimeout(async () => {
+      console.log('[UPDATE-UI] Triggering installUpdate()');
+      await updates.installUpdate();
+    }, 3000);
+  };
 
   useEffect(() => {
     // Set up update event listeners with detailed logging
@@ -88,7 +102,7 @@ const UpdateNotification = () => {
         } has been downloaded and will be installed on restart`,
         action: (
           <button
-            onClick={() => updates.installUpdate()}
+            onClick={handleInstallUpdate}
             className="px-3 py-2 text-sm bg-primary text-primary-foreground hover:bg-primary/90 rounded-md"
           >
             Restart Now
@@ -136,6 +150,82 @@ const UpdateNotification = () => {
         <p className="mt-1 text-xs text-muted-foreground">
           {progress.toFixed(1)}%
         </p>
+      </div>
+    );
+  }
+
+  // Full-screen installation modal
+  if (isInstalling) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+        backdropFilter: 'blur(10px)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 999999,
+        color: 'white',
+        fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      }}>
+        <div style={{
+          fontSize: '48px',
+          marginBottom: '30px',
+          animation: 'spin 2s linear infinite'
+        }}>
+          ⚙️
+        </div>
+        <h2 style={{
+          fontSize: '32px',
+          fontWeight: '600',
+          marginBottom: '20px',
+          letterSpacing: '-0.5px'
+        }}>
+          Installing Update
+        </h2>
+        <p style={{
+          fontSize: '18px',
+          color: '#94a3b8',
+          maxWidth: '500px',
+          textAlign: 'center',
+          lineHeight: '1.6',
+          marginBottom: '30px'
+        }}>
+          CypherEdge is being updated to the latest version.
+          <br />
+          The application will restart automatically in a few moments.
+        </p>
+        <div style={{
+          display: 'flex',
+          gap: '15px',
+          alignItems: 'center',
+          fontSize: '16px',
+          color: '#64748b'
+        }}>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <span style={{ animation: 'pulse 1.4s infinite ease-in-out', animationDelay: '0s' }}>●</span>
+            <span style={{ animation: 'pulse 1.4s infinite ease-in-out', animationDelay: '0.2s' }}>●</span>
+            <span style={{ animation: 'pulse 1.4s infinite ease-in-out', animationDelay: '0.4s' }}>●</span>
+          </div>
+          <span>Please do not close this window</span>
+        </div>
+
+        <style>{`
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+
+          @keyframes pulse {
+            0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+            40% { opacity: 1; transform: scale(1.2); }
+          }
+        `}</style>
       </div>
     );
   }

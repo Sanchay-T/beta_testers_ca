@@ -1085,9 +1085,21 @@ function generateReportIpc(tmpdir_path) {
           }
 
           // Store failed statements in database (mapped in HYBRID; unchanged in LOCAL)
+          // Sanitize data to prevent null values from being stored
+          const sanitizedFailedObj = {
+            bank_names: (failedObj.bank_names || []).map(name => name || "UNKNOWN"),
+            paths: failedObj.paths || [],
+            passwords: failedObj.passwords || [],
+            start_dates: failedObj.start_dates || [],
+            end_dates: failedObj.end_dates || [],
+            error_codes: failedObj.error_codes || Array((failedObj.paths || []).length).fill("UNKNOWN_ERROR"),
+            respective_list_of_columns: (failedObj.respective_list_of_columns || []).map(cols => cols || []),
+            respective_reasons_for_error: failedObj.respective_reasons_for_error || []
+          };
+
           await db.insert(failedStatements).values({
             caseId: caseId,
-            data: JSON.stringify(failedObj),
+            data: JSON.stringify(sanitizedFailedObj),
           });
 
           for (const failedPath of failedPdfPaths) {

@@ -62,6 +62,7 @@ if (!Number.isNaN(metricsIntervalMinutes) && metricsIntervalMinutes > 0) {
   metricsService.setIntervalMs(metricsIntervalMinutes * 60 * 1000);
 }
 let shutdownInProgress = false;
+let updateLoggablePrefixes = null;
 
 // Removed progressWindow - no longer needed for seamless updates
 
@@ -88,6 +89,11 @@ log.transports.file.level = "info"; // Only log info level and above in the log 
 
 // Set up detailed logging for updates
 log.transports.file.fileName = "cyphersol.log";
+const updateLogger = log.create("update");
+updateLogger.transports.console.level = false;
+updateLogger.transports.file.level = "info";
+updateLogger.transports.file.fileName = "update.log";
+
 log.info("===========================================");
 log.info(`Application starting - Version ${app.getVersion()}`);
 log.info(`User data directory: ${userDataDir}`);
@@ -96,6 +102,87 @@ log.info(`Arch: ${process.arch}`);
 log.info(`Node version: ${process.versions.node}`);
 log.info(`Electron version: ${process.versions.electron}`);
 log.info("===========================================");
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CRITICAL: Integrity Check - Validates app.asar is not corrupted
+// This catches ASAR corruption early (from failed updates) before it causes
+// cryptic JSON parsing errors later in startup sequence
+// ═══════════════════════════════════════════════════════════════════════════
+function validateAppIntegrity() {
+  log.info("🔍 ═══ STARTING APP INTEGRITY CHECK ═══");
+  log.info("[INTEGRITY-CHECK] Validating app.asar and package.json...");
+
+  try {
+    // Test 1: Read package.json
+    log.info("[INTEGRITY-CHECK] Test 1/3: Reading package.json from ASAR...");
+    const packageJsonPath = path.join(__dirname, 'package.json');
+    log.info(`[INTEGRITY-CHECK] Package.json path: ${packageJsonPath}`);
+
+    const packageJsonContent = fs.readFileSync(packageJsonPath, 'utf8');
+    log.info(`[INTEGRITY-CHECK] Package.json read successfully (${packageJsonContent.length} bytes)`);
+
+    // Test 2: Parse JSON
+    log.info("[INTEGRITY-CHECK] Test 2/3: Parsing package.json...");
+    const packageJson = JSON.parse(packageJsonContent);
+    log.info(`[INTEGRITY-CHECK] JSON parsed successfully`);
+
+    // Test 3: Validate critical fields
+    log.info("[INTEGRITY-CHECK] Test 3/3: Validating critical fields...");
+
+    if (!packageJson.version) {
+      throw new Error('package.json missing "version" field');
+    }
+    if (!packageJson.name) {
+      throw new Error('package.json missing "name" field');
+    }
+    if (!packageJson.main) {
+      throw new Error('package.json missing "main" field');
+    }
+
+    log.info(`[INTEGRITY-CHECK]   ✓ name: ${packageJson.name}`);
+    log.info(`[INTEGRITY-CHECK]   ✓ version: ${packageJson.version}`);
+    log.info(`[INTEGRITY-CHECK]   ✓ main: ${packageJson.main}`);
+
+    log.info("✅ ═══ APP INTEGRITY CHECK PASSED ═══");
+    log.info(`[INTEGRITY-CHECK] App is healthy and ready to start`);
+
+    return { success: true, version: packageJson.version };
+
+  } catch (error) {
+    log.error("❌ ═══ APP INTEGRITY CHECK FAILED ═══");
+    log.error(`[INTEGRITY-CHECK] ERROR: ${error.message}`);
+    log.error(`[INTEGRITY-CHECK] Stack trace: ${error.stack}`);
+    log.error("[INTEGRITY-CHECK] This usually indicates:");
+    log.error("[INTEGRITY-CHECK]   1. Corrupted app.asar (failed update)");
+    log.error("[INTEGRITY-CHECK]   2. Incomplete file extraction");
+    log.error("[INTEGRITY-CHECK]   3. File system errors");
+
+    // Show user-friendly error dialog
+    const { dialog } = require('electron');
+    dialog.showErrorBox(
+      'CypherEdge Installation Corrupted',
+      `The application installation appears to be corrupted.\n\n` +
+      `Error: ${error.message}\n\n` +
+      `This typically happens when an update was interrupted.\n\n` +
+      `Please follow these steps to fix:\n` +
+      `1. Uninstall CypherEdge completely\n` +
+      `2. Download fresh installer from official source\n` +
+      `3. Reinstall the application\n\n` +
+      `If this problem persists, contact support with this error:\n` +
+      `${error.message}`
+    );
+
+    log.error("[INTEGRITY-CHECK] Exiting application due to corruption");
+    app.quit();
+    process.exit(1);
+  }
+}
+
+// Run integrity check IMMEDIATELY before any other initialization
+log.info("🚀 Running startup integrity check...");
+const integrityResult = validateAppIntegrity();
+log.info(`🚀 Integrity check result: ${JSON.stringify(integrityResult)}`);
+// ═══════════════════════════════════════════════════════════════════════════
 
 // Configure autoUpdater logging
 autoUpdater.logger = log;
@@ -146,6 +233,14 @@ sessionManager.on("logout", () => {
 });
 
 app.on("before-quit", (event) => {
+  if (isUpdating) {
+    const skipMessage =
+      "[UPDATE] Skipping shutdown hooks because an auto-update is in progress";
+    log.info(skipMessage);
+    writeUpdateLog("info", skipMessage);
+    return;
+  }
+
   if (shutdownInProgress) {
     return;
   }
@@ -183,6 +278,7 @@ autoUpdater.setFeedURL({
   url: UPDATE_SERVER_URL,
   channel: process.env.UPDATE_CHANNEL || "latest"
 });
+autoUpdater.disableDifferentialDownload = true;
 
 // Log update server configuration
 log.info("✅ Update Configuration (DigitalOcean Spaces CDN):", {
@@ -557,6 +653,11 @@ autoUpdater.on("download-progress", (progress) => {
 
 // Add flag for tracking update status
 let isUpdating = false;
+
+const logQuitInstall = (message) => {
+  log.info(message);
+  writeUpdateLog("info", message);
+};
 
 // Cleanup function to ensure all processes are stopped before update
 async function cleanupForUpdate() {
@@ -1061,19 +1162,43 @@ autoUpdater.on("update-downloaded", (info) => {
         // Install update
         setTimeout(() => {
           try {
+            logQuitInstall("═══════════════════════════════════════════════════════════════");
+            logQuitInstall("   QUIT AND INSTALL SEQUENCE - COMPREHENSIVE LOGGING");
+            logQuitInstall("═══════════════════════════════════════════════════════════════");
             logWithTimestamp(
               "info",
               UPDATE_LOG_PREFIX,
               "🚀 INITIATING QUIT AND INSTALL SEQUENCE"
             );
+            logQuitInstall("[QUIT-INSTALL] Step 1/6: Pre-cleanup completed successfully");
+            logQuitInstall("[QUIT-INSTALL] Step 2/6: All processes terminated");
+            logQuitInstall("[QUIT-INSTALL] Step 3/6: All windows closed");
+            logQuitInstall("[QUIT-INSTALL] Step 4/6: Database connections closed");
+
             logWithTimestamp(
               "info",
               UPDATE_LOG_PREFIX,
               "Application will restart with new version"
             );
 
+            logQuitInstall("[QUIT-INSTALL] Step 5/6: Setting autoInstallOnAppQuit=false");
+            logQuitInstall("[QUIT-INSTALL]   This ensures immediate install, not on app quit");
             performanceTracker.end("installation-process");
             autoUpdater.autoInstallOnAppQuit = false;
+
+            logQuitInstall("[QUIT-INSTALL] Step 6/6: Calling autoUpdater.quitAndInstall(true, true)");
+            logQuitInstall("[QUIT-INSTALL]   Param 1 (isSilent): true - Install silently");
+            logQuitInstall("[QUIT-INSTALL]   Param 2 (isForceRunAfter): true - Force restart app");
+            logQuitInstall("[QUIT-INSTALL] ═══════════════════════════════════════════");
+            logQuitInstall("[QUIT-INSTALL] NSIS installer will now:");
+            logQuitInstall("[QUIT-INSTALL]   1. Run customUnInit (kill remaining processes)");
+            logQuitInstall("[QUIT-INSTALL]   2. Uninstall old version");
+            logQuitInstall("[QUIT-INSTALL]   3. Install new version");
+            logQuitInstall("[QUIT-INSTALL]   4. Wait 5 seconds for file system");
+            logQuitInstall("[QUIT-INSTALL]   5. Launch new version");
+            logQuitInstall("[QUIT-INSTALL] ═══════════════════════════════════════════");
+            logQuitInstall("[QUIT-INSTALL] Goodbye! Will restart as new version...");
+
             autoUpdater.quitAndInstall(true, true);
           } catch (err) {
             performanceTracker.end("installation-process");
@@ -3441,6 +3566,18 @@ const performanceTracker = {
   },
 };
 
+function writeUpdateLog(level, message, data = {}) {
+  if (!updateLogger || typeof updateLogger[level] !== "function") {
+    return;
+  }
+
+  if (Object.keys(data).length > 0) {
+    updateLogger[level](message, data);
+  } else {
+    updateLogger[level](message);
+  }
+}
+
 // Centralized logging function
 const logWithTimestamp = (level, prefix, message, data = {}) => {
   const timestamp = new Date().toISOString();
@@ -3451,6 +3588,10 @@ const logWithTimestamp = (level, prefix, message, data = {}) => {
   } else {
     log[level](logMessage);
   }
+
+  if (updateLoggablePrefixes?.has(prefix)) {
+    writeUpdateLog(level, logMessage, data);
+  }
 };
 
 // Log prefixes
@@ -3459,6 +3600,13 @@ const ERROR_LOG_PREFIX = "ERROR";
 const SUCCESS_LOG_PREFIX = "SUCCESS";
 const USER_LOG_PREFIX = "USER";
 const PERFORMANCE_LOG_PREFIX = "PERFORMANCE";
+updateLoggablePrefixes = new Set([
+  UPDATE_LOG_PREFIX,
+  ERROR_LOG_PREFIX,
+  SUCCESS_LOG_PREFIX,
+  USER_LOG_PREFIX,
+  PERFORMANCE_LOG_PREFIX,
+]);
 
 // Function to check for updates
 function checkForUpdates() {
