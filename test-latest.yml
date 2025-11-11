@@ -1,0 +1,7 @@
+version: 2.3.404
+files:
+  - url: CypherEdge-UAT-Setup-2.3.404.exe
+    sha512: t1nEGHc8RZmFUHaHKax3G3aYLgDMAH9QfF/mCzGJ12gS0JzWsQDD7XwhHn6K+dUko4k/Jn+aKtBrFxdSrV752Q==
+path: CypherEdge-UAT-Setup-2.3.404.exe
+sha512: t1nEGHc8RZmFUHaHKax3G3aYLgDMAH9QfF/mCzGJ12gS0JzWsQDD7XwhHn6K+dUko4k/Jn+aKtBrFxdSrV752Q==
+releaseDate: '2025-01-11T10:00:00.000Z'

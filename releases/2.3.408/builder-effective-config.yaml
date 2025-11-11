@@ -1,0 +1,88 @@
+directories:
+  output: dist
+  buildResources: build
+appId: com.cyphersol.cypheredge.uat
+productName: CypherEdge-UAT
+icon: assets/cyphersol-icon.ico
+asarUnpack:
+  - '**/*.node'
+publish:
+  provider: generic
+  url: https://cypheredge-exe-uat.blr1.cdn.digitaloceanspaces.com/releases/windows
+  channel: latest
+files:
+  - filter:
+      - '**/*'
+      - react-app/build/**/*
+      - '!../backend/**/*'
+      - env/**/*
+      - '!react-app/build/static/js/*.map'
+      - '!react-app/node_modules'
+      - '!backend/__pycache__'
+      - '!env/bin/python3'
+      - package.json
+      - media/**/*
+extraResources:
+  - from: ../dist/main
+    to: backend/main
+  - from: media
+    to: media
+    filter:
+      - '**/*'
+  - from: drizzle.config.js
+    to: drizzle.config.js
+  - from: Master_data.json
+    to: Master_data.json
+  - from: gatewayServer/appsettings.json
+    to: appsettings.json
+  - from: gatewayServer/gatewayService.exe
+    to: gatewayService.exe
+  - from: build/vcredist_x64.exe
+    to: vcredist_x64.exe
+extraMetadata:
+  main: main.js
+mac:
+  category: public.app-category.utilities
+  target:
+    - dmg
+    - zip
+  hardenedRuntime: false
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  identity: null
+  strictVerify: false
+  electronUpdaterCompatibility: '>=2.15'
+  darkModeSupport: true
+win:
+  icon: assets/cyphersol-icon.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+  artifactName: ${productName}-Setup-${version}.${ext}
+  verifyUpdateCodeSignature: false
+  publisherName: Cyphersol
+  requestedExecutionLevel: requireAdministrator
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: false
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: CypherEdge
+  deleteAppDataOnUninstall: false
+  artifactName: ${productName}-Setup-${version}.${ext}
+  uninstallDisplayName: ${productName}
+  differentialPackage: false
+  warningsAsErrors: false
+  perMachine: false
+  allowElevation: true
+  runAfterFinish: true
+  include: build/installer.nsh
+linux:
+  target:
+    - AppImage
+  category: Utility
+beforePack: ./scripts/beforePack.js
+compression: normal
+electronVersion: 33.4.11
