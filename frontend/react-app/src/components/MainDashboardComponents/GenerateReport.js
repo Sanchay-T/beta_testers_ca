@@ -222,10 +222,22 @@ export default function GenerateReport({ activeTab }) {
         setProgress(0);
         setLoading(false);
         progressIntervalRef.current = null;
-        // Show the first warning message from backend
+
+        // Determine appropriate error title based on message content
+        const warningMsg = result.data.warning[0] || "";
+        let errorTitle = "Processing Error";
+
+        if (warningMsg.toLowerCase().includes("license") || warningMsg.toLowerCase().includes("statement")) {
+          errorTitle = "Attention!";
+        } else if (warningMsg.toLowerCase().includes("gateway") || warningMsg.toLowerCase().includes("server")) {
+          errorTitle = "Server Connection Error";
+        } else if (warningMsg.toLowerCase().includes("permission")) {
+          errorTitle = "Permission Error";
+        }
+
         toast({
-          title: "No Statements Remaining",
-          description: result.data.warning[0],
+          title: errorTitle,
+          description: warningMsg,
           variant: "destructive",
           duration: 5000,
         });
@@ -509,9 +521,22 @@ export default function GenerateReport({ activeTab }) {
               setProgress(0);
               setLoading(false);
               progressIntervalRef.current = null;
+
+              // Determine appropriate error title based on message content
+              const warningMsg = ocrResult.data.warning[0] || "";
+              let errorTitle = "OCR Processing Error";
+
+              if (warningMsg.toLowerCase().includes("license") || warningMsg.toLowerCase().includes("statement")) {
+                errorTitle = "Attention!";
+              } else if (warningMsg.toLowerCase().includes("gateway") || warningMsg.toLowerCase().includes("server")) {
+                errorTitle = "Server Connection Error";
+              } else if (warningMsg.toLowerCase().includes("permission")) {
+                errorTitle = "Permission Error";
+              }
+
               toast({
-                title: "No Statements Remaining",
-                description: ocrResult.data.warning[0],
+                title: errorTitle,
+                description: warningMsg,
                 variant: "destructive",
                 duration: 5000,
               });

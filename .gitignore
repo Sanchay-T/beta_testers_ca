@@ -222,3 +222,4 @@ datasets/
 *.parquet
 /buildnul
 nul
+invoice/*

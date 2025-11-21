@@ -271,7 +271,7 @@ if (AppConfig.isDev) {
 
 // Configure autoUpdater for DigitalOcean Spaces (S3-compatible CDN)
 const UPDATE_SERVER_URL = process.env.UPDATE_SERVER_URL ||
-  "https://cypheredge-exe-uat.blr1.cdn.digitaloceanspaces.com/releases/windows";
+  "https://cypheredge-exe-prod.blr1.cdn.digitaloceanspaces.com/releases/windows";
 
 autoUpdater.setFeedURL({
   provider: "generic",
@@ -1875,8 +1875,8 @@ async function createWindow() {
     icon: path.join(__dirname, "assets", "cyphersol-icon.png"),
     autoHideMenuBar: true,
     title: AppConfig.isDev
-      ? `CypherSol Dev v${app.getVersion()}`
-      : `CypherSol v${app.getVersion()}`,
+      ? `CypherEdge Dev v${app.getVersion()}`
+      : `CypherEdge v${app.getVersion()}`,
   });
   if (AppConfig.isDev) {
     win.loadURL("http://localhost:3000");

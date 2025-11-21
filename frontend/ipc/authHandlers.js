@@ -257,6 +257,7 @@ async function getDeviceInfoFromServer(email, event) {
       return detectedMode;
     }
     return null;
+    
   } catch (error) {
     log.error("Error sending device info to server:", error);
     return null;

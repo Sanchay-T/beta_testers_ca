@@ -810,11 +810,11 @@ const MainDashboard = ({ handleTabChange }) => {
               {" "}
               <h2 className="text-3xl font-bold tracking-tight dark:text-slate-300">
                 {" "}
-                CypherSOL{" "}
+                CypherEdge{" "}
               </h2>{" "}
-              <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm px-3 py-1.5 rounded-full font-bold animate-pulse shadow-lg">
+              <span className="bg-muted text-muted-foreground text-sm px-3 py-1.5 rounded-md font-medium border border-border">
                 {" "}
-                v2.3.409 ✨{" "}
+                v2.3.600{" "}
               </span>{" "}
             </div>{" "}
             <p className="text-muted-foreground">

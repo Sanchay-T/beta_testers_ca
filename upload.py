@@ -22,7 +22,7 @@ load_dotenv(env_path)
 ACCESS_KEY = os.getenv('AWS_ACCESS_KEY_ID')
 SECRET_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
 REGION = os.getenv('SPACES_REGION', 'blr1')
-BUCKET = os.getenv('SPACES_BUCKET', 'cypheredge-exe-uat')
+BUCKET = os.getenv('SPACES_BUCKET', 'cypheredge-exe-prod')
 ENDPOINT = os.getenv('SPACES_ENDPOINT', f'https://{REGION}.digitaloceanspaces.com')
 CDN_URL = f"https://{BUCKET}.{REGION}.cdn.digitaloceanspaces.com"
 SPACES_PATH = "releases/windows"

@@ -711,9 +711,22 @@ const RecentReportsComp = ({ key, onReportGenerated }) => {
         setProgress(0);
         setLoading(false);
         progressIntervalRef.current = null;
+
+        // Determine appropriate error title based on message content
+        const warningMsg = result.data.warning[0] || "";
+        let errorTitle = "Processing Error";
+
+        if (warningMsg.toLowerCase().includes("license") || warningMsg.toLowerCase().includes("statement")) {
+          errorTitle = "Attention!";
+        } else if (warningMsg.toLowerCase().includes("gateway") || warningMsg.toLowerCase().includes("server")) {
+          errorTitle = "Server Connection Error";
+        } else if (warningMsg.toLowerCase().includes("permission")) {
+          errorTitle = "Permission Error";
+        }
+
         toast({
-          title: "No Statements Remaining",
-          description: result.data.warning[0],
+          title: errorTitle,
+          description: warningMsg,
           variant: "destructive",
           duration: 5000,
         });
