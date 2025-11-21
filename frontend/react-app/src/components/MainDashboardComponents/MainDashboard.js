@@ -814,7 +814,7 @@ const MainDashboard = ({ handleTabChange }) => {
               </h2>{" "}
               <span className="bg-muted text-muted-foreground text-sm px-3 py-1.5 rounded-md font-medium border border-border">
                 {" "}
-                v2.3.600{" "}
+                v2.3.700{" "}
               </span>{" "}
             </div>{" "}
             <p className="text-muted-foreground">

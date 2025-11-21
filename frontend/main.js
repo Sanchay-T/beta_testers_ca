@@ -592,8 +592,8 @@ autoUpdater.on("download-progress", (progress) => {
     timeRemaining:
       progress.total && progress.bytesPerSecond
         ? Math.round(
-            (progress.total - progress.transferred) / progress.bytesPerSecond
-          )
+          (progress.total - progress.transferred) / progress.bytesPerSecond
+        )
         : "Unknown",
     timestamp: new Date().toISOString(),
   };
@@ -759,12 +759,26 @@ async function cleanupForUpdate() {
     );
 
     if (pythonProcess && !pythonProcess.killed) {
+      // Remove the close listener to prevent error logging during intentional shutdown
+      pythonProcess.removeAllListeners('close');
+      logWithTimestamp(
+        "info",
+        UPDATE_LOG_PREFIX,
+        "[CLEANUP] Removing Python process listeners"
+      );
+
       pythonProcess.kill("SIGTERM");
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       if (!pythonProcess.killed) {
         pythonProcess.kill("SIGKILL");
       }
+
+      logWithTimestamp(
+        "info",
+        UPDATE_LOG_PREFIX,
+        "[CLEANUP] Terminated Python backend"
+      );
     }
 
     // Force kill any remaining Python processes with admin privileges
@@ -1614,7 +1628,7 @@ function firstExistingDir(paths) {
   for (const p of paths) {
     try {
       if (fs.existsSync(p)) return p;
-    } catch {}
+    } catch { }
   }
   return null;
 }
@@ -1661,7 +1675,7 @@ function ensureDirs() {
   ].forEach((d) => {
     try {
       fs.mkdirSync(d, { recursive: true });
-    } catch {}
+    } catch { }
   });
 }
 
@@ -1739,7 +1753,7 @@ function syncTallyprimeFilesToUserData() {
       let currentUserHash = null;
       try {
         currentUserHash = sha256OfFile(dst);
-      } catch (e) {}
+      } catch (e) { }
 
       const userUnmodified =
         last && currentUserHash && currentUserHash === last.hash;
@@ -1779,7 +1793,7 @@ function syncTallyprimeFilesToUserData() {
             fs.writeFileSync(
               note,
               "We detected local edits to your voucher files, so updates were not auto-applied.\n" +
-                "Review files in this folder and replace manually if desired.\n"
+              "Review files in this folder and replace manually if desired.\n"
             );
           }
         } catch (e) {
@@ -1862,7 +1876,7 @@ function setupEventListeners(win) {
 async function createWindow() {
   log.info("🔍 [CREATEWINDOW_DEBUG] createWindow() function called");
   log.info("🔍 [CREATEWINDOW_DEBUG] Creating new BrowserWindow with dimensions 1800x1000");
-  
+
   win = new BrowserWindow({
     width: 1800,
     height: 1000,
@@ -1936,14 +1950,14 @@ async function createWindow() {
     console.log('🔍 [WINDOW_CLOSE] sessionManager type:', typeof sessionManager);
     console.log('🔍 [WINDOW_CLOSE] sessionManager stopLicenseCountdown:', typeof sessionManager?.stopLicenseCountdown);
     console.log('🔍 [WINDOW_CLOSE] sessionManager removeAllListeners:', typeof sessionManager?.removeAllListeners);
-    
+
     try {
       sessionManager.stopLicenseCountdown();
       console.log('🔍 [WINDOW_CLOSE] stopLicenseCountdown called successfully');
     } catch (error) {
       console.error('🔍 [WINDOW_CLOSE] ERROR calling stopLicenseCountdown:', error);
     }
-    
+
     try {
       if (typeof sessionManager.removeAllListeners === 'function') {
         sessionManager.removeAllListeners();
@@ -1954,7 +1968,7 @@ async function createWindow() {
     } catch (error) {
       console.error('🔍 [WINDOW_CLOSE] ERROR calling removeAllListeners:', error);
     }
-    
+
     win = null;
     log.info("Window closed");
     app.quit();
@@ -2351,7 +2365,7 @@ app.whenReady().then(async () => {
       return { success: false, error: error.message };
     }
   });
-  
+
   log.info("🚀 APP READY - STARTING INITIALIZATION SEQUENCE", {
     userDataDir: userDataDir,
     appVersion: app.getVersion(),
@@ -2363,9 +2377,9 @@ app.whenReady().then(async () => {
   // ═══════════════════════════════════════════════════════════════════════════════
   // 🔐 EMAIL VERIFICATION & AUTO-REPORTING IPC HANDLERS
   // ═══════════════════════════════════════════════════════════════════════════════
-  
+
   let verifiedEmail = null;
-  
+
   // Store verified email for compatibility reporting
   ipcMain.handle("email-verification:store", async (event, email) => {
     try {
@@ -2377,22 +2391,22 @@ app.whenReady().then(async () => {
       return { success: false, error: error.message };
     }
   });
-  
+
   // Start compatibility check after email verification
   ipcMain.handle("email-verification:start-compatibility", async () => {
     try {
       log.info("🔐 Starting compatibility check after email verification");
-      
+
       // Close email verification window and start compatibility check
       if (win && !win.isDestroyed()) {
         win.close();
       }
-      
+
       // Start the compatibility checker
       const { SystemCompatibilityChecker } = require("./SystemCompatibilityChecker");
       globalCompatChecker = new SystemCompatibilityChecker();
       global.globalCompatChecker = globalCompatChecker; // Make globally accessible
-      
+
       // Run compatibility check (this will create its own window)
       // const compatResult = await globalCompatChecker.runFullCheck();
       const compatResult = { canProceed: true, results: { issues: [], warnings: [], successes: [] }, modeDetection: { determinedMode: 'SCAN', canProceed: true } };
@@ -2403,12 +2417,12 @@ app.whenReady().then(async () => {
       return { success: false, error: error.message };
     }
   });
-  
+
   // Auto-report compatibility results to server
   ipcMain.handle("compatibility:auto-report", async (event, compatibilityResult) => {
     try {
       log.info("📊 Auto-reporting compatibility results to server");
-      
+
       const reportData = {
         timestamp: new Date().toISOString(),
         userEmail: verifiedEmail,
@@ -2423,10 +2437,10 @@ app.whenReady().then(async () => {
         compatibilityResult: compatibilityResult,
         modeDetection: compatibilityResult.modeDetection || null
       };
-      
+
       // 🔧 DEMO - Replace with real API endpoint
       console.log("📊 [AUTO_REPORT] Report data prepared:", reportData);
-      
+
       /* 
       // 🚀 PRODUCTION - Replace with real server call:
       const response = await fetch('https://api.cyphersol.co.in/compatibility-report', {
@@ -2443,11 +2457,11 @@ app.whenReady().then(async () => {
         throw new Error(`Server responded with status: ${response.status}`);
       }
       */
-      
+
       // Simulate successful report
       await new Promise(resolve => setTimeout(resolve, 1000));
       log.info("✅ Compatibility report sent to server successfully (demo)");
-      
+
       return { success: true, reportData };
     } catch (error) {
       log.error("❌ Failed to send compatibility report:", error);
@@ -2458,7 +2472,7 @@ app.whenReady().then(async () => {
   // ═══════════════════════════════════════════════════════════════════════════════
   // 💾 COMPATIBILITY CACHE MANAGEMENT IPC HANDLERS
   // ═══════════════════════════════════════════════════════════════════════════════
-  
+
   // Get cache status
   ipcMain.handle("compatibility-cache:get-status", async () => {
     try {
@@ -2470,14 +2484,14 @@ app.whenReady().then(async () => {
       return { success: false, error: error.message };
     }
   });
-  
+
   // Clear compatibility cache (force re-run on next startup)
   ipcMain.handle("compatibility-cache:clear", async () => {
     try {
       const { CompatibilityCache } = require("./compatibility/CompatibilityCache");
       const compatCache = new CompatibilityCache(log);
       const cleared = compatCache.clearCache();
-      
+
       if (cleared) {
         log.info("🗑️ Compatibility cache cleared - next startup will run full check");
         return { success: true, message: "Cache cleared successfully" };
@@ -2489,16 +2503,16 @@ app.whenReady().then(async () => {
       return { success: false, error: error.message };
     }
   });
-  
+
   // Check if cache exists and is valid
   ipcMain.handle("compatibility-cache:is-valid", async () => {
     try {
       const { CompatibilityCache } = require("./compatibility/CompatibilityCache");
       const compatCache = new CompatibilityCache(log);
       const cachedResult = compatCache.getCachedResult();
-      
-      return { 
-        success: true, 
+
+      return {
+        success: true,
         isValid: cachedResult !== null,
         result: cachedResult ? {
           mode: cachedResult.compatibilityResult.determinedMode,
@@ -2515,7 +2529,7 @@ app.whenReady().then(async () => {
   // ═══════════════════════════════════════════════════════════════════════════════
   // 🧪 REGISTER APP MODE TESTING IPC HANDLERS (Before System Compatibility Check)
   // ═══════════════════════════════════════════════════════════════════════════════
-  
+
   log.info("🔍 [CREATEWINDOW_DEBUG] Registering app-mode IPC handlers");
   ipcMain.handle("app-mode:load-config", async () => {
     try {
@@ -2571,46 +2585,46 @@ app.whenReady().then(async () => {
         hasOverrides: !!options.overrides,
         timestamp: new Date().toISOString()
       });
-      
+
       const { getSharedAppModeManager } = require("./compatibility/SharedAppModeManager");
       const manager = getSharedAppModeManager(log, null);
-      
+
       if (options.scenario && options.scenario !== 'current') {
         log.info("[IPC] Processing test scenario:", options.scenario);
-        
+
         // Load test scenario with proper mapping
         const configPath = path.join(__dirname, "compatibility", "config", "appModeConfig.json");
         const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-        
+
         log.info("[IPC] Loaded config:", {
           developmentMode: config.developmentMode?.enabled,
           hasTestScenarios: !!config.testing?.scenarios,
           availableScenarios: Object.keys(config.testing?.scenarios || {})
         });
-        
+
         // Map UI scenario names to config scenario names
         const scenarioMapping = {
           'highEnd': 'highEnd',
-          'midRange': 'midRange', 
+          'midRange': 'midRange',
           'lowEnd': 'lowEnd'
         };
-        
+
         const mappedScenario = scenarioMapping[options.scenario] || options.scenario;
         const scenario = config.testing.scenarios[mappedScenario];
-        
+
         log.info("[IPC] Scenario mapping:", {
           original: options.scenario,
           mapped: mappedScenario,
           found: !!scenario
         });
-        
+
         if (scenario) {
           log.info("[IPC] Scenario found in config:", {
             name: scenario.name,
             expectedMode: scenario.expectedMode,
             hardwareProfile: scenario.hardwareProfile
           });
-          
+
           // Override test scenario in config
           const originalOverrides = config.testingOverrides;
           config.testingOverrides = {
@@ -2620,19 +2634,19 @@ app.whenReady().then(async () => {
             forceScanResult: 'pass',  // Always pass scan for test scenarios
             forceMode: scenario.expectedMode
           };
-          
+
           log.info("[IPC] Creating testing overrides:", {
             forceRAM: config.testingOverrides.forceRAM,
             forceCPU: config.testingOverrides.forceCPU,
             forceScanResult: config.testingOverrides.forceScanResult,
             forceMode: config.testingOverrides.forceMode
           });
-          
+
           // Temporarily save scenario config
           const tempConfigPath = path.join(__dirname, "compatibility", "config", "temp_appModeConfig.json");
           fs.writeFileSync(tempConfigPath, JSON.stringify(config, null, 2));
           log.info("[IPC] Temp config created at:", tempConfigPath);
-          
+
           // Debug logging to verify scenario override
           log.info("🧪 [IPC] Final scenario configuration:", {
             scenario: options.scenario,
@@ -2643,56 +2657,56 @@ app.whenReady().then(async () => {
             forceCPU: config.testingOverrides.forceCPU,
             developmentMode: config.developmentMode?.enabled
           });
-          
+
           // Run detection with scenario
           log.info("[IPC] Starting mode detection with mapped scenario:", mappedScenario);
           const result = await manager.runModeDetection({ scenario: mappedScenario });
-          
+
           log.info("[IPC] Detection completed:", {
             success: result.success,
             determinedMode: result.determinedMode,
             canProceed: result.canProceed,
             forced: result.modeDecision?.forced
           });
-          
+
           // Clean up temp config
           if (fs.existsSync(tempConfigPath)) {
             fs.unlinkSync(tempConfigPath);
             log.info("[IPC] Temp config cleaned up");
           }
-          
+
           log.info("=== APP MODE DETECTION IPC COMPLETE ===");
           return result;
         } else {
           log.warn("[IPC] Scenario not found in config:", mappedScenario);
         }
       }
-      
+
       // Run with current system/overrides
       if (options.overrides) {
         log.info("[IPC] Applying manual overrides:", options.overrides);
-        
+
         // Update config with overrides
         const configPath = path.join(__dirname, "compatibility", "config", "appModeConfig.json");
         const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
         config.testingOverrides = { ...config.testingOverrides, ...options.overrides };
         fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-        
+
         log.info("[IPC] Config updated with overrides");
       }
-      
+
       log.info("[IPC] Running standard detection with scenario:", options.scenario || 'current');
       const result = await manager.runModeDetection({ scenario: options.scenario || 'current' });
-      
+
       log.info("[IPC] Standard detection completed:", {
         success: result.success,
         determinedMode: result.determinedMode,
         canProceed: result.canProceed
       });
-      
+
       log.info("=== APP MODE DETECTION IPC COMPLETE ===");
       return result;
-      
+
     } catch (error) {
       log.error("[IPC ERROR] App mode detection failed:", {
         message: error.message,
@@ -2737,9 +2751,9 @@ app.whenReady().then(async () => {
     console.log("📧 🎯 Received email:", email);
     console.log("📧 🎯 globalCompatChecker exists:", !!globalCompatChecker);
     console.log("📧 🎯 setUserEmail method exists:", !!(globalCompatChecker && typeof globalCompatChecker.setUserEmail === 'function'));
-    
+
     log.info("📧 [EMAIL] User submitted email:", email);
-    
+
     // Store email in global compatibility checker if available
     if (globalCompatChecker && typeof globalCompatChecker.setUserEmail === 'function') {
       console.log("📧 🎯 Calling setUserEmail on compatibility checker...");
@@ -2751,7 +2765,7 @@ app.whenReady().then(async () => {
       console.log("📧 ⚠️ globalCompatChecker:", globalCompatChecker);
       console.log("📧 ⚠️ setUserEmail type:", globalCompatChecker ? typeof globalCompatChecker.setUserEmail : 'N/A');
     }
-    
+
     return {
       success: true,
       email: email,
@@ -2762,22 +2776,22 @@ app.whenReady().then(async () => {
 
   // 🔍 STEP -1: SYSTEM COMPATIBILITY CHECK (CRITICAL FIRST STEP)
   log.info("📋 INITIALIZATION STEP -1: SYSTEM COMPATIBILITY CHECK");
-  
+
   // Run system compatibility check for both dev and production
   try {
     // 🚀 ENHANCED: Check cache first to skip if already completed
     const { CompatibilityCache } = require("./compatibility/CompatibilityCache");
     const { SystemCompatibilityChecker } = require("./SystemCompatibilityChecker");
-    
+
     const compatCache = new CompatibilityCache(log);
     const compatStartTime = Date.now();
-    
+
     // Step 1: Check for valid cached result
     log.info("📂 Checking compatibility cache...");
     const cachedResult = compatCache.getCachedResult();
-    
+
     let compatResult;
-    
+
     if (cachedResult) {
       // ✅ Use cached result - skip full compatibility check
       log.info("⚡ Using cached compatibility result", {
@@ -2785,7 +2799,7 @@ app.whenReady().then(async () => {
         age: compatCache.getCacheAge(cachedResult.timestamp),
         confidence: cachedResult.compatibilityResult.confidence
       });
-      
+
       // Create compatibility result format expected by rest of startup
       compatResult = {
         canProceed: cachedResult.compatibilityResult.canProceed,
@@ -2798,14 +2812,14 @@ app.whenReady().then(async () => {
         fromCache: true,
         cacheAge: compatCache.getCacheAge(cachedResult.timestamp)
       };
-      
+
       // Still create global compatibility checker for email audit functionality
       console.log("📧 🎯 === CREATING GLOBAL COMPATIBILITY CHECKER (CACHED MODE) ===");
       globalCompatChecker = new SystemCompatibilityChecker();
       global.globalCompatChecker = globalCompatChecker; // Make globally accessible
       console.log("📧 🎯 globalCompatChecker created:", !!globalCompatChecker);
       console.log("📧 🎯 setUserEmail method available:", !!(globalCompatChecker && typeof globalCompatChecker.setUserEmail === 'function'));
-      
+
     } else {
       // ❌ No valid cache - run full compatibility check
       log.info("🔍 No valid cache found, running full system compatibility check...");
@@ -2814,10 +2828,10 @@ app.whenReady().then(async () => {
       global.globalCompatChecker = globalCompatChecker; // Make globally accessible
       console.log("📧 🎯 globalCompatChecker created:", !!globalCompatChecker);
       console.log("📧 🎯 setUserEmail method available:", !!(globalCompatChecker && typeof globalCompatChecker.setUserEmail === 'function'));
-      
+
       // compatResult = await globalCompatChecker.runFullCheck();
       compatResult = { canProceed: true, results: { issues: [], warnings: [], successes: [] }, modeDetection: { determinedMode: 'SCAN', canProceed: true } };
-      
+
       // 🔍 DEBUG: Log the exact compatResult structure for cache debugging
       log.info("🔍 [CACHE_DEBUG] Compatibility result structure:", {
         canProceed: compatResult.canProceed,
@@ -2826,7 +2840,7 @@ app.whenReady().then(async () => {
         determinedMode: compatResult.modeDetection?.determinedMode,
         modeCanProceed: compatResult.modeDetection?.canProceed
       });
-      
+
       // 💾 Cache the result if successful
       if (compatResult.canProceed && compatResult.modeDetection) {
         log.info("🔍 [CACHE_DEBUG] Cache conditions met, attempting to save cache...");
@@ -2843,10 +2857,10 @@ app.whenReady().then(async () => {
         });
       }
     }
-    
+
     const compatEndTime = Date.now();
     const compatDuration = compatEndTime - compatStartTime;
-    
+
     if (!compatResult.canProceed) {
       log.error("❌ CRITICAL: System compatibility check failed", {
         duration: compatDuration,
@@ -2854,13 +2868,13 @@ app.whenReady().then(async () => {
         warnings: compatResult.results.warnings.length,
         canProceed: compatResult.canProceed,
       });
-      
+
       // Show final message and exit gracefully
       log.info("🛑 Application startup terminated due to compatibility issues");
       app.quit();
       return;
     }
-    
+
     log.info("✅ System compatibility check passed", {
       duration: compatDuration,
       successes: compatResult.results.successes.length,
@@ -2870,7 +2884,7 @@ app.whenReady().then(async () => {
       fromCache: compatResult.fromCache || false,
       cacheAge: compatResult.cacheAge || null
     });
-    
+
     // 🔍 DEBUG: Log mode detection result from compatibility check
     if (compatResult.modeDetection) {
       log.info("🎯 [MODE_DEBUG] Mode detection result from compatibility:", {
@@ -2883,19 +2897,19 @@ app.whenReady().then(async () => {
     } else {
       log.warn("⚠️ [MODE_DEBUG] No mode detection result from compatibility check");
     }
-    
+
     if (compatResult.results.warnings.length > 0) {
       log.warn("⚠️ Compatibility warnings detected - proceeding with fallback configuration", {
         warnings: compatResult.results.warnings.map(w => w.test),
       });
     }
-    
+
   } catch (error) {
     log.error("💥 Compatibility check crashed - proceeding with startup anyway");
     log.error("💥 Error message:", error.message);
     log.error("💥 Error stack:", error.stack);
     console.error("💥 DETAILED COMPATIBILITY ERROR:", error);
-    
+
     // Don't block startup if compatibility checker itself fails
     // This ensures we don't break existing functionality
   }
@@ -2903,7 +2917,7 @@ app.whenReady().then(async () => {
   // 🎯 STEP 0: CREATE SPLASH SCREEN FIRST
   log.info("📋 INITIALIZATION STEP 0: SPLASH SCREEN CREATION");
   log.info("🔍 [STARTUP_DEBUG] About to create splash screen - checking mode detection status");
-  
+
   try {
     const splashStartTime = Date.now();
     createSplashWindow();
@@ -3018,12 +3032,12 @@ app.whenReady().then(async () => {
     // 3. Initialize Session Manager
     try {
       log.info("🚀 PHASE 3: Initializing Session Manager");
-      
+
       // Verify SessionManager instance and methods
       if (!sessionManager) {
         throw new Error("SessionManager instance not found");
       }
-      
+
       if (typeof sessionManager.init !== 'function') {
         log.warn("⚠️ SessionManager.init method not found, skipping initialization");
         log.info("✅ SessionManager loaded without init (singleton pattern)");
@@ -3031,7 +3045,7 @@ app.whenReady().then(async () => {
         await sessionManager.init();
         log.info("✅ SessionManager initialized successfully");
       }
-      
+
       // const sessionEndTime = Date.now();
       // log.info("✅ SessionManager phase completed", {
       //   duration: sessionEndTime - sessionStartTime,
@@ -3080,7 +3094,7 @@ app.whenReady().then(async () => {
       log.error("❌ Python backend failed to start:", error);
       // Handle backend start failure
     }
-    
+
     log.info("🔍 [STARTUP_DEBUG] ✅ ENTIRE STARTUP SEQUENCE COMPLETED SUCCESSFULLY");
 
     // 7. Sync TallyPrime files
@@ -3106,7 +3120,7 @@ app.whenReady().then(async () => {
     const totalStartupTime = Date.now() - appStartTime;
     // Mark startup as complete - allow window-all-closed to quit the app normally
     isStartingUp = false;
-    
+
     log.info(
       "════════════════════════════════════════════════════════════════"
     );
@@ -3447,7 +3461,7 @@ const stopEverythingNeatly = async () => {
           "[CLEANUP] Closed database connection"
         );
       }
-    } catch (_) {}
+    } catch (_) { }
 
     // 3. Kill Python backend
     if (pythonProcess) {
@@ -3479,7 +3493,7 @@ app.on("will-quit", async (event) => {
   log.info("isUpdating flag:", isUpdating);
 
   await stopEverythingNeatly();
-  
+
   // Clean up shared AppModeManager instance
   try {
     const { resetSharedAppModeManager } = require("./compatibility/SharedAppModeManager");
@@ -3526,6 +3540,8 @@ app.on("will-quit", async (event) => {
   // Terminate Python backend
   if (pythonProcess && !pythonProcess.killed) {
     log.info("Terminating Python backend...");
+    // Remove listener to prevent error logging during shutdown
+    pythonProcess.removeAllListeners('close');
     pythonProcess.kill();
   }
 
