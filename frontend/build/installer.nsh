@@ -104,9 +104,9 @@
     DetailPrint "[UPDATE-LOG] This prevents ASAR corruption and ensures clean start"
     Sleep 5000
     DetailPrint "[UPDATE-LOG] File system stabilized - safe to launch"
-    DetailPrint "[UPDATE-LOG] Launching CypherEdge-UAT..."
+    DetailPrint "[UPDATE-LOG] Launching CypherEdge..."
     DetailPrint ""
-    Exec "$INSTDIR\CypherEdge-UAT.exe"
+    Exec "$INSTDIR\CypherEdge.exe"
     DetailPrint "[UPDATE-LOG] Launch command issued - app should start shortly"
   ${EndIf}
 !macroend
@@ -157,16 +157,8 @@
   DetailPrint "[CLEANUP-LOG] This prevents file locking during update"
   DetailPrint ""
 
-  ; Step 1: Kill Electron app (both possible names)
+  ; Step 1: Kill Electron app
   DetailPrint "[CLEANUP-LOG] Step 1/6: Killing Electron application..."
-  nsExec::ExecToLog 'taskkill /F /IM "CypherEdge-UAT.exe" /T 2>nul'
-  Pop $0
-  ${If} $0 == 0
-    DetailPrint "[CLEANUP-LOG]   ✓ CypherEdge-UAT.exe terminated"
-  ${Else}
-    DetailPrint "[CLEANUP-LOG]   ⓘ CypherEdge-UAT.exe not running"
-  ${EndIf}
-
   nsExec::ExecToLog 'taskkill /F /IM "CypherEdge.exe" /T 2>nul'
   Pop $0
   ${If} $0 == 0
@@ -217,7 +209,6 @@
   ; Step 6: Verify cleanup - double-check all processes are dead
   DetailPrint ""
   DetailPrint "[CLEANUP-LOG] Step 6/6: Verifying all processes terminated..."
-  nsExec::ExecToLog 'taskkill /F /IM "CypherEdge-UAT.exe" /T 2>nul'
   nsExec::ExecToLog 'taskkill /F /IM "CypherEdge.exe" /T 2>nul'
   nsExec::ExecToLog 'taskkill /F /IM "main.exe" /T 2>nul'
   nsExec::ExecToLog 'taskkill /F /IM "gatewayService.exe" /T 2>nul'

@@ -192,6 +192,8 @@ autoUpdater.logger.transports.file.level = "info";
 autoUpdater.autoDownload = true; // Enable automatic background downloads
 autoUpdater.disableWebInstaller = true;
 autoUpdater.allowPrerelease = false;
+// Force interactive installs on all platforms (prevents silent fallback)
+autoUpdater.autoInstallOnAppQuit = false;
 
 // Platform specific configurations
 if (process.platform === "darwin") {
@@ -232,40 +234,55 @@ sessionManager.on("logout", () => {
     );
 });
 
-app.on("before-quit", (event) => {
-  if (isUpdating) {
-    const skipMessage =
-      "[UPDATE] Skipping shutdown hooks because an auto-update is in progress";
-    log.info(skipMessage);
-    writeUpdateLog("info", skipMessage);
-    return;
-  }
+// COMMENTED OUT: This before-quit handler was blocking normal quit and forcing silent updates
+// app.on("before-quit", (event) => {
+//   if (isUpdating) {
+//     const skipMessage =
+//       "[UPDATE] Skipping shutdown hooks because an auto-update is in progress";
+//     log.info(skipMessage);
+//     writeUpdateLog("info", skipMessage);
+//     return;
+//   }
 
-  if (shutdownInProgress) {
-    return;
-  }
+//   if (shutdownInProgress) {
+//     return;
+//   }
 
-  event.preventDefault();
-  shutdownInProgress = true;
+//   event.preventDefault();
+//   shutdownInProgress = true;
 
-  activityMonitor.finalizeSession({ force: true });
-  metricsService.stopSchedule();
-  metricsService
-    .exportAndUpload({ trigger: "shutdown" })
-    .catch((error) => {
-      log.error("Metrics: shutdown upload failed", error);
-    })
-    .finally(() => {
-      // Removing listeners prevents re-entry when we exit explicitly.
-      app.removeAllListeners("before-quit");
-      app.exit();
-    });
-});
+//   activityMonitor.finalizeSession({ force: true });
+//   metricsService.stopSchedule();
+//   metricsService
+//     .exportAndUpload({ trigger: "shutdown" })
+//     .catch((error) => {
+//       log.error("Metrics: shutdown upload failed", error);
+//     })
+//     .finally(() => {
+//       // Removing listeners prevents re-entry when we exit explicitly.
+//       app.removeAllListeners("before-quit");
+//       app.exit();
+//     });
+// });
 
 // Allow updates without code signing in development
 if (AppConfig.isDev) {
   autoUpdater.forceDevUpdateConfig = true;
 }
+
+// Critical for auto-updater to work! This event is triggered by electron-updater
+app.on("before-quit-for-update", async () => {
+  logWithTimestamp(
+    "info",
+    UPDATE_LOG_PREFIX,
+    "before-quit-for-update event triggered - electron-updater is taking control"
+  );
+  // Prevent normal quit behavior during update
+  isUpdating = true;
+  
+  // Run cleanup
+  await stopEverythingNeatly();
+});
 
 // Removed redundant settings - configured above
 
@@ -1165,30 +1182,25 @@ autoUpdater.on("update-downloaded", (info) => {
           );
         });
 
-        // Run cleanup AFTER showing installation window
+        // REMOVED cleanupForUpdate - it was killing the installer process
         logWithTimestamp(
           "info",
           UPDATE_LOG_PREFIX,
-          "Starting pre-installation cleanup sequence"
+          "Starting update installation..."
         );
-        await cleanupForUpdate();
 
-        // Install update
+        // Create success flag for tracking
+        const updateFlagPath = path.join(app.getPath("userData"), "update-success.txt");
+        fs.writeFileSync(updateFlagPath, info.version);
+
+        // Small wait for UI then install
         setTimeout(() => {
           try {
-            logQuitInstall("═══════════════════════════════════════════════════════════════");
-            logQuitInstall("   QUIT AND INSTALL SEQUENCE - COMPREHENSIVE LOGGING");
-            logQuitInstall("═══════════════════════════════════════════════════════════════");
             logWithTimestamp(
               "info",
               UPDATE_LOG_PREFIX,
-              "🚀 INITIATING QUIT AND INSTALL SEQUENCE"
+              "🚀 INITIATING QUIT AND INSTALL"
             );
-            logQuitInstall("[QUIT-INSTALL] Step 1/6: Pre-cleanup completed successfully");
-            logQuitInstall("[QUIT-INSTALL] Step 2/6: All processes terminated");
-            logQuitInstall("[QUIT-INSTALL] Step 3/6: All windows closed");
-            logQuitInstall("[QUIT-INSTALL] Step 4/6: Database connections closed");
-
             logWithTimestamp(
               "info",
               UPDATE_LOG_PREFIX,
@@ -1197,18 +1209,9 @@ autoUpdater.on("update-downloaded", (info) => {
 
             performanceTracker.end("installation-process");
 
-            logQuitInstall("[QUIT-INSTALL] Step 5/5: Calling autoUpdater.quitAndInstall(false, true)");
+            logQuitInstall("[QUIT-INSTALL] Calling autoUpdater.quitAndInstall(false, true)");
             logQuitInstall("[QUIT-INSTALL]   Param 1 (isSilent): false - Show installer UI");
             logQuitInstall("[QUIT-INSTALL]   Param 2 (isForceRunAfter): true - Force restart app");
-            logQuitInstall("[QUIT-INSTALL] ═══════════════════════════════════════════");
-            logQuitInstall("[QUIT-INSTALL] NSIS installer will now:");
-            logQuitInstall("[QUIT-INSTALL]   1. Run customUnInit (kill remaining processes)");
-            logQuitInstall("[QUIT-INSTALL]   2. Uninstall old version");
-            logQuitInstall("[QUIT-INSTALL]   3. Install new version");
-            logQuitInstall("[QUIT-INSTALL]   4. Wait 5 seconds for file system");
-            logQuitInstall("[QUIT-INSTALL]   5. Launch new version");
-            logQuitInstall("[QUIT-INSTALL] ═══════════════════════════════════════════");
-            logQuitInstall("[QUIT-INSTALL] Goodbye! Will restart as new version...");
 
             autoUpdater.quitAndInstall(false, true);
           } catch (err) {
@@ -2131,6 +2134,12 @@ async function createWindow() {
       // For macOS, let the user choose when to restart
       autoUpdater.quitAndInstall(false, true);
     }
+  });
+
+  // Add quit-and-install handler to match ATS pattern
+  ipcMain.handle("quit-and-install", () => {
+    log.info("quit-and-install IPC called - triggering update installation");
+    autoUpdater.quitAndInstall(false, true);
   });
 
   // Add platform-specific update settings
@@ -3177,6 +3186,8 @@ app.on("window-all-closed", () => {
 
 // Compact cleanup function for update process
 const stopEverythingNeatly = async () => {
+  isPerformingCleanup = true; // Set flag to prevent window-all-closed from quitting
+  
   try {
     logWithTimestamp(
       "info",
@@ -3485,37 +3496,17 @@ const stopEverythingNeatly = async () => {
   }
 }
 
-app.on("will-quit", async (event) => {
+app.on("will-quit", () => {
   log.info("App is quitting");
   log.info("isUpdating flag:", isUpdating);
-
-  await stopEverythingNeatly();
-
-  // Clean up shared AppModeManager instance
-  try {
-    const { resetSharedAppModeManager } = require("./compatibility/SharedAppModeManager");
-    resetSharedAppModeManager();
-    log.info("Shared AppModeManager instance cleaned up");
-  } catch (error) {
-    log.warn("Error cleaning up shared AppModeManager:", error.message);
-  }
-
-  // Clean up SessionManager listeners before quit
-  try {
-    if (sessionManager && typeof sessionManager.removeAllListeners === 'function') {
-      sessionManager.removeAllListeners("remainingSecondsUpdated");
-      sessionManager.removeAllListeners("licenseExpired");
-      log.info("SessionManager listeners cleaned up on quit");
-    }
-  } catch (err) {
-    log.error("Error cleaning up SessionManager listeners on quit:", err);
-  }
-
+  
+  // Skip all cleanup if updating
   if (isUpdating) {
-    log.info("Auto install update on quit");
+    log.info("Skipping cleanup for update");
+    return;
   }
-
-  // Clean logout on quit
+  
+  // Only do essential cleanup when NOT updating
   try {
     if (sessionManager && typeof sessionManager.logoutUser === 'function') {
       sessionManager.logoutUser();
@@ -3523,30 +3514,10 @@ app.on("will-quit", async (event) => {
   } catch (error) {
     log.error("Error calling sessionManager.logoutUser():", error);
   }
+  
   if (pythonProcess) {
     log.info("Stopping Python process...");
     pythonProcess.kill("SIGTERM");
-  }
-
-  // Skip confirmation if updating
-  if (isUpdating) {
-    log.info("Skipping graceful shutdown for update");
-    return;
-  }
-
-  // Terminate Python backend
-  if (pythonProcess && !pythonProcess.killed) {
-    log.info("Terminating Python backend...");
-    // Remove listener to prevent error logging during shutdown
-    pythonProcess.removeAllListeners('close');
-    pythonProcess.kill();
-  }
-
-  // Close database connection
-  const dbManager = databaseManager.getInstance();
-  if (dbManager && dbManager.getDatabase()) {
-    // dbManager.getDatabase().close();
-    log.info("Database connection closed");
   }
 });
 

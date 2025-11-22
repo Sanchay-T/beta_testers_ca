@@ -65,6 +65,7 @@
     },
     "files": [
       "**/*",
+      "!main.js.backup",
       "react-app/build/**/*",
       "!../backend/**/*",
       "env/**/*",
