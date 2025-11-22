@@ -199,7 +199,7 @@ if (process.platform === "darwin") {
 } else if (process.platform === "win32") {
   // app.setAppUserModelId('com.electron.electronapp');
   app.setAppUserModelId(process.execPath); // changed it to process.execPath from 'com.electron.electronapp' to fix the taskbar icon not showing issue ~ Aiyaz
-  autoUpdater.autoInstallOnAppQuit = true;
+  autoUpdater.autoInstallOnAppQuit = false;
   autoUpdater.allowDowngrade = false;
 }
 
@@ -1195,13 +1195,10 @@ autoUpdater.on("update-downloaded", (info) => {
               "Application will restart with new version"
             );
 
-            logQuitInstall("[QUIT-INSTALL] Step 5/6: Setting autoInstallOnAppQuit=false");
-            logQuitInstall("[QUIT-INSTALL]   This ensures immediate install, not on app quit");
             performanceTracker.end("installation-process");
-            autoUpdater.autoInstallOnAppQuit = false;
 
-            logQuitInstall("[QUIT-INSTALL] Step 6/6: Calling autoUpdater.quitAndInstall(true, true)");
-            logQuitInstall("[QUIT-INSTALL]   Param 1 (isSilent): true - Install silently");
+            logQuitInstall("[QUIT-INSTALL] Step 5/5: Calling autoUpdater.quitAndInstall(false, true)");
+            logQuitInstall("[QUIT-INSTALL]   Param 1 (isSilent): false - Show installer UI");
             logQuitInstall("[QUIT-INSTALL]   Param 2 (isForceRunAfter): true - Force restart app");
             logQuitInstall("[QUIT-INSTALL] ═══════════════════════════════════════════");
             logQuitInstall("[QUIT-INSTALL] NSIS installer will now:");
@@ -1213,7 +1210,7 @@ autoUpdater.on("update-downloaded", (info) => {
             logQuitInstall("[QUIT-INSTALL] ═══════════════════════════════════════════");
             logQuitInstall("[QUIT-INSTALL] Goodbye! Will restart as new version...");
 
-            autoUpdater.quitAndInstall(true, true);
+            autoUpdater.quitAndInstall(false, true);
           } catch (err) {
             performanceTracker.end("installation-process");
             const installError = {
@@ -1229,7 +1226,7 @@ autoUpdater.on("update-downloaded", (info) => {
             );
             app.quit();
           }
-        }, 1000);
+        }, 5000);
       } else {
         // User clicked "Install Later"
         logWithTimestamp(
@@ -2129,7 +2126,7 @@ async function createWindow() {
     );
     if (process.platform === "win32") {
       // For Windows, we want to restart the app after update
-      autoUpdater.quitAndInstall(true, true);
+      autoUpdater.quitAndInstall(false, true);
     } else {
       // For macOS, let the user choose when to restart
       autoUpdater.quitAndInstall(false, true);
